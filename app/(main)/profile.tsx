@@ -49,7 +49,12 @@ export default function ProfilePage() {
   return (
     <ScrollView className="flex-1 bg-[#fff8f7]" contentContainerClassName="pb-12">
       <View className="sticky top-0 z-50 flex-row items-center justify-between bg-[#fff8f7]/90 px-5 py-3">
-        <Text className="text-xl font-bold text-[#261816]">Profile</Text>
+        <View className="flex-row items-center gap-3">
+          <Pressable className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => router.replace('/(main)/tasks')}>
+            <Text className="text-2xl text-[#720003]">‹</Text>
+          </Pressable>
+          <Text className="text-xl font-bold text-[#261816]">Profile</Text>
+        </View>
         <Pressable className="rounded-full p-2" onPress={() => router.push('/profile/edit')}>
           <Text className="font-bold text-[#720003]">EDIT</Text>
         </Pressable>

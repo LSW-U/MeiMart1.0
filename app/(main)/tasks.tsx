@@ -132,6 +132,7 @@ export default function TasksPage() {
         onDutyLabel={t('tasks.status.onDuty')}
         pickupsLabel={taskLists.pickups.length ? t('tasks.tabs.pickups1') : t('tasks.tabs.pickups0')}
         onDutyToggle={() => setOnline((value) => !value)}
+        onMenuPress={() => router.push('/(main)/profile')}
         onTabChange={setActiveTab}
       />
       <ScrollView className="flex-1" contentContainerClassName="gap-6 px-3 py-6 pb-8">

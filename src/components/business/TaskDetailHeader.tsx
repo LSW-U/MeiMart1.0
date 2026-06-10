@@ -12,10 +12,11 @@ type TaskDetailHeaderProps = {
   deliveriesLabel: string;
   online?: boolean;
   onDutyToggle?: () => void;
+  onMenuPress?: () => void;
   onTabChange?: (tab: TaskTab) => void;
 };
 
-export function TaskDetailHeader({ activeTab, onDutyLabel, newTasksLabel, pickupsLabel, deliveriesLabel, online = true, onDutyToggle, onTabChange }: TaskDetailHeaderProps) {
+export function TaskDetailHeader({ activeTab, onDutyLabel, newTasksLabel, pickupsLabel, deliveriesLabel, online = true, onDutyToggle, onMenuPress, onTabChange }: TaskDetailHeaderProps) {
   const tabs = [
     { key: 'new', label: newTasksLabel },
     { key: 'pickups', label: pickupsLabel },
@@ -25,7 +26,7 @@ export function TaskDetailHeader({ activeTab, onDutyLabel, newTasksLabel, pickup
   return (
     <View className="border-b border-[#f7ddd9] bg-[#ffe9e6] px-5 pb-1 pt-2">
       <View className="h-12 flex-row items-center justify-between">
-        <Pressable className="rounded-full p-1">
+        <Pressable className="rounded-full p-1" onPress={onMenuPress}>
           <AppIcon name="menu" className="text-2xl text-[#59413d]" />
         </Pressable>
         <Pressable className="flex-row items-center gap-2 rounded-full border border-[#961813] bg-[#fff8f7] px-4 py-1" onPress={onDutyToggle}>
