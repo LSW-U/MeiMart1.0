@@ -4,7 +4,7 @@ import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { AppIcon } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { getRiderSettings, updateRiderSettings, type AppLanguage } from '../../src/services/settings';
+import { getLanguageOptions, getRiderSettings, setCurrentLanguage, updateRiderSettings, type AppLanguage } from '../../src/services/settings';
 
 type SettingsItemProps = {
   icon: 'language' | 'bell' | 'shield' | 'profile' | 'help';
@@ -16,14 +16,9 @@ type SettingsItemProps = {
   onSwitchChange?: (value: boolean) => void;
 };
 
-const languageLabels: Record<AppLanguage, string> = {
-  en: 'English',
-  tet: 'Tetum',
-  pt: 'Português',
-  id: 'Bahasa Indonesia',
-};
-
-const languages: AppLanguage[] = ['en', 'tet', 'pt', 'id'];
+const languageOptions = getLanguageOptions();
+const languageLabels = Object.fromEntries(languageOptions.map((option) => [option.code, option.nativeLabel])) as Record<AppLanguage, string>;
+const languages = languageOptions.map((option) => option.code);
 
 function SettingsItem({ icon, title, description, onPress, trailing = 'chevron', switchValue = false, onSwitchChange }: SettingsItemProps) {
   return (
@@ -56,7 +51,7 @@ export default function SettingsPage() {
   const rotateLanguage = async () => {
     const nextLanguage = languages[(languages.indexOf(language) + 1) % languages.length];
     setLanguage(nextLanguage);
-    await updateRiderSettings({ language: nextLanguage });
+    await setCurrentLanguage(nextLanguage);
   };
 
   const toggleNotifications = async (value: boolean) => {

@@ -1,5 +1,18 @@
 export type AppLanguage = 'en' | 'tet' | 'pt' | 'id';
 
+export type LanguageOption = {
+  code: AppLanguage;
+  label: string;
+  nativeLabel: string;
+};
+
+export const languageOptions: LanguageOption[] = [
+  { code: 'en', label: 'English', nativeLabel: 'English' },
+  { code: 'tet', label: 'Tetum', nativeLabel: 'Tetun' },
+  { code: 'pt', label: 'Portuguese', nativeLabel: 'Português' },
+  { code: 'id', label: 'Indonesian', nativeLabel: 'Bahasa Indonesia' },
+];
+
 export type RiderSettings = {
   language: AppLanguage;
   notificationsEnabled: boolean;
@@ -43,6 +56,18 @@ const saveSettings = () => {
 
 export async function getRiderSettings(): Promise<RiderSettings> {
   return { ...getSettings() };
+}
+
+export function getLanguageOptions(): LanguageOption[] {
+  return languageOptions.map((option) => ({ ...option }));
+}
+
+export async function getCurrentLanguage(): Promise<AppLanguage> {
+  return getSettings().language;
+}
+
+export async function setCurrentLanguage(language: AppLanguage): Promise<RiderSettings> {
+  return updateRiderSettings({ language });
 }
 
 export function subscribeRiderSettings(listener: (settings: RiderSettings) => void) {
