@@ -50,6 +50,7 @@ export default function TasksPage() {
 
   const renderNewTask = (task: DeliveryTask, index: number) => (
     <TaskCard
+      key={task.id}
       actionLabel={t('tasks.accept')}
       badge={index === 0 ? t('tasks.reward.firstOrder') : undefined}
       fee={formatFee(task.fee)}
@@ -68,6 +69,7 @@ export default function TasksPage() {
 
   const renderPickupTask = (task: DeliveryTask) => (
     <TaskCard
+      key={task.id}
       actionLabel={t('tasks.arrivedPickup')}
       chatLabel={t('tasks.chat')}
       contactLabel={t('tasks.contact')}
@@ -86,6 +88,7 @@ export default function TasksPage() {
 
   const renderDeliveryTask = (task: DeliveryTask) => (
     <TaskCard
+      key={task.id}
       actionLabel={t('tasks.arrivedDelivery')}
       chatLabel={t('tasks.chat')}
       contactLabel={t('tasks.contact')}
