@@ -4,6 +4,7 @@ import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-nati
 
 import { Button, Card, Input } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
+import { startRiderSession } from '../../src/services/user';
 
 type LoginMode = 'password' | 'sms';
 
@@ -14,6 +15,11 @@ export default function LoginPage() {
   const [accepted, setAccepted] = useState(false);
 
   const isPassword = mode === 'password';
+
+  const login = async () => {
+    await startRiderSession();
+    router.replace('/(main)/tasks');
+  };
 
   return (
     <ScrollView className="flex-1 bg-[#fff8f7]" contentContainerClassName="min-h-full items-center justify-center px-5 py-12">
@@ -74,7 +80,7 @@ export default function LoginPage() {
             </Text>
           </View>
 
-          <Button icon={<Text className="text-white">→</Text>}>{t('auth.login.submit')}</Button>
+          <Button icon={<Text className="text-white">→</Text>} onPress={() => void login()}>{t('auth.login.submit')}</Button>
         </View>
 
         <View className="items-center pt-1">

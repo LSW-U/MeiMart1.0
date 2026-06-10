@@ -11,8 +11,10 @@ const defaultProfile: RiderProfile = {
 };
 
 const storageKey = 'mei-delivery-app:rider-profile';
+const sessionStorageKey = 'mei-delivery-app:rider-session';
 
 let riderProfile: RiderProfile | null = null;
+let riderSession: boolean | null = null;
 
 const getProfile = () => {
   if (riderProfile) return riderProfile;
@@ -35,8 +37,49 @@ const saveProfile = () => {
   }
 };
 
+const getSession = () => {
+  if (riderSession !== null) return riderSession;
+
+  if (typeof localStorage !== 'undefined') {
+    riderSession = localStorage.getItem(sessionStorageKey) === 'active';
+    return riderSession;
+  }
+
+  riderSession = true;
+  return riderSession;
+};
+
+const saveSession = (active: boolean) => {
+  riderSession = active;
+
+  if (typeof localStorage !== 'undefined') {
+    if (active) {
+      localStorage.setItem(sessionStorageKey, 'active');
+    } else {
+      localStorage.removeItem(sessionStorageKey);
+    }
+  }
+};
+
 export async function getRiderProfile(): Promise<RiderProfile> {
   return { ...getProfile() };
+}
+
+export async function isRiderSessionActive(): Promise<boolean> {
+  return getSession();
+}
+
+export async function startRiderSession(): Promise<void> {
+  saveSession(true);
+  riderProfile = { ...getProfile(), status: 'online' };
+  saveProfile();
+}
+
+export async function registerRiderProfile(profile: Partial<RiderProfile>): Promise<RiderProfile> {
+  riderProfile = { ...getProfile(), ...profile, status: 'online' };
+  saveProfile();
+  saveSession(true);
+  return { ...riderProfile };
 }
 
 export async function updateRiderProfile(profile: Partial<RiderProfile>): Promise<RiderProfile> {
@@ -48,4 +91,5 @@ export async function updateRiderProfile(profile: Partial<RiderProfile>): Promis
 export async function resetRiderSession(): Promise<void> {
   riderProfile = { ...defaultProfile, status: 'offline' };
   saveProfile();
+  saveSession(false);
 }
