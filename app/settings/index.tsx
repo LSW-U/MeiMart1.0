@@ -1,8 +1,10 @@
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { AppIcon } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
+import { getRiderSettings, updateRiderSettings, type AppLanguage } from '../../src/services/settings';
 
 type SettingsItemProps = {
   icon: 'language' | 'bell' | 'shield' | 'profile' | 'help';
@@ -10,9 +12,20 @@ type SettingsItemProps = {
   description: string;
   onPress?: () => void;
   trailing?: 'switch' | 'chevron';
+  switchValue?: boolean;
+  onSwitchChange?: (value: boolean) => void;
 };
 
-function SettingsItem({ icon, title, description, onPress, trailing = 'chevron' }: SettingsItemProps) {
+const languageLabels: Record<AppLanguage, string> = {
+  en: 'English',
+  tet: 'Tetum',
+  pt: 'Português',
+  id: 'Bahasa Indonesia',
+};
+
+const languages: AppLanguage[] = ['en', 'tet', 'pt', 'id'];
+
+function SettingsItem({ icon, title, description, onPress, trailing = 'chevron', switchValue = false, onSwitchChange }: SettingsItemProps) {
   return (
     <Pressable className="flex-row items-center gap-4 px-5 py-4 active:bg-[#fff0ee]" onPress={onPress}>
       <View className="h-11 w-11 items-center justify-center rounded-full bg-[#ffe9e6]">
@@ -22,7 +35,7 @@ function SettingsItem({ icon, title, description, onPress, trailing = 'chevron' 
         <Text className="text-base font-bold text-[#261816]">{title}</Text>
         <Text className="mt-1 text-sm text-[#59413d]">{description}</Text>
       </View>
-      {trailing === 'switch' ? <Switch value /> : <AppIcon color="#8d706c" name="chevronRight" />}
+      {trailing === 'switch' ? <Switch onValueChange={onSwitchChange} value={switchValue} /> : <AppIcon color="#8d706c" name="chevronRight" />}
     </Pressable>
   );
 }
@@ -30,6 +43,27 @@ function SettingsItem({ icon, title, description, onPress, trailing = 'chevron' 
 export default function SettingsPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const [language, setLanguage] = useState<AppLanguage>('en');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  useEffect(() => {
+    void getRiderSettings().then((settings) => {
+      setLanguage(settings.language);
+      setNotificationsEnabled(settings.notificationsEnabled);
+    });
+  }, []);
+
+  const rotateLanguage = async () => {
+    const nextLanguage = languages[(languages.indexOf(language) + 1) % languages.length];
+    setLanguage(nextLanguage);
+    await updateRiderSettings({ language: nextLanguage });
+  };
+
+  const toggleNotifications = async (value: boolean) => {
+    setNotificationsEnabled(value);
+    await updateRiderSettings({ notificationsEnabled: value });
+  };
+
   const goBack = () => {
     if (router.canGoBack()) {
       router.back();
@@ -53,9 +87,9 @@ export default function SettingsPage() {
           <Text className="mt-2 text-sm leading-6 text-white/80">Notification, language, safety, and profile controls are grouped here for acceptance testing.</Text>
         </View>
         <View className="overflow-hidden rounded-3xl border border-[#ffe9e6] bg-white shadow-sm">
-          <SettingsItem description="English active; Tetum, Portuguese and Indonesian placeholders are prepared." icon="language" title="Language" />
+          <SettingsItem description={`${languageLabels[language]} active. Tap to cycle language preference.`} icon="language" title="Language" onPress={() => void rotateLanguage()} />
           <View className="mx-5 h-px bg-[#e1bfba]/40" />
-          <SettingsItem description="Receive new task, pickup timeout, and wallet updates." icon="bell" title="Notifications" trailing="switch" />
+          <SettingsItem description={notificationsEnabled ? 'Receive new task, pickup timeout, and wallet updates.' : 'Task, timeout, and wallet notifications are paused.'} icon="bell" switchValue={notificationsEnabled} title="Notifications" trailing="switch" onSwitchChange={(value) => void toggleNotifications(value)} />
           <View className="mx-5 h-px bg-[#e1bfba]/40" />
           <SettingsItem description="Review phone number, identity document, and vehicle verification." icon="shield" title="Account & Safety" onPress={() => router.push('/profile/edit')} />
           <View className="mx-5 h-px bg-[#e1bfba]/40" />
