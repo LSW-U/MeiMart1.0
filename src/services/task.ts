@@ -6,7 +6,9 @@ type TaskLists = {
   deliveries: DeliveryTask[];
 };
 
-const mockTasks: DeliveryTask[] = [
+const storageKey = 'mei-delivery-app:tasks';
+
+const initialTasks: DeliveryTask[] = [
   {
     id: '102',
     orderId: 'JD Delivery #102',
@@ -91,6 +93,8 @@ const mockTasks: DeliveryTask[] = [
   },
 ];
 
+let mockTasks: DeliveryTask[] | null = null;
+
 const cloneTask = (task: DeliveryTask): DeliveryTask => ({
   ...task,
   pickup: { ...task.pickup },
@@ -98,17 +102,40 @@ const cloneTask = (task: DeliveryTask): DeliveryTask => ({
   items: [...task.items],
 });
 
-const findTask = (id: string) => mockTasks.find((task) => task.id === id);
+const getTasks = () => {
+  if (mockTasks) return mockTasks;
+
+  if (typeof localStorage !== 'undefined') {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      mockTasks = JSON.parse(stored) as DeliveryTask[];
+      return mockTasks;
+    }
+  }
+
+  mockTasks = initialTasks.map(cloneTask);
+  return mockTasks;
+};
+
+const saveTasks = () => {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(storageKey, JSON.stringify(getTasks()));
+  }
+};
+
+const findTask = (id: string) => getTasks().find((task) => task.id === id);
 
 export async function getAvailableTasks(): Promise<DeliveryTask[]> {
-  return mockTasks.filter((task) => task.status === 'available').map(cloneTask);
+  return getTasks().filter((task) => task.status === 'available').map(cloneTask);
 }
 
 export async function getTaskLists(): Promise<TaskLists> {
+  const tasks = getTasks();
+
   return {
-    available: mockTasks.filter((task) => task.status === 'available').map(cloneTask),
-    pickups: mockTasks.filter((task) => task.status === 'accepted' || task.status === 'pickingUp').map(cloneTask),
-    deliveries: mockTasks.filter((task) => task.status === 'delivering').map(cloneTask),
+    available: tasks.filter((task) => task.status === 'available').map(cloneTask),
+    pickups: tasks.filter((task) => task.status === 'accepted' || task.status === 'pickingUp').map(cloneTask),
+    deliveries: tasks.filter((task) => task.status === 'delivering').map(cloneTask),
   };
 }
 
@@ -129,5 +156,6 @@ export async function updateTaskStatus(id: string, status: TaskStatus): Promise<
   }
 
   task.status = status;
+  saveTasks();
   return cloneTask(task);
 }
