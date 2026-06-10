@@ -1,5 +1,5 @@
 {
-  "app.name": "",
+  "app.name": "Sentru Rider",
   "app.tagline": "",
   "splash.status": "",
   "auth.login.title": "",
@@ -58,8 +58,8 @@
   "auth.register.submit": "",
   "auth.register.alreadyHaveAccount": "",
   "auth.register.login": "",
-  "tasks.status.onDuty": "",
-  "tasks.tabs.new": "",
+  "tasks.status.onDuty": "Iha Servisu",
+  "tasks.tabs.new": "Tarefa Foun",
   "tasks.tabs.pickups0": "",
   "tasks.tabs.pickups1": "",
   "tasks.tabs.deliveries0": "",
@@ -94,8 +94,8 @@
   "tasks.note.matchaShort": "",
   "tasks.note.quote": "",
   "tasks.accept": "",
-  "tasks.settings": "",
-  "tasks.refresh": "",
+  "tasks.settings": "Konfigurasaun",
+  "tasks.refresh": "Hafoun",
   "tasks.chat": "",
   "tasks.contact": "",
   "tasks.arrivedPickup": "",
@@ -170,9 +170,9 @@
   "profile.myOrders": "",
   "profile.myWallet": "",
   "profile.earningsHistory": "",
-  "profile.settings": "",
-  "profile.helpCenter": "",
-  "profile.logout": "",
+  "profile.settings": "Konfigurasaun",
+  "profile.helpCenter": "Sentru Ajuda",
+  "profile.logout": "Sai",
   "earnings.title": "",
   "earnings.balanceLabel": "",
   "earnings.balance": "",
@@ -240,5 +240,5 @@
   "history.viewDetails": "",
   "history.todayOrders": "",
   "history.todayAmount": "",
-  "settings.title": ""
+  "settings.title": "Konfigurasaun"
 }

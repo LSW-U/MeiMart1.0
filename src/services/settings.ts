@@ -13,6 +13,12 @@ const defaultSettings: RiderSettings = {
 };
 
 let riderSettings: RiderSettings | null = null;
+const settingsListeners = new Set<(settings: RiderSettings) => void>();
+
+const notifySettingsListeners = () => {
+  const settings = { ...getSettings() };
+  settingsListeners.forEach((listener) => listener(settings));
+};
 
 const getSettings = () => {
   if (riderSettings) return riderSettings;
@@ -39,8 +45,16 @@ export async function getRiderSettings(): Promise<RiderSettings> {
   return { ...getSettings() };
 }
 
+export function subscribeRiderSettings(listener: (settings: RiderSettings) => void) {
+  settingsListeners.add(listener);
+  return () => {
+    settingsListeners.delete(listener);
+  };
+}
+
 export async function updateRiderSettings(settings: Partial<RiderSettings>): Promise<RiderSettings> {
   riderSettings = { ...getSettings(), ...settings };
   saveSettings();
+  notifySettingsListeners();
   return { ...riderSettings };
 }
