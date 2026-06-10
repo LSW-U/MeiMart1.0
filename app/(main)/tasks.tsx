@@ -135,19 +135,19 @@ export default function TasksPage() {
         onMenuPress={() => router.push('/(main)/profile')}
         onTabChange={setActiveTab}
       />
-      <ScrollView className="flex-1" contentContainerClassName="gap-6 px-3 py-6 pb-8">
+      <ScrollView className="flex-1" contentContainerClassName="gap-6 px-3 py-6 pb-32">
         {renderContent()}
-        <View className="flex-row items-center gap-4 rounded-3xl border border-[#f7ddd9] bg-[#fff8f7] px-3 py-4">
-          <Pressable className="items-center px-2" onPress={() => router.push('/settings')}>
-            <AppIcon name="settings" className="text-2xl text-[#59413d]" />
-            <Text className="mt-1 text-[10px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
-          </Pressable>
-          <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-4 shadow-sm" onPress={() => void loadTasks()}>
-            <AppIcon name="refresh" className="text-xl text-[#961813]" />
-            <Text className="text-base font-bold text-[#961813]">{t('tasks.refresh')}</Text>
-          </Pressable>
-        </View>
       </ScrollView>
+      <View className="absolute inset-x-0 bottom-0 flex-row items-center gap-4 border-t border-[#f7ddd9] bg-[#fff8f7] px-3 pb-6 pt-3">
+        <Pressable className="items-center px-2" onPress={() => router.push('/settings')}>
+          <AppIcon name="settings" className="text-2xl text-[#59413d]" />
+          <Text className="mt-1 text-[10px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
+        </Pressable>
+        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-4 shadow-sm" onPress={() => void loadTasks()}>
+          <AppIcon name="refresh" className="text-xl text-[#961813]" />
+          <Text className="text-base font-bold text-[#961813]">{t('tasks.refresh')}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }

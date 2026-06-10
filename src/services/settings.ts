@@ -1,17 +1,23 @@
-export type AppLanguage = 'en' | 'tet' | 'pt' | 'id';
+export type AppLanguage = 'zh' | 'en' | 'tet' | 'pt' | 'id';
 
 export type LanguageOption = {
   code: AppLanguage;
   label: string;
   nativeLabel: string;
+  upcoming?: boolean;
 };
 
-export const languageOptions: LanguageOption[] = [
+const enabledLanguageOptions: LanguageOption[] = [
+  { code: 'zh', label: 'Chinese', nativeLabel: '中文' },
   { code: 'en', label: 'English', nativeLabel: 'English' },
-  { code: 'tet', label: 'Tetum', nativeLabel: 'Tetun' },
-  { code: 'pt', label: 'Portuguese', nativeLabel: 'Português' },
-  { code: 'id', label: 'Indonesian', nativeLabel: 'Bahasa Indonesia' },
 ];
+
+const upcomingLanguageOptions: LanguageOption[] = [
+  { code: 'pt', label: 'Portuguese', nativeLabel: 'Português', upcoming: true },
+  { code: 'tet', label: 'Tetum', nativeLabel: 'Tetun', upcoming: true },
+];
+
+export const languageOptions: LanguageOption[] = [...enabledLanguageOptions, ...upcomingLanguageOptions];
 
 export type RiderSettings = {
   language: AppLanguage;
@@ -21,7 +27,7 @@ export type RiderSettings = {
 const storageKey = 'mei-delivery-app:rider-settings';
 
 const defaultSettings: RiderSettings = {
-  language: 'en',
+  language: 'zh',
   notificationsEnabled: true,
 };
 
@@ -58,8 +64,9 @@ export async function getRiderSettings(): Promise<RiderSettings> {
   return { ...getSettings() };
 }
 
-export function getLanguageOptions(): LanguageOption[] {
-  return languageOptions.map((option) => ({ ...option }));
+export function getLanguageOptions(options?: { includeUpcoming?: boolean }): LanguageOption[] {
+  const source = options?.includeUpcoming ? languageOptions : enabledLanguageOptions;
+  return source.map((option) => ({ ...option }));
 }
 
 export async function getCurrentLanguage(): Promise<AppLanguage> {

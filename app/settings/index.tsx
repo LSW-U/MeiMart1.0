@@ -16,9 +16,10 @@ type SettingsItemProps = {
   onSwitchChange?: (value: boolean) => void;
 };
 
-const languageOptions = getLanguageOptions();
-const languageLabels = Object.fromEntries(languageOptions.map((option) => [option.code, option.nativeLabel])) as Record<AppLanguage, string>;
-const languages = languageOptions.map((option) => option.code);
+const enabledLanguageOptions = getLanguageOptions();
+const allLanguageOptions = getLanguageOptions({ includeUpcoming: true });
+const languageLabels = Object.fromEntries(allLanguageOptions.map((option) => [option.code, option.nativeLabel])) as Record<AppLanguage, string>;
+const languages = enabledLanguageOptions.map((option) => option.code);
 
 function SettingsItem({ icon, title, description, onPress, trailing = 'chevron', switchValue = false, onSwitchChange }: SettingsItemProps) {
   return (
