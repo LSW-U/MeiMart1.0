@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Mei Delivery App",
+    "slug": "mei-delivery-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "mei-delivery",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.meimart.delivery"
+    },
+    "android": {
+      "package": "com.meimart.delivery"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
