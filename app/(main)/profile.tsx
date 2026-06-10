@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { AppIcon } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
 
 const avatarUri = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAxYQTl8fmfVEjYlkPAfFPYKFQzFnJdbHZILY2zo70KbTeFOm1gHaq5a5hgcXMBx_K4rYX5RD_P-xVDOQabALqBnnaqUCZ9pnME_ZyaijrqU8pvVcs9vVQmB-SUOYytq4NmgjnkJU6vNlbukA_GxnB_tdqAJOKD1aFXMtJGyb-P8iNTWMu3zneBEhx07nTdDrUc05phtJYwAjgope5USCpA9iNRqKNFE_AsaZdVtw_0O9-DqC_93C04Ut2DIKF8tna1PxqbDB52e4Ct';
@@ -86,13 +87,13 @@ export default function ProfilePage() {
       <View className="mx-5 mb-8 flex-row gap-4">
         <Pressable className="flex-1 flex-row items-center gap-4 rounded-2xl border border-[#ffe9e6] bg-white p-5 shadow-sm" onPress={() => router.push('/order/history')}>
           <View className="rounded-xl bg-[#ffe9e6] p-3">
-            <Text className="text-[#720003]">O</Text>
+            <AppIcon name="orders" className="text-xl text-[#720003]" />
           </View>
           <Text className="text-[17px] font-semibold text-[#261816]">{t('profile.myOrders')}</Text>
         </Pressable>
         <Pressable className="flex-1 flex-row items-center gap-4 rounded-2xl border border-[#ffe9e6] bg-white p-5 shadow-sm" onPress={() => router.push('/(main)/earnings')}>
           <View className="rounded-xl bg-[#ffe9e6] p-3">
-            <Text className="text-[#720003]">W</Text>
+            <AppIcon name="wallet" className="text-xl text-[#720003]" />
           </View>
           <Text className="text-[17px] font-semibold text-[#261816]">{t('profile.myWallet')}</Text>
         </Pressable>

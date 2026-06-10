@@ -1,6 +1,6 @@
 import { Pressable, Text, TextInput, View } from 'react-native';
 
-import { Button } from '../ui';
+import { AppIcon, Button } from '../ui';
 
 type WithdrawFormProps = {
   amountLabel: string;
@@ -37,7 +37,7 @@ export function WithdrawForm({ amountLabel, amountPlaceholder, toLabel, bankCard
         >
           <View className="flex-row items-center gap-4">
             <View className="h-10 w-10 items-center justify-center rounded-full bg-[#fde2df]">
-              <Text className="text-[#961813]">B</Text>
+              <AppIcon name="bank" className="text-[#961813]" />
             </View>
             <View>
               <Text className="font-medium text-[#261816]">{bankCardLabel}</Text>
@@ -52,7 +52,7 @@ export function WithdrawForm({ amountLabel, amountPlaceholder, toLabel, bankCard
         >
           <View className="flex-row items-center gap-4">
             <View className="h-10 w-10 items-center justify-center rounded-full bg-[#fde2df]">
-              <Text className="text-[#961813]">S</Text>
+              <AppIcon name="settings" className="text-[#961813]" />
             </View>
             <View>
               <Text className="font-medium text-[#261816]">{servicePointLabel}</Text>

@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { TaskCard } from '../../../src/components/business/TaskCard';
 import { TaskDetailHeader } from '../../../src/components/business/TaskDetailHeader';
 import { EmptyState } from '../../../src/components/feedback/EmptyState';
+import { AppIcon } from '../../../src/components/ui';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { getTaskById } from '../../../src/services/task';
 import type { DeliveryTask } from '../../../src/types/task';
@@ -59,12 +60,12 @@ export default function TaskOngoingPage() {
         )}
       </ScrollView>
       <View className="absolute bottom-0 left-0 right-0 flex-row items-center gap-4 border-t border-[#f7ddd9] bg-[#fff8f7] px-3 py-4">
-        <Pressable className="items-center px-2">
-          <Text className="text-2xl text-[#59413d]">S</Text>
+        <Pressable className="items-center px-2" onPress={() => router.push('/settings')}>
+          <AppIcon name="settings" className="text-2xl text-[#59413d]" />
           <Text className="mt-1 text-[10px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
         </Pressable>
-        <Pressable className="flex-1 flex-row items-center justify-center gap-1 rounded-full border border-[#e1bfba] bg-white py-4 shadow-sm">
-          <Text className="text-xl text-[#961813]">R</Text>
+        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-4 shadow-sm">
+          <AppIcon name="refresh" className="text-xl text-[#961813]" />
           <Text className="text-base font-bold text-[#961813]">{t('tasks.refresh')}</Text>
         </Pressable>
       </View>

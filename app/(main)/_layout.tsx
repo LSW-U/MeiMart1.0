@@ -1,5 +1,7 @@
 import { Tabs } from 'expo-router';
 
+import { AppIcon } from '../../src/components/ui';
+
 export default function MainLayout() {
   return (
     <Tabs
@@ -13,9 +15,9 @@ export default function MainLayout() {
         },
       }}
     >
-      <Tabs.Screen name="tasks" options={{ title: 'Tasks' }} />
-      <Tabs.Screen name="earnings" options={{ title: 'Earnings' }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+      <Tabs.Screen name="tasks" options={{ title: 'Tasks', tabBarIcon: ({ color }) => <AppIcon name="orders" className="text-xl" style={{ color }} /> }} />
+      <Tabs.Screen name="earnings" options={{ title: 'Earnings', tabBarIcon: ({ color }) => <AppIcon name="wallet" className="text-xl" style={{ color }} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color }) => <AppIcon name="settings" className="text-xl" style={{ color }} /> }} />
     </Tabs>
   );
 }

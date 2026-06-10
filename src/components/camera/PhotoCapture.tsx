@@ -1,5 +1,7 @@
 import { ImageBackground, Pressable, Text, View } from 'react-native';
 
+import { AppIcon } from '../ui';
+
 const receiptUri = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCsnGxXF2l-3IqYly4Ii_dV8qTYIrsC7K65uKkFQTIXXkHXnD5ZaJfZfov3-3SyGlvIcTZR1l58hBiYaFZQy_nU50Uz7aPjz19dK5KmNkYZ7iJmlqqLd44um1R0-KQq7a8jEnbWHgspgdxaDItQAcA2gi09DUXz2FtpU6JY-d_TA2VJyvRLfux82Oo6WPws-InJQ2TliYc9ZhEY71ham3Fr-AYPoGEm3DTqvPq8iMqWdm6akzYcE5iVR6WsooRw8XknzmyqvZw-ew';
 
 type PhotoCaptureProps = {
@@ -16,7 +18,7 @@ export function PhotoCapture({ captured, instruction, fileName, readyLabel, onCa
       <View className="aspect-[3/4] w-full max-w-sm overflow-hidden rounded-lg border border-[#e1bfba] bg-[#eed4d1] shadow-inner">
         <ImageBackground className="h-full w-full items-center justify-center opacity-80" resizeMode="cover" source={{ uri: receiptUri }}>
           <View className="h-3/5 w-4/5 items-center justify-center rounded-lg border-2 border-dashed border-white/70 bg-[#261816]/20">
-            <Text className="text-5xl text-white/60">R</Text>
+            <AppIcon name="camera" className="text-5xl text-white/60" />
           </View>
           <Pressable className="absolute bottom-4 h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-white/20" onPress={onCapture}>
             <View className="h-12 w-12 rounded-full bg-white shadow-lg" />

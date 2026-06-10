@@ -1,5 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 
+import { AppIcon } from '../ui';
+
 type TaskTab = 'new' | 'pickups' | 'deliveries';
 
 type TaskDetailHeaderProps = {
@@ -24,7 +26,7 @@ export function TaskDetailHeader({ activeTab, onDutyLabel, newTasksLabel, pickup
     <View className="border-b border-[#f7ddd9] bg-[#ffe9e6] px-5 pb-1 pt-2">
       <View className="h-12 flex-row items-center justify-between">
         <Pressable className="rounded-full p-1">
-          <Text className="text-2xl text-[#59413d]">≡</Text>
+          <AppIcon name="menu" className="text-2xl text-[#59413d]" />
         </Pressable>
         <Pressable className="flex-row items-center gap-2 rounded-full border border-[#961813] bg-[#fff8f7] px-4 py-1" onPress={onDutyToggle}>
           <View className={`h-2 w-2 rounded-full ${online ? 'bg-green-500' : 'bg-[#b9aaa7]'}`} />
@@ -32,7 +34,7 @@ export function TaskDetailHeader({ activeTab, onDutyLabel, newTasksLabel, pickup
           <Text className="text-[#59413d]">v</Text>
         </Pressable>
         <Pressable className="rounded-full p-1">
-          <Text className="text-2xl text-[#59413d]">•</Text>
+          <AppIcon name="notification" className="text-2xl text-[#59413d]" />
         </Pressable>
       </View>
       <View className="mt-2 flex-row gap-6 border-b border-[#f7ddd9]">

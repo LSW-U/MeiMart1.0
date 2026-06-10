@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
 import { PageHeader } from '../../src/components/layout/PageHeader';
-import { Button, Input } from '../../src/components/ui';
+import { AppIcon, Button, Input } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
 
 type UploadKey = 'license' | 'biFront' | 'biBack' | 'vehicle';
@@ -67,7 +67,7 @@ export default function RegisterPage() {
           <View className="flex-row items-center justify-between rounded-xl bg-[#720003] px-6 py-5 shadow-md">
             <View className="flex-row items-center gap-3">
               <View className="rounded-lg bg-white/10 p-2">
-                <Text className="text-2xl text-white">M</Text>
+                <AppIcon name="rider" className="text-2xl text-white" />
               </View>
               <View>
                 <Text className="mb-1 text-[10px] font-bold uppercase leading-none tracking-wider text-white/80">{t('auth.register.partner')}</Text>
@@ -79,7 +79,7 @@ export default function RegisterPage() {
 
           <View className="gap-6">
             <View className="flex-row items-center gap-3 border-b border-[#e1bfba] pb-2">
-              <Text className="text-xl text-[#720003]">P</Text>
+              <AppIcon name="profile" className="text-xl text-[#720003]" />
               <Text className="text-xl font-semibold text-[#261816]">{t('auth.register.personalDetails')}</Text>
             </View>
             <View className="gap-6">
@@ -113,7 +113,7 @@ export default function RegisterPage() {
 
           <View className="gap-6">
             <View className="flex-row items-center gap-3 border-b border-[#e1bfba] pb-2">
-              <Text className="text-xl text-[#720003]">D</Text>
+              <AppIcon name="document" className="text-xl text-[#720003]" />
               <Text className="text-xl font-semibold text-[#261816]">{t('auth.register.documents')}</Text>
             </View>
             <Text className="-mt-4 text-sm text-[#59413d]">{t('auth.register.documentsHint')}</Text>
@@ -133,7 +133,7 @@ export default function RegisterPage() {
 
           <View className="gap-6">
             <View className="flex-row items-center gap-3 border-b border-[#e1bfba] pb-2">
-              <Text className="text-xl text-[#720003]">S</Text>
+              <AppIcon name="security" className="text-xl text-[#720003]" />
               <Text className="text-xl font-semibold text-[#261816]">{t('auth.register.security')}</Text>
             </View>
             <View className="gap-6">
