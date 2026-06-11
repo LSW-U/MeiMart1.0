@@ -1,6 +1,9 @@
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import type { DutyStatus } from '../../services/settings';
+import { getUnreadCount, subscribeNotifications } from '../../services/notification';
 import { AppIcon } from '../ui';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
@@ -24,6 +27,16 @@ const dotColor: Record<DutyStatus, string> = {
 };
 
 export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTasksLabel, pickupsLabel, deliveriesLabel, onDutyPress, onMenuPress, onTabChange }: TaskDetailHeaderProps) {
+  const router = useRouter();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    void getUnreadCount().then(setUnread);
+    return subscribeNotifications((items) => {
+      setUnread(items.filter((item) => !item.read).length);
+    });
+  }, []);
+
   const tabs = [
     { key: 'new', label: newTasksLabel },
     { key: 'pickups', label: pickupsLabel },
@@ -41,8 +54,11 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTa
           <Text className="text-xl font-bold text-[#261816]">{dutyStatusLabel}</Text>
           <AppIcon name="chevronDown" color="#59413d" size={18} />
         </Pressable>
-        <Pressable className="rounded-full p-1">
+        <Pressable className="relative rounded-full p-1" onPress={() => router.push('/notifications')}>
           <AppIcon name="notification" className="text-2xl text-[#59413d]" />
+          {unread > 0 ? (
+            <View className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#ffe9e6] bg-[#ff4d4f]" />
+          ) : null}
         </Pressable>
       </View>
       <View className="mt-2 flex-row gap-6 border-b border-[#f7ddd9]">
