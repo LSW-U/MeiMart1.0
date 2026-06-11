@@ -4,18 +4,25 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { WithdrawForm } from '../../src/components/business/WithdrawForm';
 import { useTranslation } from '../../src/i18n/useTranslation';
+import { createWithdrawal } from '../../src/services/earnings';
 
 export default function WithdrawalPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const [method, setMethod] = useState<'bank' | 'cash'>('bank');
+  const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<'idle' | 'processing' | 'success'>('idle');
 
+  const parsedAmount = Number.parseFloat(amount);
+  const amountValid = Number.isFinite(parsedAmount) && parsedAmount > 0;
   const submitLabel = status === 'processing' ? t('withdraw.processing') : status === 'success' ? t('withdraw.success') : t('withdraw.submit');
+  const submitDisabled = status !== 'idle' || !amountValid;
 
-  const submit = () => {
+  const submit = async () => {
+    if (!amountValid) return;
     setStatus('processing');
-    setTimeout(() => setStatus('success'), 500);
+    await createWithdrawal(parsedAmount, method);
+    setStatus('success');
   };
 
   return (
@@ -34,6 +41,7 @@ export default function WithdrawalPage() {
         </View>
 
         <WithdrawForm
+          amount={amount}
           amountLabel={t('withdraw.amountLabel')}
           amountPlaceholder={t('withdraw.amountPlaceholder')}
           bankCardLabel={t('withdraw.bankCard')}
@@ -42,10 +50,12 @@ export default function WithdrawalPage() {
           selectedMethod={method}
           servicePointLabel={t('withdraw.servicePoint')}
           servicePointName={t('withdraw.servicePointName')}
+          submitDisabled={submitDisabled}
           submitLabel={submitLabel}
           toLabel={t('withdraw.toLabel')}
+          onAmountChange={setAmount}
           onSelectMethod={setMethod}
-          onSubmit={submit}
+          onSubmit={() => void submit()}
         />
       </ScrollView>
     </View>

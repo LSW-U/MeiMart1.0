@@ -13,11 +13,14 @@ type WithdrawFormProps = {
   submitLabel: string;
   note: string;
   selectedMethod: 'bank' | 'cash';
+  amount: string;
+  onAmountChange: (value: string) => void;
+  submitDisabled?: boolean;
   onSelectMethod: (method: 'bank' | 'cash') => void;
   onSubmit: () => void;
 };
 
-export function WithdrawForm({ amountLabel, amountPlaceholder, toLabel, bankCardLabel, bankCardNumber, servicePointLabel, servicePointName, submitLabel, note, selectedMethod, onSelectMethod, onSubmit }: WithdrawFormProps) {
+export function WithdrawForm({ amountLabel, amountPlaceholder, toLabel, bankCardLabel, bankCardNumber, servicePointLabel, servicePointName, submitLabel, note, selectedMethod, amount, onAmountChange, submitDisabled, onSelectMethod, onSubmit }: WithdrawFormProps) {
   return (
     <View className="gap-4">
       <View className="gap-1">
@@ -27,6 +30,8 @@ export function WithdrawForm({ amountLabel, amountPlaceholder, toLabel, bankCard
           keyboardType="numeric"
           placeholder={amountPlaceholder}
           placeholderTextColor="#8d706c"
+          value={amount}
+          onChangeText={onAmountChange}
         />
       </View>
       <View className="mt-2 gap-2">
@@ -63,7 +68,7 @@ export function WithdrawForm({ amountLabel, amountPlaceholder, toLabel, bankCard
         </Pressable>
       </View>
       <View className="min-h-8" />
-      <Button className="h-14 bg-[#961813]" onPress={onSubmit}>{submitLabel}</Button>
+      <Button className={`h-14 ${submitDisabled ? 'bg-[#b9aaa7]' : 'bg-[#961813]'}`} onPress={submitDisabled ? undefined : onSubmit}>{submitLabel}</Button>
       <Text className="mt-1 text-center text-sm text-[#59413d]">{note}</Text>
     </View>
   );
