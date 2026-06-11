@@ -139,6 +139,16 @@ export async function countByStatus(): Promise<Record<OrderHistoryStatus | 'all'
   };
 }
 
+export async function getTodayStats(): Promise<{ count: number; totalIncome: number }> {
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const items = getStore().filter((item) => item.completedAt >= startOfDay && item.status === 'completed');
+  return {
+    count: items.length,
+    totalIncome: items.reduce((sum, item) => sum + item.income, 0),
+  };
+}
+
 export async function addOrderHistory(item: OrderHistoryItem): Promise<void> {
   const store = getStore();
   const existing = store.findIndex((entry) => entry.id === item.id);

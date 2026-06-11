@@ -6,7 +6,7 @@ import { OrderHistoryCard } from '../../src/components/business/HistoryItem';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { countByStatus, getOrderHistory, subscribeOrderHistory } from '../../src/services/order';
+import { countByStatus, getOrderHistory, getTodayStats, subscribeOrderHistory } from '../../src/services/order';
 import type { OrderHistoryItem, OrderHistoryStatus } from '../../src/types/order';
 
 type FilterKey = 'all' | OrderHistoryStatus;
@@ -38,11 +38,13 @@ export default function OrderHistoryPage() {
   const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
   const [counts, setCounts] = useState<Record<FilterKey, number>>({ all: 0, completed: 0, cancelled: 0, transferred: 0 });
   const [filter, setFilter] = useState<FilterKey>('all');
+  const [todayStats, setTodayStats] = useState<{ count: number; totalIncome: number }>({ count: 0, totalIncome: 0 });
 
   const load = useCallback(async () => {
-    const [list, c] = await Promise.all([getOrderHistory(), countByStatus()]);
+    const [list, c, stats] = await Promise.all([getOrderHistory(), countByStatus(), getTodayStats()]);
     setOrders(list);
     setCounts(c);
+    setTodayStats(stats);
   }, []);
 
   useFocusEffect(
@@ -119,7 +121,7 @@ export default function OrderHistoryPage() {
       <View className="absolute bottom-0 left-0 right-0 border-t border-[#e1bfba] bg-[#fde2df] px-4 py-4 shadow-sm">
         <View className="mx-auto flex-row w-full max-w-md items-center justify-between">
           <Text className="font-bold text-[#261816]">{t('history.todayOrders')}</Text>
-          <Text className="text-xl font-bold text-[#720003]">{t('history.todayAmount')}</Text>
+          <Text className="text-xl font-bold text-[#720003]">{todayStats.count} · ${todayStats.totalIncome.toFixed(2)}</Text>
         </View>
       </View>
     </View>
