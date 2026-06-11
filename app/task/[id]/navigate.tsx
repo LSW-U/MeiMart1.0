@@ -1,5 +1,5 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '../../../src/components/feedback/EmptyState';
@@ -16,12 +16,24 @@ export default function TaskNavigatePage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
-  const [accepted, setAccepted] = useState(false);
   const [task, setTask] = useState<DeliveryTask | null>(null);
 
-  useEffect(() => {
-    void getTaskById(id).then(setTask);
-  }, [id]);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      void getTaskById(id).then((next) => {
+        if (!active) return;
+        if (next && next.status !== 'delivering') {
+          router.replace(`/task/${id}`);
+          return;
+        }
+        setTask(next);
+      });
+      return () => {
+        active = false;
+      };
+    }, [id, router]),
+  );
 
   return (
     <View className="flex-1 bg-[#fff8f7]">
@@ -117,13 +129,9 @@ export default function TaskNavigatePage() {
       </ScrollView>
 
       <View className="absolute bottom-0 left-0 right-0 bg-[#fff8f7] p-5 shadow-lg">
-        <Button
-          className={accepted ? 'bg-[#463200]' : 'bg-[#720003]'}
-          onPress={() => (accepted ? router.push(`/task/${id}/sign`) : setAccepted(true))}
-        >
-          {accepted ? t('tasks.arrivedDelivery') : t('flow.acceptOrder')}
+        <Button className="bg-[#463200]" onPress={() => router.push(`/task/${id}/sign`)}>
+          {t('tasks.arrivedDelivery')}
         </Button>
-        {accepted ? <Text className="mt-3 text-center text-sm font-bold text-[#261816]">{t('flow.routeAdded')}</Text> : null}
       </View>
     </View>
   );
