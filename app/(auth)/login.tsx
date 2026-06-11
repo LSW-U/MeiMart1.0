@@ -26,6 +26,7 @@ export default function LoginPage() {
   const [phoneInvalidVisible, setPhoneInvalidVisible] = useState(false);
   const [codeSentVisible, setCodeSentVisible] = useState(false);
   const [codeSentPhone, setCodeSentPhone] = useState('');
+  const [featureInProgressVisible, setFeatureInProgressVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isPassword = mode === 'password';
@@ -154,7 +155,7 @@ export default function LoginPage() {
             </View>
           </View>
 
-          <Pressable className="items-end">
+          <Pressable className="items-end" onPress={() => setFeatureInProgressVisible(true)}>
             <Text className="text-[11px] font-bold text-[#720003]">{t('auth.login.forgotPassword')}</Text>
           </Pressable>
 
@@ -205,6 +206,14 @@ export default function LoginPage() {
         visible={codeSentVisible}
         onCancel={() => setCodeSentVisible(false)}
         onOk={() => setCodeSentVisible(false)}
+      />
+      <ConfirmDialog
+        message={t('auth.login.featureInProgress.message')}
+        okLabel={t('auth.login.featureInProgress.ok')}
+        title={t('auth.login.featureInProgress.title')}
+        visible={featureInProgressVisible}
+        onCancel={() => setFeatureInProgressVisible(false)}
+        onOk={() => setFeatureInProgressVisible(false)}
       />
     </ScrollView>
   );
