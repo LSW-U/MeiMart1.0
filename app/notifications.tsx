@@ -104,10 +104,14 @@ export default function NotificationsPage() {
           return (
             <Pressable
               key={key}
-              className={`rounded-full px-4 py-2 ${active ? 'bg-[#720003]' : 'bg-white border border-[#e1bfba]'}`}
+              className={`min-w-[60px] flex-row items-center justify-center rounded-full border px-4 py-1.5 ${
+                active ? 'border-[#720003] bg-[#720003]' : 'border-[#e1bfba] bg-white'
+              }`}
               onPress={() => setFilter(key)}
             >
-              <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-[#59413d]'}`}>{t(labelKey)}</Text>
+              <Text className={`text-center text-xs font-bold ${active ? 'text-white' : 'text-[#59413d]'}`}>
+                {t(labelKey)}
+              </Text>
             </Pressable>
           );
         })}
