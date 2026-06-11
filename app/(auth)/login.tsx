@@ -127,27 +127,27 @@ export default function LoginPage() {
               {isPassword ? t('auth.login.passwordLabel') : t('auth.login.smsLabel')}
             </Text>
             {isPassword ? (
-              <View className="min-h-12 flex-row items-center rounded-lg border border-[#8d706c] bg-[#fff0ee]">
+              <View className="min-h-14 flex-row items-center rounded-lg border border-[#e1bfba] bg-white">
                 <View className="pl-5 pr-4">
                   <AppIcon color="#8d706c" name="lock" size={24} />
                 </View>
                 <TextInput
-                  className="flex-1 px-2 py-2.5 text-base text-[#261816]"
+                  className="flex-1 px-2 py-3 text-base text-[#261816]"
                   placeholder={t('auth.login.passwordPlaceholder')}
                   placeholderTextColor="#8d706c"
                   secureTextEntry={!passwordVisible}
                   value={password}
                   onChangeText={setPassword}
                 />
-                <Pressable className="mr-2 pl-3 pr-5 py-2.5" onPress={() => setPasswordVisible((value) => !value)}>
+                <Pressable className="mr-2 pl-3 pr-5 py-3" onPress={() => setPasswordVisible((value) => !value)}>
                   <AppIcon color="#8d706c" name={passwordVisible ? 'eye' : 'eyeOff'} size={24} />
                 </Pressable>
               </View>
             ) : (
-              <View className="flex-row items-center gap-3">
-                <View className="min-h-12 flex-1 flex-row items-center rounded-lg border border-[#8d706c] bg-[#fff0ee]">
+              <View className="w-full flex-row items-center gap-3">
+                <View className="min-h-14 flex-1 flex-row items-center rounded-lg border border-[#e1bfba] bg-white">
                   <TextInput
-                    className="flex-1 pl-5 pr-3 py-2.5 text-base text-[#261816]"
+                    className="flex-1 pl-5 pr-3 py-3 text-base text-[#261816]"
                     keyboardType="number-pad"
                     placeholder={t('auth.login.smsPlaceholder')}
                     placeholderTextColor="#8d706c"
@@ -156,7 +156,7 @@ export default function LoginPage() {
                   />
                 </View>
                 <Pressable
-                  className={`rounded-full px-6 py-3.5 ${countdown > 0 ? 'bg-[#e1bfba]' : 'bg-[#720003]'}`}
+                  className={`rounded-full px-6 py-4 ${countdown > 0 ? 'bg-[#e1bfba]' : 'bg-[#720003]'}`}
                   disabled={countdown > 0}
                   onPress={() => void handleSendCode()}
                 >
