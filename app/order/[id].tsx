@@ -3,9 +3,9 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '../../src/components/feedback/EmptyState';
+import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { getOrderById } from '../../src/services/order';
-import { isRiderSessionActive } from '../../src/services/user';
 import type { OrderHistoryItem } from '../../src/types/order';
 
 const statusToneMap: Record<OrderHistoryItem['status'], 'history.status.completed' | 'history.status.cancelled' | 'history.status.transferred'> = {
@@ -48,14 +48,7 @@ export default function OrderDetailPage() {
     }, [id]),
   );
 
-  const goBack = useCallback(async () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    const isActive = await isRiderSessionActive();
-    router.replace(isActive ? '/order/history' : '/(auth)/login');
-  }, [router]);
+  const goBack = useGoBack('/order/history');
 
   const renderBody = () => {
     if (order === undefined) {

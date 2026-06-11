@@ -4,6 +4,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '../src/components/ui';
 import { EmptyState } from '../src/components/feedback/EmptyState';
+import { useGoBack } from '../src/hooks/useGoBack';
 import { useTranslation } from '../src/i18n/useTranslation';
 import {
   getNotifications,
@@ -11,7 +12,6 @@ import {
   markAsRead,
   subscribeNotifications,
 } from '../src/services/notification';
-import { isRiderSessionActive } from '../src/services/user';
 import type { NotificationCategory, NotificationItem } from '../src/types/notification';
 
 type FilterKey = 'all' | NotificationCategory;
@@ -44,14 +44,7 @@ export default function NotificationsPage() {
     });
   }, []);
 
-  const goBack = useCallback(async () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    const active = await isRiderSessionActive();
-    router.replace(active ? '/(main)/tasks' : '/(auth)/login');
-  }, [router]);
+  const goBack = useGoBack('/(main)/tasks');
 
   const visibleItems = useMemo(() => {
     if (filter === 'all') return items;

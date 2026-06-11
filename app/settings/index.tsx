@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { AppIcon } from '../../src/components/ui';
+import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { getLanguageOptions, getRiderSettings, setCurrentLanguage, subscribeRiderSettings, updateRiderSettings, type AppLanguage } from '../../src/services/settings';
 
@@ -65,20 +66,14 @@ export default function SettingsPage() {
     await updateRiderSettings({ notificationsEnabled: value });
   };
 
-  const goBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(main)/profile');
-    }
-  };
+  const goBack = useGoBack('/(main)/profile');
 
   const languageDescription = `${languageLabels[language] ?? languageLabels[languages[0]]} ${t('settings.language.activeSuffix')} ${t('settings.language.cycleHint')}`;
 
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <View className="flex-row items-center border-b border-[#f7ddd9] bg-[#fff8f7] px-5 py-4">
-        <Pressable className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={goBack}>
+        <Pressable className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => void goBack()}>
           <Text className="text-2xl text-[#261816]">‹</Text>
         </Pressable>
         <Text className="ml-2 text-xl font-semibold text-[#261816]">{t('settings.title')}</Text>

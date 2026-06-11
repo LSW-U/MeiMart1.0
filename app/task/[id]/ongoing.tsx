@@ -6,6 +6,7 @@ import { TaskCard } from '../../../src/components/business/TaskCard';
 import { TaskDetailHeader } from '../../../src/components/business/TaskDetailHeader';
 import { EmptyState } from '../../../src/components/feedback/EmptyState';
 import { AppIcon } from '../../../src/components/ui';
+import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { getTaskById } from '../../../src/services/task';
 import type { DeliveryTask } from '../../../src/types/task';
@@ -16,6 +17,7 @@ export default function TaskOngoingPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const goBack = useGoBack('/(main)/tasks');
   const [task, setTask] = useState<DeliveryTask | null>(null);
 
   useEffect(() => {
@@ -31,8 +33,8 @@ export default function TaskOngoingPage() {
         dutyStatusLabel={t('duty.onDuty')}
         newTasksLabel={t('tasks.tabs.new')}
         pickupsLabel={t('tasks.tabs.pickups0')}
-        onDutyPress={() => router.replace('/(main)/tasks')}
-        onMenuPress={() => (router.canGoBack() ? router.back() : router.replace('/(main)/tasks'))}
+        onDutyPress={() => void goBack()}
+        onMenuPress={() => void goBack()}
       />
       <ScrollView className="flex-1" contentContainerClassName="bg-white px-5 py-8 pb-28">
         {task ? (
