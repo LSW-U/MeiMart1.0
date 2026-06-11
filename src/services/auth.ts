@@ -14,10 +14,10 @@ export async function logout() {
   return undefined;
 }
 
-const phoneRegex = /^(\+670\s?)?[2-9]\d{6,7}$/;
+const phoneRegex = /^(\+670)?[2-9]\d{6,7}$/;
 
 export function isValidPhone(phone: string): boolean {
-  return phoneRegex.test(phone.trim());
+  return phoneRegex.test(phone.replace(/[\s-]/g, ''));
 }
 
 export async function sendSmsCode(phone: string): Promise<void> {
