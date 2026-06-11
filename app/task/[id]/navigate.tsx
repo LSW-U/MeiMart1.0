@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { EmptyState } from '../../../src/components/feedback/EmptyState';
 import { MapView } from '../../../src/components/map/MapView';
 import { Button } from '../../../src/components/ui';
+import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { getTaskById } from '../../../src/services/task';
 import type { DeliveryTask } from '../../../src/types/task';
@@ -16,6 +17,7 @@ export default function TaskNavigatePage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const goBack = useGoBack('/(main)/tasks');
   const [task, setTask] = useState<DeliveryTask | null>(null);
 
   useFocusEffect(
@@ -39,7 +41,7 @@ export default function TaskNavigatePage() {
     <View className="flex-1 bg-[#fff8f7]">
       <View className="h-16 flex-row items-center justify-between bg-[#ffe9e6] px-5">
         <View className="flex-row items-center gap-4">
-          <Pressable className="h-10 w-10 items-center justify-center rounded-full" onPress={() => router.back()}>
+          <Pressable className="h-10 w-10 items-center justify-center rounded-full" onPress={() => void goBack()}>
             <Text className="text-2xl text-[#720003]">‹</Text>
           </Pressable>
           <Text className="text-xl font-bold text-[#720003]">{t('flow.orderDetails')}</Text>

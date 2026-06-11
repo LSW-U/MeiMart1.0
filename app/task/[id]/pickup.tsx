@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { PhotoCapture } from '../../../src/components/camera/PhotoCapture';
 import { SwipeButton } from '../../../src/components/ui';
+import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { confirmPickup } from '../../../src/services/delivery';
 
@@ -11,6 +12,7 @@ export default function PickupConfirmPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const goBack = useGoBack('/(main)/tasks');
   const [captured, setCaptured] = useState(false);
   const [processing, setProcessing] = useState(false);
 
@@ -25,11 +27,11 @@ export default function PickupConfirmPage() {
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <View className="h-16 flex-row items-center justify-between bg-[#fff8f7] px-5">
-        <Pressable className="rounded-full p-2" onPress={() => router.back()}>
+        <Pressable className="rounded-full p-2" onPress={() => void goBack()}>
           <Text className="text-2xl text-[#720003]">‹</Text>
         </Pressable>
         <Text className="text-xl font-bold text-[#720003]">{t('pickup.title')}</Text>
-        <Pressable className="rounded-full p-2">
+        <Pressable className="rounded-full p-2" onPress={() => router.push('/help')}>
           <Text className="text-xl text-[#720003]">?</Text>
         </Pressable>
       </View>

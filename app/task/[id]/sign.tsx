@@ -4,6 +4,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EvidenceExample, EvidenceUpload } from '../../../src/components/camera/SignaturePad';
 import { Button } from '../../../src/components/ui';
+import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { confirmDelivery } from '../../../src/services/delivery';
 
@@ -14,6 +15,7 @@ export default function SignConfirmPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const goBack = useGoBack('/(main)/tasks');
   const [doorCaptured, setDoorCaptured] = useState(false);
   const [packageCaptured, setPackageCaptured] = useState(false);
   const [status, setStatus] = useState<'idle' | 'processing' | 'success'>('idle');
@@ -32,7 +34,7 @@ export default function SignConfirmPage() {
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <View className="h-16 flex-row items-center justify-between bg-[#fff8f7] px-5">
-        <Pressable className="h-10 w-10 items-center justify-center rounded-full" onPress={() => router.back()}>
+        <Pressable className="h-10 w-10 items-center justify-center rounded-full" onPress={() => void goBack()}>
           <Text className="text-2xl text-[#720003]">‹</Text>
         </Pressable>
         <Text className="text-2xl font-bold tracking-tight text-[#720003]">{t('sign.title')}</Text>

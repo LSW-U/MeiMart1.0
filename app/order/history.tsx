@@ -4,6 +4,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { OrderHistoryCard } from '../../src/components/business/HistoryItem';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
+import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { countByStatus, getOrderHistory, subscribeOrderHistory } from '../../src/services/order';
 import type { OrderHistoryItem, OrderHistoryStatus } from '../../src/types/order';
@@ -33,6 +34,7 @@ const formatIncome = (income: number, fallback: string) => (income > 0 ? `$${inc
 export default function OrderHistoryPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const goBack = useGoBack('/(main)/profile');
   const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
   const [counts, setCounts] = useState<Record<FilterKey, number>>({ all: 0, completed: 0, cancelled: 0, transferred: 0 });
   const [filter, setFilter] = useState<FilterKey>('all');
@@ -58,7 +60,7 @@ export default function OrderHistoryPage() {
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <View className="flex-row items-center justify-between border-b border-[#f7ddd9] bg-[#fff8f7] px-4 py-4">
-        <Pressable className="rounded-full p-2" onPress={() => router.back()}>
+        <Pressable className="rounded-full p-2" onPress={() => void goBack()}>
           <Text className="text-2xl text-[#261816]">‹</Text>
         </Pressable>
         <Text className="flex-1 pr-8 text-center text-2xl font-bold tracking-tight text-[#261816]">{t('history.title')}</Text>
