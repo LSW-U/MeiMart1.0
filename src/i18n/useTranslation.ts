@@ -16,6 +16,12 @@ const dictionaries: Record<AppLanguage, typeof en> = {
 };
 
 type TranslationKey = keyof typeof en;
+type TranslationVars = Record<string, string | number>;
+
+const interpolate = (template: string, vars?: TranslationVars) => {
+  if (!vars) return template;
+  return template.replace(/\{(\w+)\}/g, (match, name: string) => (name in vars ? String(vars[name]) : match));
+};
 
 export function useTranslation() {
   const [language, setLanguage] = useState<AppLanguage>('zh');
@@ -25,7 +31,10 @@ export function useTranslation() {
     return subscribeRiderSettings((settings) => setLanguage(settings.language));
   }, []);
 
-  const t = (key: TranslationKey) => dictionaries[language][key] || dictionaries.en[key] || key;
+  const t = (key: TranslationKey, vars?: TranslationVars) => {
+    const template = dictionaries[language][key] || dictionaries.en[key] || key;
+    return interpolate(template, vars);
+  };
 
   return { t, language };
 }

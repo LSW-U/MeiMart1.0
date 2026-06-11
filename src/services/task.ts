@@ -148,6 +148,10 @@ export async function acceptTask(id: string): Promise<DeliveryTask> {
   return updateTaskStatus(id, 'accepted');
 }
 
+export async function hasActiveTasks(): Promise<boolean> {
+  return getTasks().some((task) => task.status === 'accepted' || task.status === 'pickingUp' || task.status === 'delivering');
+}
+
 export async function updateTaskStatus(id: string, status: TaskStatus): Promise<DeliveryTask> {
   const task = findTask(id);
 

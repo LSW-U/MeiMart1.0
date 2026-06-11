@@ -4,7 +4,7 @@ import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { AppIcon } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { getLanguageOptions, getRiderSettings, setCurrentLanguage, updateRiderSettings, type AppLanguage } from '../../src/services/settings';
+import { getLanguageOptions, getRiderSettings, setCurrentLanguage, subscribeRiderSettings, updateRiderSettings, type AppLanguage } from '../../src/services/settings';
 
 type SettingsItemProps = {
   icon: 'language' | 'bell' | 'shield' | 'profile' | 'help';
@@ -39,7 +39,7 @@ function SettingsItem({ icon, title, description, onPress, trailing = 'chevron',
 export default function SettingsPage() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [language, setLanguage] = useState<AppLanguage>('en');
+  const [language, setLanguage] = useState<AppLanguage>('zh');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   useEffect(() => {
@@ -47,10 +47,15 @@ export default function SettingsPage() {
       setLanguage(settings.language);
       setNotificationsEnabled(settings.notificationsEnabled);
     });
+    return subscribeRiderSettings((settings) => {
+      setLanguage(settings.language);
+      setNotificationsEnabled(settings.notificationsEnabled);
+    });
   }, []);
 
   const rotateLanguage = async () => {
-    const nextLanguage = languages[(languages.indexOf(language) + 1) % languages.length];
+    const index = languages.indexOf(language);
+    const nextLanguage = languages[(index + 1 + languages.length) % languages.length] ?? languages[0];
     setLanguage(nextLanguage);
     await setCurrentLanguage(nextLanguage);
   };
@@ -68,6 +73,8 @@ export default function SettingsPage() {
     }
   };
 
+  const languageDescription = `${languageLabels[language] ?? languageLabels[languages[0]]} ${t('settings.language.activeSuffix')} ${t('settings.language.cycleHint')}`;
+
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <View className="flex-row items-center border-b border-[#f7ddd9] bg-[#fff8f7] px-5 py-4">
@@ -78,20 +85,20 @@ export default function SettingsPage() {
       </View>
       <ScrollView contentContainerClassName="gap-5 px-5 py-6 pb-12">
         <View className="rounded-3xl bg-[#720003] p-5 shadow-sm">
-          <Text className="text-sm font-bold uppercase tracking-wider text-white/70">Rider Controls</Text>
-          <Text className="mt-2 text-2xl font-bold text-white">Keep your account ready for duty</Text>
-          <Text className="mt-2 text-sm leading-6 text-white/80">Notification, language, safety, and profile controls are grouped here for acceptance testing.</Text>
+          <Text className="text-sm font-bold uppercase tracking-wider text-white/70">{t('settings.hero.eyebrow')}</Text>
+          <Text className="mt-2 text-2xl font-bold text-white">{t('settings.hero.title')}</Text>
+          <Text className="mt-2 text-sm leading-6 text-white/80">{t('settings.hero.description')}</Text>
         </View>
         <View className="overflow-hidden rounded-3xl border border-[#ffe9e6] bg-white shadow-sm">
-          <SettingsItem description={`${languageLabels[language]} active. Tap to cycle language preference.`} icon="language" title="Language" onPress={() => void rotateLanguage()} />
+          <SettingsItem description={languageDescription} icon="language" title={t('settings.language.title')} onPress={() => void rotateLanguage()} />
           <View className="mx-5 h-px bg-[#e1bfba]/40" />
-          <SettingsItem description={notificationsEnabled ? 'Receive new task, pickup timeout, and wallet updates.' : 'Task, timeout, and wallet notifications are paused.'} icon="bell" switchValue={notificationsEnabled} title="Notifications" trailing="switch" onSwitchChange={(value) => void toggleNotifications(value)} />
+          <SettingsItem description={notificationsEnabled ? t('settings.notifications.descriptionOn') : t('settings.notifications.descriptionOff')} icon="bell" switchValue={notificationsEnabled} title={t('settings.notifications.title')} trailing="switch" onSwitchChange={(value) => void toggleNotifications(value)} />
           <View className="mx-5 h-px bg-[#e1bfba]/40" />
-          <SettingsItem description="Review phone number, identity document, and vehicle verification." icon="shield" title="Account & Safety" onPress={() => router.push('/profile/edit')} />
+          <SettingsItem description={t('settings.accountSafety.description')} icon="shield" title={t('settings.accountSafety.title')} onPress={() => router.push('/profile/edit')} />
           <View className="mx-5 h-px bg-[#e1bfba]/40" />
-          <SettingsItem description="Edit rider profile and vehicle details." icon="profile" title="Rider Profile" onPress={() => router.push('/profile/edit')} />
+          <SettingsItem description={t('settings.riderProfile.description')} icon="profile" title={t('settings.riderProfile.title')} onPress={() => router.push('/profile/edit')} />
           <View className="mx-5 h-px bg-[#e1bfba]/40" />
-          <SettingsItem description="Open workflow FAQs and support hotline." icon="help" title="Help Center" onPress={() => router.push('/help')} />
+          <SettingsItem description={t('settings.helpCenter.description')} icon="help" title={t('settings.helpCenter.title')} onPress={() => router.push('/help')} />
         </View>
       </ScrollView>
     </View>

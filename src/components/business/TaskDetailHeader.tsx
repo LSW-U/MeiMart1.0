@@ -1,22 +1,29 @@
 import { Pressable, Text, View } from 'react-native';
 
+import type { DutyStatus } from '../../services/settings';
 import { AppIcon } from '../ui';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
 
 type TaskDetailHeaderProps = {
   activeTab: TaskTab;
-  onDutyLabel: string;
+  dutyStatus: DutyStatus;
+  dutyStatusLabel: string;
   newTasksLabel: string;
   pickupsLabel: string;
   deliveriesLabel: string;
-  online?: boolean;
-  onDutyToggle?: () => void;
+  onDutyPress?: () => void;
   onMenuPress?: () => void;
   onTabChange?: (tab: TaskTab) => void;
 };
 
-export function TaskDetailHeader({ activeTab, onDutyLabel, newTasksLabel, pickupsLabel, deliveriesLabel, online = true, onDutyToggle, onMenuPress, onTabChange }: TaskDetailHeaderProps) {
+const dotColor: Record<DutyStatus, string> = {
+  onDuty: 'bg-green-500',
+  busy: 'bg-orange-500',
+  offDuty: 'bg-[#b9aaa7]',
+};
+
+export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTasksLabel, pickupsLabel, deliveriesLabel, onDutyPress, onMenuPress, onTabChange }: TaskDetailHeaderProps) {
   const tabs = [
     { key: 'new', label: newTasksLabel },
     { key: 'pickups', label: pickupsLabel },
@@ -29,10 +36,10 @@ export function TaskDetailHeader({ activeTab, onDutyLabel, newTasksLabel, pickup
         <Pressable className="rounded-full p-1" onPress={onMenuPress}>
           <AppIcon name="menu" className="text-2xl text-[#59413d]" />
         </Pressable>
-        <Pressable className="flex-row items-center gap-2 rounded-full border border-[#961813] bg-[#fff8f7] px-4 py-1" onPress={onDutyToggle}>
-          <View className={`h-2 w-2 rounded-full ${online ? 'bg-green-500' : 'bg-[#b9aaa7]'}`} />
-          <Text className="text-xl font-bold text-[#261816]">{onDutyLabel}</Text>
-          <Text className="text-[#59413d]">v</Text>
+        <Pressable className="flex-row items-center gap-2 rounded-full border border-[#961813] bg-[#fff8f7] px-4 py-1" onPress={onDutyPress}>
+          <View className={`h-2 w-2 rounded-full ${dotColor[dutyStatus]}`} />
+          <Text className="text-xl font-bold text-[#261816]">{dutyStatusLabel}</Text>
+          <AppIcon name="chevronDown" color="#59413d" size={18} />
         </Pressable>
         <Pressable className="rounded-full p-1">
           <AppIcon name="notification" className="text-2xl text-[#59413d]" />

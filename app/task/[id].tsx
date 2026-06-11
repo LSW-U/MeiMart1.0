@@ -28,8 +28,9 @@ export default function TaskDetailPage() {
       <TaskDetailHeader
         activeTab="pickups"
         deliveriesLabel={t('tasks.tabs.deliveries0')}
+        dutyStatus="onDuty"
+        dutyStatusLabel={t('duty.onDuty')}
         newTasksLabel={t('tasks.tabs.new')}
-        onDutyLabel={t('tasks.status.onDuty')}
         pickupsLabel={task ? t('tasks.tabs.pickups1') : t('tasks.tabs.pickups0')}
       />
       <ScrollView className="flex-1" contentContainerClassName="px-3 py-6 pb-28">

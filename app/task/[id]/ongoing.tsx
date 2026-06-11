@@ -27,8 +27,9 @@ export default function TaskOngoingPage() {
       <TaskDetailHeader
         activeTab="deliveries"
         deliveriesLabel={task ? t('tasks.tabs.deliveries1') : t('tasks.tabs.deliveries0')}
+        dutyStatus="onDuty"
+        dutyStatusLabel={t('duty.onDuty')}
         newTasksLabel={t('tasks.tabs.new')}
-        onDutyLabel={t('tasks.status.onDuty')}
         pickupsLabel={t('tasks.tabs.pickups0')}
       />
       <ScrollView className="flex-1" contentContainerClassName="bg-white px-5 py-8 pb-28">

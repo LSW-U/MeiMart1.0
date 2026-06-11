@@ -1,13 +1,23 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DutyStatusMenu } from '../../src/components/business/DutyStatusMenu';
 import { TaskCard } from '../../src/components/business/TaskCard';
 import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader';
+import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { AppIcon } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { acceptTask, getTaskLists } from '../../src/services/task';
+import {
+  dutyStatusOptions,
+  getRiderSettings,
+  setDutyStatus,
+  subscribeRiderSettings,
+  type DutyStatus,
+} from '../../src/services/settings';
+import { acceptTask, getTaskLists, hasActiveTasks } from '../../src/services/task';
 import type { DeliveryTask } from '../../src/types/task';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
@@ -24,6 +34,12 @@ const emptyTaskLists: TaskLists = {
   deliveries: [],
 };
 
+const dutyLabelKey: Record<DutyStatus, 'duty.onDuty' | 'duty.offDuty' | 'duty.busy'> = {
+  onDuty: 'duty.onDuty',
+  offDuty: 'duty.offDuty',
+  busy: 'duty.busy',
+};
+
 const formatFee = (fee: number) => `¥${fee % 1 === 0 ? fee.toFixed(0) : fee.toFixed(1)}`;
 const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)}km`;
 const formatItems = (items: string[]) => `Items: ${items.join(' · ')}`;
@@ -31,16 +47,27 @@ const formatItems = (items: string[]) => `Items: ${items.join(' · ')}`;
 export default function TasksPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TaskTab>('new');
-  const [online, setOnline] = useState(true);
+  const [dutyStatus, setLocalDutyStatus] = useState<DutyStatus>('onDuty');
   const [taskLists, setTaskLists] = useState<TaskLists>(emptyTaskLists);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [pending, setPending] = useState<DutyStatus | null>(null);
+  const [blockVisible, setBlockVisible] = useState(false);
+  const [activeTasksExist, setActiveTasksExist] = useState(false);
+
+  const online = dutyStatus !== 'offDuty';
 
   const loadTasks = async () => {
-    setTaskLists(await getTaskLists());
+    const next = await getTaskLists();
+    setTaskLists(next);
+    setActiveTasksExist(next.pickups.length + next.deliveries.length > 0);
   };
 
   useEffect(() => {
     void loadTasks();
+    void getRiderSettings().then((settings) => setLocalDutyStatus(settings.dutyStatus));
+    return subscribeRiderSettings((settings) => setLocalDutyStatus(settings.dutyStatus));
   }, []);
 
   const acceptAndOpenTask = async (task: DeliveryTask) => {
@@ -48,6 +75,40 @@ export default function TasksPage() {
     await loadTasks();
     router.push(`/task/${task.id}`);
   };
+
+  const openMenu = () => setMenuVisible(true);
+
+  const handlePick = async (next: DutyStatus) => {
+    if (next === dutyStatus) {
+      setMenuVisible(false);
+      return;
+    }
+    if (next === 'offDuty' && (dutyStatus === 'onDuty' || dutyStatus === 'busy')) {
+      if (await hasActiveTasks()) {
+        setMenuVisible(false);
+        setBlockVisible(true);
+        return;
+      }
+    }
+    setMenuVisible(false);
+    setPending(next);
+  };
+
+  const confirmPending = async () => {
+    if (!pending) return;
+    await setDutyStatus(pending);
+    setPending(null);
+  };
+
+  const menuOptions = useMemo(
+    () =>
+      dutyStatusOptions.map((value) => ({
+        value,
+        label: t(dutyLabelKey[value]),
+        disabled: value === 'offDuty' && dutyStatus !== 'offDuty' && activeTasksExist,
+      })),
+    [activeTasksExist, dutyStatus, t],
+  );
 
   const renderNewTask = (task: DeliveryTask, index: number) => (
     <TaskCard
@@ -122,32 +183,63 @@ export default function TasksPage() {
     return taskLists.deliveries.length ? taskLists.deliveries.map(renderDeliveryTask) : <EmptyState title="No deliveries" description="Picked-up orders will appear here until completion." />;
   };
 
+  const bottomPadding = Math.max(insets.bottom, 12);
+
   return (
     <View className="flex-1 bg-white">
       <TaskDetailHeader
         activeTab={activeTab}
         deliveriesLabel={taskLists.deliveries.length ? t('tasks.tabs.deliveries1') : t('tasks.tabs.deliveries0')}
+        dutyStatus={dutyStatus}
+        dutyStatusLabel={t(dutyLabelKey[dutyStatus])}
         newTasksLabel={t('tasks.tabs.new')}
-        online={online}
-        onDutyLabel={t('tasks.status.onDuty')}
         pickupsLabel={taskLists.pickups.length ? t('tasks.tabs.pickups1') : t('tasks.tabs.pickups0')}
-        onDutyToggle={() => setOnline((value) => !value)}
+        onDutyPress={openMenu}
         onMenuPress={() => router.push('/(main)/profile')}
         onTabChange={setActiveTab}
       />
-      <ScrollView className="flex-1" contentContainerClassName="gap-6 px-3 py-6 pb-32">
+      <ScrollView className="flex-1" contentContainerClassName="gap-6 px-3 py-6">
         {renderContent()}
       </ScrollView>
-      <View className="absolute inset-x-0 bottom-0 flex-row items-center gap-4 border-t border-[#f7ddd9] bg-[#fff8f7] px-3 pb-6 pt-3">
-        <Pressable className="items-center px-2" onPress={() => router.push('/settings')}>
+      <View
+        className="flex-row items-center gap-3 border-t border-[#f7ddd9] bg-[#fff8f7] px-4 pt-3 shadow-sm"
+        style={{ paddingBottom: bottomPadding }}
+      >
+        <Pressable className="items-center px-3 py-1" onPress={() => router.push('/settings')}>
           <AppIcon name="settings" className="text-2xl text-[#59413d]" />
-          <Text className="mt-1 text-[10px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
+          <Text className="mt-1 text-[11px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
         </Pressable>
-        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-4 shadow-sm" onPress={() => void loadTasks()}>
+        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-3 shadow-sm" onPress={() => void loadTasks()}>
           <AppIcon name="refresh" className="text-xl text-[#961813]" />
           <Text className="text-base font-bold text-[#961813]">{t('tasks.refresh')}</Text>
         </Pressable>
       </View>
+      <DutyStatusMenu
+        cancelLabel={t('duty.menu.cancel')}
+        current={dutyStatus}
+        options={menuOptions}
+        title={t('duty.menu.title')}
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        onPick={(next) => void handlePick(next)}
+      />
+      <ConfirmDialog
+        cancelLabel={t('duty.confirm.cancel')}
+        message={pending ? t('duty.confirm.message', { from: t(dutyLabelKey[dutyStatus]), to: t(dutyLabelKey[pending]) }) : ''}
+        okLabel={t('duty.confirm.ok')}
+        title={t('duty.confirm.title')}
+        visible={pending !== null}
+        onCancel={() => setPending(null)}
+        onOk={() => void confirmPending()}
+      />
+      <ConfirmDialog
+        message={t('duty.block.activeTasks')}
+        okLabel={t('duty.block.ok')}
+        title={t('duty.block.title')}
+        visible={blockVisible}
+        onCancel={() => setBlockVisible(false)}
+        onOk={() => setBlockVisible(false)}
+      />
     </View>
   );
 }
