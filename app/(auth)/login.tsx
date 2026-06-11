@@ -127,7 +127,7 @@ export default function LoginPage() {
               {isPassword ? t('auth.login.passwordLabel') : t('auth.login.smsLabel')}
             </Text>
             <View className="min-h-14 flex-row items-center rounded-lg border border-[#8d706c] bg-[#fff0ee]">
-              <View className="pl-4 pr-2">
+              <View className="pl-4 pr-3">
                 <AppIcon color="#8d706c" name={isPassword ? 'lock' : 'sms'} size={20} />
               </View>
               <TextInput
@@ -140,12 +140,12 @@ export default function LoginPage() {
                 onChangeText={isPassword ? setPassword : setCode}
               />
               {isPassword ? (
-                <Pressable className="px-4 py-3" onPress={() => setPasswordVisible((value) => !value)}>
+                <Pressable className="mr-1 pl-2 pr-4 py-3" onPress={() => setPasswordVisible((value) => !value)}>
                   <AppIcon color="#8d706c" name={passwordVisible ? 'eye' : 'eyeOff'} size={20} />
                 </Pressable>
               ) : (
                 <Pressable
-                  className={`mr-2 rounded-full px-3 py-2 ${countdown > 0 ? 'bg-[#e1bfba]' : 'bg-[#720003]'}`}
+                  className={`mr-3 rounded-full px-4 py-2.5 ${countdown > 0 ? 'bg-[#e1bfba]' : 'bg-[#720003]'}`}
                   disabled={countdown > 0}
                   onPress={() => void handleSendCode()}
                 >
