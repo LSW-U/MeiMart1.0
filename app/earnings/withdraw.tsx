@@ -1,34 +1,51 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { WithdrawForm } from '../../src/components/business/WithdrawForm';
+import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { createWithdrawal } from '../../src/services/earnings';
+import { createWithdrawal, getEarningSummary, subscribeEarningSummary } from '../../src/services/earnings';
+import type { EarningSummary } from '../../src/types/earnings';
 
 export default function WithdrawalPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const goBack = useGoBack('/(main)/earnings');
   const [method, setMethod] = useState<'bank' | 'cash'>('bank');
   const [amount, setAmount] = useState('');
-  const [status, setStatus] = useState<'idle' | 'processing' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [summary, setSummary] = useState<EarningSummary | null>(null);
+
+  useEffect(() => {
+    void getEarningSummary().then(setSummary);
+    return subscribeEarningSummary(setSummary);
+  }, []);
 
   const parsedAmount = Number.parseFloat(amount);
   const amountValid = Number.isFinite(parsedAmount) && parsedAmount > 0;
+  const exceedsBalance = summary !== null && parsedAmount > summary.availableBalance;
   const submitLabel = status === 'processing' ? t('withdraw.processing') : status === 'success' ? t('withdraw.success') : t('withdraw.submit');
-  const submitDisabled = status !== 'idle' || !amountValid;
+  const submitDisabled = status !== 'idle' || !amountValid || exceedsBalance;
 
   const submit = async () => {
     if (!amountValid) return;
     setStatus('processing');
-    await createWithdrawal(parsedAmount, method);
-    setStatus('success');
+    setErrorMsg('');
+    try {
+      await createWithdrawal(parsedAmount, method);
+      setStatus('success');
+    } catch (e) {
+      setStatus('error');
+      setErrorMsg(e instanceof Error ? e.message : 'Withdrawal failed');
+    }
   };
 
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <View className="flex-row items-center border-b border-[#f7ddd9] bg-[#fff8f7] px-5 py-4">
-        <Pressable className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => router.back()}>
+        <Pressable className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => void goBack()}>
           <Text className="text-2xl text-[#261816]">‹</Text>
         </Pressable>
         <Text className="ml-2 text-xl font-semibold text-[#261816]">{t('withdraw.title')}</Text>
@@ -37,8 +54,17 @@ export default function WithdrawalPage() {
       <ScrollView className="flex-1" contentContainerClassName="mx-auto w-full max-w-lg gap-6 px-5 py-6">
         <View className="items-center justify-center rounded-xl border border-[#fde2df] bg-[#ffe9e6] p-6 shadow-sm">
           <Text className="mb-1 text-sm text-[#59413d]">{t('withdraw.availableBalance')}</Text>
-          <Text className="text-[32px] font-bold tracking-tight text-[#261816]">{t('withdraw.availableAmount')}</Text>
+          <Text className="text-[32px] font-bold tracking-tight text-[#261816]">
+            {summary ? `$${summary.availableBalance.toFixed(2)}` : '—'}
+          </Text>
         </View>
+
+        {exceedsBalance ? (
+          <Text className="text-center text-sm text-[#a3322a]">{t('withdraw.exceedsBalance')}</Text>
+        ) : null}
+        {status === 'error' ? (
+          <Text className="text-center text-sm text-[#a3322a]">{errorMsg}</Text>
+        ) : null}
 
         <WithdrawForm
           amount={amount}
