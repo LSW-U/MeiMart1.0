@@ -1,7 +1,7 @@
 import type { NotificationItem } from '../types/notification';
 import { getRiderSettings } from './settings';
 
-const storageKey = 'mei-delivery-app:notifications';
+const storageKey = 'mei-delivery-app:notifications:v2';
 
 const minute = 60 * 1000;
 const hour = 60 * minute;
@@ -36,6 +36,7 @@ const seedNotifications = (): NotificationItem[] => {
       vars: { amount: '$24.50' },
       createdAt: now - 1 * day,
       read: true,
+      link: '/(main)/earnings',
     },
     {
       id: 'seed-order-1',
@@ -45,6 +46,7 @@ const seedNotifications = (): NotificationItem[] => {
       vars: { orderId: 'JD-202588' },
       createdAt: now - 2 * day,
       read: true,
+      link: '/order/10239485',
     },
   ];
 };

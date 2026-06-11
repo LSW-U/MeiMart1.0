@@ -21,5 +21,6 @@ export async function createWithdrawal(amount: number, _method: WithdrawalReques
     titleKey: 'notification.template.walletWithdrawSuccess.title',
     messageKey: 'notification.template.walletWithdrawSuccess.message',
     vars: { amount: `$${amount.toFixed(2)}` },
+    link: '/(main)/earnings',
   });
 }
