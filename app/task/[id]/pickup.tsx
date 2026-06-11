@@ -47,7 +47,13 @@ export default function PickupConfirmPage() {
           fileName={t('pickup.fileName')}
           instruction={t('pickup.ensureVisible')}
           readyLabel={t('pickup.ready')}
+          retakeConfirmCancel={t('pickup.retakeCancel')}
+          retakeConfirmMessage={t('pickup.retakeMessage')}
+          retakeConfirmOk={t('pickup.retakeOk')}
+          retakeConfirmTitle={t('pickup.retakeTitle')}
+          retakeLabel={t('pickup.retake')}
           onCapture={() => setCaptured(true)}
+          onRetake={() => setCaptured(false)}
         />
       </View>
 
