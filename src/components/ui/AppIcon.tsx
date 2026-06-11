@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import type { StyleProp, TextStyle } from 'react-native';
 
-type AppIconName = 'menu' | 'notification' | 'settings' | 'refresh' | 'orders' | 'wallet' | 'upload' | 'camera' | 'profile' | 'document' | 'security' | 'bank' | 'rider' | 'help' | 'logout' | 'language' | 'shield' | 'bell' | 'chevronRight' | 'chevronDown' | 'check';
+type AppIconName = 'menu' | 'notification' | 'settings' | 'refresh' | 'orders' | 'wallet' | 'upload' | 'camera' | 'profile' | 'document' | 'security' | 'bank' | 'rider' | 'help' | 'logout' | 'language' | 'shield' | 'bell' | 'chevronRight' | 'chevronDown' | 'check' | 'lock' | 'eye' | 'eyeOff' | 'sms';
 
 type MaterialIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -36,6 +36,10 @@ const icons: Record<AppIconName, MaterialIconName> = {
   chevronRight: 'chevron-right',
   chevronDown: 'chevron-down',
   check: 'check',
+  lock: 'lock-outline',
+  eye: 'eye-outline',
+  eyeOff: 'eye-off-outline',
+  sms: 'cellphone-message',
 };
 
 const colorByClass = (className = '') => {

@@ -1,25 +1,89 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
-import { Button, Card, Input } from '../../src/components/ui';
+import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
+import { AppIcon, Button, Card, Input } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
+import { isValidPhone, sendSmsCode } from '../../src/services/auth';
+import { getLanguageOptions, setCurrentLanguage, type AppLanguage } from '../../src/services/settings';
 import { startRiderSession } from '../../src/services/user';
 
 type LoginMode = 'password' | 'sms';
 
+const enabledLanguages = getLanguageOptions();
+
 export default function LoginPage() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [mode, setMode] = useState<LoginMode>('password');
   const [accepted, setAccepted] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [phoneInvalidVisible, setPhoneInvalidVisible] = useState(false);
+  const [codeSentVisible, setCodeSentVisible] = useState(false);
+  const [codeSentPhone, setCodeSentPhone] = useState('');
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isPassword = mode === 'password';
+
+  useEffect(
+    () => () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    },
+    [],
+  );
+
+  const startCountdown = () => {
+    setCountdown(60);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleSendCode = async () => {
+    if (countdown > 0) return;
+    if (!isValidPhone(phone)) {
+      setPhoneInvalidVisible(true);
+      return;
+    }
+    try {
+      await sendSmsCode(phone);
+      setCodeSentPhone(phone);
+      setCodeSentVisible(true);
+      startCountdown();
+    } catch {
+      setPhoneInvalidVisible(true);
+    }
+  };
 
   const login = async () => {
     await startRiderSession();
     router.replace('/(main)/tasks');
   };
+
+  const nextLanguage: AppLanguage = (() => {
+    const index = enabledLanguages.findIndex((option) => option.code === language);
+    const next = enabledLanguages[(index + 1 + enabledLanguages.length) % enabledLanguages.length];
+    return (next ?? enabledLanguages[0]).code;
+  })();
+  const nextLanguageLabel = enabledLanguages.find((option) => option.code === nextLanguage)?.nativeLabel ?? '';
+
+  const switchLanguage = () => {
+    void setCurrentLanguage(nextLanguage);
+  };
+
+  const sendCodeLabel = countdown > 0 ? t('auth.login.resend', { seconds: countdown }) : t('auth.login.sendCode');
 
   return (
     <ScrollView className="flex-1 bg-[#fff8f7]" contentContainerClassName="min-h-full items-center justify-center px-5 py-12">
@@ -50,21 +114,43 @@ export default function LoginPage() {
         </View>
 
         <View className="gap-4">
-          <Input keyboardType="phone-pad" label={t('auth.login.phoneLabel')} placeholder={t('auth.login.phonePlaceholder')} />
+          <Input
+            keyboardType="phone-pad"
+            label={t('auth.login.phoneLabel')}
+            placeholder={t('auth.login.phonePlaceholder')}
+            value={phone}
+            onChangeText={setPhone}
+          />
           <View className="gap-1.5">
             <Text className="ml-1 text-xs font-bold uppercase tracking-wider text-[#59413d]">
               {isPassword ? t('auth.login.passwordLabel') : t('auth.login.smsLabel')}
             </Text>
             <View className="min-h-14 flex-row items-center rounded-lg border border-[#8d706c] bg-[#fff0ee]">
-              <Text className="px-4 text-[#8d706c]">{isPassword ? 'L' : 'C'}</Text>
+              <View className="pl-4 pr-2">
+                <AppIcon color="#8d706c" name={isPassword ? 'lock' : 'sms'} size={20} />
+              </View>
               <TextInput
                 className="flex-1 px-2 py-3 text-base text-[#261816]"
                 keyboardType={isPassword ? 'default' : 'number-pad'}
                 placeholder={isPassword ? t('auth.login.passwordPlaceholder') : t('auth.login.smsPlaceholder')}
                 placeholderTextColor="#8d706c"
-                secureTextEntry={isPassword}
+                secureTextEntry={isPassword && !passwordVisible}
+                value={isPassword ? password : code}
+                onChangeText={isPassword ? setPassword : setCode}
               />
-              {isPassword ? <Text className="px-4 text-[#8d706c]">V</Text> : null}
+              {isPassword ? (
+                <Pressable className="px-4 py-3" onPress={() => setPasswordVisible((value) => !value)}>
+                  <AppIcon color="#8d706c" name={passwordVisible ? 'eye' : 'eyeOff'} size={20} />
+                </Pressable>
+              ) : (
+                <Pressable
+                  className={`mr-2 rounded-full px-3 py-2 ${countdown > 0 ? 'bg-[#e1bfba]' : 'bg-[#720003]'}`}
+                  disabled={countdown > 0}
+                  onPress={() => void handleSendCode()}
+                >
+                  <Text className={`text-xs font-bold ${countdown > 0 ? 'text-[#8d706c]' : 'text-white'}`}>{sendCodeLabel}</Text>
+                </Pressable>
+              )}
             </View>
           </View>
 
@@ -91,10 +177,33 @@ export default function LoginPage() {
       </Card>
 
       <View className="mt-8 flex-row items-center gap-6">
-        <Text className="text-[11px] font-bold text-[#8d706c]">? {t('auth.login.help')}</Text>
+        <Pressable className="flex-row items-center gap-1.5" onPress={() => router.push('/help')}>
+          <AppIcon color="#8d706c" name="help" size={14} />
+          <Text className="text-[11px] font-bold text-[#8d706c]">{t('auth.login.help')}</Text>
+        </Pressable>
         <View className="h-3 w-px bg-[#e1bfba]" />
-        <Text className="text-[11px] font-bold text-[#8d706c]">◎ {t('auth.login.language')}</Text>
+        <Pressable className="flex-row items-center gap-1.5" onPress={switchLanguage}>
+          <AppIcon color="#8d706c" name="language" size={14} />
+          <Text className="text-[11px] font-bold text-[#8d706c]">{t('auth.login.languageSwitch', { language: nextLanguageLabel })}</Text>
+        </Pressable>
       </View>
+
+      <ConfirmDialog
+        message={t('auth.login.phoneInvalid.message')}
+        okLabel={t('auth.login.phoneInvalid.ok')}
+        title={t('auth.login.phoneInvalid.title')}
+        visible={phoneInvalidVisible}
+        onCancel={() => setPhoneInvalidVisible(false)}
+        onOk={() => setPhoneInvalidVisible(false)}
+      />
+      <ConfirmDialog
+        message={t('auth.login.codeSent.message', { phone: codeSentPhone })}
+        okLabel={t('auth.login.phoneInvalid.ok')}
+        title={t('auth.login.codeSent.title')}
+        visible={codeSentVisible}
+        onCancel={() => setCodeSentVisible(false)}
+        onOk={() => setCodeSentVisible(false)}
+      />
     </ScrollView>
   );
 }
