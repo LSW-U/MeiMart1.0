@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { TaskCard } from '../../../src/components/business/TaskCard';
@@ -20,9 +20,14 @@ export default function TaskOngoingPage() {
   const goBack = useGoBack('/(main)/tasks');
   const [task, setTask] = useState<DeliveryTask | null>(null);
 
-  useEffect(() => {
-    void getTaskById(id).then(setTask);
+  const loadTask = useCallback(async () => {
+    const result = await getTaskById(id);
+    setTask(result);
   }, [id]);
+
+  useEffect(() => {
+    void loadTask();
+  }, [loadTask]);
 
   return (
     <View className="flex-1 bg-[#fff8f7]">
@@ -69,7 +74,7 @@ export default function TaskOngoingPage() {
           <AppIcon name="settings" className="text-2xl text-[#59413d]" />
           <Text className="mt-1 text-[10px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
         </Pressable>
-        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-4 shadow-sm">
+        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-4 shadow-sm" onPress={() => void loadTask()}>
           <AppIcon name="refresh" className="text-xl text-[#961813]" />
           <Text className="text-base font-bold text-[#961813]">{t('tasks.refresh')}</Text>
         </Pressable>
