@@ -161,8 +161,10 @@ export default function LoginPage() {
           <View className="flex-row items-start gap-2">
             <Switch onValueChange={setAccepted} value={accepted} />
             <Text className="flex-1 text-[13px] leading-5 text-[#59413d]">
-              {t('auth.login.termsPrefix')} <Text className="font-semibold text-[#720003]">{t('auth.login.terms')}</Text>{' '}
-              {t('auth.login.privacyPrefix')} <Text className="font-semibold text-[#720003]">{t('auth.login.privacy')}</Text>.
+              {t('auth.login.termsPrefix')}{' '}
+              <Text className="font-semibold text-[#720003]" onPress={() => router.push('/terms')}>{t('auth.login.terms')}</Text>{' '}
+              {t('auth.login.privacyPrefix')}{' '}
+              <Text className="font-semibold text-[#720003]" onPress={() => router.push('/privacy')}>{t('auth.login.privacy')}</Text>.
             </Text>
           </View>
 

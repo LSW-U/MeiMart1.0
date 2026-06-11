@@ -288,5 +288,9 @@
   "help.topic.accountSafety.description": "Keep your phone number, documents, and vehicle information updated before going on duty.",
   "help.support.eyebrow": "Support hotline",
   "help.support.phone": "+670 7700 0000",
-  "help.support.description": "Available for pickup, delivery, wallet, and account issues."
+  "help.support.description": "Available for pickup, delivery, wallet, and account issues.",
+  "legal.terms.title": "Terms of Service",
+  "legal.terms.body": "This placeholder describes the rider service agreement. The official Terms of Service will replace this content before public launch.",
+  "legal.privacy.title": "Privacy Policy",
+  "legal.privacy.body": "This placeholder describes how rider data is collected, stored, and protected. The official Privacy Policy will replace this content before public launch."
 }

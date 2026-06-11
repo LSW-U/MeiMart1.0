@@ -288,5 +288,9 @@
   "help.topic.accountSafety.description": "上岗前及时更新手机号、证件和车辆资料。",
   "help.support.eyebrow": "客服热线",
   "help.support.phone": "+670 7700 0000",
-  "help.support.description": "可处理取货、配送、钱包和账号相关问题。"
+  "help.support.description": "可处理取货、配送、钱包和账号相关问题。",
+  "legal.terms.title": "服务条款",
+  "legal.terms.body": "这里是骑手服务协议的占位文案，正式上线前将替换为最终版《服务条款》。",
+  "legal.privacy.title": "隐私政策",
+  "legal.privacy.body": "这里是骑手数据收集、存储与保护说明的占位文案，正式上线前将替换为最终版《隐私政策》。"
 }
