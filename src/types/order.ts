@@ -1,13 +1,15 @@
-import type { DeliveryTask } from './task';
-
-export type OrderStatus = 'pending' | 'assigned' | 'pickedUp' | 'delivered' | 'cancelled';
+export type OrderHistoryStatus = 'completed' | 'cancelled' | 'transferred';
 
 export type OrderHistoryItem = {
   id: string;
-  taskId: DeliveryTask['id'];
-  status: OrderStatus;
-  customerName: string;
-  shopName: string;
-  deliveredAt?: string;
-  earning: number;
+  orderNo: string;
+  status: OrderHistoryStatus;
+  completedAt: number;
+  pickupName: string;
+  pickupAddress: string;
+  dropoffName: string;
+  dropoffAddress: string;
+  income: number;
+  distanceKm: number;
+  durationMinutes: number;
 };
