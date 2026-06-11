@@ -34,14 +34,15 @@ type OrderHistoryCardProps = {
   incomeLabel: string;
   income: string;
   viewDetailsLabel: string;
+  onPress?: () => void;
 };
 
-export function OrderHistoryCard({ status, statusTone, orderNo, time, pickupName, pickupAddress, dropoffName, dropoffAddress, incomeLabel, income, viewDetailsLabel }: OrderHistoryCardProps) {
+export function OrderHistoryCard({ status, statusTone, orderNo, time, pickupName, pickupAddress, dropoffName, dropoffAddress, incomeLabel, income, viewDetailsLabel, onPress }: OrderHistoryCardProps) {
   const badgeClass = statusTone === 'completed' ? 'bg-[#e6f4ea] text-[#137333]' : statusTone === 'cancelled' ? 'bg-[#e2e3e2] text-[#1a1c1c]' : 'bg-[#fef7e0] text-[#b06000]';
   const muted = statusTone === 'cancelled';
 
   return (
-    <View className="rounded-lg border border-[#f7ddd9] bg-white p-4 shadow-sm">
+    <Pressable className="rounded-lg border border-[#f7ddd9] bg-white p-4 shadow-sm active:bg-[#fff0ee]" onPress={onPress}>
       <View className="mb-4 flex-row items-center justify-between border-b border-[#f7ddd9] pb-3">
         <View className="flex-row items-center gap-2">
           <Text className={`rounded-sm px-2 py-1 text-xs font-bold uppercase tracking-wide ${badgeClass}`}>{status}</Text>
@@ -67,10 +68,8 @@ export function OrderHistoryCard({ status, statusTone, orderNo, time, pickupName
           <Text className={`text-xs font-bold uppercase tracking-wider text-[#8d706c] ${muted ? 'opacity-60' : ''}`}>{incomeLabel}</Text>
           <Text className={`font-bold ${income.startsWith('$') ? 'text-[#720003]' : 'text-[#59413d]'}`}>{income}</Text>
         </View>
-        <Pressable>
-          <Text className="text-sm font-bold text-[#720003]">{viewDetailsLabel}</Text>
-        </Pressable>
+        <Text className="text-sm font-bold text-[#720003]">{viewDetailsLabel} ›</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
