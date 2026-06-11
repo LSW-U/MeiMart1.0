@@ -31,6 +31,8 @@ export default function TaskOngoingPage() {
         dutyStatusLabel={t('duty.onDuty')}
         newTasksLabel={t('tasks.tabs.new')}
         pickupsLabel={t('tasks.tabs.pickups0')}
+        onDutyPress={() => router.replace('/(main)/tasks')}
+        onMenuPress={() => (router.canGoBack() ? router.back() : router.replace('/(main)/tasks'))}
       />
       <ScrollView className="flex-1" contentContainerClassName="bg-white px-5 py-8 pb-28">
         {task ? (

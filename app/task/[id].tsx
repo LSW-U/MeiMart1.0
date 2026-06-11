@@ -32,6 +32,8 @@ export default function TaskDetailPage() {
         dutyStatusLabel={t('duty.onDuty')}
         newTasksLabel={t('tasks.tabs.new')}
         pickupsLabel={task ? t('tasks.tabs.pickups1') : t('tasks.tabs.pickups0')}
+        onDutyPress={() => router.replace('/(main)/tasks')}
+        onMenuPress={() => (router.canGoBack() ? router.back() : router.replace('/(main)/tasks'))}
       />
       <ScrollView className="flex-1" contentContainerClassName="px-3 py-6 pb-28">
         {task ? (
