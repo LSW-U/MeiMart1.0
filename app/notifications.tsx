@@ -98,24 +98,24 @@ export default function NotificationsPage() {
         ) : null}
       </View>
 
-      <ScrollView className="border-b border-[#f7ddd9] bg-[#fff8f7]" contentContainerClassName="flex-row gap-2 px-5 py-3" horizontal showsHorizontalScrollIndicator={false}>
+      <View className="flex-row gap-2 border-b border-[#f7ddd9] bg-[#fff8f7] px-5 py-3">
         {filters.map(({ key, labelKey }) => {
           const active = filter === key;
           return (
             <Pressable
               key={key}
-              className={`min-w-[60px] flex-row items-center justify-center rounded-full border px-4 py-1.5 ${
+              className={`flex-1 items-center justify-center rounded-full border px-3 py-2 ${
                 active ? 'border-[#720003] bg-[#720003]' : 'border-[#e1bfba] bg-white'
               }`}
               onPress={() => setFilter(key)}
             >
-              <Text className={`text-center text-xs font-bold ${active ? 'text-white' : 'text-[#59413d]'}`}>
+              <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-[#59413d]'}`}>
                 {t(labelKey)}
               </Text>
             </Pressable>
           );
         })}
-      </ScrollView>
+      </View>
 
       <ScrollView contentContainerClassName="gap-3 px-5 py-4 pb-12">
         {visibleItems.length === 0 ? (
