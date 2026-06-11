@@ -126,33 +126,44 @@ export default function LoginPage() {
             <Text className="ml-1 text-xs font-bold uppercase tracking-wider text-[#59413d]">
               {isPassword ? t('auth.login.passwordLabel') : t('auth.login.smsLabel')}
             </Text>
-            <View className="min-h-14 flex-row items-center rounded-lg border border-[#8d706c] bg-[#fff0ee]">
-              <View className="pl-4 pr-3">
-                <AppIcon color="#8d706c" name={isPassword ? 'lock' : 'sms'} size={20} />
-              </View>
-              <TextInput
-                className="flex-1 px-2 py-3 text-base text-[#261816]"
-                keyboardType={isPassword ? 'default' : 'number-pad'}
-                placeholder={isPassword ? t('auth.login.passwordPlaceholder') : t('auth.login.smsPlaceholder')}
-                placeholderTextColor="#8d706c"
-                secureTextEntry={isPassword && !passwordVisible}
-                value={isPassword ? password : code}
-                onChangeText={isPassword ? setPassword : setCode}
-              />
-              {isPassword ? (
-                <Pressable className="mr-1 pl-2 pr-4 py-3" onPress={() => setPasswordVisible((value) => !value)}>
-                  <AppIcon color="#8d706c" name={passwordVisible ? 'eye' : 'eyeOff'} size={20} />
+            {isPassword ? (
+              <View className="min-h-14 flex-row items-center rounded-lg border border-[#8d706c] bg-[#fff0ee]">
+                <View className="pl-5 pr-4">
+                  <AppIcon color="#8d706c" name="lock" size={24} />
+                </View>
+                <TextInput
+                  className="flex-1 px-2 py-3 text-base text-[#261816]"
+                  placeholder={t('auth.login.passwordPlaceholder')}
+                  placeholderTextColor="#8d706c"
+                  secureTextEntry={!passwordVisible}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <Pressable className="mr-2 pl-3 pr-5 py-3" onPress={() => setPasswordVisible((value) => !value)}>
+                  <AppIcon color="#8d706c" name={passwordVisible ? 'eye' : 'eyeOff'} size={24} />
                 </Pressable>
-              ) : (
+              </View>
+            ) : (
+              <View className="flex-row items-center gap-3">
+                <View className="min-h-14 flex-1 flex-row items-center rounded-lg border border-[#8d706c] bg-[#fff0ee]">
+                  <TextInput
+                    className="flex-1 pl-5 pr-3 py-3 text-base text-[#261816]"
+                    keyboardType="number-pad"
+                    placeholder={t('auth.login.smsPlaceholder')}
+                    placeholderTextColor="#8d706c"
+                    value={code}
+                    onChangeText={setCode}
+                  />
+                </View>
                 <Pressable
-                  className={`mr-3 rounded-full px-4 py-2.5 ${countdown > 0 ? 'bg-[#e1bfba]' : 'bg-[#720003]'}`}
+                  className={`rounded-full px-5 py-3.5 ${countdown > 0 ? 'bg-[#e1bfba]' : 'bg-[#720003]'}`}
                   disabled={countdown > 0}
                   onPress={() => void handleSendCode()}
                 >
-                  <Text className={`text-xs font-bold ${countdown > 0 ? 'text-[#8d706c]' : 'text-white'}`}>{sendCodeLabel}</Text>
+                  <Text className={`text-[13px] font-bold ${countdown > 0 ? 'text-[#8d706c]' : 'text-white'}`}>{sendCodeLabel}</Text>
                 </Pressable>
-              )}
-            </View>
+              </View>
+            )}
           </View>
 
           <Pressable className="items-end" onPress={() => setFeatureInProgressVisible(true)}>
