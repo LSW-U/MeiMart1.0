@@ -1,5 +1,9 @@
 import type { RiderProfile } from '@/src/types/rider';
 
+import { API_BASE_URL, request, setAuthToken } from './api';
+
+// ── Mock layer (localStorage) ──────────────────────────────────────
+
 const defaultProfile: RiderProfile = {
   id: '8842910',
   name: 'Alex Rider',
@@ -61,21 +65,52 @@ const saveSession = (active: boolean) => {
   }
 };
 
+// ── Public API ─────────────────────────────────────────────────────
+
+const isRemote = () => API_BASE_URL.length > 0;
+
 export async function getRiderProfile(): Promise<RiderProfile> {
+  if (isRemote()) {
+    const remote = await request<RiderProfile>('/rider/profile');
+    riderProfile = remote;
+    saveProfile();
+    return remote;
+  }
   return { ...getProfile() };
 }
 
 export async function isRiderSessionActive(): Promise<boolean> {
+  if (isRemote()) {
+    try {
+      await request<void>('/rider/session');
+      return true;
+    } catch {
+      return false;
+    }
+  }
   return getSession();
 }
 
 export async function startRiderSession(): Promise<void> {
+  if (isRemote()) {
+    await request<void>('/rider/session', { method: 'POST' });
+    return;
+  }
   saveSession(true);
   riderProfile = { ...getProfile(), status: 'online' };
   saveProfile();
 }
 
 export async function registerRiderProfile(profile: Partial<RiderProfile>): Promise<RiderProfile> {
+  if (isRemote()) {
+    const remote = await request<RiderProfile>('/rider/register', {
+      method: 'POST',
+      body: JSON.stringify(profile),
+    });
+    riderProfile = remote;
+    saveProfile();
+    return remote;
+  }
   riderProfile = { ...getProfile(), ...profile, status: 'online' };
   saveProfile();
   saveSession(true);
@@ -83,12 +118,26 @@ export async function registerRiderProfile(profile: Partial<RiderProfile>): Prom
 }
 
 export async function updateRiderProfile(profile: Partial<RiderProfile>): Promise<RiderProfile> {
+  if (isRemote()) {
+    const remote = await request<RiderProfile>('/rider/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(profile),
+    });
+    riderProfile = remote;
+    saveProfile();
+    return remote;
+  }
   riderProfile = { ...getProfile(), ...profile };
   saveProfile();
   return { ...riderProfile };
 }
 
 export async function resetRiderSession(): Promise<void> {
+  if (isRemote()) {
+    await request<void>('/rider/session', { method: 'DELETE' });
+    setAuthToken(null);
+    return;
+  }
   riderProfile = { ...defaultProfile, status: 'offline' };
   saveProfile();
   saveSession(false);

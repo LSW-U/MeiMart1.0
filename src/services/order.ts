@@ -1,5 +1,9 @@
 import type { OrderHistoryItem, OrderHistoryStatus } from '../types/order';
 
+import { API_BASE_URL, request } from './api';
+
+// ── Mock layer (localStorage) ──────────────────────────────────────
+
 const storageKey = 'mei-delivery-app:orderHistory:v1';
 
 const hour = 60 * 60 * 1000;
@@ -119,17 +123,34 @@ const notify = () => {
   listeners.forEach((listener) => listener(snapshot));
 };
 
+// ── Public API ─────────────────────────────────────────────────────
+
+const isRemote = () => API_BASE_URL.length > 0;
+
 export async function getOrderHistory(): Promise<OrderHistoryItem[]> {
+  if (isRemote()) {
+    const remote = await request<OrderHistoryItem[]>('/orders/history');
+    cache = remote;
+    save();
+    notify();
+    return remote.sort((a, b) => b.completedAt - a.completedAt);
+  }
   return getStore()
     .slice()
     .sort((a, b) => b.completedAt - a.completedAt);
 }
 
 export async function getOrderById(id: string): Promise<OrderHistoryItem | null> {
+  if (isRemote()) {
+    return request<OrderHistoryItem | null>(`/orders/${encodeURIComponent(id)}`);
+  }
   return getStore().find((item) => item.id === id) ?? null;
 }
 
 export async function countByStatus(): Promise<Record<OrderHistoryStatus | 'all', number>> {
+  if (isRemote()) {
+    return request<Record<OrderHistoryStatus | 'all', number>>('/orders/count-by-status');
+  }
   const items = getStore();
   return {
     all: items.length,
@@ -140,6 +161,9 @@ export async function countByStatus(): Promise<Record<OrderHistoryStatus | 'all'
 }
 
 export async function getTodayStats(): Promise<{ count: number; totalIncome: number }> {
+  if (isRemote()) {
+    return request<{ count: number; totalIncome: number }>('/orders/today-stats');
+  }
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const items = getStore().filter((item) => item.completedAt >= startOfDay && item.status === 'completed');
@@ -150,6 +174,14 @@ export async function getTodayStats(): Promise<{ count: number; totalIncome: num
 }
 
 export async function addOrderHistory(item: OrderHistoryItem): Promise<void> {
+  if (isRemote()) {
+    await request<void>('/orders', {
+      method: 'POST',
+      body: JSON.stringify(item),
+    });
+    await getOrderHistory();
+    return;
+  }
   const store = getStore();
   const existing = store.findIndex((entry) => entry.id === item.id);
   if (existing >= 0) {

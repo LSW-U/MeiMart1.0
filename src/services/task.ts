@@ -1,10 +1,14 @@
 import type { DeliveryTask, TaskStatus } from '@/src/types/task';
 
+import { API_BASE_URL, request, buildQuery } from './api';
+
 type TaskLists = {
   available: DeliveryTask[];
   pickups: DeliveryTask[];
   deliveries: DeliveryTask[];
 };
+
+// ── Mock layer (localStorage) ──────────────────────────────────────
 
 const storageKey = 'mei-delivery-app:tasks:v2';
 
@@ -125,13 +129,22 @@ const saveTasks = () => {
 
 const findTask = (id: string) => getTasks().find((task) => task.id === id);
 
+// ── Public API ─────────────────────────────────────────────────────
+
+const isRemote = () => API_BASE_URL.length > 0;
+
 export async function getAvailableTasks(): Promise<DeliveryTask[]> {
+  if (isRemote()) {
+    return request<DeliveryTask[]>(`/tasks/available`);
+  }
   return getTasks().filter((task) => task.status === 'available').map(cloneTask);
 }
 
 export async function getTaskLists(): Promise<TaskLists> {
+  if (isRemote()) {
+    return request<TaskLists>(`/tasks/lists`);
+  }
   const tasks = getTasks();
-
   return {
     available: tasks.filter((task) => task.status === 'available').map(cloneTask),
     pickups: tasks.filter((task) => task.status === 'accepted' || task.status === 'pickingUp').map(cloneTask),
@@ -140,25 +153,38 @@ export async function getTaskLists(): Promise<TaskLists> {
 }
 
 export async function getTaskById(id: string): Promise<DeliveryTask | null> {
+  if (isRemote()) {
+    return request<DeliveryTask | null>(`/tasks/${encodeURIComponent(id)}`);
+  }
   const task = findTask(id);
   return task ? cloneTask(task) : null;
 }
 
 export async function acceptTask(id: string): Promise<DeliveryTask> {
+  if (isRemote()) {
+    return request<DeliveryTask>(`/tasks/${encodeURIComponent(id)}/accept`, { method: 'POST' });
+  }
   return updateTaskStatus(id, 'accepted');
 }
 
 export async function hasActiveTasks(): Promise<boolean> {
+  if (isRemote()) {
+    return request<boolean>(`/tasks/has-active`);
+  }
   return getTasks().some((task) => task.status === 'accepted' || task.status === 'pickingUp' || task.status === 'delivering');
 }
 
 export async function updateTaskStatus(id: string, status: TaskStatus): Promise<DeliveryTask> {
+  if (isRemote()) {
+    return request<DeliveryTask>(`/tasks/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
   const task = findTask(id);
-
   if (!task) {
     throw new Error(`Task not found: ${id}`);
   }
-
   task.status = status;
   saveTasks();
   return cloneTask(task);

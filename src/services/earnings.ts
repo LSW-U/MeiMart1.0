@@ -1,6 +1,9 @@
 import type { EarningSummary, EarningTransaction, WithdrawalRequest } from '../types/earnings';
 
+import { API_BASE_URL, request } from './api';
 import { addNotification } from './notification';
+
+// ── Mock layer (localStorage) ──────────────────────────────────────
 
 const storageKey = 'mei-delivery-app:earnings:v1';
 
@@ -75,15 +78,44 @@ const notifyTx = () => {
 
 const generateId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
+// ── Public API ─────────────────────────────────────────────────────
+
+const isRemote = () => API_BASE_URL.length > 0;
+
 export async function getEarningSummary(): Promise<EarningSummary> {
+  if (isRemote()) {
+    const remote = await request<EarningSummary>('/earnings/summary');
+    summary = remote;
+    saveSummary();
+    notifySummary();
+    return remote;
+  }
   return { ...getSummaryStore() };
 }
 
 export async function getEarningTransactions(): Promise<EarningTransaction[]> {
+  if (isRemote()) {
+    const remote = await request<EarningTransaction[]>('/earnings/transactions');
+    transactions = remote;
+    saveTransactions();
+    notifyTx();
+    return remote;
+  }
   return getTxStore().slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function createWithdrawal(amount: number, method: WithdrawalRequest['method']) {
+  if (isRemote()) {
+    await request<void>('/earnings/withdraw', {
+      method: 'POST',
+      body: JSON.stringify({ amount, method }),
+    });
+    // Re-fetch to sync local cache
+    await getEarningSummary();
+    await getEarningTransactions();
+    return;
+  }
+
   const s = getSummaryStore();
   if (amount > s.availableBalance) {
     throw new Error('Insufficient balance');

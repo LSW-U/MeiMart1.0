@@ -1,6 +1,10 @@
 import type { NotificationItem } from '../types/notification';
 import { getRiderSettings } from './settings';
 
+import { API_BASE_URL, request } from './api';
+
+// ── Mock layer (localStorage) ──────────────────────────────────────
+
 const storageKey = 'mei-delivery-app:notifications:v2';
 
 const minute = 60 * 1000;
@@ -83,17 +87,36 @@ const notifyListeners = () => {
 
 const generateId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
+// ── Public API ─────────────────────────────────────────────────────
+
+const isRemote = () => API_BASE_URL.length > 0;
+
 export async function getNotifications(): Promise<NotificationItem[]> {
+  if (isRemote()) {
+    const remote = await request<NotificationItem[]>('/notifications');
+    notifications = remote;
+    saveStore();
+    notifyListeners();
+    return remote.sort((a, b) => b.createdAt - a.createdAt);
+  }
   return getStore()
     .slice()
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export async function getUnreadCount(): Promise<number> {
+  if (isRemote()) {
+    return request<number>('/notifications/unread-count');
+  }
   return getStore().filter((item) => !item.read).length;
 }
 
 export async function markAsRead(id: string): Promise<void> {
+  if (isRemote()) {
+    await request<void>(`/notifications/${encodeURIComponent(id)}/read`, { method: 'PATCH' });
+    await getNotifications();
+    return;
+  }
   const target = getStore().find((item) => item.id === id);
   if (!target || target.read) return;
   target.read = true;
@@ -102,6 +125,11 @@ export async function markAsRead(id: string): Promise<void> {
 }
 
 export async function markAllAsRead(): Promise<void> {
+  if (isRemote()) {
+    await request<void>('/notifications/read-all', { method: 'PATCH' });
+    await getNotifications();
+    return;
+  }
   let changed = false;
   getStore().forEach((item) => {
     if (!item.read) {
@@ -119,6 +147,15 @@ export async function addNotification(
 ): Promise<NotificationItem | null> {
   const settings = await getRiderSettings();
   if (!settings.notificationsEnabled) return null;
+
+  if (isRemote()) {
+    const remote = await request<NotificationItem>('/notifications', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+    await getNotifications();
+    return remote;
+  }
 
   const item: NotificationItem = {
     ...input,

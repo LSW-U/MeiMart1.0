@@ -1,18 +1,17 @@
 import type { RiderProfile } from '@/src/types/rider';
 
+import { request, setAuthToken } from './api';
+
 export type LoginPayload = {
   phone: string;
   password?: string;
   code?: string;
 };
 
-export async function login(_payload: LoginPayload): Promise<RiderProfile | null> {
-  return null;
-}
-
-export async function logout() {
-  return undefined;
-}
+type LoginResponse = {
+  token: string;
+  rider: RiderProfile;
+};
 
 const phoneRegex = /^(\+670)?[2-9]\d{6,7}$/;
 
@@ -24,5 +23,25 @@ export async function sendSmsCode(phone: string): Promise<void> {
   if (!isValidPhone(phone)) {
     throw new Error('invalid_phone');
   }
-  console.log('[auth] sendSmsCode → mock send to', phone);
+  await request<void>('/auth/sms', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  });
+}
+
+export async function login(payload: LoginPayload): Promise<RiderProfile | null> {
+  const res = await request<LoginResponse>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  setAuthToken(res.token);
+  return res.rider;
+}
+
+export async function logout(): Promise<void> {
+  try {
+    await request<void>('/auth/logout', { method: 'POST' });
+  } finally {
+    setAuthToken(null);
+  }
 }
