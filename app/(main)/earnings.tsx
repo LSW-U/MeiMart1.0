@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EarningCard } from '../../src/components/business/EarningCard';
@@ -7,23 +7,21 @@ import { HistoryItem } from '../../src/components/business/HistoryItem';
 import { Button } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { getEarningSummary, getEarningTransactions, subscribeEarningSummary, subscribeEarningTransactions } from '../../src/services/earnings';
-import type { EarningSummary, EarningTransaction } from '../../src/types/earnings';
+import { useEarningsStore } from '../../src/store/useEarningsStore';
 
 export default function EarningsPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const goBack = useGoBack('/(main)/profile');
-  const [summary, setSummary] = useState<EarningSummary | null>(null);
-  const [transactions, setTransactions] = useState<EarningTransaction[]>([]);
+  const summary = useEarningsStore((s) => s.summary);
+  const transactions = useEarningsStore((s) => s.transactions);
+  const hydrate = useEarningsStore((s) => s.hydrate);
 
   useEffect(() => {
-    void getEarningSummary().then(setSummary);
-    void getEarningTransactions().then(setTransactions);
-    const unsubSummary = subscribeEarningSummary(setSummary);
-    const unsubTx = subscribeEarningTransactions(setTransactions);
-    return () => { unsubSummary(); unsubTx(); };
-  }, []);
+    let unsub: (() => void) | undefined;
+    void hydrate().then((fn) => { unsub = fn; });
+    return () => { unsub?.(); };
+  }, [hydrate]);
 
   const formatAmount = (amount: number) => (amount >= 0 ? `+$${amount.toFixed(2)}` : `-$${Math.abs(amount).toFixed(2)}`);
 

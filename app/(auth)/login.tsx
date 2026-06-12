@@ -6,8 +6,9 @@ import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { AppIcon, Button, Card, Input } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { isValidPhone, sendSmsCode } from '../../src/services/auth';
-import { getLanguageOptions, setCurrentLanguage, type AppLanguage } from '../../src/services/settings';
-import { startRiderSession } from '../../src/services/user';
+import { getLanguageOptions, type AppLanguage } from '../../src/services/settings';
+import { useAppStore } from '../../src/store/useAppStore';
+import { useAuthStore } from '../../src/store/useAuthStore';
 
 type LoginMode = 'password' | 'sms';
 
@@ -69,7 +70,7 @@ export default function LoginPage() {
   };
 
   const login = async () => {
-    await startRiderSession();
+    await useAuthStore.getState().login();
     router.replace('/(main)/tasks');
   };
 
@@ -81,7 +82,7 @@ export default function LoginPage() {
   const nextLanguageLabel = enabledLanguages.find((option) => option.code === nextLanguage)?.nativeLabel ?? '';
 
   const switchLanguage = () => {
-    void setCurrentLanguage(nextLanguage);
+    void useAppStore.getState().setLocale(nextLanguage);
   };
 
   const sendCodeLabel = countdown > 0 ? t('auth.login.resend', { seconds: countdown }) : t('auth.login.sendCode');

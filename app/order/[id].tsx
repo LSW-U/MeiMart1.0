@@ -5,7 +5,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { getOrderById } from '../../src/services/order';
+import { useOrderStore } from '../../src/store/useOrderStore';
 import type { OrderHistoryItem } from '../../src/types/order';
 
 const statusToneMap: Record<OrderHistoryItem['status'], 'history.status.completed' | 'history.status.cancelled' | 'history.status.transferred'> = {
@@ -38,7 +38,7 @@ export default function OrderDetailPage() {
     useCallback(() => {
       let active = true;
       const load = async () => {
-        const result = await getOrderById(String(id));
+        const result = await useOrderStore.getState().getById(String(id));
         if (active) setOrder(result);
       };
       void load();

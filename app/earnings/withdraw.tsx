@@ -5,8 +5,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { WithdrawForm } from '../../src/components/business/WithdrawForm';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { createWithdrawal, getEarningSummary, subscribeEarningSummary } from '../../src/services/earnings';
-import type { EarningSummary } from '../../src/types/earnings';
+import { useEarningsStore } from '../../src/store/useEarningsStore';
 
 export default function WithdrawalPage() {
   const router = useRouter();
@@ -16,12 +15,14 @@ export default function WithdrawalPage() {
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const [summary, setSummary] = useState<EarningSummary | null>(null);
+  const summary = useEarningsStore((s) => s.summary);
+  const hydrate = useEarningsStore((s) => s.hydrate);
 
   useEffect(() => {
-    void getEarningSummary().then(setSummary);
-    return subscribeEarningSummary(setSummary);
-  }, []);
+    let unsub: (() => void) | undefined;
+    void hydrate().then((fn) => { unsub = fn; });
+    return () => { unsub?.(); };
+  }, [hydrate]);
 
   const parsedAmount = Number.parseFloat(amount);
   const amountValid = Number.isFinite(parsedAmount) && parsedAmount > 0;
@@ -34,7 +35,7 @@ export default function WithdrawalPage() {
     setStatus('processing');
     setErrorMsg('');
     try {
-      await createWithdrawal(parsedAmount, method);
+      await useEarningsStore.getState().withdraw(parsedAmount, method);
       setStatus('success');
     } catch (e) {
       setStatus('error');

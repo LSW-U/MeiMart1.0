@@ -5,7 +5,7 @@ import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-nati
 import { PageHeader } from '../../src/components/layout/PageHeader';
 import { AppIcon, Button, Input } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { getRiderProfile, updateRiderProfile } from '../../src/services/user';
+import { useAuthStore } from '../../src/store/useAuthStore';
 
 type UploadKey = 'license' | 'biFront' | 'biBack' | 'vehicle';
 
@@ -56,14 +56,17 @@ export default function ProfileEditPage() {
 
   const sendCodeLabel = codeState === 'idle' ? t('auth.register.sendCode') : codeState === 'sent' ? t('auth.register.sent') : t('auth.register.resend');
 
+  const rider = useAuthStore((s) => s.rider);
+  const updateProfile = useAuthStore((s) => s.updateProfile);
+
   useEffect(() => {
-    void getRiderProfile().then((profile) => {
-      setName(profile.name);
-      setPhone(profile.phone.replace('+670 ', ''));
-      setLicenseNumber(profile.licenseNumber ?? '');
-      setVehicleType(profile.vehicleType ?? '');
-    });
-  }, []);
+    if (rider) {
+      setName(rider.name);
+      setPhone(rider.phone.replace('+670 ', ''));
+      setLicenseNumber(rider.licenseNumber ?? '');
+      setVehicleType(rider.vehicleType ?? '');
+    }
+  }, [rider]);
 
   const toggleUpload = (key: UploadKey) => {
     setUploads((current) => ({ ...current, [key]: !current[key] }));
@@ -74,7 +77,7 @@ export default function ProfileEditPage() {
   };
 
   const saveProfile = async () => {
-    await updateRiderProfile({
+    await updateProfile({
       name,
       phone: phone.startsWith('+670') ? phone : `+670 ${phone}`,
       licenseNumber,

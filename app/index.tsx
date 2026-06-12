@@ -1,16 +1,19 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 
-import { isRiderSessionActive } from '../src/services/user';
+import { useAuthStore } from '../src/store/useAuthStore';
 
 export default function IndexPage() {
   const [redirectTo, setRedirectTo] = useState<'/(auth)/login' | '/(main)/tasks' | null>(null);
+  const hydrate = useAuthStore((s) => s.hydrate);
+  const token = useAuthStore((s) => s.token);
 
   useEffect(() => {
-    void isRiderSessionActive().then((active) => {
+    void hydrate().then(() => {
+      const active = useAuthStore.getState().token !== null;
       setRedirectTo(active ? '/(main)/tasks' : '/(auth)/login');
     });
-  }, []);
+  }, [hydrate]);
 
   if (!redirectTo) return null;
 

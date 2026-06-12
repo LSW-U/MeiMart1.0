@@ -6,12 +6,7 @@ import { AppIcon } from '../src/components/ui';
 import { EmptyState } from '../src/components/feedback/EmptyState';
 import { useGoBack } from '../src/hooks/useGoBack';
 import { useTranslation } from '../src/i18n/useTranslation';
-import {
-  getNotifications,
-  markAllAsRead,
-  markAsRead,
-  subscribeNotifications,
-} from '../src/services/notification';
+import { useNotificationStore } from '../src/store/useNotificationStore';
 import type { NotificationCategory, NotificationItem } from '../src/types/notification';
 
 type FilterKey = 'all' | NotificationCategory;
@@ -34,15 +29,18 @@ const categoryStyle: Record<NotificationCategory, { bg: string; icon: 'notificat
 export default function NotificationsPage() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [items, setItems] = useState<NotificationItem[]>([]);
   const [filter, setFilter] = useState<FilterKey>('all');
+  const items = useNotificationStore((s) => s.items);
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
+  const hydrate = useNotificationStore((s) => s.hydrate);
+  const markRead = useNotificationStore((s) => s.markRead);
+  const markAllRead = useNotificationStore((s) => s.markAllRead);
 
   useEffect(() => {
-    void getNotifications().then(setItems);
-    return subscribeNotifications((next) => {
-      setItems(next.slice().sort((a, b) => b.createdAt - a.createdAt));
-    });
-  }, []);
+    let unsub: (() => void) | undefined;
+    void hydrate().then((fn) => { unsub = fn; });
+    return () => { unsub?.(); };
+  }, [hydrate]);
 
   const goBack = useGoBack('/(main)/tasks');
 
@@ -50,8 +48,6 @@ export default function NotificationsPage() {
     if (filter === 'all') return items;
     return items.filter((item) => item.category === filter);
   }, [items, filter]);
-
-  const unreadCount = useMemo(() => items.filter((item) => !item.read).length, [items]);
 
   const formatTime = useCallback(
     (timestamp: number) => {
@@ -69,10 +65,10 @@ export default function NotificationsPage() {
 
   const onItemPress = useCallback(
     async (item: NotificationItem) => {
-      if (!item.read) await markAsRead(item.id);
+      if (!item.read) await markRead(item.id);
       if (item.link) router.push(item.link as never);
     },
-    [router],
+    [router, markRead],
   );
 
   return (
@@ -85,7 +81,7 @@ export default function NotificationsPage() {
           <Text className="ml-2 text-xl font-semibold text-[#261816]">{t('notification.title')}</Text>
         </View>
         {unreadCount > 0 ? (
-          <Pressable className="rounded-full bg-[#fff0ee] px-3 py-1.5 active:bg-[#ffe1dc]" onPress={() => void markAllAsRead()}>
+          <Pressable className="rounded-full bg-[#fff0ee] px-3 py-1.5 active:bg-[#ffe1dc]" onPress={() => void markAllRead()}>
             <Text className="text-xs font-bold text-[#720003]">{t('notification.markAllRead')}</Text>
           </Pressable>
         ) : null}

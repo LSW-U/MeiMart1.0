@@ -7,7 +7,7 @@ import { MapView } from '../../../src/components/map/MapView';
 import { Button } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
-import { getTaskById } from '../../../src/services/task';
+import { useTaskStore } from '../../../src/store/useTaskStore';
 import type { DeliveryTask } from '../../../src/types/task';
 
 const formatFee = (fee: number) => `$${fee.toFixed(2)}`;
@@ -23,7 +23,7 @@ export default function TaskNavigatePage() {
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      void getTaskById(id).then((next) => {
+      void useTaskStore.getState().getById(id).then((next) => {
         if (!active) return;
         if (next && next.status !== 'delivering') {
           router.replace(`/task/${id}`);

@@ -1,11 +1,10 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { getRiderProfile, resetRiderSession } from '../../src/services/user';
-import type { RiderProfile } from '../../src/types/rider';
+import { useAuthStore } from '../../src/store/useAuthStore';
 
 type MenuItemProps = {
   icon: 'wallet' | 'settings' | 'help' | 'logout';
@@ -33,16 +32,18 @@ function MenuItem({ icon, label, tone = 'default', onPress }: MenuItemProps) {
 export default function ProfilePage() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [profile, setProfile] = useState<RiderProfile | null>(null);
+  const rider = useAuthStore((s) => s.rider);
+  const logout = useAuthStore((s) => s.logout);
+  const hydrate = useAuthStore((s) => s.hydrate);
 
   useFocusEffect(
     useCallback(() => {
-      void getRiderProfile().then(setProfile);
-    }, []),
+      void hydrate();
+    }, [hydrate]),
   );
 
-  const logout = async () => {
-    await resetRiderSession();
+  const handleLogout = async () => {
+    await logout();
     router.replace('/(auth)/login');
   };
 
@@ -63,16 +64,16 @@ export default function ProfilePage() {
       <View className="items-center gap-4 px-5 pb-2 pt-4">
         <View className="relative items-center">
           <View className="h-24 w-24 rounded-full bg-[#634700] p-[3px]">
-            <Image className="h-full w-full rounded-full border-2 border-[#fff8f7]" resizeMode="cover" source={{ uri: profile?.avatarUrl }} />
+            <Image className="h-full w-full rounded-full border-2 border-[#fff8f7]" resizeMode="cover" source={{ uri: rider?.avatarUrl }} />
           </View>
           <View className="absolute -bottom-3 rounded-full border-2 border-[#fff8f7] bg-[#634700] px-3 py-1 shadow-sm">
             <Text className="text-[11px] font-bold uppercase tracking-wider text-[#deb769]">{t('profile.tier')}</Text>
           </View>
         </View>
         <View className="mt-2 items-center">
-          <Text className="text-2xl font-bold text-[#261816]">{profile?.name ?? t('profile.name')}</Text>
+          <Text className="text-2xl font-bold text-[#261816]">{rider?.name ?? t('profile.name')}</Text>
           <View className="mt-1 flex-row items-center gap-2">
-            <Text className="text-sm text-[#59413d]">ID: {profile?.id ?? '8842910'}</Text>
+            <Text className="text-sm text-[#59413d]">ID: {rider?.id ?? '8842910'}</Text>
             <View className="h-1 w-1 rounded-full bg-[#e1bfba]" />
             <Text className="text-sm font-medium text-[#463200]">{t('profile.rating')}</Text>
           </View>
@@ -123,7 +124,7 @@ export default function ProfilePage() {
         <View className="mx-5 h-px bg-[#e1bfba]/40" />
         <MenuItem icon="help" label={t('profile.helpCenter')} onPress={() => router.push('/help')} />
         <View className="mx-5 h-px bg-[#e1bfba]/40" />
-        <MenuItem icon="logout" label={t('profile.logout')} tone="danger" onPress={() => void logout()} />
+        <MenuItem icon="logout" label={t('profile.logout')} tone="danger" onPress={() => void handleLogout()} />
       </View>
     </ScrollView>
   );

@@ -10,14 +10,9 @@ import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { AppIcon } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import {
-  dutyStatusOptions,
-  getRiderSettings,
-  setDutyStatus,
-  subscribeRiderSettings,
-  type DutyStatus,
-} from '../../src/services/settings';
-import { acceptTask, getTaskLists, hasActiveTasks } from '../../src/services/task';
+import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
+import { useRiderStore } from '../../src/store/useRiderStore';
+import { useTaskStore } from '../../src/store/useTaskStore';
 import type { DeliveryTask } from '../../src/types/task';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
@@ -49,30 +44,31 @@ export default function TasksPage() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TaskTab>('new');
-  const [dutyStatus, setLocalDutyStatus] = useState<DutyStatus>('onDuty');
-  const [taskLists, setTaskLists] = useState<TaskLists>(emptyTaskLists);
   const [menuVisible, setMenuVisible] = useState(false);
   const [pending, setPending] = useState<DutyStatus | null>(null);
   const [blockVisible, setBlockVisible] = useState(false);
-  const [activeTasksExist, setActiveTasksExist] = useState(false);
+
+  const dutyStatus = useRiderStore((s) => s.status);
+  const setDutyStatus = useRiderStore((s) => s.setDutyStatus);
+  const hydrateRider = useRiderStore((s) => s.hydrate);
+  const taskLists = useTaskStore((s) => s.lists);
+  const hydrateTasks = useTaskStore((s) => s.hydrate);
+  const refreshTasks = useTaskStore((s) => s.refresh);
+  const hasActive = useTaskStore((s) => s.hasActive);
+  const accept = useTaskStore((s) => s.accept);
 
   const online = dutyStatus !== 'offDuty';
-
-  const loadTasks = async () => {
-    const next = await getTaskLists();
-    setTaskLists(next);
-    setActiveTasksExist(next.pickups.length + next.deliveries.length > 0);
-  };
+  const activeTasksExist = taskLists.pickups.length + taskLists.deliveries.length > 0;
 
   useEffect(() => {
-    void loadTasks();
-    void getRiderSettings().then((settings) => setLocalDutyStatus(settings.dutyStatus));
-    return subscribeRiderSettings((settings) => setLocalDutyStatus(settings.dutyStatus));
-  }, []);
+    let unsubRider: (() => void) | undefined;
+    void hydrateRider().then((fn) => { unsubRider = fn; });
+    void hydrateTasks();
+    return () => { unsubRider?.(); };
+  }, [hydrateRider, hydrateTasks]);
 
   const acceptAndOpenTask = async (task: DeliveryTask) => {
-    await acceptTask(task.id);
-    await loadTasks();
+    await accept(task.id);
     router.push(`/task/${task.id}`);
   };
 
@@ -84,7 +80,7 @@ export default function TasksPage() {
       return;
     }
     if (next === 'offDuty' && (dutyStatus === 'onDuty' || dutyStatus === 'busy')) {
-      if (await hasActiveTasks()) {
+      if (await hasActive()) {
         setMenuVisible(false);
         setBlockVisible(true);
         return;
@@ -209,7 +205,7 @@ export default function TasksPage() {
           <AppIcon name="settings" className="text-2xl text-[#59413d]" />
           <Text className="mt-1 text-[11px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
         </Pressable>
-        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-3 shadow-sm" onPress={() => void loadTasks()}>
+        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-3 shadow-sm" onPress={() => void refreshTasks()}>
           <AppIcon name="refresh" className="text-xl text-[#961813]" />
           <Text className="text-base font-bold text-[#961813]">{t('tasks.refresh')}</Text>
         </Pressable>

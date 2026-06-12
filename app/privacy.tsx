@@ -4,20 +4,13 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '../src/components/ui';
 import { useTranslation } from '../src/i18n/useTranslation';
-import { isRiderSessionActive } from '../src/services/user';
+import { useGoBack } from '../src/hooks/useGoBack';
 
 export default function PrivacyPage() {
   const router = useRouter();
   const { t } = useTranslation();
 
-  const goBack = useCallback(async () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    const active = await isRiderSessionActive();
-    router.replace(active ? '/(main)/profile' : '/(auth)/login');
-  }, [router]);
+  const goBack = useGoBack('/(main)/profile');
 
   return (
     <View className="flex-1 bg-[#fff8f7]">

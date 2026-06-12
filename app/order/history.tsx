@@ -6,8 +6,8 @@ import { OrderHistoryCard } from '../../src/components/business/HistoryItem';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { countByStatus, getOrderHistory, getTodayStats, subscribeOrderHistory } from '../../src/services/order';
-import type { OrderHistoryItem, OrderHistoryStatus } from '../../src/types/order';
+import { useOrderStore } from '../../src/store/useOrderStore';
+import type { OrderHistoryStatus } from '../../src/types/order';
 
 type FilterKey = 'all' | OrderHistoryStatus;
 
@@ -35,23 +35,18 @@ export default function OrderHistoryPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const goBack = useGoBack('/(main)/profile');
-  const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
-  const [counts, setCounts] = useState<Record<FilterKey, number>>({ all: 0, completed: 0, cancelled: 0, transferred: 0 });
   const [filter, setFilter] = useState<FilterKey>('all');
-  const [todayStats, setTodayStats] = useState<{ count: number; totalIncome: number }>({ count: 0, totalIncome: 0 });
-
-  const load = useCallback(async () => {
-    const [list, c, stats] = await Promise.all([getOrderHistory(), countByStatus(), getTodayStats()]);
-    setOrders(list);
-    setCounts(c);
-    setTodayStats(stats);
-  }, []);
+  const orders = useOrderStore((s) => s.history);
+  const counts = useOrderStore((s) => s.statusCounts);
+  const todayStats = useOrderStore((s) => s.todayStats);
+  const hydrate = useOrderStore((s) => s.hydrate);
 
   useFocusEffect(
     useCallback(() => {
-      void load();
-      return subscribeOrderHistory(() => void load());
-    }, [load]),
+      let unsub: (() => void) | undefined;
+      void hydrate().then((fn) => { unsub = fn; });
+      return () => { unsub?.(); };
+    }, [hydrate]),
   );
 
   const visibleOrders = useMemo(() => {

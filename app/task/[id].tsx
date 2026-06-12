@@ -8,7 +8,7 @@ import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { AppIcon } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { getTaskById } from '../../src/services/task';
+import { useTaskStore } from '../../src/store/useTaskStore';
 import type { DeliveryTask } from '../../src/types/task';
 
 const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)}km`;
@@ -22,7 +22,7 @@ export default function TaskDetailPage() {
   const [task, setTask] = useState<DeliveryTask | null>(null);
 
   const loadTask = useCallback(async () => {
-    const result = await getTaskById(id);
+    const result = await useTaskStore.getState().getById(id);
     setTask(result);
   }, [id]);
 
