@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { AppIcon } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
@@ -62,8 +62,23 @@ export default function SettingsPage() {
   };
 
   const toggleNotifications = async (value: boolean) => {
-    setNotificationsEnabled(value);
-    await updateRiderSettings({ notificationsEnabled: value });
+    if (!value) {
+      Alert.alert(
+        t('settings.notifications.disableConfirm.title'),
+        t('settings.notifications.disableConfirm.message'),
+        [
+          { text: t('settings.notifications.disableConfirm.cancel'), style: 'cancel' },
+          {
+            text: t('settings.notifications.disableConfirm.ok'),
+            style: 'destructive',
+            onPress: () => void updateRiderSettings({ notificationsEnabled: false }).then(() => setNotificationsEnabled(false)),
+          },
+        ],
+      );
+      return;
+    }
+    setNotificationsEnabled(true);
+    await updateRiderSettings({ notificationsEnabled: true });
   };
 
   const goBack = useGoBack('/(main)/profile');
