@@ -18,6 +18,8 @@ export default function SignConfirmPage() {
   const goBack = useGoBack('/(main)/tasks');
   const [doorCaptured, setDoorCaptured] = useState(false);
   const [packageCaptured, setPackageCaptured] = useState(false);
+  const [doorUri, setDoorUri] = useState('');
+  const [packageUri, setPackageUri] = useState('');
   const [status, setStatus] = useState<'idle' | 'processing' | 'success'>('idle');
 
   const canSubmit = doorCaptured && packageCaptured && status !== 'processing';
@@ -66,7 +68,8 @@ export default function SignConfirmPage() {
             capturedLabel={t('sign.photoCaptured')}
             required
             title={t('sign.doorNumber')}
-            onPress={() => setDoorCaptured(true)}
+            photoUri={doorUri}
+            onPress={(uri) => { setDoorCaptured(true); setDoorUri(uri); }}
           />
           <EvidenceUpload
             actionLabel={t('sign.tapPhoto')}
@@ -74,7 +77,8 @@ export default function SignConfirmPage() {
             capturedLabel={t('sign.photoCaptured')}
             required
             title={t('sign.packageImage')}
-            onPress={() => setPackageCaptured(true)}
+            photoUri={packageUri}
+            onPress={(uri) => { setPackageCaptured(true); setPackageUri(uri); }}
           />
         </View>
       </ScrollView>

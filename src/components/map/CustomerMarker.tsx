@@ -1,9 +1,18 @@
-import { Text, View } from 'react-native';
+import { Marker } from 'react-native-maps';
 
-export function CustomerMarker() {
+import type { Coordinates } from '../../types/common';
+
+type CustomerMarkerProps = {
+  coordinate: Coordinates;
+  title?: string;
+};
+
+export function CustomerMarker({ coordinate, title = 'Delivery' }: CustomerMarkerProps) {
   return (
-    <View className="h-9 w-9 items-center justify-center rounded-full bg-[#137a3a]">
-      <Text className="text-xs font-bold text-white">D</Text>
-    </View>
+    <Marker
+      coordinate={{ latitude: coordinate.latitude, longitude: coordinate.longitude }}
+      title={title}
+      pinColor="#463200"
+    />
   );
 }

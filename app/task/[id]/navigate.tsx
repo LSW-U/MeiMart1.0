@@ -4,11 +4,14 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '../../../src/components/feedback/EmptyState';
 import { MapView } from '../../../src/components/map/MapView';
+import { NavigationLauncher } from '../../../src/components/map/NavigationLauncher';
 import { Button } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { useTaskStore } from '../../../src/store/useTaskStore';
 import type { DeliveryTask } from '../../../src/types/task';
+
+const DEFAULT_COORDINATES = { latitude: -8.5569, longitude: 125.5603 };
 
 const formatFee = (fee: number) => `$${fee.toFixed(2)}`;
 const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)} KM`;
@@ -55,7 +58,10 @@ export default function TaskNavigatePage() {
       <ScrollView className="flex-1" contentContainerClassName="pb-32">
         {task ? (
           <>
-            <MapView deliveryLabel={task.dropoff.title} pickupLabel={task.pickup.title} />
+            <MapView
+              pickup={task.pickup.coordinates ? { ...task.pickup.coordinates, title: task.pickup.title } : undefined}
+              delivery={task.dropoff.coordinates ? { ...task.dropoff.coordinates, title: task.dropoff.title } : undefined}
+            />
             <View className="-mt-8 gap-4 px-5">
               <View className="rounded-xl border border-[#8d706c]/10 bg-white p-4 shadow-md">
                 <View className="mb-6 flex-row items-start justify-between">
@@ -121,6 +127,10 @@ export default function TaskNavigatePage() {
                   </View>
                 </View>
               </View>
+
+              {task.dropoff.coordinates && (
+                <NavigationLauncher destination={task.dropoff.coordinates} label={t('tasks.arrivedDelivery')} />
+              )}
             </View>
           </>
         ) : (

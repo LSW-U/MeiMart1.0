@@ -1,15 +1,15 @@
-import { Alert, Image, ImageBackground, Pressable, Text, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Alert, Image, Pressable, Text, View } from 'react-native';
+import { useState } from 'react';
 
 import { AppIcon } from '../ui';
-
-const receiptUri = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCsnGxXF2l-3IqYly4Ii_dV8qTYIrsC7K65uKkFQTIXXkHXnD5ZaJfZfov3-3SyGlvIcTZR1l58hBiYaFZQy_nU50Uz7aPjz19dK5KmNkYZ7iJmlqqLd44um1R0-KQq7a8jEnbWHgspgdxaDItQAcA2gi09DUXz2FtpU6JY-d_TA2VJyvRLfux82Oo6WPws-InJQ2TliYc9ZhEY71ham3Fr-AYPoGEm3DTqvPq8iMqWdm6akzYcE5iVR6WsooRw8XknzmyqvZw-ew';
 
 type PhotoCaptureProps = {
   captured: boolean;
   instruction: string;
   fileName: string;
   readyLabel: string;
-  onCapture: () => void;
+  onCapture: (uri: string) => void;
   photoUri?: string;
   retakeLabel?: string;
   retakeConfirmTitle?: string;
@@ -33,7 +33,36 @@ export function PhotoCapture({
   retakeConfirmOk,
   onRetake,
 }: PhotoCaptureProps) {
-  const effectivePhotoUri = photoUri ?? receiptUri;
+  const [cameraPermission, requestCameraPermission] = ImagePicker.useCameraPermissions();
+
+  const takePhoto = async () => {
+    if (!cameraPermission?.granted) {
+      const result = await requestCameraPermission();
+      if (!result.granted) return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+      allowsEditing: false,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      onCapture(result.assets[0].uri);
+    }
+  };
+
+  const pickFromGallery = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+      allowsEditing: false,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      onCapture(result.assets[0].uri);
+    }
+  };
 
   const handleRetakePress = () => {
     if (!onRetake) return;
@@ -50,17 +79,17 @@ export function PhotoCapture({
   return (
     <View className="w-full items-center gap-6">
       <View className="aspect-[3/4] w-full max-w-sm overflow-hidden rounded-lg border border-[#e1bfba] bg-[#eed4d1] shadow-inner">
-        {captured ? (
-          <Image className="h-full w-full" resizeMode="cover" source={{ uri: effectivePhotoUri }} />
+        {captured && photoUri ? (
+          <Image className="h-full w-full" resizeMode="cover" source={{ uri: photoUri }} />
         ) : (
-          <ImageBackground className="h-full w-full items-center justify-center opacity-80" resizeMode="cover" source={{ uri: receiptUri }}>
+          <View className="h-full w-full items-center justify-center">
             <View className="h-3/5 w-4/5 items-center justify-center rounded-lg border-2 border-dashed border-white/70 bg-[#261816]/20">
               <AppIcon name="camera" className="text-5xl text-white/60" />
             </View>
-            <Pressable className="absolute bottom-4 h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-white/20" onPress={onCapture}>
+            <Pressable className="absolute bottom-4 h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-white/20" onPress={() => void takePhoto()}>
               <View className="h-12 w-12 rounded-full bg-white shadow-lg" />
             </Pressable>
-          </ImageBackground>
+          </View>
         )}
       </View>
       <View className="w-full max-w-sm gap-2">
@@ -68,10 +97,10 @@ export function PhotoCapture({
           <Text className="text-sm text-[#8d706c]">i</Text>
           <Text className="flex-1 text-xs font-bold uppercase tracking-wider text-[#59413d]">{instruction}</Text>
         </View>
-        {captured ? (
+        {captured && photoUri ? (
           <View className="h-24 flex-row items-center gap-4 rounded-lg border border-dashed border-[#e1bfba] bg-[#f7ddd9] px-4">
             <View className="h-16 w-16 overflow-hidden rounded border border-[#8d706c] bg-[#eed4d1]">
-              <Image className="h-full w-full" resizeMode="cover" source={{ uri: effectivePhotoUri }} />
+              <Image className="h-full w-full" resizeMode="cover" source={{ uri: photoUri }} />
             </View>
             <View className="flex-1">
               <Text className="text-xs font-bold uppercase tracking-wider text-[#261816]">{fileName}</Text>
@@ -87,7 +116,16 @@ export function PhotoCapture({
               </Pressable>
             ) : null}
           </View>
-        ) : null}
+        ) : (
+          <View className="flex-row gap-3">
+            <Pressable className="flex-1 items-center rounded-lg bg-[#720003] py-3" onPress={() => void takePhoto()}>
+              <Text className="text-xs font-bold text-white">CAMERA</Text>
+            </Pressable>
+            <Pressable className="flex-1 items-center rounded-lg border border-[#e1bfba] bg-white py-3" onPress={() => void pickFromGallery()}>
+              <Text className="text-xs font-bold text-[#720003]">GALLERY</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
     </View>
   );

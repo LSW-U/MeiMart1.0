@@ -1,11 +1,18 @@
-import { View } from 'react-native';
+import { Marker } from 'react-native-maps';
 
-import { AppIcon } from '../ui';
+import type { Coordinates } from '../../types/common';
 
-export function RiderMarker() {
+type RiderMarkerProps = {
+  coordinate: Coordinates;
+  title?: string;
+};
+
+export function RiderMarker({ coordinate, title = 'You' }: RiderMarkerProps) {
   return (
-    <View className="h-9 w-9 items-center justify-center rounded-full bg-[#261816]">
-      <AppIcon name="rider" className="text-xs font-bold text-white" />
-    </View>
+    <Marker
+      coordinate={{ latitude: coordinate.latitude, longitude: coordinate.longitude }}
+      title={title}
+      pinColor="#261816"
+    />
   );
 }

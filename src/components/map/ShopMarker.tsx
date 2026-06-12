@@ -1,9 +1,18 @@
-import { Text, View } from 'react-native';
+import { Marker } from 'react-native-maps';
 
-export function ShopMarker() {
+import type { Coordinates } from '../../types/common';
+
+type ShopMarkerProps = {
+  coordinate: Coordinates;
+  title?: string;
+};
+
+export function ShopMarker({ coordinate, title = 'Pickup' }: ShopMarkerProps) {
   return (
-    <View className="h-9 w-9 items-center justify-center rounded-full bg-[#720003]">
-      <Text className="text-xs font-bold text-white">P</Text>
-    </View>
+    <Marker
+      coordinate={{ latitude: coordinate.latitude, longitude: coordinate.longitude }}
+      title={title}
+      pinColor="#720003"
+    />
   );
 }

@@ -14,6 +14,7 @@ export default function PickupConfirmPage() {
   const { t } = useTranslation();
   const goBack = useGoBack('/(main)/tasks');
   const [captured, setCaptured] = useState(false);
+  const [photoUri, setPhotoUri] = useState('');
   const [processing, setProcessing] = useState(false);
 
   const handleConfirmPickup = async () => {
@@ -54,8 +55,9 @@ export default function PickupConfirmPage() {
           retakeConfirmOk={t('pickup.retakeOk')}
           retakeConfirmTitle={t('pickup.retakeTitle')}
           retakeLabel={t('pickup.retake')}
-          onCapture={() => setCaptured(true)}
-          onRetake={() => setCaptured(false)}
+          photoUri={photoUri}
+          onCapture={(uri) => { setCaptured(true); setPhotoUri(uri); }}
+          onRetake={() => { setCaptured(false); setPhotoUri(''); }}
         />
       </View>
 
