@@ -69,7 +69,7 @@ export default function RegisterPage() {
       phone: phone.startsWith('+670') ? phone : `+670 ${phone || '7700 0000'}`,
       licenseNumber: licenseNumber || 'BI-1234567',
     });
-    router.replace('/(main)/tasks');
+    router.replace('/(auth)/login');
   };
 
   return (

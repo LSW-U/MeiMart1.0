@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { setOnUnauthorized } from '../src/services/api';
 import { useAppStore } from '../src/store/useAppStore';
 import { useAuthStore } from '../src/store/useAuthStore';
 import { useEarningsStore } from '../src/store/useEarningsStore';
@@ -19,6 +20,10 @@ function StoreInitializer({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
+
+    setOnUnauthorized(() => {
+      useAuthStore.getState().logout().catch(() => {});
+    });
 
     void (async () => {
       await useAppStore.getState().hydrate();

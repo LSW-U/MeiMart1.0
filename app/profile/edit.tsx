@@ -180,13 +180,10 @@ export default function ProfileEditPage() {
             </View>
           </View>
 
-          <View className="gap-6">
+          <View>
             <Button className="h-16 rounded-2xl" textClassName="text-lg" icon={<Text className="text-lg text-white">→</Text>} onPress={() => void saveProfile()}>
               Save Profile
             </Button>
-            <Text className="text-center text-sm text-[#59413d]">
-              {t('auth.register.alreadyHaveAccount')} <Text className="font-bold text-[#720003]" onPress={() => router.push('/(auth)/login')}>{t('auth.register.login')}</Text>
-            </Text>
           </View>
         </View>
       </ScrollView>

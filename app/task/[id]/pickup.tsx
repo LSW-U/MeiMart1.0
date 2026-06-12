@@ -21,7 +21,7 @@ export default function PickupConfirmPage() {
 
     setProcessing(true);
     await useTaskStore.getState().confirmPickup(id);
-    router.push(`/task/${id}/ongoing`);
+    router.replace('/(main)/tasks?tab=pickups');
   };
 
   return (

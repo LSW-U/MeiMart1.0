@@ -11,6 +11,7 @@ export type RiderProfile = {
   vehicleType?: string;
   licenseNumber?: string;
   status: RiderStatus;
+  bondPaid?: boolean;
   currentTaskId?: DeliveryTask['id'];
   currentLocation?: Coordinates;
 };

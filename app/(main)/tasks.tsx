@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,8 +9,10 @@ import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { AppIcon } from '../../src/components/ui';
+import { Button } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
+import { useAuthStore } from '../../src/store/useAuthStore';
 import { useRiderStore } from '../../src/store/useRiderStore';
 import { useTaskStore } from '../../src/store/useTaskStore';
 import type { DeliveryTask } from '../../src/types/task';
@@ -42,8 +44,9 @@ const formatItems = (items: string[]) => `Items: ${items.join(' · ')}`;
 export default function TasksPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
   const insets = useSafeAreaInsets();
-  const [activeTab, setActiveTab] = useState<TaskTab>('new');
+  const [activeTab, setActiveTab] = useState<TaskTab>(tabParam === 'pickups' ? 'pickups' : tabParam === 'deliveries' ? 'deliveries' : 'new');
   const [menuVisible, setMenuVisible] = useState(false);
   const [pending, setPending] = useState<DutyStatus | null>(null);
   const [blockVisible, setBlockVisible] = useState(false);
@@ -56,8 +59,10 @@ export default function TasksPage() {
   const refreshTasks = useTaskStore((s) => s.refresh);
   const hasActive = useTaskStore((s) => s.hasActive);
   const accept = useTaskStore((s) => s.accept);
+  const rider = useAuthStore((s) => s.rider);
 
   const online = dutyStatus !== 'offDuty';
+  const bondPaid = rider?.bondPaid ?? true;
   const activeTasksExist = taskLists.pickups.length + taskLists.deliveries.length > 0;
 
   useEffect(() => {
@@ -121,7 +126,7 @@ export default function TasksPage() {
       ]}
       tags={index === 0 ? [t('tasks.tag.express')] : []}
       timeLabel={`Deliver within ${task.estimatedMinutes} min`}
-      onAction={() => void acceptAndOpenTask(task)}
+      onAction={() => router.push(`/task/${task.id}`)}
     />
   );
 
@@ -197,6 +202,17 @@ export default function TasksPage() {
       <ScrollView className="flex-1" contentContainerClassName="gap-6 px-3 py-6">
         {renderContent()}
       </ScrollView>
+      {!bondPaid && (
+        <View className="absolute inset-0 items-center justify-center bg-black/50 px-8">
+          <View className="gap-4 rounded-2xl bg-white p-8 shadow-xl">
+            <Text className="text-center text-xl font-bold text-[#261816]">{t('tasks.deposit.title')}</Text>
+            <Text className="text-center text-sm text-[#59413d]">{t('tasks.deposit.message')}</Text>
+            <Button className="bg-[#961813]" onPress={() => router.push('/settings')}>
+              {t('tasks.deposit.action')}
+            </Button>
+          </View>
+        </View>
+      )}
       <View
         className="flex-row items-center gap-3 border-t border-[#f7ddd9] bg-[#fff8f7] px-4 pt-3 shadow-sm"
         style={{ paddingBottom: bottomPadding }}

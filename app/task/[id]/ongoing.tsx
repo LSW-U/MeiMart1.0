@@ -57,7 +57,7 @@ export default function TaskOngoingPage() {
               tags={[t('tasks.tag.callOnArrival'), t('tasks.tag.doNotLeave'), t('tasks.tag.express')]}
               timeLabel={`Remaining ${task.estimatedMinutes} min`}
               variant="active"
-              onAction={() => router.push(`/task/${id}/navigate`)}
+              onAction={() => router.push(`/task/${id}/sign`)}
             />
             <View className="mt-3">
               <Text className="text-sm text-[#59413d]">

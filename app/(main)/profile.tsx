@@ -1,8 +1,9 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '../../src/components/ui';
+import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
@@ -35,6 +36,8 @@ export default function ProfilePage() {
   const rider = useAuthStore((s) => s.rider);
   const logout = useAuthStore((s) => s.logout);
   const hydrate = useAuthStore((s) => s.hydrate);
+
+  const [logoutVisible, setLogoutVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -124,8 +127,18 @@ export default function ProfilePage() {
         <View className="mx-5 h-px bg-[#e1bfba]/40" />
         <MenuItem icon="help" label={t('profile.helpCenter')} onPress={() => router.push('/help')} />
         <View className="mx-5 h-px bg-[#e1bfba]/40" />
-        <MenuItem icon="logout" label={t('profile.logout')} tone="danger" onPress={() => void handleLogout()} />
+        <MenuItem icon="logout" label={t('profile.logout')} tone="danger" onPress={() => setLogoutVisible(true)} />
       </View>
+
+      <ConfirmDialog
+        cancelLabel={t('duty.confirm.cancel')}
+        message={t('profile.logoutConfirmMessage')}
+        okLabel={t('profile.logout')}
+        title={t('profile.logoutConfirmTitle')}
+        visible={logoutVisible}
+        onCancel={() => setLogoutVisible(false)}
+        onOk={() => { setLogoutVisible(false); void handleLogout(); }}
+      />
     </ScrollView>
   );
 }

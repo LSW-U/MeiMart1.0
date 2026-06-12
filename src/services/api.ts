@@ -12,6 +12,7 @@ export class ApiError extends Error {
 }
 
 let authToken: string | null = null;
+let onUnauthorized: (() => void) | null = null;
 
 export function setAuthToken(token: string | null) {
   authToken = token;
@@ -19,6 +20,10 @@ export function setAuthToken(token: string | null) {
 
 export function getAuthToken() {
   return authToken;
+}
+
+export function setOnUnauthorized(cb: (() => void) | null) {
+  onUnauthorized = cb;
 }
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -43,6 +48,12 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
       if (body.code) code = body.code;
       if (body.message) message = body.message;
     } catch {}
+
+    if (response.status === 401) {
+      authToken = null;
+      onUnauthorized?.();
+    }
+
     throw new ApiError(response.status, code, message);
   }
 

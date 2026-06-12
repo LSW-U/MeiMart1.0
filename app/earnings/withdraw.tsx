@@ -37,6 +37,7 @@ export default function WithdrawalPage() {
     try {
       await useEarningsStore.getState().withdraw(parsedAmount, method);
       setStatus('success');
+      setTimeout(() => router.replace('/(main)/earnings'), 800);
     } catch (e) {
       setStatus('error');
       setErrorMsg(e instanceof Error ? e.message : 'Withdrawal failed');

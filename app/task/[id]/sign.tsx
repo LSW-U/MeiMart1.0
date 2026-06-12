@@ -28,7 +28,7 @@ export default function SignConfirmPage() {
     setStatus('processing');
     await useTaskStore.getState().confirmDelivery(id);
     setStatus('success');
-    setTimeout(() => router.push('/(main)/tasks'), 500);
+    setTimeout(() => router.replace('/(main)/tasks?tab=deliveries'), 500);
   };
 
   return (
