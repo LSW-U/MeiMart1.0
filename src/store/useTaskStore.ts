@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import type { DeliveryTask } from '../types/task';
+import { confirmPickup, confirmDelivery } from '../services/delivery';
 import { getTaskById, getTaskLists, acceptTask, hasActiveTasks, updateTaskStatus } from '../services/task';
 
 type TaskLists = {
@@ -18,6 +19,8 @@ type TaskState = {
   hasActive: () => Promise<boolean>;
   accept: (id: string) => Promise<void>;
   updateStatus: (id: string, status: DeliveryTask['status']) => Promise<void>;
+  confirmPickup: (id: string) => Promise<void>;
+  confirmDelivery: (id: string) => Promise<void>;
 };
 
 export const useTaskStore = create<TaskState>((set, get) => ({
@@ -49,6 +52,16 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
   updateStatus: async (id: string, status) => {
     await updateTaskStatus(id, status);
+    await get().refresh();
+  },
+
+  confirmPickup: async (id: string) => {
+    await confirmPickup(id);
+    await get().refresh();
+  },
+
+  confirmDelivery: async (id: string) => {
+    await confirmDelivery(id);
     await get().refresh();
   },
 }));

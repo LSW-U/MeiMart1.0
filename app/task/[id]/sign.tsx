@@ -6,7 +6,7 @@ import { EvidenceExample, EvidenceUpload } from '../../../src/components/camera/
 import { Button } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
-import { confirmDelivery } from '../../../src/services/delivery';
+import { useTaskStore } from '../../../src/store/useTaskStore';
 
 const doorExampleUri = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMHfhBvHWt0EecfMzNQjHgZFZdCRkcX5m9k6xbe1n5-EuFhwQzbzaGDpescZFwxD6bwuFdYiDnqr0XjS4F7jp7iHOsTQZsAYXd4v1pQE4cTFZCj8xdbHqm0VafUAXRae7WVXt0tG_RkbJtgmY__0k2-My2H5W_HoUKhk712Vr-w-zh5rwImNXPpXr2gH5MmFWODGepHtni4Ewasgd55Jqoon6xLKPjeix0QJrFE2KSKWYhGbqqX5omVklWn9OoJrLxpxg1G9PLEQ';
 const packageExampleUri = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDCKIaAFgN904UuZQyPS-CIO6WA5rJyPR3Kb9_GetDw7gCAox--tq9ZYbenQOj9DPKVlzTAXhoMzo6aPzcSwyrRgyvc0txMXchb9Q0yF0l-F0HuDclzq1gVRXnghARoPCnj-clXMfCtTWltbLzJj4jy7LcA8Evyz9IxE72TfKvDIm47Y9_LnyBovKiA9swd3jHEko3m5HbB3lPWaGP71vYmLRoInHXMThMjqrFnid0BLOlLqFU2mpH2nPDcFNwFVsEkCUCFOWTlaA';
@@ -26,7 +26,7 @@ export default function SignConfirmPage() {
     if (!canSubmit) return;
 
     setStatus('processing');
-    await confirmDelivery(id);
+    await useTaskStore.getState().confirmDelivery(id);
     setStatus('success');
     setTimeout(() => router.push('/(main)/tasks'), 500);
   };

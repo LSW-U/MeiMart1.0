@@ -6,7 +6,7 @@ import { PhotoCapture } from '../../../src/components/camera/PhotoCapture';
 import { SwipeButton } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
-import { confirmPickup } from '../../../src/services/delivery';
+import { useTaskStore } from '../../../src/store/useTaskStore';
 
 export default function PickupConfirmPage() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function PickupConfirmPage() {
     if (!captured || processing) return;
 
     setProcessing(true);
-    await confirmPickup(id);
+    await useTaskStore.getState().confirmPickup(id);
     router.push(`/task/${id}/ongoing`);
   };
 
