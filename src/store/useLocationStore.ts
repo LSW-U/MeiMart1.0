@@ -1,9 +1,14 @@
-import type { Coordinates } from '@/src/types/common';
-import { DEFAULT_COORDINATES } from '@/src/utils/constants';
+import { create } from 'zustand';
 
-export function useLocationStore() {
-  return {
-    coordinates: DEFAULT_COORDINATES as Coordinates,
-    setCoordinates: (_coordinates: Coordinates) => undefined,
-  };
-}
+import type { Coordinates } from '../types/common';
+import { DEFAULT_COORDINATES } from '../utils/constants';
+
+type LocationState = {
+  coordinates: Coordinates;
+  setCoordinates: (coordinates: Coordinates) => void;
+};
+
+export const useLocationStore = create<LocationState>((set) => ({
+  coordinates: DEFAULT_COORDINATES,
+  setCoordinates: (coordinates) => set({ coordinates }),
+}));
