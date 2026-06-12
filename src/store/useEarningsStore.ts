@@ -1,13 +1,14 @@
 import { create } from 'zustand';
 
-import type { EarningSummary, EarningTransaction } from '../types/earnings';
-import { getEarningSummary, getEarningTransactions, subscribeEarningSummary, subscribeEarningTransactions } from '../services/earnings';
+import type { EarningSummary, EarningTransaction, WithdrawalRequest } from '../types/earnings';
+import { getEarningSummary, getEarningTransactions, createWithdrawal, subscribeEarningSummary, subscribeEarningTransactions } from '../services/earnings';
 
 type EarningsState = {
   summary: EarningSummary | null;
   transactions: EarningTransaction[];
   hydrated: boolean;
   hydrate: () => Promise<() => void>;
+  withdraw: (amount: number, method: WithdrawalRequest['method']) => Promise<void>;
 };
 
 export const useEarningsStore = create<EarningsState>((set) => ({
@@ -25,5 +26,9 @@ export const useEarningsStore = create<EarningsState>((set) => ({
     const unsubSummary = subscribeEarningSummary((s) => set({ summary: s }));
     const unsubTx = subscribeEarningTransactions((txs) => set({ transactions: txs }));
     return () => { unsubSummary(); unsubTx(); };
+  },
+
+  withdraw: async (amount, method) => {
+    await createWithdrawal(amount, method);
   },
 }));

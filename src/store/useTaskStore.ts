@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import type { DeliveryTask } from '../types/task';
-import { getAvailableTasks, getTaskLists, acceptTask, updateTaskStatus } from '../services/task';
+import { getTaskById, getTaskLists, acceptTask, hasActiveTasks, updateTaskStatus } from '../services/task';
 
 type TaskLists = {
   available: DeliveryTask[];
@@ -14,6 +14,8 @@ type TaskState = {
   hydrated: boolean;
   hydrate: () => Promise<void>;
   refresh: () => Promise<void>;
+  getById: (id: string) => Promise<DeliveryTask | null>;
+  hasActive: () => Promise<boolean>;
   accept: (id: string) => Promise<void>;
   updateStatus: (id: string, status: DeliveryTask['status']) => Promise<void>;
 };
@@ -30,6 +32,14 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   refresh: async () => {
     const lists = await getTaskLists();
     set({ lists });
+  },
+
+  getById: async (id) => {
+    return getTaskById(id);
+  },
+
+  hasActive: async () => {
+    return hasActiveTasks();
   },
 
   accept: async (id: string) => {

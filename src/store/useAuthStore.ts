@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import type { RiderProfile } from '../types/rider';
-import { getRiderProfile, isRiderSessionActive, startRiderSession, updateRiderProfile, resetRiderSession } from '../services/user';
+import { getRiderProfile, isRiderSessionActive, startRiderSession, registerRiderProfile, updateRiderProfile, resetRiderSession } from '../services/user';
 
 type AuthState = {
   token: string | null;
@@ -10,6 +10,7 @@ type AuthState = {
   hydrate: () => Promise<void>;
   login: () => Promise<void>;
   logout: () => Promise<void>;
+  register: (profile: Partial<RiderProfile>) => Promise<void>;
   updateProfile: (patch: Partial<RiderProfile>) => Promise<void>;
 };
 
@@ -37,6 +38,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     await resetRiderSession();
     set({ token: null, rider: null });
+  },
+
+  register: async (profile) => {
+    const registered = await registerRiderProfile(profile);
+    set({ token: 'session', rider: registered });
   },
 
   updateProfile: async (patch: Partial<RiderProfile>) => {
