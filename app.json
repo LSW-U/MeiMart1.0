@@ -20,6 +20,16 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-localization",
+      "expo-image",
+      "expo-secure-store",
+      "expo-splash-screen",
+      "expo-font",
+      "expo-status-bar",
+      "@sentry/react-native"
+    ]
   }
 }
