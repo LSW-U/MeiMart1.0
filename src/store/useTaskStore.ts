@@ -28,40 +28,79 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   hydrated: false,
 
   hydrate: async () => {
-    const lists = await getTaskLists();
-    set({ lists, hydrated: true });
+    try {
+      const lists = await getTaskLists();
+      set({ lists, hydrated: true });
+    } catch (e) {
+      console.error('[useTaskStore] hydrate failed:', e);
+      set({ hydrated: true });
+    }
   },
 
   refresh: async () => {
-    const lists = await getTaskLists();
-    set({ lists });
+    try {
+      const lists = await getTaskLists();
+      set({ lists });
+    } catch (e) {
+      console.error('[useTaskStore] refresh failed:', e);
+    }
   },
 
   getById: async (id) => {
-    return getTaskById(id);
+    try {
+      return await getTaskById(id);
+    } catch (e) {
+      console.error('[useTaskStore] getById failed:', e);
+      return null;
+    }
   },
 
   hasActive: async () => {
-    return hasActiveTasks();
+    try {
+      return await hasActiveTasks();
+    } catch (e) {
+      console.error('[useTaskStore] hasActive failed:', e);
+      return false;
+    }
   },
 
   accept: async (id: string) => {
-    await acceptTask(id);
-    await get().refresh();
+    try {
+      await acceptTask(id);
+      await get().refresh();
+    } catch (e) {
+      console.error('[useTaskStore] accept failed:', e);
+      throw e;
+    }
   },
 
   updateStatus: async (id: string, status) => {
-    await updateTaskStatus(id, status);
-    await get().refresh();
+    try {
+      await updateTaskStatus(id, status);
+      await get().refresh();
+    } catch (e) {
+      console.error('[useTaskStore] updateStatus failed:', e);
+      throw e;
+    }
   },
 
   confirmPickup: async (id: string) => {
-    await confirmPickup(id);
-    await get().refresh();
+    try {
+      await confirmPickup(id);
+      await get().refresh();
+    } catch (e) {
+      console.error('[useTaskStore] confirmPickup failed:', e);
+      throw e;
+    }
   },
 
   confirmDelivery: async (id: string) => {
-    await confirmDelivery(id);
-    await get().refresh();
+    try {
+      await confirmDelivery(id);
+      await get().refresh();
+    } catch (e) {
+      console.error('[useTaskStore] confirmDelivery failed:', e);
+      throw e;
+    }
   },
 }));

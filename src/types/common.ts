@@ -1,5 +1,3 @@
-export type Locale = 'en' | 'tet' | 'pt' | 'id';
-
 export type Coordinates = {
   latitude: number;
   longitude: number;

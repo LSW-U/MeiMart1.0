@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 
-import type { Locale } from '../types/common';
 import { getCurrentLanguage, setCurrentLanguage, subscribeRiderSettings, type AppLanguage } from '../services/settings';
 
 type AppState = {
@@ -15,15 +14,25 @@ export const useAppStore = create<AppState>((set) => ({
   theme: 'light',
 
   setLocale: async (locale: AppLanguage) => {
-    await setCurrentLanguage(locale);
-    set({ locale });
+    try {
+      await setCurrentLanguage(locale);
+      set({ locale });
+    } catch (e) {
+      console.error('[useAppStore] setLocale failed:', e);
+    }
   },
 
   hydrate: async () => {
-    const lang = await getCurrentLanguage();
-    set({ locale: lang });
-    subscribeRiderSettings((settings) => {
-      set({ locale: settings.language });
-    });
+    try {
+      const lang = await getCurrentLanguage();
+      set({ locale: lang });
+      subscribeRiderSettings((settings) => {
+        set({ locale: settings.language });
+      });
+    } catch (e) {
+      console.error('[useAppStore] hydrate failed:', e);
+    }
   },
 }));
+
+export type { AppLanguage };

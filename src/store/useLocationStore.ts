@@ -15,6 +15,10 @@ export const useLocationStore = create<LocationState>((set, get) => ({
   setCoordinates: (coordinates) => set({ coordinates }),
 
   report: async () => {
-    await reportLocation(get().coordinates);
+    try {
+      await reportLocation(get().coordinates);
+    } catch (e) {
+      console.error('[useLocationStore] report failed:', e);
+    }
   },
 }));

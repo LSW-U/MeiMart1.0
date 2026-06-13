@@ -19,37 +19,56 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   hydrated: false,
 
   hydrate: async () => {
-    const [items, unreadCount] = await Promise.all([
-      getNotifications(),
-      getUnreadCount(),
-    ]);
-    set({ items, unreadCount, hydrated: true });
+    try {
+      const [items, unreadCount] = await Promise.all([
+        getNotifications(),
+        getUnreadCount(),
+      ]);
+      set({ items, unreadCount, hydrated: true });
 
-    const unsub = subscribeNotifications(async (items) => {
-      const unreadCount = items.filter((i) => !i.read).length;
-      set({ items, unreadCount });
-    });
-    return unsub;
+      const unsub = subscribeNotifications(async (items) => {
+        const unreadCount = items.filter((i) => !i.read).length;
+        set({ items, unreadCount });
+      });
+      return unsub;
+    } catch (e) {
+      console.error('[useNotificationStore] hydrate failed:', e);
+      set({ hydrated: true });
+      return () => {};
+    }
   },
 
   markRead: async (id: string) => {
-    await markAsRead(id);
-    const unreadCount = await getUnreadCount();
-    set({ unreadCount });
+    try {
+      await markAsRead(id);
+      const unreadCount = await getUnreadCount();
+      set({ unreadCount });
+    } catch (e) {
+      console.error('[useNotificationStore] markRead failed:', e);
+    }
   },
 
   markAllRead: async () => {
-    await markAllAsRead();
-    set({ unreadCount: 0 });
+    try {
+      await markAllAsRead();
+      set({ unreadCount: 0 });
+    } catch (e) {
+      console.error('[useNotificationStore] markAllRead failed:', e);
+    }
   },
 
   add: async (input) => {
-    const result = await addNotification(input);
-    if (result) {
-      const items = await getNotifications();
-      const unreadCount = items.filter((i) => !i.read).length;
-      set({ items, unreadCount });
+    try {
+      const result = await addNotification(input);
+      if (result) {
+        const items = await getNotifications();
+        const unreadCount = items.filter((i) => !i.read).length;
+        set({ items, unreadCount });
+      }
+      return result;
+    } catch (e) {
+      console.error('[useNotificationStore] add failed:', e);
+      return null;
     }
-    return result;
   },
 }));

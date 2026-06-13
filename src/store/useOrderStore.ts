@@ -20,28 +20,43 @@ export const useOrderStore = create<OrderState>((set) => ({
   hydrated: false,
 
   hydrate: async () => {
-    const [history, statusCounts, todayStats] = await Promise.all([
-      getOrderHistory(),
-      countByStatus(),
-      getTodayStats(),
-    ]);
-    set({ history, statusCounts, todayStats, hydrated: true });
-
-    const unsub = subscribeOrderHistory(async (items) => {
-      const [statusCounts, todayStats] = await Promise.all([
+    try {
+      const [history, statusCounts, todayStats] = await Promise.all([
+        getOrderHistory(),
         countByStatus(),
         getTodayStats(),
       ]);
-      set({ history: items, statusCounts, todayStats });
-    });
-    return unsub;
+      set({ history, statusCounts, todayStats, hydrated: true });
+
+      const unsub = subscribeOrderHistory(async (items) => {
+        const [statusCounts, todayStats] = await Promise.all([
+          countByStatus(),
+          getTodayStats(),
+        ]);
+        set({ history: items, statusCounts, todayStats });
+      });
+      return unsub;
+    } catch (e) {
+      console.error('[useOrderStore] hydrate failed:', e);
+      set({ hydrated: true });
+      return () => {};
+    }
   },
 
   getById: async (id: string) => {
-    return getOrderById(id);
+    try {
+      return await getOrderById(id);
+    } catch (e) {
+      console.error('[useOrderStore] getById failed:', e);
+      return null;
+    }
   },
 
   add: async (item: OrderHistoryItem) => {
-    await addOrderHistory(item);
+    try {
+      await addOrderHistory(item);
+    } catch (e) {
+      console.error('[useOrderStore] add failed:', e);
+    }
   },
 }));

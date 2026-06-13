@@ -17,18 +17,29 @@ export const useEarningsStore = create<EarningsState>((set) => ({
   hydrated: false,
 
   hydrate: async () => {
-    const [summary, transactions] = await Promise.all([
-      getEarningSummary(),
-      getEarningTransactions(),
-    ]);
-    set({ summary, transactions, hydrated: true });
+    try {
+      const [summary, transactions] = await Promise.all([
+        getEarningSummary(),
+        getEarningTransactions(),
+      ]);
+      set({ summary, transactions, hydrated: true });
 
-    const unsubSummary = subscribeEarningSummary((s) => set({ summary: s }));
-    const unsubTx = subscribeEarningTransactions((txs) => set({ transactions: txs }));
-    return () => { unsubSummary(); unsubTx(); };
+      const unsubSummary = subscribeEarningSummary((s) => set({ summary: s }));
+      const unsubTx = subscribeEarningTransactions((txs) => set({ transactions: txs }));
+      return () => { unsubSummary(); unsubTx(); };
+    } catch (e) {
+      console.error('[useEarningsStore] hydrate failed:', e);
+      set({ hydrated: true });
+      return () => {};
+    }
   },
 
   withdraw: async (amount, method) => {
-    await createWithdrawal(amount, method);
+    try {
+      await createWithdrawal(amount, method);
+    } catch (e) {
+      console.error('[useEarningsStore] withdraw failed:', e);
+      throw e;
+    }
   },
 }));

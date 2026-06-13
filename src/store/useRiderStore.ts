@@ -20,26 +20,40 @@ export const useRiderStore = create<RiderState>((set) => ({
   hydrated: false,
 
   hydrate: async () => {
-    const settings = await getRiderSettings();
-    set({
-      status: settings.dutyStatus,
-      notificationsEnabled: settings.notificationsEnabled,
-      hydrated: true,
-    });
-    const unsub = subscribeRiderSettings((settings) => {
+    try {
+      const settings = await getRiderSettings();
       set({
         status: settings.dutyStatus,
         notificationsEnabled: settings.notificationsEnabled,
+        hydrated: true,
       });
-    });
-    return unsub;
+      const unsub = subscribeRiderSettings((settings) => {
+        set({
+          status: settings.dutyStatus,
+          notificationsEnabled: settings.notificationsEnabled,
+        });
+      });
+      return unsub;
+    } catch (e) {
+      console.error('[useRiderStore] hydrate failed:', e);
+      set({ hydrated: true });
+      return () => {};
+    }
   },
 
   setDutyStatus: async (status: DutyStatus) => {
-    await updateRiderSettings({ dutyStatus: status });
+    try {
+      await updateRiderSettings({ dutyStatus: status });
+    } catch (e) {
+      console.error('[useRiderStore] setDutyStatus failed:', e);
+    }
   },
 
   toggleNotifications: async (enabled: boolean) => {
-    await updateRiderSettings({ notificationsEnabled: enabled });
+    try {
+      await updateRiderSettings({ notificationsEnabled: enabled });
+    } catch (e) {
+      console.error('[useRiderStore] toggleNotifications failed:', e);
+    }
   },
 }));

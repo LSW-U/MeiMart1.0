@@ -20,33 +20,57 @@ export const useAuthStore = create<AuthState>((set) => ({
   hydrated: false,
 
   hydrate: async () => {
-    const active = await isRiderSessionActive();
-    if (active) {
-      const profile = await getRiderProfile();
-      set({ token: 'session', rider: profile, hydrated: true });
-    } else {
+    try {
+      const active = await isRiderSessionActive();
+      if (active) {
+        const profile = await getRiderProfile();
+        set({ token: 'session', rider: profile, hydrated: true });
+      } else {
+        set({ hydrated: true });
+      }
+    } catch (e) {
+      console.error('[useAuthStore] hydrate failed:', e);
       set({ hydrated: true });
     }
   },
 
   login: async () => {
-    await startRiderSession();
-    const profile = await getRiderProfile();
-    set({ token: 'session', rider: profile });
+    try {
+      await startRiderSession();
+      const profile = await getRiderProfile();
+      set({ token: 'session', rider: profile });
+    } catch (e) {
+      console.error('[useAuthStore] login failed:', e);
+      throw e;
+    }
   },
 
   logout: async () => {
-    await resetRiderSession();
+    try {
+      await resetRiderSession();
+    } catch (e) {
+      console.error('[useAuthStore] logout failed:', e);
+    }
     set({ token: null, rider: null });
   },
 
   register: async (profile) => {
-    const registered = await registerRiderProfile(profile);
-    set({ token: 'session', rider: registered });
+    try {
+      const registered = await registerRiderProfile(profile);
+      set({ token: 'session', rider: registered });
+    } catch (e) {
+      console.error('[useAuthStore] register failed:', e);
+      throw e;
+    }
   },
 
   updateProfile: async (patch: Partial<RiderProfile>) => {
-    const updated = await updateRiderProfile(patch);
-    set({ rider: updated });
+    try {
+      const updated = await updateRiderProfile(patch);
+      set({ rider: updated });
+    } catch (e) {
+      console.error('[useAuthStore] updateProfile failed:', e);
+      throw e;
+    }
   },
 }));
