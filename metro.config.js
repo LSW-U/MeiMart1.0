@@ -1,7 +1,9 @@
+const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 const { withNativeWind } = require('nativewind/metro');
 
-const config = getDefaultConfig(__dirname__);
+const projectRoot = path.resolve(__dirname);
+const config = getDefaultConfig(projectRoot);
 
 // SVG transformer
 const { transformer } = config;
