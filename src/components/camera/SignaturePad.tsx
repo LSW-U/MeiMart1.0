@@ -1,4 +1,5 @@
-import { Platform, Text, View } from 'react-native';
+import React from 'react';
+import { Platform, Pressable, Text, View } from 'react-native';
 
 type EvidenceExampleProps = {
   label: string;
@@ -64,16 +65,46 @@ function EvidenceUploadNative({ title, actionLabel, capturedLabel, required = fa
   );
 }
 
-function EvidenceUploadPlaceholder({ title, actionLabel, required = false, captured, capturedLabel }: EvidenceUploadProps) {
+function EvidenceUploadWeb({ title, actionLabel, capturedLabel, required = false, captured, photoUri, onPress }: EvidenceUploadProps) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') onPress(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <View className="gap-2">
       <View className="flex-row items-center gap-1">
         <Text className="text-xl font-semibold text-[#261816]">{title}</Text>
         {required ? <Text className="font-bold text-[#720003]">*</Text> : null}
       </View>
-      <View className="aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed border-[#8d706c] bg-[#eed4d1]">
-        <Text className="text-xs font-bold uppercase tracking-wider text-[#59413d]">Camera not available on Web</Text>
-      </View>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleFile}
+      />
+      <Pressable
+        className={`aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed overflow-hidden ${captured ? 'border-[#634700] bg-[#ffdea3]/20' : 'border-[#8d706c] bg-white'}`}
+        onPress={() => inputRef.current?.click()}
+      >
+        {captured && photoUri ? (
+          <img src={photoUri} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <>
+            <Text className="mb-1 text-4xl text-[#8d706c]">CAM</Text>
+            <Text className="text-xs font-bold uppercase tracking-wider text-[#59413d]">{actionLabel}</Text>
+          </>
+        )}
+      </Pressable>
       {captured && (
         <Text className="text-center text-xs font-bold text-[#634700]">{capturedLabel}</Text>
       )}
@@ -82,6 +113,6 @@ function EvidenceUploadPlaceholder({ title, actionLabel, required = false, captu
 }
 
 export function EvidenceUpload(props: EvidenceUploadProps) {
-  if (Platform.OS === 'web') return <EvidenceUploadPlaceholder {...props} />;
+  if (Platform.OS === 'web') return <EvidenceUploadWeb {...props} />;
   return <EvidenceUploadNative {...props} />;
 }
