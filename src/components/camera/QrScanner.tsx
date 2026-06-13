@@ -1,12 +1,13 @@
-import { CameraView, BarcodeScanningResult, useCameraPermissions } from 'expo-camera';
-import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
 type QrScannerProps = {
   onScan?: (value: string) => void;
 };
 
-export function QrScanner({ onScan }: QrScannerProps) {
+function QrScannerNative({ onScan }: QrScannerProps) {
+  const { useState } = require('react');
+  const { CameraView, BarcodeScanningResult, useCameraPermissions } = require('expo-camera');
+
   const [scanned, setScanned] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const [requested, setRequested] = useState(false);
@@ -37,7 +38,7 @@ export function QrScanner({ onScan }: QrScannerProps) {
     );
   }
 
-  const handleBarcodeScanned = (result: BarcodeScanningResult) => {
+  const handleBarcodeScanned = (result: { data: string }) => {
     if (scanned) return;
     setScanned(true);
     onScan?.(result.data);
@@ -59,4 +60,19 @@ export function QrScanner({ onScan }: QrScannerProps) {
       </View>
     </View>
   );
+}
+
+function QrScannerPlaceholder() {
+  return (
+    <View className="items-center rounded-3xl border border-dashed border-[#720003] bg-white p-6">
+      <Text className="text-4xl text-[#720003]/40">QR</Text>
+      <Text className="mt-2 text-xs font-bold uppercase tracking-wider text-[#59413d]">QR Scanner</Text>
+      <Text className="mt-1 text-[10px] text-[#8d706c]">Available on iOS / Android</Text>
+    </View>
+  );
+}
+
+export function QrScanner(props: QrScannerProps) {
+  if (Platform.OS === 'web') return <QrScannerPlaceholder />;
+  return <QrScannerNative {...props} />;
 }

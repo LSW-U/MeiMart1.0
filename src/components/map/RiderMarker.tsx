@@ -1,4 +1,4 @@
-import { Marker } from 'react-native-maps';
+import { Platform } from 'react-native';
 
 import type { Coordinates } from '../../types/common';
 
@@ -7,7 +7,8 @@ type RiderMarkerProps = {
   title?: string;
 };
 
-export function RiderMarker({ coordinate, title = 'You' }: RiderMarkerProps) {
+function RiderMarkerNative({ coordinate, title = 'You' }: RiderMarkerProps) {
+  const { Marker } = require('react-native-maps');
   return (
     <Marker
       coordinate={{ latitude: coordinate.latitude, longitude: coordinate.longitude }}
@@ -15,4 +16,9 @@ export function RiderMarker({ coordinate, title = 'You' }: RiderMarkerProps) {
       pinColor="#261816"
     />
   );
+}
+
+export function RiderMarker(props: RiderMarkerProps) {
+  if (Platform.OS === 'web') return null;
+  return <RiderMarkerNative {...props} />;
 }

@@ -1,6 +1,4 @@
-import * as ImagePicker from 'expo-image-picker';
-import { Alert, Image, Pressable, Text, View } from 'react-native';
-import { useState } from 'react';
+import { Platform, Text, View } from 'react-native';
 
 import { AppIcon } from '../ui';
 
@@ -19,7 +17,7 @@ type PhotoCaptureProps = {
   onRetake?: () => void;
 };
 
-export function PhotoCapture({
+function PhotoCaptureNative({
   captured,
   instruction,
   fileName,
@@ -33,6 +31,9 @@ export function PhotoCapture({
   retakeConfirmOk,
   onRetake,
 }: PhotoCaptureProps) {
+  const ImagePicker = require('expo-image-picker');
+  const { Alert, Image, Pressable } = require('react-native');
+
   const [cameraPermission, requestCameraPermission] = ImagePicker.useCameraPermissions();
 
   const takePhoto = async () => {
@@ -40,28 +41,13 @@ export function PhotoCapture({
       const result = await requestCameraPermission();
       if (!result.granted) return;
     }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
-      allowsEditing: false,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      onCapture(result.assets[0].uri);
-    }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8, allowsEditing: false });
+    if (!result.canceled && result.assets[0]) onCapture(result.assets[0].uri);
   };
 
   const pickFromGallery = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
-      allowsEditing: false,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      onCapture(result.assets[0].uri);
-    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8, allowsEditing: false });
+    if (!result.canceled && result.assets[0]) onCapture(result.assets[0].uri);
   };
 
   const handleRetakePress = () => {
@@ -129,4 +115,28 @@ export function PhotoCapture({
       </View>
     </View>
   );
+}
+
+function PhotoCapturePlaceholder({ captured, instruction, fileName, readyLabel, onCapture, onRetake }: PhotoCaptureProps) {
+  return (
+    <View className="w-full items-center gap-4">
+      <View className="aspect-[3/4] w-full max-w-sm items-center justify-center rounded-lg border border-dashed border-[#e1bfba] bg-[#eed4d1]">
+        <View className="items-center gap-2">
+          <AppIcon name="camera" className="text-5xl text-[#720003]/40" />
+          <Text className="text-xs font-bold uppercase tracking-wider text-[#59413d]">Camera not available on Web</Text>
+        </View>
+      </View>
+      <View className="w-full max-w-sm gap-2">
+        <View className="flex-row items-center gap-2 px-2">
+          <Text className="text-sm text-[#8d706c]">i</Text>
+          <Text className="flex-1 text-xs font-bold uppercase tracking-wider text-[#59413d]">{instruction}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+export function PhotoCapture(props: PhotoCaptureProps) {
+  if (Platform.OS === 'web') return <PhotoCapturePlaceholder {...props} />;
+  return <PhotoCaptureNative {...props} />;
 }

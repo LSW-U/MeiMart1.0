@@ -1,4 +1,4 @@
-import { Marker } from 'react-native-maps';
+import { Platform } from 'react-native';
 
 import type { Coordinates } from '../../types/common';
 
@@ -7,7 +7,8 @@ type CustomerMarkerProps = {
   title?: string;
 };
 
-export function CustomerMarker({ coordinate, title = 'Delivery' }: CustomerMarkerProps) {
+function CustomerMarkerNative({ coordinate, title = 'Delivery' }: CustomerMarkerProps) {
+  const { Marker } = require('react-native-maps');
   return (
     <Marker
       coordinate={{ latitude: coordinate.latitude, longitude: coordinate.longitude }}
@@ -15,4 +16,9 @@ export function CustomerMarker({ coordinate, title = 'Delivery' }: CustomerMarke
       pinColor="#463200"
     />
   );
+}
+
+export function CustomerMarker(props: CustomerMarkerProps) {
+  if (Platform.OS === 'web') return null;
+  return <CustomerMarkerNative {...props} />;
 }

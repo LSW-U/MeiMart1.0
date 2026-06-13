@@ -1,6 +1,8 @@
-import MapViewRN, { Marker, PROVIDER_DEFAULT, Region } from 'react-native-maps';
+import { Platform, Text, View } from 'react-native';
 
 import type { Coordinates } from '../../types/common';
+
+type Region = { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number };
 
 type MapViewProps = {
   pickup?: Coordinates & { title?: string };
@@ -11,17 +13,15 @@ type MapViewProps = {
   children?: React.ReactNode;
 };
 
-const DEFAULT_REGION: Region = {
-  latitude: -8.5569,
-  longitude: 125.5603,
-  latitudeDelta: 0.05,
-  longitudeDelta: 0.05,
-};
+const DEFAULT_LAT = -8.5569;
+const DEFAULT_LNG = 125.5603;
 
-export function MapView({ pickup, delivery, rider, region, onRegionChange, children }: MapViewProps) {
+function MapViewNative({ pickup, delivery, rider, region, onRegionChange, children }: MapViewProps) {
+  const { default: MapViewRN, Marker, PROVIDER_DEFAULT } = require('react-native-maps');
+
   const initialRegion = region ?? {
-    latitude: pickup?.latitude ?? DEFAULT_REGION.latitude,
-    longitude: pickup?.longitude ?? DEFAULT_REGION.longitude,
+    latitude: pickup?.latitude ?? DEFAULT_LAT,
+    longitude: pickup?.longitude ?? DEFAULT_LNG,
     latitudeDelta: 0.05,
     longitudeDelta: 0.05,
   };
@@ -61,4 +61,23 @@ export function MapView({ pickup, delivery, rider, region, onRegionChange, child
       {children}
     </MapViewRN>
   );
+}
+
+function MapViewPlaceholder({ pickup, delivery }: MapViewProps) {
+  return (
+    <View className="w-full items-center justify-center bg-[#eed4d1]" style={{ height: 320 }}>
+      <View className="items-center gap-2">
+        <Text className="text-4xl text-[#720003]/40">MAP</Text>
+        <Text className="text-xs font-bold uppercase tracking-wider text-[#59413d]">
+          {pickup && delivery ? `${pickup.title ?? 'P'} → ${delivery.title ?? 'D'}` : 'Map view'}
+        </Text>
+        <Text className="mt-1 text-[10px] text-[#8d706c]">Available on iOS / Android</Text>
+      </View>
+    </View>
+  );
+}
+
+export function MapView(props: MapViewProps) {
+  if (Platform.OS === 'web') return <MapViewPlaceholder {...props} />;
+  return <MapViewNative {...props} />;
 }
