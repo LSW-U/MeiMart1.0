@@ -6,3 +6,4 @@ export { Input } from './Input';
 export { Modal } from './Modal';
 export { Skeleton } from './Skeleton';
 export { SwipeButton } from './SwipeButton';
+export { UploadTile } from './UploadTile';

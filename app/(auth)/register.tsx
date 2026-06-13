@@ -3,40 +3,11 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
 import { PageHeader } from '../../src/components/layout/PageHeader';
-import { AppIcon, Button, Input } from '../../src/components/ui';
+import { AppIcon, Button, Input, UploadTile } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
 type UploadKey = 'license' | 'biFront' | 'biBack' | 'vehicle';
-
-type UploadTileProps = {
-  title: string;
-  subtitle?: string;
-  icon: string;
-  selected: boolean;
-  compact?: boolean;
-  onPress: () => void;
-};
-
-function UploadTile({ title, subtitle, icon, selected, compact, onPress }: UploadTileProps) {
-  return (
-    <Pressable
-      className={`${compact ? 'h-24 flex-col justify-center gap-2' : 'min-h-14 flex-row justify-between'} items-center rounded-xl border p-4 ${selected ? 'border-[#720003] bg-[#720003]/5' : 'border-[#e1bfba] bg-white'}`}
-      onPress={onPress}
-    >
-      <View className={`${compact ? 'items-center' : 'flex-row items-center gap-3'}`}>
-        <View className="h-10 w-10 items-center justify-center rounded-lg bg-[#ffe9e6]">
-          <Text className="text-xl text-[#720003]">{icon}</Text>
-        </View>
-        <View className={compact ? 'items-center' : ''}>
-          <Text className="text-[10px] font-bold uppercase tracking-wider text-[#59413d]">{title}</Text>
-          {subtitle ? <Text className={`text-sm font-semibold ${selected ? 'text-[#720003]' : 'text-[#261816]'}`}>{subtitle}</Text> : null}
-        </View>
-      </View>
-      {!compact ? <Text className={`text-xl ${selected ? 'text-[#720003]' : 'text-[#8d706c]'}`}>{selected ? '✓' : 'CAM'}</Text> : null}
-    </Pressable>
-  );
-}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -64,10 +35,11 @@ export default function RegisterPage() {
   };
 
   const register = async () => {
+    if (!name || !phone) return;
     await useAuthStore.getState().register({
-      name: name || 'Alex Rider',
-      phone: phone.startsWith('+670') ? phone : `+670 ${phone || '7700 0000'}`,
-      licenseNumber: licenseNumber || 'BI-1234567',
+      name,
+      phone: phone.startsWith('+670') ? phone : `+670 ${phone}`,
+      licenseNumber,
     });
     router.replace('/(auth)/login');
   };
@@ -131,16 +103,16 @@ export default function RegisterPage() {
             </View>
             <Text className="-mt-4 text-sm text-[#59413d]">{t('auth.register.documentsHint')}</Text>
             <View className="gap-4">
-              <UploadTile icon="ID" selected={uploads.license} subtitle={t('auth.register.driverLicenseLocal')} title={t('auth.register.driverLicense')} onPress={() => toggleUpload('license')} />
+              <UploadTile icon="ID" selected={uploads.license} subtitle={t('auth.register.driverLicenseLocal')} title={t('auth.register.driverLicense')} t={t} onPress={() => toggleUpload('license')} />
               <View className="flex-row gap-4">
                 <View className="flex-1">
-                  <UploadTile compact icon="ID" selected={uploads.biFront} title={t('auth.register.biFront')} onPress={() => toggleUpload('biFront')} />
+                  <UploadTile compact icon="ID" selected={uploads.biFront} title={t('auth.register.biFront')} t={t} onPress={() => toggleUpload('biFront')} />
                 </View>
                 <View className="flex-1">
-                  <UploadTile compact icon="ID" selected={uploads.biBack} title={t('auth.register.biBack')} onPress={() => toggleUpload('biBack')} />
+                  <UploadTile compact icon="ID" selected={uploads.biBack} title={t('auth.register.biBack')} t={t} onPress={() => toggleUpload('biBack')} />
                 </View>
               </View>
-              <UploadTile icon="VR" selected={uploads.vehicle} subtitle={t('auth.register.vehicleRegistrationLocal')} title={t('auth.register.vehicleRegistration')} onPress={() => toggleUpload('vehicle')} />
+              <UploadTile icon="VR" selected={uploads.vehicle} subtitle={t('auth.register.vehicleRegistrationLocal')} title={t('auth.register.vehicleRegistration')} t={t} onPress={() => toggleUpload('vehicle')} />
             </View>
           </View>
 

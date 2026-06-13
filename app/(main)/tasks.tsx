@@ -10,7 +10,7 @@ import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { AppIcon } from '../../src/components/ui';
 import { Button } from '../../src/components/ui';
-import { useTranslation } from '../../src/i18n/useTranslation';
+import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { useRiderStore } from '../../src/store/useRiderStore';
@@ -37,9 +37,9 @@ const dutyLabelKey: Record<DutyStatus, 'duty.onDuty' | 'duty.offDuty' | 'duty.bu
   busy: 'duty.busy',
 };
 
-const formatFee = (fee: number) => `¥${fee % 1 === 0 ? fee.toFixed(0) : fee.toFixed(1)}`;
+const formatFee = (fee: number, currency: string) => `${currency}${fee % 1 === 0 ? fee.toFixed(0) : fee.toFixed(1)}`;
 const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)}km`;
-const formatItems = (items: string[]) => `Items: ${items.join(' · ')}`;
+const formatItems = (items: string[], t: (key: TranslationKey, vars?: Record<string, string | number>) => string) => t('common.items', { items: items.join(' · ') });
 
 export default function TasksPage() {
   const router = useRouter();
@@ -64,6 +64,7 @@ export default function TasksPage() {
   const online = dutyStatus !== 'offDuty';
   const bondPaid = rider?.bondPaid ?? true;
   const activeTasksExist = taskLists.pickups.length + taskLists.deliveries.length > 0;
+  const currency = t('common.currency');
 
   useEffect(() => {
     let unsubRider: (() => void) | undefined;
@@ -116,16 +117,16 @@ export default function TasksPage() {
       key={task.id}
       actionLabel={t('tasks.accept')}
       badge={index === 0 ? t('tasks.reward.firstOrder') : undefined}
-      fee={formatFee(task.fee)}
+      fee={formatFee(task.fee, currency)}
       feeNote={index === 0 ? t('tasks.feeNote') : undefined}
-      items={task.items.length ? formatItems(task.items) : undefined}
+      items={task.items.length ? formatItems(task.items, t) : undefined}
       note={task.note}
       points={[
         { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) },
         { label: 'D', title: task.dropoff.title, distance: formatDistance(task.distanceKm) },
       ]}
       tags={index === 0 ? [t('tasks.tag.express')] : []}
-      timeLabel={`Deliver within ${task.estimatedMinutes} min`}
+      timeLabel={t('common.deliverWithin', { minutes: String(task.estimatedMinutes) })}
       onAction={() => router.push(`/task/${task.id}`)}
     />
   );
@@ -136,14 +137,14 @@ export default function TasksPage() {
       actionLabel={t('tasks.arrivedPickup')}
       chatLabel={t('tasks.chat')}
       contactLabel={t('tasks.contact')}
-      items={task.items.length ? formatItems(task.items) : undefined}
+      items={task.items.length ? formatItems(task.items, t) : undefined}
       note={task.note}
       orderId={task.orderId}
       points={[
-        { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: `${formatDistance(Math.max(task.distanceKm - 1.3, 0.5))} from here` },
-        { label: 'D', title: task.dropoff.title, distance: `${formatDistance(task.distanceKm)} from pickup` },
+        { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: t('common.fromHere', { distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) }) },
+        { label: 'D', title: task.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
       ]}
-      timeLabel={`Remaining ${task.estimatedMinutes} min`}
+      timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
       variant="active"
       onAction={() => router.push(`/task/${task.id}/pickup`)}
     />
@@ -158,11 +159,11 @@ export default function TasksPage() {
       note={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : task.note}
       orderId={task.orderId.replace('JD Delivery ', '')}
       points={[
-        { label: 'P', title: task.pickup.title, distance: `${formatDistance(Math.max(task.distanceKm - 1.3, 0.5))} from here` },
-        { label: 'D', title: task.dropoff.title, distance: `${formatDistance(task.distanceKm)} from pickup` },
+        { label: 'P', title: task.pickup.title, distance: t('common.fromHere', { distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) }) },
+        { label: 'D', title: task.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
       ]}
       tags={[t('tasks.tag.callOnArrival'), t('tasks.tag.doNotLeave')]}
-      timeLabel={`Remaining ${task.estimatedMinutes} min`}
+      timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
       variant="active"
       onAction={() => router.push(`/task/${task.id}/sign`)}
     />
@@ -170,18 +171,18 @@ export default function TasksPage() {
 
   const renderContent = () => {
     if (!online) {
-      return <EmptyState title="You are offline" description="Switch On Duty back on to receive nearby delivery tasks." />;
+      return <EmptyState title={t('common.offlineTitle')} description={t('common.offlineDesc')} />;
     }
 
     if (activeTab === 'new') {
-      return taskLists.available.length ? taskLists.available.map(renderNewTask) : <EmptyState title="No new tasks" description="Pull to refresh or wait for nearby orders." />;
+      return taskLists.available.length ? taskLists.available.map(renderNewTask) : <EmptyState title={t('common.noNewTasks')} description={t('common.noNewTasksDesc')} />;
     }
 
     if (activeTab === 'pickups') {
-      return taskLists.pickups.length ? taskLists.pickups.map(renderPickupTask) : <EmptyState title="No pickups" description="Accepted tasks will appear here before merchant pickup." />;
+      return taskLists.pickups.length ? taskLists.pickups.map(renderPickupTask) : <EmptyState title={t('common.noPickups')} description={t('common.noPickupsDesc')} />;
     }
 
-    return taskLists.deliveries.length ? taskLists.deliveries.map(renderDeliveryTask) : <EmptyState title="No deliveries" description="Picked-up orders will appear here until completion." />;
+    return taskLists.deliveries.length ? taskLists.deliveries.map(renderDeliveryTask) : <EmptyState title={t('common.noDeliveries')} description={t('common.noDeliveriesDesc')} />;
   };
 
   const bottomPadding = Math.max(insets.bottom, 12);

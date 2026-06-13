@@ -52,10 +52,10 @@ export default function TaskOngoingPage() {
               orderId={task.orderId.replace('JD Delivery ', '')}
               points={[
                 { label: 'P', title: task.pickup.title, subtitle: task.pickup.address },
-                { label: 'D', title: task.dropoff.title, subtitle: `${formatDistance(task.distanceKm)} from pickup` },
+                { label: 'D', title: task.dropoff.title, subtitle: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
               ]}
               tags={[t('tasks.tag.callOnArrival'), t('tasks.tag.doNotLeave'), t('tasks.tag.express')]}
-              timeLabel={`Remaining ${task.estimatedMinutes} min`}
+              timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
               variant="active"
               onAction={() => router.push(`/task/${id}/sign`)}
             />
@@ -66,7 +66,7 @@ export default function TaskOngoingPage() {
             </View>
           </>
         ) : (
-          <EmptyState title="Task not found" description="This delivery may have already been completed." />
+          <EmptyState title={t('common.taskNotFound')} description={t('common.deliveryCompletedDesc')} />
         )}
       </ScrollView>
       <View className="absolute bottom-0 left-0 right-0 flex-row items-center gap-4 border-t border-[#f7ddd9] bg-[#fff8f7] px-3 py-4">

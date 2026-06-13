@@ -26,7 +26,7 @@ const formatDateTime = (timestamp: number) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-const formatIncome = (income: number, fallback: string) => (income > 0 ? `$${income.toFixed(2)}` : fallback);
+const formatIncome = (income: number, fallback: string, currency: string) => (income > 0 ? `${currency}${income.toFixed(2)}` : fallback);
 
 export default function OrderDetailPage() {
   const router = useRouter();
@@ -108,7 +108,7 @@ export default function OrderDetailPage() {
 
         <View className="rounded-2xl border border-[#720003] bg-[#fff0ee] p-5 shadow-sm">
           <Text className="text-xs font-bold uppercase tracking-wider text-[#720003]">{t('order.detail.income')}</Text>
-          <Text className="mt-1 text-2xl font-bold text-[#720003]">{formatIncome(order.income, t('history.noIncome'))}</Text>
+          <Text className="mt-1 text-2xl font-bold text-[#720003]">{formatIncome(order.income, t('history.noIncome'), t('common.currency'))}</Text>
         </View>
       </ScrollView>
     );

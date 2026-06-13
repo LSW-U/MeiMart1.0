@@ -7,12 +7,12 @@ import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { AppIcon } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
-import { useTranslation } from '../../src/i18n/useTranslation';
+import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { useTaskStore } from '../../src/store/useTaskStore';
 import type { DeliveryTask } from '../../src/types/task';
 
 const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)}km`;
-const formatItems = (items: string[]) => `Items: ${items.join(' · ')}`;
+const formatItems = (items: string[], t: (key: TranslationKey, vars?: Record<string, string | number>) => string) => t('common.items', { items: items.join(' · ') });
 
 export default function TaskDetailPage() {
   const router = useRouter();
@@ -48,19 +48,19 @@ export default function TaskDetailPage() {
             actionLabel={t('tasks.arrivedPickup')}
             chatLabel={t('tasks.chat')}
             contactLabel={t('tasks.contact')}
-            items={task.items.length ? formatItems(task.items) : undefined}
+            items={task.items.length ? formatItems(task.items, t) : undefined}
             note={task.note}
             orderId={task.orderId}
             points={[
-              { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: `${formatDistance(Math.max(task.distanceKm - 1.3, 0.5))} from here` },
-              { label: 'D', title: task.dropoff.title, distance: `${formatDistance(task.distanceKm)} from pickup` },
+              { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: t('common.fromHere', { distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) }) },
+              { label: 'D', title: task.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
             ]}
-            timeLabel={`Remaining ${task.estimatedMinutes} min`}
+            timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
             variant="active"
             onAction={() => router.push(`/task/${id}/pickup`)}
           />
         ) : (
-          <EmptyState title="Task not found" description="This task may have been completed, cancelled, or reassigned." />
+          <EmptyState title={t('common.taskNotFound')} description={t('common.taskNotFoundDesc')} />
         )}
       </ScrollView>
       <View className="absolute bottom-0 left-0 right-0 flex-row items-center gap-4 border-t border-[#f7ddd9] bg-[#fff8f7] px-3 py-4">

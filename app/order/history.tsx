@@ -29,7 +29,7 @@ const formatTime = (timestamp: number) => {
   return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
 };
 
-const formatIncome = (income: number, fallback: string) => (income > 0 ? `$${income.toFixed(2)}` : fallback);
+const formatIncome = (income: number, fallback: string, currency: string) => (income > 0 ? `${currency}${income.toFixed(2)}` : fallback);
 
 export default function OrderHistoryPage() {
   const router = useRouter();
@@ -66,7 +66,7 @@ export default function OrderHistoryPage() {
       <ScrollView className="flex-1" contentContainerClassName="mx-auto w-full max-w-md px-4 pb-28 pt-4">
         <View className="mb-6 flex-row items-center justify-between rounded-lg border border-[#e1bfba] bg-white p-3 shadow-sm">
           <Text className="font-bold text-[#261816]">{t('history.date')}</Text>
-          <Text className="text-[#8d706c]">CAL</Text>
+          <Text className="text-[#8d706c]">{t('history.calendar')}</Text>
         </View>
 
         <View className="mb-6 flex-row gap-2 border-b border-[#f7ddd9] pb-2">
@@ -97,7 +97,7 @@ export default function OrderHistoryPage() {
                 key={order.id}
                 dropoffAddress={order.dropoffAddress}
                 dropoffName={order.dropoffName}
-                income={formatIncome(order.income, t('history.noIncome'))}
+                income={formatIncome(order.income, t('history.noIncome'), t('common.currency'))}
                 incomeLabel={t('history.income')}
                 orderNo={order.orderNo}
                 pickupAddress={order.pickupAddress}
@@ -116,7 +116,7 @@ export default function OrderHistoryPage() {
       <View className="absolute bottom-0 left-0 right-0 border-t border-[#e1bfba] bg-[#fde2df] px-4 py-4 shadow-sm">
         <View className="mx-auto flex-row w-full max-w-md items-center justify-between">
           <Text className="font-bold text-[#261816]">{t('history.todayOrders')}</Text>
-          <Text className="text-xl font-bold text-[#720003]">{todayStats.count} · ${todayStats.totalIncome.toFixed(2)}</Text>
+          <Text className="text-xl font-bold text-[#720003]">{todayStats.count} · {t('common.currency')}{todayStats.totalIncome.toFixed(2)}</Text>
         </View>
       </View>
     </View>

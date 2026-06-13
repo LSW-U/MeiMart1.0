@@ -15,8 +15,8 @@ const dictionaries: Record<AppLanguage, typeof en> = {
   id,
 };
 
-type TranslationKey = keyof typeof en;
-type TranslationVars = Record<string, string | number>;
+export type TranslationKey = keyof typeof en;
+export type TranslationVars = Record<string, string | number>;
 
 const interpolate = (template: string, vars?: TranslationVars) => {
   if (!vars) return template;

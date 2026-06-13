@@ -40,7 +40,7 @@ export default function WithdrawalPage() {
       setTimeout(() => router.replace('/(main)/earnings'), 800);
     } catch (e) {
       setStatus('error');
-      setErrorMsg(e instanceof Error ? e.message : 'Withdrawal failed');
+      setErrorMsg(e instanceof Error ? e.message : t('withdraw.failed'));
     }
   };
 
@@ -57,7 +57,7 @@ export default function WithdrawalPage() {
         <View className="items-center justify-center rounded-xl border border-[#fde2df] bg-[#ffe9e6] p-6 shadow-sm">
           <Text className="mb-1 text-sm text-[#59413d]">{t('withdraw.availableBalance')}</Text>
           <Text className="text-[32px] font-bold tracking-tight text-[#261816]">
-            {summary ? `$${summary.availableBalance.toFixed(2)}` : '—'}
+            {summary ? `${t('common.currency')}${summary.availableBalance.toFixed(2)}` : '—'}
           </Text>
         </View>
 

@@ -57,10 +57,10 @@ export default function ProfilePage() {
           <Pressable className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => router.replace('/(main)/tasks')}>
             <Text className="text-2xl text-[#720003]">‹</Text>
           </Pressable>
-          <Text className="text-xl font-bold text-[#261816]">Profile</Text>
+          <Text className="text-xl font-bold text-[#261816]">{t('profile.title')}</Text>
         </View>
         <Pressable className="rounded-full p-2" onPress={() => router.push('/profile/edit')}>
-          <Text className="font-bold text-[#720003]">EDIT</Text>
+          <Text className="font-bold text-[#720003]">{t('profile.edit')}</Text>
         </Pressable>
       </View>
 
@@ -76,7 +76,7 @@ export default function ProfilePage() {
         <View className="mt-2 items-center">
           <Text className="text-2xl font-bold text-[#261816]">{rider?.name ?? t('profile.name')}</Text>
           <View className="mt-1 flex-row items-center gap-2">
-            <Text className="text-sm text-[#59413d]">ID: {rider?.id ?? '8842910'}</Text>
+            <Text className="text-sm text-[#59413d]">{t('profile.riderId', { id: rider?.id ?? '—' })}</Text>
             <View className="h-1 w-1 rounded-full bg-[#e1bfba]" />
             <Text className="text-sm font-medium text-[#463200]">{t('profile.rating')}</Text>
           </View>
@@ -93,7 +93,7 @@ export default function ProfilePage() {
           <View className="h-12 w-px bg-[#e1bfba]" />
           <View className="flex-[1.2] items-center px-2">
             <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#59413d]">{t('profile.earnings')}</Text>
-            <Text className="text-4xl font-bold text-[#720003]">¥{t('profile.earningsValue')}</Text>
+            <Text className="text-4xl font-bold text-[#720003]">{t('common.currency')}{t('profile.earningsValue')}</Text>
             <Text className="mt-1 text-[9px] font-bold uppercase text-[#8d706c]">{t('profile.today')}</Text>
           </View>
           <View className="h-12 w-px bg-[#e1bfba]" />

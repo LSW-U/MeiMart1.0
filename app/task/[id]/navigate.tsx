@@ -13,7 +13,7 @@ import type { DeliveryTask } from '../../../src/types/task';
 
 const DEFAULT_COORDINATES = { latitude: -8.5569, longitude: 125.5603 };
 
-const formatFee = (fee: number) => `$${fee.toFixed(2)}`;
+const formatFee = (fee: number, currency: string) => `${currency}${fee.toFixed(2)}`;
 const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)} KM`;
 
 export default function TaskNavigatePage() {
@@ -68,13 +68,13 @@ export default function TaskNavigatePage() {
                   <View>
                     <Text className="mb-1 text-xs font-bold uppercase tracking-wider text-[#59413d]">{t('flow.remainingTime')}</Text>
                     <View className="flex-row items-end gap-2">
-                      <Text className="text-xl font-semibold text-[#720003]">{task.estimatedMinutes} Minutes</Text>
-                      <Text className="text-sm text-[#59413d]">Delivery route</Text>
+                      <Text className="text-xl font-semibold text-[#720003]">{t('common.minutes', { minutes: String(task.estimatedMinutes) })}</Text>
+                      <Text className="text-sm text-[#59413d]">{t('common.deliveryRoute')}</Text>
                     </View>
                   </View>
                   <View className="items-end">
                     <Text className="mb-1 text-xs font-bold uppercase tracking-wider text-[#59413d]">{t('flow.totalEarnings')}</Text>
-                    <Text className="text-2xl font-bold text-[#720003]">{formatFee(task.fee)}</Text>
+                    <Text className="text-2xl font-bold text-[#720003]">{formatFee(task.fee, t('common.currency'))}</Text>
                     <Text className="text-[10px] text-[#8d706c]">{task.orderId}</Text>
                   </View>
                 </View>
@@ -110,7 +110,7 @@ export default function TaskNavigatePage() {
 
                 <View className="my-6 h-px bg-[#e1bfba]/30" />
                 <View className="rounded-lg px-2 py-2">
-                  <Text className="font-bold text-[#261816]">Order Summary ({task.items.length} Items)</Text>
+                  <Text className="font-bold text-[#261816]">{t('common.orderSummary', { count: String(task.items.length) })}</Text>
                   <View className="mt-4 gap-3 px-6">
                     {task.items.map((item) => (
                       <View className="flex-row justify-between" key={item}>
@@ -135,7 +135,7 @@ export default function TaskNavigatePage() {
           </>
         ) : (
           <View className="px-5 pt-8">
-            <EmptyState title="Task not found" description="This route is no longer available." />
+            <EmptyState title={t('common.taskNotFound')} description={t('common.routeNotFound')} />
           </View>
         )}
       </ScrollView>

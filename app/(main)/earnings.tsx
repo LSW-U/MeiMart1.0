@@ -23,7 +23,7 @@ export default function EarningsPage() {
     return () => { unsub?.(); };
   }, [hydrate]);
 
-  const formatAmount = (amount: number) => (amount >= 0 ? `+$${amount.toFixed(2)}` : `-$${Math.abs(amount).toFixed(2)}`);
+  const formatAmount = (amount: number) => (amount >= 0 ? `+${t('common.currency')}${amount.toFixed(2)}` : `-${t('common.currency')}${Math.abs(amount).toFixed(2)}`);
 
   return (
     <View className="flex-1 bg-[#fff8f7]">
@@ -36,9 +36,9 @@ export default function EarningsPage() {
 
       <ScrollView className="flex-1" contentContainerClassName="px-5 pb-24">
         <EarningCard
-          balance={summary ? `$${summary.availableBalance.toFixed(2)}` : '—'}
+          balance={summary ? `${t('common.currency')}${summary.availableBalance.toFixed(2)}` : '—'}
           balanceLabel={t('earnings.balanceLabel')}
-          depositAmount={summary ? `$${summary.todayEarnings.toFixed(2)}` : '—'}
+          depositAmount={summary ? `${t('common.currency')}${summary.todayEarnings.toFixed(2)}` : '—'}
           depositLabel={t('earnings.deposit')}
           paidLabel={t('earnings.paid')}
           unsettledLabel={t('earnings.unsettled')}
