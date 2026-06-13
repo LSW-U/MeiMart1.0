@@ -7,6 +7,9 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "jsx": "react-jsx"
-  }
+    "jsx": "react-jsx",
+    "types": ["jest", "react"]
+  },
+  "include": ["src/**/*", "app/**/*", "__tests__/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
