@@ -1,0 +1,207 @@
+{
+  "app": {
+    "name": "MeiMart",
+    "tagline": "Timor-Leste local e-commerce"
+  },
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "submit": "Submit",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "loading": "Loading",
+    "retry": "Retry",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Done",
+    "more": "More",
+    "all": "All",
+    "empty": "No data",
+    "error": "Something went wrong",
+    "network": {
+      "offline": "No internet connection",
+      "weak": "Slow network — data saver on",
+      "restored": "Network restored"
+    }
+  },
+  "splash": {
+    "welcome": "Welcome"
+  },
+  "onboarding": {
+    "title1": "Local groceries",
+    "desc1": "Same-day delivery in Dili",
+    "title2": "Authentic goods",
+    "desc2": "Full-chain anti-counterfeit",
+    "title3": "Tais culture",
+    "desc3": "Traditional Timor-Leste patterns",
+    "title4": "Secure payments",
+    "desc4": "Multiple local payment methods",
+    "start": "Get started"
+  },
+  "auth": {
+    "login": "Log in",
+    "register": "Sign up",
+    "phone": "Phone number",
+    "password": "Password",
+    "smsCode": "SMS code",
+    "forgotPassword": "Forgot password?",
+    "loginWithSms": "SMS login",
+    "loginWithPassword": "Password login",
+    "sendCode": "Send code",
+    "resetPassword": "Reset password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "agreeTerms": "I agree to the Terms of Service and Privacy Policy",
+    "errors": {
+      "invalidPhone": "Invalid phone number",
+      "invalidPassword": "Password must be at least 6 characters",
+      "codeSent": "Code sent",
+      "loginFailed": "Login failed, please try again"
+    }
+  },
+  "home": {
+    "search": "Search products",
+    "categories": "Categories",
+    "recommend": "Recommended for you",
+    "flashSale": "Flash sale",
+    "newArrivals": "New arrivals"
+  },
+  "tabs": {
+    "home": "Home",
+    "categories": "Categories",
+    "cart": "Cart",
+    "orders": "Orders",
+    "account": "Account"
+  },
+  "cart": {
+    "title": "Shopping cart",
+    "empty": "Your cart is empty",
+    "emptyDesc": "Browse and find great products",
+    "goShopping": "Go shopping",
+    "selectAll": "Select all",
+    "total": "Total",
+    "checkout": "Checkout",
+    "delete": "Delete",
+    "offlineBlock": "Offline — checkout unavailable",
+    "removeConfirm": "Remove this item?"
+  },
+  "product": {
+    "addToCart": "Add to cart",
+    "buyNow": "Buy now",
+    "specification": "Specification",
+    "description": "Details",
+    "reviews": "Reviews",
+    "relatedProducts": "You may also like",
+    "favorite": "Favorite",
+    "favorited": "Favorited",
+    "sold": "Sold",
+    "stock": "Stock"
+  },
+  "order": {
+    "status": {
+      "pending": "Awaiting payment",
+      "paid": "Awaiting shipment",
+      "shipped": "Shipped",
+      "delivered": "Completed",
+      "cancelled": "Cancelled",
+      "refunding": "Refunding"
+    },
+    "list": "My orders",
+    "detail": "Order detail",
+    "total": "Order total",
+    "orderNo": "Order number",
+    "createdAt": "Placed at",
+    "actions": {
+      "cancel": "Cancel order",
+      "pay": "Pay now",
+      "track": "Track shipment",
+      "review": "Review",
+      "repurchase": "Buy again",
+      "refund": "Request refund"
+    },
+    "empty": "No orders"
+  },
+  "address": {
+    "list": "Shipping addresses",
+    "add": "Add address",
+    "edit": "Edit address",
+    "name": "Recipient",
+    "phone": "Phone",
+    "province": "Province",
+    "city": "City",
+    "district": "District",
+    "detail": "Detail address",
+    "default": "Default",
+    "setDefault": "Set as default",
+    "pickOnMap": "Pick on map",
+    "empty": "No addresses",
+    "delete": "Delete address"
+  },
+  "profile": {
+    "title": "Account",
+    "edit": "Edit profile",
+    "settings": "Settings",
+    "favorites": "Favorites",
+    "coupons": "Coupons",
+    "orders": "My orders",
+    "addresses": "Addresses",
+    "customerService": "Customer service",
+    "notifications": "Notifications",
+    "feedback": "Feedback",
+    "help": "Help center",
+    "about": "About",
+    "logout": "Log out",
+    "language": "Language",
+    "theme": "Theme"
+  },
+  "settings": {
+    "notifications": "Push notifications",
+    "sound": "Sound",
+    "vibration": "Vibration",
+    "dataSaver": "Data saver",
+    "clearCache": "Clear cache",
+    "version": "Version"
+  },
+  "service": {
+    "title": "Customer service",
+    "callHotline": "Hotline",
+    "email": "Email",
+    "feedback": {
+      "title": "Feedback",
+      "type": "Type",
+      "content": "Content",
+      "contact": "Contact (optional)",
+      "placeholder": "Describe your feedback in detail…",
+      "contactPlaceholder": "Email or phone, so we can reply",
+      "submit": "Submit feedback",
+      "selectType": "Please select a type",
+      "fillContent": "Please describe the issue",
+      "submitted": "Thanks for your feedback"
+    },
+    "help": {
+      "title": "Help center",
+      "intro": "Most-asked questions — tap to expand",
+      "contactPrompt": "Didn't find what you need?",
+      "contactLink": "Contact support"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "readAll": "Mark all read",
+      "empty": "No notifications",
+      "emptyDesc": "New messages will appear here"
+    }
+  },
+  "errors": {
+    "generic": "Failed to load, please retry",
+    "network": "Network error, check connection",
+    "cart": "Failed to load cart",
+    "orders": "Failed to load orders",
+    "products": "Failed to load products",
+    "addresses": "Failed to load addresses",
+    "notifications": "Failed to load notifications"
+  }
+}

@@ -1,33 +1,37 @@
-import { StyleSheet, View, Text, FlatList, Pressable } from 'react-native';
+import { StyleSheet, View, Text, FlatList, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAppStore } from '@/store/appStore';
+import { changeLocale, type AppLocale } from '@/i18n';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface LanguageItem {
-  code: string;
+  code: AppLocale;
   label: string;
   native: string;
   icon: string;
+  available: boolean;
 }
 
 const LANGUAGES: LanguageItem[] = [
-  { code: 'zh', label: '中文', native: '中文（简体）', icon: 'account' },
-  { code: 'en', label: 'English', native: 'English', icon: 'alphabetical' },
-  { code: 'pt', label: 'Português', native: 'Português', icon: 'alphabetical' },
-  { code: 'tet', label: 'Tetun', native: 'Tetun', icon: 'alphabetical' },
+  { code: 'zh', label: '中文', native: '中文（简体）', icon: 'account', available: true },
+  { code: 'en', label: 'English', native: 'English', icon: 'alphabetical', available: true },
+  { code: 'tet', label: 'Tetun', native: 'Tetun', icon: 'alphabetical', available: false },
 ];
 
 export default function LanguagePage() {
   const { colors } = useTheme();
   const locale = useAppStore((s) => s.locale);
-  const setLocale = useAppStore((s) => s.setLocale);
 
-  const select = (code: string) => {
-    setLocale(code);
+  const select = (item: LanguageItem) => {
+    if (!item.available) {
+      Alert.alert('提示', `${item.native} 即将上线`);
+      return;
+    }
+    void changeLocale(item.code);
     if (router.canGoBack()) router.back();
   };
 
@@ -49,7 +53,7 @@ export default function LanguagePage() {
           return (
             <Pressable
               testID={`lang-${item.code}`}
-              onPress={() => select(item.code)}
+              onPress={() => select(item)}
               style={({ pressed }) => [
                 styles.row,
                 { backgroundColor: colors['surface-container-low'], opacity: pressed ? 0.7 : 1 },
@@ -67,6 +71,7 @@ export default function LanguagePage() {
                 <Text style={[styles.label, { color: colors['on-surface'] }]}>{item.label}</Text>
                 <Text style={[styles.sub, { color: colors['on-surface-variant'] }]}>
                   {item.native}
+                  {!item.available && '（即将上线）'}
                 </Text>
               </View>
               {active && <MaterialCommunityIcons name="check" size={20} color={colors.primary} />}

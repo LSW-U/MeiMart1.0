@@ -8,8 +8,9 @@
       "@/*": ["src/*"]
     },
     "jsx": "react-jsx",
-    "types": ["jest", "react"]
+    "types": ["jest", "react"],
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*", "app/**/*", "__tests__/**/*", "nativewind-env.d.ts"],
+  "include": ["src/**/*", "app/**/*", "__tests__/**/*", "locales/**/*", "nativewind-env.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,0 +1,207 @@
+{
+  "app": {
+    "name": "美惠超市",
+    "tagline": "东帝汶本地电商"
+  },
+  "common": {
+    "ok": "确定",
+    "cancel": "取消",
+    "confirm": "确认",
+    "save": "保存",
+    "submit": "提交",
+    "edit": "编辑",
+    "delete": "删除",
+    "search": "搜索",
+    "loading": "加载中",
+    "retry": "重试",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "finish": "完成",
+    "more": "更多",
+    "all": "全部",
+    "empty": "暂无数据",
+    "error": "出错了",
+    "network": {
+      "offline": "网络连接已断开",
+      "weak": "网络较慢，已切换省流模式",
+      "restored": "网络已恢复"
+    }
+  },
+  "splash": {
+    "welcome": "欢迎"
+  },
+  "onboarding": {
+    "title1": "本地化生鲜",
+    "desc1": "东帝汶帝力当日送达",
+    "title2": "真实正品",
+    "desc2": "全链路防伪溯源",
+    "title3": "Tais 文化",
+    "desc3": "传承东帝汶传统纹样",
+    "title4": "安全支付",
+    "desc4": "支持本地多种支付方式",
+    "start": "立即开始"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "phone": "手机号",
+    "password": "密码",
+    "smsCode": "验证码",
+    "forgotPassword": "忘记密码？",
+    "loginWithSms": "短信登录",
+    "loginWithPassword": "密码登录",
+    "sendCode": "发送验证码",
+    "resetPassword": "重置密码",
+    "newPassword": "新密码",
+    "confirmPassword": "确认密码",
+    "agreeTerms": "我已阅读并同意《用户协议》和《隐私政策》",
+    "errors": {
+      "invalidPhone": "手机号格式错误",
+      "invalidPassword": "密码至少 6 位",
+      "codeSent": "验证码已发送",
+      "loginFailed": "登录失败，请重试"
+    }
+  },
+  "home": {
+    "search": "搜索商品",
+    "categories": "分类",
+    "recommend": "为你推荐",
+    "flashSale": "限时秒杀",
+    "newArrivals": "新品上架"
+  },
+  "tabs": {
+    "home": "首页",
+    "categories": "分类",
+    "cart": "购物车",
+    "orders": "订单",
+    "account": "我的"
+  },
+  "cart": {
+    "title": "购物车",
+    "empty": "购物车空空如也",
+    "emptyDesc": "去逛逛，发现好物",
+    "goShopping": "去逛逛",
+    "selectAll": "全选",
+    "total": "合计",
+    "checkout": "结算",
+    "delete": "删除",
+    "offlineBlock": "网络连接已断开，结算暂不可用",
+    "removeConfirm": "确认删除该商品？"
+  },
+  "product": {
+    "addToCart": "加入购物车",
+    "buyNow": "立即购买",
+    "specification": "规格",
+    "description": "详情",
+    "reviews": "评价",
+    "relatedProducts": "相关推荐",
+    "favorite": "收藏",
+    "favorited": "已收藏",
+    "sold": "已售",
+    "stock": "库存"
+  },
+  "order": {
+    "status": {
+      "pending": "待付款",
+      "paid": "待发货",
+      "shipped": "待收货",
+      "delivered": "已完成",
+      "cancelled": "已取消",
+      "refunding": "退款中"
+    },
+    "list": "我的订单",
+    "detail": "订单详情",
+    "total": "订单总额",
+    "orderNo": "订单编号",
+    "createdAt": "下单时间",
+    "actions": {
+      "cancel": "取消订单",
+      "pay": "去支付",
+      "track": "查看物流",
+      "review": "去评价",
+      "repurchase": "再次购买",
+      "refund": "申请退款"
+    },
+    "empty": "暂无订单"
+  },
+  "address": {
+    "list": "收货地址",
+    "add": "新增地址",
+    "edit": "编辑地址",
+    "name": "收货人",
+    "phone": "手机号",
+    "province": "省份",
+    "city": "城市",
+    "district": "区/县",
+    "detail": "详细地址",
+    "default": "默认地址",
+    "setDefault": "设为默认",
+    "pickOnMap": "在地图上选择",
+    "empty": "暂无地址",
+    "delete": "删除地址"
+  },
+  "profile": {
+    "title": "我的",
+    "edit": "编辑资料",
+    "settings": "设置",
+    "favorites": "我的收藏",
+    "coupons": "优惠券",
+    "orders": "我的订单",
+    "addresses": "收货地址",
+    "customerService": "客服中心",
+    "notifications": "消息通知",
+    "feedback": "意见反馈",
+    "help": "帮助中心",
+    "about": "关于我们",
+    "logout": "退出登录",
+    "language": "语言",
+    "theme": "主题"
+  },
+  "settings": {
+    "notifications": "推送通知",
+    "sound": "提示音",
+    "vibration": "振动",
+    "dataSaver": "省流模式",
+    "clearCache": "清除缓存",
+    "version": "版本"
+  },
+  "service": {
+    "title": "客服中心",
+    "callHotline": "客服热线",
+    "email": "客服邮箱",
+    "feedback": {
+      "title": "意见反馈",
+      "type": "反馈类型",
+      "content": "反馈内容",
+      "contact": "联系方式（可选）",
+      "placeholder": "请详细描述你的反馈…",
+      "contactPlaceholder": "邮箱或手机号，方便我们回复你",
+      "submit": "提交反馈",
+      "selectType": "请选择反馈类型",
+      "fillContent": "请填写反馈内容",
+      "submitted": "感谢你的反馈"
+    },
+    "help": {
+      "title": "帮助中心",
+      "intro": "以下是用户最常问的问题，点击展开查看详细解答",
+      "contactPrompt": "没找到答案？",
+      "contactLink": "联系在线客服"
+    },
+    "notifications": {
+      "title": "消息通知",
+      "readAll": "全部已读",
+      "empty": "暂无通知",
+      "emptyDesc": "新消息会显示在这里"
+    }
+  },
+  "errors": {
+    "generic": "加载失败，请稍后再试",
+    "network": "网络异常，请检查连接",
+    "cart": "加载购物车失败",
+    "orders": "加载订单失败",
+    "products": "加载商品失败",
+    "addresses": "加载地址失败",
+    "notifications": "加载通知失败"
+  }
+}
