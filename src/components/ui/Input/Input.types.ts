@@ -1,4 +1,8 @@
+import type { ComponentProps } from 'react';
+import type { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { TextInputProps } from 'react-native';
+
+type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 export interface InputProps extends Omit<TextInputProps, 'value' | 'onChangeText'> {
   /** 标签（输入框上方） */
@@ -6,9 +10,9 @@ export interface InputProps extends Omit<TextInputProps, 'value' | 'onChangeText
   /** 错误信息（错误态） */
   error?: string;
   /** 左侧图标名（@expo/vector-icons MaterialCommunityIcons） */
-  leftIcon?: string;
+  leftIcon?: IconName;
   /** 右侧图标名 */
-  rightIcon?: string;
+  rightIcon?: IconName;
   /** 点击右侧图标回调 */
   onRightIconPress?: () => void;
   /** 当前值 */
@@ -17,4 +21,6 @@ export interface InputProps extends Omit<TextInputProps, 'value' | 'onChangeText
   onChangeText?: (text: string) => void;
   /** 辅助说明 */
   helperText?: string;
+  /** 禁用状态（映射到 TextInput editable={false}） */
+  disabled?: boolean;
 }

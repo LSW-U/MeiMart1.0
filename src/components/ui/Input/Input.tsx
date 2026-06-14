@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/theme';
@@ -21,11 +21,8 @@ export function Input({
   autoFocus,
 }: InputProps) {
   const { colors } = useTheme();
-  const inputRef = useRef<any>(null);
+  const inputRef = useRef<TextInput>(null);
   const hasError = Boolean(error);
-
-  // Use a controlled "native" TextInput via require to avoid extra imports typing
-  const { TextInput } = require('react-native');
 
   useEffect(() => {
     if (autoFocus) {
@@ -56,7 +53,7 @@ export function Input({
       >
         {leftIcon && (
           <MaterialCommunityIcons
-            name={leftIcon as any}
+            name={leftIcon}
             size={20}
             color={colors['on-surface-variant']}
             style={styles.icon}
@@ -87,7 +84,7 @@ export function Input({
             accessibilityLabel={onRightIconPress ? `${rightIcon} action` : rightIcon}
           >
             <MaterialCommunityIcons
-              name={rightIcon as any}
+              name={rightIcon}
               size={20}
               color={colors['on-surface-variant']}
             />

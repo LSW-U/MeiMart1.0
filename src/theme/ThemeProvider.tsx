@@ -63,7 +63,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<ThemeContextValue>(
     () => ({ colors, typography, spacing, mode, resolvedTheme, setMode }),
-    [colors, typography, spacing, mode, resolvedTheme],
+    // typography & spacing are static module-level constants, never change at runtime
+    [colors, mode, resolvedTheme],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
