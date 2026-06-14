@@ -13,8 +13,13 @@ const env = Constants.expoConfig?.extra as {
   SENTRY_DSN: string;
 };
 
+const baseURL = env?.API_BASE_URL ?? 'https://api.meimart.example.com';
+if (env?.APP_ENV === 'production' && !baseURL.startsWith('https://')) {
+  console.error('[security] Production API must use HTTPS. Current:', baseURL);
+}
+
 export const api = axios.create({
-  baseURL: env?.API_BASE_URL ?? 'https://api.meimart.example.com',
+  baseURL,
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -56,8 +61,22 @@ api.interceptors.request.use(async (config) => {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
+  if (__DEV__ && config.data) {
+    const safeBody = sanitizeLogPayload(config.data);
+    console.debug('[api request]', config.method, config.url, safeBody);
+  }
   return config;
 });
+
+function sanitizeLogPayload(payload: unknown): unknown {
+  if (typeof payload !== 'object' || payload === null) return payload;
+  const sensitiveKeys = ['password', 'smsCode', 'token', 'refreshToken', 'secret'];
+  const sanitized = { ...(payload as Record<string, unknown>) };
+  for (const key of Object.keys(sanitized)) {
+    if (sensitiveKeys.includes(key)) sanitized[key] = '***';
+  }
+  return sanitized;
+}
 
 let refreshPromise: Promise<string | null> | null = null;
 
