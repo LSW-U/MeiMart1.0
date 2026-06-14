@@ -1,5 +1,5 @@
 import { View, StyleSheet } from 'react-native';
-import Svg, { G, Path, Circle } from 'react-native-svg';
+import Svg, { G, Path } from 'react-native-svg';
 import { useTheme } from '@/theme';
 import type { TaisDividerProps } from './TaisDivider.types';
 

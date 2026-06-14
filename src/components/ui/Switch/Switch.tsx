@@ -27,6 +27,11 @@ export function Switch({ value, onValueChange, label, disabled = false, testID }
           {
             backgroundColor: knobBg,
             transform: [{ translateX: value ? KNOB + PADDING : PADDING }],
+            shadowColor: colors['on-surface'],
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            shadowOffset: { width: 0, height: 1 },
+            elevation: 1,
           },
         ]}
       />
@@ -86,10 +91,5 @@ const styles = StyleSheet.create({
     width: KNOB,
     height: KNOB,
     borderRadius: KNOB / 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
   },
 });

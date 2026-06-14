@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing } from '@/theme';
 import { Button } from '@/components/ui/Button';
+import { toIconName } from '@/types';
 import type { EmptyStateProps } from './EmptyState.types';
 
 export function EmptyState({
@@ -20,7 +21,11 @@ export function EmptyState({
       accessibilityRole="text"
       accessibilityLabel={title}
     >
-      <MaterialCommunityIcons name={icon as any} size={64} color={colors['on-surface-variant']} />
+      <MaterialCommunityIcons
+        name={toIconName(icon)}
+        size={64}
+        color={colors['on-surface-variant']}
+      />
       <Text style={[textStyle('h3'), { color: colors['on-surface'], textAlign: 'center' }]}>
         {title}
       </Text>

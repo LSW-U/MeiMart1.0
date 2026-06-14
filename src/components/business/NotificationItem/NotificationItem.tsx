@@ -1,9 +1,13 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
+import { type IconName } from '@/types';
 import type { NotificationItemProps } from './NotificationItem.types';
 
-const TYPE_ICON: Record<string, { name: string; colorKey: string }> = {
+const TYPE_ICON: Record<
+  string,
+  { name: IconName; colorKey: 'primary' | 'tertiary' | 'secondary' }
+> = {
   order: { name: 'package-variant-closed', colorKey: 'primary' },
   promotion: { name: 'tag', colorKey: 'tertiary' },
   system: { name: 'bell', colorKey: 'secondary' },
@@ -12,7 +16,7 @@ const TYPE_ICON: Record<string, { name: string; colorKey: string }> = {
 export function NotificationItem({ notification, onPress, testID }: NotificationItemProps) {
   const { colors } = useTheme();
   const { name, colorKey } = TYPE_ICON[notification.type] ?? TYPE_ICON.system;
-  const iconColor = colors[colorKey as keyof typeof colors] ?? colors.primary;
+  const iconColor = colors[colorKey];
 
   return (
     <Pressable
@@ -32,7 +36,7 @@ export function NotificationItem({ notification, onPress, testID }: Notification
           { backgroundColor: colors['surface-variant'], borderRadius: borderRadius.md },
         ]}
       >
-        <MaterialCommunityIcons name={name as any} size={24} color={iconColor as string} />
+        <MaterialCommunityIcons name={name} size={24} color={iconColor} />
       </View>
       <View style={styles.body}>
         <View style={styles.header}>

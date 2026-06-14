@@ -1,6 +1,4 @@
-import { Component, ReactNode } from 'react';
-import { View, Text } from 'react-native';
-import { useTheme, textStyle } from '@/theme';
+import { Component } from 'react';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { captureError } from '@/services/sentry';
 import type { ErrorBoundaryProps, ErrorBoundaryState } from './ErrorBoundary.types';

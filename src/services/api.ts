@@ -1,4 +1,5 @@
-import axios, {
+import {
+  create as axiosCreate,
   type AxiosError,
   type AxiosRequestConfig,
   type InternalAxiosRequestConfig,
@@ -18,7 +19,7 @@ if (env?.APP_ENV === 'production' && !baseURL.startsWith('https://')) {
   console.error('[security] Production API must use HTTPS. Current:', baseURL);
 }
 
-export const api = axios.create({
+export const api = axiosCreate({
   baseURL,
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
@@ -86,10 +87,9 @@ async function refreshAccessToken(): Promise<string | null> {
   if (!refreshToken) return null;
   refreshPromise = (async () => {
     try {
-      const res = await axios.post<{ token: string; refreshToken: string }>(
-        `${api.defaults.baseURL}/auth/refresh`,
-        { refreshToken },
-      );
+      const res = await api.post<{ token: string; refreshToken: string }>('/auth/refresh', {
+        refreshToken,
+      });
       const { token: newToken, refreshToken: newRefresh } = res.data;
       await tokenStorage.set(newToken, newRefresh);
       useAuthStore.getState().setAuth(newToken, newRefresh);

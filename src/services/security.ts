@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import Device from 'expo-device';
+import { isDevice } from 'expo-device';
 import { Platform } from 'react-native';
 
 interface DeviceRiskAssessment {
@@ -14,7 +14,7 @@ export async function assessDeviceRisk(): Promise<DeviceRiskAssessment> {
   const reasons: string[] = [];
 
   // 模拟器检测
-  const isEmulator = Device.isDevice === false;
+  const isEmulator = isDevice === false;
   if (isEmulator) reasons.push('运行在模拟器上');
 
   // 越狱/Root 检测（基础启发式）
@@ -59,13 +59,9 @@ async function checkAndroidRoot(): Promise<boolean> {
 }
 
 async function checkIosJailbreak(): Promise<boolean> {
-  try {
-    // Cydia/Sileo 检测需原生模块
-    // 此处依赖 Sentry 或第三方库的检测能力
-    return false;
-  } catch {
-    return false;
-  }
+  // Cydia/Sileo 检测需原生模块
+  // 此处依赖 Sentry 或第三方库的检测能力
+  return false;
 }
 
 export function getRiskWarningMessage(reasons: string[]): string {

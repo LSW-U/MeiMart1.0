@@ -1,4 +1,4 @@
-import i18n from 'i18next';
+import i18n, { use as registerI18nModule, changeLanguage } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { getLocales } from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -42,7 +42,7 @@ export async function initI18n() {
   if (initialized) return i18n;
   initialized = true;
   const initial = await loadInitialLocale();
-  await i18n.use(initReactI18next).init({
+  await registerI18nModule(initReactI18next).init({
     resources,
     lng: initial,
     fallbackLng: DEFAULT_LOCALE,
@@ -60,7 +60,7 @@ export async function changeLocale(locale: AppLocale) {
   } catch {
     // ignore storage errors
   }
-  await i18n.changeLanguage(locale);
+  await changeLanguage(locale);
 }
 
 export function getCurrentLocale(): AppLocale {

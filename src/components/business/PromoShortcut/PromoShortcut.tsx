@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
+import { toIconName } from '@/types';
 import type { PromoShortcutProps } from './PromoShortcut.types';
 
 export function PromoShortcut({ items, onPress, testID }: PromoShortcutProps) {
@@ -21,7 +22,7 @@ export function PromoShortcut({ items, onPress, testID }: PromoShortcutProps) {
           accessibilityLabel={item.title}
         >
           <MaterialCommunityIcons
-            name={item.icon as any}
+            name={toIconName(item.icon)}
             size={28}
             color={colors['on-primary-container']}
           />

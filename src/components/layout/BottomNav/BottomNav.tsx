@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTheme, textStyle, spacing, shadows } from '@/theme';
+import { useTheme, textStyle, spacing } from '@/theme';
 import { Badge } from '@/components/ui/Badge';
+import { toIconName } from '@/types';
 import type { BottomNavProps } from './BottomNav.types';
 import { BOTTOM_TAB_ITEMS } from './BottomNav.types';
 
@@ -17,7 +18,7 @@ export function BottomNav({ activeTab, onTabPress, testID }: BottomNavProps) {
         styles.nav,
         {
           backgroundColor: colors['surface-container-lowest'],
-          shadowColor: '#261822',
+          shadowColor: colors['on-surface'],
           shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.1,
           shadowRadius: 6,
@@ -39,7 +40,7 @@ export function BottomNav({ activeTab, onTabPress, testID }: BottomNavProps) {
             accessibilityLabel={item.label}
           >
             <View style={styles.iconWrapper}>
-              <MaterialCommunityIcons name={item.icon as any} size={24} color={color} />
+              <MaterialCommunityIcons name={toIconName(item.icon)} size={24} color={color} />
               {item.key === 'cart' && cartCount > 0 && (
                 <Badge count={cartCount} variant="number" style={styles.badge} />
               )}

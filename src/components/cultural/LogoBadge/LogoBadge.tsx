@@ -1,5 +1,5 @@
 import { View, StyleSheet } from 'react-native';
-import Svg, { Defs, ClipPath, Polygon, Rect, Image } from 'react-native-svg';
+import Svg, { Defs, ClipPath, Polygon, Rect } from 'react-native-svg';
 import { useTheme } from '@/theme';
 import type { LogoBadgeProps } from './LogoBadge.types';
 

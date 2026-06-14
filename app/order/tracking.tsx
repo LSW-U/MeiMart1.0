@@ -39,6 +39,7 @@ const TRACKING_STEPS = [
 export default function DeliveryTrackingPage() {
   const { colors } = useTheme();
   const params = useLocalSearchParams<{ id?: string }>();
+  const trackingNo = params.id ? `SF${params.id.padStart(10, '0')}` : 'SF1234567890';
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
@@ -50,7 +51,7 @@ export default function DeliveryTrackingPage() {
             <MaterialCommunityIcons name="truck-fast" size={32} color={colors.primary} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.trackingNo, { color: colors['on-surface'] }]}>
-                运单号: SF1234567890
+                运单号: {trackingNo}
               </Text>
               <Text style={[styles.trackingStatus, { color: colors['on-surface-variant'] }]}>
                 包裹运输中
@@ -95,5 +96,3 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
 });
-
-void useLocalSearchParams;

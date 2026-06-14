@@ -23,7 +23,13 @@ export function Card({
           borderColor: colors['outline-variant'],
           padding,
         },
-        elevated && styles.elevated,
+        elevated && {
+          shadowColor: colors['on-surface'],
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 2 },
+          elevation: 2,
+        },
         style,
       ]}
     >
@@ -57,12 +63,5 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
-  },
-  elevated: {
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
   },
 });

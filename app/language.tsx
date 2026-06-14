@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useAppStore } from '@/store/appStore';
 import { changeLocale, type AppLocale } from '@/i18n';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { toIconName } from '@/types';
 
 interface LanguageItem {
   code: AppLocale;
@@ -63,7 +64,7 @@ export default function LanguagePage() {
               accessibilityState={{ selected: active }}
             >
               <MaterialCommunityIcons
-                name={item.icon as any}
+                name={toIconName(item.icon)}
                 size={20}
                 color={colors['on-surface-variant']}
               />

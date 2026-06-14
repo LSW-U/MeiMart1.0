@@ -2,6 +2,14 @@
  * 业务数据类型定义（v0.3 Task 3.1）
  * 所有业务组件的 Props 类型从本文件导出
  */
+import type { ComponentProps } from 'react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+export type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
+
+export function toIconName(name: string): IconName {
+  return name as IconName;
+}
 
 export interface Product {
   id: string;

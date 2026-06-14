@@ -1,4 +1,4 @@
-import { Animated, Easing, StyleSheet } from 'react-native';
+import { Animated, Easing, StyleSheet, type DimensionValue } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useTheme } from '@/theme';
 
@@ -43,8 +43,8 @@ export function Skeleton({
       style={[
         styles.base,
         {
-          width: width as any,
-          height: height as any,
+          width: width as DimensionValue,
+          height: height as DimensionValue,
           backgroundColor: colors['surface-container-high'],
           borderRadius,
           opacity,

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartApi } from '@/services/cart';
-import type { CartItem, Product } from '@/types';
+import type { Cart, CartItem, Product } from '@/types';
 
 export const CART_QUERY_KEY = ['cart'] as const;
 
@@ -21,26 +21,23 @@ export function useAddToCart() {
     onMutate: async ({ product, quantity = 1 }) => {
       await qc.cancelQueries({ queryKey: CART_QUERY_KEY });
       const previous = qc.getQueryData(CART_QUERY_KEY);
-      qc.setQueryData(CART_QUERY_KEY, (old: any) => {
+      qc.setQueryData(CART_QUERY_KEY, (old: Cart | undefined) => {
         if (!old) return old;
-        const existing = old.items.find((i: CartItem) => i.product.id === product.id);
+        const existing = old.items.find((i) => i.product.id === product.id);
         let items: CartItem[];
         if (existing) {
-          items = old.items.map((i: CartItem) =>
+          items = old.items.map((i) =>
             i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i,
           );
         } else {
           items = [...old.items, { id: `ci${Date.now()}`, product, quantity, selected: true }];
         }
-        const selectedItems = items.filter((i: CartItem) => i.selected);
+        const selectedItems = items.filter((i) => i.selected);
         return {
           ...old,
           items,
-          totalItems: selectedItems.reduce((sum: number, i: CartItem) => sum + i.quantity, 0),
-          totalPrice: selectedItems.reduce(
-            (sum: number, i: CartItem) => sum + i.product.price * i.quantity,
-            0,
-          ),
+          totalItems: selectedItems.reduce((sum, i) => sum + i.quantity, 0),
+          totalPrice: selectedItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
         };
       });
       return { previous };

@@ -41,8 +41,8 @@ export function WeakNetworkBanner({ testID }: WeakNetworkBannerProps) {
       accessibilityRole="alert"
       accessibilityLabel="Weak network connection"
     >
-      <MaterialCommunityIcons name="signal-cellular-2" size={20} color="#fff" />
-      <Text style={[textStyle('body-md'), { color: '#fff' }]}>
+      <MaterialCommunityIcons name="signal-cellular-2" size={20} color={colors['on-error']} />
+      <Text style={[textStyle('body-md'), { color: colors['on-error'] }]}>
         Weak network. Loading may be slower.
       </Text>
     </View>

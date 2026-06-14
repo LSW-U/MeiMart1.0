@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
+import { toIconName } from '@/types';
 import type { CategoryItemProps } from './CategoryItem.types';
 
 const SIZE_MAP = {
@@ -33,7 +34,7 @@ export function CategoryItem({ category, size = 'md', onPress, testID }: Categor
         ]}
       >
         <MaterialCommunityIcons
-          name={(category.icon as any) || 'tag'}
+          name={category.icon ? toIconName(category.icon) : 'tag'}
           size={dims.icon}
           color={colors['on-secondary-container']}
         />

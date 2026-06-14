@@ -2,13 +2,15 @@ import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, borderRadius } from '@/theme';
+import { toIconName, type IconName } from '@/types';
 import type { ToastProps } from './Toast.types';
 
-const TYPE_CONFIG: Record<string, { icon: string; colorKey: string }> = {
-  success: { icon: 'check-circle', colorKey: 'tertiary' },
-  error: { icon: 'alert-circle', colorKey: 'error' },
-  info: { icon: 'information', colorKey: 'primary' },
-};
+const TYPE_CONFIG: Record<string, { icon: IconName; colorKey: 'primary' | 'tertiary' | 'error' }> =
+  {
+    success: { icon: 'check-circle', colorKey: 'tertiary' },
+    error: { icon: 'alert-circle', colorKey: 'error' },
+    info: { icon: 'information', colorKey: 'primary' },
+  };
 
 export function Toast({
   visible,
@@ -20,7 +22,7 @@ export function Toast({
 }: ToastProps) {
   const { colors } = useTheme();
   const config = TYPE_CONFIG[type];
-  const bgColor = colors[config.colorKey as keyof typeof colors] ?? colors.primary;
+  const bgColor = colors[config.colorKey];
   const textColor = type === 'error' ? colors['on-error'] : colors['on-primary'];
 
   useEffect(() => {
@@ -35,11 +37,11 @@ export function Toast({
   return (
     <View
       testID={testID}
-      style={[styles.toast, { backgroundColor: bgColor as string, borderRadius: borderRadius.lg }]}
+      style={[styles.toast, { backgroundColor: bgColor, borderRadius: borderRadius.lg }]}
       accessibilityRole="alert"
       accessibilityLabel={message}
     >
-      <MaterialCommunityIcons name={config.icon as any} size={20} color={textColor} />
+      <MaterialCommunityIcons name={toIconName(config.icon)} size={20} color={textColor} />
       <Text style={[textStyle('body-md'), { color: textColor, flex: 1 }]}>{message}</Text>
     </View>
   );

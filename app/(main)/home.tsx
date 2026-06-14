@@ -53,7 +53,7 @@ export default function HomePage() {
             {!shouldSkipNonEssential && banners && banners.length > 0 && (
               <BannerCarousel
                 banners={banners}
-                onBannerPress={(b) => b.link && router.push(b.link as any)}
+                onBannerPress={(b) => b.link && router.push(b.link)}
               />
             )}
             <PromoShortcut items={SHORTCUTS} onPress={(item) => router.push('/search')} />

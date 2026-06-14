@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/theme';
+import { toIconName } from '@/types';
 
 import type { ChipProps } from './Chip.types';
 
@@ -24,7 +25,7 @@ export function Chip({ label, selected, onSelect, disabled = false, testID, icon
       ]}
     >
       <View style={styles.content}>
-        {icon && <MaterialCommunityIcons name={icon as any} size={16} color={fg} />}
+        {icon && <MaterialCommunityIcons name={toIconName(icon)} size={16} color={fg} />}
         <Text style={[styles.label, { color: fg }]}>{label}</Text>
       </View>
     </Pressable>
