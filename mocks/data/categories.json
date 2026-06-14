@@ -1,0 +1,10 @@
+[
+  { "id": "c001", "name": "水果生鲜", "icon": "fruit-watermelon" },
+  { "id": "c002", "name": "蔬菜", "icon": "carrot" },
+  { "id": "c003", "name": "肉禽蛋品", "icon": "egg" },
+  { "id": "c004", "name": "粮油调味", "icon": "bottle-tonic" },
+  { "id": "c005", "name": "乳品饮料", "icon": "bottle-soda" },
+  { "id": "c006", "name": "零食糕点", "icon": "cookie" },
+  { "id": "c007", "name": "家庭清洁", "icon": "spray" },
+  { "id": "c008", "name": "个人护理", "icon": "shower" }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "cp001",
+    "name": "新人立减券",
+    "discount": 20,
+    "type": "fixed",
+    "minPurchase": 50,
+    "validUntil": "2027-12-31",
+    "used": false
+  },
+  {
+    "id": "cp002",
+    "name": "满100减30",
+    "discount": 30,
+    "type": "fixed",
+    "minPurchase": 100,
+    "validUntil": "2027-10-31",
+    "used": false
+  },
+  {
+    "id": "cp003",
+    "name": "8折优惠券",
+    "discount": 20,
+    "type": "percentage",
+    "minPurchase": 80,
+    "validUntil": "2027-09-30",
+    "used": false
+  }
+]

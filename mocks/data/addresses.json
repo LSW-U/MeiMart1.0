@@ -1,0 +1,22 @@
+[
+  {
+    "id": "a001",
+    "name": "张三",
+    "phone": "13800138000",
+    "province": "北京市",
+    "city": "北京市",
+    "district": "朝阳区",
+    "detail": "建国路88号 SOHO 现代城 A 座 1801 室",
+    "isDefault": true
+  },
+  {
+    "id": "a002",
+    "name": "李四",
+    "phone": "13900139000",
+    "province": "上海市",
+    "city": "上海市",
+    "district": "浦东新区",
+    "detail": "陆家嘴环路1000号恒生银行大厦25楼",
+    "isDefault": false
+  }
+]

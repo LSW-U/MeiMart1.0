@@ -1,0 +1,108 @@
+[
+  {
+    "id": "o001",
+    "orderNo": "MM202606010001",
+    "status": "pending",
+    "items": [
+      {
+        "id": "ci001",
+        "product": {
+          "id": "p001",
+          "name": "新鲜红富士苹果",
+          "price": 25.9,
+          "image": "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400",
+          "category": "fruits"
+        },
+        "quantity": 2,
+        "selected": true
+      }
+    ],
+    "totalPrice": 51.8,
+    "createdAt": "2026-06-01T10:30:00Z"
+  },
+  {
+    "id": "o002",
+    "orderNo": "MM202606050002",
+    "status": "paid",
+    "items": [
+      {
+        "id": "ci002",
+        "product": {
+          "id": "p005",
+          "name": "蒙牛纯牛奶 250ml×12",
+          "price": 42.9,
+          "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
+          "category": "dairy"
+        },
+        "quantity": 1,
+        "selected": true
+      }
+    ],
+    "totalPrice": 42.9,
+    "createdAt": "2026-06-05T14:20:00Z"
+  },
+  {
+    "id": "o003",
+    "orderNo": "MM202606080003",
+    "status": "shipped",
+    "items": [
+      {
+        "id": "ci003",
+        "product": {
+          "id": "p009",
+          "name": "清风原木抽纸 24包",
+          "price": 45.0,
+          "image": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400",
+          "category": "household"
+        },
+        "quantity": 1,
+        "selected": true
+      }
+    ],
+    "totalPrice": 45.0,
+    "createdAt": "2026-06-08T09:15:00Z",
+    "trackingNo": "SF1234567890"
+  },
+  {
+    "id": "o004",
+    "orderNo": "MM202606100004",
+    "status": "delivered",
+    "items": [
+      {
+        "id": "ci004",
+        "product": {
+          "id": "p002",
+          "name": "本地土鸡蛋 30枚装",
+          "price": 38.5,
+          "image": "https://images.unsplash.com/photo-1582722872445-44dc5f43e784?w=400",
+          "category": "eggs"
+        },
+        "quantity": 1,
+        "selected": true
+      }
+    ],
+    "totalPrice": 38.5,
+    "createdAt": "2026-05-28T16:45:00Z"
+  },
+  {
+    "id": "o005",
+    "orderNo": "MM202606120005",
+    "status": "cancelled",
+    "items": [
+      {
+        "id": "ci005",
+        "product": {
+          "id": "p007",
+          "name": "薯片零食大礼包",
+          "price": 35.9,
+          "image": "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400",
+          "category": "snacks"
+        },
+        "quantity": 1,
+        "selected": true
+      }
+    ],
+    "totalPrice": 35.9,
+    "createdAt": "2026-05-30T11:00:00Z"
+  }
+]

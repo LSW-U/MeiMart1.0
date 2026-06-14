@@ -1,0 +1,42 @@
+[
+  {
+    "id": "n001",
+    "title": "订单已发货",
+    "body": "您的订单 MM202606080003 已发货，预计明日送达",
+    "type": "order",
+    "read": false,
+    "createdAt": "2026-06-13T08:00:00Z"
+  },
+  {
+    "id": "n002",
+    "title": "限时秒杀",
+    "body": "今日 12 点开启，海量商品低至 5 折",
+    "type": "promotion",
+    "read": false,
+    "createdAt": "2026-06-13T10:00:00Z"
+  },
+  {
+    "id": "n003",
+    "title": "优惠券到账",
+    "body": "您获得一张 20 元优惠券，3 天内有效",
+    "type": "promotion",
+    "read": true,
+    "createdAt": "2026-06-12T15:30:00Z"
+  },
+  {
+    "id": "n004",
+    "title": "系统维护通知",
+    "body": "今晚 23:00-01:00 系统维护，期间可能无法下单",
+    "type": "system",
+    "read": true,
+    "createdAt": "2026-06-11T09:00:00Z"
+  },
+  {
+    "id": "n005",
+    "title": "评价有礼",
+    "body": "完成订单评价可获得 5 积分",
+    "type": "system",
+    "read": true,
+    "createdAt": "2026-06-10T18:00:00Z"
+  }
+]

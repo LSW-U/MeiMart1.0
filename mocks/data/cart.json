@@ -1,0 +1,44 @@
+{
+  "items": [
+    {
+      "id": "ci001",
+      "product": {
+        "id": "p001",
+        "name": "新鲜红富士苹果",
+        "price": 25.9,
+        "originalPrice": 35.0,
+        "image": "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400",
+        "category": "fruits"
+      },
+      "quantity": 2,
+      "selected": true
+    },
+    {
+      "id": "ci002",
+      "product": {
+        "id": "p005",
+        "name": "蒙牛纯牛奶 250ml×12",
+        "price": 42.9,
+        "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
+        "category": "dairy"
+      },
+      "quantity": 1,
+      "selected": true
+    },
+    {
+      "id": "ci003",
+      "product": {
+        "id": "p009",
+        "name": "清风原木抽纸 24包",
+        "price": 45.0,
+        "originalPrice": 55.0,
+        "image": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400",
+        "category": "household"
+      },
+      "quantity": 1,
+      "selected": false
+    }
+  ],
+  "totalPrice": 94.7,
+  "totalItems": 4
+}
