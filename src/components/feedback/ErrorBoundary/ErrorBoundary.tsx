@@ -2,6 +2,7 @@ import { Component, ReactNode } from 'react';
 import { View, Text } from 'react-native';
 import { useTheme, textStyle } from '@/theme';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { captureError } from '@/services/sentry';
 import type { ErrorBoundaryProps, ErrorBoundaryState } from './ErrorBoundary.types';
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -16,7 +17,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.props.onError?.(error, errorInfo);
-    // TODO: Sentry integration in production
+    captureError(error, { componentStack: errorInfo.componentStack });
   }
 
   render() {

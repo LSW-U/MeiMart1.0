@@ -6,6 +6,9 @@ import { ThemeProvider } from '@/theme/ThemeProvider';
 import { initPersist } from '@/services/offline/persist';
 import { initNetworkListener } from '@/services/offline/network';
 import { initI18n, default as i18n } from '@/i18n';
+import { initSentry } from '@/services/sentry';
+
+initSentry();
 
 const queryClient = new QueryClient({
   defaultOptions: {
