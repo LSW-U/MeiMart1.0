@@ -231,7 +231,7 @@ function SegmentSwitch({
           >
             <Text
               style={{
-                color: active ? '#fff' : subColor,
+                color: active ? color : subColor,
                 ...typography['label-caps'],
               }}
             >

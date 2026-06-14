@@ -18,7 +18,7 @@ export default function PaymentResultPage() {
           style={[styles.iconBox, { backgroundColor: colors.primary }]}
           accessibilityRole="image"
         >
-          <MaterialCommunityIcons name="check" size={48} color="#fff" />
+          <MaterialCommunityIcons name="check" size={48} color={colors['on-primary']} />
         </View>
         <Text style={[styles.title, { color: colors['on-surface'] }]} accessibilityRole="header">
           支付成功
