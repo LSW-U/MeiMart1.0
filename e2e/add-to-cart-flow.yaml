@@ -1,0 +1,18 @@
+appId: ${MAESTRO_APP_ID}
+---
+- launchApp:
+    clearState: true
+- runFlow: login-flow.yaml
+# 从首页进入商品详情
+- tapOn:
+    id: "product-card-.*"
+# 加入购物车
+- tapOn:
+    id: "product-detail-add-to-cart"
+- assertVisible:
+    text: ".*已加入.*"
+# 进入购物车 Tab
+- tapOn:
+    id: "tab-cart"
+- assertVisible:
+    containsText: "购物车"

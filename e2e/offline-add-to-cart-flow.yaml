@@ -1,0 +1,37 @@
+appId: ${MAESTRO_APP_ID}
+tags:
+  - offline
+---
+- launchApp:
+    clearState: true
+- runFlow: login-flow.yaml
+# 模拟离线：Maestro 通过 adb 飞行模式
+- runScript:
+    when:
+      platform: Android
+    commands:
+      - adb shell svc data disable
+      - adb shell svc wifi disable
+- tapOn:
+    id: "product-card-.*"
+- tapOn:
+    id: "product-detail-add-to-cart"
+# 离线下应入队，不报错
+- assertVisible:
+    text: ".*已加入.*|.*将.*加入.*"
+# 恢复网络
+- runScript:
+    when:
+      platform: Android
+    commands:
+      - adb shell svc data enable
+      - adb shell svc wifi enable
+# 等待队列同步
+- extendedWaitUntil:
+    visible:
+      containsText: "购物车"
+    timeout: 10000
+- tapOn:
+    id: "tab-cart"
+- assertVisible:
+    containsText: ".*1.*"

@@ -1,0 +1,14 @@
+appId: ${MAESTRO_APP_ID}
+---
+- launchApp:
+    clearState: true
+# 跳过登录，进入主流程
+- runFlow: login-flow.yaml
+- assertVisible: "搜索商品"
+- tapOn:
+    id: "home-search"
+- inputText: "苹果"
+- tapOn:
+    id: "search-submit"
+- assertVisible:
+    containsText: "搜索结果"

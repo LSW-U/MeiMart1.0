@@ -1,0 +1,20 @@
+appId: ${MAESTRO_APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible: "MeiMart"
+- extendedWaitUntil:
+    visible: "登录"
+    timeout: 5000
+- tapOn:
+    id: "login-password-phone"
+- inputText: "77001234"
+- tapOn:
+    id: "login-password-password"
+- inputText: "123456"
+- tapOn:
+    id: "login-password-submit"
+- extendedWaitUntil:
+    visible: "首页"
+    timeout: 5000
+- assertVisible: "首页"

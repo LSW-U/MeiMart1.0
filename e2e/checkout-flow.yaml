@@ -1,0 +1,15 @@
+appId: ${MAESTRO_APP_ID}
+---
+- launchApp:
+    clearState: true
+- runFlow: login-flow.yaml
+- tapOn:
+    id: "tab-cart"
+- tapOn:
+    id: "cart-checkout"
+- assertVisible:
+    containsText: "结算"
+- tapOn:
+    id: "checkout-submit"
+- assertVisible:
+    text: "支付"
