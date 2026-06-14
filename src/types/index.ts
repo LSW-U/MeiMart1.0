@@ -87,10 +87,20 @@ export interface Category {
   parentId?: string;
 }
 
+export type BannerTheme = 'primary' | 'emerald' | 'blue';
+
 export interface Banner {
   id: string;
+  /** 背景图片 URL（叠加在 gradient 之上，opacity 较低） */
   image: string;
+  /** 主标题（与 HTML 的 `<h2>` 对应） */
   title: string;
+  /** 副标题 / 描述（可选） */
+  description?: string;
+  /** 行动号召按钮文字（如 "SHOP NOW"），可选 */
+  ctaLabel?: string;
+  /** 卡片色调（决定渐变方向 + 装饰色），可选 — 默认 primary */
+  theme?: BannerTheme;
   link?: string;
 }
 

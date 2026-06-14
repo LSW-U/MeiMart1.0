@@ -10,10 +10,26 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useTheme, textStyle, borderRadius } from '@/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme, textStyle, spacing, gradientPresets, shadowPresets } from '@/theme';
+import { DecorativeCorner } from '@/components/cultural/DecorativeCorner';
+import type { Banner, BannerTheme } from '@/types';
 import type { BannerCarouselProps } from './BannerCarousel.types';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
+const BANNER_HEIGHT = 180;
+
+const THEME_GRADIENT: Record<BannerTheme, keyof typeof gradientPresets> = {
+  primary: 'primaryFade',
+  emerald: 'emeraldFade',
+  blue: 'blueFade',
+};
+
+const THEME_BG: Record<BannerTheme, string> = {
+  primary: '#961813',
+  emerald: '#065f46',
+  blue: '#1d4ed8',
+};
 
 export function BannerCarousel({
   banners,
@@ -55,29 +71,14 @@ export function BannerCarousel({
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onMomentumScrollEnd}
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
       >
         {banners.map((banner) => (
-          <Pressable
+          <BannerCard
             key={banner.id}
+            banner={banner}
             onPress={onBannerPress ? () => onBannerPress(banner) : undefined}
-            style={styles.slide}
-            accessibilityRole="button"
-            accessibilityLabel={`Banner: ${banner.title}`}
-          >
-            <Image
-              source={{ uri: banner.image }}
-              style={[styles.image, { borderRadius: borderRadius.xl }]}
-              accessible={false}
-            />
-            <View style={styles.overlay}>
-              <Text
-                style={[textStyle('h3'), { color: colors['on-primary'], fontWeight: '700' }]}
-                numberOfLines={2}
-              >
-                {banner.title}
-              </Text>
-            </View>
-          </Pressable>
+          />
         ))}
       </ScrollView>
       {showDots && banners.length > 1 && (
@@ -88,6 +89,7 @@ export function BannerCarousel({
               testID={`dot-${i}`}
               style={[
                 styles.dot,
+                i === activeIndex && styles.dotActive,
                 {
                   backgroundColor: i === activeIndex ? colors.primary : colors['outline-variant'],
                 },
@@ -100,27 +102,113 @@ export function BannerCarousel({
   );
 }
 
+function BannerCard({ banner, onPress }: { banner: Banner; onPress?: () => void }) {
+  const theme = banner.theme ?? 'primary';
+  const gradientPreset = gradientPresets[THEME_GRADIENT[theme]];
+  const bgColor = THEME_BG[theme];
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: bgColor },
+        pressed && styles.pressed,
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={`Banner: ${banner.title}`}
+    >
+      {/* 装饰角花（右上） */}
+      <View style={styles.corner} pointerEvents="none">
+        <DecorativeCorner size={120} variant="light" />
+      </View>
+
+      {/* 背景图（半透明叠加，呼应 HTML 的 opacity-40 mix-blend-overlay） */}
+      {banner.image ? (
+        <Image source={{ uri: banner.image }} style={styles.bgImage} accessible={false} />
+      ) : null}
+
+      {/* 渐变遮罩（左→右深→浅） */}
+      <LinearGradient {...gradientPreset} style={styles.gradient} />
+
+      {/* 文案 + CTA */}
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={3}>
+          {banner.title}
+        </Text>
+        {banner.ctaLabel && (
+          <View style={[styles.ctaBtn, shadowPresets.lg]}>
+            <Text style={styles.ctaText}>{banner.ctaLabel}</Text>
+          </View>
+        )}
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   scrollView: { width: '100%' },
-  slide: { width: SCREEN_WIDTH, paddingHorizontal: 16, position: 'relative' },
-  image: { width: '100%', height: 160 },
-  overlay: {
+  scrollContent: { gap: 0 },
+  card: {
+    width: Dimensions.get('window').width - spacing.lg * 2,
+    marginHorizontal: spacing.lg,
+    height: BANNER_HEIGHT,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  pressed: { opacity: 0.92 },
+  corner: {
     position: 'absolute',
-    left: 24,
-    right: 24,
-    bottom: 16,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    right: -16,
+    top: -8,
+    opacity: 0.3,
+  },
+  bgImage: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    opacity: 0.4,
+  },
+  gradient: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  content: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+    maxWidth: 240,
+  },
+  title: {
+    ...textStyle('h2'),
+    color: '#ffffff',
+    fontWeight: '700',
+    marginBottom: spacing.sm,
+  },
+  ctaBtn: {
+    backgroundColor: '#634700',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     borderRadius: 8,
     alignSelf: 'flex-start',
+  },
+  ctaText: {
+    ...textStyle('label-caps'),
+    color: '#ffffff',
+    fontSize: 11,
+    letterSpacing: 0.05,
   },
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 8,
+    gap: spacing.xs,
+    marginTop: spacing.sm,
   },
   dot: { width: 6, height: 6, borderRadius: 3 },
+  dotActive: { width: 16, height: 6, borderRadius: 3 },
 });
