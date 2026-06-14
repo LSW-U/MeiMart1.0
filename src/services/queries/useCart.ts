@@ -76,7 +76,20 @@ export function useRemoveCartItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (itemId: string) => cartApi.removeItem(itemId),
-    onSuccess: (cart) => qc.setQueryData(CART_QUERY_KEY, cart),
+    onMutate: async (itemId) => {
+      await qc.cancelQueries({ queryKey: CART_QUERY_KEY });
+      const previous = qc.getQueryData(CART_QUERY_KEY);
+      qc.setQueryData(CART_QUERY_KEY, (old: Cart | undefined) => {
+        if (!old) return old;
+        const items = old.items.filter((i) => i.id !== itemId);
+        return recomputeTotals(old, items);
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(CART_QUERY_KEY, ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: CART_QUERY_KEY }),
   });
 }
 
