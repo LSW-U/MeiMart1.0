@@ -1,3 +1,6 @@
+// 此文件作为「设计 Token 字典」参考，NativeWind 未激活。
+// 项目采用 StyleSheet 精细翻译路线，详见 docs/style-strategy.md。
+// 翻译 HTML 的 Tailwind class 时，请对照此文件的 colors/spacing/shadow 定义。
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   presets: [require('nativewind/preset')],

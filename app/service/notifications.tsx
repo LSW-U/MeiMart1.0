@@ -1,12 +1,4 @@
-import {
-  StyleSheet,
-  View,
-  FlatList,
-  ActivityIndicator,
-  Text,
-  Pressable,
-  Alert,
-} from 'react-native';
+import { StyleSheet, View, FlatList, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme, spacing } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -83,7 +75,3 @@ const styles = StyleSheet.create({
   list: { padding: spacing.md, gap: spacing.sm, paddingBottom: 40 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });
-
-void Text;
-void Pressable;
-void Alert;

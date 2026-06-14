@@ -8,7 +8,6 @@ import { BannerCarousel } from '@/components/business/BannerCarousel';
 import { CategoryGrid } from '@/components/business/CategoryGrid';
 import { PromoShortcut } from '@/components/business/PromoShortcut';
 import { ProductCard } from '@/components/business/ProductCard';
-import { Card } from '@/components/ui/Card';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { LogoBadge } from '@/components/cultural/LogoBadge';
@@ -103,5 +102,3 @@ const styles = StyleSheet.create({
   section: { gap: spacing.md, marginTop: spacing.lg },
   sectionTitle: { ...typography.h3, fontWeight: '700' },
 });
-
-void Card;

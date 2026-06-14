@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, FlatList } from 'react-native';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -60,5 +60,3 @@ const styles = StyleSheet.create({
   tag: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 16 },
   tagText: { ...typography['body-sm'] },
 });
-
-void FlatList;
