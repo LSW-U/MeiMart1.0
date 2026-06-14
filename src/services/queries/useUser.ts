@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/services/user';
+import type { Notification } from '@/types';
 
 export const PROFILE_QUERY_KEY = ['user', 'profile'] as const;
 export const COUPONS_QUERY_KEY = ['user', 'coupons'] as const;
@@ -54,6 +55,18 @@ export function useMarkNotificationRead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => userApi.markNotificationRead(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY }),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
+      const previous = qc.getQueryData<Notification[]>(NOTIFICATIONS_QUERY_KEY);
+      qc.setQueryData<Notification[]>(NOTIFICATIONS_QUERY_KEY, (old) => {
+        if (!old) return old;
+        return old.map((n) => (n.id === id ? { ...n, read: true } : n));
+      });
+      return { previous };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previous) qc.setQueryData(NOTIFICATIONS_QUERY_KEY, ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY }),
   });
 }

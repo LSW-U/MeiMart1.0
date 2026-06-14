@@ -35,6 +35,20 @@ export function useCancelOrder() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => orderApi.cancelOrder(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ORDERS_QUERY_KEY });
+      const previous = qc.getQueriesData({ queryKey: ORDERS_QUERY_KEY });
+      qc.setQueriesData({ queryKey: ORDERS_QUERY_KEY }, (old: unknown) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((o: Order) => (o.id === id ? { ...o, status: 'cancelled' as const } : o));
+      });
+      return { previous };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previous) {
+        ctx.previous.forEach(([key, data]) => qc.setQueryData(key, data));
+      }
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
   });
 }
