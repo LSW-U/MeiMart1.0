@@ -9,6 +9,7 @@ export function Badge({
   maxCount = 99,
   color,
   accessibilityLabel,
+  style,
 }: BadgeProps) {
   const { colors } = useTheme();
 
@@ -23,7 +24,7 @@ export function Badge({
     return (
       <View
         testID="badge-dot"
-        style={[styles.dot, { backgroundColor: bgColor }]}
+        style={[styles.dot, { backgroundColor: bgColor }, style]}
         accessibilityLabel={accessibilityLabel ?? `New notification`}
         accessibilityRole="image"
       />
@@ -33,7 +34,7 @@ export function Badge({
   return (
     <View
       testID="badge-number"
-      style={[styles.number, { backgroundColor: bgColor }]}
+      style={[styles.number, { backgroundColor: bgColor }, style]}
       accessibilityLabel={accessibilityLabel ?? `${count} notifications`}
       accessibilityRole="image"
     >

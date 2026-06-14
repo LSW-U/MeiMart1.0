@@ -1,3 +1,5 @@
+import type { ViewStyle } from 'react-native';
+
 export type BadgeVariant = 'dot' | 'number';
 
 export interface BadgeProps {
@@ -11,4 +13,6 @@ export interface BadgeProps {
   color?: string;
   /** a11y */
   accessibilityLabel?: string;
+  /** 自定义样式（用于 absolute 定位等） */
+  style?: ViewStyle;
 }

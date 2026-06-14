@@ -4,16 +4,30 @@ import { useTheme } from '@/theme';
 
 import type { CheckboxProps } from './Checkbox.types';
 
-export function Checkbox({ checked, onChange, label, disabled = false, testID }: CheckboxProps) {
+export function Checkbox({
+  checked,
+  onChange,
+  onPress,
+  label,
+  disabled = false,
+  testID,
+  accessibilityLabel,
+}: CheckboxProps) {
   const { colors } = useTheme();
+
+  const handlePress = () => {
+    if (disabled) return;
+    onChange?.(!checked);
+    onPress?.();
+  };
 
   return (
     <Pressable
       testID={testID}
-      onPress={() => !disabled && onChange?.(!checked)}
+      onPress={handlePress}
       disabled={disabled}
       accessibilityRole="checkbox"
-      accessibilityLabel={label ?? 'Checkbox'}
+      accessibilityLabel={accessibilityLabel ?? label ?? 'Checkbox'}
       accessibilityState={{ checked, disabled }}
       style={({ pressed }) => [styles.row, { opacity: disabled ? 0.5 : pressed ? 0.7 : 1 }]}
     >

@@ -4,3 +4,9 @@ export interface PromoShortcutItem {
   icon: string;
   link?: string;
 }
+
+export interface PromoShortcutProps {
+  items: PromoShortcutItem[];
+  onPress?: (item: PromoShortcutItem) => void;
+  testID?: string;
+}
