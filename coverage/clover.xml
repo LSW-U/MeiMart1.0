@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1781415189470" clover="3.2.0">
+  <project timestamp="1781415189470" name="All files">
+    <metrics statements="114" coveredstatements="100" conditionals="146" coveredconditionals="112" methods="32" coveredmethods="27" elements="292" coveredelements="239" complexity="0" loc="114" ncloc="114" packages="12" files="35" classes="35"/>
+    <package name="components.ui.Avatar">
+      <metrics statements="10" coveredstatements="10" conditionals="13" coveredconditionals="9" methods="2" coveredmethods="2"/>
+      <file name="Avatar.tsx" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Avatar/Avatar.tsx">
+        <metrics statements="10" coveredstatements="10" conditionals="13" coveredconditionals="9" methods="2" coveredmethods="2"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="21" count="4" type="stmt"/>
+        <line num="22" count="4" type="stmt"/>
+        <line num="24" count="4" type="stmt"/>
+        <line num="27" count="4" type="stmt"/>
+        <line num="73" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="74" count="1" type="stmt"/>
+        <line num="81" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="88" count="3" type="stmt"/>
+        <line num="95" count="1" type="stmt"/>
+      </file>
+      <file name="Avatar.types.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Avatar/Avatar.types.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="index.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Avatar/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="components.ui.Badge">
+      <metrics statements="9" coveredstatements="9" conditionals="15" coveredconditionals="14" methods="1" coveredmethods="1"/>
+      <file name="Badge.tsx" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Badge/Badge.tsx">
+        <metrics statements="9" coveredstatements="9" conditionals="15" coveredconditionals="14" methods="1" coveredmethods="1"/>
+        <line num="13" count="4" type="stmt"/>
+        <line num="15" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="19" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="20" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="33" count="2" type="stmt"/>
+        <line num="45" count="1" type="stmt"/>
+      </file>
+      <file name="Badge.types.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Badge/Badge.types.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="index.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Badge/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="components.ui.Button">
+      <metrics statements="9" coveredstatements="9" conditionals="19" coveredconditionals="15" methods="2" coveredmethods="2"/>
+      <file name="Button.tsx" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Button/Button.tsx">
+        <metrics statements="9" coveredstatements="9" conditionals="19" coveredconditionals="15" methods="2" coveredmethods="2"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="29" count="5" type="stmt"/>
+        <line num="30" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="32" count="5" type="stmt"/>
+        <line num="39" count="5" type="stmt"/>
+        <line num="46" count="5" type="stmt"/>
+        <line num="55" count="5" type="stmt"/>
+        <line num="91" count="1" type="stmt"/>
+      </file>
+      <file name="Button.types.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Button/Button.types.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="index.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Button/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="components.ui.Card">
+      <metrics statements="7" coveredstatements="7" conditionals="8" coveredconditionals="6" methods="2" coveredmethods="2"/>
+      <file name="Card.tsx" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Card/Card.tsx">
+        <metrics statements="7" coveredstatements="7" conditionals="8" coveredconditionals="6" methods="2" coveredmethods="2"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="34" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="35" count="1" type="stmt"/>
+        <line num="41" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="48" count="2" type="stmt"/>
+        <line num="55" count="1" type="stmt"/>
+      </file>
+      <file name="Card.types.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Card/Card.types.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="index.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Card/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="components.ui.Checkbox">
+      <metrics statements="5" coveredstatements="5" conditionals="17" coveredconditionals="16" methods="3" coveredmethods="3"/>
+      <file name="Checkbox.tsx" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Checkbox/Checkbox.tsx">
+        <metrics statements="5" coveredstatements="5" conditionals="17" coveredconditionals="16" methods="3" coveredmethods="3"/>
+        <line num="8" count="4" type="stmt"/>
+        <line num="10" count="4" type="stmt"/>
+        <line num="13" count="1" type="cond" truecount="2" falsecount="0"/>
+        <line num="18" count="4" type="cond" truecount="3" falsecount="1"/>
+        <line num="36" count="1" type="stmt"/>
+      </file>
+      <file name="Checkbox.types.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Checkbox/Checkbox.types.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="index.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Checkbox/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="components.ui.Chip">
+      <metrics statements="7" coveredstatements="7" conditionals="11" coveredconditionals="8" methods="3" coveredmethods="3"/>
+      <file name="Chip.tsx" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Chip/Chip.tsx">
+        <metrics statements="7" coveredstatements="7" conditionals="11" coveredconditionals="8" methods="3" coveredmethods="3"/>
+        <line num="8" count="3" type="stmt"/>
+        <line num="10" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="11" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="13" count="3" type="stmt"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="21" count="3" type="stmt"/>
+        <line num="34" count="1" type="stmt"/>
+      </file>
+      <file name="Chip.types.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Chip/Chip.types.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="index.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Chip/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="components.ui.Input">
+      <metrics statements="8" coveredstatements="7" conditionals="24" coveredconditionals="15" methods="2" coveredmethods="2"/>
+      <file name="Input.tsx" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Input/Input.tsx">
+        <metrics statements="8" coveredstatements="7" conditionals="24" coveredconditionals="15" methods="2" coveredmethods="2"/>
+        <line num="23" count="4" type="stmt"/>
+        <line num="24" count="4" type="stmt"/>
+        <line num="25" count="4" type="stmt"/>
+        <line num="27" count="4" type="stmt"/>
+        <line num="28" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="29" count="0" type="stmt"/>
+        <line num="33" count="4" type="stmt"/>
+        <line num="105" count="1" type="stmt"/>
+      </file>
+      <file name="Input.types.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Input/Input.types.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="index.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Input/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="components.ui.Skeleton">
+      <metrics statements="9" coveredstatements="9" conditionals="9" coveredconditionals="9" methods="4" coveredmethods="4"/>
+      <file name="Skeleton.tsx" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Skeleton/Skeleton.tsx">
+        <metrics statements="9" coveredstatements="9" conditionals="9" coveredconditionals="9" methods="4" coveredmethods="4"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="34" count="3" type="stmt"/>
+        <line num="35" count="3" type="stmt"/>
+        <line num="38" count="3" type="cond" truecount="6" falsecount="0"/>
+        <line num="40" count="3" type="stmt"/>
+        <line num="59" count="1" type="stmt"/>
+      </file>
+      <file name="Skeleton.types.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Skeleton/Skeleton.types.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="index.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Skeleton/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="components.ui.Switch">
+      <metrics statements="14" coveredstatements="13" conditionals="15" coveredconditionals="12" methods="3" coveredmethods="2"/>
+      <file name="Switch.tsx" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Switch/Switch.tsx">
+        <metrics statements="14" coveredstatements="13" conditionals="15" coveredconditionals="12" methods="3" coveredmethods="2"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="13" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+        <line num="36" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="40" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="52" count="2" type="stmt"/>
+        <line num="55" count="1" type="cond" truecount="2" falsecount="0"/>
+        <line num="65" count="1" type="stmt"/>
+      </file>
+      <file name="Switch.types.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Switch/Switch.types.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="index.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/components/ui/Switch/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="config">
+      <metrics statements="5" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <file name="api.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/config/api.ts">
+        <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="2" count="0" type="stmt"/>
+      </file>
+      <file name="env.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/config/env.ts">
+        <metrics statements="4" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="9" count="0" type="stmt"/>
+        <line num="11" count="0" type="stmt"/>
+        <line num="12" count="0" type="stmt"/>
+        <line num="13" count="0" type="stmt"/>
+      </file>
+    </package>
+    <package name="theme">
+      <metrics statements="31" coveredstatements="24" conditionals="15" coveredconditionals="8" methods="10" coveredmethods="6"/>
+      <file name="ThemeProvider.tsx" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/theme/ThemeProvider.tsx">
+        <metrics statements="23" coveredstatements="18" conditionals="13" coveredconditionals="8" methods="9" coveredmethods="6"/>
+        <line num="27" count="9" type="stmt"/>
+        <line num="29" count="9" type="stmt"/>
+        <line num="32" count="33" type="stmt"/>
+        <line num="33" count="33" type="stmt"/>
+        <line num="36" count="33" type="stmt"/>
+        <line num="37" count="33" type="stmt"/>
+        <line num="39" count="33" type="cond" truecount="4" falsecount="1"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="48" count="33" type="stmt"/>
+        <line num="49" count="0" type="stmt"/>
+        <line num="50" count="0" type="stmt"/>
+        <line num="55" count="33" type="stmt"/>
+        <line num="56" count="33" type="cond" truecount="1" falsecount="1"/>
+        <line num="57" count="33" type="cond" truecount="1" falsecount="1"/>
+        <line num="59" count="0" type="stmt"/>
+        <line num="62" count="33" type="cond" truecount="1" falsecount="1"/>
+        <line num="64" count="33" type="stmt"/>
+        <line num="65" count="33" type="stmt"/>
+        <line num="70" count="33" type="stmt"/>
+        <line num="74" count="33" type="stmt"/>
+        <line num="75" count="33" type="cond" truecount="1" falsecount="1"/>
+        <line num="76" count="0" type="stmt"/>
+        <line num="78" count="33" type="stmt"/>
+      </file>
+      <file name="colors.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/theme/colors.ts">
+        <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="74" count="9" type="stmt"/>
+        <line num="158" count="9" type="stmt"/>
+      </file>
+      <file name="index.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/theme/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="spacing.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/theme/spacing.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="17" count="9" type="stmt"/>
+        <line num="34" count="9" type="stmt"/>
+        <line num="57" count="9" type="stmt"/>
+      </file>
+      <file name="typography.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/theme/typography.ts">
+        <metrics statements="3" coveredstatements="1" conditionals="2" coveredconditionals="0" methods="1" coveredmethods="0"/>
+        <line num="27" count="9" type="stmt"/>
+        <line num="85" count="0" type="stmt"/>
+        <line num="86" count="0" type="stmt"/>
+      </file>
+    </package>
+    <package name="types">
+      <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <file name="index.ts" path="/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/src/types/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+  </project>
+</coverage>
