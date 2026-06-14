@@ -55,7 +55,20 @@ export function useUpdateCartItem() {
   return useMutation({
     mutationFn: ({ itemId, updates }: { itemId: string; updates: Partial<CartItem> }) =>
       cartApi.updateItem(itemId, updates),
-    onSuccess: (cart) => qc.setQueryData(CART_QUERY_KEY, cart),
+    onMutate: async ({ itemId, updates }) => {
+      await qc.cancelQueries({ queryKey: CART_QUERY_KEY });
+      const previous = qc.getQueryData(CART_QUERY_KEY);
+      qc.setQueryData(CART_QUERY_KEY, (old: Cart | undefined) => {
+        if (!old) return old;
+        const items = old.items.map((i) => (i.id === itemId ? { ...i, ...updates } : i));
+        return recomputeTotals(old, items);
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(CART_QUERY_KEY, ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: CART_QUERY_KEY }),
   });
 }
 
