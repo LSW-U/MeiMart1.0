@@ -4,6 +4,16 @@ import type { Cart, CartItem, Product } from '@/types';
 
 export const CART_QUERY_KEY = ['cart'] as const;
 
+function recomputeTotals(cart: Cart, items: CartItem[]): Cart {
+  const selectedItems = items.filter((i) => i.selected);
+  return {
+    ...cart,
+    items,
+    totalItems: selectedItems.reduce((sum, i) => sum + i.quantity, 0),
+    totalPrice: selectedItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
+  };
+}
+
 export function useCart() {
   return useQuery({
     queryKey: CART_QUERY_KEY,
@@ -24,21 +34,12 @@ export function useAddToCart() {
       qc.setQueryData(CART_QUERY_KEY, (old: Cart | undefined) => {
         if (!old) return old;
         const existing = old.items.find((i) => i.product.id === product.id);
-        let items: CartItem[];
-        if (existing) {
-          items = old.items.map((i) =>
-            i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i,
-          );
-        } else {
-          items = [...old.items, { id: `ci${Date.now()}`, product, quantity, selected: true }];
-        }
-        const selectedItems = items.filter((i) => i.selected);
-        return {
-          ...old,
-          items,
-          totalItems: selectedItems.reduce((sum, i) => sum + i.quantity, 0),
-          totalPrice: selectedItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
-        };
+        const items: CartItem[] = existing
+          ? old.items.map((i) =>
+              i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i,
+            )
+          : [...old.items, { id: `ci${Date.now()}`, product, quantity, selected: true }];
+        return recomputeTotals(old, items);
       });
       return { previous };
     },
@@ -71,6 +72,19 @@ export function useToggleCartItem() {
   return useMutation({
     mutationFn: ({ itemId, selected }: { itemId: string; selected: boolean }) =>
       cartApi.toggleSelect(itemId, selected),
-    onSuccess: (cart) => qc.setQueryData(CART_QUERY_KEY, cart),
+    onMutate: async ({ itemId, selected }) => {
+      await qc.cancelQueries({ queryKey: CART_QUERY_KEY });
+      const previous = qc.getQueryData(CART_QUERY_KEY);
+      qc.setQueryData(CART_QUERY_KEY, (old: Cart | undefined) => {
+        if (!old) return old;
+        const items = old.items.map((i) => (i.id === itemId ? { ...i, selected } : i));
+        return recomputeTotals(old, items);
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(CART_QUERY_KEY, ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: CART_QUERY_KEY }),
   });
 }
