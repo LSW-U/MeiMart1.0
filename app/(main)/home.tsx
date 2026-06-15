@@ -1,26 +1,43 @@
-// 本页通过 BannerCarousel / CategoryGrid / PromoShortcut / ProductCard 复用
-// 还原自 HomePage.html（511 行）。HTML → RN 行数比：511 → ~430（含样式），
-// 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 84%）。
-import { StyleSheet, View, Text, FlatList, ActivityIndicator, Pressable } from 'react-native';
+// 本页通过 BannerCarousel / CategoryGrid / PromoShortcut / ProductCard / BuyAgainCard 复用
+// 还原自 HomePage.html（511 行）。HTML → RN 行数比：511 → ~480（含样式），
+// 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 94%）。
+// Fix-9: 推荐改横滑卡片 + Buy Again 横滑 + ProductCard 角标 + Header TaisPattern 叠加
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  Pressable,
+  Image,
+} from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { useTheme, spacing, typography, shadowPresets, gradientPresets } from '@/theme';
+import {
+  useTheme,
+  spacing,
+  typography,
+  shadowPresets,
+  gradientPresets,
+  borderRadius,
+} from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { BannerCarousel } from '@/components/business/BannerCarousel';
 import { CategoryGrid } from '@/components/business/CategoryGrid';
 import { PromoShortcut } from '@/components/business/PromoShortcut';
 import { ProductCard } from '@/components/business/ProductCard';
+import type { ProductBadge } from '@/components/business/ProductCard/ProductCard.types';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
+import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Logo } from '@/components/cultural/Logo';
 import { UmaLulikSkyline } from '@/components/cultural/UmaLulikSkyline';
 import { Icon } from '@/components/ui/Icon';
 import { useCategories, useBanners } from '@/services/queries/useCatalog';
 import { useRecommendations } from '@/services/queries/useProducts';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
-import type { Product } from '@/types';
 
 const SHORTCUTS = [
   {
@@ -74,12 +91,52 @@ const SHORTCUTS = [
   },
 ];
 
+// Buy Again mock（HTML 第 389-421 行：Bee Botir / Asukar 小卡片）
+const BUY_AGAIN: { id: string; name: string; price: number; image: string }[] = [
+  {
+    id: 'buy-1',
+    name: 'Bee Botir 600ml',
+    price: 0.5,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCE3sTv-XZhtRhkl92P2N_5rhCCODDi4Xps8vSc5b2WRUe11tpJKJHGsGCdTwOySKJ6sKq6LmnuxAHrj2vwCrBtdgr9_akZcFV-N0FUFEn2Tt8zqIEIzta9uDm-xRPhhQUCcbZSdOV7n7sfYVF3II4r9FKwsXEMF0cd0nvTA8J0oVyo0EjoqVatlIK_xCLblnx95w1K5kqdwoxhKJmvlVZ1XnMA6DgTPRoDNOGKNrG0QoqRFVrej3MwLxWgSGljQvxxXECepyJO',
+  },
+  {
+    id: 'buy-2',
+    name: 'Asukar 1kg',
+    price: 1.2,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAgORJZUTBW_lQWUP0A-PqyDlrkXeZFsZKSTd11VLZrrpFOxtwkyZO1AfMgwChLp0xeOjbqsXy1U3EHfGAozayccsp0fVv0FUM5nngs2I7LmapkoyqIHpjiWU7u9r-dx1aO-6snlxBRxl1LN29i202-FnWRRXWoyDUf-tSXKlvtlWvmoOti26OXZ3eVg806wPfB1R0oEV9w_Cs3GuseFuvwu1ewO8zckynXd1F0pa7bVzGycgLCPB8TKZ9WPrxTEJCAeG9fZ4ZM',
+  },
+  {
+    id: 'buy-3',
+    name: 'Foos Lafaek 5kg',
+    price: 4.8,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBXs-CQLr3ottuFHa8A8jV5U8wot6MLv7kddnkUZL7B_NigcoSIRd1bc0r32kBq2SNUzS5SVcna2oK31NPahWdDm8rATsDVi5n2Zlq-LbgXQh_IqjlESZXtk_4VpPW3u_9BbTW4KERum0HVRbYzjb-csWo9tDgiXG1JwcflhuaDQGtcsCw5Y4V1OYmP5y1N_wSttHNPb_hOC4IhFdBUIZ5B7TaiedXTLNI26vu379e5PAWkq6diJlV3zzSmrF-O8JELi-xN4n0B',
+  },
+  {
+    id: 'buy-4',
+    name: 'Huun Klean 4pk',
+    price: 1.8,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuA-1b7aBs9aO47BTPz5sy-Z-vUZD_ttiKwLqQ3V13Ly16NpxaZuahzP5VttDlGDnLyisdIS3AFgLDx5LNFskYTNTKoOcPhqQn3N607wZE7tyfn7Q3SJJSF9UmhrmmHy9fxNYi_Wp3CPsY45XIIrXfwaBO9u4rxPhHz2HtZhPWSg2wzZyZ2lNS-0HnFUg2IGOJiKw7EvTnkbQi21d3nQyziBh2a_4TPHcAw05wbi694fAea8At5KfqcHYYXUuVP4KPMeOHCYa9oJ',
+  },
+];
+
+// 推荐商品角标轮转：第 1 张 Fresh / 第 2 张 Best Seller / 后续无角标
+function getRecommendBadge(index: number): ProductBadge | undefined {
+  if (index === 0) return { label: 'Fresh', variant: 'fresh' };
+  if (index === 1) return { label: 'Best Seller', variant: 'best-seller' };
+  return undefined;
+}
+
 export default function HomePage() {
   const { colors } = useTheme();
   const { shouldSkipNonEssential } = useWeakNetworkUI();
   const { data: banners } = useBanners();
   const { data: categories } = useCategories();
   const { data: products, isLoading, isError, refetch } = useRecommendations();
+  const recommendList = products ?? [];
 
   return (
     <SafeAreaWrapper edges={['top']} style={{ backgroundColor: colors.primary, flex: 1 }}>
@@ -89,6 +146,10 @@ export default function HomePage() {
         style={styles.headerBg}
       >
         <StatusBarConfig />
+        {/* Fix-9: header tais-pattern 叠加（HTML 第 128 行 opacity-20） */}
+        <View style={styles.headerPatternOverlay} pointerEvents="none">
+          <TaisPattern width={400} height={200} opacity={0.2} />
+        </View>
         {/* Sticky Header — Logo + 定位 + 消息红点 */}
         <View style={styles.headerRow}>
           <View style={styles.brandCol}>
@@ -130,123 +191,197 @@ export default function HomePage() {
         <Text style={styles.deliveryTipText}>Delivery active · Today 1-2h · Free over $20</Text>
       </View>
 
-      <FlatList
-        data={products ?? []}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.list}
+      <ScrollView
         style={styles.scrollArea}
-        ListHeaderComponent={
-          <View>
-            {/* 搜索栏 */}
-            <View style={styles.searchSection}>
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 搜索栏 */}
+        <View style={styles.searchSection}>
+          <Pressable
+            onPress={() => router.push('/search')}
+            style={({ pressed }) => [
+              styles.searchCard,
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderColor: colors['outline-variant'],
+              },
+              shadowPresets.sm,
+              pressed && { opacity: 0.7 },
+            ]}
+            accessibilityRole="search"
+          >
+            <Icon symbol="search" size={22} color={colors.outline} />
+            <Text style={[styles.searchPlaceholder, { color: colors['on-surface-variant'] }]}>
+              Search household essentials...
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Banner 轮播（弱网降级：跳过） */}
+        {!shouldSkipNonEssential && banners && banners.length > 0 && (
+          <View style={styles.bannerSection}>
+            <BannerCarousel
+              banners={banners}
+              onBannerPress={(b) => b.link && router.push(b.link)}
+            />
+          </View>
+        )}
+
+        {/* 分类入口 */}
+        {categories && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>Categories</Text>
               <Pressable
-                onPress={() => router.push('/search')}
+                onPress={() => router.push('/(main)/categories')}
+                style={styles.seeAllBtn}
+                accessibilityRole="button"
+                accessibilityLabel="See all categories"
+              >
+                <Text style={[styles.seeAllText, { color: colors.primary }]}>SEE ALL</Text>
+                <Icon symbol="chevron_right" size={16} color={colors.primary} />
+              </Pressable>
+            </View>
+            <CategoryGrid
+              categories={categories.slice(0, 8)}
+              onCategoryPress={(c) =>
+                router.push({ pathname: '/product/list', params: { category: c.id } })
+              }
+            />
+          </View>
+        )}
+
+        {/* Tais Divider（保留 HTML 装饰） */}
+        <View style={styles.dividerRow}>
+          <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
+          <TaisDivider />
+          <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
+        </View>
+
+        {/* Promo Shortcuts */}
+        <View style={styles.section}>
+          <PromoShortcut items={SHORTCUTS} onPress={(item) => router.push('/search')} />
+        </View>
+
+        {/* 推荐商品标题 + 横滑卡片 */}
+        <View style={styles.recommendSection}>
+          <View style={[styles.sectionHeader, styles.recommendHeader]}>
+            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+              Recommended for You
+            </Text>
+            <Pressable
+              onPress={() => router.push('/product/list')}
+              style={styles.seeAllBtn}
+              accessibilityRole="button"
+              accessibilityLabel="See all products"
+            >
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>SEE ALL</Text>
+              <Icon symbol="chevron_right" size={16} color={colors.primary} />
+            </Pressable>
+          </View>
+          {isLoading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
+          {isError && <ErrorState message="加载商品失败" onRetry={() => refetch()} />}
+          {!isLoading && !isError && recommendList.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              decelerationRate="fast"
+              snapToInterval={180 + spacing.md}
+              snapToAlignment="start"
+              contentContainerStyle={styles.hScroll}
+            >
+              {recommendList.map((item, index) => (
+                <View key={item.id} style={styles.recommendCard}>
+                  <ProductCard
+                    product={item}
+                    badge={getRecommendBadge(index)}
+                    onPress={() => router.push(`/product/${item.id}`)}
+                  />
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
+        {/* Buy Again — 横滑小卡片（HTML 第 389-421 行） */}
+        <View style={styles.buyAgainSection}>
+          <View style={[styles.sectionHeader, styles.buyAgainHeader]}>
+            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>Buy Again</Text>
+            <Icon symbol="history" size={20} color={colors.outline} />
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.hScroll}
+          >
+            {BUY_AGAIN.map((item) => (
+              <Pressable
+                key={item.id}
+                onPress={() => router.push('/product/list')}
                 style={({ pressed }) => [
-                  styles.searchCard,
+                  styles.buyAgainCard,
                   {
                     backgroundColor: colors['surface-container-lowest'],
                     borderColor: colors['outline-variant'],
                   },
-                  shadowPresets.sm,
                   pressed && { opacity: 0.7 },
                 ]}
-                accessibilityRole="search"
+                accessibilityRole="button"
+                accessibilityLabel={`Reorder ${item.name}`}
               >
-                <Icon symbol="search" size={22} color={colors.outline} />
-                <Text style={[styles.searchPlaceholder, { color: colors['on-surface-variant'] }]}>
-                  Search household essentials...
-                </Text>
-              </Pressable>
-            </View>
-
-            {/* Banner 轮播（弱网降级：跳过） */}
-            {!shouldSkipNonEssential && banners && banners.length > 0 && (
-              <View style={styles.bannerSection}>
-                <BannerCarousel
-                  banners={banners}
-                  onBannerPress={(b) => b.link && router.push(b.link)}
-                />
-              </View>
-            )}
-
-            {/* 分类入口 */}
-            {categories && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                    Categories
-                  </Text>
-                  <Pressable
-                    onPress={() => router.push('/(main)/categories')}
-                    style={styles.seeAllBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel="See all categories"
-                  >
-                    <Text style={[styles.seeAllText, { color: colors.primary }]}>SEE ALL</Text>
-                    <Icon symbol="chevron_right" size={16} color={colors.primary} />
-                  </Pressable>
-                </View>
-                <CategoryGrid
-                  categories={categories.slice(0, 8)}
-                  onCategoryPress={(c) =>
-                    router.push({ pathname: '/product/list', params: { category: c.id } })
-                  }
-                />
-              </View>
-            )}
-
-            {/* Tais Divider（保留 HTML 装饰） */}
-            <View style={styles.dividerRow}>
-              <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
-              <TaisDivider />
-              <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
-            </View>
-
-            {/* Promo Shortcuts */}
-            <View style={styles.section}>
-              <PromoShortcut items={SHORTCUTS} onPress={(item) => router.push('/search')} />
-            </View>
-
-            {/* 推荐商品标题 */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                  Recommended for You
-                </Text>
-                <Pressable
-                  onPress={() => router.push('/product/list')}
-                  style={styles.seeAllBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel="See all products"
+                <View
+                  style={[
+                    styles.buyAgainImageWrap,
+                    { backgroundColor: colors['surface-container'] },
+                  ]}
                 >
-                  <Text style={[styles.seeAllText, { color: colors.primary }]}>SEE ALL</Text>
-                  <Icon symbol="chevron_right" size={16} color={colors.primary} />
-                </Pressable>
-              </View>
-              {isLoading && <ActivityIndicator color={colors.primary} />}
-              {isError && <ErrorState message="加载商品失败" onRetry={() => refetch()} />}
-            </View>
-          </View>
-        }
-        renderItem={({ item }: { item: Product }) => (
-          <View style={styles.cell}>
-            <ProductCard product={item} onPress={() => router.push(`/product/${item.id}`)} />
-          </View>
-        )}
-      />
+                  <Image source={{ uri: item.image }} style={styles.buyAgainImage} />
+                </View>
+                <Text
+                  style={[styles.buyAgainName, { color: colors['on-surface-variant'] }]}
+                  numberOfLines={1}
+                >
+                  {item.name}
+                </Text>
+                <View style={styles.buyAgainRow}>
+                  <Text style={[styles.buyAgainPrice, { color: colors.primary }]}>
+                    ${item.price.toFixed(2)}
+                  </Text>
+                  <Icon symbol="add_shopping_cart" size={16} color={colors.primary} />
+                </View>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      </ScrollView>
     </SafeAreaWrapper>
   );
 }
 
+const RECOMMEND_CARD_WIDTH = 180;
+
 const styles = StyleSheet.create({
   headerBg: {
     paddingBottom: 0,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  headerPatternOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
   },
   scrollArea: {
     flex: 1,
     backgroundColor: 'transparent',
+  },
+  scrollContent: {
+    paddingHorizontal: 0,
+    paddingBottom: spacing.xxl * 2,
   },
   headerRow: {
     flexDirection: 'row',
@@ -255,6 +390,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing['container-margin'],
     paddingVertical: spacing.md,
     gap: spacing.md,
+    zIndex: 1,
   },
   brandCol: {
     flexDirection: 'row',
@@ -308,6 +444,7 @@ const styles = StyleSheet.create({
   },
   skylineRow: {
     marginTop: -1,
+    zIndex: 1,
   },
   deliveryTip: {
     flexDirection: 'row',
@@ -321,13 +458,8 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontSize: 10,
   },
-  list: {
-    paddingHorizontal: spacing['container-margin'],
-    paddingBottom: spacing.xxl * 2,
-    gap: spacing.lg,
-    backgroundColor: 'transparent',
-  },
   searchSection: {
+    paddingHorizontal: spacing['container-margin'],
     paddingTop: spacing.md,
   },
   searchCard: {
@@ -344,9 +476,11 @@ const styles = StyleSheet.create({
   },
   bannerSection: {
     marginTop: spacing.md,
+    paddingHorizontal: spacing['container-margin'],
   },
   section: {
     marginTop: spacing.xl,
+    paddingHorizontal: spacing['container-margin'],
     gap: spacing.md,
   },
   sectionHeader: {
@@ -380,11 +514,60 @@ const styles = StyleSheet.create({
     flex: 1,
     height: StyleSheet.hairlineWidth,
   },
-  row: {
-    gap: spacing.md,
+  recommendSection: {
+    marginTop: spacing.xl,
+  },
+  recommendHeader: {
+    paddingHorizontal: spacing['container-margin'],
     marginBottom: spacing.md,
   },
-  cell: {
-    flex: 1,
+  loader: {
+    paddingVertical: spacing.lg,
+  },
+  hScroll: {
+    paddingHorizontal: spacing['container-margin'],
+    gap: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  recommendCard: {
+    width: RECOMMEND_CARD_WIDTH,
+  },
+  buyAgainSection: {
+    marginTop: spacing.xl,
+  },
+  buyAgainHeader: {
+    paddingHorizontal: spacing['container-margin'],
+    marginBottom: spacing.md,
+  },
+  buyAgainCard: {
+    minWidth: 140,
+    padding: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: spacing.sm,
+  },
+  buyAgainImageWrap: {
+    height: 96,
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+  },
+  buyAgainImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  buyAgainName: {
+    ...typography['label-caps'],
+    fontSize: 10,
+  },
+  buyAgainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.xs,
+  },
+  buyAgainPrice: {
+    ...typography['price-display'],
+    fontSize: 14,
   },
 });
