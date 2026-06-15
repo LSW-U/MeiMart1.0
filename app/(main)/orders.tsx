@@ -1,22 +1,33 @@
+// OrderListPage — 还原自 OrderListPage.html
+// Fix-20: Primary tais-pattern Header + Tab 栏分隔线 + 状态彩色胶囊
 import { useState } from 'react';
-import { StyleSheet, View, FlatList, ActivityIndicator, Text, Pressable } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  FlatList,
+  ActivityIndicator,
+  Text,
+  Pressable,
+  ScrollView,
+} from 'react-native';
 import { router } from 'expo-router';
-import { useTheme, spacing, typography } from '@/theme';
+import { useTheme, spacing, typography, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { TabBar } from '@/components/layout/TabBar';
 import { OrderCard } from '@/components/business/OrderCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { TaisPattern } from '@/components/cultural/TaisPattern';
+import { Icon } from '@/components/ui/Icon';
 import { useOrders } from '@/services/queries/useOrders';
 import type { OrderStatus, Order } from '@/types';
 
 const TABS: { key: OrderStatus | 'all'; label: string }[] = [
-  { key: 'all', label: '全部' },
-  { key: 'pending', label: '待付款' },
-  { key: 'paid', label: '待发货' },
-  { key: 'shipped', label: '待收货' },
-  { key: 'delivered', label: '已完成' },
+  { key: 'all', label: 'All' },
+  { key: 'pending', label: 'To Pay' },
+  { key: 'paid', label: 'To Ship' },
+  { key: 'shipped', label: 'To Receive' },
+  { key: 'delivered', label: 'Completed' },
 ];
 
 export default function OrdersPage() {
@@ -25,33 +36,65 @@ export default function OrdersPage() {
   const { data: orders, isLoading, isError, refetch } = useOrders(active);
 
   return (
-    <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
-      <View style={[styles.header, { backgroundColor: colors['surface-container-lowest'] }]}>
-        <Text style={[styles.title, { color: colors['on-surface'] }]} accessibilityRole="header">
-          我的订单
-        </Text>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
-          <Text style={[styles.backBtn, { color: colors.primary }]}>返回</Text>
-        </Pressable>
+      <Header />
+
+      {/* Tab 栏（HTML 第 ? 行：border-b border-outline-variant/30，激活态 primary） */}
+      <View
+        style={[
+          styles.tabBar,
+          {
+            backgroundColor: colors['surface-container-lowest'],
+            borderBottomColor: 'rgba(141,112,108,0.3)',
+          },
+        ]}
+      >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.tabRow}>
+            {TABS.map((tab) => {
+              const isActive = tab.key === active;
+              return (
+                <Pressable
+                  key={tab.key}
+                  onPress={() => setActive(tab.key)}
+                  style={styles.tabBtn}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: isActive }}
+                  accessibilityLabel={tab.label}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      {
+                        color: isActive ? colors.primary : colors['on-surface-variant'],
+                      },
+                    ]}
+                  >
+                    {tab.label}
+                  </Text>
+                  {isActive && (
+                    <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+        </ScrollView>
       </View>
-      <TabBar
-        tabs={TABS.map((t) => t.label)}
-        activeIndex={TABS.findIndex((t) => t.key === active)}
-        onTabChange={(idx) => setActive(TABS[idx].key)}
-      />
+
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : isError ? (
-        <ErrorState message="加载订单失败" onRetry={() => refetch()} />
+        <ErrorState message="Failed to load orders" onRetry={() => refetch()} />
       ) : !orders || orders.length === 0 ? (
         <EmptyState
-          title="没有相关订单"
-          description="去首页看看喜欢的商品吧"
+          title="No orders yet"
+          description="Browse products and place your first order"
           icon="clipboard-text-outline"
-          actionLabel="去逛逛"
+          actionLabel="Browse Products"
           onAction={() => router.push('/(main)/home')}
         />
       ) : (
@@ -68,17 +111,104 @@ export default function OrdersPage() {
   );
 }
 
+// Primary tais-pattern Header（HTML 第 141-153 行：arrow_back + My Orders + help）
+function Header() {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.md]}>
+      <View style={styles.headerPattern} pointerEvents="none">
+        <TaisPattern width={390} height={56} opacity={0.2} />
+      </View>
+      <View style={styles.headerRow}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          style={styles.headerBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Icon symbol="arrow_back" size={24} color="#ffffff" />
+        </Pressable>
+        <Text style={styles.headerTitle} accessibilityRole="header">
+          My Orders
+        </Text>
+        <Pressable
+          onPress={() => router.push('/service/help')}
+          hitSlop={8}
+          style={styles.headerBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Help"
+        >
+          <Icon symbol="help" size={24} color="#ffffff" />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   header: {
+    position: 'relative',
+    height: 56,
+    overflow: 'hidden',
+    paddingHorizontal: spacing['container-margin'],
+    justifyContent: 'center',
+  },
+  headerPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
-  title: { ...typography.h3, fontWeight: '700' },
-  backBtn: { ...typography['body-sm'], fontWeight: '600' },
-  list: { padding: spacing.md, gap: spacing.md, paddingBottom: 100 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  headerBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    ...typography.h3,
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  tabBar: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing['container-margin'],
+  },
+  tabBtn: {
+    position: 'relative',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  tabText: {
+    ...typography['label-caps'],
+    fontSize: 13,
+  },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: spacing.md,
+    right: spacing.md,
+    height: 2,
+    borderRadius: 1,
+  },
+  list: {
+    padding: spacing['container-margin'],
+    gap: spacing.md,
+    paddingBottom: spacing.xxl * 2,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
