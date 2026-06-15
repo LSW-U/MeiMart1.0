@@ -34,4 +34,14 @@ describe('SearchBar', () => {
     fireEvent(getByPlaceholderText('Search'), 'submitEditing');
     expect(onSearch).toHaveBeenCalledWith('coffee');
   });
+
+  it('renders mic button when showMic is true', () => {
+    const { getByLabelText } = render(<SearchBar showMic placeholder="Search" />, { wrapper });
+    expect(getByLabelText('Voice search')).toBeTruthy();
+  });
+
+  it('renders embedded variant with translucent background', () => {
+    const { toJSON } = render(<SearchBar variant="embedded" placeholder="Search" />, { wrapper });
+    expect(toJSON()).not.toBeNull();
+  });
 });
