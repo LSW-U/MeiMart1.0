@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -9,6 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function PaymentResultPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
@@ -21,22 +23,22 @@ export default function PaymentResultPage() {
           <MaterialCommunityIcons name="check" size={48} color={colors['on-primary']} />
         </View>
         <Text style={[styles.title, { color: colors['on-surface'] }]} accessibilityRole="header">
-          支付成功
+          {t('result.successTitle')}
         </Text>
         <Text style={[styles.subtitle, { color: colors['on-surface-variant'] }]}>
-          感谢您的购买，订单已确认
+          {t('result.successDesc')}
         </Text>
         <TaisDivider />
         <View style={styles.actions}>
           <Button
-            label="查看订单"
+            label={t('result.viewOrder')}
             variant="primary"
             fullWidth
             onPress={() => router.replace('/(main)/orders')}
             testID="result-view-orders"
           />
           <Button
-            label="继续购物"
+            label={t('result.continueShopping')}
             variant="outline"
             fullWidth
             onPress={() => router.replace('/(main)/home')}

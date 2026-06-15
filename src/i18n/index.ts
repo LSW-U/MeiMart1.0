@@ -10,7 +10,7 @@ import tet from '../../locales/tet.json';
 
 export const SUPPORTED_LOCALES = ['zh', 'en', 'tet'] as const;
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number];
-export const DEFAULT_LOCALE: AppLocale = 'zh';
+export const DEFAULT_LOCALE: AppLocale = 'en';
 
 const LOCALE_STORAGE_KEY = 'meimart.locale';
 

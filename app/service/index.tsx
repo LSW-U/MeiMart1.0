@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, ScrollView, Pressable, Linking } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -12,58 +13,59 @@ import type { ComponentProps } from 'react';
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 interface EntryItem {
-  id: string;
-  label: string;
+  id: 'order' | 'payment' | 'product' | 'feedback' | 'help';
+  labelKey: string;
+  descKey: string;
   icon: IconName;
-  desc: string;
   route?: string;
 }
 
 const ENTRIES: EntryItem[] = [
   {
     id: 'order',
-    label: '订单问题',
+    labelKey: 'service.categories.order',
+    descKey: 'service.categories.orderDesc',
     icon: 'clipboard-list',
-    desc: '查询订单、物流、退换货',
     route: '/(main)/orders',
   },
   {
     id: 'payment',
-    label: '支付问题',
+    labelKey: 'service.categories.payment',
+    descKey: 'service.categories.paymentDesc',
     icon: 'credit-card',
-    desc: '支付失败、退款进度',
     route: '/order/payment',
   },
   {
     id: 'product',
-    label: '商品咨询',
+    labelKey: 'service.categories.product',
+    descKey: 'service.categories.productDesc',
     icon: 'shopping',
-    desc: '商品真假、保质期',
     route: '/service',
   },
   {
     id: 'feedback',
-    label: '意见反馈',
+    labelKey: 'service.categories.feedback',
+    descKey: 'service.categories.feedbackDesc',
     icon: 'message-alert',
-    desc: '产品建议、bug 反馈',
     route: '/service/feedback',
   },
   {
     id: 'help',
-    label: '帮助中心',
+    labelKey: 'service.categories.help',
+    descKey: 'service.categories.helpDesc',
     icon: 'help-circle',
-    desc: '常见问题解答',
     route: '/service/help',
   },
 ];
 
 export default function CustomerServicePage() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title="客服中心" showBack onBackPress={() => router.back()} />
+      <PageHeader title={t('service.title')} showBack onBackPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card>
           <View style={styles.headerRow}>
@@ -73,10 +75,10 @@ export default function CustomerServicePage() {
                 style={[styles.headerTitle, { color: colors['on-surface'] }]}
                 accessibilityRole="header"
               >
-                你好，需要帮忙吗？
+                {t('service.greetingTitle')}
               </Text>
               <Text style={[styles.headerDesc, { color: colors['on-surface-variant'] }]}>
-                我们随时为你服务
+                {t('service.greetingDesc')}
               </Text>
             </View>
           </View>
@@ -84,7 +86,9 @@ export default function CustomerServicePage() {
 
         <TaisDivider />
 
-        <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>常见问题</Text>
+        <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
+          {t('service.faqTitle')}
+        </Text>
         <Card>
           {ENTRIES.map((item, idx) => (
             <Pressable
@@ -100,14 +104,15 @@ export default function CustomerServicePage() {
                 { opacity: pressed ? 0.7 : 1 },
               ]}
               accessibilityRole="button"
+              accessibilityLabel={t(item.labelKey)}
             >
               <MaterialCommunityIcons name={item.icon} size={22} color={colors.primary} />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.entryLabel, { color: colors['on-surface'] }]}>
-                  {item.label}
+                  {t(item.labelKey)}
                 </Text>
                 <Text style={[styles.entryDesc, { color: colors['on-surface-variant'] }]}>
-                  {item.desc}
+                  {t(item.descKey)}
                 </Text>
               </View>
               <MaterialCommunityIcons
@@ -119,11 +124,13 @@ export default function CustomerServicePage() {
           ))}
         </Card>
 
-        <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>联系方式</Text>
+        <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
+          {t('service.contactTitle')}
+        </Text>
         <Card>
           <PressableRow
             icon="phone"
-            label="客服热线"
+            label={t('service.callHotline')}
             value="+670 123 4567"
             color={colors.primary}
             textColor={colors['on-surface']}
@@ -133,7 +140,7 @@ export default function CustomerServicePage() {
           />
           <PressableRow
             icon="email"
-            label="客服邮箱"
+            label={t('service.email')}
             value="support@meimart.tl"
             color={colors.primary}
             textColor={colors['on-surface']}
@@ -143,7 +150,7 @@ export default function CustomerServicePage() {
           />
           <PressableRow
             icon="bell"
-            label="消息通知"
+            label={t('service.notifications.title')}
             color={colors.primary}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
@@ -179,6 +186,8 @@ function PressableRow({
     <Pressable
       testID={testID}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
       style={({ pressed }) => [
         styles.entryRow,
         { borderTopColor: subColor, opacity: pressed ? 0.7 : 1 },

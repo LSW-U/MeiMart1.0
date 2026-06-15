@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -15,6 +16,7 @@ type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 export default function SettingsPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const themeMode = useAppStore((s) => s.themeMode);
   const setThemeMode = useAppStore((s) => s.setThemeMode);
   const locale = useAppStore((s) => s.locale);
@@ -22,12 +24,12 @@ export default function SettingsPage() {
 
   const setMode = (mode: 'light' | 'dark' | 'system') => setThemeMode(mode);
 
-  const clearCache = () => Alert.alert('提示', '已清除缓存');
+  const clearCache = () => Alert.alert(t('common.notice'), t('settings.clearCacheDone'));
   const logout = () => {
-    Alert.alert('确认退出', '确定退出登录？', [
-      { text: '取消', style: 'cancel' },
+    Alert.alert(t('settings.logoutTitle'), t('settings.logoutConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: '退出',
+        text: t('profile.logout'),
         style: 'destructive',
         onPress: () => {
           clearAuth();
@@ -40,12 +42,12 @@ export default function SettingsPage() {
   return (
     <SafeAreaWrapper style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBarConfig />
-      <PageHeader title="设置" showBack onBackPress={() => router.back()} />
+      <PageHeader title={t('settings.title')} showBack onBackPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.scroll}>
-        <SectionTitle title="外观" color={colors['on-surface-variant']} />
+        <SectionTitle title={t('settings.appearance')} color={colors['on-surface-variant']} />
         <Card>
           <RowItem
-            label="主题"
+            label={t('settings.theme')}
             icon="palette"
             color={colors.primary}
             textColor={colors['on-surface']}
@@ -62,10 +64,10 @@ export default function SettingsPage() {
           </RowItem>
         </Card>
 
-        <SectionTitle title="通用" color={colors['on-surface-variant']} />
+        <SectionTitle title={t('settings.general')} color={colors['on-surface-variant']} />
         <Card>
           <PressableRow
-            label="语言"
+            label={t('settings.language')}
             icon="translate"
             value={locale === 'zh' ? '中文' : locale === 'en' ? 'English' : locale.toUpperCase()}
             color={colors.primary}
@@ -75,7 +77,7 @@ export default function SettingsPage() {
             onPress={() => router.push('/language')}
           />
           <RowItem
-            label="消息推送"
+            label={t('settings.push')}
             icon="bell"
             color={colors.primary}
             textColor={colors['on-surface']}
@@ -84,7 +86,7 @@ export default function SettingsPage() {
             <Switch value onValueChange={() => {}} />
           </RowItem>
           <PressableRow
-            label="清除缓存"
+            label={t('settings.clearCache')}
             icon="broom"
             value="1.2 MB"
             color={colors.primary}
@@ -95,10 +97,10 @@ export default function SettingsPage() {
           />
         </Card>
 
-        <SectionTitle title="关于" color={colors['on-surface-variant']} />
+        <SectionTitle title={t('settings.aboutSection')} color={colors['on-surface-variant']} />
         <Card>
           <PressableRow
-            label="版本"
+            label={t('settings.version')}
             icon="information"
             value="v1.0.0"
             color={colors.primary}
@@ -108,7 +110,7 @@ export default function SettingsPage() {
             onPress={() => {}}
           />
           <PressableRow
-            label="用户协议"
+            label={t('settings.terms')}
             icon="file-document"
             color={colors.primary}
             textColor={colors['on-surface']}
@@ -126,7 +128,7 @@ export default function SettingsPage() {
             { backgroundColor: colors['surface-container-low'], opacity: pressed ? 0.7 : 1 },
           ]}
         >
-          <Text style={[styles.logoutText, { color: colors.error }]}>退出登录</Text>
+          <Text style={[styles.logoutText, { color: colors.error }]}>{t('profile.logout')}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaWrapper>
@@ -214,10 +216,11 @@ function SegmentSwitch({
   subColor: string;
   activeColor: string;
 }) {
+  const { t } = useTranslation();
   const options: { v: 'light' | 'dark' | 'system'; label: string }[] = [
-    { v: 'system', label: '跟随系统' },
-    { v: 'light', label: '浅色' },
-    { v: 'dark', label: '深色' },
+    { v: 'system', label: t('settings.themeMode.system') },
+    { v: 'light', label: t('settings.themeMode.light') },
+    { v: 'dark', label: t('settings.themeMode.dark') },
   ];
   return (
     <View style={styles.segment}>

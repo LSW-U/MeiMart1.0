@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, Linking, Pressable } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -12,11 +13,17 @@ const APP_VERSION = '1.0.0';
 
 export default function AboutPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaWrapper style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBarConfig />
-      <PageHeader title="关于我们" showBack onBackPress={() => router.back()} testID="about-back" />
+      <PageHeader
+        title={t('about.title')}
+        showBack
+        onBackPress={() => router.back()}
+        testID="about-back"
+      />
       <View style={styles.content}>
         <View style={styles.brand}>
           <LogoBadge size={80} />
@@ -34,24 +41,24 @@ export default function AboutPage() {
         <View style={styles.cultural}>
           <UmaLulikSkyline height={80} />
           <Text style={[styles.mission, { color: colors['on-surface'] }]}>
-            连接东帝汶本地的商家与消费者，让生活更便捷
+            {t('about.mission')}
           </Text>
         </View>
         <View style={[styles.infoBlock, { backgroundColor: colors['surface-container-low'] }]}>
           <InfoRow
-            label="公司"
+            label={t('about.company')}
             value="MeiMart Lda."
             color={colors['on-surface']}
             subColor={colors['on-surface-variant']}
           />
           <InfoRow
-            label="地址"
+            label={t('about.address')}
             value="Dili, Timor-Leste"
             color={colors['on-surface']}
             subColor={colors['on-surface-variant']}
           />
           <InfoRow
-            label="邮箱"
+            label={t('about.email')}
             value="support@meimart.tl"
             color={colors['on-surface']}
             subColor={colors['on-surface-variant']}
@@ -60,7 +67,7 @@ export default function AboutPage() {
           />
         </View>
         <Text style={[styles.copyright, { color: colors['on-surface-variant'] }]}>
-          © 2026 MeiMart. All rights reserved.
+          © 2026 MeiMart. {t('about.rights')}
         </Text>
       </View>
     </SafeAreaWrapper>

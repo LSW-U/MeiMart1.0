@@ -22,6 +22,11 @@
     "all": "All",
     "empty": "No data",
     "error": "Something went wrong",
+    "notice": "Notice",
+    "success": "Success",
+    "submitted": "Submitted",
+    "yes": "Yes",
+    "no": "No",
     "network": {
       "offline": "No internet connection",
       "weak": "Slow network — data saver on",
@@ -40,7 +45,8 @@
     "desc3": "Traditional Timor-Leste patterns",
     "title4": "Secure payments",
     "desc4": "Multiple local payment methods",
-    "start": "Get started"
+    "start": "Get started",
+    "skip": "Skip"
   },
   "auth": {
     "login": "Log in",
@@ -115,6 +121,10 @@
     "total": "Order total",
     "orderNo": "Order number",
     "createdAt": "Placed at",
+    "statusLabel": "Order status",
+    "shippingInfo": "Shipping info",
+    "items": "Items",
+    "progress": "Order progress",
     "actions": {
       "cancel": "Cancel order",
       "pay": "Pay now",
@@ -123,7 +133,20 @@
       "repurchase": "Buy again",
       "refund": "Request refund"
     },
-    "empty": "No orders"
+    "empty": "No orders",
+    "cancelTitle": "Confirm cancel",
+    "cancelConfirm": "Cancel this order?",
+    "notFoundError": "Order not found or failed to load",
+    "timeline": {
+      "submitted": "Order submitted",
+      "submittedDesc": "Waiting for buyer payment",
+      "paid": "Buyer paid",
+      "paidDesc": "Seller is preparing the shipment",
+      "shipped": "Seller shipped",
+      "shippedDesc": "Package has left the warehouse",
+      "delivered": "Delivered",
+      "deliveredDesc": "Package has been delivered"
+    }
   },
   "address": {
     "list": "Shipping addresses",
@@ -159,17 +182,161 @@
     "theme": "Theme"
   },
   "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "general": "General",
+    "language": "Language",
+    "push": "Push notifications",
+    "clearCache": "Clear cache",
+    "clearCacheDone": "Cache cleared",
+    "aboutSection": "About",
+    "version": "Version",
+    "terms": "Terms of service",
+    "logoutTitle": "Confirm logout",
+    "logoutConfirm": "Log out of this account?",
     "notifications": "Push notifications",
     "sound": "Sound",
     "vibration": "Vibration",
     "dataSaver": "Data saver",
-    "clearCache": "Clear cache",
-    "version": "Version"
+    "themeMode": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    }
+  },
+  "language": {
+    "title": "Select language",
+    "comingSoon": "{{native}} coming soon",
+    "comingSoonShort": "Coming soon"
+  },
+  "coupons": {
+    "title": "Coupons",
+    "loadError": "Failed to load coupons",
+    "empty": "No coupons",
+    "emptyDesc": "Check the home page for new offers"
+  },
+  "about": {
+    "title": "About us",
+    "company": "Company",
+    "address": "Address",
+    "email": "Email",
+    "mission": "Connecting local Timor-Leste merchants and shoppers — making daily life easier",
+    "rights": "All rights reserved."
+  },
+  "checkout": {
+    "title": "Confirm order",
+    "loadError": "Failed to load cart",
+    "offlineBlock": "Offline — checkout unavailable",
+    "offlineBlockDesc": "Check your network and try again",
+    "submit": "Place order",
+    "selectAddress": "Select shipping address",
+    "noItems": "No items selected",
+    "itemQty": "Qty: {{count}}",
+    "payment": {
+      "wechat": "WeChat Pay",
+      "alipay": "Alipay",
+      "cash": "Cash on delivery",
+      "laispay": "LaisPay Wallet",
+      "card": "Bank card"
+    }
+  },
+  "payment": {
+    "title": "Select payment method",
+    "payNow": "Pay now"
+  },
+  "result": {
+    "viewOrder": "View order",
+    "continueShopping": "Continue shopping"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "loadError": "Failed to load favorites",
+    "empty": "No favorites yet",
+    "emptyDesc": "Browse products and save what you love"
+  },
+  "afterSales": {
+    "applyTitle": "Request after-sales",
+    "applyPlaceholder": "Describe the issue in detail…",
+    "applySubmit": "Submit request",
+    "selectReason": "Please select a reason",
+    "submittedTitle": "Submitted",
+    "submittedDesc": "Your request is in review",
+    "detailTitle": "After-sales detail",
+    "applyNo": "Request number",
+    "reason": "Reason",
+    "applyTime": "Submitted at",
+    "contactService": "Contact support",
+    "typeLabel": "After-sales type",
+    "reasonLabel": "Refund reason",
+    "descLabel": "Issue description",
+    "refundAmount": "Refund amount",
+    "progressLabel": "Processing progress",
+    "applyInfo": "Request info",
+    "processing": "Processing",
+    "processingDesc": "Seller approved — refund in progress",
+    "types": {
+      "refundOnly": "Refund only",
+      "returnRefund": "Return & refund"
+    },
+    "reasons": {
+      "damaged": "Item damaged",
+      "notAsDescribed": "Not as described",
+      "quality": "Quality issue",
+      "wrongOrMissing": "Wrong or missing item",
+      "noReason": "7-day no-reason"
+    },
+    "timeline": {
+      "submitted": "Request submitted",
+      "submittedDesc": "Waiting for seller review",
+      "reviewing": "Seller reviewing",
+      "reviewingDesc": "Seller is reviewing the request",
+      "approved": "Approved",
+      "approvedDesc": "Refund approved — processing",
+      "completed": "Refund completed",
+      "completedDesc": "Refund has been issued"
+    },
+    "mockReason": "Product quality issue",
+    "mockProduct": "Fresh Red Fuji Apple"
+  },
+  "review": {
+    "title": "Write a review",
+    "placeholder": "Share your experience…",
+    "submit": "Submit review",
+    "fillContent": "Please write your review",
+    "successTitle": "Success",
+    "successDesc": "Review submitted"
+  },
+  "profileEdit": {
+    "title": "Edit profile",
+    "nickname": "Nickname",
+    "nicknamePlaceholder": "Enter nickname",
+    "phone": "Phone",
+    "phonePlaceholder": "Enter phone",
+    "email": "Email",
+    "emailPlaceholder": "Enter email (optional)",
+    "saved": "Profile updated"
   },
   "service": {
     "title": "Customer service",
     "callHotline": "Hotline",
     "email": "Email",
+    "greetingTitle": "Hi, need help?",
+    "greetingDesc": "We're here for you anytime",
+    "faqTitle": "Common questions",
+    "contactTitle": "Contact methods",
+    "categories": {
+      "order": "Order issues",
+      "orderDesc": "Check orders, shipping, returns",
+      "payment": "Payment issues",
+      "paymentDesc": "Payment failures, refund status",
+      "product": "Product advice",
+      "productDesc": "Authenticity, expiry dates",
+      "feedback": "Feedback",
+      "feedbackDesc": "Product suggestions, bug reports",
+      "help": "Help center",
+      "helpDesc": "Frequently asked questions"
+    },
     "feedback": {
       "title": "Feedback",
       "type": "Type",
@@ -180,13 +347,33 @@
       "submit": "Submit feedback",
       "selectType": "Please select a type",
       "fillContent": "Please describe the issue",
-      "submitted": "Thanks for your feedback"
+      "submitted": "Thanks for your feedback",
+      "types": {
+        "feature": "Feature request",
+        "product": "Product issue",
+        "order": "Order issue",
+        "payment": "Payment issue",
+        "shipping": "Shipping issue",
+        "other": "Other"
+      }
     },
     "help": {
       "title": "Help center",
       "intro": "Most-asked questions — tap to expand",
       "contactPrompt": "Didn't find what you need?",
-      "contactLink": "Contact support"
+      "contactLink": "Contact support",
+      "faq": {
+        "q1": "How do I check my order status?",
+        "a1": "Open \"My orders\" and tap an order to see its status and shipping details.",
+        "q2": "What payment methods are supported?",
+        "a2": "WeChat Pay, Alipay, cash on delivery, and other local methods.",
+        "q3": "What's your return policy?",
+        "a3": "Most items support 7-day no-reason returns — see the after-sales entry on the order page.",
+        "q4": "Delivery area and time?",
+        "a4": "Same-day in Dili city, 2-3 days elsewhere, longer for remote areas.",
+        "q5": "How do I request an invoice?",
+        "a5": "Tick \"Need invoice\" at checkout and fill in the title — e-invoice arrives within 24h."
+      }
     },
     "notifications": {
       "title": "Notifications",

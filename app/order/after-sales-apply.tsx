@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Alert, Image } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -9,32 +10,39 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 
-const REFUND_REASONS = ['商品损坏', '与描述不符', '质量问题', '发错/漏发', '7 天无理由'];
+const REFUND_REASON_KEYS = [
+  'afterSales.reasons.damaged',
+  'afterSales.reasons.notAsDescribed',
+  'afterSales.reasons.quality',
+  'afterSales.reasons.wrongOrMissing',
+  'afterSales.reasons.noReason',
+];
 const REFUND_TYPES = [
-  { id: 'refund-only', label: '仅退款' },
-  { id: 'return-refund', label: '退货退款' },
+  { id: 'refund-only', labelKey: 'afterSales.types.refundOnly' },
+  { id: 'return-refund', labelKey: 'afterSales.types.returnRefund' },
 ];
 
 export default function AfterSalesApplyPage() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const [type, setType] = useState('refund-only');
-  const [reason, setReason] = useState('');
+  const [reasonKey, setReasonKey] = useState('');
   const [content, setContent] = useState('');
 
   const submit = () => {
-    if (!reason) {
-      Alert.alert('提示', '请选择退款原因');
+    if (!reasonKey) {
+      Alert.alert(t('common.notice'), t('afterSales.selectReason'));
       return;
     }
-    Alert.alert('已提交', '售后申请已提交，等待商家审核', [
-      { text: '确定', onPress: () => router.replace('/order/after-sales-detail') },
+    Alert.alert(t('afterSales.submittedTitle'), t('afterSales.submittedDesc'), [
+      { text: t('common.ok'), onPress: () => router.replace('/order/after-sales-detail') },
     ]);
   };
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title="申请售后" showBack onBackPress={() => router.back()} />
+      <PageHeader title={t('afterSales.applyTitle')} showBack onBackPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card>
           <View style={styles.productRow}>
@@ -46,7 +54,7 @@ export default function AfterSalesApplyPage() {
             />
             <View style={{ flex: 1 }}>
               <Text style={[styles.productName, { color: colors['on-surface'] }]} numberOfLines={2}>
-                新鲜红富士苹果
+                {t('afterSales.mockProduct')}
               </Text>
               <Text style={[styles.productMeta, { color: colors['on-surface-variant'] }]}>x 1</Text>
             </View>
@@ -55,37 +63,48 @@ export default function AfterSalesApplyPage() {
         </Card>
 
         <Card>
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>售后类型</Text>
+          <Text style={[styles.label, { color: colors['on-surface'] }]}>
+            {t('afterSales.typeLabel')}
+          </Text>
           <View style={styles.typesRow}>
-            {REFUND_TYPES.map((t) => {
-              const active = type === t.id;
+            {REFUND_TYPES.map((rt) => {
+              const active = type === rt.id;
               return (
-                <Chip key={t.id} label={t.label} selected={active} onSelect={() => setType(t.id)} />
+                <Chip
+                  key={rt.id}
+                  label={t(rt.labelKey)}
+                  selected={active}
+                  onSelect={() => setType(rt.id)}
+                />
               );
             })}
           </View>
         </Card>
 
         <Card>
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>退款原因</Text>
+          <Text style={[styles.label, { color: colors['on-surface'] }]}>
+            {t('afterSales.reasonLabel')}
+          </Text>
           <View style={styles.tagsRow}>
-            {REFUND_REASONS.map((r) => (
+            {REFUND_REASON_KEYS.map((key) => (
               <Chip
-                key={r}
-                label={r}
-                selected={reason === r}
-                onSelect={() => setReason(reason === r ? '' : r)}
+                key={key}
+                label={t(key)}
+                selected={reasonKey === key}
+                onSelect={() => setReasonKey(reasonKey === key ? '' : key)}
               />
             ))}
           </View>
         </Card>
 
         <Card>
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>问题描述</Text>
+          <Text style={[styles.label, { color: colors['on-surface'] }]}>
+            {t('afterSales.descLabel')}
+          </Text>
           <TextInput
             value={content}
             onChangeText={setContent}
-            placeholder="请详细描述你遇到的问题…"
+            placeholder={t('afterSales.applyPlaceholder')}
             placeholderTextColor={colors['on-surface-variant']}
             multiline
             numberOfLines={4}
@@ -101,7 +120,7 @@ export default function AfterSalesApplyPage() {
         </Card>
 
         <Button
-          label="提交申请"
+          label={t('afterSales.applySubmit')}
           variant="primary"
           fullWidth
           onPress={submit}

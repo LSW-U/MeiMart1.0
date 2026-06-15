@@ -1,5 +1,6 @@
 import { StyleSheet, View, FlatList, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -12,6 +13,7 @@ import { useNotifications, useMarkNotificationRead } from '@/services/queries/us
 import type { Notification } from '@/types';
 
 export default function NotificationsPage() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { data: notifications, isLoading, isError, refetch } = useNotifications();
   const markRead = useMarkNotificationRead();
@@ -34,13 +36,13 @@ export default function NotificationsPage() {
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
       <PageHeader
-        title="消息通知"
+        title={t('service.notifications.title')}
         showBack
         onBackPress={() => router.back()}
         rightAction={
           unreadCount > 0 ? (
             <Button
-              label="全部已读"
+              label={t('service.notifications.readAll')}
               variant="text"
               size="sm"
               onPress={markAllRead}
@@ -54,9 +56,13 @@ export default function NotificationsPage() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : isError ? (
-        <ErrorState message="加载通知失败" onRetry={() => refetch()} />
+        <ErrorState message={t('errors.notifications')} onRetry={() => refetch()} />
       ) : !notifications || notifications.length === 0 ? (
-        <EmptyState title="暂无通知" description="新消息会显示在这里" icon="bell-off-outline" />
+        <EmptyState
+          title={t('service.notifications.empty')}
+          description={t('service.notifications.emptyDesc')}
+          icon="bell-off-outline"
+        />
       ) : (
         <FlatList
           data={notifications}

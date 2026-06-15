@@ -22,6 +22,11 @@
     "all": "全部",
     "empty": "暂无数据",
     "error": "出错了",
+    "notice": "提示",
+    "success": "成功",
+    "submitted": "已提交",
+    "yes": "是",
+    "no": "不",
     "network": {
       "offline": "网络连接已断开",
       "weak": "网络较慢，已切换省流模式",
@@ -40,7 +45,8 @@
     "desc3": "传承东帝汶传统纹样",
     "title4": "安全支付",
     "desc4": "支持本地多种支付方式",
-    "start": "立即开始"
+    "start": "立即开始",
+    "skip": "跳过"
   },
   "auth": {
     "login": "登录",
@@ -115,6 +121,10 @@
     "total": "订单总额",
     "orderNo": "订单编号",
     "createdAt": "下单时间",
+    "statusLabel": "订单状态",
+    "shippingInfo": "收货信息",
+    "items": "商品",
+    "progress": "订单进度",
     "actions": {
       "cancel": "取消订单",
       "pay": "去支付",
@@ -123,7 +133,20 @@
       "repurchase": "再次购买",
       "refund": "申请退款"
     },
-    "empty": "暂无订单"
+    "empty": "暂无订单",
+    "cancelTitle": "确认取消",
+    "cancelConfirm": "确定取消此订单？",
+    "notFoundError": "订单不存在或加载失败",
+    "timeline": {
+      "submitted": "订单已提交",
+      "submittedDesc": "等待买家付款",
+      "paid": "买家已付款",
+      "paidDesc": "商家准备发货",
+      "shipped": "商家已发货",
+      "shippedDesc": "包裹已出库",
+      "delivered": "已签收",
+      "deliveredDesc": "包裹已送达"
+    }
   },
   "address": {
     "list": "收货地址",
@@ -159,17 +182,161 @@
     "theme": "主题"
   },
   "settings": {
+    "title": "设置",
+    "appearance": "外观",
+    "theme": "主题",
+    "general": "通用",
+    "language": "语言",
+    "push": "消息推送",
+    "clearCache": "清除缓存",
+    "clearCacheDone": "已清除缓存",
+    "aboutSection": "关于",
+    "version": "版本",
+    "terms": "用户协议",
+    "logoutTitle": "确认退出",
+    "logoutConfirm": "确定退出登录？",
     "notifications": "推送通知",
     "sound": "提示音",
     "vibration": "振动",
     "dataSaver": "省流模式",
-    "clearCache": "清除缓存",
-    "version": "版本"
+    "themeMode": {
+      "system": "跟随系统",
+      "light": "浅色",
+      "dark": "深色"
+    }
+  },
+  "language": {
+    "title": "选择语言",
+    "comingSoon": "{{native}} 即将上线",
+    "comingSoonShort": "即将上线"
+  },
+  "coupons": {
+    "title": "优惠券",
+    "loadError": "加载优惠券失败",
+    "empty": "暂无优惠券",
+    "emptyDesc": "去首页看看有什么可领的吧"
+  },
+  "about": {
+    "title": "关于我们",
+    "company": "公司",
+    "address": "地址",
+    "email": "邮箱",
+    "mission": "连接东帝汶本地的商家与消费者，让生活更便捷",
+    "rights": "保留所有权利。"
+  },
+  "checkout": {
+    "title": "确认订单",
+    "loadError": "加载购物车失败",
+    "offlineBlock": "网络断开",
+    "offlineBlockDesc": "请检查网络后下单",
+    "submit": "提交订单",
+    "selectAddress": "请选择收货地址",
+    "noItems": "没有选中商品",
+    "itemQty": "数量: {{count}}",
+    "payment": {
+      "wechat": "微信支付",
+      "alipay": "支付宝",
+      "cash": "货到付款",
+      "laispay": "LaisPay 钱包",
+      "card": "银行卡"
+    }
+  },
+  "payment": {
+    "title": "选择支付方式",
+    "payNow": "立即支付"
+  },
+  "result": {
+    "viewOrder": "查看订单",
+    "continueShopping": "继续购物"
+  },
+  "favorites": {
+    "title": "我的收藏",
+    "loadError": "加载收藏失败",
+    "empty": "还没有收藏",
+    "emptyDesc": "去逛逛喜欢的商品吧"
+  },
+  "afterSales": {
+    "applyTitle": "申请售后",
+    "applyPlaceholder": "请详细描述你遇到的问题…",
+    "applySubmit": "提交申请",
+    "selectReason": "请选择退款原因",
+    "submittedTitle": "已提交",
+    "submittedDesc": "售后申请已提交，等待商家审核",
+    "detailTitle": "售后详情",
+    "applyNo": "申请单号",
+    "reason": "申请原因",
+    "applyTime": "申请时间",
+    "contactService": "联系客服",
+    "typeLabel": "售后类型",
+    "reasonLabel": "退款原因",
+    "descLabel": "问题描述",
+    "refundAmount": "退款金额",
+    "progressLabel": "处理进度",
+    "applyInfo": "申请信息",
+    "processing": "处理中",
+    "processingDesc": "商家已同意退款申请，正在处理",
+    "types": {
+      "refundOnly": "仅退款",
+      "returnRefund": "退货退款"
+    },
+    "reasons": {
+      "damaged": "商品损坏",
+      "notAsDescribed": "与描述不符",
+      "quality": "质量问题",
+      "wrongOrMissing": "发错/漏发",
+      "noReason": "7 天无理由"
+    },
+    "timeline": {
+      "submitted": "申请已提交",
+      "submittedDesc": "等待商家审核",
+      "reviewing": "商家审核中",
+      "reviewingDesc": "商家正在审核申请",
+      "approved": "审核通过",
+      "approvedDesc": "同意退款，处理中",
+      "completed": "退款完成",
+      "completedDesc": "退款已原路返回"
+    },
+    "mockReason": "商品质量问题",
+    "mockProduct": "新鲜红富士苹果"
+  },
+  "review": {
+    "title": "发表评价",
+    "placeholder": "分享你的使用体验…",
+    "submit": "提交评价",
+    "fillContent": "请填写评价内容",
+    "successTitle": "成功",
+    "successDesc": "评价已提交"
+  },
+  "profileEdit": {
+    "title": "编辑资料",
+    "nickname": "昵称",
+    "nicknamePlaceholder": "请输入昵称",
+    "phone": "手机号",
+    "phonePlaceholder": "请输入手机号",
+    "email": "邮箱",
+    "emailPlaceholder": "请输入邮箱（可选）",
+    "saved": "资料已更新"
   },
   "service": {
     "title": "客服中心",
     "callHotline": "客服热线",
     "email": "客服邮箱",
+    "greetingTitle": "你好，需要帮忙吗？",
+    "greetingDesc": "我们随时为你服务",
+    "faqTitle": "常见问题",
+    "contactTitle": "联系方式",
+    "categories": {
+      "order": "订单问题",
+      "orderDesc": "查询订单、物流、退换货",
+      "payment": "支付问题",
+      "paymentDesc": "支付失败、退款进度",
+      "product": "商品咨询",
+      "productDesc": "商品真假、保质期",
+      "feedback": "意见反馈",
+      "feedbackDesc": "产品建议、bug 反馈",
+      "help": "帮助中心",
+      "helpDesc": "常见问题解答"
+    },
     "feedback": {
       "title": "意见反馈",
       "type": "反馈类型",
@@ -180,13 +347,33 @@
       "submit": "提交反馈",
       "selectType": "请选择反馈类型",
       "fillContent": "请填写反馈内容",
-      "submitted": "感谢你的反馈"
+      "submitted": "感谢你的反馈",
+      "types": {
+        "feature": "功能建议",
+        "product": "商品问题",
+        "order": "订单问题",
+        "payment": "支付问题",
+        "shipping": "物流问题",
+        "other": "其他"
+      }
     },
     "help": {
       "title": "帮助中心",
       "intro": "以下是用户最常问的问题，点击展开查看详细解答",
       "contactPrompt": "没找到答案？",
-      "contactLink": "联系在线客服"
+      "contactLink": "联系在线客服",
+      "faq": {
+        "q1": "如何查询订单状态？",
+        "a1": "进入「我的订单」页面，点击对应订单可查看详细状态和物流信息。",
+        "q2": "支持哪些支付方式？",
+        "a2": "目前支持微信支付、支付宝、货到付款等多种支付方式。",
+        "q3": "退换货政策是？",
+        "a3": "大部分商品支持 7 天无理由退换货，详情请查看订单详情页的售后入口。",
+        "q4": "配送范围和时间？",
+        "a4": "帝力市区当日达，其他地区 2-3 日送达，部分偏远地区需更长时间。",
+        "q5": "如何申请发票？",
+        "a5": "在结算页面可勾选「需要发票」并填写抬头信息，电子发票会在 24 小时内发送到邮箱。"
+      }
     },
     "notifications": {
       "title": "消息通知",

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -8,60 +9,36 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Card } from '@/components/ui/Card';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const FAQS = [
-  {
-    id: 'q1',
-    question: '如何查询订单状态？',
-    answer: '进入「我的订单」页面，点击对应订单可查看详细状态和物流信息。',
-  },
-  {
-    id: 'q2',
-    question: '支持哪些支付方式？',
-    answer: '目前支持微信支付、支付宝、货到付款等多种支付方式。',
-  },
-  {
-    id: 'q3',
-    question: '退换货政策是？',
-    answer: '大部分商品支持 7 天无理由退换货，详情请查看订单详情页的售后入口。',
-  },
-  {
-    id: 'q4',
-    question: '配送范围和时间？',
-    answer: '帝力市区当日达，其他地区 2-3 日送达，部分偏远地区需更长时间。',
-  },
-  {
-    id: 'q5',
-    question: '如何申请发票？',
-    answer: '在结算页面可勾选「需要发票」并填写抬头信息，电子发票会在 24 小时内发送到邮箱。',
-  },
-];
+const FAQ_IDS = ['q1', 'q2', 'q3', 'q4', 'q5'] as const;
 
 export default function HelpCenterPage() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const [expanded, setExpanded] = useState<string | null>('q1');
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title="帮助中心" showBack onBackPress={() => router.back()} />
+      <PageHeader title={t('service.help.title')} showBack onBackPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={[styles.intro, { color: colors['on-surface-variant'] }]}>
-          以下是用户最常问的问题，点击展开查看详细解答
+          {t('service.help.intro')}
         </Text>
         <View style={styles.list}>
-          {FAQS.map((faq) => {
-            const isOpen = expanded === faq.id;
+          {FAQ_IDS.map((id) => {
+            const isOpen = expanded === id;
             return (
-              <Card key={faq.id}>
+              <Card key={id}>
                 <Pressable
-                  testID={`faq-${faq.id}`}
-                  onPress={() => setExpanded(isOpen ? null : faq.id)}
+                  testID={`faq-${id}`}
+                  onPress={() => setExpanded(isOpen ? null : id)}
                   style={({ pressed }) => [styles.faqHeader, { opacity: pressed ? 0.7 : 1 }]}
                   accessibilityRole="button"
                   accessibilityState={{ expanded: isOpen }}
+                  accessibilityLabel={t(`service.help.faq.${id}`)}
                 >
                   <Text style={[styles.question, { color: colors['on-surface'] }]}>
-                    {faq.question}
+                    {t(`service.help.faq.${id}`)}
                   </Text>
                   <MaterialCommunityIcons
                     name={isOpen ? 'chevron-up' : 'chevron-down'}
@@ -71,7 +48,7 @@ export default function HelpCenterPage() {
                 </Pressable>
                 {isOpen && (
                   <Text style={[styles.answer, { color: colors['on-surface-variant'] }]}>
-                    {faq.answer}
+                    {t(`service.help.faq.a${id.slice(1)}`)}
                   </Text>
                 )}
               </Card>
@@ -80,10 +57,16 @@ export default function HelpCenterPage() {
         </View>
         <View style={styles.contactBox}>
           <Text style={[styles.contactText, { color: colors['on-surface-variant'] }]}>
-            没找到答案？
+            {t('service.help.contactPrompt')}
           </Text>
-          <Pressable onPress={() => router.push('/service')}>
-            <Text style={[styles.contactLink, { color: colors.primary }]}>联系在线客服</Text>
+          <Pressable
+            onPress={() => router.push('/service')}
+            accessibilityRole="button"
+            accessibilityLabel={t('service.help.contactLink')}
+          >
+            <Text style={[styles.contactLink, { color: colors.primary }]}>
+              {t('service.help.contactLink')}
+            </Text>
           </Pressable>
         </View>
       </ScrollView>

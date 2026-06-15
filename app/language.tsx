@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, FlatList, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -25,11 +26,12 @@ const LANGUAGES: LanguageItem[] = [
 
 export default function LanguagePage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const locale = useAppStore((s) => s.locale);
 
   const select = (item: LanguageItem) => {
     if (!item.available) {
-      Alert.alert('提示', `${item.native} 即将上线`);
+      Alert.alert(t('common.notice'), t('language.comingSoon', { native: item.native }));
       return;
     }
     void changeLocale(item.code);
@@ -40,7 +42,7 @@ export default function LanguagePage() {
     <SafeAreaWrapper style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBarConfig />
       <PageHeader
-        title="选择语言"
+        title={t('language.title')}
         showBack
         onBackPress={() => router.back()}
         testID="language-back"
@@ -72,7 +74,7 @@ export default function LanguagePage() {
                 <Text style={[styles.label, { color: colors['on-surface'] }]}>{item.label}</Text>
                 <Text style={[styles.sub, { color: colors['on-surface-variant'] }]}>
                   {item.native}
-                  {!item.available && '（即将上线）'}
+                  {!item.available && `（${t('language.comingSoonShort')}）`}
                 </Text>
               </View>
               {active && <MaterialCommunityIcons name="check" size={20} color={colors.primary} />}

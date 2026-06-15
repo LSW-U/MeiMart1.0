@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -9,58 +10,81 @@ import { Card } from '@/components/ui/Card';
 import { TimelineStep } from '@/components/business/TimelineStep';
 import { PriceText } from '@/components/ui/PriceText';
 
-const STEPS = [
-  { status: '申请已提交', description: '等待商家审核', timestamp: '2026-06-13 10:00' },
-  { status: '商家审核中', description: '商家正在审核申请', timestamp: '2026-06-13 14:00' },
-  { status: '审核通过', description: '同意退款，处理中', timestamp: '2026-06-14 09:00' },
-  { status: '退款完成', description: '退款已原路返回', timestamp: '2026-06-14 11:00' },
-];
-
 export default function AfterSalesDetailPage() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
+
+  const steps = [
+    {
+      status: t('afterSales.timeline.submitted'),
+      description: t('afterSales.timeline.submittedDesc'),
+      timestamp: '2026-06-13 10:00',
+    },
+    {
+      status: t('afterSales.timeline.reviewing'),
+      description: t('afterSales.timeline.reviewingDesc'),
+      timestamp: '2026-06-13 14:00',
+    },
+    {
+      status: t('afterSales.timeline.approved'),
+      description: t('afterSales.timeline.approvedDesc'),
+      timestamp: '2026-06-14 09:00',
+    },
+    {
+      status: t('afterSales.timeline.completed'),
+      description: t('afterSales.timeline.completedDesc'),
+      timestamp: '2026-06-14 11:00',
+    },
+  ];
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title="售后详情" showBack onBackPress={() => router.back()} />
+      <PageHeader title={t('afterSales.detailTitle')} showBack onBackPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card>
           <View style={styles.statusBox}>
             <Text style={[styles.statusText, { color: colors.primary }]} accessibilityRole="header">
-              处理中
+              {t('afterSales.processing')}
             </Text>
             <Text style={[styles.statusDesc, { color: colors['on-surface-variant'] }]}>
-              商家已同意退款申请，正在处理
+              {t('afterSales.processingDesc')}
             </Text>
           </View>
         </Card>
 
         <Card>
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>退款金额</Text>
+          <Text style={[styles.label, { color: colors['on-surface'] }]}>
+            {t('afterSales.refundAmount')}
+          </Text>
           <PriceText value={25.9} size="lg" />
         </Card>
 
         <Card>
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>处理进度</Text>
-          <TimelineStep steps={STEPS} currentIndex={2} />
+          <Text style={[styles.label, { color: colors['on-surface'] }]}>
+            {t('afterSales.progressLabel')}
+          </Text>
+          <TimelineStep steps={steps} currentIndex={2} />
         </Card>
 
         <Card>
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>申请信息</Text>
+          <Text style={[styles.label, { color: colors['on-surface'] }]}>
+            {t('afterSales.applyInfo')}
+          </Text>
           <InfoRow
-            label="申请单号"
+            label={t('afterSales.applyNo')}
             value="AS202606130001"
             subColor={colors['on-surface-variant']}
             textColor={colors['on-surface']}
           />
           <InfoRow
-            label="申请原因"
-            value="商品质量问题"
+            label={t('afterSales.reason')}
+            value={t('afterSales.mockReason')}
             subColor={colors['on-surface-variant']}
             textColor={colors['on-surface']}
           />
           <InfoRow
-            label="申请时间"
+            label={t('afterSales.applyTime')}
             value="2026-06-13 10:00"
             subColor={colors['on-surface-variant']}
             textColor={colors['on-surface']}
@@ -68,7 +92,7 @@ export default function AfterSalesDetailPage() {
         </Card>
 
         <Button
-          label="联系客服"
+          label={t('afterSales.contactService')}
           variant="outline"
           fullWidth
           onPress={() => router.push('/service')}

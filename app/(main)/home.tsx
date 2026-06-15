@@ -12,6 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import {
@@ -132,6 +133,7 @@ function getRecommendBadge(index: number): ProductBadge | undefined {
 
 export default function HomePage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { shouldSkipNonEssential } = useWeakNetworkUI();
   const { data: banners } = useBanners();
   const { data: categories } = useCategories();
@@ -281,7 +283,7 @@ export default function HomePage() {
             </Pressable>
           </View>
           {isLoading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
-          {isError && <ErrorState message="加载商品失败" onRetry={() => refetch()} />}
+          {isError && <ErrorState message={t('errors.products')} onRetry={() => refetch()} />}
           {!isLoading && !isError && recommendList.length > 0 && (
             <ScrollView
               horizontal

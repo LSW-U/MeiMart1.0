@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -22,13 +23,14 @@ import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const PAYMENT_METHODS = [
-  { id: 'wechat', label: '微信支付', icon: 'wechat' as const },
-  { id: 'alipay', label: '支付宝', icon: 'alpha-c' as const },
-  { id: 'cash', label: '货到付款', icon: 'cash' as const },
+  { id: 'wechat', labelKey: 'checkout.payment.wechat', icon: 'wechat' as const },
+  { id: 'alipay', labelKey: 'checkout.payment.alipay', icon: 'alpha-c' as const },
+  { id: 'cash', labelKey: 'checkout.payment.cash', icon: 'cash' as const },
 ];
 
 export default function CheckoutPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { isOffline } = useWeakNetworkUI();
   const { data: cart, isLoading, isError, refetch } = useCart();
   const { data: addresses } = useAddresses();
@@ -39,7 +41,7 @@ export default function CheckoutPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <PageHeader title="确认订单" showBack onBackPress={() => router.back()} />
+        <PageHeader title={t('checkout.title')} showBack onBackPress={() => router.back()} />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -50,15 +52,15 @@ export default function CheckoutPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <PageHeader title="确认订单" showBack onBackPress={() => router.back()} />
-        <ErrorState message="加载购物车失败" onRetry={() => refetch()} />
+        <PageHeader title={t('checkout.title')} showBack onBackPress={() => router.back()} />
+        <ErrorState message={t('checkout.loadError')} onRetry={() => refetch()} />
       </SafeAreaWrapper>
     );
   }
 
   const submit = () => {
     if (isOffline) {
-      Alert.alert('网络断开', '请检查网络后下单');
+      Alert.alert(t('checkout.offlineBlock'), t('checkout.offlineBlockDesc'));
       return;
     }
     router.push('/order/payment');
@@ -67,7 +69,7 @@ export default function CheckoutPage() {
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title="确认订单" showBack onBackPress={() => router.back()} />
+      <PageHeader title={t('checkout.title')} showBack onBackPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Pressable
           testID="checkout-address"
@@ -96,7 +98,7 @@ export default function CheckoutPage() {
             </View>
           ) : (
             <Text style={[styles.noAddress, { color: colors['on-surface-variant'] }]}>
-              请选择收货地址
+              {t('checkout.selectAddress')}
             </Text>
           )}
           <MaterialCommunityIcons
@@ -109,7 +111,7 @@ export default function CheckoutPage() {
         <Card>
           {selectedItems.length === 0 ? (
             <Text style={[styles.emptyText, { color: colors['on-surface-variant'] }]}>
-              没有选中商品
+              {t('checkout.noItems')}
             </Text>
           ) : (
             selectedItems.map((item) => (
@@ -122,7 +124,7 @@ export default function CheckoutPage() {
                     {item.product.name}
                   </Text>
                   <Text style={[styles.itemQty, { color: colors['on-surface-variant'] }]}>
-                    数量: {item.quantity}
+                    {t('checkout.itemQty', { count: item.quantity })}
                   </Text>
                 </View>
                 <PriceText value={item.product.price * item.quantity} size="md" />
@@ -145,10 +147,12 @@ export default function CheckoutPage() {
                 { opacity: pressed ? 0.7 : 1 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel={m.label}
+              accessibilityLabel={t(m.labelKey)}
             >
               <MaterialCommunityIcons name={m.icon} size={22} color={colors.primary} />
-              <Text style={[styles.paymentLabel, { color: colors['on-surface'] }]}>{m.label}</Text>
+              <Text style={[styles.paymentLabel, { color: colors['on-surface'] }]}>
+                {t(m.labelKey)}
+              </Text>
               <MaterialCommunityIcons name="radiobox-blank" size={20} color={colors.outline} />
             </Pressable>
           ))}
@@ -156,11 +160,13 @@ export default function CheckoutPage() {
       </ScrollView>
       <View style={[styles.bottomBar, { backgroundColor: colors['surface-container-lowest'] }]}>
         <View style={styles.priceBox}>
-          <Text style={[styles.totalLabel, { color: colors['on-surface-variant'] }]}>合计</Text>
+          <Text style={[styles.totalLabel, { color: colors['on-surface-variant'] }]}>
+            {t('cart.total')}
+          </Text>
           <PriceText value={cart?.totalPrice ?? 0} size="lg" />
         </View>
         <Button
-          label="提交订单"
+          label={t('checkout.submit')}
           variant="primary"
           disabled={selectedItems.length === 0 || isOffline}
           onPress={submit}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -9,51 +10,65 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 
-const FEEDBACK_TYPES = ['功能建议', '商品问题', '订单问题', '支付问题', '物流问题', '其他'];
+const FEEDBACK_TYPE_KEYS = [
+  'service.feedback.types.feature',
+  'service.feedback.types.product',
+  'service.feedback.types.order',
+  'service.feedback.types.payment',
+  'service.feedback.types.shipping',
+  'service.feedback.types.other',
+];
 
 export default function FeedbackPage() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
-  const [type, setType] = useState('');
+  const [typeKey, setTypeKey] = useState('');
   const [content, setContent] = useState('');
   const [contact, setContact] = useState('');
 
   const submit = () => {
-    if (!type) {
-      Alert.alert('提示', '请选择反馈类型');
+    if (!typeKey) {
+      Alert.alert(t('common.notice'), t('service.feedback.selectType'));
       return;
     }
     if (!content.trim()) {
-      Alert.alert('提示', '请填写反馈内容');
+      Alert.alert(t('common.notice'), t('service.feedback.fillContent'));
       return;
     }
-    Alert.alert('已提交', '感谢你的反馈', [{ text: '确定', onPress: () => router.back() }]);
+    Alert.alert(t('common.submitted'), t('service.feedback.submitted'), [
+      { text: t('common.ok'), onPress: () => router.back() },
+    ]);
   };
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title="意见反馈" showBack onBackPress={() => router.back()} />
+      <PageHeader title={t('service.feedback.title')} showBack onBackPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card>
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>反馈类型</Text>
+          <Text style={[styles.label, { color: colors['on-surface'] }]}>
+            {t('service.feedback.type')}
+          </Text>
           <View style={styles.tagsRow}>
-            {FEEDBACK_TYPES.map((t) => (
+            {FEEDBACK_TYPE_KEYS.map((key) => (
               <Chip
-                key={t}
-                label={t}
-                selected={type === t}
-                onSelect={() => setType(type === t ? '' : t)}
+                key={key}
+                label={t(key)}
+                selected={typeKey === key}
+                onSelect={() => setTypeKey(typeKey === key ? '' : key)}
               />
             ))}
           </View>
         </Card>
 
         <Card>
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>反馈内容</Text>
+          <Text style={[styles.label, { color: colors['on-surface'] }]}>
+            {t('service.feedback.content')}
+          </Text>
           <TextInput
             value={content}
             onChangeText={setContent}
-            placeholder="请详细描述你的反馈…"
+            placeholder={t('service.feedback.placeholder')}
             placeholderTextColor={colors['on-surface-variant']}
             multiline
             numberOfLines={6}
@@ -73,11 +88,13 @@ export default function FeedbackPage() {
         </Card>
 
         <Card>
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>联系方式（可选）</Text>
+          <Text style={[styles.label, { color: colors['on-surface'] }]}>
+            {t('service.feedback.contact')}
+          </Text>
           <TextInput
             value={contact}
             onChangeText={setContact}
-            placeholder="邮箱或手机号，方便我们回复你"
+            placeholder={t('service.feedback.contactPlaceholder')}
             placeholderTextColor={colors['on-surface-variant']}
             style={[
               styles.input,
@@ -91,7 +108,7 @@ export default function FeedbackPage() {
         </Card>
 
         <Button
-          label="提交反馈"
+          label={t('service.feedback.submit')}
           variant="primary"
           fullWidth
           onPress={submit}

@@ -1,5 +1,6 @@
 import { StyleSheet, View, FlatList, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -12,20 +13,25 @@ import type { Product } from '@/types';
 
 export default function FavoritesPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { data: favorites, isLoading, isError, refetch } = useFavorites();
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title="我的收藏" showBack onBackPress={() => router.back()} />
+      <PageHeader title={t('favorites.title')} showBack onBackPress={() => router.back()} />
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : isError ? (
-        <ErrorState message="加载收藏失败" onRetry={() => refetch()} />
+        <ErrorState message={t('favorites.loadError')} onRetry={() => refetch()} />
       ) : !favorites || favorites.length === 0 ? (
-        <EmptyState title="还没有收藏" description="去逛逛喜欢的商品吧" icon="heart-outline" />
+        <EmptyState
+          title={t('favorites.empty')}
+          description={t('favorites.emptyDesc')}
+          icon="heart-outline"
+        />
       ) : (
         <FlatList
           data={favorites}

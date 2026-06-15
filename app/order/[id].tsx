@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -10,25 +11,52 @@ import { PriceText } from '@/components/ui/PriceText';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TimelineStep } from '@/components/business/TimelineStep';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
+import type { OrderStatus } from '@/types';
 
-const TIMELINE_STEPS = [
-  { status: '订单已提交', description: '等待买家付款', timestamp: '2026-06-01 10:30' },
-  { status: '买家已付款', description: '商家准备发货', timestamp: '2026-06-01 11:00' },
-  { status: '商家已发货', description: '包裹已出库', timestamp: '2026-06-02 08:00' },
-  { status: '已签收', description: '包裹已送达', timestamp: '2026-06-03 14:00' },
-];
+const STATUS_KEY_MAP: Record<OrderStatus, string> = {
+  pending: 'order.status.pending',
+  paid: 'order.status.paid',
+  shipped: 'order.status.shipped',
+  delivered: 'order.status.delivered',
+  cancelled: 'order.status.cancelled',
+  refunding: 'order.status.refunding',
+};
 
 export default function OrderDetailPage() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const { data: order, isLoading, isError, refetch } = useOrder(id);
   const cancelMutation = useCancelOrder();
 
+  const timelineSteps = [
+    {
+      status: t('order.timeline.submitted'),
+      description: t('order.timeline.submittedDesc'),
+      timestamp: '2026-06-01 10:30',
+    },
+    {
+      status: t('order.timeline.paid'),
+      description: t('order.timeline.paidDesc'),
+      timestamp: '2026-06-01 11:00',
+    },
+    {
+      status: t('order.timeline.shipped'),
+      description: t('order.timeline.shippedDesc'),
+      timestamp: '2026-06-02 08:00',
+    },
+    {
+      status: t('order.timeline.delivered'),
+      description: t('order.timeline.deliveredDesc'),
+      timestamp: '2026-06-03 14:00',
+    },
+  ];
+
   if (isLoading) {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <PageHeader title="订单详情" showBack onBackPress={() => router.back()} />
+        <PageHeader title={t('order.detail')} showBack onBackPress={() => router.back()} />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -39,17 +67,17 @@ export default function OrderDetailPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <PageHeader title="订单详情" showBack onBackPress={() => router.back()} />
-        <ErrorState message="订单不存在或加载失败" onRetry={() => refetch()} />
+        <PageHeader title={t('order.detail')} showBack onBackPress={() => router.back()} />
+        <ErrorState message={t('order.notFoundError')} onRetry={() => refetch()} />
       </SafeAreaWrapper>
     );
   }
 
   const cancel = () => {
-    Alert.alert('确认取消', '确定取消此订单？', [
-      { text: '不', style: 'cancel' },
+    Alert.alert(t('order.cancelTitle'), t('order.cancelConfirm'), [
+      { text: t('common.no'), style: 'cancel' },
       {
-        text: '确定',
+        text: t('common.confirm'),
         style: 'destructive',
         onPress: () => cancelMutation.mutate(order.id, { onSuccess: () => router.back() }),
       },
@@ -59,12 +87,12 @@ export default function OrderDetailPage() {
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title="订单详情" showBack onBackPress={() => router.back()} />
+      <PageHeader title={t('order.detail')} showBack onBackPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card>
           <View style={styles.statusRow}>
             <Text style={[styles.statusText, { color: colors.primary }]} accessibilityRole="header">
-              订单状态: {order.status}
+              {t('order.statusLabel')}: {t(STATUS_KEY_MAP[order.status])}
             </Text>
             <Text style={[styles.orderNo, { color: colors['on-surface-variant'] }]}>
               {order.orderNo}
@@ -74,7 +102,9 @@ export default function OrderDetailPage() {
 
         {order.address && (
           <Card>
-            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>收货信息</Text>
+            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+              {t('order.shippingInfo')}
+            </Text>
             <View style={styles.addressBox}>
               <Text style={[styles.addressLine, { color: colors['on-surface'] }]}>
                 {order.address.name} {order.address.phone}
@@ -90,7 +120,9 @@ export default function OrderDetailPage() {
         )}
 
         <Card>
-          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>商品</Text>
+          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+            {t('order.items')}
+          </Text>
           {order.items.map((item) => (
             <View key={item.id} style={styles.itemRow}>
               <View style={{ flex: 1 }}>
@@ -107,14 +139,16 @@ export default function OrderDetailPage() {
         </Card>
 
         <Card>
-          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>订单进度</Text>
-          <TimelineStep steps={TIMELINE_STEPS} currentIndex={1} />
+          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+            {t('order.progress')}
+          </Text>
+          <TimelineStep steps={timelineSteps} currentIndex={1} />
         </Card>
 
         <Card>
           <View style={styles.totalRow}>
             <Text style={[styles.totalLabel, { color: colors['on-surface-variant'] }]}>
-              订单总额
+              {t('order.total')}
             </Text>
             <PriceText value={order.totalPrice} size="lg" />
           </View>
@@ -122,9 +156,14 @@ export default function OrderDetailPage() {
       </ScrollView>
       {order.status === 'pending' && (
         <View style={[styles.bottomBar, { backgroundColor: colors['surface-container-lowest'] }]}>
-          <Button label="取消订单" variant="outline" onPress={cancel} testID="order-cancel" />
           <Button
-            label="去支付"
+            label={t('order.actions.cancel')}
+            variant="outline"
+            onPress={cancel}
+            testID="order-cancel"
+          />
+          <Button
+            label={t('order.actions.pay')}
             variant="primary"
             onPress={() => router.push('/order/payment')}
             testID="order-pay"
@@ -134,7 +173,7 @@ export default function OrderDetailPage() {
       {order.status === 'shipped' && (
         <View style={[styles.bottomBar, { backgroundColor: colors['surface-container-lowest'] }]}>
           <Button
-            label="查看物流"
+            label={t('order.actions.track')}
             variant="primary"
             onPress={() => router.push({ pathname: '/order/tracking', params: { id: order.id } })}
             testID="order-track"
@@ -144,7 +183,7 @@ export default function OrderDetailPage() {
       {order.status === 'delivered' && (
         <View style={[styles.bottomBar, { backgroundColor: colors['surface-container-lowest'] }]}>
           <Button
-            label="去评价"
+            label={t('order.actions.review')}
             variant="primary"
             onPress={() => router.push({ pathname: '/order/review', params: { id: order.id } })}
             testID="order-review"

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -11,6 +12,7 @@ import { useProfile, useUpdateProfile } from '@/services/queries/useUser';
 
 export default function ProfileEditPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { data: user } = useProfile();
   const updateMutation = useUpdateProfile();
   const [name, setName] = useState(user?.name ?? '');
@@ -22,7 +24,7 @@ export default function ProfileEditPage() {
       { name, phone, email },
       {
         onSuccess: () => {
-          Alert.alert('成功', '资料已更新');
+          Alert.alert(t('common.success'), t('profileEdit.saved'));
           router.back();
         },
       },
@@ -32,23 +34,23 @@ export default function ProfileEditPage() {
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title="编辑资料" showBack onBackPress={() => router.back()} />
+      <PageHeader title={t('profileEdit.title')} showBack onBackPress={() => router.back()} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scroll}>
           <Input
-            label="昵称"
-            placeholder="请输入昵称"
+            label={t('profileEdit.nickname')}
+            placeholder={t('profileEdit.nicknamePlaceholder')}
             leftIcon="account"
             value={name}
             onChangeText={setName}
             testID="edit-name"
           />
           <Input
-            label="手机号"
-            placeholder="请输入手机号"
+            label={t('profileEdit.phone')}
+            placeholder={t('profileEdit.phonePlaceholder')}
             leftIcon="phone"
             keyboardType="phone-pad"
             value={phone}
@@ -56,8 +58,8 @@ export default function ProfileEditPage() {
             testID="edit-phone"
           />
           <Input
-            label="邮箱"
-            placeholder="请输入邮箱（可选）"
+            label={t('profileEdit.email')}
+            placeholder={t('profileEdit.emailPlaceholder')}
             leftIcon="email"
             keyboardType="email-address"
             value={email}
@@ -65,7 +67,7 @@ export default function ProfileEditPage() {
             testID="edit-email"
           />
           <Button
-            label="保存"
+            label={t('common.save')}
             variant="primary"
             fullWidth
             loading={updateMutation.isPending}
