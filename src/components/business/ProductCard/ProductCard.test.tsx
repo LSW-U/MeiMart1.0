@@ -48,4 +48,24 @@ describe('ProductCard', () => {
     fireEvent.press(getByText('Add to Cart'));
     expect(onAddToCart).toHaveBeenCalledWith(product);
   });
+
+  it('renders badge when provided', () => {
+    const { getByText } = render(
+      <ProductCard product={product} badge={{ label: 'Fresh', variant: 'fresh' }} />,
+      { wrapper },
+    );
+    expect(getByText('Fresh')).toBeTruthy();
+  });
+
+  it('renders favorite button when showFavorite is true', () => {
+    const { getByLabelText } = render(<ProductCard product={product} showFavorite />, { wrapper });
+    expect(getByLabelText('Add to favorites')).toBeTruthy();
+  });
+
+  it('reflects favorite state', () => {
+    const { getByLabelText } = render(<ProductCard product={product} showFavorite isFavorite />, {
+      wrapper,
+    });
+    expect(getByLabelText('Remove from favorites')).toBeTruthy();
+  });
 });
