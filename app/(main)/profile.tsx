@@ -78,10 +78,19 @@ const FUNCTION_ITEMS: FunctionItem[] = [
   { id: 'logout', label: 'Log Out', icon: 'logout', isError: true },
 ];
 
+// 未登录状态的功能菜单（无 Log Out）
+const FUNCTION_ITEMS_EMPTY: FunctionItem[] = FUNCTION_ITEMS.filter((i) => i.id !== 'logout');
+
 export default function ProfilePage() {
   const { colors } = useTheme();
   const { data: user, isLoading, isError, refetch } = useProfile();
   const clearAuth = useAuthStore((s) => s.clearAuth);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  // 未登录分支（Fix-18：ProfileEmptyPage HTML 还原）
+  if (!isAuthenticated) {
+    return <ProfileEmpty />;
+  }
 
   if (isLoading) {
     return (
@@ -302,6 +311,145 @@ function Header() {
   );
 }
 
+// ProfileEmpty — 未登录状态（Fix-18：还原 ProfileEmptyPage.html）
+// 仍渲染 Header + Orders 4 宫格 + Function Menus（无 Log Out），点击触发登录
+function ProfileEmpty() {
+  const { colors } = useTheme();
+  const onRequireLogin = () => {
+    router.push('/(auth)/login');
+  };
+  return (
+    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+      <StatusBarConfig />
+      <Header />
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* User Info Card — 未登录（HTML 第 149-160 行） */}
+        <View
+          style={[
+            styles.userCard,
+            { backgroundColor: colors['surface-container-lowest'], ...shadowPresets.sm },
+          ]}
+        >
+          <View style={styles.emptyAvatarWrap}>
+            <View style={[styles.emptyAvatarCircle, { backgroundColor: 'rgba(150,24,19,0.1)' }]}>
+              <Icon symbol="account_circle" size={40} color={colors.primary} />
+            </View>
+          </View>
+          <Text style={[styles.emptyHint, { color: colors['on-surface-variant'] }]}>
+            Login to enjoy member exclusive discount
+          </Text>
+          <Pressable
+            onPress={onRequireLogin}
+            style={({ pressed }) => [
+              styles.loginBtn,
+              { backgroundColor: colors.primary },
+              pressed && { transform: [{ scale: 0.98 }] },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Login or register"
+          >
+            <Text style={styles.loginBtnText}>LOGIN / REGISTER</Text>
+          </Pressable>
+        </View>
+
+        {/* My Orders 4 宫格（无 badge） */}
+        <View
+          style={[
+            styles.ordersCard,
+            { backgroundColor: colors['surface-container-lowest'], ...shadowPresets.sm },
+          ]}
+        >
+          <View style={styles.ordersHeader}>
+            <Text style={[styles.ordersTitle, { color: colors['on-surface'] }]}>My Orders</Text>
+            <Pressable
+              onPress={onRequireLogin}
+              style={styles.viewAllBtn}
+              accessibilityRole="button"
+              accessibilityLabel="View all orders (login required)"
+            >
+              <Text style={[styles.viewAllText, { color: colors['on-surface-variant'] }]}>
+                VIEW ALL
+              </Text>
+              <Icon symbol="chevron_right" size={16} color={colors['on-surface-variant']} />
+            </Pressable>
+          </View>
+          <View style={styles.ordersGrid}>
+            {ORDER_ENTRIES.map((entry) => (
+              <Pressable
+                key={entry.id}
+                onPress={onRequireLogin}
+                style={styles.orderCell}
+                accessibilityRole="button"
+                accessibilityLabel={`${entry.label} (login required)`}
+              >
+                <View style={styles.orderIconWrap}>
+                  <Icon symbol={entry.icon} size={28} color={colors['on-surface-variant']} />
+                </View>
+                <Text style={[styles.orderLabel, { color: colors['on-surface-variant'] }]}>
+                  {entry.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {/* Function Menus（无 Log Out） */}
+        <View
+          style={[
+            styles.functionsCard,
+            { backgroundColor: colors['surface-container-lowest'], ...shadowPresets.sm },
+          ]}
+        >
+          {FUNCTION_ITEMS_EMPTY.map((item, idx) => (
+            <Pressable
+              key={item.id}
+              testID={`empty-menu-${item.id}`}
+              onPress={onRequireLogin}
+              style={({ pressed }) => [
+                styles.functionRow,
+                idx > 0 && {
+                  borderTopColor: 'rgba(225, 191, 186, 0.1)',
+                  borderTopWidth: StyleSheet.hairlineWidth,
+                },
+                pressed && { opacity: 0.7 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.label} (login required)`}
+            >
+              <View style={styles.functionLeft}>
+                <Icon symbol={item.icon} size={24} color={colors.primary} />
+                <Text style={[styles.functionLabel, { color: colors['on-surface'] }]}>
+                  {item.label}
+                </Text>
+              </View>
+              <View style={styles.functionRight}>
+                {item.rightText && (
+                  <Text style={[styles.functionRightText, { color: 'rgba(89, 65, 61, 0.6)' }]}>
+                    {item.rightText}
+                  </Text>
+                )}
+                <Icon symbol="chevron_right" size={24} color={colors.outline} />
+              </View>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Footer Logo */}
+        <View style={styles.footerLogo}>
+          <Text style={[styles.footerTitle, { color: colors.primary }]}>Mei Mart</Text>
+          <Text style={[styles.footerVersion, { color: colors['on-surface-variant'] }]}>
+            v2.4.0 (Timor-Leste)
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaWrapper>
+  );
+}
+
 const styles = StyleSheet.create({
   headerWrap: {
     position: 'relative',
@@ -496,5 +644,37 @@ const styles = StyleSheet.create({
   footerVersion: {
     ...typography['label-caps'],
     fontSize: 10,
+  },
+  emptyAvatarWrap: {
+    width: 96,
+    height: 96,
+    marginBottom: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyAvatarCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyHint: {
+    ...typography['body-sm'],
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  loginBtn: {
+    width: '100%',
+    height: 56,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadowPresets.md,
+  },
+  loginBtnText: {
+    color: '#ffffff',
+    ...typography['label-caps'],
+    letterSpacing: 1.5,
   },
 });
