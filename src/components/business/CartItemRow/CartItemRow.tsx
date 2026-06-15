@@ -19,7 +19,13 @@ export function CartItemRow({
   return (
     <View
       testID={testID}
-      style={[styles.row, { backgroundColor: colors['surface-container-lowest'] }]}
+      style={[
+        styles.row,
+        {
+          backgroundColor: colors['surface-container-lowest'],
+          borderColor: colors['outline-variant'],
+        },
+      ]}
     >
       {showControls && (
         <Checkbox
@@ -28,7 +34,9 @@ export function CartItemRow({
           accessibilityLabel="Select item"
         />
       )}
-      <Image source={{ uri: product.image }} style={styles.image} accessible={false} />
+      <View style={[styles.imageWrap, { backgroundColor: colors['surface-container'] }]}>
+        <Image source={{ uri: product.image }} style={styles.image} accessible={false} />
+      </View>
       <View style={styles.info}>
         <Text
           style={[textStyle('body-md'), { fontWeight: '700', color: colors['on-surface'] }]}
@@ -42,7 +50,7 @@ export function CartItemRow({
         <View style={styles.bottomRow}>
           <PriceText value={product.price} size="sm" />
           {showControls && onQuantityChange && (
-            <View style={styles.qtyRow}>
+            <View style={[styles.qtyRow, { backgroundColor: colors['surface-container'] }]}>
               <Pressable
                 onPress={() => onQuantityChange(Math.max(1, quantity - 1))}
                 hitSlop={8}
@@ -50,9 +58,11 @@ export function CartItemRow({
                 accessibilityRole="button"
                 accessibilityLabel="Decrease quantity"
               >
-                <MaterialCommunityIcons name="minus" size={16} color={colors.primary} />
+                <MaterialCommunityIcons name="minus" size={18} color={colors.primary} />
               </Pressable>
-              <Text style={[textStyle('body-md'), { color: colors['on-surface'] }]}>
+              <Text
+                style={[textStyle('body-sm'), { color: colors['on-surface'], fontWeight: '700' }]}
+              >
                 {quantity}
               </Text>
               <Pressable
@@ -62,7 +72,7 @@ export function CartItemRow({
                 accessibilityRole="button"
                 accessibilityLabel="Increase quantity"
               >
-                <MaterialCommunityIcons name="plus" size={16} color={colors.primary} />
+                <MaterialCommunityIcons name="plus" size={18} color={colors.primary} />
               </Pressable>
             </View>
           )}
@@ -95,8 +105,19 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  image: { width: 80, height: 80, borderRadius: borderRadius.sm },
+  imageWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
   info: { flex: 1, gap: 4 },
   bottomRow: {
     flexDirection: 'row',
@@ -107,15 +128,12 @@ const styles = StyleSheet.create({
   qtyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: 2,
   },
   qtyBtn: {
-    minWidth: 32,
-    minHeight: 32,
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },

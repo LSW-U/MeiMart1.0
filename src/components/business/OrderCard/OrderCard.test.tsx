@@ -33,7 +33,7 @@ const order: Order = {
 describe('OrderCard', () => {
   it('renders order number, status, total', () => {
     const { getByText } = render(<OrderCard order={order} />, { wrapper });
-    expect(getByText('ORD-20240101-0001')).toBeTruthy();
+    expect(getByText('#ORD-20240101-0001')).toBeTruthy();
     expect(getByText('Pending Payment')).toBeTruthy();
     expect(getByText('$37.00')).toBeTruthy();
   });

@@ -18,6 +18,7 @@ import { OrderCard } from '@/components/business/OrderCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
+import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
 import { useOrders } from '@/services/queries/useOrders';
 import type { OrderStatus, Order } from '@/types';
@@ -102,6 +103,11 @@ export default function OrdersPage() {
           data={orders}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
+          ItemSeparatorComponent={() => (
+            <View style={styles.dividerWrap}>
+              <TaisDivider />
+            </View>
+          )}
           renderItem={({ item }: { item: Order }) => (
             <OrderCard order={item} onPress={() => router.push(`/order/${item.id}`)} />
           )}
@@ -203,8 +209,10 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: spacing['container-margin'],
-    gap: spacing.md,
     paddingBottom: spacing.xxl * 2,
+  },
+  dividerWrap: {
+    paddingVertical: spacing.sm,
   },
   center: {
     flex: 1,

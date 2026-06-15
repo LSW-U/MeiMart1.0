@@ -1,4 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
 import { PriceText } from '@/components/ui/PriceText';
 import { Button } from '@/components/ui/Button';
@@ -6,45 +8,35 @@ import type { OrderStatus } from '@/types';
 import type { OrderAction, OrderCardProps } from './OrderCard.types';
 import { ORDER_STATUS_LABEL } from './OrderCard.types';
 
-type StatusPill = { bg: string; fg: string };
+type StatusPill = { bg: string; fg: string; dot: string };
 
 const STATUS_PILL: Record<OrderStatus, StatusPill> = {
-  pending: { bg: '#fef3c7', fg: '#b45309' }, // amber-100 / amber-700
-  paid: { bg: '#dbeafe', fg: '#1d4ed8' }, // blue-100 / blue-700
-  shipped: { bg: '#dbeafe', fg: '#1d4ed8' },
-  delivered: { bg: '#d1fae5', fg: '#047857' }, // emerald-100 / emerald-700
-  cancelled: { bg: '#fee2e2', fg: '#b91c1c' }, // red-100 / red-700
-  refunding: { bg: '#fef3c7', fg: '#b45309' },
-};
-
-const ACTIONS_BY_STATUS: Record<string, { label: string; action: OrderAction }[]> = {
-  pending: [
-    { label: 'Cancel', action: 'cancel' },
-    { label: 'Pay Now', action: 'pay' },
-  ],
-  paid: [{ label: 'Track', action: 'track' }],
-  shipped: [{ label: 'Track', action: 'track' }],
-  delivered: [
-    { label: 'After-Sales', action: 'after-sales' },
-    { label: 'Review', action: 'review' },
-  ],
-  cancelled: [{ label: 'Repurchase', action: 'repurchase' }],
-  refunding: [],
+  pending: { bg: '#fef3c7', fg: '#b45309', dot: '#f59e0b' }, // amber
+  paid: { bg: '#dbeafe', fg: '#1d4ed8', dot: '#3b82f6' }, // blue
+  shipped: { bg: '#dbeafe', fg: '#1d4ed8', dot: '#3b82f6' },
+  delivered: { bg: '#d1fae5', fg: '#047857', dot: '#10b981' }, // emerald
+  cancelled: { bg: '#fee2e2', fg: '#b91c1c', dot: '#ef4444' }, // red
+  refunding: { bg: '#fef3c7', fg: '#b45309', dot: '#f59e0b' },
 };
 
 export function OrderCard({ order, onPress, onAction, testID }: OrderCardProps) {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const pill = STATUS_PILL[order.status];
-  const actions = ACTIONS_BY_STATUS[order.status] ?? [];
-  const thumbnails = order.items.slice(0, 3);
-  const overflow = Math.max(0, order.items.length - 3);
+  const thumbnails = order.items.slice(0, 2);
+  const overflow = Math.max(0, order.items.length - 2);
+
+  const actions = ACTIONS_BY_STATUS(order.status);
 
   return (
     <Pressable
       testID={testID}
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: colors['surface-container-lowest'] },
+        {
+          backgroundColor: colors['surface-container-lowest'],
+          borderColor: colors['outline-variant'],
+        },
         shadowPresets.sm,
         pressed && styles.pressed,
       ]}
@@ -52,99 +44,180 @@ export function OrderCard({ order, onPress, onAction, testID }: OrderCardProps) 
       accessibilityRole="button"
       accessibilityLabel={`Order ${order.orderNo}, status ${ORDER_STATUS_LABEL[order.status]}`}
     >
-      <View style={styles.header}>
-        <Text
-          style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}
-          numberOfLines={1}
-        >
-          {order.orderNo}
-        </Text>
-        <View style={[styles.statusPill, { backgroundColor: pill.bg }]}>
-          <Text style={[styles.statusText, { color: pill.fg }]}>
-            {ORDER_STATUS_LABEL[order.status]}
+      <View style={[styles.header, { borderBottomColor: colors['outline-variant'] }]}>
+        <View style={styles.headerLeft}>
+          <Text style={[textStyle('label-caps'), { color: colors.primary, fontSize: 10 }]}>
+            #{order.orderNo}
+          </Text>
+          <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
+            {order.createdAt}
           </Text>
         </View>
-      </View>
-
-      <View style={styles.thumbRow}>
-        {thumbnails.map((item) => (
-          <Image
-            key={item.id}
-            source={{ uri: item.product.image }}
-            style={styles.thumb}
-            accessible={false}
-            accessibilityLabel={item.product.name}
-          />
-        ))}
-        {overflow > 0 && (
-          <View
-            style={[
-              styles.thumb,
-              styles.thumbOverflow,
-              { backgroundColor: colors['surface-container-high'] },
-            ]}
-          >
-            <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-              +{overflow}
+        <View style={styles.headerRight}>
+          <View style={[styles.statusPill, { backgroundColor: pill.bg }]}>
+            <View style={[styles.statusDot, { backgroundColor: pill.dot }]} />
+            <Text style={[textStyle('label-caps'), { color: pill.fg, fontSize: 10 }]}>
+              {ORDER_STATUS_LABEL[order.status]}
             </Text>
           </View>
-        )}
-        <View style={styles.thumbSummary}>
-          <Text
-            style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}
-            numberOfLines={1}
-          >
-            {order.items[0]?.product.name ?? ''}
-            {order.items.length > 1 ? ` and ${order.items.length - 1} more` : ''}
-          </Text>
-          <PriceText value={order.totalPrice} size="md" />
+          {onAction && (
+            <Pressable
+              onPress={() => onAction('cancel', order)}
+              hitSlop={8}
+              style={[styles.deleteBtn, { backgroundColor: colors['error-container'] }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.delete')}
+            >
+              <MaterialCommunityIcons name="delete-outline" size={18} color={colors.error} />
+            </Pressable>
+          )}
         </View>
       </View>
 
-      {actions.length > 0 && onAction && (
-        <View style={styles.actions}>
-          {actions.map(({ label, action }) => (
-            <Button
-              key={action}
-              label={label}
-              variant={action === 'pay' ? 'primary' : 'outline'}
-              size="sm"
-              onPress={() => onAction(action, order)}
-            />
+      <View style={styles.body}>
+        <View style={styles.thumbRow}>
+          {thumbnails.map((item) => (
+            <View
+              key={item.id}
+              style={[
+                styles.thumb,
+                {
+                  backgroundColor: colors['surface-container'],
+                  borderColor: colors['outline-variant'],
+                },
+              ]}
+            >
+              <Image
+                source={{ uri: item.product.image }}
+                style={styles.thumbImg}
+                accessible={false}
+                accessibilityLabel={item.product.name}
+              />
+            </View>
           ))}
+          {overflow > 0 && (
+            <View
+              style={[
+                styles.thumb,
+                {
+                  backgroundColor: colors['surface-container'],
+                  borderColor: colors['outline-variant'],
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  textStyle('label-caps'),
+                  { color: colors['on-surface-variant'], fontSize: 10 },
+                ]}
+              >
+                +{overflow} ITEM
+              </Text>
+            </View>
+          )}
         </View>
-      )}
+
+        <View style={styles.footer}>
+          <View style={styles.totalBox}>
+            <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
+              {t('order.total')}
+            </Text>
+            <PriceText value={order.totalPrice} size="md" />
+          </View>
+          {actions.length > 0 && onAction && (
+            <View style={styles.actions}>
+              {actions.map(({ label, action, primary }) => (
+                <Button
+                  key={action}
+                  label={label}
+                  variant={primary ? 'primary' : 'outline'}
+                  size="sm"
+                  onPress={() => onAction(action, order)}
+                />
+              ))}
+            </View>
+          )}
+        </View>
+      </View>
     </Pressable>
   );
 }
 
+function ACTIONS_BY_STATUS(status: OrderStatus): {
+  label: string;
+  action: OrderAction;
+  primary?: boolean;
+}[] {
+  switch (status) {
+    case 'pending':
+      return [
+        { label: 'Cancel', action: 'cancel' },
+        { label: 'Pay Now', action: 'pay', primary: true },
+      ];
+    case 'paid':
+      return [{ label: 'Details', action: 'track' }];
+    case 'shipped':
+      return [{ label: 'Track', action: 'track', primary: true }];
+    case 'delivered':
+      return [
+        { label: 'After-Sales', action: 'after-sales' },
+        { label: 'Review', action: 'review', primary: true },
+      ];
+    case 'cancelled':
+      return [{ label: 'Buy Again', action: 'repurchase', primary: true }];
+    case 'refunding':
+      return [];
+  }
+}
+
 const styles = StyleSheet.create({
   card: {
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    gap: spacing.md,
+    borderRadius: borderRadius['2xl'],
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.05)',
+    overflow: 'hidden',
   },
   pressed: { opacity: 0.85 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    padding: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  headerLeft: {
+    gap: 2,
+  },
+  headerRight: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.md,
   },
   statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: 999,
   },
-  statusText: {
-    ...textStyle('label-caps'),
-    fontSize: 10,
-    letterSpacing: 0.5,
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+  },
+  deleteBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  body: {
+    padding: spacing.md,
+    gap: spacing.md,
   },
   thumbRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.sm,
   },
   thumb: {
@@ -152,20 +225,25 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: borderRadius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.05)',
-  },
-  thumbOverflow: {
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  thumbSummary: {
-    flex: 1,
-    marginLeft: spacing.xs,
-    gap: 4,
+  thumbImg: {
+    width: '100%',
+    height: '100%',
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  totalBox: {
+    gap: 2,
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
 });
