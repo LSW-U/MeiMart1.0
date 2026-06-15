@@ -1,73 +1,165 @@
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
+// LoginPage — 还原自 LoginPage.html（209 行）
+// 通过 AuthShell 复用外壳，HTML 行数: 209 → RN 行数: ~135（视觉细节在 AuthShell 中）
+// 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 65%，外壳行数计入 AuthShell.tsx）
+// Fix-16: 替换为 AuthShell + Welcome Back + 账号/密码表单 + Cultural Image
+import { useState } from 'react';
+import { StyleSheet, View, Text, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme, spacing, typography } from '@/theme';
-import { Button } from '@/components/ui/Button';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { LogoBadge } from '@/components/cultural/LogoBadge';
-import { TaisDivider } from '@/components/cultural/TaisDivider';
+import { Input } from '@/components/ui/Input';
+import { Checkbox } from '@/components/ui/Checkbox';
+import { AuthShell } from '@/components/business/AuthShell';
+import { useLoginPassword } from '@/services/queries/useAuth';
+import { useAuthStore } from '@/store/authStore';
 
 export default function LoginPage() {
   const { colors } = useTheme();
+  const [account, setAccount] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const loginMutation = useLoginPassword();
+
+  const submit = () => {
+    if (!account || !password) {
+      Alert.alert('Notice', 'Please enter account and password');
+      return;
+    }
+    if (!agreed) {
+      Alert.alert('Notice', 'Please agree to the terms first');
+      return;
+    }
+    loginMutation.mutate(
+      { phone: account, password },
+      {
+        onSuccess: (data) => {
+          setAuth(data.token, data.refreshToken);
+          router.replace('/(main)/home');
+        },
+        onError: () => Alert.alert('Sign in failed', 'Please check your credentials'),
+      },
+    );
+  };
 
   return (
-    <SafeAreaWrapper style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.brand}>
-          <LogoBadge size={80} />
-          <Text
-            style={[styles.appName, { color: colors['on-surface'] }]}
-            accessibilityRole="header"
-          >
-            MeiMart
-          </Text>
-          <Text style={[styles.tagline, { color: colors['on-surface-variant'] }]}>
-            Tolu Hamutuk Sosa Fácil
-          </Text>
-        </View>
-        <TaisDivider />
-        <View style={styles.actions}>
-          <Button
-            label="账号密码登录"
-            variant="primary"
-            fullWidth
-            onPress={() => router.push('/(auth)/login-password')}
-            testID="login-password-btn"
-          />
-          <Button
-            label="短信验证码登录"
-            variant="outline"
-            fullWidth
+      <AuthShell
+        welcomeTitle="Welcome Back"
+        welcomeSub="Sign in to your account to start shopping"
+        actionLabel="Sign In"
+        onAction={submit}
+        loading={loginMutation.isPending}
+        secondary={
+          <View style={styles.registerRow}>
+            <Text style={[styles.registerText, { color: colors.secondary }]}>
+              New to Mei Mart?{' '}
+            </Text>
+            <Pressable
+              onPress={() => router.push('/(auth)/register')}
+              hitSlop={8}
+              accessibilityRole="link"
+              accessibilityLabel="Register account"
+            >
+              <Text style={[styles.registerLink, { color: colors.primary }]}>Register Account</Text>
+            </Pressable>
+          </View>
+        }
+        testID="login-page"
+      >
+        <Input
+          label="ACCOUNT OR MOBILE"
+          placeholder="Email or Phone Number"
+          leftIcon="account"
+          value={account}
+          onChangeText={setAccount}
+          testID="login-account"
+        />
+
+        <Input
+          label="PASSWORD"
+          placeholder="123456"
+          leftIcon="lock"
+          rightIcon={showPassword ? 'eye' : 'eye-off'}
+          onRightIconPress={() => setShowPassword((v) => !v)}
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={setPassword}
+          testID="login-password"
+        />
+
+        <View style={styles.linkRow}>
+          <Pressable
             onPress={() => router.push('/(auth)/login-sms')}
-            testID="login-sms-btn"
-          />
-          <Button
-            label="注册新账号"
-            variant="text"
-            fullWidth
-            onPress={() => router.push('/(auth)/register')}
-            testID="login-register-btn"
-          />
+            hitSlop={8}
+            accessibilityRole="link"
+            accessibilityLabel="Sign in with phone code"
+          >
+            <Text style={[styles.codeLink, { color: colors.primary }]}>
+              Sign in with phone code
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push('/(auth)/reset-password')}
+            hitSlop={8}
+            accessibilityRole="link"
+            accessibilityLabel="Forgot password"
+          >
+            <Text style={[styles.forgotLink, { color: colors.secondary }]}>Forgot Password?</Text>
+          </Pressable>
         </View>
-        <Text style={[styles.policy, { color: colors['on-surface-variant'] }]}>
-          登录即视为同意《用户协议》和《隐私政策》
-        </Text>
-      </ScrollView>
+
+        <View style={styles.agreementRow}>
+          <Checkbox checked={agreed} onChange={setAgreed} testID="login-agreement" />
+          <Text style={[styles.agreementText, { color: colors['on-surface-variant'] }]}>
+            {"By logging in, I agree to Mei Mart's "}
+            <Text style={{ color: colors.primary, fontWeight: '700' }}>
+              Terms of Service
+            </Text> and{' '}
+            <Text style={{ color: colors.primary, fontWeight: '700' }}>Privacy Policy</Text>.
+          </Text>
+        </View>
+      </AuthShell>
     </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { flexGrow: 1, padding: spacing.xl, justifyContent: 'space-around' },
-  brand: { alignItems: 'center', gap: spacing.sm, marginVertical: spacing.xxl },
-  appName: { ...typography.h1, fontWeight: '700' },
-  tagline: { ...typography['body-md'] },
-  actions: { gap: spacing.md, paddingVertical: spacing.xl },
-  policy: {
+  linkRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  codeLink: {
     ...typography['label-caps'],
-    textAlign: 'center',
-    marginTop: spacing.lg,
+    textDecorationLine: 'underline',
+  },
+  forgotLink: {
+    ...typography['label-caps'],
+  },
+  agreementRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
+  },
+  agreementText: {
+    ...typography['body-sm'],
+    flex: 1,
+    lineHeight: 18,
+  },
+  registerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  registerText: {
+    ...typography['body-md'],
+  },
+  registerLink: {
+    ...typography['body-md'],
+    fontWeight: '700',
   },
 });

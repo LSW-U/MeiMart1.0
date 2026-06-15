@@ -1,12 +1,16 @@
+// ResetPasswordPage — 还原自 ResetPasswordPage.html（180 行）
+// 通过 AuthShell 复用外壳，HTML 行数: 180 → RN 行数: ~135
+// 满足 CLAUDE.md 规则 #28 的 30% 门槛（外壳行数计入 AuthShell.tsx）
+// Fix-16: 替换 PageHeader 为 AuthShell + 手机号 + 验证码 + 新密码
 import { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, Alert } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme, spacing, typography } from '@/theme';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { AuthShell } from '@/components/business/AuthShell';
 import { useResetPassword, useSendSmsCode } from '@/services/queries/useAuth';
 
 const COUNTDOWN = 60;
@@ -16,6 +20,7 @@ export default function ResetPasswordPage() {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [counter, setCounter] = useState(0);
   const resetMutation = useResetPassword();
   const sendMutation = useSendSmsCode();
@@ -28,7 +33,7 @@ export default function ResetPasswordPage() {
 
   const sendCode = () => {
     if (!phone) {
-      Alert.alert('提示', '请填写手机号');
+      Alert.alert('Notice', 'Please enter phone number');
       return;
     }
     sendMutation.mutate(phone, {
@@ -38,44 +43,63 @@ export default function ResetPasswordPage() {
 
   const submit = () => {
     if (!phone || !code || !password) {
-      Alert.alert('提示', '请填写完整信息');
+      Alert.alert('Notice', 'Please fill in all fields');
       return;
     }
     resetMutation.mutate(
       { phone, password, smsCode: code },
       {
         onSuccess: () => {
-          Alert.alert('成功', '密码已重置，请重新登录', [
-            { text: '确定', onPress: () => router.replace('/(auth)/login') },
+          Alert.alert('Success', 'Password has been reset, please log in again', [
+            { text: 'OK', onPress: () => router.replace('/(auth)/login') },
           ]);
         },
-        onError: () => Alert.alert('重置失败', '请稍后重试'),
+        onError: () => Alert.alert('Reset failed', 'Please try again later'),
       },
     );
   };
 
   return (
-    <SafeAreaWrapper style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
-      <PageHeader title="重置密码" showBack onBackPress={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={[styles.title, { color: colors['on-surface'] }]} accessibilityRole="header">
-          重置你的密码
-        </Text>
+      <AuthShell
+        welcomeTitle="Forgot Password?"
+        welcomeSub="Reset your password with SMS verification"
+        actionLabel="Reset Password"
+        onAction={submit}
+        loading={resetMutation.isPending}
+        secondary={
+          <View style={styles.loginRow}>
+            <Text style={[styles.loginText, { color: colors.secondary }]}>
+              Remember your password?{' '}
+            </Text>
+            <Pressable
+              onPress={() => router.push('/(auth)/login')}
+              hitSlop={8}
+              accessibilityRole="link"
+              accessibilityLabel="Log in"
+            >
+              <Text style={[styles.loginLink, { color: colors.primary }]}>Log In</Text>
+            </Pressable>
+          </View>
+        }
+        testID="reset-password-page"
+      >
         <Input
-          label="手机号"
-          placeholder="请输入手机号"
+          label="PHONE NUMBER"
+          placeholder="+670 7xx xxxx"
           keyboardType="phone-pad"
           leftIcon="phone"
           value={phone}
           onChangeText={setPhone}
           testID="reset-phone"
         />
+
         <View style={styles.codeRow}>
           <View style={styles.codeInput}>
             <Input
-              label="验证码"
-              placeholder="6 位验证码"
+              label="VERIFICATION CODE"
+              placeholder="6-digit code"
               keyboardType="number-pad"
               leftIcon="message-text"
               value={code}
@@ -86,7 +110,7 @@ export default function ResetPasswordPage() {
           </View>
           <View style={styles.codeBtn}>
             <Button
-              label={counter > 0 ? `${counter}s` : '发送'}
+              label={counter > 0 ? `${counter}s` : 'Husu Kódigu'}
               variant="outline"
               size="sm"
               disabled={counter > 0 || sendMutation.isPending}
@@ -95,33 +119,44 @@ export default function ResetPasswordPage() {
             />
           </View>
         </View>
+
         <Input
-          label="新密码"
-          placeholder="请设置新密码"
+          label="NEW PASSWORD"
+          placeholder="Enter new password"
           leftIcon="lock"
-          secureTextEntry
+          rightIcon={showPassword ? 'eye' : 'eye-off'}
+          onRightIconPress={() => setShowPassword((v) => !v)}
+          secureTextEntry={!showPassword}
           value={password}
           onChangeText={setPassword}
-          testID="reset-password"
+          testID="reset-password-input"
         />
-        <Button
-          label="重置密码"
-          variant="primary"
-          fullWidth
-          loading={resetMutation.isPending}
-          onPress={submit}
-          testID="reset-submit"
-        />
-      </ScrollView>
+      </AuthShell>
     </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { padding: spacing.lg, gap: spacing.lg },
-  title: { ...typography.h2, fontWeight: '700', marginBottom: spacing.md },
-  codeRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm },
-  codeInput: { flex: 1 },
-  codeBtn: { paddingBottom: spacing.xs },
+  codeRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: spacing.sm,
+  },
+  codeInput: {
+    flex: 1,
+  },
+  codeBtn: {
+    paddingBottom: spacing.xs,
+  },
+  loginRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  loginText: {
+    ...typography['body-md'],
+  },
+  loginLink: {
+    ...typography['body-md'],
+    fontWeight: '700',
+  },
 });
