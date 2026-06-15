@@ -1,10 +1,65 @@
 [
-  { "id": "c001", "name": "水果生鲜", "icon": "fruit-watermelon" },
-  { "id": "c002", "name": "蔬菜", "icon": "carrot" },
-  { "id": "c003", "name": "肉禽蛋品", "icon": "egg" },
-  { "id": "c004", "name": "粮油调味", "icon": "bottle-tonic" },
-  { "id": "c005", "name": "乳品饮料", "icon": "bottle-soda" },
-  { "id": "c006", "name": "零食糕点", "icon": "cookie" },
-  { "id": "c007", "name": "家庭清洁", "icon": "spray" },
-  { "id": "c008", "name": "个人护理", "icon": "shower" }
+  {
+    "id": "c001",
+    "name": "Vegetables",
+    "icon": "fruit-watermelon",
+    "color": "#ecfdf5",
+    "borderColor": "#d1fae5",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuC9cFseHD3YT35VuyN8YKHdQ-IYgbNmkEHrFq22ulH5ehj2T4MfNdl0IpqJdILh8fPOln8umWSACtVPvi24W3UvKv3FSXA4kLz5S0SKIMfQOeojCBNkwdAfvvyC1JTOxlqD6wfS22FViqg0uBR_Gvfi0cyBex70Bshbzty4X7-dU3MhkxOUANrJ3QmenP9ZCdfzzexILg6r6LO2zDA4-A77u2e3BKmrYB6ls016JFwMzrx4g_5oPGnMNwDaE-yuOKzZ8n06iHBi"
+  },
+  {
+    "id": "c002",
+    "name": "Fruits",
+    "icon": "carrot",
+    "color": "#fff7ed",
+    "borderColor": "#fed7aa",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuCGs_iH0aNMKLHBWXBJSuBnW18tUDJexPY_F2W97bL_ZGm1lFyt4aKFXb7nBsJa3_5ufyQ2agwMPqJviDbV-xTuiBoec9ZR7U3mGAr5ysosDJjrK2S9N4Bmy1vAgo2jClVhHdsIi6QVfIUBHDA4i_po6OlU73O74J2QGdBIwPQPiIxpIITPt96SbpQQr4PPIB7ljHBoGk8SCHjYJ9awjel_b2eP26xGlRku2yMGa_tbbBt41IwpIlYUfhjXQcIMOKXZ6pr3d13y"
+  },
+  {
+    "id": "c003",
+    "name": "Drinks",
+    "icon": "bottle-soda",
+    "color": "#eff6ff",
+    "borderColor": "#bfdbfe",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAw9KpV2cKnwoo6_OG-Wx79dNO82rFGDHbPM_r6nEzu-YkPtkJnVJg9SRZnhShTiAAW2bN-Aq67MwbnsNk_3PTn0my2TrtElELH9xFEeEkcmf4OE4MIqh-8736s1GPfZSrajiFNCQzSP6yGLFVc3olSieqikf2gzghMM4mscQEN-3VWGhSnB4dNr9nea9aJ7Af0QCeqvGzjVGd6fGau42ae6VnQnSvGXZg1R4QL_4zxRT0KMdT1frgz-Ofkp9vGxKEPCsjgAfAk"
+  },
+  {
+    "id": "c004",
+    "name": "Rice",
+    "icon": "bottle-tonic",
+    "color": "#fffbeb",
+    "borderColor": "#fde68a",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuC2VqqglgO4S_ttoMMQMtjtBjsTOp_rKeDBNKKfxWr96ldpZyTiJgWNMTyuzEJ9L9Z3Z7khrG2rnyLNLqE4vK4PR--xJV9Kw306dAaP7a7bmVCXBouxVUIbSI6tGuqtXiYTtfYuj4g05NSI69qex9HyVISziBtsDPvVG5Q7NVydWZ8iNW9cTEPgBYn8nqigHjzSnPY8Zlfx1QVS318NvvMNt5myTPR6eqxow-UyK_w0JIUjWM7nMFJeSNuKIyrYdPUrmMWNWizM"
+  },
+  {
+    "id": "c005",
+    "name": "Snacks",
+    "icon": "cookie",
+    "color": "#fff1f2",
+    "borderColor": "#ffe4e6",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDoUrVdOQlLRy1pqf3H0cXjPmji1CVRhUiJOXL_gutsBN7V5c-vZZ-iK5Oq02snPiWksZ1WufdcReSJLnF1mT5gmu7mz-340a8kCC0ehtIy1SExmdVmcg5fXLdWfVMYJ1BKrXaTwsA_MqCjR6qPXD38WFZBhWkA77Z528HWZZAxn9Uj1nu04bXeoKclybckfECGmhsi1USgqYQOfgz-hUfcfUbi6HnMbKogp8ReI13tQCdIophUq3F1JHa8MjlR2aTezj46upSp"
+  },
+  {
+    "id": "c006",
+    "name": "Meat",
+    "icon": "egg",
+    "color": "#fef2f2",
+    "borderColor": "#fecaca",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDIcbfXv73lPxhc-FCkxytojYZZZZLqQ0Gpi8jzb_c0pxN_81E_IB8u6jIrFZHQidxubgCE60D3YCwkrVX-NmTmM5aUB-IsBWFadp27D96WE-Bdkj2hj69CiNDtFu2PjohhPgBpD25EcL_EGEq30j9UomVNJXU0OXbO_KfbrgTZ2bWgfEiO4l9jZHnY5qFVS6ivAluzTDFjuEQH8qxl0ilpsnh7SDgkI2lvjAWo3BsRf0RfE29MGlWLpYuaeckmvoZGj4ZptW4G"
+  },
+  {
+    "id": "c007",
+    "name": "Home",
+    "icon": "spray",
+    "color": "#f8fafc",
+    "borderColor": "#e2e8f0",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDUCT9gMrMLAMSxb8xbghVuRa0N0Vnuq0SzQUCNAgBjUBAdLnJqpOmCMhbMzqPgqB3tfyYqVvNbm9pKvXkbB79qB8sVz2JiQBl1S3CxITpIEyhICEVf97G7wyG0yDftGO2La3SppqbNpZ64nq6YR55vYHevRpK-Dd6xTPgLnLKQmV4gAj1HEtN5bl1C5hIuIyMRcAAN10aRebpabX9dA3UJ_HzepxZqxJVOHq8jMJn4vP5F8BB9Y1P850geqQN_liRZkJiMSwsW"
+  },
+  {
+    "id": "c008",
+    "name": "More",
+    "icon": "shower",
+    "color": "#fafaf9",
+    "borderColor": "#e7e5e4"
+  }
 ]

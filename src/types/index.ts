@@ -84,6 +84,12 @@ export interface Category {
   id: string;
   name: string;
   icon: string;
+  /** 背景色（如 '#ecfdf5' for emerald-50），用于圆形头像底色 */
+  color?: string;
+  /** 边框色（如 '#d1fae5' for emerald-100），与 color 配套 */
+  borderColor?: string;
+  /** 缩略图 URL（若提供则渲染圆形图片替代图标） */
+  image?: string;
   parentId?: string;
 }
 
