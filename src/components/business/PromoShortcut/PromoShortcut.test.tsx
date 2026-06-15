@@ -9,16 +9,37 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 const items: PromoShortcutItem[] = [
-  { id: 'p1', title: 'Flash Sale', icon: 'flash' },
-  { id: 'p2', title: 'New', icon: 'new-box' },
-  { id: 'p3', title: 'Coupons', icon: 'ticket-percent' },
+  {
+    id: 'p1',
+    label: 'SAVE BIG',
+    title: 'Deals',
+    icon: 'local_offer',
+    bgColor: 'rgba(150,24,19,0.05)',
+    borderColor: 'rgba(150,24,19,0.2)',
+    labelColor: '#961813',
+    titleColor: '#961813',
+    iconColor: '#961813',
+    withCorner: true,
+  },
+  {
+    id: 'p2',
+    label: 'WELCOME',
+    title: 'New User',
+    icon: 'person_add',
+    bgColor: '#ecfdf5',
+    borderColor: '#d1fae5',
+    labelColor: '#047857',
+    titleColor: '#047857',
+    iconColor: '#059669',
+  },
 ];
 
 describe('PromoShortcut', () => {
-  it('renders all item titles', () => {
+  it('renders label and title for each item', () => {
     const { getByText } = render(<PromoShortcut items={items} />, { wrapper });
-    expect(getByText('Flash Sale')).toBeTruthy();
-    expect(getByText('New')).toBeTruthy();
-    expect(getByText('Coupons')).toBeTruthy();
+    expect(getByText('SAVE BIG')).toBeTruthy();
+    expect(getByText('Deals')).toBeTruthy();
+    expect(getByText('WELCOME')).toBeTruthy();
+    expect(getByText('New User')).toBeTruthy();
   });
 });
