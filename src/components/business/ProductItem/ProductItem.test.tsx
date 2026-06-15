@@ -38,4 +38,15 @@ describe('ProductItem', () => {
     fireEvent.press(getByLabelText(/Organic Wild Honey/));
     expect(onPress).toHaveBeenCalledWith(item);
   });
+
+  it('renders quantity controls in cart layout', () => {
+    const onIncrease = jest.fn();
+    const { getByLabelText } = render(
+      <ProductItem item={item} layout="cart" onIncrease={onIncrease} />,
+      { wrapper },
+    );
+    const incBtn = getByLabelText(/Increase Organic Wild Honey quantity/);
+    fireEvent.press(incBtn);
+    expect(onIncrease).toHaveBeenCalledWith(item);
+  });
 });
