@@ -14,6 +14,7 @@ import {
 import { router } from 'expo-router';
 import { useTheme, spacing, typography, shadowPresets, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
+import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
@@ -96,7 +97,7 @@ export default function ProfilePage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <Header />
+        <ProfileHeader />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -107,7 +108,7 @@ export default function ProfilePage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <Header />
+        <ProfileHeader />
         <ErrorState message="Failed to load profile. Please try again." onRetry={() => refetch()} />
       </SafeAreaWrapper>
     );
@@ -125,7 +126,7 @@ export default function ProfilePage() {
   return (
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
-      <Header />
+      <ProfileHeader />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -274,35 +275,34 @@ export default function ProfilePage() {
 }
 
 // Primary tais-pattern Header（HTML 第 142-144 行：h-14 顶栏 + h-48 tais-pattern 底色）
-function Header() {
+// 已迁移到 PrimaryHeader 组件（CP-FIX P1-3）+ 额外的 tais-pattern strip 给 userCard 上色
+function ProfileHeader() {
   const { colors } = useTheme();
   return (
-    <View style={[styles.headerWrap, { backgroundColor: colors.primary, ...shadowPresets.md }]}>
-      {/* 顶栏（h-14） */}
-      <View style={styles.headerTop}>
-        <View style={styles.headerSpacer} />
-        <Text style={styles.headerTitle} accessibilityRole="header">
-          My Account
-        </Text>
-        <View style={styles.headerRight}>
-          <Pressable
-            onPress={() => router.push('/service/customer')}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Customer Service"
-          >
-            <Icon symbol="headset" size={24} color="#ffffff" />
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/service/notifications')}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Notifications"
-          >
-            <Icon symbol="notifications" size={24} color="#ffffff" />
-          </Pressable>
-        </View>
-      </View>
+    <View style={{ backgroundColor: colors.primary, ...shadowPresets.md }}>
+      <PrimaryHeader
+        title="My Account"
+        rightActions={
+          <View style={profileHeaderStyles.actions}>
+            <Pressable
+              onPress={() => router.push('/service/customer')}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Customer Service"
+            >
+              <Icon symbol="headset" size={24} color="#ffffff" />
+            </Pressable>
+            <Pressable
+              onPress={() => router.push('/service/notifications')}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Notifications"
+            >
+              <Icon symbol="notifications" size={24} color="#ffffff" />
+            </Pressable>
+          </View>
+        }
+      />
       {/* tais-pattern 底色块（h-48 = 192px，剩 ~150px） */}
       <View style={styles.headerPattern} pointerEvents="none">
         <TaisPattern width={390} height={150} opacity={0.1} />
@@ -310,6 +310,14 @@ function Header() {
     </View>
   );
 }
+
+const profileHeaderStyles = StyleSheet.create({
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+});
 
 // ProfileEmpty — 未登录状态（Fix-18：还原 ProfileEmptyPage.html）
 // 仍渲染 Header + Orders 4 宫格 + Function Menus（无 Log Out），点击触发登录
@@ -321,7 +329,7 @@ function ProfileEmpty() {
   return (
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
-      <Header />
+      <ProfileHeader />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
@@ -451,35 +459,6 @@ function ProfileEmpty() {
 }
 
 const styles = StyleSheet.create({
-  headerWrap: {
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing['container-margin'],
-    height: 56,
-    zIndex: 2,
-  },
-  headerSpacer: {
-    flex: 1,
-  },
-  headerTitle: {
-    ...typography.h2,
-    color: '#ffffff',
-    fontWeight: '700',
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerRight: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: spacing.md,
-  },
   headerPattern: {
     height: 150,
   },

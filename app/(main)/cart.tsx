@@ -15,13 +15,13 @@ import {
 import { router } from 'expo-router';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
+import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { CartItemRow } from '@/components/business/CartItemRow';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { OfflineBanner } from '@/components/feedback/OfflineBanner';
 import { PriceText } from '@/components/ui/PriceText';
-import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
 import {
@@ -94,7 +94,22 @@ export default function CartPage() {
   return (
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
-      <Header />
+      <PrimaryHeader
+        title="Cart"
+        showLocation
+        locationLabel="Dili, Christo Rei"
+        rightActions={
+          <Pressable
+            onPress={() => router.push('/search')}
+            hitSlop={8}
+            style={styles.headerBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Search"
+          >
+            <Icon symbol="search" size={24} color="#ffffff" />
+          </Pressable>
+        }
+      />
 
       {isOffline && <OfflineBanner />}
       {isLoading ? (
@@ -277,83 +292,7 @@ export default function CartPage() {
   );
 }
 
-// Primary tais-pattern Header（HTML 第 123-136 行：location chip + Cart + search）
-function Header() {
-  const { colors } = useTheme();
-  return (
-    <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.md]}>
-      <View style={styles.headerPattern} pointerEvents="none">
-        <TaisPattern width={390} height={56} opacity={0.2} />
-      </View>
-      <View style={styles.headerRow}>
-        <Pressable
-          onPress={() => {}}
-          style={[styles.locationBtn, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
-          accessibilityRole="button"
-          accessibilityLabel="Location: Dili, Christo Rei"
-        >
-          <Icon symbol="location_on" size={18} color="#ffffff" />
-          <Text style={styles.locationText}>Dili, Christo Rei</Text>
-          <Icon symbol="expand_more" size={18} color="#ffffff" />
-        </Pressable>
-
-        <Text style={styles.headerTitle} accessibilityRole="header">
-          Cart
-        </Text>
-
-        <Pressable
-          onPress={() => router.push('/search')}
-          hitSlop={8}
-          style={styles.headerBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Search"
-        >
-          <Icon symbol="search" size={24} color="#ffffff" />
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  header: {
-    position: 'relative',
-    height: 56,
-    overflow: 'hidden',
-    paddingHorizontal: spacing['container-margin'],
-    justifyContent: 'center',
-  },
-  headerPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  locationBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: 999,
-    minWidth: 120,
-  },
-  locationText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  headerTitle: {
-    ...typography.h3,
-    color: '#ffffff',
-    fontWeight: '700',
-  },
   headerBtn: {
     width: 40,
     height: 40,

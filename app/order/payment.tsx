@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -32,7 +32,7 @@ export default function PaymentPage() {
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title={t('payment.title')} showBack onBackPress={() => router.back()} />
+      <PrimaryHeader title={t('payment.title')} showBack onBackPress={() => router.back()} />
       <View style={styles.amountBox}>
         <Text style={[styles.amountLabel, { color: colors['on-surface-variant'] }]}>
           {t('payment.amountDue')}

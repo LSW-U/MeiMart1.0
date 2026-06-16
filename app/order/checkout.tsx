@@ -11,7 +11,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -41,7 +41,7 @@ export default function CheckoutPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <PageHeader title={t('checkout.title')} showBack onBackPress={() => router.back()} />
+        <PrimaryHeader title={t('checkout.title')} showBack onBackPress={() => router.back()} />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -52,7 +52,7 @@ export default function CheckoutPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <PageHeader title={t('checkout.title')} showBack onBackPress={() => router.back()} />
+        <PrimaryHeader title={t('checkout.title')} showBack onBackPress={() => router.back()} />
         <ErrorState message={t('checkout.loadError')} onRetry={() => refetch()} />
       </SafeAreaWrapper>
     );
@@ -69,7 +69,7 @@ export default function CheckoutPage() {
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title={t('checkout.title')} showBack onBackPress={() => router.back()} />
+      <PrimaryHeader title={t('checkout.title')} showBack onBackPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Pressable
           testID="checkout-address"

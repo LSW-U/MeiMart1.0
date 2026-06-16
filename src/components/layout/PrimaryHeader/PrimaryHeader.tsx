@@ -57,6 +57,7 @@ export function PrimaryHeader({
               <Text style={styles.locationText} numberOfLines={1}>
                 {locationLabel}
               </Text>
+              <Icon symbol="expand_more" size={14} color="#ffffff" />
             </Pressable>
           )}
         </View>

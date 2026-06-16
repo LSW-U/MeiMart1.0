@@ -5,12 +5,12 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView, Image } from 'react-native';
 import { router } from 'expo-router';
-import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
+import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
 import { useCategories } from '@/services/queries/useCatalog';
@@ -94,7 +94,7 @@ export default function CategoriesPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <Header />
+        <CategoriesHeader />
         <ContentSkeleton />
       </SafeAreaWrapper>
     );
@@ -103,7 +103,7 @@ export default function CategoriesPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <Header />
+        <CategoriesHeader />
         <ErrorState message="Failed to load categories" onRetry={() => catRefetch()} />
       </SafeAreaWrapper>
     );
@@ -114,7 +114,7 @@ export default function CategoriesPage() {
   return (
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
-      <Header />
+      <CategoriesHeader />
 
       <View style={styles.body}>
         {/* 侧栏 */}
@@ -371,38 +371,35 @@ export default function CategoriesPage() {
 }
 
 // Primary tais-pattern Header（HTML 第 141-153 行）
-function Header() {
-  const { colors } = useTheme();
+function CategoriesHeader() {
   return (
-    <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.md]}>
-      <View style={styles.headerPattern} pointerEvents="none">
-        <TaisPattern width={390} height={64} opacity={0.2} />
-      </View>
-      <View style={styles.headerRow}>
-        <Pressable
-          onPress={() => {}}
-          style={[styles.locationBtn, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
-          accessibilityRole="button"
-          accessibilityLabel="Location: Dili, Christo Rei"
-        >
-          <Icon symbol="location_on" size={18} color="#ffffff" />
-          <Text style={styles.locationText}>Dili, Christo Rei</Text>
-          <Icon symbol="expand_more" size={18} color="#ffffff" />
-        </Pressable>
-
+    <PrimaryHeader
+      title=""
+      showLocation
+      locationLabel="Dili, Christo Rei"
+      rightActions={
         <Pressable
           onPress={() => router.push('/search')}
           hitSlop={8}
-          style={styles.headerBtn}
+          style={headerActionStyles.btn}
           accessibilityRole="button"
           accessibilityLabel="Search"
         >
           <Icon symbol="search" size={24} color="#ffffff" />
         </Pressable>
-      </View>
-    </View>
+      }
+    />
   );
 }
+
+const headerActionStyles = StyleSheet.create({
+  btn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 // Skeleton 加载状态（HTML 第 188-218 行）
 function ContentSkeleton() {
@@ -449,44 +446,6 @@ function ContentSkeleton() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    position: 'relative',
-    height: 56,
-    overflow: 'hidden',
-    paddingHorizontal: spacing['container-margin'],
-    justifyContent: 'center',
-  },
-  headerPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  locationBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  locationText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   body: {
     flex: 1,
     flexDirection: 'row',
