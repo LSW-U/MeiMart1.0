@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Alert, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -9,6 +11,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
+import { reviewSchema, type ReviewValues } from '@/forms/schemas/service';
 
 const TAGS = [
   'review.tag.quality',
@@ -29,9 +32,14 @@ const RATING_KEYS = [
 export default function OrderReviewPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const [rating, setRating] = useState(5);
-  const [content, setContent] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const { control, handleSubmit } = useForm<ReviewValues>({
+    resolver: zodResolver(reviewSchema),
+    defaultValues: { rating: 5, content: '' },
+    mode: 'onBlur',
+  });
+  const ratingValue = useWatch({ control, name: 'rating' }) as number;
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -39,15 +47,11 @@ export default function OrderReviewPage() {
     );
   };
 
-  const submit = () => {
-    if (!content.trim()) {
-      Alert.alert(t('common.notice'), t('review.fillContent'));
-      return;
-    }
+  const submit = handleSubmit(() => {
     Alert.alert(t('review.successTitle'), t('review.successDesc'), [
       { text: t('common.ok'), onPress: () => router.back() },
     ]);
-  };
+  });
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
@@ -77,16 +81,22 @@ export default function OrderReviewPage() {
           </Text>
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((n) => (
-              <Button
+              <Controller
                 key={n}
-                label="★"
-                variant="text"
-                onPress={() => setRating(n)}
-                testID={`star-${n}`}
+                control={control}
+                name="rating"
+                render={({ field: { onChange } }) => (
+                  <Button
+                    label="★"
+                    variant="text"
+                    onPress={() => onChange(n)}
+                    testID={`star-${n}`}
+                  />
+                )}
               />
             ))}
             <Text style={[styles.ratingLabel, { color: colors.primary }]}>
-              {t(RATING_KEYS[rating - 1])}
+              {t(RATING_KEYS[ratingValue - 1])}
             </Text>
           </View>
         </Card>
@@ -95,21 +105,37 @@ export default function OrderReviewPage() {
           <Text style={[styles.label, { color: colors['on-surface'] }]}>
             {t('review.contentLabel')}
           </Text>
-          <TextInput
-            value={content}
-            onChangeText={setContent}
-            placeholder={t('review.placeholder')}
-            placeholderTextColor={colors['on-surface-variant']}
-            multiline
-            numberOfLines={4}
-            style={[
-              styles.textarea,
-              {
-                color: colors['on-surface'],
-                backgroundColor: colors['surface-container-low'],
-              },
-            ]}
-            testID="review-content"
+          <Controller
+            control={control}
+            name="content"
+            render={({ field: { value, onChange }, fieldState: { error } }) => (
+              <>
+                <TextInput
+                  value={value}
+                  onChangeText={onChange}
+                  placeholder={t('review.placeholder')}
+                  placeholderTextColor={colors['on-surface-variant']}
+                  multiline
+                  numberOfLines={4}
+                  style={[
+                    styles.textarea,
+                    {
+                      color: colors['on-surface'],
+                      backgroundColor: colors['surface-container-low'],
+                    },
+                  ]}
+                  testID="review-content"
+                />
+                {error?.message && (
+                  <Text
+                    style={[styles.errorText, { color: colors.error }]}
+                    accessibilityRole="alert"
+                  >
+                    {error.message}
+                  </Text>
+                )}
+              </>
+            )}
           />
           <View style={styles.tagsRow}>
             {TAGS.map((tagKey) => {
@@ -156,4 +182,8 @@ const styles = StyleSheet.create({
     ...typography['body-md'],
   },
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  errorText: {
+    ...typography['body-sm'],
+    marginBottom: spacing.xs,
+  },
 });

@@ -1,7 +1,7 @@
 // AddressEditPage — 还原自 AddressListPage.html（177 行，HTML 文件名与内容反向）
 // HTML 行数 177 → RN ~340（含样式），满足 CLAUDE.md 规则 #28 的 30% 门槛
 // Fix-22: PrimaryHeader + tais-pattern + person/call/location_city/home/location_on + PIN ON MAP + Switch + Cultural Motif
-import { useState } from 'react';
+// CP-FIX-2.3: 表单迁移到 react-hook-form + zod（规则 9）
 import {
   StyleSheet,
   View,
@@ -14,6 +14,9 @@ import {
   Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Controller, useForm } from 'react-hook-form';
+import type { Control, FieldPath, FieldValues } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -21,9 +24,22 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { Switch } from '@/components/ui/Switch';
 import { useAddresses, useCreateAddress, useUpdateAddress } from '@/services/queries/useAddress';
+import { addressEditSchema, type AddressEditValues } from '@/forms/schemas/user';
 import type { Address } from '@/types';
 
 const DISTRICTS = ['Dili', 'Baucau', 'Ermera', 'Liquiçá', 'Aileu', 'Manatuto', 'Bobonaro'];
+
+function toFormValues(existing?: Address): AddressEditValues {
+  return {
+    recipientName: existing?.name ?? '',
+    phone: existing?.phone ?? '',
+    province: existing?.province ?? '',
+    city: existing?.city ?? '',
+    district: existing?.district ?? 'Dili',
+    detail: existing?.detail ?? '',
+    isDefault: existing?.isDefault ?? false,
+  };
+}
 
 export default function AddressEditPage() {
   const { colors } = useTheme();
@@ -47,13 +63,22 @@ export default function AddressEditPage() {
           existing={existing}
           submitting={createMutation.isPending || updateMutation.isPending}
           onSubmit={(values) => {
+            const payload: Omit<Address, 'id'> = {
+              name: values.recipientName,
+              phone: values.phone,
+              province: values.province,
+              city: values.city,
+              district: values.district,
+              detail: values.detail,
+              isDefault: values.isDefault,
+            };
             if (existing) {
               updateMutation.mutate(
-                { id: existing.id, updates: values },
+                { id: existing.id, updates: payload },
                 { onSuccess: () => router.back() },
               );
             } else {
-              createMutation.mutate(values, { onSuccess: () => router.back() });
+              createMutation.mutate(payload, { onSuccess: () => router.back() });
             }
           }}
         />
@@ -65,26 +90,19 @@ export default function AddressEditPage() {
 interface AddressFormProps {
   existing?: Address;
   submitting: boolean;
-  onSubmit: (values: Omit<Address, 'id'>) => void;
+  onSubmit: (values: AddressEditValues) => void;
 }
 
 function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
   const { colors } = useTheme();
-  const [name, setName] = useState(existing?.name ?? '');
-  const [phone, setPhone] = useState(existing?.phone ?? '');
-  const [province, setProvince] = useState(existing?.province ?? '');
-  const [city, setCity] = useState(existing?.city ?? '');
-  const [district, setDistrict] = useState(existing?.district ?? 'Dili');
-  const [detail, setDetail] = useState(existing?.detail ?? '');
-  const [isDefault, setIsDefault] = useState(existing?.isDefault ?? false);
 
-  const submit = () => {
-    if (!name || !phone || !province || !city || !detail) {
-      Alert.alert('Notice', 'Please fill in all required fields');
-      return;
-    }
-    onSubmit({ name, phone, province, city, district, detail, isDefault });
-  };
+  const { control, handleSubmit } = useForm<AddressEditValues>({
+    resolver: zodResolver(addressEditSchema),
+    defaultValues: toFormValues(existing),
+    mode: 'onBlur',
+  });
+
+  const submit = handleSubmit((values) => onSubmit(values));
 
   return (
     <>
@@ -93,17 +111,16 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* FULL NAME（HTML 第 158 行 — person icon） */}
         <Field
+          control={control}
+          name="recipientName"
           icon="person"
           label="FULL NAME"
-          value={name}
-          onChangeText={setName}
           placeholder="e.g., Maria Silva"
           testID="addr-name"
         />
 
-        {/* PHONE NUMBER（HTML 第 — call icon + +670 prefix） */}
+        {/* PHONE NUMBER with +670 prefix */}
         <View>
           <FieldLabel icon="call" label="PHONE NUMBER" />
           <View style={styles.phoneRow}>
@@ -119,65 +136,74 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
               <Text style={[styles.phonePrefixText, { color: colors['on-surface'] }]}>+670</Text>
             </View>
             <View style={styles.phoneInput}>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors['surface-container-lowest'],
-                    borderColor: colors['outline-variant'],
-                    color: colors['on-surface'],
-                  },
-                ]}
-                placeholder="7712 3456"
-                placeholderTextColor={colors['on-surface-variant']}
-                keyboardType="phone-pad"
-                value={phone}
-                onChangeText={setPhone}
-                testID="addr-phone"
+              <Controller
+                control={control}
+                name="phone"
+                render={({ field: { value, onChange } }) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors['surface-container-lowest'],
+                        borderColor: colors['outline-variant'],
+                        color: colors['on-surface'],
+                      },
+                    ]}
+                    placeholder="7712 3456"
+                    placeholderTextColor={colors['on-surface-variant']}
+                    keyboardType="phone-pad"
+                    value={value}
+                    onChangeText={onChange}
+                    testID="addr-phone"
+                  />
+                )}
               />
             </View>
           </View>
         </View>
 
-        {/* DISTRICT / REGION（HTML — location_city icon + select） */}
+        {/* DISTRICT / REGION select */}
         <View>
           <FieldLabel icon="location_city" label="DISTRICT / REGION" />
-          <Pressable
-            onPress={() => {
-              Alert.alert(
-                'Select District',
-                'Choose your district',
-                DISTRICTS.map((d) => ({
-                  text: d,
-                  onPress: () => setProvince(d),
-                })),
-              );
-            }}
-            style={[
-              styles.selectBox,
-              {
-                backgroundColor: colors['surface-container-lowest'],
-                borderColor: colors['outline-variant'],
-              },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={`Select district, current ${province || 'none'}`}
-          >
-            <Text
-              style={[
-                styles.selectText,
-                {
-                  color: province ? colors['on-surface'] : colors['on-surface-variant'],
-                },
-              ]}
-            >
-              {province || 'Select District'}
-            </Text>
-            <Icon symbol="expand_more" size={20} color={colors['on-surface-variant']} />
-          </Pressable>
+          <Controller
+            control={control}
+            name="province"
+            render={({ field: { value, onChange } }) => (
+              <Pressable
+                onPress={() => {
+                  Alert.alert(
+                    'Select District',
+                    'Choose your district',
+                    DISTRICTS.map((d) => ({ text: d, onPress: () => onChange(d) })),
+                  );
+                }}
+                style={[
+                  styles.selectBox,
+                  {
+                    backgroundColor: colors['surface-container-lowest'],
+                    borderColor: colors['outline-variant'],
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={`Select district, current ${value || 'none'}`}
+              >
+                <Text
+                  style={[
+                    styles.selectText,
+                    {
+                      color: value ? colors['on-surface'] : colors['on-surface-variant'],
+                    },
+                  ]}
+                >
+                  {value || 'Select District'}
+                </Text>
+                <Icon symbol="expand_more" size={20} color={colors['on-surface-variant']} />
+              </Pressable>
+            )}
+          />
         </View>
 
-        {/* COMPLETE ADDRESS（HTML 第 — home icon + PIN ON MAP） */}
+        {/* COMPLETE ADDRESS + city/sub-district */}
         <View>
           <View style={styles.addrLabelRow}>
             <FieldLabel icon="home" label="COMPLETE ADDRESS" />
@@ -192,73 +218,95 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
               <Text style={[styles.pinBtnText, { color: colors.primary }]}>PIN ON MAP</Text>
             </Pressable>
           </View>
-          <TextInput
-            style={[
-              styles.textarea,
-              {
-                backgroundColor: colors['surface-container-lowest'],
-                borderColor: colors['outline-variant'],
-                color: colors['on-surface'],
-              },
-            ]}
-            placeholder="Village, Sub-district, street name, house number..."
-            placeholderTextColor={colors['on-surface-variant']}
-            value={detail}
-            onChangeText={setDetail}
-            multiline
-            numberOfLines={3}
-            testID="addr-detail"
-          />
-          {/* city / district 双列（辅助字段，HTML 未列但表单需要） */}
-          <View style={styles.cityRow}>
-            <View style={styles.col}>
-              <FieldLabel icon="apartment" label="CITY" />
+          <Controller
+            control={control}
+            name="detail"
+            render={({ field: { value, onChange } }) => (
               <TextInput
                 style={[
-                  styles.input,
+                  styles.textarea,
                   {
                     backgroundColor: colors['surface-container-lowest'],
                     borderColor: colors['outline-variant'],
                     color: colors['on-surface'],
                   },
                 ]}
-                placeholder="Dili"
+                placeholder="Village, Sub-district, street name, house number..."
                 placeholderTextColor={colors['on-surface-variant']}
-                value={city}
-                onChangeText={setCity}
-                testID="addr-city"
+                value={value}
+                onChangeText={onChange}
+                multiline
+                numberOfLines={3}
+                testID="addr-detail"
+              />
+            )}
+          />
+          <View style={styles.cityRow}>
+            <View style={styles.col}>
+              <FieldLabel icon="apartment" label="CITY" />
+              <Controller
+                control={control}
+                name="city"
+                render={({ field: { value, onChange } }) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors['surface-container-lowest'],
+                        borderColor: colors['outline-variant'],
+                        color: colors['on-surface'],
+                      },
+                    ]}
+                    placeholder="Dili"
+                    placeholderTextColor={colors['on-surface-variant']}
+                    value={value}
+                    onChangeText={onChange}
+                    testID="addr-city"
+                  />
+                )}
               />
             </View>
             <View style={styles.col}>
               <FieldLabel icon="location_city" label="SUB-DISTRICT" />
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors['surface-container-lowest'],
-                    borderColor: colors['outline-variant'],
-                    color: colors['on-surface'],
-                  },
-                ]}
-                placeholder="Cristo Rei"
-                placeholderTextColor={colors['on-surface-variant']}
-                value={district}
-                onChangeText={setDistrict}
-                testID="addr-district"
+              <Controller
+                control={control}
+                name="district"
+                render={({ field: { value, onChange } }) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors['surface-container-lowest'],
+                        borderColor: colors['outline-variant'],
+                        color: colors['on-surface'],
+                      },
+                    ]}
+                    placeholder="Cristo Rei"
+                    placeholderTextColor={colors['on-surface-variant']}
+                    value={value}
+                    onChangeText={onChange}
+                    testID="addr-district"
+                  />
+                )}
               />
             </View>
           </View>
         </View>
 
-        {/* Set as default（HTML 第 158 行末 — Switch） */}
         <View style={[styles.defaultRow, { borderTopColor: colors['outline-variant'] }]}>
           <Text style={[styles.defaultLabel, { color: colors['on-surface'] }]}>
             Set as default address
           </Text>
-          <Switch value={isDefault} onValueChange={setIsDefault} testID="addr-default" />
+          <Controller
+            control={control}
+            name="isDefault"
+            render={({ field: { value, onChange } }) => (
+              <Switch value={value} onValueChange={onChange} testID="addr-default" />
+            )}
+          />
         </View>
 
-        {/* Cultural Motif Separator（HTML 第 — uma-lulik-silhouette 三角） */}
+        {/* Cultural Motif Separator */}
         <View style={styles.motifRow}>
           <View style={[styles.motifLine, { backgroundColor: colors['outline-variant'] }]} />
           <MotifTriangle size={16} color={colors.primary} opacity={1} />
@@ -268,7 +316,6 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
         </View>
       </ScrollView>
 
-      {/* SAVE ADDRESS 底部按钮（HTML 第 160 行） */}
       <View
         style={[
           styles.bottomBar,
@@ -297,42 +344,56 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
   );
 }
 
-function Field({
-  icon,
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  testID,
-  keyboardType,
-}: {
+interface FieldProps<T extends FieldValues> {
+  control: Control<T>;
+  name: FieldPath<T>;
   icon: string;
   label: string;
-  value: string;
-  onChangeText: (v: string) => void;
   placeholder?: string;
   testID?: string;
   keyboardType?: 'default' | 'phone-pad' | 'email-address';
-}) {
+}
+
+function Field<T extends FieldValues>({
+  control,
+  name,
+  icon,
+  label,
+  placeholder,
+  testID,
+}: FieldProps<T>) {
   const { colors } = useTheme();
   return (
     <View>
       <FieldLabel icon={icon} label={label} />
-      <TextInput
-        style={[
-          styles.input,
-          {
-            backgroundColor: colors['surface-container-lowest'],
-            borderColor: colors['outline-variant'],
-            color: colors['on-surface'],
-          },
-        ]}
-        placeholder={placeholder}
-        placeholderTextColor={colors['on-surface-variant']}
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType={keyboardType}
-        testID={testID}
+      <Controller
+        control={control}
+        name={name}
+        render={({ field: { value, onChange, onBlur }, fieldState: { error } }) => (
+          <>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors['surface-container-lowest'],
+                  borderColor: error ? colors.error : colors['outline-variant'],
+                  color: colors['on-surface'],
+                },
+              ]}
+              placeholder={placeholder}
+              placeholderTextColor={colors['on-surface-variant']}
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              testID={testID}
+            />
+            {error?.message && (
+              <Text style={[styles.errorText, { color: colors.error }]} accessibilityRole="alert">
+                {error.message}
+              </Text>
+            )}
+          </>
+        )}
       />
     </View>
   );
@@ -348,7 +409,6 @@ function FieldLabel({ icon, label }: { icon: string; label: string }) {
   );
 }
 
-// uma-lulik-silhouette triangle（同 list.tsx）
 function MotifTriangle({ size, color, opacity }: { size: number; color: string; opacity: number }) {
   return (
     <View
@@ -367,7 +427,6 @@ function MotifTriangle({ size, color, opacity }: { size: number; color: string; 
   );
 }
 
-// PrimaryHeader（HTML 第 141-157 行 — primary + tais-pattern + MANAGE bar）
 function Header({ title }: { title: string }) {
   const { colors } = useTheme();
   return (
@@ -406,7 +465,6 @@ function Header({ title }: { title: string }) {
 }
 
 const styles = StyleSheet.create({
-  // Header
   trackerBar: {
     height: 32,
     alignItems: 'center',
@@ -450,7 +508,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 20,
   },
-  // Form
   scroll: {
     padding: spacing['container-margin'],
     paddingBottom: 120,
@@ -550,7 +607,6 @@ const styles = StyleSheet.create({
     ...typography['body-md'],
     fontWeight: '500',
   },
-  // Motif
   motifRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -562,7 +618,6 @@ const styles = StyleSheet.create({
     height: 1,
     flex: 1,
   },
-  // Bottom Bar
   bottomBar: {
     position: 'absolute',
     bottom: 0,
@@ -582,5 +637,9 @@ const styles = StyleSheet.create({
     ...typography['body-md'],
     fontWeight: '700',
     letterSpacing: 1,
+  },
+  errorText: {
+    ...typography['body-sm'],
+    marginTop: spacing.xs,
   },
 });

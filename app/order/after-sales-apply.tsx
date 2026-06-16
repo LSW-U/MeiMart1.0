@@ -1,7 +1,8 @@
-import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Alert, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -9,6 +10,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
+import { afterSalesApplySchema, type AfterSalesApplyValues } from '@/forms/schemas/service';
 
 const REFUND_REASON_KEYS = [
   'afterSales.reasons.damaged',
@@ -20,24 +22,25 @@ const REFUND_REASON_KEYS = [
 const REFUND_TYPES = [
   { id: 'refund-only', labelKey: 'afterSales.types.refundOnly' },
   { id: 'return-refund', labelKey: 'afterSales.types.returnRefund' },
-];
+] as const;
 
 export default function AfterSalesApplyPage() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const [type, setType] = useState('refund-only');
-  const [reasonKey, setReasonKey] = useState('');
-  const [content, setContent] = useState('');
 
-  const submit = () => {
-    if (!reasonKey) {
-      Alert.alert(t('common.notice'), t('afterSales.selectReason'));
-      return;
-    }
+  const { control, handleSubmit, setValue } = useForm<AfterSalesApplyValues>({
+    resolver: zodResolver(afterSalesApplySchema),
+    defaultValues: { type: 'refund-only', reason: '', description: '' },
+    mode: 'onBlur',
+  });
+  const typeValue = useWatch({ control, name: 'type' }) as AfterSalesApplyValues['type'];
+  const reasonValue = useWatch({ control, name: 'reason' }) as string;
+
+  const submit = handleSubmit(() => {
     Alert.alert(t('afterSales.submittedTitle'), t('afterSales.submittedDesc'), [
       { text: t('common.ok'), onPress: () => router.replace('/order/after-sales-detail') },
     ]);
-  };
+  });
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
@@ -68,13 +71,13 @@ export default function AfterSalesApplyPage() {
           </Text>
           <View style={styles.typesRow}>
             {REFUND_TYPES.map((rt) => {
-              const active = type === rt.id;
+              const active = typeValue === rt.id;
               return (
                 <Chip
                   key={rt.id}
                   label={t(rt.labelKey)}
                   selected={active}
-                  onSelect={() => setType(rt.id)}
+                  onSelect={() => setValue('type', rt.id)}
                 />
               );
             })}
@@ -90,8 +93,8 @@ export default function AfterSalesApplyPage() {
               <Chip
                 key={key}
                 label={t(key)}
-                selected={reasonKey === key}
-                onSelect={() => setReasonKey(reasonKey === key ? '' : key)}
+                selected={reasonValue === key}
+                onSelect={() => setValue('reason', reasonValue === key ? '' : key)}
               />
             ))}
           </View>
@@ -101,21 +104,37 @@ export default function AfterSalesApplyPage() {
           <Text style={[styles.label, { color: colors['on-surface'] }]}>
             {t('afterSales.descLabel')}
           </Text>
-          <TextInput
-            value={content}
-            onChangeText={setContent}
-            placeholder={t('afterSales.applyPlaceholder')}
-            placeholderTextColor={colors['on-surface-variant']}
-            multiline
-            numberOfLines={4}
-            style={[
-              styles.textarea,
-              {
-                color: colors['on-surface'],
-                backgroundColor: colors['surface-container-low'],
-              },
-            ]}
-            testID="aftersales-content"
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { value, onChange }, fieldState: { error } }) => (
+              <>
+                <TextInput
+                  value={value}
+                  onChangeText={onChange}
+                  placeholder={t('afterSales.applyPlaceholder')}
+                  placeholderTextColor={colors['on-surface-variant']}
+                  multiline
+                  numberOfLines={4}
+                  style={[
+                    styles.textarea,
+                    {
+                      color: colors['on-surface'],
+                      backgroundColor: colors['surface-container-low'],
+                    },
+                  ]}
+                  testID="aftersales-content"
+                />
+                {error?.message && (
+                  <Text
+                    style={[styles.errorText, { color: colors.error }]}
+                    accessibilityRole="alert"
+                  >
+                    {error.message}
+                  </Text>
+                )}
+              </>
+            )}
           />
         </Card>
 
@@ -147,5 +166,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     textAlignVertical: 'top',
     ...typography['body-md'],
+  },
+  errorText: {
+    ...typography['body-sm'],
+    marginTop: spacing.xs,
   },
 });

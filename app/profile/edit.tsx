@@ -1,34 +1,40 @@
-import { useState } from 'react';
 import { StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing } from '@/theme';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { useProfile, useUpdateProfile } from '@/services/queries/useUser';
+import { FormInput } from '@/forms';
+import { profileEditSchema, type ProfileEditValues } from '@/forms/schemas/user';
 
 export default function ProfileEditPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { data: user } = useProfile();
   const updateMutation = useUpdateProfile();
-  const [name, setName] = useState(user?.name ?? '');
-  const [phone, setPhone] = useState(user?.phone ?? '');
-  const [email, setEmail] = useState(user?.email ?? '');
 
-  const submit = () => {
-    updateMutation.mutate(
-      { name, phone, email },
-      {
-        onSuccess: () => {
-          Alert.alert(t('common.success'), t('profileEdit.saved'));
-          router.back();
-        },
+  const { control, handleSubmit } = useForm<ProfileEditValues>({
+    resolver: zodResolver(profileEditSchema),
+    defaultValues: {
+      name: user?.name ?? '',
+      phone: user?.phone ?? '',
+      email: user?.email ?? '',
+    },
+    mode: 'onBlur',
+  });
+
+  const submit = (values: ProfileEditValues) => {
+    updateMutation.mutate(values, {
+      onSuccess: () => {
+        Alert.alert(t('common.success'), t('profileEdit.saved'));
+        router.back();
       },
-    );
+    });
   };
 
   return (
@@ -40,30 +46,30 @@ export default function ProfileEditPage() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scroll}>
-          <Input
+          <FormInput
+            control={control}
+            name="name"
             label={t('profileEdit.nickname')}
             placeholder={t('profileEdit.nicknamePlaceholder')}
             leftIcon="account"
-            value={name}
-            onChangeText={setName}
             testID="edit-name"
           />
-          <Input
+          <FormInput
+            control={control}
+            name="phone"
             label={t('profileEdit.phone')}
             placeholder={t('profileEdit.phonePlaceholder')}
             leftIcon="phone"
             keyboardType="phone-pad"
-            value={phone}
-            onChangeText={setPhone}
             testID="edit-phone"
           />
-          <Input
+          <FormInput
+            control={control}
+            name="email"
             label={t('profileEdit.email')}
             placeholder={t('profileEdit.emailPlaceholder')}
             leftIcon="email"
             keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
             testID="edit-email"
           />
           <Button
@@ -71,7 +77,7 @@ export default function ProfileEditPage() {
             variant="primary"
             fullWidth
             loading={updateMutation.isPending}
-            onPress={submit}
+            onPress={handleSubmit(submit)}
             testID="edit-save"
           />
         </ScrollView>

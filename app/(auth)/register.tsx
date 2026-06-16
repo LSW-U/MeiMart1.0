@@ -2,34 +2,48 @@
 // 通过 AuthShell 复用外壳，HTML 行数: 185 → RN 行数: ~140
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（外壳行数计入 AuthShell.tsx）
 // Fix-16: 替换 PageHeader 为 AuthShell + 手机号 + 验证码 + 密码 + 确认密码
-import { useState, useEffect } from 'react';
+// CP-FIX-2.3: 表单迁移到 react-hook-form + zod（规则 9）
+import { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { AuthShell } from '@/components/business/AuthShell';
 import { useRegister, useSendSmsCode } from '@/services/queries/useAuth';
 import { useAuthStore } from '@/store/authStore';
+import { FormInput } from '@/forms';
+import { registerSchema, type RegisterValues } from '@/forms/schemas/auth';
 
 const COUNTDOWN = 60;
 
 export default function RegisterPage() {
   const { colors } = useTheme();
-  const [phone, setPhone] = useState('');
-  const [code, setCode] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [counter, setCounter] = useState(0);
-  const [agreed, setAgreed] = useState(false);
   const setAuth = useAuthStore((s) => s.setAuth);
   const registerMutation = useRegister();
   const sendMutation = useSendSmsCode();
+
+  const { control, handleSubmit, formState } = useForm<RegisterValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      phone: '',
+      code: '',
+      password: '',
+      confirmPassword: '',
+      inviteCode: '',
+      agreed: false,
+    },
+    mode: 'onBlur',
+  });
+  const phoneValue = useWatch({ control, name: 'phone' }) as string;
+  const agreedError = formState.errors.agreed?.message;
 
   useEffect(() => {
     if (counter <= 0) return;
@@ -38,30 +52,18 @@ export default function RegisterPage() {
   }, [counter]);
 
   const sendCode = () => {
-    if (!phone) {
+    if (!phoneValue) {
       Alert.alert('Notice', 'Please enter phone number');
       return;
     }
-    sendMutation.mutate(phone, {
+    sendMutation.mutate(phoneValue, {
       onSuccess: () => setCounter(COUNTDOWN),
     });
   };
 
-  const submit = () => {
-    if (!phone || !password || !code) {
-      Alert.alert('Notice', 'Please fill in all fields');
-      return;
-    }
-    if (password !== confirm) {
-      Alert.alert('Notice', 'Passwords do not match');
-      return;
-    }
-    if (!agreed) {
-      Alert.alert('Notice', 'Please agree to the terms first');
-      return;
-    }
+  const submit = (values: RegisterValues) => {
     registerMutation.mutate(
-      { phone, password },
+      { phone: values.phone, password: values.password },
       {
         onSuccess: (data) => {
           setAuth(data.token, data.refreshToken);
@@ -79,7 +81,7 @@ export default function RegisterPage() {
         welcomeTitle="Registu Kontu"
         welcomeSub="Welcome! Join us and start shopping."
         actionLabel="Register"
-        onAction={submit}
+        onAction={handleSubmit(submit)}
         loading={registerMutation.isPending}
         secondary={
           <View style={styles.loginRow}>
@@ -98,25 +100,25 @@ export default function RegisterPage() {
         }
         testID="register-page"
       >
-        <Input
+        <FormInput
+          control={control}
+          name="phone"
           label="PHONE NUMBER"
           placeholder="+670 7xx xxxx"
           keyboardType="phone-pad"
           leftIcon="phone"
-          value={phone}
-          onChangeText={setPhone}
           testID="register-phone"
         />
 
         <View style={styles.codeRow}>
           <View style={styles.codeInput}>
-            <Input
+            <FormInput
+              control={control}
+              name="code"
               label="VERIFICATION CODE"
               placeholder="6-digit code"
               keyboardType="number-pad"
               leftIcon="message-text"
-              value={code}
-              onChangeText={setCode}
               maxLength={6}
               testID="register-code"
             />
@@ -133,32 +135,38 @@ export default function RegisterPage() {
           </View>
         </View>
 
-        <Input
+        <FormInput
+          control={control}
+          name="password"
           label="SET PASSWORD"
           placeholder="Enter your password"
           leftIcon="lock"
           rightIcon={showPassword ? 'eye' : 'eye-off'}
           onRightIconPress={() => setShowPassword((v) => !v)}
           secureTextEntry={!showPassword}
-          value={password}
-          onChangeText={setPassword}
           testID="register-password"
         />
 
-        <Input
+        <FormInput
+          control={control}
+          name="confirmPassword"
           label="CONFIRM PASSWORD"
           placeholder="Re-enter your password"
           leftIcon="lock-check"
           rightIcon={showConfirm ? 'eye' : 'eye-off'}
           onRightIconPress={() => setShowConfirm((v) => !v)}
           secureTextEntry={!showConfirm}
-          value={confirm}
-          onChangeText={setConfirm}
           testID="register-confirm"
         />
 
         <View style={styles.agreementRow}>
-          <Checkbox checked={agreed} onChange={setAgreed} testID="register-agreement" />
+          <Controller
+            control={control}
+            name="agreed"
+            render={({ field: { value, onChange } }) => (
+              <Checkbox checked={value} onChange={onChange} testID="register-agreement" />
+            )}
+          />
           <Text style={[styles.agreementText, { color: colors['on-surface-variant'] }]}>
             {"By logging in, I agree to Mei Mart's "}
             <Text style={{ color: colors.primary, fontWeight: '700' }}>
@@ -167,6 +175,11 @@ export default function RegisterPage() {
             <Text style={{ color: colors.primary, fontWeight: '700' }}>Privacy Policy</Text>.
           </Text>
         </View>
+        {agreedError && (
+          <Text style={[styles.errorText, { color: colors.error }]} accessibilityRole="alert">
+            {agreedError}
+          </Text>
+        )}
       </AuthShell>
     </SafeAreaWrapper>
   );
@@ -205,5 +218,9 @@ const styles = StyleSheet.create({
   loginLink: {
     ...typography['body-md'],
     fontWeight: '700',
+  },
+  errorText: {
+    ...typography['body-sm'],
+    marginTop: spacing.xs,
   },
 });

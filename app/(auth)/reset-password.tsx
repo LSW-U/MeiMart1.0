@@ -2,28 +2,36 @@
 // 通过 AuthShell 复用外壳，HTML 行数: 180 → RN 行数: ~135
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（外壳行数计入 AuthShell.tsx）
 // Fix-16: 替换 PageHeader 为 AuthShell + 手机号 + 验证码 + 新密码
-import { useState, useEffect } from 'react';
+// CP-FIX-2.3: 表单迁移到 react-hook-form + zod（规则 9）
+import { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { AuthShell } from '@/components/business/AuthShell';
 import { useResetPassword, useSendSmsCode } from '@/services/queries/useAuth';
+import { FormInput } from '@/forms';
+import { resetPasswordSchema, type ResetPasswordValues } from '@/forms/schemas/auth';
 
 const COUNTDOWN = 60;
 
 export default function ResetPasswordPage() {
   const { colors } = useTheme();
-  const [phone, setPhone] = useState('');
-  const [code, setCode] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [counter, setCounter] = useState(0);
   const resetMutation = useResetPassword();
   const sendMutation = useSendSmsCode();
+
+  const { control, handleSubmit } = useForm<ResetPasswordValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { phone: '', code: '', password: '', confirmPassword: '' },
+    mode: 'onBlur',
+  });
+  const phoneValue = useWatch({ control, name: 'phone' }) as string;
 
   useEffect(() => {
     if (counter <= 0) return;
@@ -32,22 +40,18 @@ export default function ResetPasswordPage() {
   }, [counter]);
 
   const sendCode = () => {
-    if (!phone) {
+    if (!phoneValue) {
       Alert.alert('Notice', 'Please enter phone number');
       return;
     }
-    sendMutation.mutate(phone, {
+    sendMutation.mutate(phoneValue, {
       onSuccess: () => setCounter(COUNTDOWN),
     });
   };
 
-  const submit = () => {
-    if (!phone || !code || !password) {
-      Alert.alert('Notice', 'Please fill in all fields');
-      return;
-    }
+  const submit = (values: ResetPasswordValues) => {
     resetMutation.mutate(
-      { phone, password, smsCode: code },
+      { phone: values.phone, password: values.password, smsCode: values.code },
       {
         onSuccess: () => {
           Alert.alert('Success', 'Password has been reset, please log in again', [
@@ -66,7 +70,7 @@ export default function ResetPasswordPage() {
         welcomeTitle="Forgot Password?"
         welcomeSub="Reset your password with SMS verification"
         actionLabel="Reset Password"
-        onAction={submit}
+        onAction={handleSubmit(submit)}
         loading={resetMutation.isPending}
         secondary={
           <View style={styles.loginRow}>
@@ -85,25 +89,25 @@ export default function ResetPasswordPage() {
         }
         testID="reset-password-page"
       >
-        <Input
+        <FormInput
+          control={control}
+          name="phone"
           label="PHONE NUMBER"
           placeholder="+670 7xx xxxx"
           keyboardType="phone-pad"
           leftIcon="phone"
-          value={phone}
-          onChangeText={setPhone}
           testID="reset-phone"
         />
 
         <View style={styles.codeRow}>
           <View style={styles.codeInput}>
-            <Input
+            <FormInput
+              control={control}
+              name="code"
               label="VERIFICATION CODE"
               placeholder="6-digit code"
               keyboardType="number-pad"
               leftIcon="message-text"
-              value={code}
-              onChangeText={setCode}
               maxLength={6}
               testID="reset-code"
             />
@@ -120,16 +124,28 @@ export default function ResetPasswordPage() {
           </View>
         </View>
 
-        <Input
+        <FormInput
+          control={control}
+          name="password"
           label="NEW PASSWORD"
           placeholder="Enter new password"
           leftIcon="lock"
           rightIcon={showPassword ? 'eye' : 'eye-off'}
           onRightIconPress={() => setShowPassword((v) => !v)}
           secureTextEntry={!showPassword}
-          value={password}
-          onChangeText={setPassword}
           testID="reset-password-input"
+        />
+
+        <FormInput
+          control={control}
+          name="confirmPassword"
+          label="CONFIRM PASSWORD"
+          placeholder="Re-enter new password"
+          leftIcon="lock-check"
+          rightIcon={showPassword ? 'eye' : 'eye-off'}
+          onRightIconPress={() => setShowPassword((v) => !v)}
+          secureTextEntry={!showPassword}
+          testID="reset-confirm-input"
         />
       </AuthShell>
     </SafeAreaWrapper>
