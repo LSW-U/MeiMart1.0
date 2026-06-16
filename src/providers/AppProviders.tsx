@@ -2,6 +2,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
+import {
+  useFonts,
+  NotoSerif_400Regular,
+  NotoSerif_600SemiBold,
+  NotoSerif_700Bold,
+} from '@expo-google-fonts/noto-serif';
+import {
+  PlusJakartaSans_400Regular as PJS_400,
+  PlusJakartaSans_600SemiBold as PJS_600,
+  PlusJakartaSans_700Bold as PJS_700,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { initPersist } from '@/services/offline/persist';
 import { initNetworkListener } from '@/services/offline/network';
@@ -29,6 +40,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [client] = useState(() => queryClient);
   const [i18nReady, setI18nReady] = useState(false);
 
+  const [fontsLoaded] = useFonts({
+    NotoSerif: NotoSerif_400Regular,
+    'NotoSerif-SemiBold': NotoSerif_600SemiBold,
+    'NotoSerif-Bold': NotoSerif_700Bold,
+    PlusJakartaSans: PJS_400,
+    'PlusJakartaSans-SemiBold': PJS_600,
+    'PlusJakartaSans-Bold': PJS_700,
+  });
+
   useEffect(() => {
     let mounted = true;
     void initI18n().then(() => {
@@ -42,7 +62,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     };
   }, [client]);
 
-  if (!i18nReady) return null;
+  if (!i18nReady || !fontsLoaded) return null;
 
   return (
     <QueryClientProvider client={client}>
