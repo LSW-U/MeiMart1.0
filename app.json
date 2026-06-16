@@ -65,12 +65,6 @@
       "expo-font",
       "expo-status-bar",
       [
-        "expo-notifications",
-        {
-          "color": "#961813"
-        }
-      ],
-      [
         "expo-updates",
         {
           "username": "your-expo-username"
