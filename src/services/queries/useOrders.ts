@@ -27,7 +27,38 @@ export function useCreateOrder() {
   return useMutation({
     mutationFn: ({ items, totalPrice }: { items: Order['items']; totalPrice: number }) =>
       orderApi.createOrder(items, totalPrice),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
+    onMutate: async ({ items, totalPrice }) => {
+      // 乐观插入临时订单到「all」和「pending」列表，避免下单后跳列表时空白闪一下
+      await qc.cancelQueries({ queryKey: ORDERS_QUERY_KEY });
+      const previous = qc.getQueriesData({ queryKey: ORDERS_QUERY_KEY });
+      const tempId = `o${Date.now()}`;
+      const tempOrder: Order = {
+        id: tempId,
+        orderNo: `MM${Date.now()}`,
+        status: 'pending',
+        items,
+        totalPrice,
+        createdAt: new Date().toISOString(),
+      };
+      qc.setQueriesData({ queryKey: ORDERS_QUERY_KEY }, (old: unknown) => {
+        if (!Array.isArray(old)) return old;
+        return [tempOrder, ...old];
+      });
+      return { previous, tempId };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) {
+        ctx.previous.forEach(([key, data]) => qc.setQueryData(key, data));
+      }
+    },
+    onSuccess: (realOrder, _vars, ctx) => {
+      // 用真实订单替换临时订单
+      qc.setQueriesData({ queryKey: ORDERS_QUERY_KEY }, (old: unknown) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((o: Order) => (o.id === ctx?.tempId ? realOrder : o));
+      });
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
   });
 }
 
