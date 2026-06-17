@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "MeiMart",
+    "name": "",
     "tagline": ""
   },
   "common": {
@@ -22,10 +22,425 @@
     "all": "",
     "empty": "",
     "error": "",
+    "notice": "",
+    "success": "",
+    "submitted": "",
+    "yes": "",
+    "no": "",
     "network": {
       "offline": "",
       "weak": "",
       "restored": ""
     }
+  },
+  "splash": {
+    "welcome": ""
+  },
+  "onboarding": {
+    "title1": "",
+    "desc1": "",
+    "title2": "",
+    "desc2": "",
+    "title3": "",
+    "desc3": "",
+    "title4": "",
+    "desc4": "",
+    "start": "",
+    "skip": ""
+  },
+  "auth": {
+    "login": "",
+    "register": "",
+    "phone": "",
+    "password": "",
+    "smsCode": "",
+    "forgotPassword": "",
+    "loginWithSms": "",
+    "loginWithPassword": "",
+    "sendCode": "",
+    "resetPassword": "",
+    "newPassword": "",
+    "confirmPassword": "",
+    "agreeTerms": "",
+    "errors": {
+      "invalidPhone": "",
+      "invalidPassword": "",
+      "codeSent": "",
+      "loginFailed": ""
+    }
+  },
+  "home": {
+    "search": "",
+    "categories": "",
+    "recommend": "",
+    "flashSale": "",
+    "newArrivals": ""
+  },
+  "tabs": {
+    "home": "",
+    "categories": "",
+    "cart": "",
+    "orders": "",
+    "account": ""
+  },
+  "cart": {
+    "title": "",
+    "empty": "",
+    "emptyDesc": "",
+    "goShopping": "",
+    "selectAll": "",
+    "total": "",
+    "checkout": "",
+    "delete": "",
+    "offlineBlock": "",
+    "removeConfirm": ""
+  },
+  "product": {
+    "addToCart": "",
+    "buyNow": "",
+    "specification": "",
+    "description": "",
+    "reviews": "",
+    "relatedProducts": "",
+    "favorite": "",
+    "favorited": "",
+    "sold": "",
+    "stock": ""
+  },
+  "order": {
+    "status": {
+      "pending": "",
+      "paid": "",
+      "shipped": "",
+      "delivered": "",
+      "cancelled": "",
+      "refunding": ""
+    },
+    "list": "",
+    "detail": "",
+    "total": "",
+    "orderNo": "",
+    "createdAt": "",
+    "statusLabel": "",
+    "shippingInfo": "",
+    "items": "",
+    "progress": "",
+    "priceSummary": "",
+    "subtotal": "",
+    "shipping": "",
+    "discount": "",
+    "createdAtLabel": "",
+    "trackingNo": "",
+    "actions": {
+      "cancel": "",
+      "pay": "",
+      "track": "",
+      "review": "",
+      "repurchase": "",
+      "refund": "",
+      "confirm": "",
+      "afterSales": ""
+    },
+    "empty": "",
+    "cancelTitle": "",
+    "cancelConfirm": "",
+    "notFoundError": "",
+    "timeline": {
+      "submitted": "",
+      "submittedDesc": "",
+      "paid": "",
+      "paidDesc": "",
+      "shipped": "",
+      "shippedDesc": "",
+      "delivered": "",
+      "deliveredDesc": ""
+    }
+  },
+  "address": {
+    "list": "",
+    "add": "",
+    "edit": "",
+    "name": "",
+    "phone": "",
+    "province": "",
+    "city": "",
+    "district": "",
+    "detail": "",
+    "default": "",
+    "setDefault": "",
+    "pickOnMap": "",
+    "empty": "",
+    "delete": ""
+  },
+  "profile": {
+    "title": "",
+    "edit": "",
+    "settings": "",
+    "favorites": "",
+    "coupons": "",
+    "orders": "",
+    "addresses": "",
+    "customerService": "",
+    "notifications": "",
+    "feedback": "",
+    "help": "",
+    "about": "",
+    "logout": "",
+    "language": "",
+    "theme": ""
+  },
+  "settings": {
+    "title": "",
+    "appearance": "",
+    "theme": "",
+    "general": "",
+    "language": "",
+    "push": "",
+    "clearCache": "",
+    "clearCacheDone": "",
+    "aboutSection": "",
+    "version": "",
+    "terms": "",
+    "logoutTitle": "",
+    "logoutConfirm": "",
+    "notifications": "",
+    "sound": "",
+    "vibration": "",
+    "dataSaver": "",
+    "privacy": "",
+    "accountSecurity": "",
+    "privacyPolicy": "",
+    "themeMode": {
+      "system": "",
+      "light": "",
+      "dark": ""
+    }
+  },
+  "language": {
+    "title": "",
+    "comingSoon": "",
+    "comingSoonShort": ""
+  },
+  "coupons": {
+    "title": "",
+    "loadError": "",
+    "empty": "",
+    "emptyDesc": "",
+    "tabAvailable": "",
+    "tabUsed": "",
+    "tabExpired": "",
+    "centerTitle": "",
+    "centerDesc": ""
+  },
+  "about": {
+    "title": "",
+    "company": "",
+    "address": "",
+    "email": "",
+    "mission": "",
+    "rights": "",
+    "tagline": "",
+    "subtitle": "",
+    "contactTitle": "",
+    "phone": ""
+  },
+  "checkout": {
+    "title": "",
+    "loadError": "",
+    "offlineBlock": "",
+    "offlineBlockDesc": "",
+    "submit": "",
+    "selectAddress": "",
+    "noItems": "",
+    "itemQty": "",
+    "payment": {
+      "wechat": "",
+      "alipay": "",
+      "cash": "",
+      "laispay": "",
+      "card": ""
+    }
+  },
+  "payment": {
+    "title": "",
+    "payNow": ""
+  },
+  "result": {
+    "viewOrder": "",
+    "continueShopping": ""
+  },
+  "favorites": {
+    "title": "",
+    "loadError": "",
+    "empty": "",
+    "emptyDesc": "",
+    "removeTitle": "",
+    "removeConfirm": "",
+    "selectedTitle": "",
+    "countHint": "",
+    "longPressHint": "",
+    "goBrowse": ""
+  },
+  "afterSales": {
+    "applyTitle": "",
+    "applyPlaceholder": "",
+    "applySubmit": "",
+    "selectReason": "",
+    "submittedTitle": "",
+    "submittedDesc": "",
+    "detailTitle": "",
+    "applyNo": "",
+    "reason": "",
+    "applyTime": "",
+    "contactService": "",
+    "typeLabel": "",
+    "reasonLabel": "",
+    "descLabel": "",
+    "refundAmount": "",
+    "progressLabel": "",
+    "applyInfo": "",
+    "processing": "",
+    "processingDesc": "",
+    "productLabel": "",
+    "evidenceLabel": "",
+    "addPhoto": "",
+    "contactLabel": "",
+    "refundMethod": "",
+    "cancelApply": "",
+    "refundNote": "",
+    "types": {
+      "refundOnly": "",
+      "returnRefund": ""
+    },
+    "reasons": {
+      "damaged": "",
+      "notAsDescribed": "",
+      "quality": "",
+      "wrongOrMissing": "",
+      "noReason": ""
+    },
+    "timeline": {
+      "submitted": "",
+      "submittedDesc": "",
+      "reviewing": "",
+      "reviewingDesc": "",
+      "approved": "",
+      "approvedDesc": "",
+      "completed": "",
+      "completedDesc": ""
+    },
+    "mockReason": "",
+    "mockProduct": ""
+  },
+  "review": {
+    "title": "",
+    "placeholder": "",
+    "submit": "",
+    "fillContent": "",
+    "successTitle": "",
+    "successDesc": "",
+    "tagsLabel": "",
+    "photosLabel": "",
+    "addPhoto": "",
+    "anonymousTitle": "",
+    "anonymousDesc": ""
+  },
+  "profileEdit": {
+    "title": "",
+    "nickname": "",
+    "nicknamePlaceholder": "",
+    "phone": "",
+    "phonePlaceholder": "",
+    "email": "",
+    "emailPlaceholder": "",
+    "saved": ""
+  },
+  "service": {
+    "title": "",
+    "callHotline": "",
+    "email": "",
+    "greetingTitle": "",
+    "greetingDesc": "",
+    "faqTitle": "",
+    "contactTitle": "",
+    "workHours": "",
+    "online": "",
+    "workHoursDesc": "",
+    "categories": {
+      "order": "",
+      "orderDesc": "",
+      "payment": "",
+      "paymentDesc": "",
+      "product": "",
+      "productDesc": "",
+      "feedback": "",
+      "feedbackDesc": "",
+      "help": "",
+      "helpDesc": ""
+    },
+    "feedback": {
+      "title": "",
+      "type": "",
+      "content": "",
+      "contact": "",
+      "placeholder": "",
+      "contactPlaceholder": "",
+      "submit": "",
+      "selectType": "",
+      "fillContent": "",
+      "submitted": "",
+      "photosLabel": "",
+      "addPhoto": "",
+      "optionalHint": "",
+      "tipTitle": "",
+      "tipDesc": "",
+      "types": {
+        "feature": "",
+        "product": "",
+        "order": "",
+        "payment": "",
+        "shipping": "",
+        "other": ""
+      }
+    },
+    "help": {
+      "title": "",
+      "intro": "",
+      "contactPrompt": "",
+      "contactLink": "",
+      "searchPlaceholder": "",
+      "hotTitle": "",
+      "faq": {
+        "q1": "",
+        "a1": "",
+        "q2": "",
+        "a2": "",
+        "q3": "",
+        "a3": "",
+        "q4": "",
+        "a4": "",
+        "q5": "",
+        "a5": ""
+      }
+    },
+    "notifications": {
+      "title": "",
+      "readAll": "",
+      "empty": "",
+      "emptyDesc": "",
+      "tabAll": "",
+      "tabOrder": "",
+      "tabPromo": "",
+      "tabSystem": ""
+    }
+  },
+  "errors": {
+    "generic": "",
+    "network": "",
+    "cart": "",
+    "orders": "",
+    "products": "",
+    "addresses": "",
+    "notifications": ""
   }
 }
