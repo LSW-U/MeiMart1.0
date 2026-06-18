@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
+import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Button } from '@/components/ui/Button';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
@@ -13,8 +14,9 @@ export default function PaymentResultPage() {
   const { t } = useTranslation();
 
   return (
-    <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+    <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
+      <PrimaryHeader title={t('result.title')} showBack onBackPress={() => router.back()} />
       <View style={styles.body}>
         <View
           style={[styles.iconBox, { backgroundColor: colors.primary }]}

@@ -266,6 +266,7 @@
     "payNow": "Pay now"
   },
   "result": {
+    "title": "Payment Success",
     "viewOrder": "View order",
     "continueShopping": "Continue shopping"
   },

@@ -266,6 +266,7 @@
     "payNow": "立即支付"
   },
   "result": {
+    "title": "支付成功",
     "viewOrder": "查看订单",
     "continueShopping": "继续购物"
   },
