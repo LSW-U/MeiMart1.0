@@ -157,6 +157,8 @@ export default function CartPage() {
               >
                 <CartItemRow
                   item={item}
+                  onPress={(i) => toggleMutation.mutate({ itemId: i.id, selected: !i.selected })}
+                  onItemPress={(i) => router.push(`/product/${i.product.id}`)}
                   onQuantityChange={(qty) =>
                     updateMutation.mutate({ itemId: item.id, updates: { quantity: qty } })
                   }

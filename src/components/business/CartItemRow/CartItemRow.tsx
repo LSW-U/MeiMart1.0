@@ -8,6 +8,7 @@ import type { CartItemRowProps } from './CartItemRow.types';
 export function CartItemRow({
   item,
   onPress,
+  onItemPress,
   onQuantityChange,
   onDelete,
   showControls = true,
@@ -17,15 +18,20 @@ export function CartItemRow({
   const { product, quantity, selected } = item;
 
   return (
-    <View
+    <Pressable
       testID={testID}
-      style={[
+      onPress={onItemPress ? () => onItemPress(item) : undefined}
+      disabled={!onItemPress}
+      style={({ pressed }) => [
         styles.row,
         {
           backgroundColor: colors['surface-container-lowest'],
           borderColor: colors['outline-variant'],
         },
+        pressed && { opacity: 0.85 },
       ]}
+      accessibilityRole={onItemPress ? 'button' : undefined}
+      accessibilityLabel={onItemPress ? `View ${product.name}` : undefined}
     >
       {showControls && (
         <Checkbox
@@ -94,7 +100,7 @@ export function CartItemRow({
           <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.error} />
         </Pressable>
       )}
-    </View>
+    </Pressable>
   );
 }
 
