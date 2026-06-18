@@ -14,11 +14,12 @@ export function initPersist(client: QueryClient) {
     queryClient: client,
     persister: asyncStoragePersister,
     maxAge: 1000 * 60 * 60 * 24 * 7,
-    buster: 'meimart-v1',
+    buster: 'meimart-v2',
     dehydrateOptions: {
       shouldDehydrateQuery: (query) => {
-        const queryKey = query.queryKey[0];
-        return queryKey !== 'auth' && queryKey !== 'notifications';
+        const queryKey = query.queryKey[0] as string;
+        const excluded = ['auth', 'notifications', 'product', 'products'];
+        return !excluded.includes(queryKey);
       },
     },
   });
