@@ -37,7 +37,10 @@ export default function OrdersPage() {
   const { data: orders, isLoading, isError, refetch } = useOrders(active);
 
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <PrimaryHeader
         title="My Orders"
