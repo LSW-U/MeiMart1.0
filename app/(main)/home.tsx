@@ -194,7 +194,7 @@ export default function HomePage() {
       </View>
 
       <ScrollView
-        style={styles.scrollArea}
+        style={[styles.scrollArea, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
