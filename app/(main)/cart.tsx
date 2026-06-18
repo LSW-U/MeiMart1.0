@@ -43,14 +43,14 @@ interface RecommendItem {
 
 const RECOMMENDED: RecommendItem[] = [
   {
-    id: 'rec-rice',
+    id: 'p003',
     name: 'Foos Lafaek 5kg',
     price: 4.8,
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuBXs-CQLr3ottuFHa8A8jV5U8wot6MLv7kddnkUZL7B_NigcoSIRd1bc0r32kBq2SNUzS5SVcna2oK31NPahWdDm8rATsDVi5n2Zlq-LbgXQh_IqjlESZXtk_4VpPW3u_9BbTW4KERum0HVRbYzjb-csWo9tDgiXG1JwcflhuaDQGtcsCw5Y4V1OYmP5y1N_wSttHNPb_hOC4IhFdBUIZ5B7TaiedXTLNI26vu379e5PAWkq6diJlV3zzSmrF-O8JELi-xN4n0B',
   },
   {
-    id: 'rec-water',
+    id: 'p005',
     name: 'Bee Botir 600ml',
     price: 0.5,
     image:
@@ -92,7 +92,10 @@ export default function CartPage() {
   };
 
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <PrimaryHeader
         title="Cart"
