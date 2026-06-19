@@ -13,7 +13,6 @@ import {
   Alert,
   Share,
   Dimensions,
-  type LayoutChangeEvent,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { BlurView } from 'expo-blur';
@@ -90,7 +89,6 @@ export default function ProductDetailPage() {
   const isFavorite = Boolean(product && (favorites ?? []).some((p) => p.id === product.id));
 
   const [activeTab, setActiveTab] = useState<TabKey>('PRODUCT');
-  const [tabLayouts, setTabLayouts] = useState<Record<string, { x: number; w: number }>>({});
   const [activeImage, setActiveImage] = useState(0);
   const [grind, setGrind] = useState<(typeof GRIND_TYPES)[number]>('FINE');
 
@@ -98,13 +96,7 @@ export default function ProductDetailPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <TopBar
-          activeTab={activeTab}
-          onTabPress={() => {}}
-          tabLayouts={tabLayouts}
-          setTabLayout={setTabLayouts}
-          onBack={() => router.back()}
-        />
+        <TopBar activeTab={activeTab} onTabPress={() => {}} onBack={() => router.back()} />
         <View style={styles.center}>
           <Text style={{ color: colors['on-surface-variant'] }}>Loading…</Text>
         </View>
@@ -115,13 +107,7 @@ export default function ProductDetailPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <TopBar
-          activeTab={activeTab}
-          onTabPress={() => {}}
-          tabLayouts={tabLayouts}
-          setTabLayout={setTabLayouts}
-          onBack={() => router.back()}
-        />
+        <TopBar activeTab={activeTab} onTabPress={() => {}} onBack={() => router.back()} />
         <ErrorState message="Product not found or failed to load" onRetry={() => refetch()} />
       </SafeAreaWrapper>
     );
@@ -178,8 +164,6 @@ export default function ProductDetailPage() {
       <TopBar
         activeTab={activeTab}
         onTabPress={(t) => setActiveTab(t)}
-        tabLayouts={tabLayouts}
-        setTabLayout={setTabLayouts}
         onBack={() => router.back()}
         onShare={shareProduct}
       />
@@ -623,25 +607,15 @@ export default function ProductDetailPage() {
 function TopBar({
   activeTab,
   onTabPress,
-  tabLayouts,
-  setTabLayout,
   onBack,
   onShare,
 }: {
   activeTab: TabKey;
   onTabPress: (t: TabKey) => void;
-  tabLayouts: Record<string, { x: number; w: number }>;
-  setTabLayout: React.Dispatch<React.SetStateAction<Record<string, { x: number; w: number }>>>;
   onBack: () => void;
   onShare?: () => void;
 }) {
   const { colors } = useTheme();
-  const active = tabLayouts[activeTab];
-
-  const onLayout = (key: TabKey) => (e: LayoutChangeEvent) => {
-    const { x, width } = e.nativeEvent.layout;
-    setTabLayout((prev) => ({ ...prev, [key]: { x, w: width } }));
-  };
 
   return (
     <View
@@ -659,15 +633,19 @@ function TopBar({
       >
         <Icon symbol="arrow_back" size={24} color={colors['on-surface']} />
       </Pressable>
-      <View style={styles.tabsWrap}>
+      <ScrollView
+        style={styles.tabsWrap}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabsContent}
+      >
         {TABS.map((t) => {
           const isActive = t === activeTab;
           return (
             <Pressable
               key={t}
               onPress={() => onTabPress(t)}
-              onLayout={onLayout(t)}
-              style={styles.tabBtn}
+              style={[styles.tabBtn, isActive && { borderBottomColor: colors.primary }]}
               accessibilityRole="tab"
               accessibilityState={{ selected: isActive }}
             >
@@ -684,20 +662,7 @@ function TopBar({
             </Pressable>
           );
         })}
-        {active && (
-          <View
-            style={[
-              styles.tabIndicator,
-              {
-                left: active.x,
-                width: active.w,
-                backgroundColor: colors['primary-container'],
-              },
-            ]}
-            pointerEvents="none"
-          />
-        )}
-      </View>
+      </ScrollView>
       <Pressable
         onPress={onShare ?? (() => {})}
         hitSlop={8}
@@ -737,21 +702,20 @@ const styles = StyleSheet.create({
   },
   tabsWrap: {
     flex: 1,
-    flexDirection: 'row',
-    position: 'relative',
+  },
+  tabsContent: {
+    gap: spacing.sm,
+    alignItems: 'center',
   },
   tabBtn: {
     paddingHorizontal: spacing.sm + 4,
     paddingVertical: spacing.sm,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   tabText: {
     ...typography['label-caps'],
     fontWeight: '700',
-  },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    height: 2,
   },
   carousel: {
     position: 'relative',
@@ -841,6 +805,7 @@ const styles = StyleSheet.create({
   priceBig: {
     ...typography['price-display'],
     fontSize: 28,
+    flexShrink: 0,
   },
   priceStrike: {
     ...typography['body-sm'],
