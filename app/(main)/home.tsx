@@ -463,7 +463,6 @@ const styles = StyleSheet.create({
   },
   bannerSection: {
     marginTop: spacing.md,
-    paddingHorizontal: spacing['container-margin'],
   },
   section: {
     marginTop: spacing.xl,

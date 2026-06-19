@@ -65,7 +65,6 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '48%',
-    flexGrow: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

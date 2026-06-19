@@ -147,6 +147,8 @@ function BannerCard({ banner, onPress }: { banner: Banner; onPress?: () => void 
 }
 
 const styles = StyleSheet.create({
+  // BannerCarousel 内部用 spacing.lg (24px) 做 card 左右 margin，调用方不应再加
+  // paddingHorizontal，否则 card 宽度（按 SCREEN_WIDTH 计算）会超出可视区被裁。
   scrollView: { width: '100%' },
   scrollContent: { gap: 0 },
   card: {
