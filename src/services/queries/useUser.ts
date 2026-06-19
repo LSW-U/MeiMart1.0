@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/services/user';
-import type { Notification, User } from '@/types';
+import type { Notification, Product, User } from '@/types';
 
 export const PROFILE_QUERY_KEY = ['user', 'profile'] as const;
 export const COUPONS_QUERY_KEY = ['user', 'coupons'] as const;
@@ -48,6 +48,27 @@ export function useFavorites() {
     queryFn: () => userApi.getFavorites(),
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',
+  });
+}
+
+export function useToggleFavorite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (product: Product) => userApi.toggleFavorite(product),
+    onMutate: async (product) => {
+      await qc.cancelQueries({ queryKey: FAVORITES_QUERY_KEY });
+      const previous = qc.getQueryData<Product[]>(FAVORITES_QUERY_KEY);
+      qc.setQueryData<Product[]>(FAVORITES_QUERY_KEY, (old) => {
+        if (!old) return old;
+        const exists = old.some((p) => p.id === product.id);
+        return exists ? old.filter((p) => p.id !== product.id) : [...old, product];
+      });
+      return { previous };
+    },
+    onError: (_err, _product, ctx) => {
+      if (ctx?.previous) qc.setQueryData(FAVORITES_QUERY_KEY, ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: FAVORITES_QUERY_KEY }),
   });
 }
 

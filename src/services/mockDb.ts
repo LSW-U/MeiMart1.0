@@ -30,6 +30,7 @@ export const mockDb = {
   user: userData as User,
   coupons: couponsData as Coupon[],
   notifications: notificationsData as Notification[],
+  favorites: [productsData[0] as Product, productsData[3] as Product, productsData[7] as Product],
 };
 
 const delay = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms));

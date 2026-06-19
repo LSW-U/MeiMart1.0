@@ -11,6 +11,7 @@ import {
   Image,
   Pressable,
   Alert,
+  Share,
   Dimensions,
   type LayoutChangeEvent,
 } from 'react-native';
@@ -21,8 +22,9 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
-import { useProduct } from '@/services/queries/useProducts';
+import { useProduct, useProducts } from '@/services/queries/useProducts';
 import { useAddToCart } from '@/services/queries/useCart';
+import { useFavorites, useToggleFavorite } from '@/services/queries/useUser';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -31,48 +33,11 @@ type TabKey = (typeof TABS)[number];
 
 const GRIND_TYPES = ['FINE', 'MEDIUM', 'COARSE'] as const;
 
-// 配对商品 mock（HTML 第 376-408 行）
-const PAIRS_WELL_WITH = [
-  {
-    id: 'pair-1',
-    name: 'Organic Wild Honey',
-    price: 12.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBIFT9eVY_nIkxBU3W3XBE2GP_jSNbVy0OKtSxNHRYzqh1aq-268V9r56pozLSG-99ckgmP_sP9jhPICHNCe8RCzFIygw1uzjVYPZJKANXjHC5qVFQ3BKJSX0vGkMQXzvsPncLZq86n6OzIivIO1uJQ6KsqBOfLEEIP4SIPmCdIDX_SWoo_gtvLxUKxeV95v_5Tn9G535y3rCGUWghrd7I-P6ytuKPN0ezlgtIOm3de0tSB-4phCE0yhIvUlYnttiKR43MRXtQJ',
-  },
-  {
-    id: 'pair-2',
-    name: 'Himalayan Red Rice',
-    price: 8.5,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAXxtt_mRlrGtFB7Xt02N0dB4yvReV5GxsT_5djDOI3LAictnBeP3_pxUVjAHdnzAyqDaBDem_bv9uzkFJyNwWuWO6xIRYl7Pa4fzDuQIGSEcrSNVp3A1G-Y27AurskieUHczCvxgrwze8Y-IJ5qcgiQoHIljM9hS2NTe0O2ZSMTwur0TnXaJC_EO-7uA7uDHcmfA4W7SVa5XscmHN1BWJ5PTyElhb_v1CWgCd5yHIegTLhd1_W_qIucw-EkXo3U1Mv-lCFWfec',
-  },
-  {
-    id: 'pair-3',
-    name: 'Handcrafted Mug',
-    price: 15.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCG16VWlPRW90kLvfVeBhcATjGNDIGCnQHYaQtoWBEAytD1hHF_56W82nisFh8BNn8xCZtOBx5-RKXY44s2lGLtlMcN9ffKjiYuNYZBRkt0TYJEOSu1xodEcslqvj2wLM6bh_BI9X872LkmAhn6smFdT_Cz3jjn6o60RQTfXurRyFwPYfuptSWIuWfr0mftVhiy54Gd8L6n7sBY-WRmGTb7yO_LN7lvv98aRlBwQuIu1RpMuXk8p6yFAGWIcAOlMF0sOwazkAxp',
-  },
-];
+// 配对商品（HTML 第 376-408 行）— 用真实 mockDb id，数据从 useProducts 动态拉取
+const PAIRS_WELL_WITH_IDS = ['p003', 'p005', 'p008'];
 
-// You May Also Like mock（HTML 第 418-437 行）
-const YOU_MAY_LIKE = [
-  {
-    id: 'like-1',
-    name: 'Lete-Foho Arabica',
-    price: 19.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCQCULYjcqA1QfSM-KNRQZP0Ls8aYf7Bnc5mdBRD8Y0134TkbNa5KgcJKOlcbtgNZIb83T_wj78sk5Ao6PZc_j1OxUNHnT2zdP2xD-KW8ccDx4JBQwWhR-o0RpQc7IJVPXqPBmWYjPupq2Kk5cVMvBqriQgbT37W6faxU4c7X4hx1uqjv4plg66BDyj7HVowXn-KK8cGgB3yLEDrHibJhGZGw3oEdS000hd4bWuIBNCGQS7MaugVIuWhFG5NlRHzhH0wKfw3eKL',
-  },
-  {
-    id: 'like-2',
-    name: 'Traditional Tais Bag',
-    price: 25.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAXxtt_mRlrGtFB7Xt02N0dB4yvReV5GxsT_5djDOI3LAictnBeP3_pxUVjAHdnzAyqDaBDem_bv9uzkFJyNwWuWO6xIRYl7Pa4fzDuQIGSEcrSNVp3A1G-Y27AurskieUHczCvxgrwze8Y-IJ5qcgiQoHIljM9hS2NTe0O2ZSMTwur0TnXaJC_EO-7uA7uDHcmfA4W7SVa5XscmHN1BWJ5PTyElhb_v1CWgCd5yHIegTLhd1_W_qIucw-EkXo3U1Mv-lCFWfec',
-  },
-];
+// You May Also Like（HTML 第 418-437 行）— 用真实 mockDb id
+const YOU_MAY_LIKE_IDS = ['p006', 'p009'];
 
 // Reviews mock（HTML 第 337-370 行：英文名 + 英文评论）
 const REVIEWS = [
@@ -115,7 +80,14 @@ export default function ProductDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const { data: product, isLoading, isError, refetch } = useProduct(id);
+  const { data: allProducts } = useProducts();
+  const { data: favorites } = useFavorites();
+  const toggleFavoriteMutation = useToggleFavorite();
   const addToCartMutation = useAddToCart();
+
+  const pairsWellWith = (allProducts ?? []).filter((p) => PAIRS_WELL_WITH_IDS.includes(p.id));
+  const youMayLike = (allProducts ?? []).filter((p) => YOU_MAY_LIKE_IDS.includes(p.id));
+  const isFavorite = Boolean(product && (favorites ?? []).some((p) => p.id === product.id));
 
   const [activeTab, setActiveTab] = useState<TabKey>('PRODUCT');
   const [tabLayouts, setTabLayouts] = useState<Record<string, { x: number; w: number }>>({});
@@ -164,8 +136,43 @@ export default function ProductDetailPage() {
     );
   };
 
+  const addRelatedToCart = (p: { id: string; name: string; price: number; image: string }) => {
+    const full = (allProducts ?? []).find((item) => item.id === p.id);
+    if (!full) return;
+    addToCartMutation.mutate(
+      { product: full, quantity: 1 },
+      { onSuccess: () => Alert.alert('Added to cart', full.name) },
+    );
+  };
+
+  const toggleFavorite = () => {
+    if (!product) return;
+    toggleFavoriteMutation.mutate(product, {
+      onSuccess: ({ isFavorite: fav }) =>
+        Alert.alert(fav ? 'Added to favorites' : 'Removed from favorites', product.name),
+    });
+  };
+
+  const shareProduct = () => {
+    if (!product) return;
+    Share.share({
+      message: `${product.name} — $${product.price.toFixed(2)}\nCheck it out on MeiMart!`,
+      title: product.name,
+    }).catch(() => {});
+  };
+
+  const writeReview = () => {
+    Alert.alert(
+      'Write a review',
+      'You can write a review after purchasing this product. Check your order history.',
+    );
+  };
+
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       {/* Top Bar with 4-Tab Navigation */}
       <TopBar
@@ -174,6 +181,7 @@ export default function ProductDetailPage() {
         tabLayouts={tabLayouts}
         setTabLayout={setTabLayouts}
         onBack={() => router.back()}
+        onShare={shareProduct}
       />
 
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
@@ -381,7 +389,7 @@ export default function ProductDetailPage() {
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>Reviews</Text>
               <Pressable
-                onPress={() => {}}
+                onPress={writeReview}
                 style={[styles.writeReviewBtn, { borderBottomColor: colors.primary }]}
                 accessibilityRole="button"
                 accessibilityLabel="Write a review"
@@ -461,13 +469,17 @@ export default function ProductDetailPage() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.hScroll}
             >
-              {PAIRS_WELL_WITH.map((p) => (
-                <View
+              {pairsWellWith.map((p) => (
+                <Pressable
                   key={p.id}
-                  style={[
+                  onPress={() => router.push(`/product/${p.id}`)}
+                  style={({ pressed }) => [
                     styles.relatedCard,
                     { backgroundColor: '#ffffff', borderColor: 'rgba(141,112,108,0.1)' },
+                    pressed && { opacity: 0.85 },
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View ${p.name}`}
                 >
                   <View
                     style={[styles.relatedImage, { backgroundColor: colors['surface-variant'] }]}
@@ -485,8 +497,12 @@ export default function ProductDetailPage() {
                       ${p.price.toFixed(2)}
                     </Text>
                     <Pressable
-                      onPress={() => {}}
-                      style={[styles.relatedAddBtn, { borderColor: colors.primary }]}
+                      onPress={() => addRelatedToCart(p)}
+                      style={({ pressed }) => [
+                        styles.relatedAddBtn,
+                        { borderColor: colors.primary },
+                        pressed && { backgroundColor: 'rgba(150,24,19,0.05)' },
+                      ]}
                       accessibilityRole="button"
                       accessibilityLabel={`Add ${p.name} to cart`}
                     >
@@ -495,7 +511,7 @@ export default function ProductDetailPage() {
                       </Text>
                     </Pressable>
                   </View>
-                </View>
+                </Pressable>
               ))}
             </ScrollView>
           </View>
@@ -520,13 +536,17 @@ export default function ProductDetailPage() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.hScroll}
             >
-              {YOU_MAY_LIKE.map((p) => (
-                <View
+              {youMayLike.map((p) => (
+                <Pressable
                   key={p.id}
-                  style={[
+                  onPress={() => router.push(`/product/${p.id}`)}
+                  style={({ pressed }) => [
                     styles.relatedCard,
                     { backgroundColor: '#ffffff', borderColor: 'rgba(141,112,108,0.1)' },
+                    pressed && { opacity: 0.85 },
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View ${p.name}`}
                 >
                   <View
                     style={[styles.relatedImage, { backgroundColor: colors['surface-variant'] }]}
@@ -544,7 +564,7 @@ export default function ProductDetailPage() {
                       ${p.price.toFixed(2)}
                     </Text>
                   </View>
-                </View>
+                </Pressable>
               ))}
             </ScrollView>
           </View>
@@ -562,13 +582,25 @@ export default function ProductDetailPage() {
         ]}
       >
         <Pressable
-          onPress={() => {}}
-          style={styles.favoriteBtn}
+          onPress={toggleFavorite}
+          style={({ pressed }) => [styles.favoriteBtn, pressed && { opacity: 0.6 }]}
           accessibilityRole="button"
-          accessibilityLabel="Favorite"
+          accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          accessibilityState={{ selected: isFavorite }}
         >
-          <Icon symbol="star" size={32} color={colors['on-surface']} />
-          <Text style={[styles.favoriteText, { color: colors['on-surface'] }]}>FAVORITE</Text>
+          <Icon
+            name={isFavorite ? 'star' : 'star-outline'}
+            size={32}
+            color={isFavorite ? colors.primary : colors['on-surface']}
+          />
+          <Text
+            style={[
+              styles.favoriteText,
+              { color: isFavorite ? colors.primary : colors['on-surface'] },
+            ]}
+          >
+            FAVORITE
+          </Text>
         </Pressable>
         <Pressable
           onPress={addToCart}
@@ -594,12 +626,14 @@ function TopBar({
   tabLayouts,
   setTabLayout,
   onBack,
+  onShare,
 }: {
   activeTab: TabKey;
   onTabPress: (t: TabKey) => void;
   tabLayouts: Record<string, { x: number; w: number }>;
   setTabLayout: React.Dispatch<React.SetStateAction<Record<string, { x: number; w: number }>>>;
   onBack: () => void;
+  onShare?: () => void;
 }) {
   const { colors } = useTheme();
   const active = tabLayouts[activeTab];
@@ -665,7 +699,7 @@ function TopBar({
         )}
       </View>
       <Pressable
-        onPress={() => {}}
+        onPress={onShare ?? (() => {})}
         hitSlop={8}
         style={styles.topBarBtn}
         accessibilityRole="button"

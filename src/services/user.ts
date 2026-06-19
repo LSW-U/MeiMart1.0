@@ -19,8 +19,18 @@ export const userApi = {
     throw new Error('Real API not implemented');
   },
   async getFavorites(): Promise<Product[]> {
+    if (isMockMode) return mockResponse(mockDb.favorites);
+    throw new Error('Real API not implemented');
+  },
+  async toggleFavorite(product: Product): Promise<{ favorites: Product[]; isFavorite: boolean }> {
     if (isMockMode) {
-      return mockResponse([mockDb.products[0], mockDb.products[3], mockDb.products[7]]);
+      const idx = mockDb.favorites.findIndex((p) => p.id === product.id);
+      if (idx >= 0) {
+        mockDb.favorites.splice(idx, 1);
+      } else {
+        mockDb.favorites.push(product);
+      }
+      return mockResponse({ favorites: mockDb.favorites, isFavorite: idx < 0 });
     }
     throw new Error('Real API not implemented');
   },
