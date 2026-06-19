@@ -27,6 +27,10 @@
     "submitted": "",
     "yes": "",
     "no": "",
+    "viewAll": "",
+    "seeAll": "",
+    "view": "",
+    "badgeNew": "",
     "network": {
       "offline": "",
       "weak": "",
@@ -74,7 +78,46 @@
     "categories": "",
     "recommend": "",
     "flashSale": "",
-    "newArrivals": ""
+    "newArrivals": "",
+    "appName": "",
+    "locationLabel": "",
+    "deliveryTip": "",
+    "searchPlaceholder": "",
+    "seeAllCategories": "",
+    "seeAllProducts": "",
+    "messagesLabel": "",
+    "reorderLabel": ""
+  },
+  "shortcut": {
+    "dealsLabel": "",
+    "deals": "",
+    "newLabel": "",
+    "newUser": "",
+    "couponsLabel": "",
+    "deliveryLabel": "",
+    "freeDelivery": ""
+  },
+  "category": {
+    "food": "",
+    "fashion": "",
+    "home": "",
+    "tech": "",
+    "crafts": "",
+    "beauty": "",
+    "foodTitle": "",
+    "fashionTitle": "",
+    "homeTitle": "",
+    "techTitle": "",
+    "craftsTitle": "",
+    "beautyTitle": "",
+    "freshProduce": "",
+    "localSnacks": "",
+    "dealsTitle": "",
+    "dealsSub": "",
+    "dealsA11y": "",
+    "hotProducts": "",
+    "viewAllProducts": "",
+    "viewAllProductsA11y": ""
   },
   "tabs": {
     "home": "",
@@ -93,7 +136,16 @@
     "checkout": "",
     "delete": "",
     "offlineBlock": "",
-    "removeConfirm": ""
+    "removeConfirm": "",
+    "removeTitle": "",
+    "removeAction": "",
+    "removeWithNameConfirm": "",
+    "yourItems": "",
+    "itemCount_one": "",
+    "itemCount_other": "",
+    "selectedTotal": "",
+    "selectAllLabel": "",
+    "peopleAlsoBought": ""
   },
   "product": {
     "addToCart": "",
@@ -105,7 +157,10 @@
     "favorite": "",
     "favorited": "",
     "sold": "",
-    "stock": ""
+    "stock": "",
+    "badgeFresh": "",
+    "badgeBestSeller": "",
+    "addToCartLabel": ""
   },
   "order": {
     "status": {
@@ -142,6 +197,11 @@
       "afterSales": ""
     },
     "empty": "",
+    "emptyTitle": "",
+    "emptyDesc": "",
+    "statusToPay": "",
+    "statusToShip": "",
+    "statusToReceive": "",
     "cancelTitle": "",
     "cancelConfirm": "",
     "notFoundError": "",
@@ -187,7 +247,16 @@
     "about": "",
     "logout": "",
     "language": "",
-    "theme": ""
+    "theme": "",
+    "goldMember": "",
+    "pointsValue": "",
+    "viewAllOrders": "",
+    "viewAllOrdersLogin": "",
+    "loginHint": "",
+    "loginRegister": "",
+    "loginOrRegister": "",
+    "loginRequiredSuffix": "",
+    "version": ""
   },
   "settings": {
     "title": "",
@@ -442,6 +511,8 @@
     "orders": "",
     "products": "",
     "addresses": "",
-    "notifications": ""
+    "notifications": "",
+    "profile": "",
+    "categories": ""
   }
 }

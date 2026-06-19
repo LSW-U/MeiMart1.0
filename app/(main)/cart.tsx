@@ -13,6 +13,7 @@ import {
   Image,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -61,6 +62,7 @@ const RECOMMENDED: RecommendItem[] = [
 
 export default function CartPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const localize = useLocalizer();
   const { isOffline } = useWeakNetworkUI();
   const { data: cart, isLoading, isError, refetch } = useCart();
@@ -83,14 +85,18 @@ export default function CartPage() {
   };
 
   const remove = (item: CartItem) => {
-    Alert.alert('Remove Item', `Remove "${localize(item.product.name)}" from cart?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: () => removeMutation.mutate(item.id),
-      },
-    ]);
+    Alert.alert(
+      t('cart.removeTitle'),
+      t('cart.removeWithNameConfirm', { name: localize(item.product.name) }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('cart.removeAction'),
+          style: 'destructive',
+          onPress: () => removeMutation.mutate(item.id),
+        },
+      ],
+    );
   };
 
   return (
@@ -100,16 +106,16 @@ export default function CartPage() {
     >
       <StatusBarConfig />
       <PrimaryHeader
-        title="Cart"
+        title={t('tabs.cart')}
         showLocation
-        locationLabel="Dili, Christo Rei"
+        locationLabel={t('home.locationLabel')}
         rightActions={
           <Pressable
             onPress={() => router.push('/search')}
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel="Search"
+            accessibilityLabel={t('common.search')}
           >
             <Icon symbol="search" size={24} color="#ffffff" />
           </Pressable>
@@ -122,14 +128,14 @@ export default function CartPage() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : isError ? (
-        <ErrorState message="Failed to load cart" onRetry={() => refetch()} />
+        <ErrorState message={t('errors.cart')} onRetry={() => refetch()} />
       ) : isEmpty ? (
         <View style={styles.emptyBox}>
           <EmptyState
-            title="Your cart is empty"
-            description="Discover local products and add them to your cart"
+            title={t('cart.empty')}
+            description={t('cart.emptyDesc')}
             icon="cart-outline"
-            actionLabel="Browse Products"
+            actionLabel={t('favorites.goBrowse')}
             onAction={() => router.push('/(main)/home')}
           />
         </View>
@@ -141,9 +147,11 @@ export default function CartPage() {
         >
           {/* Your Items 标题 + 数量 */}
           <View style={styles.itemsHeader}>
-            <Text style={[styles.itemsTitle, { color: colors['on-surface'] }]}>Your Items</Text>
+            <Text style={[styles.itemsTitle, { color: colors['on-surface'] }]}>
+              {t('cart.yourItems')}
+            </Text>
             <Text style={[styles.itemsCount, { color: colors.primary }]}>
-              {totalItems} {totalItems === 1 ? 'Item' : 'Items'}
+              {t('cart.itemCount', { count: totalItems })}
             </Text>
           </View>
 
@@ -182,7 +190,7 @@ export default function CartPage() {
           {/* PEOPLE ALSO BOUGHT 推荐区 */}
           <View style={styles.recommendWrap}>
             <Text style={[styles.recommendTitle, { color: colors['on-surface-variant'] }]}>
-              PEOPLE ALSO BOUGHT
+              {t('cart.peopleAlsoBought')}
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.recommendRow}>
@@ -250,21 +258,23 @@ export default function CartPage() {
             style={styles.selectAllBtn}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: allSelected }}
-            accessibilityLabel="Select all items"
+            accessibilityLabel={t('cart.selectAllLabel')}
           >
             <Icon
               symbol={allSelected ? 'check_circle' : 'radio_button_unchecked'}
               size={20}
               color={allSelected ? colors.primary : colors['outline-variant']}
             />
-            <Text style={[styles.selectAllText, { color: colors['on-surface-variant'] }]}>All</Text>
+            <Text style={[styles.selectAllText, { color: colors['on-surface-variant'] }]}>
+              {t('common.all')}
+            </Text>
           </Pressable>
 
           {/* 合计 + 折扣 */}
           <View style={styles.totalBox}>
             <View style={styles.discountRow}>
               <Text style={[styles.discountLabel, { color: colors['on-surface-variant'] }]}>
-                Discount
+                {t('order.discount')}
               </Text>
               <View style={[styles.discountPill, { backgroundColor: '#f0fdf4' }]}>
                 <Text style={styles.discountText}>-${discount.toFixed(2)}</Text>
@@ -272,7 +282,7 @@ export default function CartPage() {
             </View>
             <View style={styles.totalRow}>
               <Text style={[styles.selectedLabel, { color: colors['on-surface-variant'] }]}>
-                Selected Total
+                {t('cart.selectedTotal')}
               </Text>
               <PriceText value={Math.max(0, totalPrice - discount)} size="lg" />
             </View>
@@ -289,9 +299,9 @@ export default function CartPage() {
               (totalItems === 0 || isOffline) && { opacity: 0.5 },
             ]}
             accessibilityRole="button"
-            accessibilityLabel="Checkout"
+            accessibilityLabel={t('cart.checkout')}
           >
-            <Text style={styles.checkoutText}>CHECKOUT</Text>
+            <Text style={styles.checkoutText}>{t('cart.checkout').toUpperCase()}</Text>
           </Pressable>
         </View>
       )}

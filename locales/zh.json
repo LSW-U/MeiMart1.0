@@ -27,6 +27,10 @@
     "submitted": "已提交",
     "yes": "是",
     "no": "不",
+    "viewAll": "查看全部",
+    "seeAll": "查看所有",
+    "view": "查看",
+    "badgeNew": "新品",
     "network": {
       "offline": "网络连接已断开",
       "weak": "网络较慢，已切换省流模式",
@@ -74,7 +78,46 @@
     "categories": "分类",
     "recommend": "为你推荐",
     "flashSale": "限时秒杀",
-    "newArrivals": "新品上架"
+    "newArrivals": "新品上架",
+    "appName": "美惠超市",
+    "locationLabel": "帝力，基督像区",
+    "deliveryTip": "配送中 · 今天 1-2 小时 · 满 $20 免运费",
+    "searchPlaceholder": "搜索生活必需品...",
+    "seeAllCategories": "查看全部分类",
+    "seeAllProducts": "查看全部商品",
+    "messagesLabel": "消息",
+    "reorderLabel": "再次购买 {{name}}"
+  },
+  "shortcut": {
+    "dealsLabel": "特惠",
+    "deals": "优惠",
+    "newLabel": "新用户",
+    "newUser": "新人福利",
+    "couponsLabel": "领券",
+    "deliveryLabel": "限时",
+    "freeDelivery": "免运费"
+  },
+  "category": {
+    "food": "食品",
+    "fashion": "服饰",
+    "home": "家居",
+    "tech": "数码",
+    "crafts": "工艺",
+    "beauty": "美妆",
+    "foodTitle": "食品 & 厨房",
+    "fashionTitle": "服饰精选",
+    "homeTitle": "家居精选",
+    "techTitle": "数码精选",
+    "craftsTitle": "工艺精选",
+    "beautyTitle": "美妆精选",
+    "freshProduce": "新鲜果蔬",
+    "localSnacks": "本地零食",
+    "dealsTitle": "每日特惠",
+    "dealsSub": "本地好物最高 7 折",
+    "dealsA11y": "每日特惠 — 最高 7 折",
+    "hotProducts": "热门商品",
+    "viewAllProducts": "查看全部商品",
+    "viewAllProductsA11y": "查看全部商品"
   },
   "tabs": {
     "home": "首页",
@@ -93,7 +136,16 @@
     "checkout": "结算",
     "delete": "删除",
     "offlineBlock": "网络连接已断开，结算暂不可用",
-    "removeConfirm": "确认删除该商品？"
+    "removeConfirm": "确认删除该商品？",
+    "removeTitle": "删除商品",
+    "removeAction": "删除",
+    "removeWithNameConfirm": "将\"{{name}}\"从购物车移除？",
+    "yourItems": "您的商品",
+    "itemCount_one": "{{count}} 件",
+    "itemCount_other": "{{count}} 件",
+    "selectedTotal": "已选合计",
+    "selectAllLabel": "全选所有商品",
+    "peopleAlsoBought": "买了又买"
   },
   "product": {
     "addToCart": "加入购物车",
@@ -105,7 +157,10 @@
     "favorite": "收藏",
     "favorited": "已收藏",
     "sold": "已售",
-    "stock": "库存"
+    "stock": "库存",
+    "badgeFresh": "新鲜",
+    "badgeBestSeller": "热销",
+    "addToCartLabel": "将 {{name}} 加入购物车"
   },
   "order": {
     "status": {
@@ -142,6 +197,11 @@
       "afterSales": "申请售后"
     },
     "empty": "暂无订单",
+    "emptyTitle": "暂无订单",
+    "emptyDesc": "去逛逛商品，下你的第一单吧",
+    "statusToPay": "待付款",
+    "statusToShip": "待发货",
+    "statusToReceive": "待收货",
     "cancelTitle": "确认取消",
     "cancelConfirm": "确定取消此订单？",
     "notFoundError": "订单不存在或加载失败",
@@ -173,7 +233,7 @@
     "delete": "删除地址"
   },
   "profile": {
-    "title": "我的",
+    "title": "我的账户",
     "edit": "编辑资料",
     "settings": "设置",
     "favorites": "我的收藏",
@@ -187,7 +247,16 @@
     "about": "关于我们",
     "logout": "退出登录",
     "language": "语言",
-    "theme": "主题"
+    "theme": "主题",
+    "goldMember": "黄金会员",
+    "pointsValue": "{{count}} 积分",
+    "viewAllOrders": "查看全部订单",
+    "viewAllOrdersLogin": "查看全部订单（需登录）",
+    "loginHint": "登录享受会员专属折扣",
+    "loginRegister": "登录 / 注册",
+    "loginOrRegister": "登录或注册",
+    "loginRequiredSuffix": "{{label}}（需登录）",
+    "version": "v2.4.0（东帝汶）"
   },
   "settings": {
     "title": "设置",
@@ -442,6 +511,8 @@
     "orders": "加载订单失败",
     "products": "加载商品失败",
     "addresses": "加载地址失败",
-    "notifications": "加载通知失败"
+    "notifications": "加载通知失败",
+    "profile": "加载个人资料失败，请重试",
+    "categories": "加载分类失败"
   }
 }

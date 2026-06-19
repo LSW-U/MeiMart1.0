@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -23,16 +24,17 @@ import { Icon } from '@/components/ui/Icon';
 import { useOrders } from '@/services/queries/useOrders';
 import type { OrderStatus, Order } from '@/types';
 
-const TABS: { key: OrderStatus | 'all'; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'pending', label: 'To Pay' },
-  { key: 'paid', label: 'To Ship' },
-  { key: 'shipped', label: 'To Receive' },
-  { key: 'delivered', label: 'Completed' },
+const TABS: { key: OrderStatus | 'all'; labelKey: string }[] = [
+  { key: 'all', labelKey: 'common.all' },
+  { key: 'pending', labelKey: 'order.statusToPay' },
+  { key: 'paid', labelKey: 'order.statusToShip' },
+  { key: 'shipped', labelKey: 'order.statusToReceive' },
+  { key: 'delivered', labelKey: 'order.status.delivered' },
 ];
 
 export default function OrdersPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [active, setActive] = useState<OrderStatus | 'all'>('all');
   const { data: orders, isLoading, isError, refetch } = useOrders(active);
 
@@ -43,14 +45,14 @@ export default function OrdersPage() {
     >
       <StatusBarConfig />
       <PrimaryHeader
-        title="My Orders"
+        title={t('profile.orders')}
         rightActions={
           <Pressable
             onPress={() => router.push('/service/help')}
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel="Help"
+            accessibilityLabel={t('profile.help')}
           >
             <Icon symbol="help" size={24} color="#ffffff" />
           </Pressable>
@@ -78,7 +80,7 @@ export default function OrdersPage() {
                   style={styles.tabBtn}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: isActive }}
-                  accessibilityLabel={tab.label}
+                  accessibilityLabel={t(tab.labelKey)}
                 >
                   <Text
                     style={[
@@ -88,7 +90,7 @@ export default function OrdersPage() {
                       },
                     ]}
                   >
-                    {tab.label}
+                    {t(tab.labelKey)}
                   </Text>
                   {isActive && (
                     <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />
@@ -105,13 +107,13 @@ export default function OrdersPage() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : isError ? (
-        <ErrorState message="Failed to load orders" onRetry={() => refetch()} />
+        <ErrorState message={t('errors.orders')} onRetry={() => refetch()} />
       ) : !orders || orders.length === 0 ? (
         <EmptyState
-          title="No orders yet"
-          description="Browse products and place your first order"
+          title={t('order.emptyTitle')}
+          description={t('order.emptyDesc')}
           icon="clipboard-text-outline"
-          actionLabel="Browse Products"
+          actionLabel={t('favorites.goBrowse')}
           onAction={() => router.push('/(main)/home')}
         />
       ) : (

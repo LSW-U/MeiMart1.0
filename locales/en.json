@@ -27,6 +27,10 @@
     "submitted": "Submitted",
     "yes": "Yes",
     "no": "No",
+    "viewAll": "VIEW ALL",
+    "seeAll": "SEE ALL",
+    "view": "VIEW",
+    "badgeNew": "NEW",
     "network": {
       "offline": "No internet connection",
       "weak": "Slow network — data saver on",
@@ -74,7 +78,46 @@
     "categories": "Categories",
     "recommend": "Recommended for you",
     "flashSale": "Flash sale",
-    "newArrivals": "New arrivals"
+    "newArrivals": "New arrivals",
+    "appName": "Mei mart",
+    "locationLabel": "Dili, Christo Rei",
+    "deliveryTip": "Delivery active · Today 1-2h · Free over $20",
+    "searchPlaceholder": "Search household essentials...",
+    "seeAllCategories": "See all categories",
+    "seeAllProducts": "See all products",
+    "messagesLabel": "Messages",
+    "reorderLabel": "Reorder {{name}}"
+  },
+  "shortcut": {
+    "dealsLabel": "SAVE BIG",
+    "deals": "Deals",
+    "newLabel": "WELCOME",
+    "newUser": "New User",
+    "couponsLabel": "REDEEM",
+    "deliveryLabel": "LIMITED",
+    "freeDelivery": "Free Delivery"
+  },
+  "category": {
+    "food": "Food",
+    "fashion": "Fashion",
+    "home": "Home",
+    "tech": "Tech",
+    "crafts": "Crafts",
+    "beauty": "Beauty",
+    "foodTitle": "Food & Kitchen",
+    "fashionTitle": "Fashion Collection",
+    "homeTitle": "Home Collection",
+    "techTitle": "Tech Collection",
+    "craftsTitle": "Crafts Collection",
+    "beautyTitle": "Beauty Collection",
+    "freshProduce": "Fresh Produce",
+    "localSnacks": "Local Snacks",
+    "dealsTitle": "Daily Deals",
+    "dealsSub": "Up to 30% off local favorites",
+    "dealsA11y": "Daily Deals — Up to 30% off",
+    "hotProducts": "HOT PRODUCTS",
+    "viewAllProducts": "VIEW ALL PRODUCTS",
+    "viewAllProductsA11y": "View all products"
   },
   "tabs": {
     "home": "Home",
@@ -93,7 +136,16 @@
     "checkout": "Checkout",
     "delete": "Delete",
     "offlineBlock": "Offline — checkout unavailable",
-    "removeConfirm": "Remove this item?"
+    "removeConfirm": "Remove this item?",
+    "removeTitle": "Remove Item",
+    "removeAction": "Remove",
+    "removeWithNameConfirm": "Remove \"{{name}}\" from cart?",
+    "yourItems": "Your Items",
+    "itemCount_one": "{{count}} Item",
+    "itemCount_other": "{{count}} Items",
+    "selectedTotal": "Selected Total",
+    "selectAllLabel": "Select all items",
+    "peopleAlsoBought": "PEOPLE ALSO BOUGHT"
   },
   "product": {
     "addToCart": "Add to cart",
@@ -105,7 +157,10 @@
     "favorite": "Favorite",
     "favorited": "Favorited",
     "sold": "Sold",
-    "stock": "Stock"
+    "stock": "Stock",
+    "badgeFresh": "Fresh",
+    "badgeBestSeller": "Best Seller",
+    "addToCartLabel": "Add {{name}} to cart"
   },
   "order": {
     "status": {
@@ -142,6 +197,11 @@
       "afterSales": "After-Sales"
     },
     "empty": "No orders",
+    "emptyTitle": "No orders yet",
+    "emptyDesc": "Browse products and place your first order",
+    "statusToPay": "To Pay",
+    "statusToShip": "To Ship",
+    "statusToReceive": "To Receive",
     "cancelTitle": "Confirm cancel",
     "cancelConfirm": "Cancel this order?",
     "notFoundError": "Order not found or failed to load",
@@ -173,7 +233,7 @@
     "delete": "Delete address"
   },
   "profile": {
-    "title": "Account",
+    "title": "My Account",
     "edit": "Edit profile",
     "settings": "Settings",
     "favorites": "Favorites",
@@ -187,7 +247,16 @@
     "about": "About",
     "logout": "Log out",
     "language": "Language",
-    "theme": "Theme"
+    "theme": "Theme",
+    "goldMember": "Gold Member",
+    "pointsValue": "{{count}} Points",
+    "viewAllOrders": "View all orders",
+    "viewAllOrdersLogin": "View all orders (login required)",
+    "loginHint": "Login to enjoy member exclusive discount",
+    "loginRegister": "LOGIN / REGISTER",
+    "loginOrRegister": "Login or register",
+    "loginRequiredSuffix": "{{label}} (login required)",
+    "version": "v2.4.0 (Timor-Leste)"
   },
   "settings": {
     "title": "Settings",
@@ -442,6 +511,8 @@
     "orders": "Failed to load orders",
     "products": "Failed to load products",
     "addresses": "Failed to load addresses",
-    "notifications": "Failed to load notifications"
+    "notifications": "Failed to load notifications",
+    "profile": "Failed to load profile. Please try again.",
+    "categories": "Failed to load categories"
   }
 }

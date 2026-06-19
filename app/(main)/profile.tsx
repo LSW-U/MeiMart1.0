@@ -12,6 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, shadowPresets, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -20,6 +21,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useProfile } from '@/services/queries/useUser';
 import { useAuthStore } from '@/store/authStore';
+import type { AppLocale } from '@/i18n';
 
 // 默认头像 mock（HTML 第 150 行）
 const DEFAULT_AVATAR =
@@ -27,7 +29,11 @@ const DEFAULT_AVATAR =
 
 interface OrderEntry {
   id: string;
-  label: string;
+  labelKey:
+    | 'order.statusToPay'
+    | 'order.statusToShip'
+    | 'order.statusToReceive'
+    | 'order.actions.review';
   icon: Parameters<typeof Icon>[0]['symbol'];
   badge?: number;
   route?: string;
@@ -37,55 +43,61 @@ interface OrderEntry {
 const ORDER_ENTRIES: OrderEntry[] = [
   {
     id: 'to-pay',
-    label: 'To Pay',
+    labelKey: 'order.statusToPay',
     icon: 'account_balance_wallet',
     badge: 1,
     route: '/(main)/orders',
   },
-  { id: 'to-ship', label: 'To Ship', icon: 'package_', route: '/(main)/orders' },
+  { id: 'to-ship', labelKey: 'order.statusToShip', icon: 'package_', route: '/(main)/orders' },
   {
     id: 'to-receive',
-    label: 'To Receive',
+    labelKey: 'order.statusToReceive',
     icon: 'local_shipping',
     badge: 2,
     route: '/(main)/orders',
   },
-  { id: 'review', label: 'Review', icon: 'star_rate', route: '/order/review' },
+  { id: 'review', labelKey: 'order.actions.review', icon: 'star_rate', route: '/order/review' },
 ];
 
 interface FunctionItem {
   id: string;
-  label: string;
+  labelKey: string;
   icon: Parameters<typeof Icon>[0]['symbol'];
   route?: string;
-  rightText?: string;
   isError?: boolean;
 }
 
 // 功能菜单（HTML 第 200-244 行）
 const FUNCTION_ITEMS: FunctionItem[] = [
-  { id: 'coupons', label: 'My Coupons', icon: 'confirmation_number', route: '/coupons' },
-  { id: 'address', label: 'Shipping Addresses', icon: 'location_on', route: '/address/list' },
+  { id: 'coupons', labelKey: 'profile.coupons', icon: 'confirmation_number', route: '/coupons' },
+  { id: 'address', labelKey: 'address.list', icon: 'location_on', route: '/address/list' },
   {
     id: 'language',
-    label: 'Language Switch',
+    labelKey: 'profile.language',
     icon: 'language',
     route: '/settings/language',
-    rightText: 'English',
   },
-  { id: 'help', label: 'Help Center', icon: 'help', route: '/service/help' },
-  { id: 'settings', label: 'Settings', icon: 'settings', route: '/settings' },
-  { id: 'logout', label: 'Log Out', icon: 'logout', isError: true },
+  { id: 'help', labelKey: 'profile.help', icon: 'help', route: '/service/help' },
+  { id: 'settings', labelKey: 'profile.settings', icon: 'settings', route: '/settings' },
+  { id: 'logout', labelKey: 'profile.logout', icon: 'logout', isError: true },
 ];
 
 // 未登录状态的功能菜单（无 Log Out）
 const FUNCTION_ITEMS_EMPTY: FunctionItem[] = FUNCTION_ITEMS.filter((i) => i.id !== 'logout');
 
+const LOCALE_NATIVE_NAME: Record<AppLocale, string> = {
+  zh: '中文',
+  en: 'English',
+  tet: 'Tetun',
+};
+
 export default function ProfilePage() {
   const { colors } = useTheme();
+  const { t, i18n } = useTranslation();
   const { data: user, isLoading, isError, refetch } = useProfile();
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const localeNativeName = LOCALE_NATIVE_NAME[i18n.language as AppLocale] ?? 'English';
 
   // 未登录分支（Fix-18：ProfileEmptyPage HTML 还原）
   if (!isAuthenticated) {
@@ -108,7 +120,7 @@ export default function ProfilePage() {
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
         <ProfileHeader />
-        <ErrorState message="Failed to load profile. Please try again." onRetry={() => refetch()} />
+        <ErrorState message={t('errors.profile')} onRetry={() => refetch()} />
       </SafeAreaWrapper>
     );
   }
@@ -149,7 +161,7 @@ export default function ProfilePage() {
             onPress={() => router.push('/profile/edit')}
             style={styles.userRow}
             accessibilityRole="button"
-            accessibilityLabel="Edit profile"
+            accessibilityLabel={t('profile.edit')}
           >
             <View style={styles.avatarWrap}>
               <Image source={{ uri: user.avatar ?? DEFAULT_AVATAR }} style={styles.avatar} />
@@ -157,10 +169,12 @@ export default function ProfilePage() {
             <View style={styles.userText}>
               <Text style={[styles.userName, { color: colors['on-surface'] }]}>{user.name}</Text>
               <View style={styles.userMeta}>
-                <Text style={[styles.userGold, { color: colors.primary }]}>Gold Member</Text>
+                <Text style={[styles.userGold, { color: colors.primary }]}>
+                  {t('profile.goldMember')}
+                </Text>
                 <Text style={[styles.userDivider, { color: colors['on-surface-variant'] }]}>|</Text>
                 <Text style={[styles.userPoints, { color: colors['on-surface-variant'] }]}>
-                  1,250 Points
+                  {t('profile.pointsValue', { count: 1250 })}
                 </Text>
               </View>
             </View>
@@ -178,15 +192,17 @@ export default function ProfilePage() {
           ]}
         >
           <View style={styles.ordersHeader}>
-            <Text style={[styles.ordersTitle, { color: colors['on-surface'] }]}>My Orders</Text>
+            <Text style={[styles.ordersTitle, { color: colors['on-surface'] }]}>
+              {t('profile.orders')}
+            </Text>
             <Pressable
               onPress={() => router.push('/(main)/orders')}
               style={styles.viewAllBtn}
               accessibilityRole="button"
-              accessibilityLabel="View all orders"
+              accessibilityLabel={t('profile.viewAllOrders')}
             >
               <Text style={[styles.viewAllText, { color: colors['on-surface-variant'] }]}>
-                VIEW ALL
+                {t('common.viewAll')}
               </Text>
               <Icon symbol="chevron_right" size={16} color={colors['on-surface-variant']} />
             </Pressable>
@@ -198,7 +214,7 @@ export default function ProfilePage() {
                 onPress={() => entry.route && router.push(entry.route)}
                 style={styles.orderCell}
                 accessibilityRole="button"
-                accessibilityLabel={entry.label}
+                accessibilityLabel={t(entry.labelKey)}
               >
                 <View style={styles.orderIconWrap}>
                   <Icon symbol={entry.icon} size={28} color={colors['on-surface-variant']} />
@@ -209,7 +225,7 @@ export default function ProfilePage() {
                   ) : null}
                 </View>
                 <Text style={[styles.orderLabel, { color: colors['on-surface-variant'] }]}>
-                  {entry.label}
+                  {t(entry.labelKey)}
                 </Text>
               </Pressable>
             ))}
@@ -240,7 +256,7 @@ export default function ProfilePage() {
                 pressed && { opacity: 0.7 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel={item.label}
+              accessibilityLabel={t(item.labelKey)}
             >
               <View style={styles.functionLeft}>
                 <Icon
@@ -249,13 +265,13 @@ export default function ProfilePage() {
                   color={item.isError ? colors.error : colors.primary}
                 />
                 <Text style={[styles.functionLabel, { color: colors['on-surface'] }]}>
-                  {item.label}
+                  {t(item.labelKey)}
                 </Text>
               </View>
               <View style={styles.functionRight}>
-                {item.rightText && (
+                {item.id === 'language' && (
                   <Text style={[styles.functionRightText, { color: 'rgba(89, 65, 61, 0.6)' }]}>
-                    {item.rightText}
+                    {localeNativeName}
                   </Text>
                 )}
                 <Icon symbol="chevron_right" size={24} color={colors.outline} />
@@ -266,9 +282,9 @@ export default function ProfilePage() {
 
         {/* Footer Logo / App Version */}
         <View style={styles.footerLogo}>
-          <Text style={[styles.footerTitle, { color: colors.primary }]}>Mei Mart</Text>
+          <Text style={[styles.footerTitle, { color: colors.primary }]}>{t('home.appName')}</Text>
           <Text style={[styles.footerVersion, { color: colors['on-surface-variant'] }]}>
-            v2.4.0 (Timor-Leste)
+            {t('profile.version')}
           </Text>
         </View>
       </ScrollView>
@@ -280,17 +296,18 @@ export default function ProfilePage() {
 // 已迁移到 PrimaryHeader 组件（CP-FIX P1-3）+ 额外的 tais-pattern strip 给 userCard 上色
 function ProfileHeader() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={{ backgroundColor: colors.primary, ...shadowPresets.md }}>
       <PrimaryHeader
-        title="My Account"
+        title={t('profile.title')}
         rightActions={
           <View style={profileHeaderStyles.actions}>
             <Pressable
               onPress={() => router.push('/service/customer')}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel="Customer Service"
+              accessibilityLabel={t('profile.customerService')}
             >
               <Icon symbol="headset" size={24} color="#ffffff" />
             </Pressable>
@@ -298,7 +315,7 @@ function ProfileHeader() {
               onPress={() => router.push('/service/notifications')}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel="Notifications"
+              accessibilityLabel={t('profile.notifications')}
             >
               <Icon symbol="notifications" size={24} color="#ffffff" />
             </Pressable>
@@ -321,6 +338,8 @@ const profileHeaderStyles = StyleSheet.create({
 // 仍渲染 Header + Orders 4 宫格 + Function Menus（无 Log Out），点击触发登录
 function ProfileEmpty() {
   const { colors } = useTheme();
+  const { t, i18n } = useTranslation();
+  const localeNativeName = LOCALE_NATIVE_NAME[i18n.language as AppLocale] ?? 'English';
   const onRequireLogin = () => {
     router.push('/(auth)/login');
   };
@@ -349,7 +368,7 @@ function ProfileEmpty() {
             </View>
           </View>
           <Text style={[styles.emptyHint, { color: colors['on-surface-variant'] }]}>
-            Login to enjoy member exclusive discount
+            {t('profile.loginHint')}
           </Text>
           <Pressable
             onPress={onRequireLogin}
@@ -359,9 +378,9 @@ function ProfileEmpty() {
               pressed && { transform: [{ scale: 0.98 }] },
             ]}
             accessibilityRole="button"
-            accessibilityLabel="Login or register"
+            accessibilityLabel={t('profile.loginOrRegister')}
           >
-            <Text style={styles.loginBtnText}>LOGIN / REGISTER</Text>
+            <Text style={styles.loginBtnText}>{t('profile.loginRegister')}</Text>
           </Pressable>
         </View>
 
@@ -373,15 +392,17 @@ function ProfileEmpty() {
           ]}
         >
           <View style={styles.ordersHeader}>
-            <Text style={[styles.ordersTitle, { color: colors['on-surface'] }]}>My Orders</Text>
+            <Text style={[styles.ordersTitle, { color: colors['on-surface'] }]}>
+              {t('profile.orders')}
+            </Text>
             <Pressable
               onPress={onRequireLogin}
               style={styles.viewAllBtn}
               accessibilityRole="button"
-              accessibilityLabel="View all orders (login required)"
+              accessibilityLabel={t('profile.viewAllOrdersLogin')}
             >
               <Text style={[styles.viewAllText, { color: colors['on-surface-variant'] }]}>
-                VIEW ALL
+                {t('common.viewAll')}
               </Text>
               <Icon symbol="chevron_right" size={16} color={colors['on-surface-variant']} />
             </Pressable>
@@ -393,13 +414,15 @@ function ProfileEmpty() {
                 onPress={onRequireLogin}
                 style={styles.orderCell}
                 accessibilityRole="button"
-                accessibilityLabel={`${entry.label} (login required)`}
+                accessibilityLabel={t('profile.loginRequiredSuffix', {
+                  label: t(entry.labelKey),
+                })}
               >
                 <View style={styles.orderIconWrap}>
                   <Icon symbol={entry.icon} size={28} color={colors['on-surface-variant']} />
                 </View>
                 <Text style={[styles.orderLabel, { color: colors['on-surface-variant'] }]}>
-                  {entry.label}
+                  {t(entry.labelKey)}
                 </Text>
               </Pressable>
             ))}
@@ -427,18 +450,18 @@ function ProfileEmpty() {
                 pressed && { opacity: 0.7 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel={`${item.label} (login required)`}
+              accessibilityLabel={t('profile.loginRequiredSuffix', { label: t(item.labelKey) })}
             >
               <View style={styles.functionLeft}>
                 <Icon symbol={item.icon} size={24} color={colors.primary} />
                 <Text style={[styles.functionLabel, { color: colors['on-surface'] }]}>
-                  {item.label}
+                  {t(item.labelKey)}
                 </Text>
               </View>
               <View style={styles.functionRight}>
-                {item.rightText && (
+                {item.id === 'language' && (
                   <Text style={[styles.functionRightText, { color: 'rgba(89, 65, 61, 0.6)' }]}>
-                    {item.rightText}
+                    {localeNativeName}
                   </Text>
                 )}
                 <Icon symbol="chevron_right" size={24} color={colors.outline} />
@@ -449,9 +472,9 @@ function ProfileEmpty() {
 
         {/* Footer Logo */}
         <View style={styles.footerLogo}>
-          <Text style={[styles.footerTitle, { color: colors.primary }]}>Mei Mart</Text>
+          <Text style={[styles.footerTitle, { color: colors.primary }]}>{t('home.appName')}</Text>
           <Text style={[styles.footerVersion, { color: colors['on-surface-variant'] }]}>
-            v2.4.0 (Timor-Leste)
+            {t('profile.version')}
           </Text>
         </View>
       </ScrollView>

@@ -44,8 +44,8 @@ import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 const SHORTCUTS = [
   {
     id: 'deals',
-    label: 'SAVE BIG',
-    title: 'Deals',
+    labelKey: 'shortcut.dealsLabel',
+    titleKey: 'shortcut.deals',
     icon: 'local_offer',
     bgColor: 'rgba(150,24,19,0.05)',
     borderColor: 'rgba(150,24,19,0.2)',
@@ -57,8 +57,8 @@ const SHORTCUTS = [
   },
   {
     id: 'new',
-    label: 'WELCOME',
-    title: 'New User',
+    labelKey: 'shortcut.newLabel',
+    titleKey: 'shortcut.newUser',
     icon: 'person_add',
     bgColor: '#ecfdf5',
     borderColor: '#d1fae5',
@@ -69,8 +69,8 @@ const SHORTCUTS = [
   },
   {
     id: 'coupons',
-    label: 'REDEEM',
-    title: 'Coupons',
+    labelKey: 'shortcut.couponsLabel',
+    titleKey: 'profile.coupons',
     icon: 'confirmation_number',
     bgColor: 'rgba(99,71,0,0.1)',
     borderColor: 'rgba(99,71,0,0.2)',
@@ -81,8 +81,8 @@ const SHORTCUTS = [
   },
   {
     id: 'delivery',
-    label: 'LIMITED',
-    title: 'Free Delivery',
+    labelKey: 'shortcut.deliveryLabel',
+    titleKey: 'shortcut.freeDelivery',
     icon: 'moped',
     bgColor: '#eff6ff',
     borderColor: '#bfdbfe',
@@ -96,9 +96,9 @@ const SHORTCUTS = [
 // Buy Again 区块改用 useBuyAgain 从 mockDb 拉 p007-p010，避免与详情页数据脱节
 
 // 推荐商品角标轮转：第 1 张 Fresh / 第 2 张 Best Seller / 后续无角标
-function getRecommendBadge(index: number): ProductBadge | undefined {
-  if (index === 0) return { label: 'Fresh', variant: 'fresh' };
-  if (index === 1) return { label: 'Best Seller', variant: 'best-seller' };
+function getRecommendBadge(index: number, t: (key: string) => string): ProductBadge | undefined {
+  if (index === 0) return { label: t('product.badgeFresh'), variant: 'fresh' };
+  if (index === 1) return { label: t('product.badgeBestSeller'), variant: 'best-seller' };
   return undefined;
 }
 
@@ -131,7 +131,7 @@ export default function HomePage() {
           <View style={styles.brandCol}>
             <Logo size={32} />
             <Text style={styles.brandName} accessibilityRole="header">
-              Mei mart
+              {t('home.appName')}
             </Text>
           </View>
           <BlurView
@@ -140,14 +140,14 @@ export default function HomePage() {
             style={[styles.locationChip, styles.locationChipBorder]}
           >
             <Icon symbol="location_on" size={16} color="#ffffff" />
-            <Text style={styles.locationText}>Dili, Christo Rei</Text>
+            <Text style={styles.locationText}>{t('home.locationLabel')}</Text>
           </BlurView>
           <Pressable
             testID="home-messages"
             onPress={() => router.push('/service/notifications')}
             style={styles.msgBtn}
             accessibilityRole="button"
-            accessibilityLabel="Messages"
+            accessibilityLabel={t('home.messagesLabel')}
           >
             <Icon symbol="mail" size={24} color="#ffffff" />
             <View style={styles.msgBadge}>
@@ -164,7 +164,7 @@ export default function HomePage() {
       {/* Delivery Tip — 黄色横条 */}
       <View style={[styles.deliveryTip, { backgroundColor: colors.cultural.amber }]}>
         <Icon symbol="local_shipping" size={18} color="#000000" />
-        <Text style={styles.deliveryTipText}>Delivery active · Today 1-2h · Free over $20</Text>
+        <Text style={styles.deliveryTipText}>{t('home.deliveryTip')}</Text>
       </View>
 
       <ScrollView
@@ -189,7 +189,7 @@ export default function HomePage() {
           >
             <Icon symbol="search" size={22} color={colors.outline} />
             <Text style={[styles.searchPlaceholder, { color: colors['on-surface-variant'] }]}>
-              Search household essentials...
+              {t('home.searchPlaceholder')}
             </Text>
           </Pressable>
         </View>
@@ -208,14 +208,18 @@ export default function HomePage() {
         {categories && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>Categories</Text>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                {t('home.categories')}
+              </Text>
               <Pressable
                 onPress={() => router.push('/(main)/categories')}
                 style={styles.seeAllBtn}
                 accessibilityRole="button"
-                accessibilityLabel="See all categories"
+                accessibilityLabel={t('home.seeAllCategories')}
               >
-                <Text style={[styles.seeAllText, { color: colors.primary }]}>SEE ALL</Text>
+                <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                  {t('common.seeAll')}
+                </Text>
                 <Icon symbol="chevron_right" size={16} color={colors.primary} />
               </Pressable>
             </View>
@@ -237,22 +241,27 @@ export default function HomePage() {
 
         {/* Promo Shortcuts */}
         <View style={styles.section}>
-          <PromoShortcut items={SHORTCUTS} onPress={(item) => router.push('/search')} />
+          <PromoShortcut
+            items={SHORTCUTS.map((s) => ({ ...s, label: t(s.labelKey), title: t(s.titleKey) }))}
+            onPress={(item) => router.push('/search')}
+          />
         </View>
 
         {/* 推荐商品标题 + 横滑卡片 */}
         <View style={styles.recommendSection}>
           <View style={[styles.sectionHeader, styles.recommendHeader]}>
             <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              Recommended for You
+              {t('home.recommend')}
             </Text>
             <Pressable
               onPress={() => router.push('/product/list')}
               style={styles.seeAllBtn}
               accessibilityRole="button"
-              accessibilityLabel="See all products"
+              accessibilityLabel={t('home.seeAllProducts')}
             >
-              <Text style={[styles.seeAllText, { color: colors.primary }]}>SEE ALL</Text>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                {t('common.seeAll')}
+              </Text>
               <Icon symbol="chevron_right" size={16} color={colors.primary} />
             </Pressable>
           </View>
@@ -271,7 +280,7 @@ export default function HomePage() {
                 <View key={item.id} style={styles.recommendCard}>
                   <ProductCard
                     product={item}
-                    badge={getRecommendBadge(index)}
+                    badge={getRecommendBadge(index, t)}
                     onPress={() => router.push(`/product/${item.id}`)}
                   />
                 </View>
@@ -283,7 +292,9 @@ export default function HomePage() {
         {/* Buy Again — 横滑小卡片（HTML 第 389-421 行） */}
         <View style={styles.buyAgainSection}>
           <View style={[styles.sectionHeader, styles.buyAgainHeader]}>
-            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>Buy Again</Text>
+            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+              {t('order.actions.repurchase')}
+            </Text>
             <Icon symbol="history" size={20} color={colors.outline} />
           </View>
           <ScrollView
@@ -304,7 +315,7 @@ export default function HomePage() {
                   pressed && { opacity: 0.7 },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={`Reorder ${localize(item.name)}`}
+                accessibilityLabel={t('home.reorderLabel', { name: localize(item.name) })}
               >
                 <View
                   style={[
