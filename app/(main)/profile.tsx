@@ -470,9 +470,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing['container-margin'],
-    marginTop: -96,
+    paddingTop: spacing.md,
     paddingBottom: spacing.xxl * 2,
-    zIndex: 10,
     gap: spacing.md,
   },
   center: {
