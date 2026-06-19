@@ -37,7 +37,7 @@ import { Logo } from '@/components/cultural/Logo';
 import { UmaLulikSkyline } from '@/components/cultural/UmaLulikSkyline';
 import { Icon } from '@/components/ui/Icon';
 import { useCategories, useBanners } from '@/services/queries/useCatalog';
-import { useRecommendations } from '@/services/queries/useProducts';
+import { useRecommendations, useBuyAgain } from '@/services/queries/useProducts';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 
 const SHORTCUTS = [
@@ -92,37 +92,7 @@ const SHORTCUTS = [
   },
 ];
 
-// Buy Again mock（HTML 第 389-421 行：Bee Botir / Asukar 小卡片）
-const BUY_AGAIN: { id: string; name: string; price: number; image: string }[] = [
-  {
-    id: 'p007',
-    name: 'Bee Botir 600ml',
-    price: 0.5,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCE3sTv-XZhtRhkl92P2N_5rhCCODDi4Xps8vSc5b2WRUe11tpJKJHGsGCdTwOySKJ6sKq6LmnuxAHrj2vwCrBtdgr9_akZcFV-N0FUFEn2Tt8zqIEIzta9uDm-xRPhhQUCcbZSdOV7n7sfYVF3II4r9FKwsXEMF0cd0nvTA8J0oVyo0EjoqVatlIK_xCLblnx95w1K5kqdwoxhKJmvlVZ1XnMA6DgTPRoDNOGKNrG0QoqRFVrej3MwLxWgSGljQvxxXECepyJO',
-  },
-  {
-    id: 'p008',
-    name: 'Asukar 1kg',
-    price: 1.2,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAgORJZUTBW_lQWUP0A-PqyDlrkXeZFsZKSTd11VLZrrpFOxtwkyZO1AfMgwChLp0xeOjbqsXy1U3EHfGAozayccsp0fVv0FUM5nngs2I7LmapkoyqIHpjiWU7u9r-dx1aO-6snlxBRxl1LN29i202-FnWRRXWoyDUf-tSXKlvtlWvmoOti26OXZ3eVg806wPfB1R0oEV9w_Cs3GuseFuvwu1ewO8zckynXd1F0pa7bVzGycgLCPB8TKZ9WPrxTEJCAeG9fZ4ZM',
-  },
-  {
-    id: 'p009',
-    name: 'Foos Lafaek 5kg',
-    price: 4.8,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBXs-CQLr3ottuFHa8A8jV5U8wot6MLv7kddnkUZL7B_NigcoSIRd1bc0r32kBq2SNUzS5SVcna2oK31NPahWdDm8rATsDVi5n2Zlq-LbgXQh_IqjlESZXtk_4VpPW3u_9BbTW4KERum0HVRbYzjb-csWo9tDgiXG1JwcflhuaDQGtcsCw5Y4V1OYmP5y1N_wSttHNPb_hOC4IhFdBUIZ5B7TaiedXTLNI26vu379e5PAWkq6diJlV3zzSmrF-O8JELi-xN4n0B',
-  },
-  {
-    id: 'p010',
-    name: 'Huun Klean 4pk',
-    price: 1.8,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuA-1b7aBs9aO47BTPz5sy-Z-vUZD_ttiKwLqQ3V13Ly16NpxaZuahzP5VttDlGDnLyisdIS3AFgLDx5LNFskYTNTKoOcPhqQn3N607wZE7tyfn7Q3SJJSF9UmhrmmHy9fxNYi_Wp3CPsY45XIIrXfwaBO9u4rxPhHz2HtZhPWSg2wzZyZ2lNS-0HnFUg2IGOJiKw7EvTnkbQi21d3nQyziBh2a_4TPHcAw05wbi694fAea8At5KfqcHYYXUuVP4KPMeOHCYa9oJ',
-  },
-];
+// Buy Again 区块改用 useBuyAgain 从 mockDb 拉 p007-p010，避免与详情页数据脱节
 
 // 推荐商品角标轮转：第 1 张 Fresh / 第 2 张 Best Seller / 后续无角标
 function getRecommendBadge(index: number): ProductBadge | undefined {
@@ -139,6 +109,8 @@ export default function HomePage() {
   const { data: categories } = useCategories();
   const { data: products, isLoading, isError, refetch } = useRecommendations();
   const recommendList = products ?? [];
+  const { data: buyAgainProducts } = useBuyAgain();
+  const buyAgainList = buyAgainProducts ?? [];
 
   return (
     <SafeAreaWrapper edges={['top']} style={{ backgroundColor: colors.primary, flex: 1 }}>
@@ -317,7 +289,7 @@ export default function HomePage() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.hScroll}
           >
-            {BUY_AGAIN.map((item) => (
+            {buyAgainList.map((item) => (
               <Pressable
                 key={item.id}
                 onPress={() => router.push(`/product/${item.id}`)}

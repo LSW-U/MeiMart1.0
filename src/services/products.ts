@@ -18,6 +18,10 @@ export const productApi = {
     if (isMockMode) return mockResponse(mockDb.products.slice(0, 6));
     throw new Error('Real API not implemented');
   },
+  async getBuyAgain(): Promise<Product[]> {
+    if (isMockMode) return mockResponse(mockDb.products.slice(6, 10));
+    throw new Error('Real API not implemented');
+  },
   async search(keyword: string): Promise<Product[]> {
     if (isMockMode) {
       const filtered = mockDb.products.filter((p) => p.name.includes(keyword));

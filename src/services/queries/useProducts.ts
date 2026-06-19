@@ -30,6 +30,15 @@ export function useRecommendations() {
   });
 }
 
+export function useBuyAgain() {
+  return useQuery({
+    queryKey: ['products', 'buy-again'],
+    queryFn: () => productApi.getBuyAgain(),
+    staleTime: 5 * 60 * 1000,
+    networkMode: 'offlineFirst',
+  });
+}
+
 export function useProductSearch(keyword: string, enabled = true) {
   return useQuery<Product[]>({
     queryKey: ['products', 'search', keyword],
