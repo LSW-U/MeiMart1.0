@@ -42,7 +42,7 @@ export default function SettingsPage() {
 
   return (
     <SafeAreaWrapper
-      edges={['bottom']}
+      edges={['top', 'bottom']}
       style={[styles.container, { backgroundColor: colors.background }]}
     >
       <StatusBarConfig />

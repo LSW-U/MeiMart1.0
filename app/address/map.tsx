@@ -31,7 +31,10 @@ export default function MapPickPage() {
   const { colors } = useTheme();
 
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <Header title="Add New Address" />
 

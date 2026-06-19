@@ -112,7 +112,10 @@ export default function CategoriesPage() {
   const activeCategory = SIDEBAR_CATEGORIES.find((c) => c.id === activeId) ?? SIDEBAR_CATEGORIES[0];
 
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <CategoriesHeader />
 

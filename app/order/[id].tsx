@@ -55,7 +55,10 @@ export default function OrderDetailPage() {
 
   if (isLoading) {
     return (
-      <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
         <StatusBarConfig />
         <PrimaryHeader title={t('order.detail')} showBack onBackPress={() => router.back()} />
         <View style={styles.center}>
@@ -66,7 +69,10 @@ export default function OrderDetailPage() {
   }
   if (isError || !order) {
     return (
-      <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
         <StatusBarConfig />
         <PrimaryHeader title={t('order.detail')} showBack onBackPress={() => router.back()} />
         <ErrorState message={t('order.notFoundError')} onRetry={() => refetch()} />
@@ -123,7 +129,10 @@ export default function OrderDetailPage() {
   };
 
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <PrimaryHeader
         title={t('order.detail')}

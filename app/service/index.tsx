@@ -111,7 +111,10 @@ export default function CustomerServicePage() {
   ];
 
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <PrimaryHeader title={t('service.title')} showBack onBackPress={() => router.back()} />
 

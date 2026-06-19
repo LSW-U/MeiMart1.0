@@ -103,7 +103,10 @@ export default function DeliveryTrackingPage() {
   const trackingNo = params.id ? `MEI-${params.id.padStart(5, '0')}` : 'MEI-98234';
 
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <Header title="Order Details" />
 

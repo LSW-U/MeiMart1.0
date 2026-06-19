@@ -51,7 +51,10 @@ export default function AddressEditPage() {
   const isEditing = !!existing;
 
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <Header title={isEditing ? 'Edit Address' : 'Add New Address'} />
       <KeyboardAvoidingView
