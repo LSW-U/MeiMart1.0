@@ -805,6 +805,7 @@ const styles = StyleSheet.create({
   priceBig: {
     ...typography['price-display'],
     fontSize: 28,
+    lineHeight: 28 * 1.2,
     flexShrink: 0,
   },
   priceStrike: {
