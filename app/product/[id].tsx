@@ -24,6 +24,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useProduct, useProducts } from '@/services/queries/useProducts';
 import { useAddToCart } from '@/services/queries/useCart';
 import { useFavorites, useToggleFavorite } from '@/services/queries/useUser';
+import { useLocalizer } from '@/i18n';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -78,6 +79,7 @@ function StarsRow({ size = 14 }: { size?: number }) {
 export default function ProductDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
+  const localize = useLocalizer();
   const { data: product, isLoading, isError, refetch } = useProduct(id);
   const { data: allProducts } = useProducts();
   const { data: favorites } = useFavorites();
@@ -117,17 +119,17 @@ export default function ProductDetailPage() {
     addToCartMutation.mutate(
       { product, quantity: 1 },
       {
-        onSuccess: () => Alert.alert('Added to cart', product.name),
+        onSuccess: () => Alert.alert('Added to cart', localize(product.name)),
       },
     );
   };
 
-  const addRelatedToCart = (p: { id: string; name: string; price: number; image: string }) => {
+  const addRelatedToCart = (p: { id: string }) => {
     const full = (allProducts ?? []).find((item) => item.id === p.id);
     if (!full) return;
     addToCartMutation.mutate(
       { product: full, quantity: 1 },
-      { onSuccess: () => Alert.alert('Added to cart', full.name) },
+      { onSuccess: () => Alert.alert('Added to cart', localize(full.name)) },
     );
   };
 
@@ -135,15 +137,16 @@ export default function ProductDetailPage() {
     if (!product) return;
     toggleFavoriteMutation.mutate(product, {
       onSuccess: ({ isFavorite: fav }) =>
-        Alert.alert(fav ? 'Added to favorites' : 'Removed from favorites', product.name),
+        Alert.alert(fav ? 'Added to favorites' : 'Removed from favorites', localize(product.name)),
     });
   };
 
   const shareProduct = () => {
     if (!product) return;
+    const name = localize(product.name);
     Share.share({
-      message: `${product.name} — $${product.price.toFixed(2)}\nCheck it out on MeiMart!`,
-      title: product.name,
+      message: `${name} — $${product.price.toFixed(2)}\nCheck it out on MeiMart!`,
+      title: name,
     }).catch(() => {});
   };
 
@@ -232,7 +235,9 @@ export default function ProductDetailPage() {
                 <Text style={[styles.tagPrimaryText, { color: colors.primary }]}>BEST SELLER</Text>
               </View>
             </View>
-            <Text style={[styles.h1, { color: colors['on-surface'] }]}>{product.name}</Text>
+            <Text style={[styles.h1, { color: colors['on-surface'] }]}>
+              {localize(product.name)}
+            </Text>
             <View style={styles.priceRow}>
               <Text style={[styles.priceBig, { color: colors.primary }]}>
                 ${product.price.toFixed(2)}
@@ -360,10 +365,13 @@ export default function ProductDetailPage() {
               />
             </View>
             <View style={styles.detailTextWrap}>
-              <Text style={[styles.detailH2, { color: colors['on-surface'] }]}>{product.name}</Text>
+              <Text style={[styles.detailH2, { color: colors['on-surface'] }]}>
+                {localize(product.name)}
+              </Text>
               <Text style={[styles.detailBody, { color: colors['on-surface-variant'] }]}>
-                {product.description ??
-                  'Sourced from the misty highlands of Ermera, our 100% organic Arabica beans are hand-picked by local cooperatives. Each bean carries the legacy of traditional sun-drying methods, resulting in a rich, velvety profile with notes of dark chocolate and native citrus.'}
+                {product.description
+                  ? localize(product.description)
+                  : 'Sourced from the misty highlands of Ermera, our 100% organic Arabica beans are hand-picked by local cooperatives. Each bean carries the legacy of traditional sun-drying methods, resulting in a rich, velvety profile with notes of dark chocolate and native citrus.'}
               </Text>
             </View>
           </View>
@@ -475,7 +483,7 @@ export default function ProductDetailPage() {
                       style={[styles.relatedName, { color: colors['on-surface'] }]}
                       numberOfLines={1}
                     >
-                      {p.name}
+                      {localize(p.name)}
                     </Text>
                     <Text style={[styles.relatedPrice, { color: colors.primary }]}>
                       ${p.price.toFixed(2)}
@@ -542,7 +550,7 @@ export default function ProductDetailPage() {
                       style={[styles.relatedName, { color: colors['on-surface'] }]}
                       numberOfLines={1}
                     >
-                      {p.name}
+                      {localize(p.name)}
                     </Text>
                     <Text style={[styles.relatedPrice, { color: colors.primary }]}>
                       ${p.price.toFixed(2)}

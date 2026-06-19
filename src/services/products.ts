@@ -1,5 +1,6 @@
 import { isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
+import { getCurrentLocale } from '@/i18n';
 import type { Product } from '@/types';
 
 export const productApi = {
@@ -24,7 +25,11 @@ export const productApi = {
   },
   async search(keyword: string): Promise<Product[]> {
     if (isMockMode) {
-      const filtered = mockDb.products.filter((p) => p.name.includes(keyword));
+      const lower = keyword.toLowerCase();
+      const filtered = mockDb.products.filter((p) => {
+        const name = p.name[getCurrentLocale()] ?? p.name.en;
+        return name.toLowerCase().includes(lower);
+      });
       return mockResponse(filtered, 500);
     }
     throw new Error('Real API not implemented');

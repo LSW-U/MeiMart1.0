@@ -4,8 +4,11 @@
  */
 import type { ComponentProps } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import type { AppLocale } from '@/i18n';
 
 export type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
+
+export type LocalizableText = Record<AppLocale, string>;
 
 export function toIconName(name: string): IconName {
   return name as IconName;
@@ -13,14 +16,14 @@ export function toIconName(name: string): IconName {
 
 export interface Product {
   id: string;
-  name: string;
+  name: LocalizableText;
   price: number;
   originalPrice?: number;
   image: string;
   category: string;
   rating?: number;
   salesCount?: number;
-  description?: string;
+  description?: LocalizableText;
 }
 
 export interface CartItem {

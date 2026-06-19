@@ -2,6 +2,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
+import { useLocalizer } from '@/i18n';
 import { PriceText } from '@/components/ui/PriceText';
 import { Button } from '@/components/ui/Button';
 import type { OrderStatus } from '@/types';
@@ -22,6 +23,7 @@ const STATUS_PILL: Record<OrderStatus, StatusPill> = {
 export function OrderCard({ order, onPress, onAction, testID }: OrderCardProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const localize = useLocalizer();
   const pill = STATUS_PILL[order.status];
   const thumbnails = order.items.slice(0, 2);
   const overflow = Math.max(0, order.items.length - 2);
@@ -91,7 +93,7 @@ export function OrderCard({ order, onPress, onAction, testID }: OrderCardProps) 
                 source={{ uri: item.product.image }}
                 style={styles.thumbImg}
                 accessible={false}
-                accessibilityLabel={item.product.name}
+                accessibilityLabel={localize(item.product.name)}
               />
             </View>
           ))}

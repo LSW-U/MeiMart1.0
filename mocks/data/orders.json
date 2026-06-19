@@ -8,7 +8,11 @@
         "id": "ci001",
         "product": {
           "id": "p001",
-          "name": "新鲜红富士苹果",
+          "name": {
+            "zh": "新鲜红富士苹果",
+            "en": "Fresh Red Fuji Apple",
+            "tet": "Maçã Fuji Vermelha Frescu"
+          },
           "price": 25.9,
           "image": "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400",
           "category": "fruits"
@@ -29,7 +33,11 @@
         "id": "ci002",
         "product": {
           "id": "p005",
-          "name": "蒙牛纯牛奶 250ml×12",
+          "name": {
+            "zh": "蒙牛纯牛奶 250ml×12",
+            "en": "Pure Milk 250ml × 12",
+            "tet": "Sasán Lét 250ml × 12"
+          },
           "price": 42.9,
           "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
           "category": "dairy"
@@ -50,7 +58,11 @@
         "id": "ci003",
         "product": {
           "id": "p009",
-          "name": "清风原木抽纸 24包",
+          "name": {
+            "zh": "清风原木抽纸 24包",
+            "en": "Tissue Paper 24 pack",
+            "tet": "Surat Tisu 24"
+          },
           "price": 45.0,
           "image": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400",
           "category": "household"
@@ -72,7 +84,11 @@
         "id": "ci004",
         "product": {
           "id": "p002",
-          "name": "本地土鸡蛋 30枚装",
+          "name": {
+            "zh": "本地土鸡蛋 30枚装",
+            "en": "Free-Range Eggs (30 pack)",
+            "tet": "Manu Tolun 30"
+          },
           "price": 38.5,
           "image": "https://images.unsplash.com/photo-1582722872445-44dc5f43e784?w=400",
           "category": "eggs"
@@ -93,7 +109,11 @@
         "id": "ci005",
         "product": {
           "id": "p007",
-          "name": "薯片零食大礼包",
+          "name": {
+            "zh": "薯片零食大礼包",
+            "en": "Snacks Variety Pack",
+            "tet": "Pakote Snack"
+          },
           "price": 35.9,
           "image": "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400",
           "category": "snacks"

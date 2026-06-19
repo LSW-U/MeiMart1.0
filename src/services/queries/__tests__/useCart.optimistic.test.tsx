@@ -13,7 +13,7 @@ jest.mock('@/services/cart');
 
 const sampleProduct: Product = {
   id: 'p1',
-  name: '苹果',
+  name: { zh: '苹果', en: 'Apple', tet: 'Maçã' },
   price: 9.9,
   image: '',
   category: 'fruit',
@@ -24,7 +24,12 @@ const baseCart: Cart = {
     { id: 'ci1', product: sampleProduct, quantity: 2, selected: true },
     {
       id: 'ci2',
-      product: { ...sampleProduct, id: 'p2', name: '香蕉', price: 5 },
+      product: {
+        ...sampleProduct,
+        id: 'p2',
+        name: { zh: '香蕉', en: 'Banana', tet: 'Huu' },
+        price: 5,
+      },
       quantity: 3,
       selected: false,
     },

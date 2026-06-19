@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { useLocalizer } from '@/i18n';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -31,6 +32,7 @@ const PAYMENT_METHODS = [
 export default function CheckoutPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const localize = useLocalizer();
   const { isOffline } = useWeakNetworkUI();
   const { data: cart, isLoading, isError, refetch } = useCart();
   const { data: addresses } = useAddresses();
@@ -121,7 +123,7 @@ export default function CheckoutPage() {
                     style={[styles.itemName, { color: colors['on-surface'] }]}
                     numberOfLines={2}
                   >
-                    {item.product.name}
+                    {localize(item.product.name)}
                   </Text>
                   <Text style={[styles.itemQty, { color: colors['on-surface-variant'] }]}>
                     {t('checkout.itemQty', { count: item.quantity })}

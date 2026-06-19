@@ -1,6 +1,7 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
+import { useLocalizer } from '@/i18n';
 import { PriceText } from '@/components/ui/PriceText';
 import { Checkbox } from '@/components/ui/Checkbox';
 import type { CartItemRowProps } from './CartItemRow.types';
@@ -15,7 +16,9 @@ export function CartItemRow({
   testID,
 }: CartItemRowProps) {
   const { colors } = useTheme();
+  const localize = useLocalizer();
   const { product, quantity, selected } = item;
+  const name = localize(product.name);
 
   return (
     <Pressable
@@ -31,7 +34,7 @@ export function CartItemRow({
         pressed && { opacity: 0.85 },
       ]}
       accessibilityRole={onItemPress ? 'button' : undefined}
-      accessibilityLabel={onItemPress ? `View ${product.name}` : undefined}
+      accessibilityLabel={onItemPress ? `View ${name}` : undefined}
     >
       {showControls && (
         <Checkbox
@@ -48,7 +51,7 @@ export function CartItemRow({
           style={[textStyle('body-md'), { fontWeight: '700', color: colors['on-surface'] }]}
           numberOfLines={2}
         >
-          {product.name}
+          {name}
         </Text>
         <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
           {product.category}

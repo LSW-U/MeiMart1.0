@@ -34,39 +34,39 @@ const POPULAR_SEARCHES = [
 const RECOMMENDED: Product[] = [
   {
     id: 'rec-1',
-    name: 'Organic Rice 5kg',
+    name: { zh: '有机大米 5kg', en: 'Organic Rice 5kg', tet: 'Horas Organiku 5kg' },
     price: 12.5,
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCknzBB-OmbcSPhlbjB806DoUJ0WkWxaVAoCwDg8pmxtP0Lif3DQET2BMCS9qphYk5ag-3K8Je-teCqRifr-KcE_Snuq1huoIbxoCX3gJNq9mj8VRL9cSLfNVzB_-AQWohO1UpBp0n5XTguQFAkAGaKDkFhhwqy9JMTzc7RjjqvZFauM1e94AinBnRKhaS_pksfK7TGMilO2dRtm0ysCT95K4dpykuI10Q0oQAglZeTM9wt-8N08h-7VpEb1ZVVmwdGzkb_V7ok',
     category: 'Local Agriculture',
-    description: '',
+    description: { zh: '', en: '', tet: '' },
   },
   {
     id: 'rec-2',
-    name: 'Arabica Coffee 250g',
+    name: { zh: '阿拉比卡咖啡 250g', en: 'Arabica Coffee 250g', tet: 'Kafé Arabika 250g' },
     price: 8.0,
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCWeJP4XWPW0OOcAqIRu9iKpsNYVGPidRP98g4ZGq0-sspNtxokZY4RhfyclV44MOavAzu2nTBnBow9xvFz3nup3GRUNzuW1SqjB4J4d2DHITO9UWzA-4yKFQxJxoOPfaOIoSTAo9fz4ta5dcwfASRrDOf3Wp3GH9HVIU7hax2lkYYz0cCfuBa9UYciw5p7m_Ljwa5YFoVIEk8DracFoN9JEtI7MLRfTwQtSfT9sK5dDTPW4q1SNIS8pPbkqfkADPVBW3zQLHr3',
     category: 'Ermera Specialty',
-    description: '',
+    description: { zh: '', en: '', tet: '' },
   },
   {
     id: 'rec-3',
-    name: 'Beef 1kg',
+    name: { zh: '牛肉 1kg', en: 'Beef 1kg', tet: 'Karau 1kg' },
     price: 15.2,
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuDxb8eoZ2Un2_q3XtJq_EwFP0JPN5-nEBPLyKUqgJx3lOyEpxDol1NVS1cjhdeBSfB03rJakIosOhtZscua-6bgRqUveSb0h4QeeCDC_N9Pafbu_KeS45wVh6o0UDvyKuP9OQg4yXrJULkA_5kztsnYTW9_oCGuAvBxirrOdb_ceyu7MAMQvliA9HD2GCg_VpnRdz8dwvk6dcwXduMz97H64Gfw9PgkDjz5OlzvpPidDDKWsPceVU-k8mVwxV3LxtId1oDNswzn',
     category: 'Meat Market',
-    description: '',
+    description: { zh: '', en: '', tet: '' },
   },
   {
     id: 'rec-4',
-    name: 'Tropical Mixed Fruit',
+    name: { zh: '热带混合水果', en: 'Tropical Mixed Fruit', tet: 'Hudi Tropikál' },
     price: 4.5,
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuAVbJaVvDDcit_qOfEVIMYGqB5O5HVL5MSL0QTTuw9H2Z5iDyiJ9HTA-l5E4XixKLyXmKDgqQOFsPdo54jJE6MQdy2x8_QFT528tnbo-2iTQ5ECTZsdaM6kZmXvjwjuvRmtk2KCTvNg1uiUqLr-QPj0km2ydUcqwdU0cn5JBFruN6EcpRW6f2OXNhUBiroWxAhjQ_MgY_-L6f55VxZiw4lve3IVnT-dHnv7alOKhNVsfxI1tlP9Y0XHplvhCrREreZyMWtid6aK',
     category: 'Farm Direct',
-    description: '',
+    description: { zh: '', en: '', tet: '' },
   },
 ];
 

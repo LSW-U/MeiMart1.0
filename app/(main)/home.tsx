@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { useLocalizer } from '@/i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import {
@@ -104,6 +105,7 @@ function getRecommendBadge(index: number): ProductBadge | undefined {
 export default function HomePage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const localize = useLocalizer();
   const { shouldSkipNonEssential } = useWeakNetworkUI();
   const { data: banners } = useBanners();
   const { data: categories } = useCategories();
@@ -302,7 +304,7 @@ export default function HomePage() {
                   pressed && { opacity: 0.7 },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={`Reorder ${item.name}`}
+                accessibilityLabel={`Reorder ${localize(item.name)}`}
               >
                 <View
                   style={[
@@ -316,7 +318,7 @@ export default function HomePage() {
                   style={[styles.buyAgainName, { color: colors['on-surface-variant'] }]}
                   numberOfLines={1}
                 >
-                  {item.name}
+                  {localize(item.name)}
                 </Text>
                 <View style={styles.buyAgainRow}>
                   <Text style={[styles.buyAgainPrice, { color: colors.primary }]}>

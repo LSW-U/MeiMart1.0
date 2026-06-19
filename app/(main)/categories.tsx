@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
+import { useLocalizer } from '@/i18n';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -55,26 +56,27 @@ const SUB_CATEGORIES = [
 const HOT_PRODUCTS: Product[] = [
   {
     id: 'hot-1',
-    name: 'Ermera Premium Coffee',
+    name: { zh: 'Ermera 优质咖啡', en: 'Ermera Premium Coffee', tet: 'Kafé Premium Ermera' },
     price: 12.5,
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCyjrHeeobiFoXak9PGkXAhLYNsiqtIdDeqqbao1sLfr8sjL2EhbmGIM-xxxOwwxTok9M2bZK0wnh3cMxKJ7uy1L6DuPMqf2saImFPxCaN0WUPSZf-wg4uHLF14L6fUPy5GQokcdrQra1OaEV7avlq2P1f_ggcW5VwGQU33jvd7WqE6JMgp4WGcOm2-thR50XXQpVxe8YdMngLWc5o1B8d1hhtmzodB54ggassp7ZQchzykOEMi5WQgvNYshq2rYUXGpjSb3u3C',
     category: 'Coffee',
-    description: '',
+    description: { zh: '', en: '', tet: '' },
   },
   {
     id: 'hot-2',
-    name: 'Wild Forest Honey',
+    name: { zh: '野生森林蜂蜜', en: 'Wild Forest Honey', tet: 'Fuan Foho Metan' },
     price: 8.0,
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCuSltztY2InuCouNxLFTR3dvUPAeuO2NHMnDjtODHFeFj_tFlXPGzC28qveja3V9KkA1PTJ78rhE-VEXDbed8jwb58ymI9L0SxtegdKxZVZeBgOPUQlcmX1vxXeyjq0FehsY3AjQUiQkbvpcY-PIwjZgiOrevERR-jbyGYSUsI5p17iXnA1akgKciu-u40VRfXuKsbrLoCXuMsgzipjKTN07dCJXiMsCBFVewiUnDq8q8JTTWGMw-qbQ6u8jurlbHH-80k_TrD',
     category: 'Honey',
-    description: '',
+    description: { zh: '', en: '', tet: '' },
   },
 ];
 
 export default function CategoriesPage() {
   const { colors } = useTheme();
+  const localize = useLocalizer();
   const {
     data: categories,
     isLoading: catLoading,
@@ -281,7 +283,7 @@ export default function CategoriesPage() {
                         style={[styles.hotName, { color: colors['on-surface'] }]}
                         numberOfLines={1}
                       >
-                        {p.name}
+                        {localize(p.name)}
                       </Text>
                       <View style={styles.hotPriceRow}>
                         <Text style={[styles.hotPrice, { color: colors.primary }]}>
@@ -295,7 +297,7 @@ export default function CategoriesPage() {
                             pressed && { transform: [{ scale: 0.9 }] },
                           ]}
                           accessibilityRole="button"
-                          accessibilityLabel={`Add ${p.name} to cart`}
+                          accessibilityLabel={`Add ${localize(p.name)} to cart`}
                         >
                           <Icon symbol="add_shopping_cart" size={18} color="#ffffff" />
                         </Pressable>
@@ -326,7 +328,7 @@ export default function CategoriesPage() {
                         style={[styles.hotName, { color: colors['on-surface'] }]}
                         numberOfLines={1}
                       >
-                        {p.name}
+                        {localize(p.name)}
                       </Text>
                       <View style={styles.hotPriceRow}>
                         <Text style={[styles.hotPrice, { color: colors.primary }]}>
@@ -340,7 +342,7 @@ export default function CategoriesPage() {
                             pressed && { transform: [{ scale: 0.9 }] },
                           ]}
                           accessibilityRole="button"
-                          accessibilityLabel={`Add ${p.name} to cart`}
+                          accessibilityLabel={`Add ${localize(p.name)} to cart`}
                         >
                           <Icon symbol="add_shopping_cart" size={18} color="#ffffff" />
                         </Pressable>

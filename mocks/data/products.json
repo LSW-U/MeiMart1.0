@@ -1,29 +1,49 @@
 [
   {
     "id": "p001",
-    "name": "新鲜红富士苹果",
+    "name": {
+      "zh": "新鲜红富士苹果",
+      "en": "Fresh Red Fuji Apple",
+      "tet": "Maçã Fuji Vermelha Frescu"
+    },
     "price": 25.9,
     "originalPrice": 35.0,
     "image": "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400",
     "category": "fruits",
     "rating": 4.8,
     "salesCount": 1280,
-    "description": "山东烟台直供新鲜红富士苹果，个大脆甜"
+    "description": {
+      "zh": "山东烟台直供新鲜红富士苹果，个大脆甜",
+      "en": "Fresh Red Fuji apples sourced directly from Yantai — crisp and sweet",
+      "tet": "Maçã Fuji vermella fresku, moruk no meten"
+    }
   },
   {
     "id": "p002",
-    "name": "本地土鸡蛋 30枚装",
+    "name": {
+      "zh": "本地土鸡蛋 30枚装",
+      "en": "Free-Range Eggs (30 pack)",
+      "tet": "Manu Tolun 30"
+    },
     "price": 38.5,
     "originalPrice": 48.0,
     "image": "https://images.unsplash.com/photo-1582722872445-44dc5f43e784?w=400",
     "category": "eggs",
     "rating": 4.9,
     "salesCount": 2450,
-    "description": "农家散养土鸡蛋，新鲜直达"
+    "description": {
+      "zh": "农家散养土鸡蛋，新鲜直达",
+      "en": "Free-range farm eggs delivered fresh",
+      "tet": "Tolun manu sirku livre, simu fresku"
+    }
   },
   {
     "id": "p003",
-    "name": "东北珍珠米 5kg",
+    "name": {
+      "zh": "东北珍珠米 5kg",
+      "en": "Pearl Rice 5kg",
+      "tet": "Horas Mutin 5kg"
+    },
     "price": 49.9,
     "image": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400",
     "category": "grain",
@@ -32,7 +52,11 @@
   },
   {
     "id": "p004",
-    "name": "金龙鱼食用油 5L",
+    "name": {
+      "zh": "金龙鱼食用油 5L",
+      "en": "Cooking Oil 5L",
+      "tet": "Minan Tahan 5L"
+    },
     "price": 78.0,
     "originalPrice": 89.0,
     "image": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
@@ -42,7 +66,11 @@
   },
   {
     "id": "p005",
-    "name": "蒙牛纯牛奶 250ml×12",
+    "name": {
+      "zh": "蒙牛纯牛奶 250ml×12",
+      "en": "Pure Milk 250ml × 12",
+      "tet": "Sasán Lét 250ml × 12"
+    },
     "price": 42.9,
     "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
     "category": "dairy",
@@ -51,7 +79,11 @@
   },
   {
     "id": "p006",
-    "name": "青岛啤酒 500ml×12",
+    "name": {
+      "zh": "青岛啤酒 500ml×12",
+      "en": "Tsingtao Beer 500ml × 12",
+      "tet": "Bir Tsingtao 500ml × 12"
+    },
     "price": 58.0,
     "originalPrice": 68.0,
     "image": "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400",
@@ -61,7 +93,11 @@
   },
   {
     "id": "p007",
-    "name": "薯片零食大礼包",
+    "name": {
+      "zh": "薯片零食大礼包",
+      "en": "Snacks Variety Pack",
+      "tet": "Pakote Snack"
+    },
     "price": 35.9,
     "image": "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400",
     "category": "snacks",
@@ -70,7 +106,11 @@
   },
   {
     "id": "p008",
-    "name": "中华牙膏套装 3支装",
+    "name": {
+      "zh": "中华牙膏套装 3支装",
+      "en": "Toothpaste Set (3 pack)",
+      "tet": "Pasta Ihan 3"
+    },
     "price": 29.9,
     "image": "https://images.unsplash.com/photo-1559591937-abc5e0e8e21a?w=400",
     "category": "household",
@@ -79,7 +119,11 @@
   },
   {
     "id": "p009",
-    "name": "清风原木抽纸 24包",
+    "name": {
+      "zh": "清风原木抽纸 24包",
+      "en": "Tissue Paper 24 pack",
+      "tet": "Surat Tisu 24"
+    },
     "price": 45.0,
     "originalPrice": 55.0,
     "image": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400",
@@ -89,7 +133,11 @@
   },
   {
     "id": "p010",
-    "name": "进口三文鱼 200g",
+    "name": {
+      "zh": "进口三文鱼 200g",
+      "en": "Imported Salmon 200g",
+      "tet": "Salmaun Importadu 200g"
+    },
     "price": 89.9,
     "image": "https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400",
     "category": "seafood",

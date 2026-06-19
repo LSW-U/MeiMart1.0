@@ -2,7 +2,9 @@ import i18n, { use as registerI18nModule, changeLanguage } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { getLocales } from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSyncExternalStore } from 'react';
 import { useAppStore } from '@/store/appStore';
+import type { LocalizableText } from '@/types';
 
 import zh from '../../locales/zh.json';
 import en from '../../locales/en.json';
@@ -69,6 +71,25 @@ export function getCurrentLocale(): AppLocale {
 
 export function isRTL(locale: string): boolean {
   return ['ar', 'he', 'fa', 'ur'].includes(locale);
+}
+
+export function localize(text: LocalizableText, locale: AppLocale): string {
+  return text[locale] ?? text.en;
+}
+
+export function useLocalizer(): (text: LocalizableText) => string {
+  const locale = useSyncExternalStore(
+    (cb) => {
+      const handler = () => cb();
+      i18n.on('languageChanged', handler);
+      return () => {
+        i18n.off('languageChanged', handler);
+      };
+    },
+    () => (i18n.language as AppLocale) || DEFAULT_LOCALE,
+    () => DEFAULT_LOCALE,
+  );
+  return (text) => localize(text, locale);
 }
 
 export default i18n;

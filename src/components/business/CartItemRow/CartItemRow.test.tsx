@@ -12,7 +12,7 @@ const item: CartItem = {
   id: 'c1',
   product: {
     id: 'p1',
-    name: 'Organic Wild Honey',
+    name: { zh: '有机野蜂蜜', en: 'Organic Wild Honey', tet: 'Fuan Mensak' },
     price: 18.5,
     image: 'https://example.com/h.jpg',
     category: 'food',

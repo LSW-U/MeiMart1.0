@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { useLocalizer } from '@/i18n';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -48,6 +49,7 @@ const STATUS_ICON: Record<OrderStatus, string> = {
 
 export default function OrderDetailPage() {
   const { t } = useTranslation();
+  const localize = useLocalizer();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const { data: order, isLoading, isError, refetch } = useOrder(id);
@@ -232,12 +234,12 @@ export default function OrderDetailPage() {
                   style={styles.itemImage}
                   resizeMode="cover"
                   accessible
-                  accessibilityLabel={item.product.name}
+                  accessibilityLabel={localize(item.product.name)}
                 />
               </View>
               <View style={styles.itemTextBox}>
                 <Text style={[styles.itemName, { color: colors['on-surface'] }]} numberOfLines={2}>
-                  {item.product.name}
+                  {localize(item.product.name)}
                 </Text>
                 <Text style={[styles.itemPrice, { color: colors['on-surface-variant'] }]}>
                   ${item.product.price.toFixed(2)} × {item.quantity}

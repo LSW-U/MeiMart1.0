@@ -31,6 +31,7 @@ import {
   useUpdateCartItem,
 } from '@/services/queries/useCart';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
+import { useLocalizer } from '@/i18n';
 import type { CartItem } from '@/types';
 
 // "PEOPLE ALSO BOUGHT" 推荐 mock（HTML 第 228-253 行）
@@ -60,6 +61,7 @@ const RECOMMENDED: RecommendItem[] = [
 
 export default function CartPage() {
   const { colors } = useTheme();
+  const localize = useLocalizer();
   const { isOffline } = useWeakNetworkUI();
   const { data: cart, isLoading, isError, refetch } = useCart();
   const removeMutation = useRemoveCartItem();
@@ -81,7 +83,7 @@ export default function CartPage() {
   };
 
   const remove = (item: CartItem) => {
-    Alert.alert('Remove Item', `Remove "${item.product.name}" from cart?`, [
+    Alert.alert('Remove Item', `Remove "${localize(item.product.name)}" from cart?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',

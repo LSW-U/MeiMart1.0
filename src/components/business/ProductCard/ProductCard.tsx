@@ -1,6 +1,7 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
+import { useLocalizer } from '@/i18n';
 
 import { PriceText } from '@/components/ui/PriceText';
 import { Button } from '@/components/ui/Button';
@@ -51,6 +52,8 @@ export function ProductCard({
   testID,
 }: ProductCardProps) {
   const { colors } = useTheme();
+  const localize = useLocalizer();
+  const name = localize(product.name);
 
   return (
     <Pressable
@@ -66,7 +69,7 @@ export function ProductCard({
       ]}
       onPress={onPress ? () => onPress(product) : undefined}
       accessibilityRole="button"
-      accessibilityLabel={`${product.name}, price ${product.price}`}
+      accessibilityLabel={`${name}, price ${product.price}`}
     >
       <View style={styles.imageWrap}>
         <Image source={{ uri: product.image }} style={styles.image} accessible={false} />
@@ -91,7 +94,7 @@ export function ProductCard({
           style={[textStyle('body-sm'), { fontWeight: '700', color: colors['on-surface'] }]}
           numberOfLines={2}
         >
-          {product.name}
+          {name}
         </Text>
         <PriceText value={product.price} originalPrice={product.originalPrice} size="md" />
         {typeof product.rating === 'number' && (
