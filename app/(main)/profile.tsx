@@ -21,7 +21,6 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useProfile } from '@/services/queries/useUser';
 import { useAuthStore } from '@/store/authStore';
-import type { AppLocale } from '@/i18n';
 
 // 默认头像 mock（HTML 第 150 行）
 const DEFAULT_AVATAR =
@@ -67,16 +66,10 @@ interface FunctionItem {
   isError?: boolean;
 }
 
-// 功能菜单（HTML 第 200-244 行）
+// 功能菜单（HTML 第 200-244 行）—— language 项已移到 settings 页，profile 不重复
 const FUNCTION_ITEMS: FunctionItem[] = [
   { id: 'coupons', labelKey: 'profile.coupons', icon: 'confirmation_number', route: '/coupons' },
   { id: 'address', labelKey: 'address.list', icon: 'location_on', route: '/address/list' },
-  {
-    id: 'language',
-    labelKey: 'profile.language',
-    icon: 'language',
-    route: '/settings/language',
-  },
   { id: 'help', labelKey: 'profile.help', icon: 'help', route: '/service/help' },
   { id: 'settings', labelKey: 'profile.settings', icon: 'settings', route: '/settings' },
   { id: 'logout', labelKey: 'profile.logout', icon: 'logout', isError: true },
@@ -85,19 +78,12 @@ const FUNCTION_ITEMS: FunctionItem[] = [
 // 未登录状态的功能菜单（无 Log Out）
 const FUNCTION_ITEMS_EMPTY: FunctionItem[] = FUNCTION_ITEMS.filter((i) => i.id !== 'logout');
 
-const LOCALE_NATIVE_NAME: Record<AppLocale, string> = {
-  zh: '中文',
-  en: 'English',
-  tet: 'Tetun',
-};
-
 export default function ProfilePage() {
   const { colors } = useTheme();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { data: user, isLoading, isError, refetch } = useProfile();
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const localeNativeName = LOCALE_NATIVE_NAME[i18n.language as AppLocale] ?? 'English';
 
   // 未登录分支（Fix-18：ProfileEmptyPage HTML 还原）
   if (!isAuthenticated) {
@@ -269,11 +255,6 @@ export default function ProfilePage() {
                 </Text>
               </View>
               <View style={styles.functionRight}>
-                {item.id === 'language' && (
-                  <Text style={[styles.functionRightText, { color: 'rgba(89, 65, 61, 0.6)' }]}>
-                    {localeNativeName}
-                  </Text>
-                )}
                 <Icon symbol="chevron_right" size={24} color={colors.outline} />
               </View>
             </Pressable>
@@ -338,8 +319,7 @@ const profileHeaderStyles = StyleSheet.create({
 // 仍渲染 Header + Orders 4 宫格 + Function Menus（无 Log Out），点击触发登录
 function ProfileEmpty() {
   const { colors } = useTheme();
-  const { t, i18n } = useTranslation();
-  const localeNativeName = LOCALE_NATIVE_NAME[i18n.language as AppLocale] ?? 'English';
+  const { t } = useTranslation();
   const onRequireLogin = () => {
     router.push('/(auth)/login');
   };
@@ -459,11 +439,6 @@ function ProfileEmpty() {
                 </Text>
               </View>
               <View style={styles.functionRight}>
-                {item.id === 'language' && (
-                  <Text style={[styles.functionRightText, { color: 'rgba(89, 65, 61, 0.6)' }]}>
-                    {localeNativeName}
-                  </Text>
-                )}
                 <Icon symbol="chevron_right" size={24} color={colors.outline} />
               </View>
             </Pressable>
