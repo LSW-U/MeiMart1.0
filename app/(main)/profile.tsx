@@ -17,7 +17,6 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
-import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useProfile } from '@/services/queries/useUser';
 import { useAuthStore } from '@/store/authStore';
@@ -306,10 +305,6 @@ function ProfileHeader() {
           </View>
         }
       />
-      {/* tais-pattern 底色块（h-48 = 192px，剩 ~150px） */}
-      <View style={styles.headerPattern} pointerEvents="none">
-        <TaisPattern width={390} height={150} opacity={0.1} />
-      </View>
     </View>
   );
 }
@@ -465,9 +460,6 @@ function ProfileEmpty() {
 }
 
 const styles = StyleSheet.create({
-  headerPattern: {
-    height: 150,
-  },
   scrollContent: {
     paddingHorizontal: spacing['container-margin'],
     paddingTop: spacing.md,
