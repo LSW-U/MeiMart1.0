@@ -224,6 +224,7 @@ pages/
     [ -s "$htmlPath" ] || echo "⚠️ 空文件，暂停询问"
     ```
 31. **遇到 0 字节的 HTML 文件，必须暂停并记录到 `docs/empty-html-files.md`**，不要凭空编造页面内容。记录格式：
+
     ```markdown
     ## [页面名].html — 0 字节
 
@@ -232,6 +233,7 @@ pages/
     - 同类参考：[页面名]
     - 待确认清单：[列出需要用户确认的视觉/交互元素]
     ```
+
 32. **凭空编造的页面必须在文件顶部标注**：`// ⚠️ 无 HTML 原型，参考 [同类页面] 推导实现，待设计确认`。未标注即违反规则。
 
 ### 配置完整性规则（防止装了不用）
@@ -268,6 +270,11 @@ pages/
 
 38. **每个 Phase 完成后必须暂停验收**，不可跨 Phase 连续执行。即使指令说"一路跑到 Phase 7"，也必须在每个 CP 检查点暂停，等用户确认后才继续。违反此规则会导致质量问题堆积。
 39. **遇到修复方案文档（如 修复.md）时**，严格按批次执行：批次 A+B 合并执行 → CP-FIX-1 验收 → 批次 C 分模块逐个验收 → CP-FIX-2 验收 → 批次 D。不可跳过验收检查点。
+
+### 反复违反规则（高频 bug，写代码前先看）
+
+40. **`SafeAreaWrapper` 的 `edges` 必须显式列出 `['top', 'bottom']`**（或更多）。`PrimaryHeader` / `ProfileHeader` 等顶栏组件不内置 safe area padding，依赖外层 `SafeAreaWrapper` 提供。漏 `'top'` 会导致整个 header 被状态栏/battery 遮挡。**已被违反 6+ 次**（cart / profile / orders / coupons / favorites / product list 等）。
+41. **mock 数据的 `id` 必须是真实存在于 `mocks/data/*.json` 的 ID**。任何"看起来像 mock 字符串"的 id（如 `'top-1'`、`'rec-rice'`、`'buy-1'`）一旦被 `router.push('/product/${id}')` 跳转，详情页查不到数据直接显示 "Product not found"，看起来像"点击不跳转"。**已被违反 2 次**（home BUY_AGAIN、product/list.tsx 排行榜）。修复：grep 出所有 mock id，确认都在 `mockDb.products` 里。
 
 ## 常用验证命令
 

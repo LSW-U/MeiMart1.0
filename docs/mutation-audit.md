@@ -1,6 +1,7 @@
 # Mutation 完整性审计（Task B.5）
 
-> 扫描时间：2026-06-15  
+> 初次扫描：2026-06-15  
+> 最近更新：2026-06-20（补 useUser.ts 两个新增 mutation）  
 > 范围：`src/services/queries/use*.ts` 全部 mutation  
 > 评判规则：CLAUDE.md 规则 #25 — "用户点击后期望立即视觉反馈的写操作，必须有 onMutate"
 
@@ -12,8 +13,17 @@
 | `useCart.ts`    | 4                | 4           | 4          | 4            | ✅ 合规                       |
 | `useAddress.ts` | 4                | 4           | 4          | 4            | ✅ 合规                       |
 | `useOrders.ts`  | 2                | 1           | 1          | 1            | ✅ 合规（createOrder 豁免）   |
-| `useUser.ts`    | 2                | 1           | 1          | 1            | ✅ 合规（updateProfile 豁免） |
-| **合计**        | **17**           | **10**      | **10**     | **10**       | —                             |
+| `useUser.ts`    | 4                | 3           | 3          | 3            | ✅ 合规（updateProfile 豁免） |
+| **合计**        | **19**           | **12**      | **12**     | **12**       | —                             |
+
+## 2026-06-20 增量
+
+`useUser.ts` 在 Task 4.3 之后又新增了 2 个 mutation（用 i18n 期间发现需要）：
+
+- `useToggleFavorite`：收藏切换，需要乐观更新（用户希望立刻看到心形切换）
+- `useMarkNotificationRead`：消息标记已读，需要乐观更新
+
+两个都按规则 #25 补齐了 `onMutate` + `onError` + `onSettled` 三件套。
 
 ## 逐项说明
 
