@@ -14,6 +14,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
+import { formatDate } from '@/utils/format';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -48,7 +49,7 @@ const STATUS_ICON: Record<OrderStatus, string> = {
 };
 
 export default function OrderDetailPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const localize = useLocalizer();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
@@ -318,29 +319,47 @@ export default function OrderDetailPage() {
         </View>
 
         {/* 订单号 + 时间信息 */}
-        <View style={styles.metaBox}>
-          <View style={styles.metaRow}>
-            <Text style={[styles.metaLabel, { color: colors['on-surface-variant'] }]}>
-              {t('order.orderNo', { defaultValue: 'Order No.' })}
-            </Text>
-            <Text style={[styles.metaValue, { color: colors['on-surface'] }]}>{order.orderNo}</Text>
-          </View>
-          <View style={styles.metaRow}>
-            <Text style={[styles.metaLabel, { color: colors['on-surface-variant'] }]}>
-              {t('order.createdAtLabel', { defaultValue: 'Created At' })}
-            </Text>
-            <Text style={[styles.metaValue, { color: colors['on-surface'] }]}>
-              {order.createdAt}
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.sm,
+          ]}
+        >
+          <View style={styles.cardHeader}>
+            <Icon symbol="receipt_long" size={18} color={colors.primary} />
+            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+              {t('order.applyInfo', { defaultValue: 'Order Info' })}
             </Text>
           </View>
-          {order.trackingNo && (
+          <View style={styles.metaBox}>
             <View style={styles.metaRow}>
               <Text style={[styles.metaLabel, { color: colors['on-surface-variant'] }]}>
-                {t('order.trackingNo', { defaultValue: 'Tracking No.' })}
+                {t('order.orderNo', { defaultValue: 'Order No.' })}
               </Text>
-              <Text style={[styles.metaValue, { color: colors.primary }]}>{order.trackingNo}</Text>
+              <Text style={[styles.metaValue, { color: colors['on-surface'] }]}>
+                {order.orderNo}
+              </Text>
             </View>
-          )}
+            <View style={styles.metaRow}>
+              <Text style={[styles.metaLabel, { color: colors['on-surface-variant'] }]}>
+                {t('order.createdAtLabel', { defaultValue: 'Created At' })}
+              </Text>
+              <Text style={[styles.metaValue, { color: colors['on-surface'] }]}>
+                {formatDate(order.createdAt, i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
+              </Text>
+            </View>
+            {order.trackingNo && (
+              <View style={styles.metaRow}>
+                <Text style={[styles.metaLabel, { color: colors['on-surface-variant'] }]}>
+                  {t('order.trackingNo', { defaultValue: 'Tracking No.' })}
+                </Text>
+                <Text style={[styles.metaValue, { color: colors.primary }]}>
+                  {order.trackingNo}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       </ScrollView>
 
@@ -372,6 +391,7 @@ export default function OrderDetailPage() {
               color={colors.primary}
               fgColor="#ffffff"
               testID="order-pay"
+              primary
             />
           </>
         )}
@@ -392,6 +412,7 @@ export default function OrderDetailPage() {
               color={colors.primary}
               fgColor="#ffffff"
               testID="order-confirm"
+              primary
             />
           </>
         )}
@@ -414,6 +435,7 @@ export default function OrderDetailPage() {
               color={colors.primary}
               fgColor="#ffffff"
               testID="order-review"
+              primary
             />
           </>
         )}
@@ -441,6 +463,7 @@ function ActionBtn({
   fgColor,
   testID,
   fullWidth = false,
+  primary = false,
 }: {
   label: string;
   onPress: () => void;
@@ -449,6 +472,7 @@ function ActionBtn({
   fgColor: string;
   testID: string;
   fullWidth?: boolean;
+  primary?: boolean;
 }) {
   return (
     <Pressable
@@ -457,6 +481,7 @@ function ActionBtn({
       style={({ pressed }) => [
         styles.actionBtn,
         fullWidth && styles.actionBtnFull,
+        primary && styles.actionBtnPrimary,
         {
           backgroundColor: variant === 'primary' ? color : 'transparent',
           borderColor: variant === 'outline' ? color : 'transparent',
@@ -627,8 +652,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   metaBox: {
-    paddingHorizontal: spacing.md,
     gap: spacing.xs,
+    paddingHorizontal: spacing.xs,
   },
   metaRow: {
     flexDirection: 'row',
@@ -664,6 +689,9 @@ const styles = StyleSheet.create({
   },
   actionBtnFull: {
     flex: 1,
+  },
+  actionBtnPrimary: {
+    flex: 1.5,
   },
   actionText: {
     ...typography['label-caps'],
