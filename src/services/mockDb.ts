@@ -7,6 +7,7 @@ import addressesData from '../../mocks/data/addresses.json';
 import userData from '../../mocks/data/user.json';
 import couponsData from '../../mocks/data/coupons.json';
 import notificationsData from '../../mocks/data/notifications.json';
+import paymentsData from '../../mocks/data/payments.json';
 
 import type {
   Product,
@@ -18,6 +19,7 @@ import type {
   User,
   Coupon,
   Notification,
+  PaymentMethod,
 } from '@/types';
 
 export const mockDb = {
@@ -30,6 +32,7 @@ export const mockDb = {
   user: userData as User,
   coupons: couponsData as Coupon[],
   notifications: notificationsData as Notification[],
+  payments: paymentsData as PaymentMethod[],
   favorites: [productsData[0] as Product, productsData[3] as Product, productsData[7] as Product],
 };
 

@@ -39,6 +39,18 @@ export interface Cart {
   totalItems: number;
 }
 
+export interface PaymentMethod {
+  id: string;
+  /** 主标题，如 "LaisPay (Local Wallet)" */
+  name: LocalizableText;
+  /** 副标题，如 "Balance: $45.00" 或 "BNU / Mandiri" */
+  subtitle?: LocalizableText;
+  /** Material Symbols 图标名 */
+  icon: string;
+  /** 是否默认选中 */
+  isDefault?: boolean;
+}
+
 export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'refunding';
 
 export interface Order {

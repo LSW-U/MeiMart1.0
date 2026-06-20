@@ -1,0 +1,45 @@
+[
+  {
+    "id": "laispay",
+    "name": {
+      "zh": "LaisPay 钱包",
+      "en": "LaisPay (Local Wallet)",
+      "tet": "LaisPay (Carteira Lokál)"
+    },
+    "subtitle": {
+      "zh": "余额: $45.00",
+      "en": "Balance: $45.00",
+      "tet": "Saldo: $45.00"
+    },
+    "icon": "account_balance_wallet",
+    "isDefault": true
+  },
+  {
+    "id": "bank",
+    "name": {
+      "zh": "银行转账",
+      "en": "Bank Transfer",
+      "tet": "Transferensa Bankária"
+    },
+    "subtitle": {
+      "zh": "BNU / Mandiri",
+      "en": "BNU / Mandiri",
+      "tet": "BNU / Mandiri"
+    },
+    "icon": "account_balance"
+  },
+  {
+    "id": "card",
+    "name": {
+      "zh": "信用卡 / 借记卡",
+      "en": "Credit / Debit Card",
+      "tet": "Cartaun Kréditu / Débitu"
+    },
+    "subtitle": {
+      "zh": "Visa / Mastercard",
+      "en": "Visa / Mastercard",
+      "tet": "Visa / Mastercard"
+    },
+    "icon": "credit_card"
+  }
+]
