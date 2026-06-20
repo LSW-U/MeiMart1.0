@@ -1,8 +1,13 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { textStyle, spacing } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
 import { DecorativeCorner } from '@/components/cultural/DecorativeCorner';
 import type { PromoShortcutItem, PromoShortcutProps } from './PromoShortcut.types';
+
+const CARD_GAP = spacing.md;
+const CONTAINER_MARGIN = spacing['container-margin'];
+// 2 列布局：每张卡 = (屏宽 - 左右 container margin - 中间 gap) / 2
+const CARD_WIDTH = (Dimensions.get('window').width - CONTAINER_MARGIN * 2 - CARD_GAP) / 2;
 
 export function PromoShortcut({ items, onPress, testID }: PromoShortcutProps) {
   return (
@@ -61,10 +66,10 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    gap: CARD_GAP,
   },
   card: {
-    width: '48%',
+    width: CARD_WIDTH,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
