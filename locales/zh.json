@@ -328,7 +328,25 @@
       "cash": "货到付款",
       "laispay": "LaisPay 钱包",
       "card": "银行卡"
-    }
+    },
+    "section": {
+      "deliveryAddress": "收货地址",
+      "paymentMethod": "支付方式",
+      "orderSummary": "订单明细"
+    },
+    "address": {
+      "change": "修改",
+      "changeA11y": "修改地址"
+    },
+    "summary": {
+      "subtotal": "小计",
+      "discount": "优惠",
+      "deliveryFee": "运费",
+      "finalTotal": "应付总额"
+    },
+    "secure": "安全支付",
+    "confirmAndPay": "确认并支付 ${{amount}}",
+    "customerService": "客服"
   },
   "result": {
     "title": "支付成功",

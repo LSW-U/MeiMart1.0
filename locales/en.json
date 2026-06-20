@@ -328,7 +328,25 @@
       "cash": "Cash on delivery",
       "laispay": "LaisPay Wallet",
       "card": "Bank card"
-    }
+    },
+    "section": {
+      "deliveryAddress": "DELIVERY ADDRESS",
+      "paymentMethod": "PAYMENT METHOD",
+      "orderSummary": "Order Summary"
+    },
+    "address": {
+      "change": "Change",
+      "changeA11y": "Change address"
+    },
+    "summary": {
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "deliveryFee": "Delivery Fee",
+      "finalTotal": "Final Total"
+    },
+    "secure": "Secure Checkout",
+    "confirmAndPay": "CONFIRM & PAY ${{amount}}",
+    "customerService": "Customer Service"
   },
   "result": {
     "title": "Payment Success",

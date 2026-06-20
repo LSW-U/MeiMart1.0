@@ -328,7 +328,25 @@
       "cash": "",
       "laispay": "",
       "card": ""
-    }
+    },
+    "section": {
+      "deliveryAddress": "",
+      "paymentMethod": "",
+      "orderSummary": ""
+    },
+    "address": {
+      "change": "",
+      "changeA11y": ""
+    },
+    "summary": {
+      "subtotal": "",
+      "discount": "",
+      "deliveryFee": "",
+      "finalTotal": ""
+    },
+    "secure": "",
+    "confirmAndPay": "",
+    "customerService": ""
   },
   "result": {
     "title": "",
