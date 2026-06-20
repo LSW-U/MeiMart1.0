@@ -21,7 +21,7 @@ const CATEGORY_BAR = ['All', 'Coffee', 'Artisanal Food', 'Handicrafts'] as const
 // Top 3 大卡片 mock（HTML 第 145-192 行）
 const TOP_THREE = [
   {
-    id: 'top-1',
+    id: 'p001',
     rank: 1,
     name: 'Ermera Arabica Coffee Beans',
     sold: '942+ sold recently',
@@ -30,7 +30,7 @@ const TOP_THREE = [
       'https://lh3.googleusercontent.com/aida-public/AB6AXuDmUYfQODctGuRNTrFmZdlQbTqUXPPZ72Y03aI9kHGCy5m8Yv1b6aOFG5KheToU68XbawxpGTljtdCnU4o1mUKAcJlB_hhPx2YPOdeQJtafcDEyElW-W1s-_P9C02DI3kgw-hN8-br1VIgbAdiAWEERQ8uH9zHeqiTknpYUn_W1jWxHiDE6ioxly5smPxQME0DcEmmpVlgLwFH5xoKF16nFypkFAdl4B0OTUrcJt4K-KVgD-JPzwBB75RcCha7O4mjZdR5ECSvB',
   },
   {
-    id: 'top-2',
+    id: 'p002',
     rank: 2,
     name: 'Atauro Island Wild Honey',
     sold: '754+ sold recently',
@@ -39,7 +39,7 @@ const TOP_THREE = [
       'https://lh3.googleusercontent.com/aida-public/AB6AXuB1pOvdPdPa3q7WqY1XOy5OFONktDSjis1v9TQRe5NXv6K3NGZrU_YlLKy6_tRbEo12MxEZWFVTEK8i9K3wL5U4SiIVCgYO-UF55rT0y-dInkfr6YQ4TJWwEyN9Y2ps5OaUaDszs0E6HqXKhRs5Q6g7cZCGhGOb3YTktzk_pO5hbvWXhSvR3Vl1JnisxwT9ZRUVq4Gv7JlO93coJPtvqc3rJJHyyc3WvsJI2h2-tcw3VUNH2Jg6sY2jaAwuQX_cZ2pRZ_FbMLE7',
   },
   {
-    id: 'top-3',
+    id: 'p003',
     rank: 3,
     name: 'Dili Handmade Pottery Mug',
     sold: '512+ sold recently',
@@ -52,7 +52,7 @@ const TOP_THREE = [
 // Top 4-10 紧凑列表 mock（HTML 第 196-278 行）
 const REST_LIST = [
   {
-    id: 'rest-4',
+    id: 'p004',
     rank: 4,
     name: 'Organic Red Rice',
     sold: '320 sold',
@@ -61,7 +61,7 @@ const REST_LIST = [
       'https://lh3.googleusercontent.com/aida-public/AB6AXuDR3JKLoD9c-GluQJWQ-al72hUHySGht27Om1qNjiJjkWJPmWwljKK9Mzl8TeGVcZT2zoOr2vEC1EEeVAh-s9fpY0fkOQDrHPzck7tGEZDHXfeYi_uLwJtgwky5R1KkRU21sCREAJDKPrOm3KfIkuiHo8mb6CM8BsH-SYCstj1HKX_LULvMrVyf18HPTII5dcp8e2X-ckDlu6HcI_YymqOOLaWNMyKW3W10x3V_WjNrG-ouvGY6aj5oyhqEfRMpOm_XD60_TEX8',
   },
   {
-    id: 'rest-5',
+    id: 'p005',
     rank: 5,
     name: 'Artisanal Coconut Sugar',
     sold: '298 sold',
@@ -70,7 +70,7 @@ const REST_LIST = [
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCbtMU1AeRajrRyOUwgnAwAbQSd9LAqJTTrRxxeFZ7tejOXfSETc5GoLK3o59veAmKs2tJbQVn0Rge3GOrK6-OYO53HzuDfU2PqQK5Lxj404sFu5m-ZWPYQ_zbbNM5zCDCqIFIcUlr_45wu-iCBAXAt6BYvPB8YsKj0-08gA8GmnBet-Bu1apQ84Fiw0y1CnIT6censpmVUqH4gAVHZUnc4Ep8fzQy8bNpqkIT73T3rP8xz1BVMH7syhFIN1BLqKjuiKQS_vk6d',
   },
   {
-    id: 'rest-6',
+    id: 'p006',
     rank: 6,
     name: 'Tais Woven Handkerchief',
     sold: '245 sold',
@@ -79,7 +79,7 @@ const REST_LIST = [
       'https://lh3.googleusercontent.com/aida-public/AB6AXuAwfvdrkWk31Bjk5zpVkpC9xAzIDmhA0pFxcDhcEGiyc5g07rkG4C7aTgl24IdkRqGzU8OO9vb0ChvKWe1Cggg2NR535eJMnt_k-siHvzc0BZ4U8olc6Uq_vqOMELQZGoDxTnyJnwYnAT5epm7MnwDWmSffGg_zQAnmZe_9u9BSiQv3uvn5F6WEzf_F5WOpbdbdjTp8c6dcmJ9UM6En4mXqlE76_X26SQZz40P4SysMeqkvYCCUgszI7zbhdFuf2sYMUfpJyHDe',
   },
   {
-    id: 'rest-7',
+    id: 'p007',
     rank: 7,
     name: 'Organic Vanilla Pods',
     sold: '210 sold',
@@ -88,7 +88,7 @@ const REST_LIST = [
       'https://lh3.googleusercontent.com/aida-public/AB6AXuDBaSvpQ7gdneUFLZtfDdsLmKhYn_0qJJkFLHpshMQuZRgZwOt9j8MJvutYy4-RAC8Up9vKLkg5ZOdaEhCxfgzVma3T0XOo9gl5RFnD5T5MVC581s0eAdAl7D5i-IERS67gfudbv6G3-e0MiBqz7-0IoV1tK5lwV9W4Mz7UM1f7LCsz8GPPyfi9HkbKupCl5z7gcz09EmA66ZVzvd6yhY1ODBdcExB7nNAMbDUZGtb8QUI83aHSa4nI6WvRRzAJrkUE2HCX7yRW',
   },
   {
-    id: 'rest-8',
+    id: 'p008',
     rank: 8,
     name: 'Handmade Batik Scarf',
     sold: '186 sold',
@@ -97,7 +97,7 @@ const REST_LIST = [
       'https://lh3.googleusercontent.com/aida-public/AB6AXuDkODiY8I4APKHHdRf1T8MBvkGSClhPJy3fSGcYRkomNPg2zSrOnMflXI0pVSjK9-gMhocxnIYDeGEtoT65fiePmHg92NBQ8DejMyeQDzx6OvVhoN5paaFOEbZNI71lvjk8wkXUlupJFQFE996lb-MOIytqCLpZbQ685IJFv5WL0O_yarjGpq6oMQbdfZzRawHpLkKQT2u1stI9ABdMyI3dlKuDb9UnG11ky45ZlhY_2a_hPgY65Ab5NwC39mOXNhSi2WvTkrvw',
   },
   {
-    id: 'rest-9',
+    id: 'p009',
     rank: 9,
     name: 'Local Raw Cashews',
     sold: '175 sold',
@@ -106,7 +106,7 @@ const REST_LIST = [
       'https://lh3.googleusercontent.com/aida-public/AB6AXuACKaZh_6Bcr6qA9iIPW2o31w9HWkbeZlIbQwY5q7U6WhrjG8L43P3Oqsq_xQljqCPZyO9K1Lu9LOVhYAAPBueDlNbcTTObSjht8b9D8ZlauTljB_MqwZeqh1eofb4-KRxsAf8QRD0cjGf-HOakUJEYkCoWuYne62vrzEwnT33q0PHzsFbIMiGgfpZJY8ol4QvDTbuF1Mjx8ByxwefV7Tax3_bbMO1umh7sg-GB45BXm7uGFYKYDkOdf4Ma6ylMlOLqL4z_pCsH',
   },
   {
-    id: 'rest-10',
+    id: 'p010',
     rank: 10,
     name: 'Coconut Oil Handmade Soap',
     sold: '142 sold',
@@ -144,7 +144,10 @@ export default function ProductListPage() {
   }
 
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <Header />
 
