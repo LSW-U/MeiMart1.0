@@ -44,3 +44,6 @@ coverage/
 # generated native folders
 /ios
 /android
+
+# Local backups (deleted files parked here for restore)
+.bak/

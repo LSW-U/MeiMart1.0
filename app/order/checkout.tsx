@@ -65,7 +65,7 @@ export default function CheckoutPage() {
       Alert.alert(t('checkout.offlineBlock'), t('checkout.offlineBlockDesc'));
       return;
     }
-    router.push('/order/payment');
+    router.push('/order/result');
   };
 
   return (

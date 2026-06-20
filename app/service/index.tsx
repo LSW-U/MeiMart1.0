@@ -85,7 +85,7 @@ export default function CustomerServicePage() {
       labelKey: 'service.categories.payment',
       descKey: 'service.categories.paymentDesc',
       icon: 'credit_card',
-      route: '/order/payment',
+      route: '/order/checkout',
     },
     {
       id: 'product',

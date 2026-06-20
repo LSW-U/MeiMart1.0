@@ -367,7 +367,7 @@ export default function OrderDetailPage() {
             />
             <ActionBtn
               label={t('order.actions.pay')}
-              onPress={() => router.push('/order/payment')}
+              onPress={() => router.push('/order/checkout')}
               variant="primary"
               color={colors.primary}
               fgColor="#ffffff"
