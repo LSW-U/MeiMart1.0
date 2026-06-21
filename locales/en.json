@@ -213,8 +213,19 @@
       "shipped": "Seller shipped",
       "shippedDesc": "Package has left the warehouse",
       "delivered": "Delivered",
-      "deliveredDesc": "Package has been delivered"
-    }
+      "deliveredDesc": "Package has been delivered",
+      "cancelled": "Order cancelled",
+      "cancelledDesc": "Order was cancelled"
+    },
+    "statusHint": {
+      "pending": "Please complete the payment soon",
+      "paid": "Seller is preparing your order",
+      "shipped": "Package is on the way to you",
+      "delivered": "Hope you enjoyed your order",
+      "cancelled": "Order has been cancelled",
+      "refunding": "Refund is being processed"
+    },
+    "itemViewLabel": "View item"
   },
   "address": {
     "list": "Shipping addresses",

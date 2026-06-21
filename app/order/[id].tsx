@@ -88,28 +88,45 @@ export default function OrderDetailPage() {
   const discount = 5.0;
   const subtotal = order.totalPrice + discount - shippingFee;
 
-  const timelineSteps = [
-    {
-      status: t('order.timeline.submitted'),
-      description: t('order.timeline.submittedDesc'),
-      timestamp: '2026-06-01 10:30',
-    },
-    {
-      status: t('order.timeline.paid'),
-      description: t('order.timeline.paidDesc'),
-      timestamp: '2026-06-01 11:00',
-    },
-    {
-      status: t('order.timeline.shipped'),
-      description: t('order.timeline.shippedDesc'),
-      timestamp: '2026-06-02 08:00',
-    },
-    {
-      status: t('order.timeline.delivered'),
-      description: t('order.timeline.deliveredDesc'),
-      timestamp: '2026-06-03 14:00',
-    },
-  ];
+  const isCancelled = order.status === 'cancelled';
+  const isRefunding = order.status === 'refunding';
+  // cancelled / refunding 走简化 timeline，不显示完整 4 步流程
+  const timelineSteps =
+    isCancelled || isRefunding
+      ? [
+          {
+            status: t('order.timeline.submitted'),
+            description: t('order.timeline.submittedDesc'),
+            timestamp: '2026-06-01 10:30',
+          },
+          {
+            status: t(`order.timeline.${order.status}`, { defaultValue: '' }),
+            description: t(`order.timeline.${order.status}Desc`, { defaultValue: '' }),
+            timestamp: '2026-06-01 18:00',
+          },
+        ]
+      : [
+          {
+            status: t('order.timeline.submitted'),
+            description: t('order.timeline.submittedDesc'),
+            timestamp: '2026-06-01 10:30',
+          },
+          {
+            status: t('order.timeline.paid'),
+            description: t('order.timeline.paidDesc'),
+            timestamp: '2026-06-01 11:00',
+          },
+          {
+            status: t('order.timeline.shipped'),
+            description: t('order.timeline.shippedDesc'),
+            timestamp: '2026-06-02 08:00',
+          },
+          {
+            status: t('order.timeline.delivered'),
+            description: t('order.timeline.deliveredDesc'),
+            timestamp: '2026-06-03 14:00',
+          },
+        ];
 
   const timelineCurrentMap: Record<OrderStatus, number> = {
     pending: 0,
@@ -174,6 +191,9 @@ export default function OrderDetailPage() {
               {ORDER_STATUS_LABEL[order.status]}
             </Text>
             <Text style={[styles.orderNo, { color: pill.fg, opacity: 0.7 }]}>#{order.orderNo}</Text>
+            <Text style={[styles.statusHint, { color: pill.fg, opacity: 0.85 }]} numberOfLines={1}>
+              {t(`order.statusHint.${order.status}`, { defaultValue: '' })}
+            </Text>
           </View>
         </View>
 
@@ -226,7 +246,13 @@ export default function OrderDetailPage() {
             </Text>
           </View>
           {order.items.map((item) => (
-            <View key={item.id} style={styles.itemRow}>
+            <Pressable
+              key={item.id}
+              onPress={() => router.push(`/product/${item.product.id}`)}
+              style={({ pressed }) => [styles.itemRow, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              accessibilityLabel={`${t('order.itemViewLabel')}: ${localize(item.product.name)}`}
+            >
               <View
                 style={[styles.itemImageWrap, { backgroundColor: colors['surface-container'] }]}
               >
@@ -234,8 +260,7 @@ export default function OrderDetailPage() {
                   source={{ uri: item.product.image }}
                   style={styles.itemImage}
                   resizeMode="cover"
-                  accessible
-                  accessibilityLabel={localize(item.product.name)}
+                  accessible={false}
                 />
               </View>
               <View style={styles.itemTextBox}>
@@ -247,7 +272,7 @@ export default function OrderDetailPage() {
                 </Text>
               </View>
               <PriceText value={item.product.price * item.quantity} size="md" />
-            </View>
+            </Pressable>
           ))}
         </View>
 
@@ -548,6 +573,11 @@ const styles = StyleSheet.create({
     ...typography.h3,
     fontWeight: '700',
   },
+  statusHint: {
+    ...typography['body-sm'],
+    fontSize: 11,
+    marginTop: 2,
+  },
   orderNo: {
     ...typography['label-caps'],
     fontSize: 11,
@@ -645,11 +675,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: spacing.md,
     marginTop: spacing.xs,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: 2,
+    borderTopColor: 'rgba(0,0,0,0.05)',
   },
   priceTotalLabel: {
     ...typography['body-md'],
     fontWeight: '700',
+    fontSize: 16,
   },
   metaBox: {
     gap: spacing.xs,

@@ -213,8 +213,19 @@
       "shipped": "商家已发货",
       "shippedDesc": "包裹已出库",
       "delivered": "已签收",
-      "deliveredDesc": "包裹已送达"
-    }
+      "deliveredDesc": "包裹已送达",
+      "cancelled": "订单已取消",
+      "cancelledDesc": "订单已取消"
+    },
+    "statusHint": {
+      "pending": "请尽快完成支付",
+      "paid": "商家正在备货",
+      "shipped": "包裹正在路上",
+      "delivered": "感谢您的惠顾",
+      "cancelled": "订单已取消",
+      "refunding": "退款处理中"
+    },
+    "itemViewLabel": "查看商品"
   },
   "address": {
     "list": "收货地址",

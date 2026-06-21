@@ -213,8 +213,19 @@
       "shipped": "",
       "shippedDesc": "",
       "delivered": "",
-      "deliveredDesc": ""
-    }
+      "deliveredDesc": "",
+      "cancelled": "",
+      "cancelledDesc": ""
+    },
+    "statusHint": {
+      "pending": "",
+      "paid": "",
+      "shipped": "",
+      "delivered": "",
+      "cancelled": "",
+      "refunding": ""
+    },
+    "itemViewLabel": ""
   },
   "address": {
     "list": "",
