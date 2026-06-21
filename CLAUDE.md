@@ -105,7 +105,7 @@ pages/
 ### 本项目目录
 
 ```
-/Users/linsuwei/code/Work/Temporarily-project-React Native + Expo/mei-mart-app/
+/Users/linsuwei/code/Work/Temporarily-project/mei-mart-app/
 ```
 
 （已初始化 git 仓库）
