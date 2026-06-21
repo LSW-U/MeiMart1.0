@@ -1,6 +1,6 @@
 // ⚠️ 无 HTML 原型，参考 OrderListPage + OrderCard 推导实现，待设计确认
-// OrderDetailPage — 订单详情（参考 OrderListPage.html 的 OrderCard 视觉风格 + 状态色）
-// D.3: PrimaryHeader + 状态色块 + 商品列表 + 时间轴 + 价格汇总 + 操作按钮
+// OrderDetailPage — 订单详情（参考 OrderListPage.html 的 OrderCard 视觉风格 + 状态色块）
+// 重构：ADR-0002 方案 C — 抽离 4 个 Section 组件复用（Items/PriceSummary/Address/Timeline）
 import {
   StyleSheet,
   View,
@@ -8,22 +8,24 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Image,
   Pressable,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useLocalizer } from '@/i18n';
 import { formatDate } from '@/utils/format';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { PriceText } from '@/components/ui/PriceText';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
-import { TimelineStep } from '@/components/business/TimelineStep';
+import {
+  OrderItemsCard,
+  OrderPriceSummaryCard,
+  OrderAddressCard,
+  OrderTimelineCard,
+} from '@/components/business/order-sections';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
 import { ORDER_STATUS_LABEL } from '@/components/business/OrderCard/OrderCard.types';
 import type { OrderStatus } from '@/types';
@@ -48,9 +50,17 @@ const STATUS_ICON: Record<OrderStatus, string> = {
   refunding: 'history',
 };
 
+const TIMELINE_CURRENT: Record<OrderStatus, number> = {
+  pending: 0,
+  paid: 1,
+  shipped: 2,
+  delivered: 3,
+  cancelled: 0,
+  refunding: 1,
+};
+
 export default function OrderDetailPage() {
   const { t, i18n } = useTranslation();
-  const localize = useLocalizer();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const { data: order, isLoading, isError, refetch } = useOrder(id);
@@ -90,7 +100,6 @@ export default function OrderDetailPage() {
 
   const isCancelled = order.status === 'cancelled';
   const isRefunding = order.status === 'refunding';
-  // cancelled / refunding 走简化 timeline，不显示完整 4 步流程
   const timelineSteps =
     isCancelled || isRefunding
       ? [
@@ -127,15 +136,6 @@ export default function OrderDetailPage() {
             timestamp: '2026-06-03 14:00',
           },
         ];
-
-  const timelineCurrentMap: Record<OrderStatus, number> = {
-    pending: 0,
-    paid: 1,
-    shipped: 2,
-    delivered: 3,
-    cancelled: 0,
-    refunding: 1,
-  };
 
   const cancel = () => {
     Alert.alert(t('order.cancelTitle'), t('order.cancelConfirm'), [
@@ -176,7 +176,7 @@ export default function OrderDetailPage() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* 状态色块（参考 OrderCard 的 STATUS_PILL） */}
+        {/* 状态色块（OrderDetail 专属，不复用） */}
         <View style={[styles.statusBlock, { backgroundColor: pill.bg }, shadowPresets.sm]}>
           <View style={styles.statusPattern} pointerEvents="none">
             <TaisPattern width={400} height={100} opacity={0.2} />
@@ -198,152 +198,26 @@ export default function OrderDetailPage() {
         </View>
 
         {/* 收货地址卡片 */}
-        {order.address && (
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: colors['surface-container-lowest'] },
-              shadowPresets.sm,
-            ]}
-          >
-            <View style={styles.cardHeader}>
-              <Icon symbol="location_on" size={18} color={colors.primary} />
-              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                {t('order.shippingInfo')}
-              </Text>
-            </View>
-            <View style={styles.addressBox}>
-              <View style={styles.addressTopRow}>
-                <Text style={[styles.addressName, { color: colors['on-surface'] }]}>
-                  {order.address.name}
-                </Text>
-                <Text style={[styles.addressPhone, { color: colors['on-surface-variant'] }]}>
-                  {order.address.phone}
-                </Text>
-              </View>
-              <Text style={[styles.addressLine, { color: colors['on-surface-variant'] }]}>
-                {order.address.province}
-                {order.address.city}
-                {order.address.district}
-                {order.address.detail}
-              </Text>
-            </View>
-          </View>
-        )}
+        {order.address && <OrderAddressCard address={order.address} />}
 
         {/* 商品列表卡片 */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
-          ]}
-        >
-          <View style={styles.cardHeader}>
-            <Icon symbol="shopping_cart" size={18} color={colors.primary} />
-            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              {t('order.items')}
-            </Text>
-          </View>
-          {order.items.map((item) => (
-            <Pressable
-              key={item.id}
-              onPress={() => router.push(`/product/${item.product.id}`)}
-              style={({ pressed }) => [styles.itemRow, pressed && { opacity: 0.7 }]}
-              accessibilityRole="button"
-              accessibilityLabel={`${t('order.itemViewLabel')}: ${localize(item.product.name)}`}
-            >
-              <View
-                style={[styles.itemImageWrap, { backgroundColor: colors['surface-container'] }]}
-              >
-                <Image
-                  source={{ uri: item.product.image }}
-                  style={styles.itemImage}
-                  resizeMode="cover"
-                  accessible={false}
-                />
-              </View>
-              <View style={styles.itemTextBox}>
-                <Text style={[styles.itemName, { color: colors['on-surface'] }]} numberOfLines={2}>
-                  {localize(item.product.name)}
-                </Text>
-                <Text style={[styles.itemPrice, { color: colors['on-surface-variant'] }]}>
-                  ${item.product.price.toFixed(2)} × {item.quantity}
-                </Text>
-              </View>
-              <PriceText value={item.product.price * item.quantity} size="md" />
-            </Pressable>
-          ))}
-        </View>
+        <OrderItemsCard
+          items={order.items}
+          onItemPress={(item) => router.push(`/product/${item.product.id}`)}
+        />
 
         {/* 进度时间轴卡片 */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
-          ]}
-        >
-          <View style={styles.cardHeader}>
-            <Icon symbol="timeline" size={18} color={colors.primary} />
-            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              {t('order.progress')}
-            </Text>
-          </View>
-          <TimelineStep steps={timelineSteps} currentIndex={timelineCurrentMap[order.status]} />
-        </View>
+        <OrderTimelineCard steps={timelineSteps} currentIndex={TIMELINE_CURRENT[order.status]} />
 
         {/* 价格汇总卡片 */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
-          ]}
-        >
-          <View style={styles.cardHeader}>
-            <Icon symbol="receipt_long" size={18} color={colors.primary} />
-            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              {t('order.priceSummary', { defaultValue: 'Price Summary' })}
-            </Text>
-          </View>
+        <OrderPriceSummaryCard
+          subtotal={subtotal}
+          shipping={shippingFee}
+          discount={discount}
+          total={order.totalPrice}
+        />
 
-          <View style={styles.priceRow}>
-            <Text style={[styles.priceLabel, { color: colors['on-surface-variant'] }]}>
-              {t('order.subtotal', { defaultValue: 'Subtotal' })}
-            </Text>
-            <Text style={[styles.priceValue, { color: colors['on-surface'] }]}>
-              ${subtotal.toFixed(2)}
-            </Text>
-          </View>
-
-          <View style={styles.priceRow}>
-            <Text style={[styles.priceLabel, { color: colors['on-surface-variant'] }]}>
-              {t('order.shipping', { defaultValue: 'Shipping' })}
-            </Text>
-            <Text style={[styles.priceValue, { color: colors['on-surface'] }]}>
-              ${shippingFee.toFixed(2)}
-            </Text>
-          </View>
-
-          <View style={styles.priceRow}>
-            <Text style={[styles.priceLabel, { color: colors['on-surface-variant'] }]}>
-              {t('order.discount', { defaultValue: 'Discount' })}
-            </Text>
-            <View style={[styles.discountPill, { backgroundColor: '#f0fdf4' }]}>
-              <Text style={styles.discountText}>-${discount.toFixed(2)}</Text>
-            </View>
-          </View>
-
-          <View style={[styles.priceTotalRow, { borderTopColor: colors['outline-variant'] }]}>
-            <Text style={[styles.priceTotalLabel, { color: colors['on-surface'] }]}>
-              {t('order.total')}
-            </Text>
-            <PriceText value={order.totalPrice} size="lg" />
-          </View>
-        </View>
-
-        {/* 订单号 + 时间信息 */}
+        {/* 订单号 + 时间信息（OrderDetail 专属，不复用） */}
         <View
           style={[
             styles.card,
@@ -388,7 +262,7 @@ export default function OrderDetailPage() {
         </View>
       </ScrollView>
 
-      {/* 底部操作按钮栏 */}
+      {/* 底部操作按钮栏（OrderDetail 专属，不复用） */}
       <View
         style={[
           styles.bottomBar,
@@ -596,92 +470,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography['body-md'],
     fontWeight: '700',
-  },
-  addressBox: {
-    gap: spacing.xs,
-    paddingHorizontal: spacing.xs,
-  },
-  addressTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  addressName: {
-    ...typography['body-md'],
-    fontWeight: '700',
-  },
-  addressPhone: {
-    ...typography['body-sm'],
-  },
-  addressLine: {
-    ...typography['body-sm'],
-    lineHeight: 20,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  itemImageWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-  },
-  itemImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  itemTextBox: {
-    flex: 1,
-    gap: 4,
-  },
-  itemName: {
-    ...typography['body-sm'],
-    lineHeight: 18,
-  },
-  itemPrice: {
-    ...typography['label-caps'],
-    fontSize: 11,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  priceLabel: {
-    ...typography['body-sm'],
-  },
-  priceValue: {
-    ...typography['body-sm'],
-    fontWeight: '600',
-  },
-  discountPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-  },
-  discountText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#16a34a',
-  },
-  priceTotalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: spacing.md,
-    marginTop: spacing.xs,
-    borderTopWidth: 2,
-    borderTopColor: 'rgba(0,0,0,0.05)',
-  },
-  priceTotalLabel: {
-    ...typography['body-md'],
-    fontWeight: '700',
-    fontSize: 16,
   },
   metaBox: {
     gap: spacing.xs,
