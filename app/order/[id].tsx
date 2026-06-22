@@ -16,7 +16,6 @@ import {
   Image,
   Platform,
 } from 'react-native';
-import { Defs, ClipPath, Polygon, Rect, Svg } from 'react-native-svg';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/format';
@@ -26,6 +25,7 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
+import { StatusBadge } from '@/components/business/StatusBadge';
 import { Icon } from '@/components/ui/Icon';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
 import type { OrderStatus, Order, CartItem } from '@/types';
@@ -503,38 +503,6 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
   );
 }
 
-// 平行四边形 status badge（HTML .status-badge clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%)）
-function StatusBadge({ text, backgroundColor }: { text: string; backgroundColor: string }) {
-  // badge 整体宽度 92，高度 22；parallelogram 偏移 8px
-  const w = 92;
-  const h = 22;
-  const offset = 8;
-  return (
-    <View
-      style={styles.statusBadgeWrap}
-      accessibilityRole="text"
-      accessibilityLabel={`Status: ${text}`}
-    >
-      <Svg width={w} height={h}>
-        <Defs>
-          <ClipPath id="statusBadgeClip">
-            <Polygon points={`${offset},0 ${w},0 ${w - offset},${h} 0,${h}`} />
-          </ClipPath>
-        </Defs>
-        <Rect
-          x={0}
-          y={0}
-          width={w}
-          height={h}
-          fill={backgroundColor}
-          clipPath="url(#statusBadgeClip)"
-        />
-      </Svg>
-      <Text style={styles.statusBadgeText}>{text}</Text>
-    </View>
-  );
-}
-
 function OrderItemRow({
   item,
   localize,
@@ -870,22 +838,6 @@ const styles = StyleSheet.create({
   bodyMdBold: {
     ...typography['body-md'],
     fontWeight: '700',
-  },
-  // Status badge (parallelogram via SVG clipPath)
-  statusBadgeWrap: {
-    position: 'relative',
-    width: 92,
-    height: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statusBadgeText: {
-    position: 'absolute',
-    color: '#ffffff',
-    ...typography['label-caps'],
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
   },
   // ETA banner
   etaRow: {

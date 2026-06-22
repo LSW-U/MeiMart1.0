@@ -17,6 +17,7 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PriceText } from '@/components/ui/PriceText';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
+import { StatusBadge } from '@/components/business/StatusBadge';
 import { Icon } from '@/components/ui/Icon';
 
 interface OrderItemRow {
@@ -126,13 +127,7 @@ export default function DeliveryTrackingPage() {
                 Placed May 12, 2024
               </Text>
             </View>
-            <View
-              style={styles.statusBadge}
-              accessibilityRole="text"
-              accessibilityLabel="Status: Processing"
-            >
-              <Text style={styles.statusBadgeText}>PROCESSING</Text>
-            </View>
+            <StatusBadge text="PROCESSING" backgroundColor="#F97316" />
           </View>
 
           {/* ESTIMATED DELIVERY（HTML 第 168-174 行 — blue-50/50 bg） */}
@@ -597,18 +592,6 @@ const styles = StyleSheet.create({
   },
   bodyMdBold: {
     ...typography['body-md'],
-    fontWeight: '700',
-  },
-  statusBadge: {
-    backgroundColor: '#F97316',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 4,
-    borderRadius: 2,
-  },
-  statusBadgeText: {
-    color: '#ffffff',
-    ...typography['label-caps'],
-    fontSize: 10,
     fontWeight: '700',
   },
   etaRow: {
