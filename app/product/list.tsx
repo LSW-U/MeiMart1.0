@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView, Image } from 'react-native';
 import { router } from 'expo-router';
-import { useTheme, spacing, typography, borderRadius } from '@/theme';
+import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { EmptyState } from '@/components/feedback/EmptyState';
@@ -116,15 +116,6 @@ const REST_LIST = [
   },
 ];
 
-// uma-lulik-shadow（offset 4,4 + #59413d + opacity 0.2 + radius 0）
-const UMA_LULIK_SHADOW = {
-  shadowColor: '#59413d',
-  shadowOffset: { width: 4, height: 4 },
-  shadowOpacity: 0.2,
-  shadowRadius: 0,
-  elevation: 4,
-};
-
 export default function ProductListPage() {
   const { colors } = useTheme();
   const [activeCategory, setActiveCategory] = useState<(typeof CATEGORY_BAR)[number]>('All');
@@ -211,7 +202,7 @@ export default function ProductListPage() {
                   backgroundColor: colors['surface-container-lowest'],
                   borderColor: 'rgba(225, 191, 186, 0.1)',
                 },
-                UMA_LULIK_SHADOW,
+                shadowPresets.umaLulik,
                 pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
               ]}
               accessibilityRole="button"

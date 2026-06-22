@@ -7,9 +7,14 @@
  * - `shadow-lg` → lg（按钮/floating）
  * - `shadow-xl` → xl（弹层/模态）
  *
+ * 文化阴影：
+ * - `umaLulik` → 翻译自 HTML 原型 `.uma-lulik-shadow` CSS 类
+ *   （`box-shadow: 4px 4px 0px 0px rgba(38, 24, 22, 0.1)`）
+ *   用于 order/tracking、order/[id]、product/list 等页面，是该项目独有的视觉签名
+ *
  * 用法：
  *   import { shadowPresets } from '@/theme';
- *   <View style={[styles.card, shadowPresets.md]} />
+ *   <View style={[styles.card, shadowPresets.umaLulik]} />
  *
  * shadowColor 默认黑色（不透明），调用方可在外层覆盖：
  *   [shadowPresets.md, { shadowColor: colors.primary }]
@@ -29,7 +34,7 @@ export type ShadowPreset = {
 
 const baseShadowColor = '#000';
 
-export const shadowPresets: Record<'sm' | 'md' | 'lg' | 'xl', ShadowPreset> = {
+export const shadowPresets: Record<'sm' | 'md' | 'lg' | 'xl' | 'umaLulik', ShadowPreset> = {
   sm: {
     shadowColor: baseShadowColor,
     shadowOffset: { width: 0, height: 1 },
@@ -57,6 +62,13 @@ export const shadowPresets: Record<'sm' | 'md' | 'lg' | 'xl', ShadowPreset> = {
     shadowOpacity: 0.16,
     shadowRadius: 16,
     elevation: 10,
+  },
+  umaLulik: {
+    shadowColor: '#59413d',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 0,
+    elevation: 4,
   },
 } as const;
 

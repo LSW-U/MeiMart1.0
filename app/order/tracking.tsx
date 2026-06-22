@@ -12,21 +12,12 @@ import {
   Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useTheme, spacing, typography, borderRadius } from '@/theme';
+import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PriceText } from '@/components/ui/PriceText';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
-
-// uma-lulik-shadow（offset 4,4 + #59413d + opacity 0.2 + radius 0）
-const UMA_LULIK_SHADOW = {
-  shadowColor: '#59413d',
-  shadowOffset: { width: 4, height: 4 },
-  shadowOpacity: 0.2,
-  shadowRadius: 0,
-  elevation: 4,
-};
 
 interface OrderItemRow {
   id: string;
@@ -120,7 +111,7 @@ export default function DeliveryTrackingPage() {
           style={[
             styles.card,
             { backgroundColor: colors['surface-container-lowest'] },
-            UMA_LULIK_SHADOW,
+            shadowPresets.umaLulik,
           ]}
         >
           <View style={styles.orderHeaderRow}>
@@ -175,7 +166,7 @@ export default function DeliveryTrackingPage() {
           style={[
             styles.card,
             { backgroundColor: colors['surface-container-lowest'] },
-            UMA_LULIK_SHADOW,
+            shadowPresets.umaLulik,
           ]}
         >
           <View style={styles.addressHeaderRow}>
@@ -248,7 +239,7 @@ export default function DeliveryTrackingPage() {
           style={[
             styles.card,
             { backgroundColor: colors['surface-container-lowest'] },
-            UMA_LULIK_SHADOW,
+            shadowPresets.umaLulik,
           ]}
         >
           <Text style={[styles.labelCaps, { color: colors['on-surface-variant'] }]}>
@@ -272,7 +263,7 @@ export default function DeliveryTrackingPage() {
           style={[
             styles.card,
             { backgroundColor: colors['surface-container-lowest'] },
-            UMA_LULIK_SHADOW,
+            shadowPresets.umaLulik,
           ]}
         >
           {/* Payment Method */}
@@ -324,7 +315,7 @@ export default function DeliveryTrackingPage() {
           style={({ pressed }) => [
             styles.solidBtn,
             { backgroundColor: colors.primary },
-            UMA_LULIK_SHADOW,
+            shadowPresets.umaLulik,
             pressed && { transform: [{ scale: 0.95 }] },
           ]}
           accessibilityRole="button"
@@ -341,7 +332,7 @@ export default function DeliveryTrackingPage() {
 function Header({ title }: { title: string }) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.header, { backgroundColor: colors.primary }, UMA_LULIK_SHADOW]}>
+    <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.umaLulik]}>
       <View style={styles.headerPattern} pointerEvents="none">
         <TaisPattern width={390} height={64} opacity={0.2} />
       </View>
@@ -448,7 +439,7 @@ function CourierCard({ courier }: { courier: typeof COURIER }) {
         styles.card,
         styles.courierRow,
         { backgroundColor: colors['surface-container-lowest'] },
-        UMA_LULIK_SHADOW,
+        shadowPresets.umaLulik,
       ]}
     >
       <View style={[styles.courierAvatar, { backgroundColor: colors['primary-container'] }]}>
