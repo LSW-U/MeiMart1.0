@@ -22,6 +22,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Chip } from '@/components/ui/Chip';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { PriceText } from '@/components/ui/PriceText';
 import { afterSalesApplySchema, type AfterSalesApplyValues } from '@/forms/schemas/service';
 
 const REFUND_REASON_KEYS = [
@@ -107,7 +108,7 @@ export default function AfterSalesApplyPage() {
                 <Text style={[styles.productMeta, { color: colors['on-surface-variant'] }]}>
                   × 1
                 </Text>
-                <Text style={[styles.productPrice, { color: colors.primary }]}>$25.90</Text>
+                <PriceText value={25.9} size="md" />
               </View>
             </View>
           </View>
@@ -290,7 +291,7 @@ export default function AfterSalesApplyPage() {
           <Text style={[styles.refundLabel, { color: colors['on-surface-variant'] }]}>
             {t('afterSales.refundAmount', { defaultValue: 'Refund amount' })}
           </Text>
-          <Text style={[styles.refundValue, { color: colors.primary }]}>$25.90</Text>
+          <PriceText value={25.9} size="lg" />
         </View>
         <Pressable
           onPress={submit}
@@ -372,10 +373,6 @@ const styles = StyleSheet.create({
   },
   productMeta: {
     ...typography['body-sm'],
-  },
-  productPrice: {
-    ...typography['body-md'],
-    fontWeight: '700',
   },
   label: {
     ...typography['body-md'],
@@ -469,10 +466,6 @@ const styles = StyleSheet.create({
   refundLabel: {
     ...typography['label-caps'],
     fontSize: 10,
-  },
-  refundValue: {
-    ...typography.h3,
-    fontWeight: '700',
   },
   submitBtn: {
     flex: 1,

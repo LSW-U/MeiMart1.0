@@ -23,6 +23,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Chip } from '@/components/ui/Chip';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { PriceText } from '@/components/ui/PriceText';
 import { reviewSchema, type ReviewValues } from '@/forms/schemas/service';
 
 const TAGS = [
@@ -110,7 +111,7 @@ export default function OrderReviewPage() {
                 <Text style={[styles.productMeta, { color: colors['on-surface-variant'] }]}>
                   × 2
                 </Text>
-                <Text style={[styles.productPrice, { color: colors.primary }]}>$9.80</Text>
+                <PriceText value={9.8} size="md" />
               </View>
             </View>
           </View>
@@ -352,10 +353,6 @@ const styles = StyleSheet.create({
   },
   productMeta: {
     ...typography['body-sm'],
-  },
-  productPrice: {
-    ...typography['body-md'],
-    fontWeight: '700',
   },
   label: {
     ...typography['body-md'],

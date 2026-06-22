@@ -128,7 +128,7 @@ export default function AfterSalesDetailPage() {
                 <Text style={[styles.productMeta, { color: colors['on-surface-variant'] }]}>
                   × 1
                 </Text>
-                <Text style={[styles.productPrice, { color: colors.primary }]}>$25.90</Text>
+                <PriceText value={25.9} size="md" />
               </View>
             </View>
           </View>
@@ -377,10 +377,6 @@ const styles = StyleSheet.create({
   productMeta: {
     ...typography['label-caps'],
     fontSize: 11,
-  },
-  productPrice: {
-    ...typography['body-md'],
-    fontWeight: '700',
   },
   refundAmountRow: {
     flexDirection: 'row',
