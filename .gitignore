@@ -31,6 +31,7 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
 .env.staging
 .env.production
@@ -47,3 +48,9 @@ coverage/
 
 # Local backups (deleted files parked here for restore)
 .bak/
+
+# Claude Code personal config (not for shared repo)
+.claude/
+
+# Husky auto-generated internal folder
+.husky/_/
