@@ -27,7 +27,7 @@ FRONTEND_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # ====================================
 
 OPENAPI_SRC="$BACKEND_ROOT/packages/api-contract/openapi.yaml"
-TYPES_SRC="$BACKEND_ROOT/packages/shared-types/src/generated"
+TYPES_SRC="$BACKEND_ROOT/packages/shared-types/src/api-types.ts"
 
 echo "🔍 后端 repo: $BACKEND_ROOT"
 echo "🔍 前端 repo: $FRONTEND_ROOT"
@@ -41,7 +41,7 @@ if [ ! -d "$BACKEND_ROOT" ]; then
 fi
 
 # 检查后端是否需要重新生成 artifacts
-if [ ! -f "$OPENAPI_SRC" ] || [ ! -d "$TYPES_SRC" ]; then
+if [ ! -f "$OPENAPI_SRC" ] || [ ! -f "$TYPES_SRC" ]; then
   echo "⚠️  后端 artifact 缺失，自动跑 gen:openapi + gen:types..."
   cd "$BACKEND_ROOT"
   pnpm --filter @meimart/api-contract gen:openapi
@@ -54,7 +54,7 @@ if [ ! -f "$OPENAPI_SRC" ]; then
   echo "❌ OpenAPI 生成失败: $OPENAPI_SRC 不存在"
   exit 1
 fi
-if [ ! -d "$TYPES_SRC" ]; then
+if [ ! -f "$TYPES_SRC" ]; then
   echo "❌ TS 类型生成失败: $TYPES_SRC 不存在"
   exit 1
 fi
@@ -83,16 +83,15 @@ sync_to_app() {
     return
   fi
 
-  mkdir -p "$api_dir/types"
+  mkdir -p "$api_dir"
 
   # 1. OpenAPI YAML
   cp "$OPENAPI_SRC" "$api_dir/openapi.yaml"
-  echo "  ✓ openapi.yaml → apps/$app/api/openapi.yaml"
+  echo "  ✓ openapi.yaml   → apps/$app/api/openapi.yaml"
 
-  # 2. TS 类型
-  rm -rf "$api_dir/types/"*.ts
-  cp -R "$TYPES_SRC/." "$api_dir/types/"
-  echo "  ✓ types/        → apps/$app/api/types/"
+  # 2. TS 类型（单文件 api-types.ts）
+  cp "$TYPES_SRC" "$api_dir/api-types.ts"
+  echo "  ✓ api-types.ts   → apps/$app/api/api-types.ts"
 
   # 3. 写一个版本戳（git 可追溯上次同步时间）
   date -u +"%Y-%m-%dT%H:%M:%SZ" > "$api_dir/.last-sync"
@@ -100,7 +99,7 @@ sync_to_app() {
   BACKEND_SHA=$(git rev-parse --short HEAD)
   cd "$FRONTEND_ROOT"
   echo "$BACKEND_SHA" > "$api_dir/.backend-sha"
-  echo "  ✓ 版本戳       → backend_sha=$BACKEND_SHA"
+  echo "  ✓ 版本戳         → backend_sha=$BACKEND_SHA"
 }
 
 for app in "${APPS[@]}"; do
@@ -112,6 +111,6 @@ done
 echo "🎉 同步完成"
 echo
 echo "下一步："
-echo "  - 在 app 代码中 import { types } from './api/types/...' 使用类型"
+echo "  - 在 app 代码中 import ' in app 代码中导入类型，例如：import type { paths } from './api/api-types'"
 echo "  - 用 openapi.yaml 加载到 swagger viewer 或 code generator"
-echo "  - git add api/ commit 这次同步"
+echo "  - git add apps/*/api/ commit 这次同步"

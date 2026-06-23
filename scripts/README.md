@@ -20,7 +20,7 @@ bash scripts/sync-api.sh rider-app
 | 来源（后端 MeiMart repo） | 目标（前端 app） |
 |---|---|
 | `packages/api-contract/openapi.yaml` | `apps/<app>/api/openapi.yaml` |
-| `packages/shared-types/src/generated/` | `apps/<app>/api/types/` |
+| `packages/shared-types/src/api-types.ts` | `apps/<app>/api/api-types.ts` |
 | 后端 git SHA | `apps/<app>/api/.backend-sha` |
 | 同步时间戳 | `apps/<app>/api/.last-sync` |
 
