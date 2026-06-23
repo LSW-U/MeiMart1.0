@@ -2,10 +2,10 @@ import { Stack, useSegments, router } from 'expo-router';
 import { useEffect } from 'react';
 import { AppProviders } from '@/providers/AppProviders';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
+import { useAuthStore } from '@/store/authStore';
 
 function RootAuthGate() {
-  // TEMP: bypass auth for web preview
-  const isAuthenticated = true;
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const segments = useSegments();
 
   useEffect(() => {
