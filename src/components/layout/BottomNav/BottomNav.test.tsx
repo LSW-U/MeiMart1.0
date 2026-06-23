@@ -1,11 +1,23 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/theme';
 import { BottomNav } from './BottomNav';
 
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <ThemeProvider>{children}</ThemeProvider>
-);
+jest.mock('@/services/queries/useCart', () => ({
+  useCart: () => ({ data: { totalItems: 3 } }),
+}));
+
+const wrapper = ({ children }: { children: React.ReactNode }) => {
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  return (
+    <ThemeProvider>
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    </ThemeProvider>
+  );
+};
 
 describe('BottomNav', () => {
   it('renders all tabs', () => {

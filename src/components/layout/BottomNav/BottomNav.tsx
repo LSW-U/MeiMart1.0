@@ -2,14 +2,15 @@ import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing } from '@/theme';
 import { Badge } from '@/components/ui/Badge';
+import { useCart } from '@/services/queries/useCart';
 import { toIconName } from '@/types';
 import type { BottomNavProps } from './BottomNav.types';
 import { BOTTOM_TAB_ITEMS } from './BottomNav.types';
 
 export function BottomNav({ activeTab, onTabPress, testID }: BottomNavProps) {
   const { colors } = useTheme();
-  // Mock cart count for demo
-  const cartCount = 3;
+  const { data: cart } = useCart();
+  const cartCount = cart?.totalItems ?? 0;
 
   return (
     <View
