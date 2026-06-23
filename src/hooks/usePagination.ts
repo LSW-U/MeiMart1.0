@@ -13,7 +13,7 @@ export function usePagination<T>({ queryKey, queryFn, enabled = true }: Paginati
     queryKey,
     queryFn: ({ pageParam }) => queryFn(pageParam as number),
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => (lastPage.hasMore ? undefined : undefined),
+    getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length + 1 : undefined),
     enabled,
     networkMode: 'offlineFirst',
   });
