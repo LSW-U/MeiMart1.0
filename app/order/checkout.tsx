@@ -20,6 +20,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useCart } from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
 import { usePaymentMethods } from '@/services/queries/usePayment';
+import { useCreateOrder } from '@/services/queries/useOrders';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { useState } from 'react';
 
@@ -34,6 +35,7 @@ export default function CheckoutPage() {
   const { data: cart, isLoading, isError, refetch } = useCart();
   const { data: addresses } = useAddresses();
   const { data: paymentMethods } = usePaymentMethods();
+  const createOrder = useCreateOrder();
   const selectedItems = cart?.items.filter((i) => i.selected) ?? [];
   const defaultAddress = addresses?.find((a) => a.isDefault) ?? addresses?.[0];
 
@@ -64,12 +66,18 @@ export default function CheckoutPage() {
     );
   }
 
-  const submit = () => {
+  const submit = async () => {
     if (isOffline) {
       Alert.alert(t('checkout.offlineBlock'), t('checkout.offlineBlockDesc'));
       return;
     }
-    router.push('/order/result');
+    if (selectedItems.length === 0) return;
+    try {
+      await createOrder.mutateAsync({ items: selectedItems, totalPrice: finalTotal });
+      router.replace('/order/result');
+    } catch {
+      Alert.alert(t('common.error'), t('checkout.orderFailed'));
+    }
   };
 
   return (
@@ -310,7 +318,7 @@ export default function CheckoutPage() {
         <Pressable
           testID="checkout-submit"
           onPress={submit}
-          disabled={selectedItems.length === 0 || isOffline}
+          disabled={selectedItems.length === 0 || isOffline || createOrder.isPending}
           style={({ pressed }) => [
             styles.payBtn,
             { backgroundColor: colors.primary },

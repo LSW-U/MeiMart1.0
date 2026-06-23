@@ -357,7 +357,8 @@
     },
     "secure": "Secure Checkout",
     "confirmAndPay": "CONFIRM & PAY ${{amount}}",
-    "customerService": "Customer Service"
+    "customerService": "Customer Service",
+    "orderFailed": "Failed to place order. Please try again."
   },
   "result": {
     "title": "Payment Success",

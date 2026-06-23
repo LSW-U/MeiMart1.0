@@ -357,7 +357,8 @@
     },
     "secure": "安全支付",
     "confirmAndPay": "确认并支付 ${{amount}}",
-    "customerService": "客服"
+    "customerService": "客服",
+    "orderFailed": "下单失败，请重试"
   },
   "result": {
     "title": "支付成功",

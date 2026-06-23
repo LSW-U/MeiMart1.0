@@ -357,7 +357,8 @@
     },
     "secure": "",
     "confirmAndPay": "",
-    "customerService": ""
+    "customerService": "",
+    "orderFailed": "La han pedidu la konsege."
   },
   "result": {
     "title": "",
