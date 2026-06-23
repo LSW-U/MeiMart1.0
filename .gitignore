@@ -54,3 +54,7 @@ coverage/
 
 # Husky auto-generated internal folder
 .husky/_/
+
+# AI tools
+.claude/
+.cursor/
