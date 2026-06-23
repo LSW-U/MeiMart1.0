@@ -16,3 +16,6 @@ yarn-error.log*
 
 expo-env.d.ts
 # @end expo-cli
+# AI tools
+.claude/
+.cursor/

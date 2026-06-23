@@ -6,6 +6,7 @@ import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useOrderStore } from '../../src/store/useOrderStore';
+import { colors } from '../../src/theme/colors';
 import type { OrderHistoryItem } from '../../src/types/order';
 
 const statusToneMap: Record<OrderHistoryItem['status'], 'history.status.completed' | 'history.status.cancelled' | 'history.status.transferred'> = {
@@ -15,9 +16,9 @@ const statusToneMap: Record<OrderHistoryItem['status'], 'history.status.complete
 };
 
 const statusColorMap: Record<OrderHistoryItem['status'], { bg: string; text: string }> = {
-  completed: { bg: '#dcf5e3', text: '#1f7a3a' },
-  cancelled: { bg: '#fde2df', text: '#a3322a' },
-  transferred: { bg: '#fff3d6', text: '#a06b00' },
+  completed: { bg: colors.statusSuccessBg, text: colors.statusSuccessText },
+  cancelled: { bg: colors.statusDangerBg, text: colors.statusDangerText },
+  transferred: { bg: colors.statusWarningBg, text: colors.statusWarningText },
 };
 
 const formatDateTime = (timestamp: number) => {

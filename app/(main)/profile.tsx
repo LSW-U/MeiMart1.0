@@ -6,6 +6,7 @@ import { AppIcon } from '../../src/components/ui';
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useAuthStore } from '../../src/store/useAuthStore';
+import { colors } from '../../src/theme/colors';
 
 type MenuItemProps = {
   icon: 'wallet' | 'settings' | 'help' | 'logout';
@@ -21,7 +22,7 @@ function MenuItem({ icon, label, tone = 'default', onPress }: MenuItemProps) {
     <Pressable className={`flex-row items-center justify-between p-5 ${danger ? 'active:bg-[#ffdad6]/30' : 'active:bg-[#fff0ee]'}`} onPress={onPress}>
       <View className="flex-row items-center gap-4">
         <View className={`h-10 w-10 items-center justify-center rounded-full ${danger ? 'bg-[#ffdad6]/50' : 'bg-[#ffe9e6]'}`}>
-          <AppIcon color={danger ? '#ba1a1a' : '#59413d'} name={icon} />
+          <AppIcon color={danger ? colors.error : colors.textMuted} name={icon} />
         </View>
         <Text className={`text-lg font-medium ${danger ? 'text-[#ba1a1a]' : 'text-[#261816]'}`}>{label}</Text>
       </View>

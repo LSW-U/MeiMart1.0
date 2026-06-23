@@ -7,6 +7,7 @@ import { EmptyState } from '../src/components/feedback/EmptyState';
 import { useGoBack } from '../src/hooks/useGoBack';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { useNotificationStore } from '../src/store/useNotificationStore';
+import { colors } from '../src/theme/colors';
 import type { NotificationCategory, NotificationItem } from '../src/types/notification';
 
 type FilterKey = 'all' | NotificationCategory;
@@ -20,10 +21,10 @@ const filters: { key: FilterKey; labelKey: 'notification.filter.all' | 'notifica
 ];
 
 const categoryStyle: Record<NotificationCategory, { bg: string; icon: 'notification' | 'orders' | 'wallet' | 'settings' }> = {
-  task: { bg: '#ff9800', icon: 'notification' },
-  order: { bg: '#1976d2', icon: 'orders' },
-  wallet: { bg: '#388e3c', icon: 'wallet' },
-  system: { bg: '#8d706c', icon: 'settings' },
+  task: { bg: colors.notificationTask, icon: 'notification' },
+  order: { bg: colors.notificationOrder, icon: 'orders' },
+  wallet: { bg: colors.notificationWallet, icon: 'wallet' },
+  system: { bg: colors.notificationSystem, icon: 'settings' },
 };
 
 export default function NotificationsPage() {

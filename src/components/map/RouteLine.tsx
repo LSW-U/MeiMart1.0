@@ -1,5 +1,6 @@
 import { Platform, Text, View } from 'react-native';
 
+import { colors } from '../../theme/colors';
 import type { Coordinates } from '../../types/common';
 
 type RouteLineProps = {
@@ -9,7 +10,7 @@ type RouteLineProps = {
   strokeWidth?: number;
 };
 
-function RouteLineNative({ pickup, delivery, strokeColor = '#720003', strokeWidth = 3 }: RouteLineProps) {
+function RouteLineNative({ pickup, delivery, strokeColor = colors.primary, strokeWidth = 3 }: RouteLineProps) {
   const { Marker, Polyline } = require('react-native-maps');
 
   const coordinates = [
@@ -29,6 +30,7 @@ function RouteLinePlaceholder({ pickup, delivery }: RouteLineProps) {
   return (
     <View className="items-center justify-center py-4">
       <Text className="text-sm font-semibold text-[#720003]">
+        {/* TODO: 改用 text-primary className（当前 Tailwind preset 未映射） */}
         {pickup.latitude.toFixed(2)}, {pickup.longitude.toFixed(2)} → {delivery.latitude.toFixed(2)}, {delivery.longitude.toFixed(2)}
       </Text>
     </View>
