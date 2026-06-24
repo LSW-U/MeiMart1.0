@@ -1,11 +1,11 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { WithdrawForm } from '../../src/components/business/WithdrawForm';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { useEarningsStore } from '../../src/store/useEarningsStore';
+import { useEarningSummary, useCreateWithdrawal } from '../../src/services/queries/useEarnings';
 
 export default function WithdrawalPage() {
   const router = useRouter();
@@ -15,18 +15,12 @@ export default function WithdrawalPage() {
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const summary = useEarningsStore((s) => s.summary);
-  const hydrate = useEarningsStore((s) => s.hydrate);
-
-  useEffect(() => {
-    let unsub: (() => void) | undefined;
-    void hydrate().then((fn) => { unsub = fn; });
-    return () => { unsub?.(); };
-  }, [hydrate]);
+  const { data: summary } = useEarningSummary();
+  const createWithdrawal = useCreateWithdrawal();
 
   const parsedAmount = Number.parseFloat(amount);
   const amountValid = Number.isFinite(parsedAmount) && parsedAmount > 0;
-  const exceedsBalance = summary !== null && parsedAmount > summary.availableBalance;
+  const exceedsBalance = summary != null && parsedAmount > summary.availableBalance;
   const submitLabel = status === 'processing' ? t('withdraw.processing') : status === 'success' ? t('withdraw.success') : t('withdraw.submit');
   const submitDisabled = status !== 'idle' || !amountValid || exceedsBalance;
 
@@ -35,7 +29,7 @@ export default function WithdrawalPage() {
     setStatus('processing');
     setErrorMsg('');
     try {
-      await useEarningsStore.getState().withdraw(parsedAmount, method);
+      await createWithdrawal.mutateAsync({ amount: parsedAmount, method });
       setStatus('success');
       setTimeout(() => router.replace('/(main)/earnings'), 800);
     } catch (e) {

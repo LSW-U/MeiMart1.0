@@ -11,9 +11,6 @@ import { useAuth } from '../src/hooks/useAuth';
 import { ToastHost } from '../src/components/feedback/Toast';
 import { useAppStore } from '../src/store/useAppStore';
 import { useAuthStore } from '../src/store/useAuthStore';
-import { useEarningsStore } from '../src/store/useEarningsStore';
-import { useNotificationStore } from '../src/store/useNotificationStore';
-import { useOrderStore } from '../src/store/useOrderStore';
 import { useRiderStore } from '../src/store/useRiderStore';
 
 function StoreInitializer({ children }: { children: React.ReactNode }) {
@@ -31,12 +28,7 @@ function StoreInitializer({ children }: { children: React.ReactNode }) {
     void (async () => {
       await useAppStore.getState().hydrate();
       await useAuthStore.getState().hydrate();
-      await Promise.all([
-        useRiderStore.getState().hydrate(),
-        useEarningsStore.getState().hydrate(),
-        useNotificationStore.getState().hydrate(),
-        useOrderStore.getState().hydrate(),
-      ]);
+      await useRiderStore.getState().hydrate();
     })();
   }, [logout]);
 

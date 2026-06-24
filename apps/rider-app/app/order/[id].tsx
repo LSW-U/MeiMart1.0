@@ -1,11 +1,10 @@
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { useOrderStore } from '../../src/store/useOrderStore';
+import { useOrder } from '../../src/services/queries/useOrder';
 import { colors } from '../../src/theme/colors';
 import type { OrderHistoryItem } from '../../src/types/order';
 
@@ -32,29 +31,15 @@ const formatIncome = (income: number, fallback: string, currency: string) => (in
 export default function OrderDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
-  const [order, setOrder] = useState<OrderHistoryItem | null | undefined>(undefined);
-
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      const load = async () => {
-        const result = await useOrderStore.getState().getById(String(id));
-        if (active) setOrder(result);
-      };
-      void load();
-      return () => {
-        active = false;
-      };
-    }, [id]),
-  );
+  const { data: order, isLoading } = useOrder(id);
 
   const goBack = useGoBack('/order/history');
 
   const renderBody = () => {
-    if (order === undefined) {
+    if (isLoading) {
       return null;
     }
-    if (order === null) {
+    if (order === null || order === undefined) {
       return (
         <View className="px-4 pt-8">
           <EmptyState title={t('order.detail.notFound.title')} description={t('order.detail.notFound.description')} />

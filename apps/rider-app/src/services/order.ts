@@ -1,8 +1,8 @@
-import type { OrderHistoryItem, OrderHistoryStatus } from '../types/order';
+import type { OrderHistoryItem, OrderHistoryStatus } from '@/src/types/order';
 
-import { API_BASE_URL, request } from './api';
+import { api, isMockMode } from './api';
 
-// ── Mock layer (localStorage) ──────────────────────────────────────
+// ── Mock layer (localStorage for Web dev) ──────────────────────────
 
 const storageKey = 'mei-delivery-app:orderHistory:v1';
 
@@ -93,109 +93,100 @@ const seedHistory = (): OrderHistoryItem[] => {
   ];
 };
 
-let cache: OrderHistoryItem[] | null = null;
-const listeners = new Set<(items: OrderHistoryItem[]) => void>();
+let mockCache: OrderHistoryItem[] | null = null;
 
-const getStore = (): OrderHistoryItem[] => {
-  if (cache) return cache;
-
+function getMockStore(): OrderHistoryItem[] {
+  if (mockCache) return mockCache;
   if (typeof localStorage !== 'undefined') {
     const stored = localStorage.getItem(storageKey);
     if (stored) {
-      cache = JSON.parse(stored) as OrderHistoryItem[];
-      return cache;
+      mockCache = JSON.parse(stored) as OrderHistoryItem[];
+      return mockCache;
     }
   }
+  mockCache = seedHistory();
+  saveMock();
+  return mockCache;
+}
 
-  cache = seedHistory();
-  save();
-  return cache;
+function saveMock(): void {
+  if (typeof localStorage !== 'undefined' && mockCache) {
+    localStorage.setItem(storageKey, JSON.stringify(mockCache));
+  }
+}
+
+function mockDelay<T>(value: T, ms = 300): Promise<T> {
+  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
+}
+
+// ── orderApi 对象 ───────────────────────────────────────────────────
+
+export const orderApi = {
+  async getHistory(): Promise<OrderHistoryItem[]> {
+    if (isMockMode) {
+      const items = getMockStore().slice();
+      return mockDelay(items.sort((a, b) => b.completedAt - a.completedAt));
+    }
+    const res = await api.get<OrderHistoryItem[]>('/orders/history');
+    return res.data;
+  },
+
+  async getById(id: string): Promise<OrderHistoryItem | null> {
+    if (isMockMode) {
+      return mockDelay(getMockStore().find((item) => item.id === id) ?? null);
+    }
+    const res = await api.get<OrderHistoryItem | null>(`/orders/${encodeURIComponent(id)}`);
+    return res.data;
+  },
+
+  async countByStatus(): Promise<Record<OrderHistoryStatus | 'all', number>> {
+    if (isMockMode) {
+      const items = getMockStore();
+      return mockDelay({
+        all: items.length,
+        completed: items.filter((item) => item.status === 'completed').length,
+        cancelled: items.filter((item) => item.status === 'cancelled').length,
+        transferred: items.filter((item) => item.status === 'transferred').length,
+      });
+    }
+    const res = await api.get<Record<OrderHistoryStatus | 'all', number>>('/orders/count-by-status');
+    return res.data;
+  },
+
+  async getTodayStats(): Promise<{ count: number; totalIncome: number }> {
+    if (isMockMode) {
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const items = getMockStore().filter(
+        (item) => item.completedAt >= startOfDay && item.status === 'completed',
+      );
+      return mockDelay({
+        count: items.length,
+        totalIncome: items.reduce((sum, item) => sum + item.income, 0),
+      });
+    }
+    const res = await api.get<{ count: number; totalIncome: number }>('/orders/today-stats');
+    return res.data;
+  },
+
+  async add(item: OrderHistoryItem): Promise<void> {
+    if (isMockMode) {
+      const store = getMockStore();
+      const existing = store.findIndex((entry) => entry.id === item.id);
+      if (existing >= 0) {
+        store[existing] = item;
+      } else {
+        store.unshift(item);
+      }
+      saveMock();
+      return;
+    }
+    await api.post('/orders', item);
+  },
 };
 
-const save = () => {
-  if (typeof localStorage !== 'undefined' && cache) {
-    localStorage.setItem(storageKey, JSON.stringify(cache));
-  }
-};
-
-const notify = () => {
-  const snapshot = getStore().slice();
-  listeners.forEach((listener) => listener(snapshot));
-};
-
-// ── Public API ─────────────────────────────────────────────────────
-
-const isRemote = () => API_BASE_URL.length > 0;
-
-export async function getOrderHistory(): Promise<OrderHistoryItem[]> {
-  if (isRemote()) {
-    const remote = await request<OrderHistoryItem[]>('/orders/history');
-    cache = remote;
-    save();
-    notify();
-    return remote.sort((a, b) => b.completedAt - a.completedAt);
-  }
-  return getStore()
-    .slice()
-    .sort((a, b) => b.completedAt - a.completedAt);
-}
-
-export async function getOrderById(id: string): Promise<OrderHistoryItem | null> {
-  if (isRemote()) {
-    return request<OrderHistoryItem | null>(`/orders/${encodeURIComponent(id)}`);
-  }
-  return getStore().find((item) => item.id === id) ?? null;
-}
-
-export async function countByStatus(): Promise<Record<OrderHistoryStatus | 'all', number>> {
-  if (isRemote()) {
-    return request<Record<OrderHistoryStatus | 'all', number>>('/orders/count-by-status');
-  }
-  const items = getStore();
-  return {
-    all: items.length,
-    completed: items.filter((item) => item.status === 'completed').length,
-    cancelled: items.filter((item) => item.status === 'cancelled').length,
-    transferred: items.filter((item) => item.status === 'transferred').length,
-  };
-}
-
-export async function getTodayStats(): Promise<{ count: number; totalIncome: number }> {
-  if (isRemote()) {
-    return request<{ count: number; totalIncome: number }>('/orders/today-stats');
-  }
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const items = getStore().filter((item) => item.completedAt >= startOfDay && item.status === 'completed');
-  return {
-    count: items.length,
-    totalIncome: items.reduce((sum, item) => sum + item.income, 0),
-  };
-}
+// ── 兼容 export（delivery.ts writeMockSideEffects 仍用） ─────────────
 
 export async function addOrderHistory(item: OrderHistoryItem): Promise<void> {
-  if (isRemote()) {
-    await request<void>('/orders', {
-      method: 'POST',
-      body: JSON.stringify(item),
-    });
-    await getOrderHistory();
-    return;
-  }
-  const store = getStore();
-  const existing = store.findIndex((entry) => entry.id === item.id);
-  if (existing >= 0) {
-    store[existing] = item;
-  } else {
-    store.unshift(item);
-  }
-  save();
-  notify();
-}
-
-export function subscribeOrderHistory(listener: (items: OrderHistoryItem[]) => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
+  await orderApi.add(item);
 }

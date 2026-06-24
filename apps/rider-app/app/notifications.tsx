@@ -1,12 +1,17 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '../src/components/ui';
 import { EmptyState } from '../src/components/feedback/EmptyState';
 import { useGoBack } from '../src/hooks/useGoBack';
 import { useTranslation } from '../src/i18n/useTranslation';
-import { useNotificationStore } from '../src/store/useNotificationStore';
+import {
+  useNotifications,
+  useUnreadCount,
+  useMarkAsRead,
+  useMarkAllAsRead,
+} from '../src/services/queries/useNotifications';
 import { colors } from '../src/theme/colors';
 import type { NotificationCategory, NotificationItem } from '../src/types/notification';
 
@@ -31,17 +36,10 @@ export default function NotificationsPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const [filter, setFilter] = useState<FilterKey>('all');
-  const items = useNotificationStore((s) => s.items);
-  const unreadCount = useNotificationStore((s) => s.unreadCount);
-  const hydrate = useNotificationStore((s) => s.hydrate);
-  const markRead = useNotificationStore((s) => s.markRead);
-  const markAllRead = useNotificationStore((s) => s.markAllRead);
-
-  useEffect(() => {
-    let unsub: (() => void) | undefined;
-    void hydrate().then((fn) => { unsub = fn; });
-    return () => { unsub?.(); };
-  }, [hydrate]);
+  const { data: items = [] } = useNotifications();
+  const { data: unreadCount = 0 } = useUnreadCount();
+  const markAsReadMutation = useMarkAsRead();
+  const markAllAsReadMutation = useMarkAllAsRead();
 
   const goBack = useGoBack('/(main)/tasks');
 
@@ -66,11 +64,15 @@ export default function NotificationsPage() {
 
   const onItemPress = useCallback(
     async (item: NotificationItem) => {
-      if (!item.read) await markRead(item.id);
+      if (!item.read) await markAsReadMutation.mutateAsync(item.id);
       if (item.link) router.push(item.link as never);
     },
-    [router, markRead],
+    [router, markAsReadMutation],
   );
+
+  const handleMarkAllRead = async () => {
+    await markAllAsReadMutation.mutateAsync();
+  };
 
   return (
     <View className="flex-1 bg-[#fff8f7]">
@@ -82,7 +84,7 @@ export default function NotificationsPage() {
           <Text className="ml-2 text-xl font-semibold text-[#261816]">{t('notification.title')}</Text>
         </View>
         {unreadCount > 0 ? (
-          <Pressable className="rounded-full bg-[#fff0ee] px-3 py-1.5 active:bg-[#ffe1dc]" onPress={() => void markAllRead()}>
+          <Pressable className="rounded-full bg-[#fff0ee] px-3 py-1.5 active:bg-[#ffe1dc]" onPress={() => void handleMarkAllRead()}>
             <Text className="text-xs font-bold text-[#720003]">{t('notification.markAllRead')}</Text>
           </Pressable>
         ) : null}

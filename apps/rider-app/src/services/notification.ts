@@ -1,9 +1,9 @@
-import type { NotificationItem } from '../types/notification';
-import { getRiderSettings } from './settings';
+import type { NotificationItem } from '@/src/types/notification';
 
-import { API_BASE_URL, request } from './api';
+import { api, isMockMode } from './api';
+import { riderSettingsApi } from './settings';
 
-// ── Mock layer (localStorage) ──────────────────────────────────────
+// ── Mock layer (localStorage for Web dev) ──────────────────────────
 
 const storageKey = 'mei-delivery-app:notifications:v2';
 
@@ -55,123 +55,113 @@ const seedNotifications = (): NotificationItem[] => {
   ];
 };
 
-let notifications: NotificationItem[] | null = null;
-const listeners = new Set<(items: NotificationItem[]) => void>();
+let mockCache: NotificationItem[] | null = null;
 
-const getStore = (): NotificationItem[] => {
-  if (notifications) return notifications;
-
+function getMockStore(): NotificationItem[] {
+  if (mockCache) return mockCache;
   if (typeof localStorage !== 'undefined') {
     const stored = localStorage.getItem(storageKey);
     if (stored) {
-      notifications = JSON.parse(stored) as NotificationItem[];
-      return notifications;
+      mockCache = JSON.parse(stored) as NotificationItem[];
+      return mockCache;
     }
   }
-
-  notifications = seedNotifications();
-  saveStore();
-  return notifications;
-};
-
-const saveStore = () => {
-  if (typeof localStorage !== 'undefined' && notifications) {
-    localStorage.setItem(storageKey, JSON.stringify(notifications));
-  }
-};
-
-const notifyListeners = () => {
-  const snapshot = getStore().slice();
-  listeners.forEach((listener) => listener(snapshot));
-};
-
-const generateId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
-
-// ── Public API ─────────────────────────────────────────────────────
-
-const isRemote = () => API_BASE_URL.length > 0;
-
-export async function getNotifications(): Promise<NotificationItem[]> {
-  if (isRemote()) {
-    const remote = await request<NotificationItem[]>('/notifications');
-    notifications = remote;
-    saveStore();
-    notifyListeners();
-    return remote.sort((a, b) => b.createdAt - a.createdAt);
-  }
-  return getStore()
-    .slice()
-    .sort((a, b) => b.createdAt - a.createdAt);
+  mockCache = seedNotifications();
+  saveMock();
+  return mockCache;
 }
 
-export async function getUnreadCount(): Promise<number> {
-  if (isRemote()) {
-    return request<number>('/notifications/unread-count');
+function saveMock(): void {
+  if (typeof localStorage !== 'undefined' && mockCache) {
+    localStorage.setItem(storageKey, JSON.stringify(mockCache));
   }
-  return getStore().filter((item) => !item.read).length;
 }
 
-export async function markAsRead(id: string): Promise<void> {
-  if (isRemote()) {
-    await request<void>(`/notifications/${encodeURIComponent(id)}/read`, { method: 'PATCH' });
-    await getNotifications();
-    return;
-  }
-  const target = getStore().find((item) => item.id === id);
-  if (!target || target.read) return;
-  target.read = true;
-  saveStore();
-  notifyListeners();
+function mockDelay<T>(value: T, ms = 200): Promise<T> {
+  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
 
-export async function markAllAsRead(): Promise<void> {
-  if (isRemote()) {
-    await request<void>('/notifications/read-all', { method: 'PATCH' });
-    await getNotifications();
-    return;
-  }
-  let changed = false;
-  getStore().forEach((item) => {
-    if (!item.read) {
-      item.read = true;
-      changed = true;
+function generateId(): string {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+// ── notificationApi 对象 ────────────────────────────────────────────
+
+export const notificationApi = {
+  async list(): Promise<NotificationItem[]> {
+    if (isMockMode) {
+      const items = getMockStore().slice();
+      return mockDelay(items.sort((a, b) => b.createdAt - a.createdAt));
     }
-  });
-  if (!changed) return;
-  saveStore();
-  notifyListeners();
-}
+    const res = await api.get<NotificationItem[]>('/notifications');
+    return res.data;
+  },
+
+  async getUnreadCount(): Promise<number> {
+    if (isMockMode) {
+      return mockDelay(getMockStore().filter((item) => !item.read).length);
+    }
+    const res = await api.get<number>('/notifications/unread-count');
+    return res.data;
+  },
+
+  async markAsRead(id: string): Promise<void> {
+    if (isMockMode) {
+      const target = getMockStore().find((item) => item.id === id);
+      if (!target || target.read) return;
+      target.read = true;
+      saveMock();
+      return;
+    }
+    await api.patch(`/notifications/${encodeURIComponent(id)}/read`);
+  },
+
+  async markAllAsRead(): Promise<void> {
+    if (isMockMode) {
+      let changed = false;
+      getMockStore().forEach((item) => {
+        if (!item.read) {
+          item.read = true;
+          changed = true;
+        }
+      });
+      if (changed) saveMock();
+      return;
+    }
+    await api.patch('/notifications/read-all');
+  },
+
+  async add(
+    input: Omit<NotificationItem, 'id' | 'createdAt' | 'read'>,
+  ): Promise<NotificationItem | null> {
+    // 检查用户设置（mock + real 都查）
+    const settings = await riderSettingsApi.get();
+    if (!settings.notificationsEnabled) return null;
+
+    if (isMockMode) {
+      const item: NotificationItem = {
+        ...input,
+        id: generateId(),
+        createdAt: Date.now(),
+        read: false,
+      };
+      getMockStore().unshift(item);
+      saveMock();
+      return item;
+    }
+    const res = await api.post<NotificationItem>('/notifications', input);
+    return res.data;
+  },
+};
+
+// ── 兼容 export（delivery.ts writeMockSideEffects + earnings.ts 仍用） ──
 
 export async function addNotification(
   input: Omit<NotificationItem, 'id' | 'createdAt' | 'read'>,
 ): Promise<NotificationItem | null> {
-  const settings = await getRiderSettings();
-  if (!settings.notificationsEnabled) return null;
-
-  if (isRemote()) {
-    const remote = await request<NotificationItem>('/notifications', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    });
-    await getNotifications();
-    return remote;
-  }
-
-  const item: NotificationItem = {
-    ...input,
-    id: generateId(),
-    createdAt: Date.now(),
-    read: false,
-  };
-  getStore().unshift(item);
-  saveStore();
-  notifyListeners();
-  return item;
+  return notificationApi.add(input);
 }
 
-export function subscribeNotifications(listener: (items: NotificationItem[]) => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
+export async function getUnreadCount(): Promise<number> {
+  return notificationApi.getUnreadCount();
 }

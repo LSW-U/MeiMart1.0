@@ -1,5 +1,4 @@
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EarningCard } from '../../src/components/business/EarningCard';
@@ -7,21 +6,14 @@ import { HistoryItem } from '../../src/components/business/HistoryItem';
 import { Button } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { useEarningsStore } from '../../src/store/useEarningsStore';
+import { useEarningSummary, useEarningTransactions } from '../../src/services/queries/useEarnings';
 
 export default function EarningsPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const goBack = useGoBack('/(main)/profile');
-  const summary = useEarningsStore((s) => s.summary);
-  const transactions = useEarningsStore((s) => s.transactions);
-  const hydrate = useEarningsStore((s) => s.hydrate);
-
-  useEffect(() => {
-    let unsub: (() => void) | undefined;
-    void hydrate().then((fn) => { unsub = fn; });
-    return () => { unsub?.(); };
-  }, [hydrate]);
+  const { data: summary } = useEarningSummary();
+  const { data: transactions = [] } = useEarningTransactions();
 
   const formatAmount = (amount: number) => (amount >= 0 ? `+${t('common.currency')}${amount.toFixed(2)}` : `-${t('common.currency')}${Math.abs(amount).toFixed(2)}`);
 

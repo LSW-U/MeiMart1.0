@@ -1,12 +1,12 @@
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { OrderHistoryCard } from '../../src/components/business/HistoryItem';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { useOrderStore } from '../../src/store/useOrderStore';
+import { useOrderHistory, useOrderStatusCounts, useOrderTodayStats } from '../../src/services/queries/useOrder';
 import type { OrderHistoryStatus } from '../../src/types/order';
 
 type FilterKey = 'all' | OrderHistoryStatus;
@@ -36,18 +36,11 @@ export default function OrderHistoryPage() {
   const { t } = useTranslation();
   const goBack = useGoBack('/(main)/profile');
   const [filter, setFilter] = useState<FilterKey>('all');
-  const orders = useOrderStore((s) => s.history);
-  const counts = useOrderStore((s) => s.statusCounts);
-  const todayStats = useOrderStore((s) => s.todayStats);
-  const hydrate = useOrderStore((s) => s.hydrate);
-
-  useFocusEffect(
-    useCallback(() => {
-      let unsub: (() => void) | undefined;
-      void hydrate().then((fn) => { unsub = fn; });
-      return () => { unsub?.(); };
-    }, [hydrate]),
-  );
+  const { data: orders = [] } = useOrderHistory();
+  const { data: counts } = useOrderStatusCounts();
+  const { data: todayStats } = useOrderTodayStats();
+  const statusCounts = counts ?? { all: 0, completed: 0, cancelled: 0, transferred: 0 };
+  const today = todayStats ?? { count: 0, totalIncome: 0 };
 
   const visibleOrders = useMemo(() => {
     if (filter === 'all') return orders;
@@ -81,7 +74,7 @@ export default function OrderHistoryPage() {
                 onPress={() => setFilter(key)}
               >
                 <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-[#59413d]'}`}>
-                  {t(labelKey)} ({counts[key]})
+                  {t(labelKey)} ({statusCounts[key]})
                 </Text>
               </Pressable>
             );
@@ -116,7 +109,7 @@ export default function OrderHistoryPage() {
       <View className="absolute bottom-0 left-0 right-0 border-t border-[#e1bfba] bg-[#fde2df] px-4 py-4 shadow-sm">
         <View className="mx-auto flex-row w-full max-w-md items-center justify-between">
           <Text className="font-bold text-[#261816]">{t('history.todayOrders')}</Text>
-          <Text className="text-xl font-bold text-[#720003]">{todayStats.count} · {t('common.currency')}{todayStats.totalIncome.toFixed(2)}</Text>
+          <Text className="text-xl font-bold text-[#720003]">{today.count} · {t('common.currency')}{today.totalIncome.toFixed(2)}</Text>
         </View>
       </View>
     </View>

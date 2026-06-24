@@ -1,9 +1,8 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import type { DutyStatus } from '../../services/settings';
-import { getUnreadCount, subscribeNotifications } from '../../services/notification';
+import { useUnreadCount } from '../../services/queries/useNotifications';
 import { AppIcon } from '../ui';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
@@ -28,14 +27,7 @@ const dotColor: Record<DutyStatus, string> = {
 
 export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTasksLabel, pickupsLabel, deliveriesLabel, onDutyPress, onMenuPress, onTabChange }: TaskDetailHeaderProps) {
   const router = useRouter();
-  const [unread, setUnread] = useState(0);
-
-  useEffect(() => {
-    void getUnreadCount().then(setUnread);
-    return subscribeNotifications((items) => {
-      setUnread(items.filter((item) => !item.read).length);
-    });
-  }, []);
+  const { data: unread = 0 } = useUnreadCount();
 
   const tabs = [
     { key: 'new', label: newTasksLabel },

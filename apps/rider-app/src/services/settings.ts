@@ -105,3 +105,9 @@ export async function updateRiderSettings(settings: Partial<RiderSettings>): Pro
   notifySettingsListeners();
   return { ...riderSettings };
 }
+
+// riderSettingsApi：B.5.1 内最小补丁让 notificationApi 能调，完整迁移在 B.5.2
+export const riderSettingsApi = {
+  get: getRiderSettings,
+  update: updateRiderSettings,
+};
