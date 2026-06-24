@@ -15,8 +15,10 @@ const emailOrPhoneSchema = z
 
 const passwordSchema = z
   .string()
-  .min(6, 'Password must be at least 6 characters')
-  .max(64, 'Password too long');
+  .min(8, 'Password must be at least 8 characters')
+  .max(64, 'Password too long')
+  .regex(/[a-zA-Z]/, 'Password must contain letters')
+  .regex(/\d/, 'Password must contain numbers');
 
 const smsCodeSchema = z
   .string()

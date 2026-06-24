@@ -17,13 +17,18 @@ describe('isValidPhone', () => {
 });
 
 describe('isValidPassword', () => {
-  it('accepts 6+ chars', () => {
-    expect(isValidPassword('123456')).toBe(true);
-    expect(isValidPassword('abcdef')).toBe(true);
+  it('accepts 8+ chars with letters and digits', () => {
+    expect(isValidPassword('abc12345')).toBe(true);
+    expect(isValidPassword('Pass1word')).toBe(true);
   });
-  it('rejects short passwords', () => {
+  it('rejects short passwords (< 8 chars)', () => {
     expect(isValidPassword('12345')).toBe(false);
+    expect(isValidPassword('abc1234')).toBe(false);
     expect(isValidPassword('')).toBe(false);
+  });
+  it('rejects password without letters or without digits', () => {
+    expect(isValidPassword('12345678')).toBe(false); // digits only
+    expect(isValidPassword('abcdefgh')).toBe(false); // letters only
   });
 });
 

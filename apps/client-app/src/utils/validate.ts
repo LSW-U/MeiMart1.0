@@ -10,7 +10,12 @@ export function isValidPhone(phone: string, region: 'TL' | 'CN' | 'generic' = 'g
 }
 
 export function isValidPassword(password: string): boolean {
-  return typeof password === 'string' && password.length >= 6;
+  return (
+    typeof password === 'string' &&
+    password.length >= 8 &&
+    /[a-zA-Z]/.test(password) &&
+    /\d/.test(password)
+  );
 }
 
 export function isSmsCode(code: string): boolean {
