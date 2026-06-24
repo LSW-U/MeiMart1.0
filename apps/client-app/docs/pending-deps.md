@@ -28,6 +28,21 @@ export async function checkForUpdate() {
 - EAS Project ID（`app.json` extra.eas.projectId）
 - EAS Build 账号 + 项目创建
 
+## expo-device（设备信息）
+
+**当前状态**：装了但删除 `src/services/security.ts`（code-review-2026-06-21 阻塞项 #9）后无源码 import。
+
+**保留理由**：
+1. Expo SDK 56 默认推荐包，移除需要验证 SDK 重装/构建流程，本次 code review 修复不动
+2. 将来真正接入越狱/Root 检测（如 `expo-application` + 第三方 jailbreak/root 库）时仍需 `isDevice` 字段判断模拟器
+
+**激活方式（将来引用）**：
+
+```typescript
+import * as Device from 'expo-device';
+const isEmulator = Device.isDevice === false;
+```
+
 ## 已移除的依赖（CP-FIX-2.4 决策）
 
 以下依赖曾装但未用，CP-FIX-2.4 已移除：
