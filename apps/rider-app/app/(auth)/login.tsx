@@ -73,13 +73,16 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
+      console.log('[login] handleLogin start', { phone, mode, hasPassword: Boolean(password), hasCode: Boolean(code) });
       await login(
         phone,
         mode === 'password' ? password : undefined,
         mode === 'sms' ? code : undefined,
       );
+      console.log('[login] handleLogin success, router.replace should fire');
       // router.replace('/(main)/tasks') 已在 useAuth.login 内部处理
-    } catch {
+    } catch (e) {
+      console.error('[login] handleLogin failed:', e);
       // TODO: 接入 Toast 反馈错误
     }
   };

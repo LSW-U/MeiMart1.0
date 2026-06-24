@@ -14,9 +14,13 @@ export function useAuth() {
 
   const login = useCallback(
     async (phone: string, password?: string, code?: string) => {
+      console.log('[useAuth.login] start', { phone, hasPassword: Boolean(password), hasCode: Boolean(code) });
       const result = await loginMutation.mutateAsync({ phone, password, code });
+      console.log('[useAuth.login] mutation result', { hasToken: Boolean(result.token), riderName: result.rider.name });
       await tokenStorage.set(result.token, result.refreshToken);
+      console.log('[useAuth.login] tokenStorage.set done');
       setRider(result.rider);
+      console.log('[useAuth.login] setRider done, replacing route');
       router.replace('/(main)/tasks');
       return result;
     },
