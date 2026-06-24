@@ -15,7 +15,6 @@ import { useEarningsStore } from '../src/store/useEarningsStore';
 import { useNotificationStore } from '../src/store/useNotificationStore';
 import { useOrderStore } from '../src/store/useOrderStore';
 import { useRiderStore } from '../src/store/useRiderStore';
-import { useTaskStore } from '../src/store/useTaskStore';
 
 function StoreInitializer({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
@@ -34,7 +33,6 @@ function StoreInitializer({ children }: { children: React.ReactNode }) {
       await useAuthStore.getState().hydrate();
       await Promise.all([
         useRiderStore.getState().hydrate(),
-        useTaskStore.getState().hydrate(),
         useEarningsStore.getState().hydrate(),
         useNotificationStore.getState().hydrate(),
         useOrderStore.getState().hydrate(),

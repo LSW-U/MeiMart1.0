@@ -195,25 +195,3 @@ async function mutateMockStatus(id: string, status: TaskStatus): Promise<Deliver
   saveMockTasks();
   return cloneTask(task);
 }
-
-// ── 兼容 export（useTaskStore 仍用，B.3.3 整体接入新 hook 后清理） ────
-
-export async function getTaskLists(): Promise<TaskLists> {
-  return taskApi.getLists();
-}
-
-export async function getTaskById(id: string): Promise<DeliveryTask | null> {
-  return taskApi.getById(id);
-}
-
-export async function acceptTask(id: string): Promise<DeliveryTask> {
-  return taskApi.accept(id);
-}
-
-export async function hasActiveTasks(): Promise<boolean> {
-  return taskApi.hasActive();
-}
-
-export async function updateTaskStatus(id: string, status: TaskStatus): Promise<DeliveryTask> {
-  return taskApi.updateStatus(id, status);
-}

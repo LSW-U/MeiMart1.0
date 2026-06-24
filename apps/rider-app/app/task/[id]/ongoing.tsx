@@ -1,5 +1,4 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { TaskCard } from '../../../src/components/business/TaskCard';
@@ -8,7 +7,7 @@ import { EmptyState } from '../../../src/components/feedback/EmptyState';
 import { AppIcon } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
-import { useTaskStore } from '../../../src/store/useTaskStore';
+import { useTask } from '../../../src/services/queries/useTask';
 import type { DeliveryTask } from '../../../src/types/task';
 
 const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)}km`;
@@ -18,23 +17,14 @@ export default function TaskOngoingPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const goBack = useGoBack('/(main)/tasks');
-  const [task, setTask] = useState<DeliveryTask | null>(null);
-
-  const loadTask = useCallback(async () => {
-    const result = await useTaskStore.getState().getById(id);
-    setTask(result);
-  }, [id]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- 原因：B 阶段接入 React Query 后用 useQuery 替代，effect 加载模式自然消失
-    void loadTask();
-  }, [loadTask]);
+  const { data: task, refetch } = useTask(id);
+  const taskData: DeliveryTask | null = task ?? null;
 
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <TaskDetailHeader
         activeTab="deliveries"
-        deliveriesLabel={task ? t('tasks.tabs.deliveries1') : t('tasks.tabs.deliveries0')}
+        deliveriesLabel={taskData ? t('tasks.tabs.deliveries1') : t('tasks.tabs.deliveries0')}
         dutyStatus="onDuty"
         dutyStatusLabel={t('duty.onDuty')}
         newTasksLabel={t('tasks.tabs.new')}
@@ -43,26 +33,26 @@ export default function TaskOngoingPage() {
         onMenuPress={() => void goBack()}
       />
       <ScrollView className="flex-1" contentContainerClassName="bg-white px-5 py-8 pb-28">
-        {task ? (
+        {taskData ? (
           <>
             <TaskCard
               actionLabel={t('tasks.arrivedDelivery')}
               chatLabel={t('tasks.chat')}
               contactLabel={t('tasks.contact')}
-              note={task.note}
-              orderId={task.orderId.replace('JD Delivery ', '')}
+              note={taskData.note}
+              orderId={taskData.orderId.replace('JD Delivery ', '')}
               points={[
-                { label: 'P', title: task.pickup.title, subtitle: task.pickup.address },
-                { label: 'D', title: task.dropoff.title, subtitle: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
+                { label: 'P', title: taskData.pickup.title, subtitle: taskData.pickup.address },
+                { label: 'D', title: taskData.dropoff.title, subtitle: t('common.fromPickup', { distance: formatDistance(taskData.distanceKm) }) },
               ]}
               tags={[t('tasks.tag.callOnArrival'), t('tasks.tag.doNotLeave'), t('tasks.tag.express')]}
-              timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
+              timeLabel={t('common.remaining', { minutes: String(taskData.estimatedMinutes) })}
               variant="active"
               onAction={() => router.push(`/task/${id}/sign`)}
             />
             <View className="mt-3">
               <Text className="text-sm text-[#59413d]">
-                {t('tasks.recipientSuffix')} <Text className="font-bold text-[#ff9800]">{task.dropoff.contactPhone?.slice(-4) ?? t('tasks.recipientSuffixValue')}</Text>
+                {t('tasks.recipientSuffix')} <Text className="font-bold text-[#ff9800]">{taskData.dropoff.contactPhone?.slice(-4) ?? t('tasks.recipientSuffixValue')}</Text>
               </Text>
             </View>
           </>
@@ -75,7 +65,7 @@ export default function TaskOngoingPage() {
           <AppIcon name="settings" className="text-2xl text-[#59413d]" />
           <Text className="mt-1 text-[10px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
         </Pressable>
-        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-4 shadow-sm" onPress={() => void loadTask()}>
+        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-4 shadow-sm" onPress={() => void refetch()}>
           <AppIcon name="refresh" className="text-xl text-[#961813]" />
           <Text className="text-base font-bold text-[#961813]">{t('tasks.refresh')}</Text>
         </Pressable>

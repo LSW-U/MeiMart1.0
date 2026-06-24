@@ -1,5 +1,5 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '../../../src/components/feedback/EmptyState';
@@ -8,7 +8,7 @@ import { NavigationLauncher } from '../../../src/components/map/NavigationLaunch
 import { Button } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
-import { useTaskStore } from '../../../src/store/useTaskStore';
+import { useTask } from '../../../src/services/queries/useTask';
 import type { DeliveryTask } from '../../../src/types/task';
 
 const formatFee = (fee: number, currency: string) => `${currency}${fee.toFixed(2)}`;
@@ -19,24 +19,15 @@ export default function TaskNavigatePage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const goBack = useGoBack('/(main)/tasks');
-  const [task, setTask] = useState<DeliveryTask | null>(null);
+  const { data } = useTask(id);
+  const task: DeliveryTask | null = data ?? null;
 
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      void useTaskStore.getState().getById(id).then((next) => {
-        if (!active) return;
-        if (next && next.status !== 'delivering') {
-          router.replace(`/task/${id}`);
-          return;
-        }
-        setTask(next);
-      });
-      return () => {
-        active = false;
-      };
-    }, [id, router]),
-  );
+  // status 不是 delivering 时跳回详情页（用户直接 URL 进了 navigate 但 task 状态不对）
+  useEffect(() => {
+    if (task && task.status !== 'delivering') {
+      router.replace(`/task/${id}`);
+    }
+  }, [task, id, router]);
 
   return (
     <View className="flex-1 bg-[#fff8f7]">

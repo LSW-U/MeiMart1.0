@@ -1,6 +1,6 @@
 import { addNotification } from './notification';
 import { addOrderHistory } from './order';
-import { getTaskById, updateTaskStatus } from './task';
+import { taskApi } from './task';
 
 const computeFare = (fee: number): number => {
   const rounded = Math.round(fee * 100) / 100;
@@ -8,11 +8,11 @@ const computeFare = (fee: number): number => {
 };
 
 export async function confirmPickup(taskId: string) {
-  await updateTaskStatus(taskId, 'delivering');
+  await taskApi.updateStatus(taskId, 'delivering');
 }
 
 export async function confirmDelivery(taskId: string) {
-  const task = await updateTaskStatus(taskId, 'completed');
+  const task = await taskApi.updateStatus(taskId, 'completed');
 
   await addOrderHistory({
     id: task.id,
@@ -38,7 +38,7 @@ export async function confirmDelivery(taskId: string) {
 }
 
 export async function reportDeliveryProgress(taskId: string) {
-  const task = await getTaskById(taskId);
+  const task = await taskApi.getById(taskId);
 
   if (!task) {
     throw new Error(`Task not found: ${taskId}`);
