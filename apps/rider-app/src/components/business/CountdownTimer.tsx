@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 
 type CountdownTimerProps = {
@@ -9,10 +9,15 @@ type CountdownTimerProps = {
 
 export function CountdownTimer({ seconds, label = 'ETA', onExpire }: CountdownTimerProps) {
   const [remaining, setRemaining] = useState(seconds);
+  // 保存最新 onExpire 到 ref，避免每次父 render 都触发 useEffect 重置定时器
+  const onExpireRef = useRef(onExpire);
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  });
 
   useEffect(() => {
     if (remaining <= 0) {
-      onExpire?.();
+      onExpireRef.current?.();
       return;
     }
     const id = setInterval(() => setRemaining((r) => r - 1), 1000);

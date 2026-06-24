@@ -6,7 +6,7 @@ type QrScannerProps = {
 
 function QrScannerNative({ onScan }: QrScannerProps) {
   const { useState } = require('react');
-  const { CameraView, BarcodeScanningResult, useCameraPermissions } = require('expo-camera');
+  const { CameraView, useCameraPermissions } = require('expo-camera');
 
   const [scanned, setScanned] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();

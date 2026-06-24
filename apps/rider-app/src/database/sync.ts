@@ -13,8 +13,6 @@ export async function enqueue(action: QueueAction): Promise<void> {
     await database.get<OfflineQueueEntry>('offline_queue').create((entry) => {
       entry.action = action.type;
       entry.payload = JSON.stringify(action.payload);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (entry as any)._raw.created_at = Date.now();
       entry.attempts = 0;
     });
   });

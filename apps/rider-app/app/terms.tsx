@@ -1,5 +1,3 @@
-import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '../src/components/ui';
@@ -7,7 +5,6 @@ import { useTranslation } from '../src/i18n/useTranslation';
 import { useGoBack } from '../src/hooks/useGoBack';
 
 export default function TermsPage() {
-  const router = useRouter();
   const { t } = useTranslation();
 
   const goBack = useGoBack('/(main)/profile');

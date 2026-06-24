@@ -27,6 +27,7 @@ export default function TaskDetailPage() {
   }, [id]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 原因：B 阶段接入 React Query 后用 useQuery 替代，effect 加载模式自然消失
     void loadTask();
   }, [loadTask]);
 

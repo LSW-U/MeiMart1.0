@@ -9,7 +9,7 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "types": ["nativewind/types"]
+    "types": ["nativewind/types", "react-native"]
   },
   "include": [
     "**/*.ts",

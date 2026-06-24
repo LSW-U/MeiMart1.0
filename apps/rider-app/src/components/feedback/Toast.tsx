@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 
 type ToastItem = {
@@ -13,7 +13,7 @@ type Action =
   | { type: 'remove'; id: number };
 
 let nextId = 0;
-const listeners: Array<(item: ToastItem) => void> = [];
+const listeners: ((item: ToastItem) => void)[] = [];
 
 export function showToast(message: string, type: ToastItem['type'] = 'info', duration = 3000) {
   const item: ToastItem = { id: nextId++, message, type, duration };
@@ -21,15 +21,21 @@ export function showToast(message: string, type: ToastItem['type'] = 'info', dur
 }
 
 function ToastEntry({ item, onDone }: { item: ToastItem; onDone: () => void }) {
-  const opacity = new Animated.Value(0);
+  // opacity 用 useState 惰性初始化，保证 mount 时创建一次且不在 render 期间读 ref
+  const [opacity] = useState(() => new Animated.Value(0));
+  // 保存最新 onDone 到 ref，避免 effect 每次父 render 重置动画定时器
+  const onDoneRef = useRef(onDone);
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  });
 
   useEffect(() => {
     Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
     const timer = setTimeout(() => {
-      Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => onDone());
+      Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => onDoneRef.current());
     }, item.duration ?? 3000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [item.duration, opacity]);
 
   const bgColor = item.type === 'success' ? 'bg-[#2d6a2e]' : item.type === 'error' ? 'bg-[#961813]' : 'bg-[#261816]';
 

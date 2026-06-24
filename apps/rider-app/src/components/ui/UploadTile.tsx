@@ -1,5 +1,7 @@
 import type { TranslationKey } from '../../i18n/useTranslation';
 
+import { Pressable, Text, View } from 'react-native';
+
 type UploadTileProps = {
   title: string;
   subtitle?: string;
@@ -9,8 +11,6 @@ type UploadTileProps = {
   onPress: () => void;
   t: (key: TranslationKey) => string;
 };
-
-import { Pressable, Text, View } from 'react-native';
 
 export function UploadTile({ title, subtitle, icon, selected, compact, onPress, t }: UploadTileProps) {
   return (

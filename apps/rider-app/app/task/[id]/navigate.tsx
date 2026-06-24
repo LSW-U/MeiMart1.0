@@ -11,8 +11,6 @@ import { useTranslation } from '../../../src/i18n/useTranslation';
 import { useTaskStore } from '../../../src/store/useTaskStore';
 import type { DeliveryTask } from '../../../src/types/task';
 
-const DEFAULT_COORDINATES = { latitude: -8.5569, longitude: 125.5603 };
-
 const formatFee = (fee: number, currency: string) => `${currency}${fee.toFixed(2)}`;
 const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)} KM`;
 

@@ -6,7 +6,6 @@ import { useAuthStore } from '../src/store/useAuthStore';
 export default function IndexPage() {
   const [redirectTo, setRedirectTo] = useState<'/(auth)/login' | '/(main)/tasks' | null>(null);
   const hydrate = useAuthStore((s) => s.hydrate);
-  const token = useAuthStore((s) => s.token);
 
   useEffect(() => {
     void hydrate().then(() => {

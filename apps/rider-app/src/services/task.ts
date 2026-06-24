@@ -1,6 +1,6 @@
 import type { DeliveryTask, TaskStatus } from '@/src/types/task';
 
-import { API_BASE_URL, request, buildQuery } from './api';
+import { API_BASE_URL, request } from './api';
 
 type TaskLists = {
   available: DeliveryTask[];

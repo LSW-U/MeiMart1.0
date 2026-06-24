@@ -1,4 +1,4 @@
-import { request } from './api';
+import { api } from './api';
 
 export type UploadResult = {
   url: string;
@@ -10,12 +10,10 @@ export async function uploadFile(uri: string): Promise<UploadResult> {
     uri,
     type: 'image/jpeg',
     name: 'upload.jpg',
-  } as unknown as Blob);
-
-  const res = await request<UploadResult>('/upload', {
-    method: 'POST',
-    headers: { 'Content-Type': 'multipart/form-data' },
-    body: formData as unknown as string,
   });
-  return res;
+
+  const res = await api.post<UploadResult>('/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data;
 }

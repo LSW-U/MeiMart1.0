@@ -31,10 +31,12 @@ export default function ProfileEditPage() {
 
   useEffect(() => {
     if (rider) {
+      /* eslint-disable react-hooks/set-state-in-effect -- 原因：rider hydrate 后批量初始化表单字段；B 阶段接入 react-hook-form + key reset 后整体移除 */
       setName(rider.name);
       setPhone(rider.phone.replace('+670 ', ''));
       setLicenseNumber(rider.licenseNumber ?? '');
       setVehicleType(rider.vehicleType ?? '');
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [rider]);
 

@@ -1,5 +1,4 @@
-import { Linking, Platform } from 'react-native';
-import { Pressable, Text } from 'react-native';
+import { Linking, Platform , Pressable, Text } from 'react-native';
 
 import type { Coordinates } from '../../types/common';
 

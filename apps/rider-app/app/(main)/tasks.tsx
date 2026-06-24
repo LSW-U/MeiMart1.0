@@ -8,8 +8,7 @@ import { TaskCard } from '../../src/components/business/TaskCard';
 import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader';
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
-import { AppIcon } from '../../src/components/ui';
-import { Button } from '../../src/components/ui';
+import { AppIcon, Button } from '../../src/components/ui';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
 import { useAuthStore } from '../../src/store/useAuthStore';
@@ -18,18 +17,6 @@ import { useTaskStore } from '../../src/store/useTaskStore';
 import type { DeliveryTask } from '../../src/types/task';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
-
-type TaskLists = {
-  available: DeliveryTask[];
-  pickups: DeliveryTask[];
-  deliveries: DeliveryTask[];
-};
-
-const emptyTaskLists: TaskLists = {
-  available: [],
-  pickups: [],
-  deliveries: [],
-};
 
 const dutyLabelKey: Record<DutyStatus, 'duty.onDuty' | 'duty.offDuty' | 'duty.busy'> = {
   onDuty: 'duty.onDuty',
@@ -58,7 +45,6 @@ export default function TasksPage() {
   const hydrateTasks = useTaskStore((s) => s.hydrate);
   const refreshTasks = useTaskStore((s) => s.refresh);
   const hasActive = useTaskStore((s) => s.hasActive);
-  const accept = useTaskStore((s) => s.accept);
   const rider = useAuthStore((s) => s.rider);
 
   const online = dutyStatus !== 'offDuty';
@@ -72,11 +58,6 @@ export default function TasksPage() {
     void hydrateTasks();
     return () => { unsubRider?.(); };
   }, [hydrateRider, hydrateTasks]);
-
-  const acceptAndOpenTask = async (task: DeliveryTask) => {
-    await accept(task.id);
-    router.push(`/task/${task.id}`);
-  };
 
   const openMenu = () => setMenuVisible(true);
 

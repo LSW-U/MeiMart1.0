@@ -1,5 +1,4 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { AppIcon } from '../../src/components/ui';
@@ -46,19 +45,10 @@ export default function SettingsPage() {
   const setLocale = useAppStore((s) => s.setLocale);
   const notificationsEnabled = useRiderStore((s) => s.notificationsEnabled);
   const toggleNotificationsInStore = useRiderStore((s) => s.toggleNotifications);
-  const [language, setLanguage] = useState<AppLanguage>(locale);
-  const riderHydrated = useRiderStore((s) => s.hydrated);
-
-  useEffect(() => {
-    if (riderHydrated) {
-      setLanguage(locale);
-    }
-  }, [locale, riderHydrated]);
 
   const rotateLanguage = async () => {
-    const index = languages.indexOf(language);
+    const index = languages.indexOf(locale);
     const nextLanguage = languages[(index + 1 + languages.length) % languages.length] ?? languages[0];
-    setLanguage(nextLanguage);
     await setLocale(nextLanguage);
   };
 
@@ -83,7 +73,7 @@ export default function SettingsPage() {
 
   const goBack = useGoBack('/(main)/profile');
 
-  const languageDescription = `${languageLabels[language] ?? languageLabels[languages[0]]} ${t('settings.language.activeSuffix')} ${t('settings.language.cycleHint')}`;
+  const languageDescription = `${languageLabels[locale] ?? languageLabels[languages[0]]} ${t('settings.language.activeSuffix')} ${t('settings.language.cycleHint')}`;
 
   return (
     <View className="flex-1 bg-[#fff8f7]">

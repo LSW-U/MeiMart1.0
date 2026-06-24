@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 
-import type { RiderStatus } from '../types/rider';
 import { getRiderSettings, subscribeRiderSettings, updateRiderSettings, type DutyStatus } from '../services/settings';
 
 type RiderState = {
