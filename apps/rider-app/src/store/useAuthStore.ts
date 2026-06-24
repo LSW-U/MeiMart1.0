@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import type { RiderProfile } from '../types/rider';
-import { registerRiderProfile, updateRiderProfile } from '../services/user';
+import { riderApi, registerRiderProfile } from '../services/user';
 import { tokenStorage } from '../services/token-storage';
 
 type AuthState = {
@@ -22,9 +22,20 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   hydrate: async () => {
     try {
-      // 真实 token 链路：token 唯一来源是 SecureStore（A.2 已落地）
       const token = await tokenStorage.get();
-      set({ isAuthenticated: token !== null, hydrated: true });
+      if (!token) {
+        set({ hydrated: true });
+        return;
+      }
+      // 已登录：拉 rider profile 填 store（修 B.1.3 cold-start rider=null 遗留）
+      try {
+        const profile = await riderApi.getProfile();
+        set({ isAuthenticated: true, rider: profile, hydrated: true });
+      } catch (e) {
+        // profile 拉取失败：仍设登录态，rider 留空（页面用 useRiderProfile 重试）
+        console.error('[useAuthStore] hydrate profile failed:', e);
+        set({ isAuthenticated: true, hydrated: true });
+      }
     } catch (e) {
       console.error('[useAuthStore] hydrate failed:', e);
       set({ hydrated: true });
@@ -48,7 +59,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   updateProfile: async (patch) => {
     try {
-      const updated = await updateRiderProfile(patch);
+      const updated = await riderApi.updateProfile(patch);
       set({ rider: updated });
     } catch (e) {
       console.error('[useAuthStore] updateProfile failed:', e);
