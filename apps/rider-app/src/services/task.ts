@@ -1,6 +1,6 @@
 import type { DeliveryTask, TaskStatus } from '@/src/types/task';
 
-import { API_BASE_URL, request } from './api';
+import { api, isMockMode } from './api';
 
 type TaskLists = {
   available: DeliveryTask[];
@@ -8,7 +8,7 @@ type TaskLists = {
   deliveries: DeliveryTask[];
 };
 
-// ── Mock layer (localStorage) ──────────────────────────────────────
+// ── Mock layer (localStorage for Web dev) ──────────────────────────
 
 const storageKey = 'mei-delivery-app:tasks:v2';
 
@@ -97,7 +97,7 @@ const initialTasks: DeliveryTask[] = [
   },
 ];
 
-let mockTasks: DeliveryTask[] | null = null;
+let mockTasksCache: DeliveryTask[] | null = null;
 
 const cloneTask = (task: DeliveryTask): DeliveryTask => ({
   ...task,
@@ -106,45 +106,35 @@ const cloneTask = (task: DeliveryTask): DeliveryTask => ({
   items: [...task.items],
 });
 
-const getTasks = () => {
-  if (mockTasks) return mockTasks;
-
+function getMockTasks(): DeliveryTask[] {
+  if (mockTasksCache) return mockTasksCache;
   if (typeof localStorage !== 'undefined') {
     const stored = localStorage.getItem(storageKey);
     if (stored) {
-      mockTasks = JSON.parse(stored) as DeliveryTask[];
-      return mockTasks;
+      mockTasksCache = JSON.parse(stored) as DeliveryTask[];
+      return mockTasksCache;
     }
   }
-
-  mockTasks = initialTasks.map(cloneTask);
-  return mockTasks;
-};
-
-const saveTasks = () => {
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(storageKey, JSON.stringify(getTasks()));
-  }
-};
-
-const findTask = (id: string) => getTasks().find((task) => task.id === id);
-
-// ── Public API ─────────────────────────────────────────────────────
-
-const isRemote = () => API_BASE_URL.length > 0;
-
-export async function getAvailableTasks(): Promise<DeliveryTask[]> {
-  if (isRemote()) {
-    return request<DeliveryTask[]>(`/tasks/available`);
-  }
-  return getTasks().filter((task) => task.status === 'available').map(cloneTask);
+  mockTasksCache = initialTasks.map(cloneTask);
+  return mockTasksCache;
 }
 
-export async function getTaskLists(): Promise<TaskLists> {
-  if (isRemote()) {
-    return request<TaskLists>(`/tasks/lists`);
+function saveMockTasks(): void {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(storageKey, JSON.stringify(getMockTasks()));
   }
-  const tasks = getTasks();
+}
+
+function findMockTask(id: string): DeliveryTask | undefined {
+  return getMockTasks().find((task) => task.id === id);
+}
+
+function mockDelay<T>(value: T, ms = 400): Promise<T> {
+  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
+}
+
+function buildMockLists(): TaskLists {
+  const tasks = getMockTasks();
   return {
     available: tasks.filter((task) => task.status === 'available').map(cloneTask),
     pickups: tasks.filter((task) => task.status === 'accepted' || task.status === 'pickingUp').map(cloneTask),
@@ -152,40 +142,78 @@ export async function getTaskLists(): Promise<TaskLists> {
   };
 }
 
+// ── taskApi 对象 ────────────────────────────────────────────────────
+
+export const taskApi = {
+  async getLists(): Promise<TaskLists> {
+    if (isMockMode) return mockDelay(buildMockLists(), 400);
+    const res = await api.get<TaskLists>('/tasks/lists');
+    return res.data;
+  },
+
+  async getById(id: string): Promise<DeliveryTask | null> {
+    if (isMockMode) {
+      const task = findMockTask(id);
+      return mockDelay(task ? cloneTask(task) : null, 300);
+    }
+    const res = await api.get<DeliveryTask | null>(`/tasks/${encodeURIComponent(id)}`);
+    return res.data;
+  },
+
+  async accept(id: string): Promise<DeliveryTask> {
+    if (isMockMode) {
+      return mockDelay(await mutateMockStatus(id, 'accepted'), 500);
+    }
+    const res = await api.post<DeliveryTask>(`/tasks/${encodeURIComponent(id)}/accept`);
+    return res.data;
+  },
+
+  async updateStatus(id: string, status: TaskStatus): Promise<DeliveryTask> {
+    if (isMockMode) {
+      return mockDelay(await mutateMockStatus(id, status), 400);
+    }
+    const res = await api.patch<DeliveryTask>(`/tasks/${encodeURIComponent(id)}/status`, { status });
+    return res.data;
+  },
+
+  async hasActive(): Promise<boolean> {
+    if (isMockMode) {
+      const active = getMockTasks().some(
+        (task) => task.status === 'accepted' || task.status === 'pickingUp' || task.status === 'delivering',
+      );
+      return mockDelay(active, 200);
+    }
+    const res = await api.get<boolean>('/tasks/has-active');
+    return res.data;
+  },
+};
+
+async function mutateMockStatus(id: string, status: TaskStatus): Promise<DeliveryTask> {
+  const task = findMockTask(id);
+  if (!task) throw new Error(`Task not found: ${id}`);
+  task.status = status;
+  saveMockTasks();
+  return cloneTask(task);
+}
+
+// ── 兼容 export（useTaskStore 仍用，B.3.3 整体接入新 hook 后清理） ────
+
+export async function getTaskLists(): Promise<TaskLists> {
+  return taskApi.getLists();
+}
+
 export async function getTaskById(id: string): Promise<DeliveryTask | null> {
-  if (isRemote()) {
-    return request<DeliveryTask | null>(`/tasks/${encodeURIComponent(id)}`);
-  }
-  const task = findTask(id);
-  return task ? cloneTask(task) : null;
+  return taskApi.getById(id);
 }
 
 export async function acceptTask(id: string): Promise<DeliveryTask> {
-  if (isRemote()) {
-    return request<DeliveryTask>(`/tasks/${encodeURIComponent(id)}/accept`, { method: 'POST' });
-  }
-  return updateTaskStatus(id, 'accepted');
+  return taskApi.accept(id);
 }
 
 export async function hasActiveTasks(): Promise<boolean> {
-  if (isRemote()) {
-    return request<boolean>(`/tasks/has-active`);
-  }
-  return getTasks().some((task) => task.status === 'accepted' || task.status === 'pickingUp' || task.status === 'delivering');
+  return taskApi.hasActive();
 }
 
 export async function updateTaskStatus(id: string, status: TaskStatus): Promise<DeliveryTask> {
-  if (isRemote()) {
-    return request<DeliveryTask>(`/tasks/${encodeURIComponent(id)}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
-    });
-  }
-  const task = findTask(id);
-  if (!task) {
-    throw new Error(`Task not found: ${id}`);
-  }
-  task.status = status;
-  saveTasks();
-  return cloneTask(task);
+  return taskApi.updateStatus(id, status);
 }
