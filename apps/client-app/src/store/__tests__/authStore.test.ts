@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '../authStore';
 
 describe('authStore', () => {
@@ -25,5 +26,14 @@ describe('authStore', () => {
     expect(state.isAuthenticated).toBe(false);
     expect(state.token).toBeNull();
     expect(state.refreshToken).toBeNull();
+  });
+
+  it('persist partialize only keeps isAuthenticated — token never lands in AsyncStorage', async () => {
+    useAuthStore.getState().setAuth('tok-secret', 'ref-secret');
+    const persistedRaw = await AsyncStorage.getItem('auth-storage');
+    const persisted = JSON.parse(persistedRaw ?? '{}');
+    expect(persisted.state.isAuthenticated).toBe(true);
+    expect(persisted.state.token).toBeUndefined();
+    expect(persisted.state.refreshToken).toBeUndefined();
   });
 });
