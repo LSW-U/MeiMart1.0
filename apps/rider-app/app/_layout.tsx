@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { setOnUnauthorized } from '../src/services/api';
+import { AppProviders } from '../src/providers/AppProviders';
 import { ToastHost } from '../src/components/feedback/Toast';
 import { useAppStore } from '../src/store/useAppStore';
 import { useAuthStore } from '../src/store/useAuthStore';
@@ -45,11 +46,13 @@ function StoreInitializer({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <StoreInitializer>
-        <StatusBar style="dark" />
-        <ToastHost />
-        <Stack screenOptions={{ headerShown: false }} />
-      </StoreInitializer>
+      <AppProviders>
+        <StoreInitializer>
+          <StatusBar style="dark" />
+          <ToastHost />
+          <Stack screenOptions={{ headerShown: false }} />
+        </StoreInitializer>
+      </AppProviders>
     </SafeAreaProvider>
   );
 }
