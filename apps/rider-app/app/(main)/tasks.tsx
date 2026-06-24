@@ -10,10 +10,10 @@ import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { AppIcon, Button } from '../../src/components/ui';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
+import { useTaskLists } from '../../src/services/queries/useTask';
 import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { useRiderStore } from '../../src/store/useRiderStore';
-import { useTaskStore } from '../../src/store/useTaskStore';
 import type { DeliveryTask } from '../../src/types/task';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
@@ -41,10 +41,8 @@ export default function TasksPage() {
   const dutyStatus = useRiderStore((s) => s.status);
   const setDutyStatus = useRiderStore((s) => s.setDutyStatus);
   const hydrateRider = useRiderStore((s) => s.hydrate);
-  const taskLists = useTaskStore((s) => s.lists);
-  const hydrateTasks = useTaskStore((s) => s.hydrate);
-  const refreshTasks = useTaskStore((s) => s.refresh);
-  const hasActive = useTaskStore((s) => s.hasActive);
+  const { data: taskListsData, refetch: refetchTasks } = useTaskLists();
+  const taskLists = taskListsData ?? { available: [] as DeliveryTask[], pickups: [] as DeliveryTask[], deliveries: [] as DeliveryTask[] };
   const rider = useAuthStore((s) => s.rider);
 
   const online = dutyStatus !== 'offDuty';
@@ -55,9 +53,8 @@ export default function TasksPage() {
   useEffect(() => {
     let unsubRider: (() => void) | undefined;
     void hydrateRider().then((fn) => { unsubRider = fn; });
-    void hydrateTasks();
     return () => { unsubRider?.(); };
-  }, [hydrateRider, hydrateTasks]);
+  }, [hydrateRider]);
 
   const openMenu = () => setMenuVisible(true);
 
@@ -67,7 +64,8 @@ export default function TasksPage() {
       return;
     }
     if (next === 'offDuty' && (dutyStatus === 'onDuty' || dutyStatus === 'busy')) {
-      if (await hasActive()) {
+      // 用派生数据判断是否有进行中任务（useTaskLists 缓存已含最新状态，无需后端再确认）
+      if (activeTasksExist) {
         setMenuVisible(false);
         setBlockVisible(true);
         return;
@@ -203,7 +201,7 @@ export default function TasksPage() {
           <AppIcon name="settings" className="text-2xl text-[#59413d]" />
           <Text className="mt-1 text-[11px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
         </Pressable>
-        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-3 shadow-sm" onPress={() => void refreshTasks()}>
+        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-3 shadow-sm" onPress={() => void refetchTasks()}>
           <AppIcon name="refresh" className="text-xl text-[#961813]" />
           <Text className="text-base font-bold text-[#961813]">{t('tasks.refresh')}</Text>
         </Pressable>
