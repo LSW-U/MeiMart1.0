@@ -64,13 +64,3 @@ export const deliveryApi = {
     return task;
   },
 };
-
-// ── 兼容 export（useTaskStore 仍用，B.4.2 整体接入 useDelivery 后清理） ──
-
-export async function confirmPickup(taskId: string): Promise<void> {
-  await deliveryApi.confirmPickup(taskId);
-}
-
-export async function confirmDelivery(taskId: string): Promise<void> {
-  await deliveryApi.confirmDelivery(taskId);
-}

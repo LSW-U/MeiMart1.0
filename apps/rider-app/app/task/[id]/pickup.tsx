@@ -6,7 +6,7 @@ import { PhotoCapture } from '../../../src/components/camera/PhotoCapture';
 import { SwipeButton } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
-import { useTaskStore } from '../../../src/store/useTaskStore';
+import { useConfirmPickup } from '../../../src/services/queries/useDelivery';
 
 export default function PickupConfirmPage() {
   const router = useRouter();
@@ -15,14 +15,18 @@ export default function PickupConfirmPage() {
   const goBack = useGoBack('/(main)/tasks');
   const [captured, setCaptured] = useState(false);
   const [photoUri, setPhotoUri] = useState('');
-  const [processing, setProcessing] = useState(false);
+  const confirmPickup = useConfirmPickup();
+  const processing = confirmPickup.isPending;
 
   const handleConfirmPickup = async () => {
     if (!captured || processing) return;
 
-    setProcessing(true);
-    await useTaskStore.getState().confirmPickup(id);
-    router.replace('/(main)/tasks?tab=pickups');
+    try {
+      await confirmPickup.mutateAsync({ taskId: id, evidence: { photoUri } });
+      router.replace('/(main)/tasks?tab=pickups');
+    } catch {
+      // TODO: Toast 反馈错误
+    }
   };
 
   return (
