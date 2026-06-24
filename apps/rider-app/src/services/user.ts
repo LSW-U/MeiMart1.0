@@ -1,144 +1,96 @@
 import type { RiderProfile } from '@/src/types/rider';
 
-import { API_BASE_URL, request, setAuthToken } from './api';
+import { api, isMockMode } from './api';
+import { tokenStorage } from './token-storage';
 
-// ── Mock layer (localStorage) ──────────────────────────────────────
+// ── Mock layer (localStorage for Web dev) ──────────────────────────
 
 const defaultProfile: RiderProfile = {
   id: '8842910',
   name: 'Alex Rider',
   phone: '+670 7700 0000',
-  avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAxYQTl8fmfVEjYlkPAfFPYKFQzFnJdbHZILY2zo70KbTeFOm1gHaq5a5hgcXMBx_K4rYX5RD_P-xVDOQabALqBnnaqUCZ9pnME_ZyaijrqU8pvVcs9vVQmB-SUOYytq4NmgjnkJU6vNlbukA_GxnB_tdqAJOKD1aFXMtJGyb-P8iNTWMu3zneBEhx07nTdDrUc05phtJYwAjgope5USCpA9iNRqKNFE_AsaZdVtw_0O9-DqC_93C04Ut2DIKF8tna1PxqbDB52e4Ct',
+  avatarUrl: '',
   vehicleType: 'Motorcycle Courier',
   licenseNumber: 'BI-1234567',
   status: 'online',
 };
 
-const storageKey = 'mei-delivery-app:rider-profile';
-const sessionStorageKey = 'mei-delivery-app:rider-session';
+const profileStorageKey = 'mei-delivery-app:rider-profile';
 
-let riderProfile: RiderProfile | null = null;
-let riderSession: boolean | null = null;
+let mockProfileCache: RiderProfile | null = null;
 
-const getProfile = () => {
-  if (riderProfile) return riderProfile;
-
+function getMockProfile(): RiderProfile {
+  if (mockProfileCache) return mockProfileCache;
   if (typeof localStorage !== 'undefined') {
-    const stored = localStorage.getItem(storageKey);
+    const stored = localStorage.getItem(profileStorageKey);
     if (stored) {
-      riderProfile = JSON.parse(stored) as RiderProfile;
-      return riderProfile;
+      mockProfileCache = JSON.parse(stored) as RiderProfile;
+      return mockProfileCache;
     }
   }
+  mockProfileCache = { ...defaultProfile };
+  return mockProfileCache;
+}
 
-  riderProfile = { ...defaultProfile };
-  return riderProfile;
-};
-
-const saveProfile = () => {
+function saveMockProfile(profile: RiderProfile): void {
+  mockProfileCache = profile;
   if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(storageKey, JSON.stringify(getProfile()));
+    localStorage.setItem(profileStorageKey, JSON.stringify(profile));
   }
-};
+}
 
-const getSession = () => {
-  if (riderSession !== null) return riderSession;
+function mockDelay<T>(value: T, ms = 400): Promise<T> {
+  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
+}
 
-  if (typeof localStorage !== 'undefined') {
-    riderSession = localStorage.getItem(sessionStorageKey) === 'active';
-    return riderSession;
-  }
+// ── riderApi 对象 ───────────────────────────────────────────────────
 
-  riderSession = true;
-  return riderSession;
-};
-
-const saveSession = (active: boolean) => {
-  riderSession = active;
-
-  if (typeof localStorage !== 'undefined') {
-    if (active) {
-      localStorage.setItem(sessionStorageKey, 'active');
-    } else {
-      localStorage.removeItem(sessionStorageKey);
+export const riderApi = {
+  async getProfile(): Promise<RiderProfile> {
+    if (isMockMode) {
+      return mockDelay({ ...getMockProfile() });
     }
-  }
+    const res = await api.get<RiderProfile>('/rider/profile');
+    return res.data;
+  },
+
+  async register(payload: Partial<RiderProfile>): Promise<RiderProfile> {
+    if (isMockMode) {
+      const next: RiderProfile = { ...getMockProfile(), ...payload, status: 'online' };
+      saveMockProfile(next);
+      return mockDelay({ ...next }, 600);
+    }
+    const res = await api.post<RiderProfile>('/rider/register', payload);
+    return res.data;
+  },
+
+  async updateProfile(payload: Partial<RiderProfile>): Promise<RiderProfile> {
+    if (isMockMode) {
+      const next: RiderProfile = { ...getMockProfile(), ...payload };
+      saveMockProfile(next);
+      return mockDelay({ ...next }, 400);
+    }
+    const res = await api.patch<RiderProfile>('/rider/profile', payload);
+    return res.data;
+  },
 };
 
-// ── Public API ─────────────────────────────────────────────────────
-
-const isRemote = () => API_BASE_URL.length > 0;
+// ── 兼容 export（useAuthStore + useGoBack 仍用，B.2.3 整体切换后清理） ──
 
 export async function getRiderProfile(): Promise<RiderProfile> {
-  if (isRemote()) {
-    const remote = await request<RiderProfile>('/rider/profile');
-    riderProfile = remote;
-    saveProfile();
-    return remote;
-  }
-  return { ...getProfile() };
-}
-
-export async function isRiderSessionActive(): Promise<boolean> {
-  if (isRemote()) {
-    try {
-      await request<void>('/rider/session');
-      return true;
-    } catch {
-      return false;
-    }
-  }
-  return getSession();
-}
-
-export async function startRiderSession(): Promise<void> {
-  if (isRemote()) {
-    await request<void>('/rider/session', { method: 'POST' });
-    return;
-  }
-  saveSession(true);
-  riderProfile = { ...getProfile(), status: 'online' };
-  saveProfile();
+  return riderApi.getProfile();
 }
 
 export async function registerRiderProfile(profile: Partial<RiderProfile>): Promise<RiderProfile> {
-  if (isRemote()) {
-    const remote = await request<RiderProfile>('/rider/register', {
-      method: 'POST',
-      body: JSON.stringify(profile),
-    });
-    riderProfile = remote;
-    saveProfile();
-    return remote;
-  }
-  riderProfile = { ...getProfile(), ...profile, status: 'online' };
-  saveProfile();
-  saveSession(true);
-  return { ...riderProfile };
+  return riderApi.register(profile);
 }
 
 export async function updateRiderProfile(profile: Partial<RiderProfile>): Promise<RiderProfile> {
-  if (isRemote()) {
-    const remote = await request<RiderProfile>('/rider/profile', {
-      method: 'PATCH',
-      body: JSON.stringify(profile),
-    });
-    riderProfile = remote;
-    saveProfile();
-    return remote;
-  }
-  riderProfile = { ...getProfile(), ...profile };
-  saveProfile();
-  return { ...riderProfile };
+  return riderApi.updateProfile(profile);
 }
 
-export async function resetRiderSession(): Promise<void> {
-  if (isRemote()) {
-    await request<void>('/rider/session', { method: 'DELETE' });
-    setAuthToken(null);
-    return;
-  }
-  riderProfile = { ...defaultProfile, status: 'offline' };
-  saveProfile();
-  saveSession(false);
+export async function isRiderSessionActive(): Promise<boolean> {
+  if (isMockMode) return true;
+  const token = await tokenStorage.get();
+  return token !== null;
 }
