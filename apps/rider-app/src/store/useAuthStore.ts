@@ -1,70 +1,52 @@
 import { create } from 'zustand';
 
 import type { RiderProfile } from '../types/rider';
-import { getRiderProfile, isRiderSessionActive, startRiderSession, registerRiderProfile, updateRiderProfile, resetRiderSession } from '../services/user';
+import { registerRiderProfile, updateRiderProfile } from '../services/user';
+import { tokenStorage } from '../services/token-storage';
 
 type AuthState = {
-  token: string | null;
+  isAuthenticated: boolean;
   rider: RiderProfile | null;
   hydrated: boolean;
   hydrate: () => Promise<void>;
-  login: () => Promise<void>;
-  logout: () => Promise<void>;
+  setRider: (rider: RiderProfile) => void;
+  clearAuth: () => void;
   register: (profile: Partial<RiderProfile>) => Promise<void>;
   updateProfile: (patch: Partial<RiderProfile>) => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
-  token: null,
+  isAuthenticated: false,
   rider: null,
   hydrated: false,
 
   hydrate: async () => {
     try {
-      const active = await isRiderSessionActive();
-      if (active) {
-        const profile = await getRiderProfile();
-        set({ token: 'session', rider: profile, hydrated: true });
-      } else {
-        set({ hydrated: true });
-      }
+      // 真实 token 链路：token 唯一来源是 SecureStore（A.2 已落地）
+      const token = await tokenStorage.get();
+      set({ isAuthenticated: token !== null, hydrated: true });
     } catch (e) {
       console.error('[useAuthStore] hydrate failed:', e);
       set({ hydrated: true });
     }
   },
 
-  login: async () => {
-    try {
-      await startRiderSession();
-      const profile = await getRiderProfile();
-      set({ token: 'session', rider: profile });
-    } catch (e) {
-      console.error('[useAuthStore] login failed:', e);
-      throw e;
-    }
-  },
+  setRider: (rider) => set({ rider, isAuthenticated: true }),
 
-  logout: async () => {
-    try {
-      await resetRiderSession();
-    } catch (e) {
-      console.error('[useAuthStore] logout failed:', e);
-    }
-    set({ token: null, rider: null });
-  },
+  clearAuth: () => set({ isAuthenticated: false, rider: null }),
 
+  // register/updateProfile 仍走 services/user.ts（B.2 阶段迁移到 riderApi）
   register: async (profile) => {
     try {
       const registered = await registerRiderProfile(profile);
-      set({ token: 'session', rider: registered });
+      set({ rider: registered, isAuthenticated: true });
     } catch (e) {
       console.error('[useAuthStore] register failed:', e);
       throw e;
     }
   },
 
-  updateProfile: async (patch: Partial<RiderProfile>) => {
+  updateProfile: async (patch) => {
     try {
       const updated = await updateRiderProfile(patch);
       set({ rider: updated });

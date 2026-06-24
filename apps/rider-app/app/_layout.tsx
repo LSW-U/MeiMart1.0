@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { setOnUnauthorized } from '../src/services/api';
 import { AppProviders } from '../src/providers/AppProviders';
+import { useAuth } from '../src/hooks/useAuth';
 import { ToastHost } from '../src/components/feedback/Toast';
 import { useAppStore } from '../src/store/useAppStore';
 import { useAuthStore } from '../src/store/useAuthStore';
@@ -18,13 +19,14 @@ import { useTaskStore } from '../src/store/useTaskStore';
 
 function StoreInitializer({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
+  const { logout } = useAuth();
 
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
 
     setOnUnauthorized(() => {
-      useAuthStore.getState().logout().catch(() => {});
+      void logout();
     });
 
     void (async () => {
@@ -38,7 +40,7 @@ function StoreInitializer({ children }: { children: React.ReactNode }) {
         useOrderStore.getState().hydrate(),
       ]);
     })();
-  }, []);
+  }, [logout]);
 
   return <>{children}</>;
 }

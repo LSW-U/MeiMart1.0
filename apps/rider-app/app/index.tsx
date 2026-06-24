@@ -9,7 +9,8 @@ export default function IndexPage() {
 
   useEffect(() => {
     void hydrate().then(() => {
-      const active = useAuthStore.getState().token !== null;
+      // hydrate 后 isAuthenticated 已基于 SecureStore token 设置
+      const active = useAuthStore.getState().isAuthenticated;
       setRedirectTo(active ? '/(main)/tasks' : '/(auth)/login');
     });
   }, [hydrate]);

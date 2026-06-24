@@ -4,6 +4,7 @@ import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '../../src/components/ui';
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
+import { useAuth } from '../../src/hooks/useAuth';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { colors } from '../../src/theme/colors';
@@ -35,7 +36,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { t } = useTranslation();
   const rider = useAuthStore((s) => s.rider);
-  const logout = useAuthStore((s) => s.logout);
+  const { logout } = useAuth();
   const hydrate = useAuthStore((s) => s.hydrate);
 
   const [logoutVisible, setLogoutVisible] = useState(false);

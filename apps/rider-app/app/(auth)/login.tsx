@@ -4,11 +4,11 @@ import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-nati
 
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { AppIcon, Button, Card, Input } from '../../src/components/ui';
+import { useAuth } from '../../src/hooks/useAuth';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { isValidPhone, sendSmsCode } from '../../src/services/auth';
+import { isValidPhone } from '../../src/services/auth';
 import { getLanguageOptions, type AppLanguage } from '../../src/services/settings';
 import { useAppStore } from '../../src/store/useAppStore';
-import { useAuthStore } from '../../src/store/useAuthStore';
 
 type LoginMode = 'password' | 'sms';
 
@@ -17,6 +17,7 @@ const enabledLanguages = getLanguageOptions();
 export default function LoginPage() {
   const router = useRouter();
   const { t, language } = useTranslation();
+  const { login, sendSmsCode } = useAuth();
   const [mode, setMode] = useState<LoginMode>('password');
   const [accepted, setAccepted] = useState(false);
   const [phone, setPhone] = useState('');
@@ -69,9 +70,17 @@ export default function LoginPage() {
     }
   };
 
-  const login = async () => {
-    await useAuthStore.getState().login();
-    router.replace('/(main)/tasks');
+  const handleLogin = async () => {
+    try {
+      await login(
+        phone,
+        mode === 'password' ? password : undefined,
+        mode === 'sms' ? code : undefined,
+      );
+      // router.replace('/(main)/tasks') 已在 useAuth.login 内部处理
+    } catch {
+      // TODO: 接入 Toast 反馈错误
+    }
   };
 
   const nextLanguage: AppLanguage = (() => {
@@ -181,7 +190,7 @@ export default function LoginPage() {
             </Text>
           </View>
 
-          <Button icon={<Text className="text-white">→</Text>} onPress={() => void login()}>{t('auth.login.submit')}</Button>
+          <Button icon={<Text className="text-white">→</Text>} onPress={() => void handleLogin()}>{t('auth.login.submit')}</Button>
         </View>
 
         <View className="items-center pt-1">
