@@ -1,7 +1,7 @@
 import type { DeliveryTask } from '@/src/types/task';
 
-import { addNotification } from './notification';
-import { addOrderHistory } from './order';
+import { notificationApi } from './notification';
+import { orderApi } from './order';
 import { taskApi } from './task';
 
 export type DeliveryEvidence = {
@@ -17,7 +17,7 @@ const computeFare = (fee: number): number => {
 
 // mock 模式的本地副作用：订单历史 + 通知（real 模式由后端生成）
 async function writeMockSideEffects(task: DeliveryTask): Promise<void> {
-  await addOrderHistory({
+  await orderApi.add({
     id: task.id,
     orderNo: `#${task.id}`,
     status: 'completed',
@@ -31,7 +31,7 @@ async function writeMockSideEffects(task: DeliveryTask): Promise<void> {
     durationMinutes: task.estimatedMinutes,
   });
 
-  await addNotification({
+  await notificationApi.add({
     category: 'order',
     titleKey: 'notification.template.orderSigned.title',
     messageKey: 'notification.template.orderSigned.message',

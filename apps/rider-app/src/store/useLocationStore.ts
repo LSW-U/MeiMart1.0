@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import type { Coordinates } from '../types/common';
-import { reportLocation } from '../services/location';
+import { locationApi } from '../services/location';
 import { DEFAULT_COORDINATES } from '../utils/constants';
 
 type LocationState = {
@@ -16,7 +16,7 @@ export const useLocationStore = create<LocationState>((set, get) => ({
 
   report: async () => {
     try {
-      await reportLocation(get().coordinates);
+      await locationApi.report(get().coordinates);
     } catch (e) {
       console.error('[useLocationStore] report failed:', e);
     }

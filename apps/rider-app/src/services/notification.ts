@@ -153,15 +153,3 @@ export const notificationApi = {
     return res.data;
   },
 };
-
-// ── 兼容 export（delivery.ts writeMockSideEffects + earnings.ts 仍用） ──
-
-export async function addNotification(
-  input: Omit<NotificationItem, 'id' | 'createdAt' | 'read'>,
-): Promise<NotificationItem | null> {
-  return notificationApi.add(input);
-}
-
-export async function getUnreadCount(): Promise<number> {
-  return notificationApi.getUnreadCount();
-}

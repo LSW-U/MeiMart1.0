@@ -17,8 +17,3 @@ export const locationApi = {
     await api.post('/location/report', coordinates);
   },
 };
-
-// 兼容 export（useLocationStore 仍用）
-export async function reportLocation(coordinates: Coordinates): Promise<void> {
-  await locationApi.report(coordinates);
-}

@@ -184,9 +184,3 @@ export const orderApi = {
     await api.post('/orders', item);
   },
 };
-
-// ── 兼容 export（delivery.ts writeMockSideEffects 仍用） ─────────────
-
-export async function addOrderHistory(item: OrderHistoryItem): Promise<void> {
-  await orderApi.add(item);
-}
