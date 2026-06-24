@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-
-import { getRiderSettings, subscribeRiderSettings, type AppLanguage } from '../services/settings';
+import { useRiderSettings } from '../services/queries/useSettings';
+import type { AppLanguage } from '../services/settings';
 import en from './locales/en.json';
 import id from './locales/id.json';
 import pt from './locales/pt.json';
@@ -24,12 +23,8 @@ const interpolate = (template: string, vars?: TranslationVars) => {
 };
 
 export function useTranslation() {
-  const [language, setLanguage] = useState<AppLanguage>('zh');
-
-  useEffect(() => {
-    void getRiderSettings().then((settings) => setLanguage(settings.language));
-    return subscribeRiderSettings((settings) => setLanguage(settings.language));
-  }, []);
+  const { data: settings } = useRiderSettings();
+  const language: AppLanguage = settings?.language ?? 'zh';
 
   const t = (key: TranslationKey, vars?: TranslationVars) => {
     const template = dictionaries[language][key] || dictionaries.en[key] || key;

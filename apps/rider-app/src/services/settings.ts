@@ -31,6 +31,11 @@ export type RiderSettings = {
   dutyStatus: DutyStatus;
 };
 
+export function getLanguageOptions(options?: { includeUpcoming?: boolean }): LanguageOption[] {
+  const source = options?.includeUpcoming ? languageOptions : enabledLanguageOptions;
+  return source.map((option) => ({ ...option }));
+}
+
 // ── Mock layer (localStorage for Web dev) ──────────────────────────
 
 const storageKey = 'mei-delivery-app:rider-settings';
@@ -42,7 +47,6 @@ const defaultSettings: RiderSettings = {
 };
 
 let mockSettings: RiderSettings | null = null;
-const settingsListeners = new Set<(settings: RiderSettings) => void>();
 
 function getMockSettings(): RiderSettings {
   if (mockSettings) return mockSettings;
@@ -65,72 +69,22 @@ function saveMockSettings(): void {
   }
 }
 
-function notifyMockListeners(): void {
-  const snapshot = { ...getMockSettings() };
-  settingsListeners.forEach((listener) => listener(snapshot));
-}
+// ── riderSettingsApi（react query 化后唯一对外接口） ────────────────
 
-// ── real API（axios，B.5.2 引入） ───────────────────────────────────
-//
-// 懒加载避免在 mock 模式（API_BASE_URL 为空）下加载 axios 报错。
-// 完整 riderSettingsApi 在文件末尾统一 export。
-
-// ── Public API（保留所有原 export 名，B.5.1 加 riderSettingsApi 在末尾） ──
-
-export async function getRiderSettings(): Promise<RiderSettings> {
-  if (isMockMode) {
-    return { ...getMockSettings() };
-  }
-  const res = await api.get<RiderSettings>('/rider/settings');
-  return res.data;
-}
-
-export function getLanguageOptions(options?: { includeUpcoming?: boolean }): LanguageOption[] {
-  const source = options?.includeUpcoming ? languageOptions : enabledLanguageOptions;
-  return source.map((option) => ({ ...option }));
-}
-
-export async function getCurrentLanguage(): Promise<AppLanguage> {
-  if (isMockMode) return getMockSettings().language;
-  const settings = await getRiderSettings();
-  return settings.language;
-}
-
-export async function setCurrentLanguage(language: AppLanguage): Promise<RiderSettings> {
-  return updateRiderSettings({ language });
-}
-
-export async function getCurrentDutyStatus(): Promise<DutyStatus> {
-  if (isMockMode) return getMockSettings().dutyStatus;
-  const settings = await getRiderSettings();
-  return settings.dutyStatus;
-}
-
-export async function setDutyStatus(dutyStatus: DutyStatus): Promise<RiderSettings> {
-  return updateRiderSettings({ dutyStatus });
-}
-
-export function subscribeRiderSettings(listener: (settings: RiderSettings) => void) {
-  settingsListeners.add(listener);
-  return () => {
-    settingsListeners.delete(listener);
-  };
-}
-
-export async function updateRiderSettings(settings: Partial<RiderSettings>): Promise<RiderSettings> {
-  if (isMockMode) {
-    mockSettings = { ...getMockSettings(), ...settings };
-    saveMockSettings();
-    notifyMockListeners();
-    return { ...mockSettings };
-  }
-  const res = await api.patch<RiderSettings>('/rider/settings', settings);
-  notifyMockListeners();
-  return res.data;
-}
-
-// riderSettingsApi：聚合对象，新代码（notificationApi/earningsApi 等）用
 export const riderSettingsApi = {
-  get: getRiderSettings,
-  update: updateRiderSettings,
+  async get(): Promise<RiderSettings> {
+    if (isMockMode) return { ...getMockSettings() };
+    const res = await api.get<RiderSettings>('/rider/settings');
+    return res.data;
+  },
+
+  async update(patch: Partial<RiderSettings>): Promise<RiderSettings> {
+    if (isMockMode) {
+      mockSettings = { ...getMockSettings(), ...patch };
+      saveMockSettings();
+      return { ...mockSettings };
+    }
+    const res = await api.patch<RiderSettings>('/rider/settings', patch);
+    return res.data;
+  },
 };

@@ -8,7 +8,7 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { isValidPhone } from '../../src/services/auth';
 import { getLanguageOptions, type AppLanguage } from '../../src/services/settings';
-import { useAppStore } from '../../src/store/useAppStore';
+import { useUpdateRiderSettings } from '../../src/services/queries/useSettings';
 
 type LoginMode = 'password' | 'sms';
 
@@ -18,6 +18,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { t, language } = useTranslation();
   const { login, sendSmsCode } = useAuth();
+  const updateSettings = useUpdateRiderSettings();
   const [mode, setMode] = useState<LoginMode>('password');
   const [accepted, setAccepted] = useState(false);
   const [phone, setPhone] = useState('');
@@ -91,7 +92,7 @@ export default function LoginPage() {
   const nextLanguageLabel = enabledLanguages.find((option) => option.code === nextLanguage)?.nativeLabel ?? '';
 
   const switchLanguage = () => {
-    void useAppStore.getState().setLocale(nextLanguage);
+    void updateSettings.mutateAsync({ language: nextLanguage });
   };
 
   const sendCodeLabel = countdown > 0 ? t('auth.login.resend', { seconds: countdown }) : t('auth.login.sendCode');

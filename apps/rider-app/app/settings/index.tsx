@@ -4,9 +4,8 @@ import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { AppIcon } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
+import { useRiderSettings, useUpdateRiderSettings } from '../../src/services/queries/useSettings';
 import { getLanguageOptions, type AppLanguage } from '../../src/services/settings';
-import { useAppStore } from '../../src/store/useAppStore';
-import { useRiderStore } from '../../src/store/useRiderStore';
 
 type SettingsItemProps = {
   icon: 'language' | 'bell' | 'shield' | 'profile' | 'help';
@@ -41,15 +40,15 @@ function SettingsItem({ icon, title, description, onPress, trailing = 'chevron',
 export default function SettingsPage() {
   const router = useRouter();
   const { t } = useTranslation();
-  const locale = useAppStore((s) => s.locale);
-  const setLocale = useAppStore((s) => s.setLocale);
-  const notificationsEnabled = useRiderStore((s) => s.notificationsEnabled);
-  const toggleNotificationsInStore = useRiderStore((s) => s.toggleNotifications);
+  const { data: settings } = useRiderSettings();
+  const updateSettings = useUpdateRiderSettings();
+  const locale: AppLanguage = settings?.language ?? 'zh';
+  const notificationsEnabled = settings?.notificationsEnabled ?? true;
 
   const rotateLanguage = async () => {
     const index = languages.indexOf(locale);
     const nextLanguage = languages[(index + 1 + languages.length) % languages.length] ?? languages[0];
-    await setLocale(nextLanguage);
+    await updateSettings.mutateAsync({ language: nextLanguage });
   };
 
   const toggleNotifications = async (value: boolean) => {
@@ -62,13 +61,13 @@ export default function SettingsPage() {
           {
             text: t('settings.notifications.disableConfirm.ok'),
             style: 'destructive',
-            onPress: () => void toggleNotificationsInStore(false),
+            onPress: () => void updateSettings.mutateAsync({ notificationsEnabled: false }),
           },
         ],
       );
       return;
     }
-    await toggleNotificationsInStore(true);
+    await updateSettings.mutateAsync({ notificationsEnabled: true });
   };
 
   const goBack = useGoBack('/(main)/profile');

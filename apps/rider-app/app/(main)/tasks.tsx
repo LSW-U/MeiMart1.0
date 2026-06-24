@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -11,9 +11,9 @@ import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { AppIcon, Button } from '../../src/components/ui';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { useTaskLists } from '../../src/services/queries/useTask';
+import { useRiderSettings, useUpdateRiderSettings } from '../../src/services/queries/useSettings';
 import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
 import { useAuthStore } from '../../src/store/useAuthStore';
-import { useRiderStore } from '../../src/store/useRiderStore';
 import type { DeliveryTask } from '../../src/types/task';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
@@ -38,9 +38,9 @@ export default function TasksPage() {
   const [pending, setPending] = useState<DutyStatus | null>(null);
   const [blockVisible, setBlockVisible] = useState(false);
 
-  const dutyStatus = useRiderStore((s) => s.status);
-  const setDutyStatus = useRiderStore((s) => s.setDutyStatus);
-  const hydrateRider = useRiderStore((s) => s.hydrate);
+  const { data: settings } = useRiderSettings();
+  const updateSettings = useUpdateRiderSettings();
+  const dutyStatus = settings?.dutyStatus ?? 'offDuty';
   const { data: taskListsData, refetch: refetchTasks } = useTaskLists();
   const taskLists = taskListsData ?? { available: [] as DeliveryTask[], pickups: [] as DeliveryTask[], deliveries: [] as DeliveryTask[] };
   const rider = useAuthStore((s) => s.rider);
@@ -49,12 +49,6 @@ export default function TasksPage() {
   const bondPaid = rider?.bondPaid ?? true;
   const activeTasksExist = taskLists.pickups.length + taskLists.deliveries.length > 0;
   const currency = t('common.currency');
-
-  useEffect(() => {
-    let unsubRider: (() => void) | undefined;
-    void hydrateRider().then((fn) => { unsubRider = fn; });
-    return () => { unsubRider?.(); };
-  }, [hydrateRider]);
 
   const openMenu = () => setMenuVisible(true);
 
@@ -77,7 +71,7 @@ export default function TasksPage() {
 
   const confirmPending = async () => {
     if (!pending) return;
-    await setDutyStatus(pending);
+    await updateSettings.mutateAsync({ dutyStatus: pending });
     setPending(null);
   };
 

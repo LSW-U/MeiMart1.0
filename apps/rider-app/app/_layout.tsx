@@ -9,9 +9,7 @@ import { setOnUnauthorized } from '../src/services/api';
 import { AppProviders } from '../src/providers/AppProviders';
 import { useAuth } from '../src/hooks/useAuth';
 import { ToastHost } from '../src/components/feedback/Toast';
-import { useAppStore } from '../src/store/useAppStore';
 import { useAuthStore } from '../src/store/useAuthStore';
-import { useRiderStore } from '../src/store/useRiderStore';
 
 function StoreInitializer({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
@@ -25,11 +23,9 @@ function StoreInitializer({ children }: { children: React.ReactNode }) {
       void logout();
     });
 
-    void (async () => {
-      await useAppStore.getState().hydrate();
-      await useAuthStore.getState().hydrate();
-      await useRiderStore.getState().hydrate();
-    })();
+    // useAuthStore.hydrate 拉 rider profile 填 store（B.2.2 已实现）
+    // 其他数据（task lists / orders / earnings / notifications / settings）由各页面 useXxx 自动 fetch
+    void useAuthStore.getState().hydrate();
   }, [logout]);
 
   return <>{children}</>;
