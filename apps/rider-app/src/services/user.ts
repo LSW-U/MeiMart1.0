@@ -75,19 +75,9 @@ export const riderApi = {
   },
 };
 
-// ── 兼容 export（useAuthStore + useGoBack 仍用，B.2.3 整体切换后清理） ──
-
-export async function getRiderProfile(): Promise<RiderProfile> {
-  return riderApi.getProfile();
-}
-
-export async function registerRiderProfile(profile: Partial<RiderProfile>): Promise<RiderProfile> {
-  return riderApi.register(profile);
-}
-
-export async function updateRiderProfile(profile: Partial<RiderProfile>): Promise<RiderProfile> {
-  return riderApi.updateProfile(profile);
-}
+// ── 兼容 export（仅保留仍被外部调用的） ──────────────────────────────
+// B.2.3 清理：getRiderProfile / registerRiderProfile / updateRiderProfile 已被
+// riderApi 替代且无外部调用方；isRiderSessionActive 保留因 useGoBack.ts 仍在用。
 
 export async function isRiderSessionActive(): Promise<boolean> {
   if (isMockMode) return true;

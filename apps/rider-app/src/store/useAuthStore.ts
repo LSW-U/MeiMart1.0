@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import type { RiderProfile } from '../types/rider';
-import { riderApi, registerRiderProfile } from '../services/user';
+import { riderApi } from '../services/user';
 import { tokenStorage } from '../services/token-storage';
 
 type AuthState = {
@@ -12,7 +12,6 @@ type AuthState = {
   setRider: (rider: RiderProfile) => void;
   clearAuth: () => void;
   register: (profile: Partial<RiderProfile>) => Promise<void>;
-  updateProfile: (patch: Partial<RiderProfile>) => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -46,23 +45,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   clearAuth: () => set({ isAuthenticated: false, rider: null }),
 
-  // register/updateProfile 仍走 services/user.ts（B.2 阶段迁移到 riderApi）
   register: async (profile) => {
     try {
-      const registered = await registerRiderProfile(profile);
+      const registered = await riderApi.register(profile);
       set({ rider: registered, isAuthenticated: true });
     } catch (e) {
       console.error('[useAuthStore] register failed:', e);
-      throw e;
-    }
-  },
-
-  updateProfile: async (patch) => {
-    try {
-      const updated = await riderApi.updateProfile(patch);
-      set({ rider: updated });
-    } catch (e) {
-      console.error('[useAuthStore] updateProfile failed:', e);
       throw e;
     }
   },

@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-nati
 import { PageHeader } from '../../src/components/layout/PageHeader';
 import { AppIcon, Button, Input, UploadTile } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
+import { useUpdateProfile } from '../../src/services/queries/useRider';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
 type UploadKey = 'license' | 'biFront' | 'biBack' | 'vehicle';
@@ -27,7 +28,7 @@ export default function ProfileEditPage() {
   const sendCodeLabel = codeState === 'idle' ? t('auth.register.sendCode') : codeState === 'sent' ? t('auth.register.sent') : t('auth.register.resend');
 
   const rider = useAuthStore((s) => s.rider);
-  const updateProfile = useAuthStore((s) => s.updateProfile);
+  const updateProfile = useUpdateProfile();
 
   useEffect(() => {
     if (rider) {
@@ -49,7 +50,7 @@ export default function ProfileEditPage() {
   };
 
   const saveProfile = async () => {
-    await updateProfile({
+    await updateProfile.mutateAsync({
       name,
       phone: phone.startsWith('+670') ? phone : `+670 ${phone}`,
       licenseNumber,
