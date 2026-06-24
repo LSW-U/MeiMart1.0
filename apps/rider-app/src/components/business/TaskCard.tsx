@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 
 import { Button } from '../ui';
+import { showToast } from '../feedback/Toast';
 
 type RoutePoint = {
   label: 'P' | 'D';
@@ -24,9 +25,11 @@ type TaskCardProps = {
   contactLabel?: string;
   variant?: 'new' | 'active';
   onAction?: () => void;
+  onChat?: () => void;
+  onContact?: () => void;
 };
 
-export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags = [], items, note, actionLabel, chatLabel = 'Chat', contactLabel = 'Contact', variant = 'new', onAction }: TaskCardProps) {
+export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags = [], items, note, actionLabel, chatLabel = 'Chat', contactLabel = 'Contact', variant = 'new', onAction, onChat, onContact }: TaskCardProps) {
   return (
     <View className="relative gap-3 rounded-lg border border-[#f7ddd9] bg-white p-4 shadow-sm">
       {badge ? (
@@ -74,7 +77,7 @@ export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags
             <Text className="rounded border border-[#e1bfba] px-2 py-1 text-[11px] text-[#5d5f5f]" key={tag}>{tag}</Text>
           ))}
           {items ? (
-            <Pressable className="rounded-lg bg-[#f59e0b] px-2 py-1">
+            <Pressable className="rounded-lg bg-[#f59e0b] px-2 py-1" onPress={() => showToast(items, 'info')}>
               <Text className="text-sm text-white">{items} ˅</Text>
             </Pressable>
           ) : null}
@@ -89,10 +92,16 @@ export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags
 
       {variant === 'active' ? (
         <View className="mt-1 flex-row items-stretch gap-2">
-          <Pressable className="min-w-16 items-center justify-center rounded-lg border border-[#e1bfba] px-3">
+          <Pressable
+            className="min-w-16 items-center justify-center rounded-lg border border-[#e1bfba] px-3"
+            onPress={() => (onChat ? onChat() : showToast('Chat feature coming soon', 'info'))}
+          >
             <Text className="text-xs font-bold text-[#261816]">{chatLabel}</Text>
           </Pressable>
-          <Pressable className="flex-1 items-center justify-center rounded-lg border border-[#e1bfba] py-3">
+          <Pressable
+            className="flex-1 items-center justify-center rounded-lg border border-[#e1bfba] py-3"
+            onPress={() => (onContact ? onContact() : showToast('Contact feature coming soon', 'info'))}
+          >
             <Text className="text-sm font-bold text-[#261816]">{contactLabel}</Text>
           </Pressable>
           <Pressable className="flex-[2] items-center justify-center rounded-lg bg-[#961813] py-3" onPress={onAction}>

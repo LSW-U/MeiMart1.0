@@ -7,6 +7,9 @@ import { Button } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useEarningSummary, useEarningTransactions } from '../../src/services/queries/useEarnings';
+import { useState } from 'react';
+
+type BillingTab = 'today' | 'all';
 
 export default function EarningsPage() {
   const router = useRouter();
@@ -14,6 +17,14 @@ export default function EarningsPage() {
   const goBack = useGoBack('/(main)/profile');
   const { data: summary } = useEarningSummary();
   const { data: transactions = [] } = useEarningTransactions();
+  const [billingTab, setBillingTab] = useState<BillingTab>('today');
+
+  // TODO: 后端按时间过滤；当前前端按 createdAt 是否在今天内筛选
+  const today = new Date();
+  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const visibleTransactions = billingTab === 'today'
+    ? transactions.filter((tx) => new Date(tx.createdAt).getTime() >= startOfDay)
+    : transactions;
 
   const formatAmount = (amount: number) => (amount >= 0 ? `+${t('common.currency')}${amount.toFixed(2)}` : `-${t('common.currency')}${Math.abs(amount).toFixed(2)}`);
 
@@ -44,20 +55,26 @@ export default function EarningsPage() {
 
         <View className="mt-8">
           <View className="mb-4 flex-row border-b border-[#fde2df]">
-            <Pressable className="border-b-2 border-[#720003] px-1 pb-2">
-              <Text className="text-xl font-semibold text-[#720003]">{t('earnings.todayBilling')}</Text>
+            <Pressable
+              className={`border-b-2 px-1 pb-2 ${billingTab === 'today' ? 'border-[#720003]' : 'border-transparent'}`}
+              onPress={() => setBillingTab('today')}
+            >
+              <Text className={`text-xl font-semibold ${billingTab === 'today' ? 'text-[#720003]' : 'text-[#59413d]'}`}>{t('earnings.todayBilling')}</Text>
             </Pressable>
-            <Pressable className="ml-6 px-1 pb-2">
-              <Text className="text-lg text-[#59413d]">{t('earnings.allBilling')}</Text>
+            <Pressable
+              className={`ml-6 border-b-2 px-1 pb-2 ${billingTab === 'all' ? 'border-[#720003]' : 'border-transparent'}`}
+              onPress={() => setBillingTab('all')}
+            >
+              <Text className={`text-xl font-semibold ${billingTab === 'all' ? 'text-[#720003]' : 'text-[#59413d]'}`}>{t('earnings.allBilling')}</Text>
             </Pressable>
           </View>
 
           <View className="gap-4">
             <Text className="pt-2 text-xs font-bold uppercase tracking-wider text-[#59413d]">{t('earnings.today')}</Text>
-            {transactions.length === 0 ? (
+            {visibleTransactions.length === 0 ? (
               <Text className="py-4 text-center text-sm text-[#8d706c]">{t('earnings.noTransactions')}</Text>
             ) : (
-              transactions.map((tx) => (
+              visibleTransactions.map((tx) => (
                 <HistoryItem
                   key={tx.id}
                   amount={formatAmount(tx.amount)}
