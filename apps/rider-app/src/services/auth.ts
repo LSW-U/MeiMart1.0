@@ -1,6 +1,6 @@
 import type { RiderProfile } from '@/src/types/rider';
 
-import { request, setAuthToken } from './api';
+import { api, isMockMode } from './api';
 
 export type LoginPayload = {
   phone: string;
@@ -8,8 +8,9 @@ export type LoginPayload = {
   code?: string;
 };
 
-type LoginResponse = {
+export type AuthResult = {
   token: string;
+  refreshToken: string;
   rider: RiderProfile;
 };
 
@@ -19,29 +20,58 @@ export function isValidPhone(phone: string): boolean {
   return phoneRegex.test(phone.replace(/[\s-]/g, ''));
 }
 
+// mock 模式下返回 fake 数据（与 client-app authApi 风格一致），让 dev 环境 UI 全流程可演示
+const mockRider: RiderProfile = {
+  id: 'r001',
+  name: 'Alex Rider',
+  phone: '+670 7700 0000',
+  avatarUrl: '',
+  vehicleType: 'Motorcycle Courier',
+  licenseNumber: 'BI-1234567',
+  status: 'online',
+};
+
+function mockDelay<T>(value: T, ms = 400): Promise<T> {
+  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
+}
+
+export const authApi = {
+  async sendSmsCode(phone: string): Promise<{ success: boolean }> {
+    if (!isValidPhone(phone)) {
+      throw new Error('invalid_phone');
+    }
+    if (isMockMode) {
+      return mockDelay({ success: true }, 300);
+    }
+    const res = await api.post<{ success: boolean }>('/auth/sms', { phone });
+    return res.data;
+  },
+
+  async login(payload: LoginPayload): Promise<AuthResult> {
+    if (isMockMode) {
+      return mockDelay(
+        {
+          token: 'mock-token-' + Date.now(),
+          refreshToken: 'mock-refresh-' + Date.now(),
+          rider: mockRider,
+        },
+        500,
+      );
+    }
+    const res = await api.post<AuthResult>('/auth/login', payload);
+    return res.data;
+  },
+
+  async logout(refreshToken: string): Promise<{ success: boolean }> {
+    if (isMockMode) {
+      return mockDelay({ success: true }, 200);
+    }
+    const res = await api.post<{ success: boolean }>('/auth/logout', { refreshToken });
+    return res.data;
+  },
+};
+
+// 兼容 login.tsx 现有调用（B.1.3 改造 login.tsx 时整体切换到 authApi + mutation hook）
 export async function sendSmsCode(phone: string): Promise<void> {
-  if (!isValidPhone(phone)) {
-    throw new Error('invalid_phone');
-  }
-  await request<void>('/auth/sms', {
-    method: 'POST',
-    body: JSON.stringify({ phone }),
-  });
-}
-
-export async function login(payload: LoginPayload): Promise<RiderProfile | null> {
-  const res = await request<LoginResponse>('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-  setAuthToken(res.token);
-  return res.rider;
-}
-
-export async function logout(): Promise<void> {
-  try {
-    await request<void>('/auth/logout', { method: 'POST' });
-  } finally {
-    setAuthToken(null);
-  }
+  await authApi.sendSmsCode(phone);
 }
