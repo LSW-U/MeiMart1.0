@@ -1,3 +1,5 @@
+import { api, isMockMode } from './api';
+
 export type AppLanguage = 'zh' | 'en' | 'tet' | 'pt' | 'id';
 
 export type LanguageOption = {
@@ -29,6 +31,8 @@ export type RiderSettings = {
   dutyStatus: DutyStatus;
 };
 
+// ── Mock layer (localStorage for Web dev) ──────────────────────────
+
 const storageKey = 'mei-delivery-app:rider-settings';
 
 const defaultSettings: RiderSettings = {
@@ -37,38 +41,48 @@ const defaultSettings: RiderSettings = {
   dutyStatus: 'onDuty',
 };
 
-let riderSettings: RiderSettings | null = null;
+let mockSettings: RiderSettings | null = null;
 const settingsListeners = new Set<(settings: RiderSettings) => void>();
 
-const notifySettingsListeners = () => {
-  const settings = { ...getSettings() };
-  settingsListeners.forEach((listener) => listener(settings));
-};
-
-const getSettings = () => {
-  if (riderSettings) return riderSettings;
-
+function getMockSettings(): RiderSettings {
+  if (mockSettings) return mockSettings;
   if (typeof localStorage !== 'undefined') {
     const stored = localStorage.getItem(storageKey);
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<RiderSettings>;
-      riderSettings = { ...defaultSettings, ...parsed };
-      return riderSettings;
+      mockSettings = { ...defaultSettings, ...parsed };
+      return mockSettings;
     }
   }
+  mockSettings = { ...defaultSettings };
+  saveMockSettings();
+  return mockSettings;
+}
 
-  riderSettings = { ...defaultSettings };
-  return riderSettings;
-};
-
-const saveSettings = () => {
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(storageKey, JSON.stringify(getSettings()));
+function saveMockSettings(): void {
+  if (typeof localStorage !== 'undefined' && mockSettings) {
+    localStorage.setItem(storageKey, JSON.stringify(mockSettings));
   }
-};
+}
+
+function notifyMockListeners(): void {
+  const snapshot = { ...getMockSettings() };
+  settingsListeners.forEach((listener) => listener(snapshot));
+}
+
+// ── real API（axios，B.5.2 引入） ───────────────────────────────────
+//
+// 懒加载避免在 mock 模式（API_BASE_URL 为空）下加载 axios 报错。
+// 完整 riderSettingsApi 在文件末尾统一 export。
+
+// ── Public API（保留所有原 export 名，B.5.1 加 riderSettingsApi 在末尾） ──
 
 export async function getRiderSettings(): Promise<RiderSettings> {
-  return { ...getSettings() };
+  if (isMockMode) {
+    return { ...getMockSettings() };
+  }
+  const res = await api.get<RiderSettings>('/rider/settings');
+  return res.data;
 }
 
 export function getLanguageOptions(options?: { includeUpcoming?: boolean }): LanguageOption[] {
@@ -77,7 +91,9 @@ export function getLanguageOptions(options?: { includeUpcoming?: boolean }): Lan
 }
 
 export async function getCurrentLanguage(): Promise<AppLanguage> {
-  return getSettings().language;
+  if (isMockMode) return getMockSettings().language;
+  const settings = await getRiderSettings();
+  return settings.language;
 }
 
 export async function setCurrentLanguage(language: AppLanguage): Promise<RiderSettings> {
@@ -85,7 +101,9 @@ export async function setCurrentLanguage(language: AppLanguage): Promise<RiderSe
 }
 
 export async function getCurrentDutyStatus(): Promise<DutyStatus> {
-  return getSettings().dutyStatus;
+  if (isMockMode) return getMockSettings().dutyStatus;
+  const settings = await getRiderSettings();
+  return settings.dutyStatus;
 }
 
 export async function setDutyStatus(dutyStatus: DutyStatus): Promise<RiderSettings> {
@@ -100,13 +118,18 @@ export function subscribeRiderSettings(listener: (settings: RiderSettings) => vo
 }
 
 export async function updateRiderSettings(settings: Partial<RiderSettings>): Promise<RiderSettings> {
-  riderSettings = { ...getSettings(), ...settings };
-  saveSettings();
-  notifySettingsListeners();
-  return { ...riderSettings };
+  if (isMockMode) {
+    mockSettings = { ...getMockSettings(), ...settings };
+    saveMockSettings();
+    notifyMockListeners();
+    return { ...mockSettings };
+  }
+  const res = await api.patch<RiderSettings>('/rider/settings', settings);
+  notifyMockListeners();
+  return res.data;
 }
 
-// riderSettingsApi：B.5.1 内最小补丁让 notificationApi 能调，完整迁移在 B.5.2
+// riderSettingsApi：聚合对象，新代码（notificationApi/earningsApi 等）用
 export const riderSettingsApi = {
   get: getRiderSettings,
   update: updateRiderSettings,
