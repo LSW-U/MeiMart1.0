@@ -6,6 +6,7 @@ import {
   useSendSmsCode,
   useResetPassword,
 } from '@/services/queries/useAuth';
+import { authApi } from '@/services/auth';
 import { useAuthStore } from '@/store/authStore';
 import { tokenStorage } from '@/services/api';
 import { router } from 'expo-router';
@@ -51,9 +52,18 @@ export function useAuth() {
   );
 
   const logout = useCallback(async () => {
-    clearAuth();
-    await tokenStorage.clear();
-    router.replace('/(auth)/login');
+    // 先通知后端拉黑 refreshToken（CLAUDE.md：logout 必传 refreshToken，服务端加 Redis 黑名单）
+    // 网络挂掉也容错清本地，避免遗留登录态
+    try {
+      const refresh = await tokenStorage.getRefresh();
+      if (refresh) await authApi.logout(refresh);
+    } catch {
+      // 拉黑失败不阻塞登出流程，本地仍要清干净
+    } finally {
+      clearAuth();
+      await tokenStorage.clear();
+      router.replace('/(auth)/login');
+    }
   }, [clearAuth]);
 
   return {

@@ -53,4 +53,10 @@ export const authApi = {
     }
     throw new Error('Real API not implemented');
   },
+  async logout(refreshToken: string): Promise<{ success: boolean }> {
+    if (isMockMode) {
+      return mockResponse({ success: true }, 200);
+    }
+    throw new Error('Real API not implemented');
+  },
 };
