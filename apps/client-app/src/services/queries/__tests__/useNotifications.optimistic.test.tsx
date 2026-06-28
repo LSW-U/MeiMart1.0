@@ -1,10 +1,14 @@
 import { act } from '@testing-library/react-native';
 import type { Notification } from '@/types';
-import { userApi } from '@/services/user';
-import { NOTIFICATIONS_QUERY_KEY, useMarkNotificationRead } from '../useUser';
+import { notificationsApi } from '@/services/notifications';
+import {
+  NOTIFICATIONS_QUERY_KEY,
+  UNREAD_COUNT_QUERY_KEY,
+  useMarkNotificationRead,
+} from '../useNotifications';
 import { createTestQueryClient, renderHookWithClient } from './testHarness';
 
-jest.mock('@/services/user');
+jest.mock('@/services/notifications');
 
 const baseNotifications: Notification[] = [
   {
@@ -26,17 +30,20 @@ const baseNotifications: Notification[] = [
 ];
 
 function setup(returnAfterRead: Notification[] = baseNotifications) {
-  (userApi.getNotifications as jest.Mock).mockResolvedValue(returnAfterRead);
+  (notificationsApi.list as jest.Mock).mockResolvedValue(returnAfterRead);
+  (notificationsApi.getUnreadCount as jest.Mock).mockResolvedValue(2);
   const qc = createTestQueryClient();
-  qc.setQueryData(NOTIFICATIONS_QUERY_KEY, baseNotifications);
+  // Why: useNotifications 用 [...NOTIFICATIONS_QUERY_KEY, 'all' | 'unread'] 作为 queryKey
+  qc.setQueryData([...NOTIFICATIONS_QUERY_KEY, 'all'], baseNotifications);
+  qc.setQueryData(UNREAD_COUNT_QUERY_KEY, 2);
   return qc;
 }
 
-describe('useUser 乐观更新', () => {
+describe('useNotifications 乐观更新', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('useMarkNotificationRead 立即标记 read=true', async () => {
-    (userApi.markNotificationRead as jest.Mock).mockResolvedValue(undefined);
+  it('useMarkNotificationRead 立即标记 read=true 并 -1 未读数', async () => {
+    (notificationsApi.markRead as jest.Mock).mockResolvedValue({ success: true });
     const after: Notification[] = [{ ...baseNotifications[0], read: true }, baseNotifications[1]];
     const qc = setup(after);
 
@@ -45,13 +52,13 @@ describe('useUser 乐观更新', () => {
       await result.current.mutateAsync('n1');
     });
 
-    const list = qc.getQueryData<Notification[]>(NOTIFICATIONS_QUERY_KEY);
+    const list = qc.getQueryData<Notification[]>([...NOTIFICATIONS_QUERY_KEY, 'all']);
     expect(list?.find((n) => n.id === 'n1')?.read).toBe(true);
     expect(list?.find((n) => n.id === 'n2')?.read).toBe(false);
   });
 
   it('useMarkNotificationRead 服务端失败时 rollback', async () => {
-    (userApi.markNotificationRead as jest.Mock).mockRejectedValue(new Error('network'));
+    (notificationsApi.markRead as jest.Mock).mockRejectedValue(new Error('network'));
     const qc = setup();
 
     const { result } = renderHookWithClient(() => useMarkNotificationRead(), qc);
@@ -63,7 +70,7 @@ describe('useUser 乐观更新', () => {
       }
     });
 
-    const list = qc.getQueryData<Notification[]>(NOTIFICATIONS_QUERY_KEY);
+    const list = qc.getQueryData<Notification[]>([...NOTIFICATIONS_QUERY_KEY, 'all']);
     expect(list?.find((n) => n.id === 'n1')?.read).toBe(false);
   });
 });

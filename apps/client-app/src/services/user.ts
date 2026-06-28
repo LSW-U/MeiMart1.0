@@ -1,6 +1,6 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
-import type { User, Coupon, Notification } from '@/types';
+import type { User, Coupon } from '@/types';
 
 // Why: 后端 user 字段名/类型与前端 User 有差异，service 层做转换避免改组件代码。
 interface ProfileRaw {
@@ -54,19 +54,5 @@ export const userApi = {
   async getCoupons(): Promise<Coupon[]> {
     if (isMockMode) return mockResponse(mockDb.coupons);
     return mockResponse(mockDb.coupons);
-  },
-
-  // Why: notifications 暂保留 mock-only，Phase 5 迁移到独立 notifications.ts 并对接真实端点
-  async getNotifications(): Promise<Notification[]> {
-    return mockResponse(mockDb.notifications);
-  },
-
-  async markNotificationRead(id: string): Promise<{ success: boolean }> {
-    if (isMockMode) {
-      const n = mockDb.notifications.find((item) => item.id === id);
-      if (n) n.read = true;
-      return mockResponse({ success: true });
-    }
-    return mockResponse({ success: true });
   },
 };

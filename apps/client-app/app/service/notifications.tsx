@@ -21,7 +21,7 @@ import { NotificationItem } from '@/components/business/NotificationItem';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
-import { useNotifications, useMarkNotificationRead } from '@/services/queries/useUser';
+import { useNotifications, useMarkNotificationRead } from '@/services/queries/useNotifications';
 import type { Notification } from '@/types';
 
 type TabKey = 'all' | 'order' | 'promotion' | 'system';
