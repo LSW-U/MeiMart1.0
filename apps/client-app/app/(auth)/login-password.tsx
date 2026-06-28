@@ -36,7 +36,7 @@ export default function LoginPasswordPage() {
       { phone: values.account, password: values.password },
       {
         onSuccess: (data) => {
-          setAuth(data.token, data.refreshToken);
+          setAuth(data.accessToken, data.refreshToken);
           router.replace('/(main)/home');
         },
         onError: () => Alert.alert('Sign in failed', 'Please check your credentials'),

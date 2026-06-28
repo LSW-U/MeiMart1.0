@@ -61,7 +61,7 @@ export const tokenStorage = {
 
 api.interceptors.request.use(async (config) => {
   const authState = useAuthStore.getState();
-  const token = authState.token ?? (await tokenStorage.get());
+  const token = authState.accessToken ?? (await tokenStorage.get());
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;

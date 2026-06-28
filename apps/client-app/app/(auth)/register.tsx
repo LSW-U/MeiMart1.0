@@ -56,7 +56,7 @@ export default function RegisterPage() {
       Alert.alert('Notice', 'Please enter phone number');
       return;
     }
-    sendMutation.mutate(phoneValue, {
+    sendMutation.mutate({ phone: phoneValue }, {
       onSuccess: () => setCounter(COUNTDOWN),
     });
   };
@@ -66,7 +66,7 @@ export default function RegisterPage() {
       { phone: values.phone, password: values.password },
       {
         onSuccess: (data) => {
-          setAuth(data.token, data.refreshToken);
+          setAuth(data.accessToken, data.refreshToken);
           router.replace('/(main)/home');
         },
         onError: () => Alert.alert('Registration failed', 'Please try again later'),

@@ -32,8 +32,8 @@ export function useAuth() {
         mode === 'password'
           ? await loginPassword.mutateAsync(input)
           : await loginSms.mutateAsync(input);
-      setAuth(result.token, result.refreshToken);
-      await tokenStorage.set(result.token, result.refreshToken);
+      setAuth(result.accessToken, result.refreshToken);
+      await tokenStorage.set(result.accessToken, result.refreshToken);
       router.replace('/(main)/home');
       return result;
     },
@@ -43,8 +43,8 @@ export function useAuth() {
   const signUp = useCallback(
     async (input: LoginInput) => {
       const result = await register.mutateAsync(input);
-      setAuth(result.token, result.refreshToken);
-      await tokenStorage.set(result.token, result.refreshToken);
+      setAuth(result.accessToken, result.refreshToken);
+      await tokenStorage.set(result.accessToken, result.refreshToken);
       router.replace('/(main)/home');
       return result;
     },

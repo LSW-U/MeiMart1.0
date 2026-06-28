@@ -8,14 +8,14 @@ describe('authStore', () => {
 
   it('starts unauthenticated', () => {
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
-    expect(useAuthStore.getState().token).toBeNull();
+    expect(useAuthStore.getState().accessToken).toBeNull();
   });
 
   it('setAuth marks authenticated and stores token', () => {
     useAuthStore.getState().setAuth('tok-1', 'ref-1');
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(true);
-    expect(state.token).toBe('tok-1');
+    expect(state.accessToken).toBe('tok-1');
     expect(state.refreshToken).toBe('ref-1');
   });
 
@@ -24,7 +24,7 @@ describe('authStore', () => {
     useAuthStore.getState().clearAuth();
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(false);
-    expect(state.token).toBeNull();
+    expect(state.accessToken).toBeNull();
     expect(state.refreshToken).toBeNull();
   });
 
@@ -33,7 +33,7 @@ describe('authStore', () => {
     const persistedRaw = await AsyncStorage.getItem('auth-storage');
     const persisted = JSON.parse(persistedRaw ?? '{}');
     expect(persisted.state.isAuthenticated).toBe(true);
-    expect(persisted.state.token).toBeUndefined();
+    expect(persisted.state.accessToken).toBeUndefined();
     expect(persisted.state.refreshToken).toBeUndefined();
   });
 });

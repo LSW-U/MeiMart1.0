@@ -44,7 +44,7 @@ export default function ResetPasswordPage() {
       Alert.alert('Notice', 'Please enter phone number');
       return;
     }
-    sendMutation.mutate(phoneValue, {
+    sendMutation.mutate({ phone: phoneValue }, {
       onSuccess: () => setCounter(COUNTDOWN),
     });
   };

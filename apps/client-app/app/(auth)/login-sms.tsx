@@ -47,7 +47,7 @@ export default function LoginSmsPage() {
       Alert.alert('Notice', 'Please enter phone number');
       return;
     }
-    sendMutation.mutate(phoneValue, {
+    sendMutation.mutate({ phone: phoneValue }, {
       onSuccess: () => {
         setCounter(COUNTDOWN);
         Alert.alert('Sent', 'SMS code sent (Mock: 123456)');
@@ -60,7 +60,7 @@ export default function LoginSmsPage() {
       { phone: values.phone, smsCode: values.code },
       {
         onSuccess: (data) => {
-          setAuth(data.token, data.refreshToken);
+          setAuth(data.accessToken, data.refreshToken);
           router.replace('/(main)/home');
         },
         onError: () => Alert.alert('Sign in failed', 'Invalid SMS code'),
