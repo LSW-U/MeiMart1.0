@@ -23,7 +23,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useProduct, useProducts } from '@/services/queries/useProducts';
 import { useAddToCart } from '@/services/queries/useCart';
-import { useFavorites, useToggleFavorite } from '@/services/queries/useUser';
+import { useFavorites, useToggleFavorite } from '@/services/queries/useFavorites';
 import { useLocalizer } from '@/i18n';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;

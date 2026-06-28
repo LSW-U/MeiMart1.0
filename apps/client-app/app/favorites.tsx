@@ -21,7 +21,7 @@ import { ProductCard } from '@/components/business/ProductCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
-import { useFavorites } from '@/services/queries/useUser';
+import { useFavorites } from '@/services/queries/useFavorites';
 import type { Product } from '@/types';
 
 export default function FavoritesPage() {
