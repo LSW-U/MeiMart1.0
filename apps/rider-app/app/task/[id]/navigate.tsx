@@ -22,9 +22,9 @@ export default function TaskNavigatePage() {
   const { data } = useTask(id);
   const task: DeliveryTask | null = data ?? null;
 
-  // status 不是 delivering 时跳回详情页（用户直接 URL 进了 navigate 但 task 状态不对）
+  // status 不是 DELIVERING 时跳回详情页（用户直接 URL 进了 navigate 但 task 状态不对）
   useEffect(() => {
-    if (task && task.status !== 'delivering') {
+    if (task && task.status !== 'DELIVERING') {
       router.replace(`/task/${id}`);
     }
   }, [task, id, router]);

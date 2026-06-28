@@ -5,7 +5,7 @@ import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-nati
 import { PageHeader } from '../../src/components/layout/PageHeader';
 import { AppIcon, Button, Input, UploadTile } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
-import { useAuthStore } from '../../src/store/useAuthStore';
+import { riderApi } from '../../src/services/user';
 
 type UploadKey = 'license' | 'biFront' | 'biBack' | 'vehicle';
 
@@ -36,10 +36,10 @@ export default function RegisterPage() {
 
   const register = async () => {
     if (!name || !phone) return;
-    await useAuthStore.getState().register({
-      name,
+    await riderApi.apply({
+      riderName: name,
       phone: phone.startsWith('+670') ? phone : `+670 ${phone}`,
-      licenseNumber,
+      idCardNumber: licenseNumber || '0000000000',
     });
     router.replace('/(auth)/login');
   };

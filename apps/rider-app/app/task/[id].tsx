@@ -40,7 +40,7 @@ export default function TaskDetailPage() {
             chatLabel={t('tasks.chat')}
             contactLabel={t('tasks.contact')}
             items={taskData.items.length ? formatItems(taskData.items, t) : undefined}
-            note={taskData.note}
+            note={taskData.note ?? undefined}
             orderId={taskData.orderId}
             points={[
               { label: 'P', title: taskData.pickup.title, subtitle: taskData.pickup.address, distance: t('common.fromHere', { distance: formatDistance(Math.max(taskData.distanceKm - 1.3, 0.5)) }) },

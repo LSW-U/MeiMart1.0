@@ -93,7 +93,7 @@ export default function TasksPage() {
       fee={formatFee(task.fee, currency)}
       feeNote={index === 0 ? t('tasks.feeNote') : undefined}
       items={task.items.length ? formatItems(task.items, t) : undefined}
-      note={task.note}
+      note={task.note ?? undefined}
       points={[
         { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) },
         { label: 'D', title: task.dropoff.title, distance: formatDistance(task.distanceKm) },
@@ -111,7 +111,7 @@ export default function TasksPage() {
       chatLabel={t('tasks.chat')}
       contactLabel={t('tasks.contact')}
       items={task.items.length ? formatItems(task.items, t) : undefined}
-      note={task.note}
+      note={task.note ?? undefined}
       orderId={task.orderId}
       points={[
         { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: t('common.fromHere', { distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) }) },
@@ -129,7 +129,7 @@ export default function TasksPage() {
       actionLabel={t('tasks.arrivedDelivery')}
       chatLabel={t('tasks.chat')}
       contactLabel={t('tasks.contact')}
-      note={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : task.note}
+      note={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : (task.note ?? undefined)}
       orderId={task.orderId.replace('JD Delivery ', '')}
       points={[
         { label: 'P', title: task.pickup.title, distance: t('common.fromHere', { distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) }) },

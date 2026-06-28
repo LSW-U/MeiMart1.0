@@ -65,10 +65,11 @@ async function refreshAccessToken(): Promise<string | null> {
   if (!refreshToken) return null;
   refreshPromise = (async () => {
     try {
-      const res = await api.post<{ token: string; refreshToken: string }>('/auth/refresh', {
-        refreshToken,
-      });
-      const { token: newToken, refreshToken: newRefresh } = res.data;
+      const res = await api.post<{ accessToken: string; refreshToken: string }>(
+        '/common/auth/refresh',
+        { refreshToken },
+      );
+      const { accessToken: newToken, refreshToken: newRefresh } = res.data;
       await tokenStorage.set(newToken, newRefresh);
       authTokenMemory = newToken;
       return newToken;
@@ -90,7 +91,20 @@ function flushQueue(token: string | null) {
 }
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // 后端业务端点统一返回 { success: true, data: T }，剥层后 service 层 res.data 直接是 T。
+    // auth 端点（login/refresh/sms-code）无此包裹，typeof body.success !== 'boolean' 时跳过剥层。
+    const body = response.data as { success?: unknown; data?: unknown } | undefined;
+    if (
+      body &&
+      typeof body === 'object' &&
+      'success' in body &&
+      typeof body.success === 'boolean'
+    ) {
+      response.data = body.data;
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const original = error.config as
       | (InternalAxiosRequestConfig & { _retry?: boolean })
@@ -128,9 +142,12 @@ api.interceptors.response.use(
     }
 
     // 非 401 或重试失败 → 抛 ApiError（保持旧 request() 行为）
-    const body = error.response?.data as { code?: string; message?: string } | undefined;
-    const code = body?.code ?? 'UNKNOWN';
-    const message = body?.message ?? `Request failed: ${status ?? 'unknown'}`;
+    // 后端业务错误格式：{ success: false, error: { code, message, details? } }
+    const raw = error.response?.data as
+      | { code?: string; message?: string; error?: { code?: string; message?: string } }
+      | undefined;
+    const code = raw?.error?.code ?? raw?.code ?? 'UNKNOWN';
+    const message = raw?.error?.message ?? raw?.message ?? `Request failed: ${status ?? 'unknown'}`;
     throw new ApiError(status ?? 0, code, message);
   },
 );

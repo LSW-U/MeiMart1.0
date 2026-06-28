@@ -11,7 +11,6 @@ type AuthState = {
   hydrate: () => Promise<void>;
   setRider: (rider: RiderProfile) => void;
   clearAuth: () => void;
-  register: (profile: Partial<RiderProfile>) => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -44,14 +43,4 @@ export const useAuthStore = create<AuthState>((set) => ({
   setRider: (rider) => set({ rider, isAuthenticated: true }),
 
   clearAuth: () => set({ isAuthenticated: false, rider: null }),
-
-  register: async (profile) => {
-    try {
-      const registered = await riderApi.register(profile);
-      set({ rider: registered, isAuthenticated: true });
-    } catch (e) {
-      console.error('[useAuthStore] register failed:', e);
-      throw e;
-    }
-  },
 }));

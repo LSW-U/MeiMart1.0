@@ -39,7 +39,7 @@ export default function TaskOngoingPage() {
               actionLabel={t('tasks.arrivedDelivery')}
               chatLabel={t('tasks.chat')}
               contactLabel={t('tasks.contact')}
-              note={taskData.note}
+              note={taskData.note ?? undefined}
               orderId={taskData.orderId.replace('JD Delivery ', '')}
               points={[
                 { label: 'P', title: taskData.pickup.title, subtitle: taskData.pickup.address },

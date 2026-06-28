@@ -3,6 +3,10 @@ import type { EarningSummary, EarningTransaction, WithdrawalRequest } from '@/sr
 import { api, isMockMode } from './api';
 import { notificationApi } from './notification';
 
+// 后端无 rider earnings / withdraw 端点（W6+ 才实现），real 模式也强制走 mock。
+// W6+ 后端实现时把 FORCE_MOCK 改为 false 即可启用真实分支。
+const FORCE_MOCK = true;
+
 // ── Mock layer (localStorage for Web dev) ──────────────────────────
 
 const storageKey = 'mei-delivery-app:earnings:v1';
@@ -76,13 +80,13 @@ function generateId(): string {
 
 export const earningsApi = {
   async getSummary(): Promise<EarningSummary> {
-    if (isMockMode) return mockDelay({ ...getMockSummary() });
+    if (isMockMode || FORCE_MOCK) return mockDelay({ ...getMockSummary() });
     const res = await api.get<EarningSummary>('/earnings/summary');
     return res.data;
   },
 
   async getTransactions(): Promise<EarningTransaction[]> {
-    if (isMockMode) {
+    if (isMockMode || FORCE_MOCK) {
       const items = getMockTransactions().slice();
       return mockDelay(
         items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
@@ -93,7 +97,7 @@ export const earningsApi = {
   },
 
   async createWithdrawal(amount: number, method: WithdrawalRequest['method']): Promise<void> {
-    if (isMockMode) {
+    if (isMockMode || FORCE_MOCK) {
       const s = getMockSummary();
       if (amount > s.availableBalance) {
         throw new Error('Insufficient balance');
@@ -120,6 +124,7 @@ export const earningsApi = {
       });
       return;
     }
-    await api.post('/earnings/withdraw', { amount, method });
+    // 后端只有 /admin/settle/withdrawals（super_admin 代录），骑手端不可用
+    throw new Error('rider withdraw endpoint not available (W6+)');
   },
 };

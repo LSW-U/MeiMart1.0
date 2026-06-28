@@ -1,5 +1,6 @@
 import type { DeliveryTask } from '@/src/types/task';
 
+import { isMockMode } from './api';
 import { notificationApi } from './notification';
 import { orderApi } from './order';
 import { taskApi } from './task';
@@ -17,18 +18,19 @@ const computeFare = (fee: number): number => {
 
 // mock 模式的本地副作用：订单历史 + 通知（real 模式由后端生成）
 async function writeMockSideEffects(task: DeliveryTask): Promise<void> {
+  if (!isMockMode) return;
   await orderApi.add({
     id: task.id,
     orderNo: `#${task.id}`,
     status: 'completed',
     completedAt: Date.now(),
-    pickupName: task.pickup.title,
-    pickupAddress: task.pickup.address,
-    dropoffName: task.dropoff.title,
-    dropoffAddress: task.dropoff.address,
-    income: computeFare(task.fee),
-    distanceKm: task.distanceKm,
-    durationMinutes: task.estimatedMinutes,
+    pickupName: task.pickup?.title ?? task.pickupAddress,
+    pickupAddress: task.pickupAddress,
+    dropoffName: task.dropoff?.title ?? task.dropoffAddress,
+    dropoffAddress: task.dropoffAddress,
+    income: computeFare(task.fee ?? 0),
+    distanceKm: task.distanceKm ?? 0,
+    durationMinutes: task.estimatedMinutes ?? 0,
   });
 
   await notificationApi.add({
@@ -46,12 +48,16 @@ export const deliveryApi = {
   async confirmPickup(taskId: string, _evidence?: DeliveryEvidence): Promise<void> {
     // TODO(B.4.3+): real 模式下若 evidence.photoUri 存在，先调 uploadFile 上传拿 URL，
     // 再传给后端 /tasks/{id}/status（multipart 端点契约待后端确认）。当前 mock + real 都不传 photo。
-    await taskApi.updateStatus(taskId, 'delivering');
+    await taskApi.pickup(taskId, _evidence?.doorUri ? 'door photo attached' : undefined);
   },
 
-  async confirmDelivery(taskId: string, _evidence?: DeliveryEvidence): Promise<DeliveryTask> {
+  async confirmDelivery(
+    taskId: string,
+    _evidence?: DeliveryEvidence,
+    collectedAmount?: number,
+  ): Promise<DeliveryTask> {
     // TODO(B.4.3+): 同上，evidence.doorUri + packageUri 待上传链路接入
-    const task = await taskApi.updateStatus(taskId, 'completed');
+    const task = await taskApi.deliver(taskId, { collectedAmount });
     await writeMockSideEffects(task);
     return task;
   },

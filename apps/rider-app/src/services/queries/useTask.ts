@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { DeliveryTask, TaskStatus } from '@/src/types/task';
+import type { DeliveryTask, ReportIssueReason, TaskStatus } from '@/src/types/task';
 
 import { taskApi } from '../task';
 
@@ -45,7 +45,7 @@ export function useAcceptTask() {
         if (task) {
           queryClient.setQueryData<TaskLists>(taskListsKey, {
             available: previous.available.filter((t) => t.id !== id),
-            pickups: [...previous.pickups, { ...task, status: 'accepted' as TaskStatus }],
+            pickups: [...previous.pickups, { ...task, status: 'ASSIGNED' as TaskStatus }],
             deliveries: previous.deliveries,
           });
         }
@@ -67,8 +67,35 @@ export function useUpdateTaskStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (params: { id: string; status: TaskStatus }) =>
-      taskApi.updateStatus(params.id, params.status),
+    mutationFn: async (params: {
+      id: string;
+      status: TaskStatus;
+      collectedAmount?: number;
+      note?: string;
+      reason?: ReportIssueReason;
+    }): Promise<DeliveryTask> => {
+      // 后端按状态拆 3 个端点：PICKED_UP → pickup, DELIVERED → deliver, FAILED → report-issue
+      // 其他状态（ASSIGNED/DELIVERING）由 accept/deliver 自动流转，前端不需要主动调用
+      if (params.status === 'PICKED_UP') {
+        return taskApi.pickup(params.id, params.note);
+      }
+      if (params.status === 'DELIVERED') {
+        return taskApi.deliver(params.id, {
+          collectedAmount: params.collectedAmount,
+          note: params.note,
+        });
+      }
+      if (params.status === 'FAILED') {
+        return taskApi.reportIssue(params.id, {
+          reason: params.reason ?? 'OTHER',
+          note: params.note,
+        });
+      }
+      // ASSIGNED / DELIVERING 等中间态：后端不接受主动切换，直接读当前任务
+      const current = await taskApi.getById(params.id);
+      if (!current) throw new Error(`Task not found: ${params.id}`);
+      return current;
+    },
     onMutate: async ({ id, status }) => {
       // 乐观更新 lists：在三个 list 中找到 task 并更新 status（不跨 list 移动，onSettled invalidate 自动纠正）
       await queryClient.cancelQueries({ queryKey: taskListsKey });
