@@ -11,6 +11,7 @@ import { useAuthStore } from '@/store/authStore';
 const env = Constants.expoConfig?.extra as {
   APP_ENV: 'development' | 'staging' | 'production';
   API_BASE_URL: string;
+  USE_MOCK?: string;
   SENTRY_DSN: string;
 };
 
@@ -25,7 +26,10 @@ export const api = axiosCreate({
   headers: { 'Content-Type': 'application/json' },
 });
 
-export const isMockMode = env?.APP_ENV === 'development';
+// Why: 文档「问题 4」——APP_ENV=development 时永久走 mock，关不掉。
+// 加 USE_MOCK=false 显式开关后，联调可切真实，演示切回 mock（删 USE_MOCK 行即恢复默认 mock）。
+export const isMockMode =
+  env?.USE_MOCK !== 'false' && env?.APP_ENV === 'development';
 
 const TOKEN_KEY = 'meimart.token';
 const REFRESH_KEY = 'meimart.refresh';
@@ -87,10 +91,11 @@ async function refreshAccessToken(): Promise<string | null> {
   if (!refreshToken) return null;
   refreshPromise = (async () => {
     try {
-      const res = await api.post<{ token: string; refreshToken: string }>('/auth/refresh', {
-        refreshToken,
-      });
-      const { token: newToken, refreshToken: newRefresh } = res.data;
+      const res = await api.post<{ accessToken: string; refreshToken: string }>(
+        '/common/auth/refresh',
+        { refreshToken },
+      );
+      const { accessToken: newToken, refreshToken: newRefresh } = res.data;
       await tokenStorage.set(newToken, newRefresh);
       useAuthStore.getState().setAuth(newToken, newRefresh);
       return newToken;
@@ -114,7 +119,15 @@ function flushQueue(token: string | null) {
 }
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Why: 后端响应统一为 { success, data, error? }，service 层 res.data 应直接拿到业务数据，
+    // 而不是 { success, data } 壳。剥层后 service 写法保持 axios 原生风格。
+    const body = response.data as { success?: boolean; data?: unknown } | undefined;
+    if (body && typeof body === 'object' && 'success' in body && typeof body.success === 'boolean') {
+      response.data = body.data as unknown;
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const original = error.config as
       | (InternalAxiosRequestConfig & { _retry?: boolean })
