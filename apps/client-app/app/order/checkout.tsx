@@ -73,7 +73,17 @@ export default function CheckoutPage() {
     }
     if (selectedItems.length === 0) return;
     try {
-      await createOrder.mutateAsync({ items: selectedItems, totalPrice: finalTotal });
+      // Why: service createOrder 期望 {skuId, quantity}[] + payload（addressId + paymentMethod）。
+      // MVP 阶段假设每个 product 对应默认 sku，skuId 暂用 product.id；
+      // paymentMethod mock id 是小写字面量，real 模式后端要大写枚举（COD/BANK/WECHAT/PAYPAL/STRIPE），统一 toUpperCase。
+      await createOrder.mutateAsync({
+        items: selectedItems.map((i) => ({ skuId: i.product.id, quantity: i.quantity })),
+        payload: {
+          addressId: defaultAddress?.id ?? '',
+          paymentMethod: (selectedMethod ?? 'COD').toUpperCase(),
+        },
+        totalPrice: finalTotal,
+      });
       router.replace('/order/result');
     } catch {
       Alert.alert(t('common.error'), t('checkout.orderFailed'));

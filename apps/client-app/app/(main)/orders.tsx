@@ -26,10 +26,10 @@ import type { OrderStatus, Order } from '@/types';
 
 const TABS: { key: OrderStatus | 'all'; labelKey: string }[] = [
   { key: 'all', labelKey: 'common.all' },
-  { key: 'pending', labelKey: 'order.statusToPay' },
-  { key: 'paid', labelKey: 'order.statusToShip' },
-  { key: 'shipped', labelKey: 'order.statusToReceive' },
-  { key: 'delivered', labelKey: 'order.status.delivered' },
+  { key: 'PENDING_PAYMENT', labelKey: 'order.statusToPay' },
+  { key: 'CONFIRMED', labelKey: 'order.statusToShip' },
+  { key: 'OUT_FOR_DELIVERY', labelKey: 'order.statusToReceive' },
+  { key: 'DELIVERED', labelKey: 'order.status.delivered' },
 ];
 
 export default function OrdersPage() {

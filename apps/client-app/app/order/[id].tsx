@@ -52,8 +52,8 @@ type StatusVisual = {
 };
 
 const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
-  // PROCESSING 等价（pending = 待付款，颜色与 HTML PROCESSING 一致）
-  pending: {
+  // 待付款（PROCESSING 等价的橙色）
+  PENDING_PAYMENT: {
     badgeBg: '#F97316',
     badgeText: 'TO PAY',
     bannerBg: 'rgba(59,130,246,0.08)',
@@ -65,7 +65,21 @@ const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
     bannerValue: 'Please complete payment soon',
     bannerIconSymbol: 'schedule',
   },
-  paid: {
+  // 待确认（已付款等审核，颜色同 PENDING_PAYMENT）
+  PENDING_CONFIRM: {
+    badgeBg: '#F97316',
+    badgeText: 'PROCESSING',
+    bannerBg: 'rgba(59,130,246,0.08)',
+    bannerBorder: 'rgba(59,130,246,0.25)',
+    bannerIcon: '#1d4ed8',
+    bannerLabelColor: '#1e3a8a',
+    bannerValueColor: '#0c2461',
+    bannerLabel: 'ORDER STATUS',
+    bannerValue: 'Order is being confirmed',
+    bannerIconSymbol: 'hourglass_empty',
+  },
+  // 已确认（PROCESSING 配色）
+  CONFIRMED: {
     badgeBg: '#F97316',
     badgeText: 'PROCESSING',
     bannerBg: 'rgba(59,130,246,0.08)',
@@ -77,8 +91,21 @@ const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
     bannerValue: 'Arriving in 2-3 days',
     bannerIconSymbol: 'local_shipping',
   },
-  // SHIPPED — HTML DeliveryTrackingPage2
-  shipped: {
+  // 已拣货（同 SHIPPED 配色）
+  PICKED: {
+    badgeBg: '#F97316',
+    badgeText: 'PICKED',
+    bannerBg: 'rgba(59,130,246,0.08)',
+    bannerBorder: 'rgba(59,130,246,0.25)',
+    bannerIcon: '#1d4ed8',
+    bannerLabelColor: '#1e3a8a',
+    bannerValueColor: '#0c2461',
+    bannerLabel: 'ESTIMATED DELIVERY',
+    bannerValue: 'Package picked, on the way soon',
+    bannerIconSymbol: 'inventory_2',
+  },
+  // 配送中 — HTML DeliveryTrackingPage2
+  OUT_FOR_DELIVERY: {
     badgeBg: '#F97316',
     badgeText: 'SHIPPED',
     bannerBg: 'rgba(59,130,246,0.08)',
@@ -90,8 +117,8 @@ const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
     bannerValue: 'Out for delivery - Expected by 5:30 PM',
     bannerIconSymbol: 'local_shipping',
   },
-  // DELIVERED — HTML DeliveryTrackingPage3
-  delivered: {
+  // 已送达（已付款） — HTML DeliveryTrackingPage3
+  DELIVERED_PAID: {
     badgeBg: '#059669',
     badgeText: 'DELIVERED',
     bannerBg: 'rgba(16,185,129,0.08)',
@@ -103,7 +130,47 @@ const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
     bannerValue: 'Delivered - hope you enjoyed your order',
     bannerIconSymbol: 'check_circle',
   },
-  cancelled: {
+  // 已送达（货到付款）
+  DELIVERED_UNPAID: {
+    badgeBg: '#059669',
+    badgeText: 'DELIVERED',
+    bannerBg: 'rgba(16,185,129,0.08)',
+    bannerBorder: 'rgba(16,185,129,0.25)',
+    bannerIcon: '#059669',
+    bannerLabelColor: '#065f46',
+    bannerValueColor: '#064e3b',
+    bannerLabel: 'PAYMENT ON DELIVERY',
+    bannerValue: 'Delivered - please pay the rider',
+    bannerIconSymbol: 'payments',
+  },
+  // 已送达（通用）
+  DELIVERED: {
+    badgeBg: '#059669',
+    badgeText: 'DELIVERED',
+    bannerBg: 'rgba(16,185,129,0.08)',
+    bannerBorder: 'rgba(16,185,129,0.25)',
+    bannerIcon: '#059669',
+    bannerLabelColor: '#065f46',
+    bannerValueColor: '#064e3b',
+    bannerLabel: 'DELIVERY STATUS',
+    bannerValue: 'Delivered - hope you enjoyed your order',
+    bannerIconSymbol: 'check_circle',
+  },
+  // 已完成
+  COMPLETED: {
+    badgeBg: '#059669',
+    badgeText: 'COMPLETED',
+    bannerBg: 'rgba(16,185,129,0.08)',
+    bannerBorder: 'rgba(16,185,129,0.25)',
+    bannerIcon: '#059669',
+    bannerLabelColor: '#065f46',
+    bannerValueColor: '#064e3b',
+    bannerLabel: 'ORDER COMPLETED',
+    bannerValue: 'Order completed - thank you',
+    bannerIconSymbol: 'task_alt',
+  },
+  // 已取消
+  CANCELLED: {
     badgeBg: '#dc2626',
     badgeText: 'CANCELLED',
     bannerBg: 'rgba(220,38,38,0.08)',
@@ -114,18 +181,6 @@ const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
     bannerLabel: 'ORDER CANCELLED',
     bannerValue: 'Order was cancelled',
     bannerIconSymbol: 'cancel',
-  },
-  refunding: {
-    badgeBg: '#F97316',
-    badgeText: 'REFUNDING',
-    bannerBg: 'rgba(245,158,11,0.08)',
-    bannerBorder: 'rgba(245,158,11,0.25)',
-    bannerIcon: '#d97706',
-    bannerLabelColor: '#92400e',
-    bannerValueColor: '#78350f',
-    bannerLabel: 'REFUND STATUS',
-    bannerValue: 'Refund request is being processed',
-    bannerIconSymbol: 'history',
   },
 };
 
@@ -141,17 +196,11 @@ type TimelineStepData = {
 };
 
 function buildTimelineSteps(status: OrderStatus): TimelineStepData[] {
-  // 已取消 / 退款中：只显示「提交 + 终态」两步
-  if (status === 'cancelled') {
+  // 已取消：只显示「提交 + 终态」两步
+  if (status === 'CANCELLED') {
     return [
       { id: 's1', status: 'Order Confirmed', time: 'Order was placed', state: 'completed' },
       { id: 's2', status: 'Cancelled', time: 'Order cancelled', state: 'active' },
-    ];
-  }
-  if (status === 'refunding') {
-    return [
-      { id: 's1', status: 'Order Confirmed', time: 'Order was placed', state: 'completed' },
-      { id: 's2', status: 'Refund Requested', time: 'Refund in progress', state: 'active' },
     ];
   }
 
@@ -162,13 +211,18 @@ function buildTimelineSteps(status: OrderStatus): TimelineStepData[] {
     { id: 's4', label: 'Delivered', time: 'Package delivered' },
   ];
 
+  // Why: 每个状态对应 timeline 高亮的步骤索引（0=Order Confirmed / 1=Processing / 2=Shipped / 3=Delivered）
   const activeIdx: Record<OrderStatus, number> = {
-    pending: 0,
-    paid: 1,
-    shipped: 2,
-    delivered: 3,
-    cancelled: 0,
-    refunding: 0,
+    PENDING_PAYMENT: 0,
+    PENDING_CONFIRM: 1,
+    CONFIRMED: 1,
+    PICKED: 2,
+    OUT_FOR_DELIVERY: 2,
+    DELIVERED_PAID: 3,
+    DELIVERED_UNPAID: 3,
+    DELIVERED: 3,
+    COMPLETED: 3,
+    CANCELLED: 0,
   };
   const current = activeIdx[status];
 
@@ -658,7 +712,7 @@ function BottomActions({
   );
 
   switch (status) {
-    case 'pending':
+    case 'PENDING_PAYMENT':
       return (
         <>
           {outline(
@@ -673,7 +727,8 @@ function BottomActions({
           )}
         </>
       );
-    case 'paid':
+    case 'PENDING_CONFIRM':
+    case 'CONFIRMED':
       return (
         <>
           {outline(
@@ -688,7 +743,8 @@ function BottomActions({
           )}
         </>
       );
-    case 'shipped':
+    case 'PICKED':
+    case 'OUT_FOR_DELIVERY':
       return (
         <>
           {outline(
@@ -703,7 +759,9 @@ function BottomActions({
           )}
         </>
       );
-    case 'delivered':
+    case 'DELIVERED_PAID':
+    case 'DELIVERED_UNPAID':
+    case 'DELIVERED':
       return (
         <>
           {outline(
@@ -718,7 +776,22 @@ function BottomActions({
           )}
         </>
       );
-    case 'cancelled':
+    case 'COMPLETED':
+      return (
+        <>
+          {outline(
+            t('order.actions.afterSales', { defaultValue: 'After-Sales' }),
+            () => router.push({ pathname: '/order/after-sales-detail', params: { id: order.id } }),
+            'order-aftersales',
+          )}
+          {solid(
+            t('order.actions.repurchase', { defaultValue: 'Buy Again' }),
+            () => router.replace('/(main)/home'),
+            'order-repurchase',
+          )}
+        </>
+      );
+    case 'CANCELLED':
       return (
         <>
           {outline(
@@ -730,21 +803,6 @@ function BottomActions({
             t('order.actions.repurchase', { defaultValue: 'Buy Again' }),
             () => router.replace('/(main)/home'),
             'order-repurchase',
-          )}
-        </>
-      );
-    case 'refunding':
-      return (
-        <>
-          {outline(
-            t('order.actions.afterSales', { defaultValue: 'View Refund' }),
-            () => router.push({ pathname: '/order/after-sales-detail', params: { id: order.id } }),
-            'order-refund',
-          )}
-          {solid(
-            t('common.contactSeller', { defaultValue: 'Contact Seller' }),
-            () => router.push('/service'),
-            'order-contact',
           )}
         </>
       );

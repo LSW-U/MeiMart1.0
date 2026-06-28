@@ -11,7 +11,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 const order: Order = {
   id: 'o1',
   orderNo: 'ORD-20240101-0001',
-  status: 'pending',
+  status: 'PENDING_PAYMENT',
   items: [
     {
       id: 'c1',

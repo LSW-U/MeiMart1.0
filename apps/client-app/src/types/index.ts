@@ -51,7 +51,17 @@ export interface PaymentMethod {
   isDefault?: boolean;
 }
 
-export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'refunding';
+export type OrderStatus =
+  | 'PENDING_PAYMENT'
+  | 'PENDING_CONFIRM'
+  | 'CONFIRMED'
+  | 'PICKED'
+  | 'OUT_FOR_DELIVERY'
+  | 'DELIVERED_PAID'
+  | 'DELIVERED_UNPAID'
+  | 'DELIVERED'
+  | 'COMPLETED'
+  | 'CANCELLED';
 
 export interface Order {
   id: string;
@@ -153,6 +163,6 @@ export interface TrackingStep {
   location?: string;
 }
 
-export type OrderTab = 'all' | 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderTab = OrderStatus | 'all';
 
 export type BottomTab = 'home' | 'categories' | 'cart' | 'orders' | 'account';
