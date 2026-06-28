@@ -19,6 +19,7 @@ import { PriceText } from '@/components/ui/PriceText';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { StatusBadge } from '@/components/business/StatusBadge';
 import { Icon } from '@/components/ui/Icon';
+import { useOrderTracking } from '@/services/queries/useTracking';
 
 interface OrderItemRow {
   id: string;
@@ -93,6 +94,9 @@ export default function DeliveryTrackingPage() {
   const { colors } = useTheme();
   const params = useLocalSearchParams<{ id?: string }>();
   const trackingNo = params.id ? `MEI-${params.id.padStart(5, '0')}` : 'MEI-98234';
+  // Why: Phase 6 启动 WS 配送追踪（join:order + 监听 order:location/order:status-changed + 5s 无消息降级 HTTP 轮询）。
+  // UI 暂保留 mock 数据（ORDER_ITEMS/TIMELINE），后续迭代再接入真实 tracking.riderLocation/lastOrderStatus。
+  useOrderTracking(params.id);
 
   return (
     <SafeAreaWrapper
