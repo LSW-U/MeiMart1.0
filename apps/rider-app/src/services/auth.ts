@@ -17,9 +17,7 @@ export type AuthResult = {
   avatarUrl: string | null;
   accessToken: string;
   refreshToken: string;
-  // 兼容字段：旧调用方读 result.token，迁移期保留映射
-  token: string;
-  // 兼容字段：login 后立即用 getProfile() 拿骑手信息；mock 模式直接构造
+  // login 后立即用 getProfile() 拿骑手信息；mock 模式直接构造
   rider?: RiderProfile;
 };
 
@@ -65,7 +63,6 @@ function fromLoginResponse(data: {
     avatarUrl: data.user.avatarUrl,
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
-    token: data.accessToken,
   };
 }
 
@@ -96,7 +93,6 @@ export const authApi = {
           avatarUrl: null,
           accessToken: 'mock-token-' + Date.now(),
           refreshToken: 'mock-refresh-' + Date.now(),
-          token: 'mock-token-' + Date.now(),
           rider: { ...mockRider },
         },
         500,
