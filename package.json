@@ -3,5 +3,14 @@
   "private": true,
   "workspaces": [
     "apps/*"
-  ]
+  ],
+  "overrides": {
+    "@tanstack/query-core": "5.101.1",
+    "@tanstack/query-async-storage-persister": {
+      "@tanstack/query-core": "5.101.1"
+    },
+    "@tanstack/query-persist-client-core": {
+      "@tanstack/query-core": "5.101.1"
+    }
+  }
 }
