@@ -1,12 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderApi } from '@/services/orders';
 import type { OrderStatus, Order } from '@/types';
 
 export const ORDERS_QUERY_KEY = ['orders'] as const;
 
-// Why: service 层 getOrders 返回游标分页结构 {items, nextCursor, hasMore}，
-// useOrders 保持返回 Order[] 兼容现有组件（不实现"加载更多"UI，单页 limit=20 足够）。
-// 后续如需"加载更多"，再单独导出 useOrdersInfinite，不影响现有调用方。
+const ORDERS_PAGE_SIZE = 20;
+
+// Why: 兼容不依赖分页的旧组件（如 checkout.tsx），返回 Order[]，单页 limit=20
 export function useOrders(status?: OrderStatus | 'all') {
   return useQuery({
     queryKey: [...ORDERS_QUERY_KEY, status ?? 'all'],
@@ -14,6 +14,18 @@ export function useOrders(status?: OrderStatus | 'all') {
       const res = await orderApi.getOrders(status);
       return res.items;
     },
+    staleTime: 60 * 1000,
+    networkMode: 'offlineFirst',
+  });
+}
+
+// Why: 游标分页无限加载 hook，订单列表页用。消费 service 的 nextCursor + hasMore。
+export function useOrdersInfinite(status?: OrderStatus | 'all') {
+  return useInfiniteQuery({
+    queryKey: [...ORDERS_QUERY_KEY, 'infinite', status ?? 'all'],
+    queryFn: ({ pageParam }) => orderApi.getOrders(status, pageParam, ORDERS_PAGE_SIZE),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextCursor : undefined),
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',
   });

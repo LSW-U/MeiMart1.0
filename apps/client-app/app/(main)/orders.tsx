@@ -21,7 +21,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
-import { useOrders } from '@/services/queries/useOrders';
+import { useOrdersInfinite } from '@/services/queries/useOrders';
 import type { OrderStatus, Order } from '@/types';
 
 const TABS: { key: OrderStatus | 'all'; labelKey: string }[] = [
@@ -36,7 +36,17 @@ export default function OrdersPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [active, setActive] = useState<OrderStatus | 'all'>('all');
-  const { data: orders, isLoading, isError, refetch } = useOrders(active);
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useOrdersInfinite(active);
+  // Why: useInfiniteQuery 返回 InfiniteData<{items,...}[]>，拍平多页 items 为 Order[]
+  const orders: Order[] = data?.pages.flatMap((p) => p.items) ?? [];
 
   return (
     <SafeAreaWrapper
@@ -121,6 +131,17 @@ export default function OrdersPage() {
           data={orders}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+          }}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={styles.footerLoading}>
+                <ActivityIndicator size="small" color={colors.primary} />
+              </View>
+            ) : null
+          }
           ItemSeparatorComponent={() => (
             <View style={styles.dividerWrap}>
               <TaisDivider />
@@ -175,6 +196,10 @@ const styles = StyleSheet.create({
   },
   dividerWrap: {
     paddingVertical: spacing.sm,
+  },
+  footerLoading: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
   },
   center: {
     flex: 1,
