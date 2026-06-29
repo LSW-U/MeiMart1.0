@@ -28,7 +28,7 @@ function transformProfile(raw: ProfileRaw): User {
 }
 
 export const userApi = {
-  // Why: /client/me 端点已废弃（后端注释说替换为 /client/user/profile），统一用 profile
+  // Why: 使用 /client/user/profile 获取完整用户信息（后端已统一该端点）
   async getProfile(): Promise<User> {
     if (isMockMode) return mockResponse(mockDb.user);
     const res = await api.get<ProfileRaw>('/client/user/profile');
