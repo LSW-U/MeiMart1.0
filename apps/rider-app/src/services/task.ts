@@ -167,6 +167,10 @@ function buildMockLists(): TaskLists {
 // 后端 view → 骑手 App 内部兼容字段填充（real 模式专用）
 // 后端 DeliveryTaskView 字段精简（无 fee/distance/items/pickup.title 等），
 // 这里映射出旧 UI 期望的嵌套结构，缺失字段填默认空值避免组件 break。
+//
+// TODO(W6-backend): 后端 W6 在 DeliveryTaskView 补 fee / distanceKm /
+//   estimatedMinutes / items 四个字段后，删除下方 ?? 0 / ?? [] 默认值，
+//   改为直接透传（fee: view.fee）。默认值是假数据，会让 UI 显示 $0/0km/0min。
 function fromView(view: DeliveryTask): DeliveryTask {
   // 后端 view 字段精简，pickup/dropoff 嵌套结构由本地构造（缺失填默认空值避免组件 break）
   return {
@@ -185,9 +189,13 @@ function fromView(view: DeliveryTask): DeliveryTask {
       lat: view.dropoffLat,
       lng: view.dropoffLng,
     },
+    // TODO(W6-backend): 后端补 fee 字段后删 ?? 0
     fee: view.fee ?? 0,
+    // TODO(W6-backend): 后端补 distanceKm 字段后删 ?? 0
     distanceKm: view.distanceKm ?? 0,
+    // TODO(W6-backend): 后端补 estimatedMinutes 字段后删 ?? 0
     estimatedMinutes: view.estimatedMinutes ?? 0,
+    // TODO(W6-backend): 后端补 items 字段后删 ?? []
     items: view.items ?? [],
   };
 }
