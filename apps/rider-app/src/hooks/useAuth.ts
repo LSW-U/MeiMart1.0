@@ -5,6 +5,7 @@ import { useLogin, useLogout, useSendSmsCode } from '../services/queries/useAuth
 import { useAuthStore } from '../store/useAuthStore';
 import { tokenStorage } from '../services/token-storage';
 import { riderApi } from '../services/user';
+import { authApi } from '../services/auth';
 
 export function useAuth() {
   const setRider = useAuthStore((s) => s.setRider);
@@ -52,6 +53,30 @@ export function useAuth() {
     [loginMutation, setRider],
   );
 
+  // Why: 开发环境 mock-login，跳过密码验证直接登录骑手账号
+  const mockLogin = useCallback(async () => {
+    console.log('[useAuth.mockLogin] start');
+    const result = await authApi.mockLogin();
+    console.log('[useAuth.mockLogin] result', { hasToken: Boolean(result.accessToken), role: result.role });
+    await tokenStorage.set(result.accessToken, result.refreshToken);
+
+    let rider = result.rider;
+    if (!rider && result.role === 'rider') {
+      try {
+        rider = await riderApi.getProfile();
+      } catch (e) {
+        console.error('[useAuth.mockLogin] getProfile failed:', e);
+      }
+    }
+    if (rider) {
+      setRider(rider);
+    } else {
+      useAuthStore.setState({ isAuthenticated: true });
+    }
+    router.replace('/(main)/tasks');
+    return result;
+  }, [setRider]);
+
   const logout = useCallback(async () => {
     // 先调后端拉黑 refreshToken（CLAUDE.md rider 弱网规则：失败也清本地）
     try {
@@ -75,6 +100,7 @@ export function useAuth() {
 
   return {
     login,
+    mockLogin,
     logout,
     sendSmsCode,
     isLoginPending: loginMutation.isPending,

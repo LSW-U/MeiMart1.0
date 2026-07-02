@@ -14,10 +14,13 @@ type LoginMode = 'password' | 'sms';
 
 const enabledLanguages = getLanguageOptions();
 
+// Why: 开发环境显示 mock-login 按钮，跳过密码验证
+const isDev = __DEV__;
+
 export default function LoginPage() {
   const router = useRouter();
   const { t, language } = useTranslation();
-  const { login, sendSmsCode } = useAuth();
+  const { login, mockLogin, sendSmsCode } = useAuth();
   const updateSettings = useUpdateRiderSettings();
   const [mode, setMode] = useState<LoginMode>('password');
   const [accepted, setAccepted] = useState(false);
@@ -195,6 +198,13 @@ export default function LoginPage() {
           </View>
 
           <Button icon={<Text className="text-white">→</Text>} onPress={() => void handleLogin()}>{t('auth.login.submit')}</Button>
+
+          {/* Why: 开发环境 mock-login 按钮，跳过密码验证直接登录骑手账号 */}
+          {isDev && (
+            <Pressable className="mt-2 items-center" onPress={() => void mockLogin()}>
+              <Text className="text-xs text-[#8d706c]">[DEV] 快速登录骑手账号</Text>
+            </Pressable>
+          )}
         </View>
 
         <View className="items-center pt-1">

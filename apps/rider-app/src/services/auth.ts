@@ -64,6 +64,23 @@ type BackendLoginResponse = {
   refreshToken: string;
 };
 
+// Why: mock-login 响应结构，与普通 login 不同（含 accessExpiresAt/refreshExpiresAt）
+// api.ts 响应拦截器会剥掉 { success: true, data: T } 层
+type MockLoginResponse = {
+  user: {
+    id: string;
+    role: AuthResult['role'];
+    deviceType: string;
+    phone: string;
+    email: string;
+    name: string;
+  };
+  accessToken: string;
+  refreshToken: string;
+  accessExpiresAt: number;
+  refreshExpiresAt: number;
+};
+
 export const authApi = {
   async sendSmsCode(phone: string): Promise<{ success: boolean; expireIn: number }> {
     if (!isValidPhone(phone)) {
@@ -129,6 +146,41 @@ export const authApi = {
       };
     }
     throw new Error('login requires password or code');
+  },
+
+  // Why: mock-login 仅 dev/staging 可用，跳过密码验证，直接按 role/deviceType 登录
+  // 用于骑手端开发调试，避免需要真实骑手账号密码
+  async mockLogin(): Promise<AuthResult> {
+    if (isMockMode) {
+      return mockDelay(
+        {
+          userId: mockRider.userId,
+          role: 'rider',
+          phone: mockRider.phone,
+          email: null,
+          name: mockRider.riderName,
+          avatarUrl: null,
+          accessToken: 'mock-token-' + Date.now(),
+          refreshToken: 'mock-refresh-' + Date.now(),
+          rider: { ...mockRider },
+        },
+        500,
+      );
+    }
+    const res = await api.post<MockLoginResponse>('/common/auth/mock-login', {
+      role: 'rider',
+      deviceType: 'rider_app',
+    });
+    return {
+      userId: res.data.user.id,
+      role: res.data.user.role,
+      phone: res.data.user.phone,
+      email: res.data.user.email,
+      name: res.data.user.name,
+      avatarUrl: null,
+      accessToken: res.data.accessToken,
+      refreshToken: res.data.refreshToken,
+    };
   },
 
   async logout(refreshToken: string): Promise<{ success: boolean }> {
