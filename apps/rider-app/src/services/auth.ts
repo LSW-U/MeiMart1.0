@@ -17,9 +17,6 @@ export type AuthResult = {
   avatarUrl: string | null;
   accessToken: string;
   refreshToken: string;
-  // Why: 后端返回 Unix 时间戳（秒），骑手端暂未使用但需兼容后端响应
-  accessExpiresAt?: number;
-  refreshExpiresAt?: number;
   // login 后立即用 getProfile() 拿骑手信息；mock 模式直接构造
   rider?: RiderProfile;
 };
@@ -52,15 +49,19 @@ function mockDelay<T>(value: T, ms = 400): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
 
-// Why: 后端 login-password / login-sms 响应顶层即业务字段（无 user 对象嵌套）
-// 参考客户端 apps/client-app/src/services/auth.ts:15-25
-type BackendAuthResponse = {
-  userId: string;
-  role: AuthResult['role'];
+// Why: 后端 login-password / login-sms 响应结构（参考 OpenAPI 定义）
+// 响应是 { user: {...}, accessToken, refreshToken }，不是顶层字段
+type BackendLoginResponse = {
+  user: {
+    id: string;
+    role: AuthResult['role'];
+    phone: string | null;
+    email: string | null;
+    name: string | null;
+    avatarUrl: string | null;
+  };
   accessToken: string;
   refreshToken: string;
-  accessExpiresAt: number;
-  refreshExpiresAt: number;
 };
 
 export const authApi = {
@@ -96,39 +97,35 @@ export const authApi = {
       );
     }
     if (payload.password) {
-      const res = await api.post<BackendAuthResponse>('/common/auth/login-password', {
+      const res = await api.post<BackendLoginResponse>('/common/auth/login-password', {
         phone: payload.phone,
         password: payload.password,
       });
       return {
-        userId: res.data.userId,
-        role: res.data.role,
-        phone: null, // 后续通过 getProfile() 获取
-        email: null,
-        name: null,
-        avatarUrl: null,
+        userId: res.data.user.id,
+        role: res.data.user.role,
+        phone: res.data.user.phone,
+        email: res.data.user.email,
+        name: res.data.user.name,
+        avatarUrl: res.data.user.avatarUrl,
         accessToken: res.data.accessToken,
         refreshToken: res.data.refreshToken,
-        accessExpiresAt: res.data.accessExpiresAt,
-        refreshExpiresAt: res.data.refreshExpiresAt,
       };
     }
     if (payload.code) {
-      const res = await api.post<BackendAuthResponse>('/common/auth/login-sms', {
+      const res = await api.post<BackendLoginResponse>('/common/auth/login-sms', {
         phone: payload.phone,
         smsCode: payload.code,
       });
       return {
-        userId: res.data.userId,
-        role: res.data.role,
-        phone: null, // 后续通过 getProfile() 获取
-        email: null,
-        name: null,
-        avatarUrl: null,
+        userId: res.data.user.id,
+        role: res.data.user.role,
+        phone: res.data.user.phone,
+        email: res.data.user.email,
+        name: res.data.user.name,
+        avatarUrl: res.data.user.avatarUrl,
         accessToken: res.data.accessToken,
         refreshToken: res.data.refreshToken,
-        accessExpiresAt: res.data.accessExpiresAt,
-        refreshExpiresAt: res.data.refreshExpiresAt,
       };
     }
     throw new Error('login requires password or code');
