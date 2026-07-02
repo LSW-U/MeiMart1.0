@@ -43,7 +43,7 @@ export default function RegisterPage() {
   };
 
   // Why: 骑手注册流程 = 先登录（获取 customer token） + 再申请骑手
-  // 开发环境用 mock-login 跳过 SMS 验证；生产环境用 SMS 登录
+  // 开发环境始终用 mock-login（后端无真实 SMS 服务）；生产环境用 SMS 登录
   const register = async () => {
     if (!name || !phone) {
       setError('请填写姓名和手机号');
@@ -59,10 +59,16 @@ export default function RegisterPage() {
     try {
       // Step 1: 登录（获取 customer token）
       console.log('[register] Step 1: login');
-      if (__DEV__ && !smsCode) {
-        // 开发环境无 SMS 时，用 mock-login 跳过验证
+      if (__DEV__) {
+        // 开发环境：mock-login 跳过 SMS 验证
         await mockLogin();
       } else {
+        // 生产环境：SMS 登录
+        if (!smsCode) {
+          setError('请输入验证码');
+          setLoading(false);
+          return;
+        }
         await login(phone, undefined, smsCode);
       }
 
