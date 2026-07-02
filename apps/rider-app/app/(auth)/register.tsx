@@ -15,7 +15,7 @@ type UploadKey = 'license' | 'biFront' | 'biBack' | 'vehicle';
 export default function RegisterPage() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const { login, mockLogin } = useAuth();
   const [accepted, setAccepted] = useState(false);
   const [codeState, setCodeState] = useState<'idle' | 'sent' | 'resend'>('idle');
   const [name, setName] = useState('');
@@ -42,10 +42,11 @@ export default function RegisterPage() {
     setCodeState(codeState === 'idle' ? 'sent' : 'resend');
   };
 
-  // Why: 骑手注册流程 = 先 SMS 登录（自动注册 customer） + 再申请骑手
+  // Why: 骑手注册流程 = 先登录（获取 customer token） + 再申请骑手
+  // 开发环境用 mock-login 跳过 SMS 验证；生产环境用 SMS 登录
   const register = async () => {
-    if (!name || !phone || !smsCode) {
-      setError('请填写完整信息');
+    if (!name || !phone) {
+      setError('请填写姓名和手机号');
       return;
     }
     if (!isValidPhone(phone)) {
@@ -56,9 +57,14 @@ export default function RegisterPage() {
     setError(null);
 
     try {
-      // Step 1: SMS 登录（自动注册 customer）
-      console.log('[register] Step 1: SMS login');
-      await login(phone, undefined, smsCode);
+      // Step 1: 登录（获取 customer token）
+      console.log('[register] Step 1: login');
+      if (__DEV__ && !smsCode) {
+        // 开发环境无 SMS 时，用 mock-login 跳过验证
+        await mockLogin();
+      } else {
+        await login(phone, undefined, smsCode);
+      }
 
       // Step 2: 骑手入驻申请
       console.log('[register] Step 2: Rider apply');
