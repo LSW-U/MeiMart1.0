@@ -53,10 +53,12 @@ export function useAuth() {
     [loginMutation, setRider],
   );
 
-  // Why: 开发环境 mock-login，跳过密码验证直接登录骑手账号
-  const mockLogin = useCallback(async () => {
-    console.log('[useAuth.mockLogin] start');
-    const result = await authApi.mockLogin();
+  // Why: 开发环境 mock-login，跳过密码验证直接登录
+  // role: customer → 用于骑手申请（apply 要求 customer 角色）
+  // role: rider → 用于骑手功能测试
+  const mockLogin = useCallback(async (role: 'customer' | 'rider' = 'rider') => {
+    console.log('[useAuth.mockLogin] start', { role });
+    const result = await authApi.mockLogin(role);
     console.log('[useAuth.mockLogin] result', { hasToken: Boolean(result.accessToken), role: result.role });
     await tokenStorage.set(result.accessToken, result.refreshToken);
 
@@ -73,7 +75,9 @@ export function useAuth() {
     } else {
       useAuthStore.setState({ isAuthenticated: true });
     }
-    router.replace('/(main)/tasks');
+    if (role === 'rider') {
+      router.replace('/(main)/tasks');
+    }
     return result;
   }, [setRider]);
 

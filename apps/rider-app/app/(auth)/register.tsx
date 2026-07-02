@@ -42,7 +42,7 @@ export default function RegisterPage() {
     setCodeState(codeState === 'idle' ? 'sent' : 'resend');
   };
 
-  // Why: 骑手注册流程 = 先登录（获取 customer token） + 再申请骑手
+  // Why: 骑手注册流程 = 先 customer 登录（提交申请要求 customer 角色） + 再申请骑手
   // 开发环境始终用 mock-login（后端无真实 SMS 服务）；生产环境用 SMS 登录
   const register = async () => {
     if (!name || !phone) {
@@ -57,13 +57,11 @@ export default function RegisterPage() {
     setError(null);
 
     try {
-      // Step 1: 登录（获取 customer token）
-      console.log('[register] Step 1: login');
+      // Step 1: 用 customer 角色登录（apply API 要求 customer 角色）
+      console.log('[register] Step 1: customer login');
       if (__DEV__) {
-        // 开发环境：mock-login 跳过 SMS 验证
-        await mockLogin();
+        await mockLogin('customer');
       } else {
-        // 生产环境：SMS 登录
         if (!smsCode) {
           setError('请输入验证码');
           setLoading(false);
@@ -81,7 +79,13 @@ export default function RegisterPage() {
         idCardNumber: licenseNumber || '0000000000',
       });
 
-      // Step 3: 跳转到任务页（申请提交成功，等待审核）
+      // Step 3: 申请成功后，开发环境自动用 rider 登录（跳过审核）
+      console.log('[register] Step 3: rider login');
+      if (__DEV__) {
+        await mockLogin('rider');
+      }
+
+      // Step 4: 跳转到任务页
       router.replace('/(main)/tasks');
     } catch (e) {
       console.error('[register] failed:', e);

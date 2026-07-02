@@ -150,26 +150,29 @@ export const authApi = {
 
   // Why: mock-login 仅 dev/staging 可用，跳过密码验证，直接按 role/deviceType 登录
   // 用于骑手端开发调试，避免需要真实骑手账号密码
-  async mockLogin(): Promise<AuthResult> {
+  // role: customer → 用于注册骑手申请（apply 要求 customer 角色）
+  // role: rider → 用于骑手功能测试
+  async mockLogin(role: 'customer' | 'rider' = 'rider'): Promise<AuthResult> {
     if (isMockMode) {
       return mockDelay(
         {
           userId: mockRider.userId,
-          role: 'rider',
+          role,
           phone: mockRider.phone,
           email: null,
           name: mockRider.riderName,
           avatarUrl: null,
           accessToken: 'mock-token-' + Date.now(),
           refreshToken: 'mock-refresh-' + Date.now(),
-          rider: { ...mockRider },
+          rider: role === 'rider' ? { ...mockRider } : undefined,
         },
         500,
       );
     }
+    const deviceType = role === 'rider' ? 'rider_app' : 'client_app';
     const res = await api.post<MockLoginResponse>('/common/auth/mock-login', {
-      role: 'rider',
-      deviceType: 'rider_app',
+      role,
+      deviceType,
     });
     return {
       userId: res.data.user.id,
