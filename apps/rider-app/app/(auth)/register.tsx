@@ -4,18 +4,23 @@ import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-nati
 
 import { PageHeader } from '../../src/components/layout/PageHeader';
 import { AppIcon, Button, Input, UploadTile } from '../../src/components/ui';
+import { useAuth } from '../../src/hooks/useAuth';
 import { useTranslation } from '../../src/i18n/useTranslation';
+import { isValidPhone } from '../../src/services/auth';
 import { riderApi } from '../../src/services/user';
+import { tokenStorage } from '../../src/services/token-storage';
 
 type UploadKey = 'license' | 'biFront' | 'biBack' | 'vehicle';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { login } = useAuth();
   const [accepted, setAccepted] = useState(false);
   const [codeState, setCodeState] = useState<'idle' | 'sent' | 'resend'>('idle');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [smsCode, setSmsCode] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [uploads, setUploads] = useState<Record<UploadKey, boolean>>({
     license: false,
@@ -23,6 +28,8 @@ export default function RegisterPage() {
     biBack: false,
     vehicle: false,
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const sendCodeLabel = codeState === 'idle' ? t('auth.register.sendCode') : codeState === 'sent' ? t('auth.register.sent') : t('auth.register.resend');
 
@@ -30,18 +37,46 @@ export default function RegisterPage() {
     setUploads((current) => ({ ...current, [key]: !current[key] }));
   };
 
-  const sendCode = () => {
+  const sendCode = async () => {
+    // TODO: 调用 authApi.sendSmsCode
     setCodeState(codeState === 'idle' ? 'sent' : 'resend');
   };
 
+  // Why: 骑手注册流程 = 先 SMS 登录（自动注册 customer） + 再申请骑手
   const register = async () => {
-    if (!name || !phone) return;
-    await riderApi.apply({
-      riderName: name,
-      phone: phone.startsWith('+670') ? phone : `+670 ${phone}`,
-      idCardNumber: licenseNumber || '0000000000',
-    });
-    router.replace('/(auth)/login');
+    if (!name || !phone || !smsCode) {
+      setError('请填写完整信息');
+      return;
+    }
+    if (!isValidPhone(phone)) {
+      setError('手机号格式错误');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Step 1: SMS 登录（自动注册 customer）
+      console.log('[register] Step 1: SMS login');
+      await login(phone, undefined, smsCode);
+
+      // Step 2: 骑手入驻申请
+      console.log('[register] Step 2: Rider apply');
+      await riderApi.apply({
+        riderName: name,
+        phone: phone.startsWith('+670') ? phone : `+670 ${phone}`,
+        vehicleType: 'MOTORCYCLE',
+        idCardNumber: licenseNumber || '0000000000',
+      });
+
+      // Step 3: 跳转到任务页（申请提交成功，等待审核）
+      router.replace('/(main)/tasks');
+    } catch (e) {
+      console.error('[register] failed:', e);
+      setError(e instanceof Error ? e.message : '注册失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -81,7 +116,7 @@ export default function RegisterPage() {
                   </Pressable>
                 </View>
               </View>
-              <Input keyboardType="number-pad" label={t('auth.register.verificationCode')} maxLength={6} placeholder={t('auth.register.smsPlaceholder')} />
+              <Input keyboardType="number-pad" label={t('auth.register.verificationCode')} maxLength={6} placeholder={t('auth.register.smsPlaceholder')} value={smsCode} onChangeText={setSmsCode} />
               <Input label={t('auth.register.identityCard')} placeholder={t('auth.register.identityCardPlaceholder')} value={licenseNumber} onChangeText={setLicenseNumber} />
               <View className="gap-1.5">
                 <Text className="text-xs font-bold uppercase tracking-wider text-[#59413d]">{t('auth.register.homeAddress')}</Text>
@@ -137,9 +172,16 @@ export default function RegisterPage() {
             </View>
           </View>
 
+          {/* 错误提示 */}
+          {error && (
+            <View className="rounded-xl bg-red-100 p-4">
+              <Text className="text-sm text-red-700">{error}</Text>
+            </View>
+          )}
+
           <View className="gap-6">
             <Button className="h-16 rounded-2xl" textClassName="text-lg" icon={<Text className="text-lg text-white">→</Text>} onPress={() => void register()}>
-              {t('auth.register.submit')}
+              {loading ? '提交中...' : t('auth.register.submit')}
             </Button>
             <Text className="text-center text-sm text-[#59413d]">
               {t('auth.register.alreadyHaveAccount')} <Text className="font-bold text-[#720003]" onPress={() => router.push('/(auth)/login')}>{t('auth.register.login')}</Text>
