@@ -7,7 +7,6 @@ import {
   Text,
   TextInput,
   ScrollView,
-  Alert,
   Image,
   Pressable,
 } from 'react-native';
@@ -23,6 +22,7 @@ import { Chip } from '@/components/ui/Chip';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { PriceText } from '@/components/ui/PriceText';
+import { toast } from '@/store/toastStore';
 import { afterSalesApplySchema, type AfterSalesApplyValues } from '@/forms/schemas/service';
 
 const REFUND_REASON_KEYS = [
@@ -51,9 +51,8 @@ export default function AfterSalesApplyPage() {
   const reasonValue = useWatch({ control, name: 'reason' }) as string;
 
   const submit = handleSubmit(() => {
-    Alert.alert(t('afterSales.submittedTitle'), t('afterSales.submittedDesc'), [
-      { text: t('common.ok'), onPress: () => router.replace('/order/after-sales-detail') },
-    ]);
+    toast.success(t('afterSales.submittedDesc'));
+    router.replace('/order/after-sales-detail');
   });
 
   return (
