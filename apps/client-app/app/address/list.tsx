@@ -10,8 +10,10 @@ import {
   Alert,
   Pressable,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -19,6 +21,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { toast } from '@/store/toastStore';
 import {
   useAddresses,
   useDeleteAddress,
@@ -28,15 +31,24 @@ import type { Address } from '@/types';
 
 export default function AddressListPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { data: addresses, isLoading, isError, refetch } = useAddresses();
   const deleteMutation = useDeleteAddress();
   const setDefaultMutation = useSetDefaultAddress();
 
   const handleDelete = (addr: Address) => {
-    Alert.alert('Delete Address', `Remove "${addr.name}" from saved addresses?`, [
-      { text: 'Cancel', style: 'cancel' },
+    // Why: Web 端 Alert.alert 不显示，直接删除 + toast；Native 端用 Alert 确认
+    if (Platform.OS === 'web') {
+      deleteMutation.mutate(addr.id, {
+        onSuccess: () => toast.success(t('address.deleted', { defaultValue: 'Address deleted' })),
+        onError: () => toast.error(t('errors.generic')),
+      });
+      return;
+    }
+    Alert.alert(t('address.removeTitle'), t('address.removeConfirm', { name: addr.name }), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: t('address.removeAction'),
         style: 'destructive',
         onPress: () => deleteMutation.mutate(addr.id),
       },
@@ -107,8 +119,8 @@ export default function AddressListPage() {
               <AddressRow
                 address={item}
                 onSelect={() => {
+                  // Why: 点击地址只设为默认，不自动退出（用户用返回按钮退出）
                   handleSetDefault(item);
-                  router.back();
                 }}
                 onEdit={() => router.push({ pathname: '/address/edit', params: { id: item.id } })}
                 onDelete={() => handleDelete(item)}
