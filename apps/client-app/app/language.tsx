@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, FlatList, Pressable, Alert } from 'react-native';
+import { StyleSheet, View, Text, FlatList, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
@@ -9,6 +9,7 @@ import { useAppStore } from '@/store/appStore';
 import { changeLocale, type AppLocale } from '@/i18n';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { toIconName } from '@/types';
+import { toast } from '@/store/toastStore';
 
 interface LanguageItem {
   code: AppLocale;
@@ -31,7 +32,7 @@ export default function LanguagePage() {
 
   const select = (item: LanguageItem) => {
     if (!item.available) {
-      Alert.alert(t('common.notice'), t('language.comingSoon', { native: item.native }));
+      toast.info(t('language.comingSoon', { native: item.native }));
       return;
     }
     void changeLocale(item.code);
