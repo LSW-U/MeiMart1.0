@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Pressable,
   Alert,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +23,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useFavorites } from '@/services/queries/useFavorites';
+import { toast } from '@/store/toastStore';
 import type { Product } from '@/types';
 
 export default function FavoritesPage() {
@@ -47,6 +49,13 @@ export default function FavoritesPage() {
 
   const removeSelected = () => {
     if (selected.size === 0) return;
+    // Why: Web 端 Alert 不显示，直接执行 + toast；Native 端用 Alert 确认
+    if (Platform.OS === 'web') {
+      // TODO: 接入 useRemoveFavorite mutation（API 待实现）
+      exitSelectMode();
+      toast.success(t('favorites.removed', { defaultValue: 'Removed from favorites' }));
+      return;
+    }
     Alert.alert(
       t('favorites.removeTitle', { defaultValue: 'Remove Favorites' }),
       t('favorites.removeConfirm', {
