@@ -28,6 +28,7 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { StatusBadge } from '@/components/business/StatusBadge';
 import { Icon } from '@/components/ui/Icon';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
+import { toast } from '@/store/toastStore';
 import type { OrderStatus, Order, CartItem } from '@/types';
 
 // === 状态视觉映射 ===
@@ -282,6 +283,16 @@ export default function OrderDetailPage() {
   const timelineProgress = activeIndex < 0 ? 1 : (activeIndex + 1) / timelineSteps.length;
 
   const cancel = () => {
+    // Why: Web 端 Alert 不显示，直接取消 + toast；Native 端用 Alert 确认
+    if (Platform.OS === 'web') {
+      cancelMutation.mutate(order.id, {
+        onSuccess: () => {
+          toast.success(t('order.cancelled', { defaultValue: 'Order cancelled' }));
+          router.back();
+        },
+      });
+      return;
+    }
     Alert.alert(t('order.cancelTitle'), t('order.cancelConfirm'), [
       { text: t('common.no', { defaultValue: 'No' }), style: 'cancel' },
       {
