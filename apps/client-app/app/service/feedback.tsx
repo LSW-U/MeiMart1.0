@@ -1,7 +1,7 @@
 // ⚠️ 无 HTML 原型，参考 CheckoutPage 推导实现，待设计确认
 // FeedbackPage — 反馈表单（参考 CheckoutPage.html 的表单样式）
 // D.8: PrimaryHeader + 类型 Chip + 内容 textarea + 联系方式 + 照片占位 + 提交按钮
-import { StyleSheet, View, Text, TextInput, ScrollView, Alert, Pressable } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -13,6 +13,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Chip } from '@/components/ui/Chip';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { toast } from '@/store/toastStore';
 import { feedbackSchema, type FeedbackValues } from '@/forms/schemas/service';
 
 const FEEDBACK_TYPE_KEYS = [
@@ -37,9 +38,8 @@ export default function FeedbackPage() {
   const categoryValue = useWatch({ control, name: 'category' }) as string;
 
   const submit = handleSubmit(() => {
-    Alert.alert(t('common.submitted'), t('service.feedback.submitted'), [
-      { text: t('common.ok'), onPress: () => router.back() },
-    ]);
+    toast.success(t('service.feedback.submitted'));
+    router.back();
   });
 
   return (
