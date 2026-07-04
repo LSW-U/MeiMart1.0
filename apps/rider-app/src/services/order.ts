@@ -1,7 +1,5 @@
 import type { OrderHistoryItem, OrderHistoryStatus } from '@/src/types/order';
 
-import { api, isMockMode } from './api';
-
 // ── Mock layer (localStorage for Web dev) ──────────────────────────
 
 const storageKey = 'mei-delivery-app:orderHistory:v1';
@@ -121,66 +119,49 @@ function mockDelay<T>(value: T, ms = 300): Promise<T> {
 
 // ── orderApi 对象 ───────────────────────────────────────────────────
 
+// Why: 后端暂无骑手订单历史 API（W6+ 计划），所有模式下用本地存储
+// 后端实现后再切回真实 API 调用
+
 export const orderApi = {
   async getHistory(): Promise<OrderHistoryItem[]> {
-    if (isMockMode) {
-      const items = getMockStore().slice();
-      return mockDelay(items.sort((a, b) => b.completedAt - a.completedAt));
-    }
-    const res = await api.get<OrderHistoryItem[]>('/orders/history');
-    return res.data;
+    const items = getMockStore().slice();
+    return mockDelay(items.sort((a, b) => b.completedAt - a.completedAt));
   },
 
   async getById(id: string): Promise<OrderHistoryItem | null> {
-    if (isMockMode) {
-      return mockDelay(getMockStore().find((item) => item.id === id) ?? null);
-    }
-    const res = await api.get<OrderHistoryItem | null>(`/orders/${encodeURIComponent(id)}`);
-    return res.data;
+    return mockDelay(getMockStore().find((item) => item.id === id) ?? null);
   },
 
   async countByStatus(): Promise<Record<OrderHistoryStatus | 'all', number>> {
-    if (isMockMode) {
-      const items = getMockStore();
-      return mockDelay({
-        all: items.length,
-        completed: items.filter((item) => item.status === 'completed').length,
-        cancelled: items.filter((item) => item.status === 'cancelled').length,
-        transferred: items.filter((item) => item.status === 'transferred').length,
-      });
-    }
-    const res = await api.get<Record<OrderHistoryStatus | 'all', number>>('/orders/count-by-status');
-    return res.data;
+    const items = getMockStore();
+    return mockDelay({
+      all: items.length,
+      completed: items.filter((item) => item.status === 'completed').length,
+      cancelled: items.filter((item) => item.status === 'cancelled').length,
+      transferred: items.filter((item) => item.status === 'transferred').length,
+    });
   },
 
   async getTodayStats(): Promise<{ count: number; totalIncome: number }> {
-    if (isMockMode) {
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-      const items = getMockStore().filter(
-        (item) => item.completedAt >= startOfDay && item.status === 'completed',
-      );
-      return mockDelay({
-        count: items.length,
-        totalIncome: items.reduce((sum, item) => sum + item.income, 0),
-      });
-    }
-    const res = await api.get<{ count: number; totalIncome: number }>('/orders/today-stats');
-    return res.data;
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const items = getMockStore().filter(
+      (item) => item.completedAt >= startOfDay && item.status === 'completed',
+    );
+    return mockDelay({
+      count: items.length,
+      totalIncome: items.reduce((sum, item) => sum + item.income, 0),
+    });
   },
 
   async add(item: OrderHistoryItem): Promise<void> {
-    if (isMockMode) {
-      const store = getMockStore();
-      const existing = store.findIndex((entry) => entry.id === item.id);
-      if (existing >= 0) {
-        store[existing] = item;
-      } else {
-        store.unshift(item);
-      }
-      saveMock();
-      return;
+    const store = getMockStore();
+    const existing = store.findIndex((entry) => entry.id === item.id);
+    if (existing >= 0) {
+      store[existing] = item;
+    } else {
+      store.unshift(item);
     }
-    await api.post('/orders', item);
+    saveMock();
   },
 };
