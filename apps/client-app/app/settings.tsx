@@ -1,7 +1,7 @@
 // ⚠️ 无 HTML 原型，参考 ProfilePage 推导实现，待设计确认
 // SettingsPage — 设置页（参考 ProfilePage.html 的分组列表样式）
 // D.13: PrimaryHeader + 分组设置项（外观/通用/隐私/关于）+ 退出登录
-import { StyleSheet, View, Text, ScrollView, Pressable, Alert } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, Alert, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
@@ -13,6 +13,7 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
+import { toast } from '@/store/toastStore';
 import type { ReactNode } from 'react';
 
 export default function SettingsPage() {
@@ -25,8 +26,15 @@ export default function SettingsPage() {
 
   const setMode = (mode: 'light' | 'dark' | 'system') => setThemeMode(mode);
 
-  const clearCache = () => Alert.alert(t('common.notice'), t('settings.clearCacheDone'));
+  const clearCache = () => toast.success(t('settings.clearCacheDone'));
   const logout = () => {
+    // Why: Web 端 Alert 不显示，直接退出 + toast；Native 端用 Alert 确认
+    if (Platform.OS === 'web') {
+      clearAuth();
+      router.replace('/(auth)/login');
+      toast.success(t('profile.logout'));
+      return;
+    }
     Alert.alert(t('settings.logoutTitle'), t('settings.logoutConfirm'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
