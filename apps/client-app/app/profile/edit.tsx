@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,6 +9,7 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { useProfile, useUpdateProfile } from '@/services/queries/useUser';
+import { toast } from '@/store/toastStore';
 import { FormInput } from '@/forms';
 import { profileEditSchema, type ProfileEditValues } from '@/forms/schemas/user';
 
@@ -31,7 +32,7 @@ export default function ProfileEditPage() {
   const submit = (values: ProfileEditValues) => {
     updateMutation.mutate(values, {
       onSuccess: () => {
-        Alert.alert(t('common.success'), t('profileEdit.saved'));
+        toast.success(t('profileEdit.saved'));
         router.back();
       },
     });
