@@ -8,7 +8,6 @@ import {
   Text,
   TextInput,
   ScrollView,
-  Alert,
   Image,
   Pressable,
 } from 'react-native';
@@ -24,6 +23,7 @@ import { Chip } from '@/components/ui/Chip';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { PriceText } from '@/components/ui/PriceText';
+import { toast } from '@/store/toastStore';
 import { reviewSchema, type ReviewValues } from '@/forms/schemas/service';
 
 const TAGS = [
@@ -64,9 +64,8 @@ export default function OrderReviewPage() {
   };
 
   const submit = handleSubmit(() => {
-    Alert.alert(t('review.successTitle'), t('review.successDesc'), [
-      { text: t('common.ok'), onPress: () => router.back() },
-    ]);
+    toast.success(t('review.successDesc'));
+    router.back();
   });
 
   return (
