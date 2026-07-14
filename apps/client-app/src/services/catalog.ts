@@ -34,7 +34,10 @@ function transformCategory(raw: CategoryRaw): Category {
   return {
     id: raw.id,
     name: pickLocalized(raw.name),
-    icon: raw.iconUrl,
+    // Why: iconUrl 统一为图片 URL 契约（后端 W7-ext-H1 已清 emoji）
+    // icon 字段废弃，统一走 image；空 URL -> undefined 走 fallback 'tag' 图标
+    icon: '',
+    image: raw.iconUrl || undefined,
     parentId: raw.parentId ?? undefined,
   };
 }

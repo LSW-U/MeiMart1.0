@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing } from '@/theme';
@@ -15,10 +16,9 @@ export function CategoryItem({ category, size = 'md', onPress, testID }: Categor
   const dims = SIZE_MAP[size];
   const bgColor = category.color ?? colors['secondary-container'];
   const borderColor = category.borderColor ?? 'transparent';
-  const hasImage = Boolean(category.image);
-  // 图片模式下，图标用 on-surface-variant；纯色背景用 on-secondary-container
-  // 当 category.color 显式指定时（HTML 的 emerald-50 等），文字色应跟随分类主题色，
-  // 简化处理：image 模式不需要图标，无 image 但有 color 时仍用 secondary-container 配色。
+  // Why: imageError 记录图片加载失败，失败后回退到 'tag' 图标，避免空白
+  const [imageError, setImageError] = useState(false);
+  const hasImage = Boolean(category.image) && !imageError;
   const iconColor = colors['on-secondary-container'];
 
   return (
@@ -44,8 +44,15 @@ export function CategoryItem({ category, size = 'md', onPress, testID }: Categor
         ]}
       >
         {hasImage ? (
-          <Image source={{ uri: category.image }} style={styles.image} accessible={false} />
+          <Image
+            source={{ uri: category.image }}
+            style={styles.image}
+            accessible={false}
+            onError={() => setImageError(true)}
+          />
         ) : (
+          // Why: 无 image 或加载失败时显示 fallback 图标
+          // category.icon 保留作矢量图标名备用（W8 再定），无值时走 'tag'
           <MaterialCommunityIcons
             name={category.icon ? toIconName(category.icon) : 'tag'}
             size={dims.icon}
