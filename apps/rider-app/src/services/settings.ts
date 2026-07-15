@@ -1,4 +1,5 @@
 import { api, isMockMode } from './api';
+import { riderApi } from './user';
 
 export type AppLanguage = 'zh' | 'en' | 'tet' | 'pt' | 'id';
 
@@ -88,14 +89,19 @@ function saveMockSettings(): void {
 
 export const riderSettingsApi = {
   // Why: 后端没有 /rider/settings 路由，language/notificationsEnabled 本地存储，
-  // dutyStatus 从 /rider/duty 获取（但该端点只有 PATCH，没有 GET）
-  // 真实 API 模式下，dutyStatus 需从 rider profile 的 status 字段推断
+  // dutyStatus 从 /rider/profile 的 status 字段获取（OFFLINE/ONLINE/BUSY）
   async get(): Promise<RiderSettings> {
     if (isMockMode) return { ...getMockSettings() };
-    // 真实 API 模式：language/notificationsEnabled 本地存储，dutyStatus 默认 offDuty
-    // 后续可从 rider profile 获取 status 字段
     const localSettings = getMockSettings();
-    return { ...localSettings, dutyStatus: 'offDuty' };
+    try {
+      const profile = await riderApi.getProfile();
+      const dutyStatus = dutyStatusReverseMap[profile.status] ?? 'offDuty';
+      return { ...localSettings, dutyStatus };
+    } catch (e) {
+      // profile 拉取失败：回退到 offDuty，避免阻塞任务页渲染
+      console.error('[riderSettingsApi.get] getProfile failed:', e);
+      return { ...localSettings, dutyStatus: 'offDuty' };
+    }
   },
 
   // Why: dutyStatus 调用 /rider/duty，language/notificationsEnabled 本地存储
