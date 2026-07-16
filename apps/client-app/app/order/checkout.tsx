@@ -6,13 +6,17 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
+import { toast } from '@/store/toastStore';
+import { productApi } from '@/services/products';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
@@ -28,6 +32,7 @@ const DISCOUNT = 5.0; // mock 优惠金额（与 cart 页一致）
 const DELIVERY_FEE = 0.0; // mock 满 $20 免运费
 
 export default function CheckoutPage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
   const localize = useLocalizer();
@@ -41,6 +46,8 @@ export default function CheckoutPage() {
 
   const defaultMethodId = paymentMethods?.find((m) => m.isDefault)?.id ?? paymentMethods?.[0]?.id;
   const [selectedMethod, setSelectedMethod] = useState<string | undefined>(defaultMethodId);
+  // Why: 防止 submit 期间重复点击（Promise.all 查 SKU 时 createOrder.isPending 还是 false）
+  const [submitting, setSubmitting] = useState(false);
 
   const subtotal = selectedItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
   const finalTotal = Math.max(0, subtotal - DISCOUNT + DELIVERY_FEE);
@@ -49,7 +56,7 @@ export default function CheckoutPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <PrimaryHeader title={t('checkout.title')} showBack onBackPress={() => router.back()} />
+        <PrimaryHeader title={t('checkout.title')} showBack onBackPress={handleBack} />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -60,33 +67,75 @@ export default function CheckoutPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <PrimaryHeader title={t('checkout.title')} showBack onBackPress={() => router.back()} />
+        <PrimaryHeader title={t('checkout.title')} showBack onBackPress={handleBack} />
         <ErrorState message={t('checkout.loadError')} onRetry={() => refetch()} />
       </SafeAreaWrapper>
     );
   }
 
   const submit = async () => {
-    if (isOffline) {
-      Alert.alert(t('checkout.offlineBlock'), t('checkout.offlineBlockDesc'));
-      return;
-    }
-    if (selectedItems.length === 0) return;
+    // Why: 防止重复点击（async 期间按钮可能被多次触发）
+    if (submitting) return;
+    setSubmitting(true);
     try {
-      // Why: service createOrder 期望 {skuId, quantity}[] + payload（addressId + paymentMethod）。
-      // MVP 阶段假设每个 product 对应默认 sku，skuId 暂用 product.id；
-      // paymentMethod mock id 是小写字面量，real 模式后端要大写枚举（COD/BANK/WECHAT/PAYPAL/STRIPE），统一 toUpperCase。
-      await createOrder.mutateAsync({
-        items: selectedItems.map((i) => ({ skuId: i.product.id, quantity: i.quantity })),
+      if (isOffline) {
+        // Why: Web 端 Alert 不显示，用 toast
+        if (Platform.OS === 'web') {
+          toast.error(t('checkout.offlineBlockDesc'));
+        } else {
+          Alert.alert(t('checkout.offlineBlock'), t('checkout.offlineBlockDesc'));
+        }
+        return;
+      }
+      if (selectedItems.length === 0) return;
+      if (!defaultAddress) {
+        toast.error(t('checkout.selectAddress'));
+        return;
+      }
+      // Why: 后端 createOrder 期望 skuId，列表项 product.id 是 Product UUID 不是 SKU ID
+      // 需查详情获取 defaultSkuId（与 cartApi.addItem 一致）
+      const itemsWithSku = await Promise.all(
+        selectedItems.map(async (i) => {
+          const skuId =
+            i.product.defaultSkuId ?? (await productApi.getProduct(i.product.id))?.defaultSkuId;
+          if (!skuId) throw new Error(`No SKU for product ${i.product.id}`);
+          return { skuId, quantity: i.quantity };
+        }),
+      );
+      const paymentMethod = (selectedMethod ?? 'COD').toUpperCase();
+      const order = await createOrder.mutateAsync({
+        items: itemsWithSku,
         payload: {
-          addressId: defaultAddress?.id ?? '',
-          paymentMethod: (selectedMethod ?? 'COD').toUpperCase(),
+          addressId: defaultAddress.id,
+          paymentMethod,
         },
         totalPrice: finalTotal,
       });
+      // Why: 开发环境自动确认订单（COD -> admin 确认；预付 -> 模拟支付+确认），
+      // 让骑手端能看到配送任务。prod 走真实流程。
+      if (__DEV__) {
+        try {
+          const { paymentApi } = await import('@/services/payment');
+          await paymentApi.devAutoConfirm(order.id, paymentMethod);
+        } catch (e) {
+          // 确认失败不阻塞下单流程，订单仍已创建
+          console.warn('[checkout] devAutoConfirm failed:', e);
+        }
+      }
+      toast.success(t('checkout.orderPlaced', { defaultValue: 'Order placed' }));
       router.replace('/order/result');
-    } catch {
-      Alert.alert(t('common.error'), t('checkout.orderFailed'));
+    } catch (error: unknown) {
+      // Why: 提取后端错误码，用 i18n 翻译
+      const err = error as {
+        response?: { data?: { error?: { code?: string; message?: string } } };
+        message?: string;
+      };
+      const code = err?.response?.data?.error?.code;
+      const fallback = err?.response?.data?.error?.message ?? err?.message;
+      const translated = code ? t(`errors.${code}`, { defaultValue: fallback }) : fallback;
+      toast.error(translated ?? t('checkout.orderFailed'));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -96,10 +145,10 @@ export default function CheckoutPage() {
       <PrimaryHeader
         title={t('checkout.title')}
         showBack
-        onBackPress={() => router.back()}
+        onBackPress={handleBack}
         rightActions={
           <Pressable
-            onPress={() => router.push('/service/customer')}
+            onPress={() => router.push('/service')}
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
@@ -328,7 +377,7 @@ export default function CheckoutPage() {
         <Pressable
           testID="checkout-submit"
           onPress={submit}
-          disabled={selectedItems.length === 0 || isOffline || createOrder.isPending}
+          disabled={selectedItems.length === 0 || isOffline || submitting || createOrder.isPending}
           style={({ pressed }) => [
             styles.payBtn,
             { backgroundColor: colors.primary },

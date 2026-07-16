@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
 import type { PaymentMethod } from '@/types';
@@ -54,6 +55,41 @@ export const paymentApi = {
       `/client/payments/${orderId}/confirm`,
     );
     return res.data;
+  },
+
+  // Why: COD 订单确认（货到付款无需预付，商家接单即确认）。
+  // 后端 POST /admin/orders/{id}/confirm 需 admin token，客户端无 admin 权限，
+  // 开发环境用 mock-login 获取 admin token 调用。prod 应由 admin web 确认。
+  async adminConfirmOrder(orderId: string): Promise<void> {
+    if (isMockMode) return;
+    const baseURL = api.defaults.baseURL ?? '';
+    // Why: 独立 axios 请求避免 client api 拦截器注入 customer token
+    const loginRes = await axios.post(`${baseURL}/common/auth/mock-login`, {
+      role: 'super_admin',
+      deviceType: 'admin_web',
+    });
+    const adminToken = loginRes.data?.data?.accessToken;
+    if (!adminToken) throw new Error('Failed to get admin token for COD confirm');
+    await axios.post(
+      `${baseURL}/admin/orders/${orderId}/confirm`,
+      {},
+      { headers: { Authorization: `Bearer ${adminToken}` } },
+    );
+  },
+
+  // Why: 开发环境下单后自动确认订单，让骑手端能看到任务。
+  // COD -> admin 确认；WECHAT/PAYPAL/STRIPE -> 模拟支付 + 确认。
+  // 仅 __DEV__ 调用，prod 走真实流程（COD 由 admin web 确认，预付走支付）。
+  async devAutoConfirm(orderId: string, paymentMethod: string): Promise<void> {
+    if (isMockMode) return;
+    const prepayMethods = ['WECHAT', 'PAYPAL', 'STRIPE'];
+    if (paymentMethod === 'COD') {
+      await this.adminConfirmOrder(orderId);
+    } else if (prepayMethods.includes(paymentMethod)) {
+      await this.mockPay(orderId);
+      await this.confirm(orderId);
+    }
+    // BANK_TRANSFER 等其他方式不自动确认（需人工处理）
   },
 };
 
