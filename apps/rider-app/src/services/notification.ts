@@ -1,6 +1,5 @@
 import type { NotificationItem } from '@/src/types/notification';
 
-import { api, isMockMode } from './api';
 import { riderSettingsApi } from './settings';
 
 // ── Mock layer (localStorage for Web dev) ──────────────────────────
@@ -87,48 +86,33 @@ function generateId(): string {
 
 // ── notificationApi 对象 ────────────────────────────────────────────
 
+// Why: 后端暂无 /notifications 端点（W6+ 计划），所有模式下用本地存储
 export const notificationApi = {
   async list(): Promise<NotificationItem[]> {
-    if (isMockMode) {
-      const items = getMockStore().slice();
-      return mockDelay(items.sort((a, b) => b.createdAt - a.createdAt));
-    }
-    const res = await api.get<NotificationItem[]>('/notifications');
-    return res.data;
+    const items = getMockStore().slice();
+    return mockDelay(items.sort((a, b) => b.createdAt - a.createdAt));
   },
 
   async getUnreadCount(): Promise<number> {
-    if (isMockMode) {
-      return mockDelay(getMockStore().filter((item) => !item.read).length);
-    }
-    const res = await api.get<number>('/notifications/unread-count');
-    return res.data;
+    return mockDelay(getMockStore().filter((item) => !item.read).length);
   },
 
   async markAsRead(id: string): Promise<void> {
-    if (isMockMode) {
-      const target = getMockStore().find((item) => item.id === id);
-      if (!target || target.read) return;
-      target.read = true;
-      saveMock();
-      return;
-    }
-    await api.patch(`/notifications/${encodeURIComponent(id)}/read`);
+    const target = getMockStore().find((item) => item.id === id);
+    if (!target || target.read) return;
+    target.read = true;
+    saveMock();
   },
 
   async markAllAsRead(): Promise<void> {
-    if (isMockMode) {
-      let changed = false;
-      getMockStore().forEach((item) => {
-        if (!item.read) {
-          item.read = true;
-          changed = true;
-        }
-      });
-      if (changed) saveMock();
-      return;
-    }
-    await api.patch('/notifications/read-all');
+    let changed = false;
+    getMockStore().forEach((item) => {
+      if (!item.read) {
+        item.read = true;
+        changed = true;
+      }
+    });
+    if (changed) saveMock();
   },
 
   async add(
@@ -138,18 +122,14 @@ export const notificationApi = {
     const settings = await riderSettingsApi.get();
     if (!settings.notificationsEnabled) return null;
 
-    if (isMockMode) {
-      const item: NotificationItem = {
-        ...input,
-        id: generateId(),
-        createdAt: Date.now(),
-        read: false,
-      };
-      getMockStore().unshift(item);
-      saveMock();
-      return item;
-    }
-    const res = await api.post<NotificationItem>('/notifications', input);
-    return res.data;
+    const item: NotificationItem = {
+      ...input,
+      id: generateId(),
+      createdAt: Date.now(),
+      read: false,
+    };
+    getMockStore().unshift(item);
+    saveMock();
+    return item;
   },
 };
