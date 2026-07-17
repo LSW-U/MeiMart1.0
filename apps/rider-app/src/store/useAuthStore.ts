@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import type { RiderProfile } from '../types/rider';
 import { riderApi } from '../services/user';
+import { ApiError } from '../services/api';
 import { tokenStorage } from '../services/token-storage';
 
 type AuthState = {
@@ -30,6 +31,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         const profile = await riderApi.getProfile();
         set({ isAuthenticated: true, rider: profile, hydrated: true });
       } catch (e) {
+        // 设备类型/角色不匹配（E-AUTH-001/E-AUTH-010）：token 不是 rider 的
+        // （如注册流程残留 customer token），清除让用户重新登录，避免卡在半登录状态
+        if (e instanceof ApiError && (e.code === 'E-AUTH-001' || e.code === 'E-AUTH-010')) {
+          console.warn('[useAuthStore] token role mismatch, clearing auth:', e.code);
+          await tokenStorage.clear();
+          set({ isAuthenticated: false, rider: null, hydrated: true });
+          return;
+        }
         // profile 拉取失败：仍设登录态，rider 留空（页面用 useRiderProfile 重试）
         console.error('[useAuthStore] hydrate profile failed:', e);
         set({ isAuthenticated: true, hydrated: true });
