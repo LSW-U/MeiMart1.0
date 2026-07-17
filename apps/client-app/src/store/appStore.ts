@@ -27,7 +27,7 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      locale: 'zh',
+      locale: 'en', // Why: 与 i18n DEFAULT_LOCALE 一致，默认英文
       themeMode: 'system',
       networkStatus: {
         isConnected: true,

@@ -11,7 +11,7 @@ import {
   Image,
   Pressable,
 } from 'react-native';
-import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,6 +46,7 @@ const RATING_KEYS = [
 const RATING_EMOJI = ['😞', '😕', '😐', '🙂', '😍'];
 
 export default function OrderReviewPage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -65,7 +66,7 @@ export default function OrderReviewPage() {
 
   const submit = handleSubmit(() => {
     toast.success(t('review.successDesc'));
-    router.back();
+    handleBack();
   });
 
   return (
@@ -74,7 +75,7 @@ export default function OrderReviewPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <PrimaryHeader title={t('review.title')} showBack onBackPress={() => router.back()} />
+      <PrimaryHeader title={t('review.title')} showBack onBackPress={handleBack} />
 
       <ScrollView
         style={{ flex: 1 }}

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/services/user';
+import { useAuthStore } from '@/store/authStore';
 import type { User } from '@/types';
 
 // Why: favorites → useFavorites；notifications → useNotifications（Phase 4/5 拆出）
@@ -7,11 +8,13 @@ export const PROFILE_QUERY_KEY = ['user', 'profile'] as const;
 export const COUPONS_QUERY_KEY = ['user', 'coupons'] as const;
 
 export function useProfile() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: PROFILE_QUERY_KEY,
     queryFn: () => userApi.getProfile(),
     staleTime: 5 * 60 * 1000,
     networkMode: 'offlineFirst',
+    enabled: isAuthenticated, // 未登录时不请求
   });
 }
 
@@ -33,10 +36,12 @@ export function useUpdateProfile() {
 }
 
 export function useCoupons() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: COUPONS_QUERY_KEY,
     queryFn: () => userApi.getCoupons(),
     staleTime: 5 * 60 * 1000,
     networkMode: 'offlineFirst',
+    enabled: isAuthenticated, // 未登录时不请求
   });
 }

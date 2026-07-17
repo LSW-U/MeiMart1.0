@@ -82,6 +82,7 @@ const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = {
   person_add: 'account-plus',
   photo_camera: 'camera',
   play_arrow: 'play',
+  radio_button_checked: 'radiobox-marked',
   radio_button_unchecked: 'radiobox-blank',
   receipt_long: 'receipt',
   restaurant: 'silverware-fork-knife',

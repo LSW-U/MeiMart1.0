@@ -7,11 +7,12 @@ import {
   Text,
   ScrollView,
   Pressable,
-  Image,
   Linking,
   Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -19,46 +20,12 @@ import { PriceText } from '@/components/ui/PriceText';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { StatusBadge } from '@/components/business/StatusBadge';
 import { Icon } from '@/components/ui/Icon';
+import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
+import { ErrorState } from '@/components/feedback/ErrorState';
 import { useOrderTracking } from '@/services/queries/useTracking';
-
-interface OrderItemRow {
-  id: string;
-  name: string;
-  spec: string;
-  qty: number;
-  price: number;
-  image: string;
-}
-
-const ORDER_ITEMS: OrderItemRow[] = [
-  {
-    id: 'item-1',
-    name: 'Premium Ermera Arabica',
-    spec: '500g Bag',
-    qty: 1,
-    price: 12.5,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAQ-PIW45qe44Mil-vVxoB9al6-whuUMeLWWyN-rNHtGr3v6z5WFP_CLT4Z9htPdpqwLS4Ps7-hzyxKS2d9iu_RU6NMYSpfx7_3qFODzZmYVGudN6juccoBHW2o2xr6fjL_zTvCqO-oC08IXgp2Wl0TjvtrYNzITjgz3yCaAO9G73s18bEt1Hl6_dJhacKvTuLhy7N2_hL7SwgHYo-u_rE2MnU-0Bu_Sk51UwyzHt7scLsEtH6Tvgttl4NQQwMlH9aRad_dA9L6',
-  },
-  {
-    id: 'item-2',
-    name: 'Foos Lafaek Rice',
-    spec: '5kg Bag',
-    qty: 1,
-    price: 4.8,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDJUu9O-Gtf8oI_7UVUeOx8CugOCjZ_0Hn7ya3KFHeSOHbWqkMuB78Um_5W-n29zwXufHvVcDTtxgXHzCTLw4FEGnXHxYBk21PsjR2nsjFKEUMjgo8Kwu1kLyvn6pjIJJoHOcDS1r1JohsxpvD3mUSoJ-L6ul-HuVHOig_XBq6DreiK99XS_8esCzPjLh8BFKRRXzpA9yx4AhYzOG5Z0XY2OI0chYjRKq1czOSmJUpXoALUpGqRPPmdx9pennzphJ3qGcKaECM5',
-  },
-  {
-    id: 'item-3',
-    name: 'Organic Wild Honey',
-    spec: '250ml Jar',
-    qty: 2,
-    price: 15.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCSSlrYR3JN_TaWryZud85z9dwY2i1oQD2A5YShNc5a2jxIot7zfScECTALw4ybW_Q7P6KStFPJR8Ggc7eFCjbncuHFyW_XMiBKp_HUqApMCRkofg_tKtFqQc3ufvi1oBg0K6Z956qBoVnWo2Tl7TlSK5zXPK2OUpzXekMb9dsWa9Tv3hVl-nwaVvF4IxVpiaW6JH14wgLBgsNta5RJmC3anaS5NuwNdXZqCVIYFGlV3Oa46lpNuQLG6ke--CdgT71sX6pfksP0',
-  },
-];
+import { useOrder } from '@/services/queries/useOrders';
+import { useLocalizer } from '@/i18n';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 // 配送员 mock（HTML 同款）
 const COURIER = {
@@ -92,11 +59,46 @@ const TIMELINE = [
 
 export default function DeliveryTrackingPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const localize = useLocalizer();
   const params = useLocalSearchParams<{ id?: string }>();
-  const trackingNo = params.id ? `MEI-${params.id.padStart(5, '0')}` : 'MEI-98234';
+  // Why: 接真实订单数据，OrderItems + 地址 + trackingNo 都从 order 拿
+  const { data: order, isLoading, isError, refetch } = useOrder(params.id);
   // Why: Phase 6 启动 WS 配送追踪（join:order + 监听 order:location/order:status-changed + 5s 无消息降级 HTTP 轮询）。
-  // UI 暂保留 mock 数据（ORDER_ITEMS/TIMELINE），后续迭代再接入真实 tracking.riderLocation/lastOrderStatus。
+  // 配送员 + 物流时间线暂保留 mock，等后端 tracking.riderLocation/lastOrderStatus 就绪后接入。
   useOrderTracking(params.id);
+
+  if (isLoading) {
+    return (
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
+        <StatusBarConfig />
+        <Header title={t('tracking.title', { defaultValue: 'Order Tracking' })} />
+        <LoadingOverlay visible />
+      </SafeAreaWrapper>
+    );
+  }
+
+  if (isError || !order) {
+    return (
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
+        <StatusBarConfig />
+        <Header title={t('tracking.title', { defaultValue: 'Order Tracking' })} />
+        <ErrorState
+          message={t('errors.orderNotFound', { defaultValue: 'Order not found' })}
+          onRetry={() => refetch()}
+        />
+      </SafeAreaWrapper>
+    );
+  }
+
+  const trackingNo = order.trackingNo ?? order.orderNo;
+  const address = order.address;
 
   return (
     <SafeAreaWrapper
@@ -176,7 +178,7 @@ export default function DeliveryTrackingPage() {
               </Text>
             </View>
             <Pressable
-              onPress={() => router.push('/address')}
+              onPress={() => router.push('/address/list')}
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Edit address"
@@ -185,10 +187,19 @@ export default function DeliveryTrackingPage() {
             </Pressable>
           </View>
           <View style={styles.addressBody}>
-            <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>Maria Silva</Text>
-            <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
-              Rua de Christo Rei, Dili, Timor-Leste
+            <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
+              {address?.name ?? t('tracking.unknownRecipient', { defaultValue: 'Recipient' })}
             </Text>
+            <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
+              {address
+                ? `${address.detail}, ${address.district}, ${address.city}, ${address.province}`
+                : t('tracking.unknownAddress', { defaultValue: 'Address not available' })}
+            </Text>
+            {address?.phone ? (
+              <Text style={[styles.bodySm, { color: colors['on-surface-variant' ]}]}>
+                {address.phone}
+              </Text>
+            ) : null}
           </View>
         </View>
 
@@ -201,7 +212,7 @@ export default function DeliveryTrackingPage() {
 
         {/* 商品列表（HTML 第 198-237 行 — 3 items） */}
         <View style={styles.itemList}>
-          {ORDER_ITEMS.map((item) => (
+          {order.items.map((item) => (
             <View
               key={item.id}
               style={[
@@ -213,7 +224,7 @@ export default function DeliveryTrackingPage() {
               ]}
             >
               <View style={[styles.itemImageWrap, { backgroundColor: colors['surface-variant'] }]}>
-                <Image source={{ uri: item.image }} style={styles.itemImage} />
+                <SafeImage source={{ uri: item.product.image }} style={styles.itemImage} />
               </View>
               <View style={styles.itemInfo}>
                 <View>
@@ -221,13 +232,13 @@ export default function DeliveryTrackingPage() {
                     style={[styles.itemName, { color: colors['on-surface'] }]}
                     numberOfLines={1}
                   >
-                    {item.name}
+                    {localize(item.product.name)}
                   </Text>
                   <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
-                    {item.spec} • Qty: {item.qty}
+                    {t('cart.quantity', { defaultValue: 'Qty' })}: {item.quantity}
                   </Text>
                 </View>
-                <PriceText value={item.price} size="lg" />
+                <PriceText value={item.product.price * item.quantity} size="lg" />
               </View>
             </View>
           ))}
@@ -245,14 +256,10 @@ export default function DeliveryTrackingPage() {
             ORDER SUMMARY
           </Text>
           <View style={styles.summaryGap}>
-            <SummaryRow label="Subtotal" value="$32.30" color={colors['on-surface']} />
-            <SummaryRow label="Delivery Fee" value="$1.50" color={colors['on-surface']} />
-            <SummaryRow label="Discount" value="-$2.00" color="#059669" />
+            {/* TODO(长期): 后端订单返回 subtotal/deliveryFee/discount 字段后恢复分项显示 */}
             <View style={[styles.totalRow, { borderTopColor: 'rgba(141,112,108,0.3)' }]}>
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>Total Amount</Text>
-              <Text style={[styles.priceDisplay, { color: colors.primary, fontSize: 24 }]}>
-                $31.80
-              </Text>
+              <PriceText value={order.totalPrice} size="lg" />
             </View>
           </View>
         </View>
@@ -330,6 +337,7 @@ export default function DeliveryTrackingPage() {
 // PrimaryHeader（HTML 第 138-155 行 — primary + tais-pattern + arrow_back + help + share）
 function Header({ title }: { title: string }) {
   const { colors } = useTheme();
+  const handleBack = useSafeBack();
   return (
     <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.umaLulik]}>
       <View style={styles.headerPattern} pointerEvents="none">
@@ -337,7 +345,7 @@ function Header({ title }: { title: string }) {
       </View>
       <View style={styles.headerRow}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={handleBack}
           hitSlop={8}
           style={styles.headerBtn}
           accessibilityRole="button"
@@ -512,15 +520,6 @@ function Timeline() {
           </View>
         );
       })}
-    </View>
-  );
-}
-
-function SummaryRow({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <View style={styles.summaryRow}>
-      <Text style={[styles.bodySm, { color: color }]}>{label}</Text>
-      <Text style={[styles.bodySm, { color, fontWeight: '600' }]}>{value}</Text>
     </View>
   );
 }

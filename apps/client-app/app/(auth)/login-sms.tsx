@@ -4,10 +4,11 @@
 // Fix-16: 替换 PageHeader 为 AuthShell + 手机号 + 验证码 + Husu Kódigu 按钮
 // CP-FIX-2.3: 表单迁移到 react-hook-form + zod（规则 9）
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert } from 'react-native';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -16,6 +17,7 @@ import { Checkbox } from '@/components/ui/Checkbox';
 import { AuthShell } from '@/components/business/AuthShell';
 import { useLoginSms, useSendSmsCode } from '@/services/queries/useAuth';
 import { useAuthStore } from '@/store/authStore';
+import { toast } from '@/store/toastStore';
 import { FormInput } from '@/forms';
 import { loginSmsSchema, type LoginSmsValues } from '@/forms/schemas/auth';
 
@@ -23,6 +25,7 @@ const COUNTDOWN = 60;
 
 export default function LoginSmsPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [counter, setCounter] = useState(0);
   const setAuth = useAuthStore((s) => s.setAuth);
   const loginMutation = useLoginSms();
@@ -38,19 +41,19 @@ export default function LoginSmsPage() {
 
   useEffect(() => {
     if (counter <= 0) return;
-    const t = setTimeout(() => setCounter(counter - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setCounter(counter - 1), 1000);
+    return () => clearTimeout(timer);
   }, [counter]);
 
   const sendCode = () => {
     if (!phoneValue) {
-      Alert.alert('Notice', 'Please enter phone number');
+      toast.info(t('auth.enterPhone'));
       return;
     }
-    sendMutation.mutate({ phone: phoneValue }, {
+    sendMutation.mutate({ phone: phoneValue, scene: 'LOGIN' }, {
       onSuccess: () => {
         setCounter(COUNTDOWN);
-        Alert.alert('Sent', 'SMS code sent (Mock: 123456)');
+        toast.success(t('auth.smsSent'));
       },
     });
   };
@@ -63,7 +66,7 @@ export default function LoginSmsPage() {
           setAuth(data.accessToken, data.refreshToken);
           router.replace('/(main)/home');
         },
-        onError: () => Alert.alert('Sign in failed', 'Invalid SMS code'),
+        onError: () => toast.error(t('auth.smsSignInFailed')),
       },
     );
   };
@@ -72,23 +75,25 @@ export default function LoginSmsPage() {
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
       <AuthShell
-        welcomeTitle="Welcome Back"
-        welcomeSub="Sign in with phone verification code"
-        actionLabel="Sign In"
+        welcomeTitle={t('auth.welcomeBack')}
+        welcomeSub={t('auth.welcomeSubSms')}
+        actionLabel={t('auth.signIn')}
         onAction={handleSubmit(submit)}
         loading={loginMutation.isPending}
         secondary={
           <View style={styles.registerRow}>
             <Text style={[styles.registerText, { color: colors.secondary }]}>
-              New to Mei Mart?{' '}
+              {t('auth.newToMeiMart')}{' '}
             </Text>
             <Pressable
-              onPress={() => router.push('/(auth)/register')}
+              onPress={() => router.replace('/(auth)/register')}
               hitSlop={8}
               accessibilityRole="link"
-              accessibilityLabel="Register account"
+              accessibilityLabel={t('auth.registerAccount')}
             >
-              <Text style={[styles.registerLink, { color: colors.primary }]}>Register Account</Text>
+              <Text style={[styles.registerLink, { color: colors.primary }]}>
+                {t('auth.registerAccount')}
+              </Text>
             </Pressable>
           </View>
         }
@@ -97,8 +102,8 @@ export default function LoginSmsPage() {
         <FormInput
           control={control}
           name="phone"
-          label="PHONE NUMBER"
-          placeholder="+670 7xx xxxx"
+          label={t('auth.phoneNumber')}
+          placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
           leftIcon="phone"
           testID="login-sms-phone"
@@ -109,8 +114,8 @@ export default function LoginSmsPage() {
             <FormInput
               control={control}
               name="code"
-              label="VERIFICATION CODE"
-              placeholder="6-digit code"
+              label={t('auth.verificationCode')}
+              placeholder={t('auth.codePlaceholder')}
               keyboardType="number-pad"
               leftIcon="message-text"
               maxLength={6}
@@ -119,7 +124,7 @@ export default function LoginSmsPage() {
           </View>
           <View style={styles.codeBtn}>
             <Button
-              label={counter > 0 ? `${counter}s` : 'Husu Kódigu'}
+              label={counter > 0 ? `${counter}s` : t('auth.sendCodeBtn')}
               variant="outline"
               size="sm"
               disabled={counter > 0 || sendMutation.isPending}
@@ -131,22 +136,24 @@ export default function LoginSmsPage() {
 
         <View style={styles.linkRow}>
           <Pressable
-            onPress={() => router.push('/(auth)/login')}
+            onPress={() => router.replace('/(auth)/login')}
             hitSlop={8}
             accessibilityRole="link"
-            accessibilityLabel="Sign in with password"
+            accessibilityLabel={t('auth.signInWithPassword')}
           >
             <Text style={[styles.passwordLink, { color: colors.primary }]}>
-              Sign in with password
+              {t('auth.signInWithPassword')}
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => router.push('/(auth)/reset-password')}
+            onPress={() => router.replace('/(auth)/reset-password')}
             hitSlop={8}
             accessibilityRole="link"
-            accessibilityLabel="Forgot password"
+            accessibilityLabel={t('auth.forgotPassword')}
           >
-            <Text style={[styles.forgotLink, { color: colors.secondary }]}>Forgot Password?</Text>
+            <Text style={[styles.forgotLink, { color: colors.secondary }]}>
+              {t('auth.forgotPassword')}
+            </Text>
           </Pressable>
         </View>
 
@@ -159,11 +166,13 @@ export default function LoginSmsPage() {
             )}
           />
           <Text style={[styles.agreementText, { color: colors['on-surface-variant'] }]}>
-            {"By logging in, I agree to Mei Mart's "}
+            {t('auth.agreePrefix')}{' '}
             <Text style={{ color: colors.primary, fontWeight: '700' }}>
-              Terms of Service
-            </Text> and{' '}
-            <Text style={{ color: colors.primary, fontWeight: '700' }}>Privacy Policy</Text>.
+              {t('auth.termsOfService')}
+            </Text> {t('auth.and')}{' '}
+            <Text style={{ color: colors.primary, fontWeight: '700' }}>
+              {t('auth.privacyPolicy')}
+            </Text>.
           </Text>
         </View>
         {agreedError && (

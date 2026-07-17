@@ -13,6 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -27,6 +28,7 @@ import { toast } from '@/store/toastStore';
 import type { Product } from '@/types';
 
 export default function FavoritesPage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { data: favorites, isLoading, isError, refetch } = useFavorites();
@@ -119,7 +121,7 @@ export default function FavoritesPage() {
             : t('favorites.title')
         }
         showBack
-        onBackPress={selectMode ? exitSelectMode : () => router.back()}
+        onBackPress={selectMode ? exitSelectMode : handleBack}
         rightActions={HeaderRight}
       />
 

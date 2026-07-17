@@ -24,6 +24,8 @@ export interface Product {
   rating?: number;
   salesCount?: number;
   description?: LocalizableText;
+  // Why: 加购需要 SKU ID（后端 cart items 主键是 skuId），列表接口不返回，详情接口返回
+  defaultSkuId?: string;
 }
 
 export interface CartItem {
@@ -31,6 +33,20 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selected: boolean;
+}
+
+export interface Address {
+  id: string;
+  name: string;
+  phone: string;
+  province: string;
+  city: string;
+  district: string;
+  detail: string;
+  isDefault: boolean;
+  // Why: 后端下单要求地址有经纬度（匹配仓库），地图选点后填充
+  lat?: number | null;
+  lng?: number | null;
 }
 
 export interface Cart {
@@ -72,17 +88,6 @@ export interface Order {
   createdAt: string;
   address?: Address;
   trackingNo?: string;
-}
-
-export interface Address {
-  id: string;
-  name: string;
-  phone: string;
-  province: string;
-  city: string;
-  district: string;
-  detail: string;
-  isDefault: boolean;
 }
 
 export interface User {

@@ -12,6 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -27,6 +28,7 @@ import type { Notification } from '@/types';
 type TabKey = 'all' | 'order' | 'promotion' | 'system';
 
 export default function NotificationsPage() {
+  const handleBack = useSafeBack();
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [tab, setTab] = useState<TabKey>('all');
@@ -81,7 +83,7 @@ export default function NotificationsPage() {
       <PrimaryHeader
         title={t('service.notifications.title')}
         showBack
-        onBackPress={() => router.back()}
+        onBackPress={handleBack}
         rightActions={
           unreadCount > 0 ? (
             <Pressable

@@ -2,7 +2,7 @@
 // AboutPage — 品牌展示页（参考 SplashPage.html 192 行的视觉风格）
 // D.1: Primary tais-pattern Header + DiamondPattern 背景 + LogoBadge + 文化装饰
 import { StyleSheet, View, Text, Linking, Pressable, ScrollView } from 'react-native';
-import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -18,6 +18,7 @@ import { Icon } from '@/components/ui/Icon';
 const APP_VERSION = '1.0.0';
 
 export default function AboutPage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
 
@@ -30,7 +31,7 @@ export default function AboutPage() {
       <PrimaryHeader
         title={t('about.title')}
         showBack
-        onBackPress={() => router.back()}
+        onBackPress={handleBack}
         testID="about-back"
       />
 

@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, Pressable, TextInput } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -54,6 +55,7 @@ const CATEGORIES: HelpCategory[] = [
 ];
 
 export default function HelpCenterPage() {
+  const handleBack = useSafeBack();
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [expanded, setExpanded] = useState<string | null>('q1');
@@ -65,7 +67,7 @@ export default function HelpCenterPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <PrimaryHeader title={t('service.help.title')} showBack onBackPress={() => router.back()} />
+      <PrimaryHeader title={t('service.help.title')} showBack onBackPress={handleBack} />
 
       <ScrollView
         style={{ flex: 1 }}

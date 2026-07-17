@@ -4,10 +4,11 @@
 // Fix-16: 替换 PageHeader 为 AuthShell + 账号/密码表单 + visibility 切换
 // CP-FIX-2.3: 表单迁移到 react-hook-form + zod（规则 9）
 import { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert } from 'react-native';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -20,7 +21,9 @@ import { loginPasswordSchema, type LoginPasswordValues } from '@/forms/schemas/a
 
 export default function LoginPasswordPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const setAuth = useAuthStore((s) => s.setAuth);
   const loginMutation = useLoginPassword();
 
@@ -32,6 +35,7 @@ export default function LoginPasswordPage() {
   const agreedError = formState.errors.agreed?.message;
 
   const submit = (values: LoginPasswordValues) => {
+    setLoginError(null);
     loginMutation.mutate(
       { phone: values.account, password: values.password },
       {
@@ -39,7 +43,16 @@ export default function LoginPasswordPage() {
           setAuth(data.accessToken, data.refreshToken);
           router.replace('/(main)/home');
         },
-        onError: () => Alert.alert('Sign in failed', 'Please check your credentials'),
+        onError: (error: unknown) => {
+          const err = error as {
+            response?: { data?: { error?: { code?: string; message?: string } } };
+            message?: string;
+          };
+          const code = err?.response?.data?.error?.code;
+          const fallback = err?.response?.data?.error?.message ?? err?.message;
+          const translated = code ? t(`errors.${code}`, { defaultValue: fallback }) : fallback;
+          setLoginError(translated ?? t('auth.errors.loginFailed'));
+        },
       },
     );
   };
@@ -48,23 +61,25 @@ export default function LoginPasswordPage() {
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
       <AuthShell
-        welcomeTitle="Welcome Back"
-        welcomeSub="Sign in to your account to start shopping"
-        actionLabel="Sign In"
+        welcomeTitle={t('auth.welcomeBack')}
+        welcomeSub={t('auth.welcomeSub')}
+        actionLabel={t('auth.signIn')}
         onAction={handleSubmit(submit)}
         loading={loginMutation.isPending}
         secondary={
           <View style={styles.registerRow}>
             <Text style={[styles.registerText, { color: colors.secondary }]}>
-              New to Mei Mart?{' '}
+              {t('auth.newToMeiMart')}{' '}
             </Text>
             <Pressable
-              onPress={() => router.push('/(auth)/register')}
+              onPress={() => router.replace('/(auth)/register')}
               hitSlop={8}
               accessibilityRole="link"
-              accessibilityLabel="Register account"
+              accessibilityLabel={t('auth.registerAccount')}
             >
-              <Text style={[styles.registerLink, { color: colors.primary }]}>Register Account</Text>
+              <Text style={[styles.registerLink, { color: colors.primary }]}>
+                {t('auth.registerAccount')}
+              </Text>
             </Pressable>
           </View>
         }
@@ -73,8 +88,8 @@ export default function LoginPasswordPage() {
         <FormInput
           control={control}
           name="account"
-          label="ACCOUNT OR MOBILE"
-          placeholder="Email or Phone Number"
+          label={t('auth.accountOrMobile')}
+          placeholder={t('auth.accountPlaceholder')}
           leftIcon="account"
           testID="login-password-account"
         />
@@ -82,8 +97,8 @@ export default function LoginPasswordPage() {
         <FormInput
           control={control}
           name="password"
-          label="PASSWORD"
-          placeholder="123456"
+          label={t('auth.password')}
+          placeholder={t('auth.passwordPlaceholder')}
           leftIcon="lock"
           rightIcon={showPassword ? 'eye' : 'eye-off'}
           onRightIconPress={() => setShowPassword((v) => !v)}
@@ -91,24 +106,34 @@ export default function LoginPasswordPage() {
           testID="login-password-input"
         />
 
+        {loginError && (
+          <View style={styles.loginErrorBox} accessibilityRole="alert">
+            <Text style={[styles.loginErrorText, { color: colors.error }]}>
+              {loginError}
+            </Text>
+          </View>
+        )}
+
         <View style={styles.linkRow}>
           <Pressable
-            onPress={() => router.push('/(auth)/login-sms')}
+            onPress={() => router.replace('/(auth)/login-sms')}
             hitSlop={8}
             accessibilityRole="link"
-            accessibilityLabel="Sign in with phone code"
+            accessibilityLabel={t('auth.signInWithPhoneCode')}
           >
             <Text style={[styles.codeLink, { color: colors.primary }]}>
-              Sign in with phone code
+              {t('auth.signInWithPhoneCode')}
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => router.push('/(auth)/reset-password')}
+            onPress={() => router.replace('/(auth)/reset-password')}
             hitSlop={8}
             accessibilityRole="link"
-            accessibilityLabel="Forgot password"
+            accessibilityLabel={t('auth.forgotPassword')}
           >
-            <Text style={[styles.forgotLink, { color: colors.secondary }]}>Forgot Password?</Text>
+            <Text style={[styles.forgotLink, { color: colors.secondary }]}>
+              {t('auth.forgotPassword')}
+            </Text>
           </Pressable>
         </View>
 
@@ -121,11 +146,13 @@ export default function LoginPasswordPage() {
             )}
           />
           <Text style={[styles.agreementText, { color: colors['on-surface-variant'] }]}>
-            {"By logging in, I agree to Mei Mart's "}
+            {t('auth.agreePrefix')}{' '}
             <Text style={{ color: colors.primary, fontWeight: '700' }}>
-              Terms of Service
-            </Text> and{' '}
-            <Text style={{ color: colors.primary, fontWeight: '700' }}>Privacy Policy</Text>.
+              {t('auth.termsOfService')}
+            </Text> {t('auth.and')}{' '}
+            <Text style={{ color: colors.primary, fontWeight: '700' }}>
+              {t('auth.privacyPolicy')}
+            </Text>.
           </Text>
         </View>
         {agreedError && (
@@ -176,5 +203,16 @@ const styles = StyleSheet.create({
   errorText: {
     ...typography['body-sm'],
     marginTop: spacing.xs,
+  },
+  loginErrorBox: {
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: 8,
+    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+  },
+  loginErrorText: {
+    ...typography['body-sm'],
+    fontWeight: '600',
   },
 });

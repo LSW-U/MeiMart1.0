@@ -3,6 +3,7 @@
 // D.13: PrimaryHeader + 分组设置项（外观/通用/隐私/关于）+ 退出登录
 import { StyleSheet, View, Text, ScrollView, Pressable, Alert, Platform } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -17,6 +18,7 @@ import { toast } from '@/store/toastStore';
 import type { ReactNode } from 'react';
 
 export default function SettingsPage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
   const themeMode = useAppStore((s) => s.themeMode);
@@ -54,7 +56,7 @@ export default function SettingsPage() {
       style={[styles.container, { backgroundColor: colors.background }]}
     >
       <StatusBarConfig />
-      <PrimaryHeader title={t('settings.title')} showBack onBackPress={() => router.back()} />
+      <PrimaryHeader title={t('settings.title')} showBack onBackPress={handleBack} />
 
       <ScrollView
         style={{ flex: 1 }}

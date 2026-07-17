@@ -4,16 +4,18 @@
 // Fix-16: 替换 PageHeader 为 AuthShell + 手机号 + 验证码 + 新密码
 // CP-FIX-2.3: 表单迁移到 react-hook-form + zod（规则 9）
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Button } from '@/components/ui/Button';
 import { AuthShell } from '@/components/business/AuthShell';
 import { useResetPassword, useSendSmsCode } from '@/services/queries/useAuth';
+import { toast } from '@/store/toastStore';
 import { FormInput } from '@/forms';
 import { resetPasswordSchema, type ResetPasswordValues } from '@/forms/schemas/auth';
 
@@ -21,6 +23,7 @@ const COUNTDOWN = 60;
 
 export default function ResetPasswordPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [counter, setCounter] = useState(0);
   const resetMutation = useResetPassword();
@@ -35,17 +38,20 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     if (counter <= 0) return;
-    const t = setTimeout(() => setCounter(counter - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setCounter(counter - 1), 1000);
+    return () => clearTimeout(timer);
   }, [counter]);
 
   const sendCode = () => {
     if (!phoneValue) {
-      Alert.alert('Notice', 'Please enter phone number');
+      toast.info(t('auth.enterPhone'));
       return;
     }
-    sendMutation.mutate({ phone: phoneValue }, {
-      onSuccess: () => setCounter(COUNTDOWN),
+    sendMutation.mutate({ phone: phoneValue, scene: 'RESET_PASSWORD' }, {
+      onSuccess: () => {
+        setCounter(COUNTDOWN);
+        toast.success(t('auth.smsSent'));
+      },
     });
   };
 
@@ -54,11 +60,17 @@ export default function ResetPasswordPage() {
       { phone: values.phone, password: values.password, smsCode: values.code },
       {
         onSuccess: () => {
-          Alert.alert('Success', 'Password has been reset, please log in again', [
-            { text: 'OK', onPress: () => router.replace('/(auth)/login') },
-          ]);
+          // Why: Native 用 Alert 确认后跳转，Web 端 Alert 不显示，用 toast + 延迟跳转
+          if (Platform.OS === 'web') {
+            toast.success(t('auth.resetSuccess'));
+            setTimeout(() => router.replace('/(auth)/login'), 1500);
+          } else {
+            Alert.alert(t('common.success'), t('auth.resetSuccess'), [
+              { text: t('common.ok'), onPress: () => router.replace('/(auth)/login') },
+            ]);
+          }
         },
-        onError: () => Alert.alert('Reset failed', 'Please try again later'),
+        onError: () => toast.error(t('auth.resetFailed')),
       },
     );
   };
@@ -67,23 +79,25 @@ export default function ResetPasswordPage() {
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
       <AuthShell
-        welcomeTitle="Forgot Password?"
-        welcomeSub="Reset your password with SMS verification"
-        actionLabel="Reset Password"
+        welcomeTitle={t('auth.forgotPasswordTitle')}
+        welcomeSub={t('auth.welcomeSubReset')}
+        actionLabel={t('auth.resetPassword')}
         onAction={handleSubmit(submit)}
         loading={resetMutation.isPending}
         secondary={
           <View style={styles.loginRow}>
             <Text style={[styles.loginText, { color: colors.secondary }]}>
-              Remember your password?{' '}
+              {t('auth.rememberPassword')}{' '}
             </Text>
             <Pressable
-              onPress={() => router.push('/(auth)/login')}
+              onPress={() => router.replace('/(auth)/login')}
               hitSlop={8}
               accessibilityRole="link"
-              accessibilityLabel="Log in"
+              accessibilityLabel={t('auth.logIn')}
             >
-              <Text style={[styles.loginLink, { color: colors.primary }]}>Log In</Text>
+              <Text style={[styles.loginLink, { color: colors.primary }]}>
+                {t('auth.logIn')}
+              </Text>
             </Pressable>
           </View>
         }
@@ -92,8 +106,8 @@ export default function ResetPasswordPage() {
         <FormInput
           control={control}
           name="phone"
-          label="PHONE NUMBER"
-          placeholder="+670 7xx xxxx"
+          label={t('auth.phoneNumber')}
+          placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
           leftIcon="phone"
           testID="reset-phone"
@@ -104,8 +118,8 @@ export default function ResetPasswordPage() {
             <FormInput
               control={control}
               name="code"
-              label="VERIFICATION CODE"
-              placeholder="6-digit code"
+              label={t('auth.verificationCode')}
+              placeholder={t('auth.codePlaceholder')}
               keyboardType="number-pad"
               leftIcon="message-text"
               maxLength={6}
@@ -114,7 +128,7 @@ export default function ResetPasswordPage() {
           </View>
           <View style={styles.codeBtn}>
             <Button
-              label={counter > 0 ? `${counter}s` : 'Husu Kódigu'}
+              label={counter > 0 ? `${counter}s` : t('auth.sendCodeBtn')}
               variant="outline"
               size="sm"
               disabled={counter > 0 || sendMutation.isPending}
@@ -127,8 +141,8 @@ export default function ResetPasswordPage() {
         <FormInput
           control={control}
           name="password"
-          label="NEW PASSWORD"
-          placeholder="Enter new password"
+          label={t('auth.newPasswordLabel')}
+          placeholder={t('auth.newPasswordPlaceholder')}
           leftIcon="lock"
           rightIcon={showPassword ? 'eye' : 'eye-off'}
           onRightIconPress={() => setShowPassword((v) => !v)}
@@ -139,8 +153,8 @@ export default function ResetPasswordPage() {
         <FormInput
           control={control}
           name="confirmPassword"
-          label="CONFIRM PASSWORD"
-          placeholder="Re-enter new password"
+          label={t('auth.confirmPasswordLabel')}
+          placeholder={t('auth.confirmPasswordPlaceholder')}
           leftIcon="lock-check"
           rightIcon={showPassword ? 'eye' : 'eye-off'}
           onRightIconPress={() => setShowPassword((v) => !v)}

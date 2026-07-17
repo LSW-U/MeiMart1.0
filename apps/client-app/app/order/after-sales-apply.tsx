@@ -1,6 +1,13 @@
 // ⚠️ 无 HTML 原型，参考 CheckoutPage 推导实现，待设计确认
-// AfterSalesApplyPage — 售后申请（参考 CheckoutPage.html 的地址卡片 + 商品卡片样式）
+// AfterSalesApplyPage - 售后申请（参考 CheckoutPage.html 的地址卡片 + 商品卡片样式）
 // D.5: PrimaryHeader + 商品卡片 + 类型 Chip + 原因 Chip + 描述 + 照片凭证 + 联系方式 + 提交
+//
+// TODO(长期): 后端售后接口就绪后改造
+// 1. src/services/afterSales.ts: createAfterSales(orderId, payload) -> POST /after-sales
+// 2. src/services/queries/useAfterSales.ts: useCreateAfterSales()
+// 3. submit 改用 useCreateAfterSales，提交后用返回的 afterSalesId 跳 detail
+// 4. 凭证照片上传接 OSS / 本地文件上传
+// 5. 联系方式从硬编码改 user.phone（接 useUser）
 import {
   StyleSheet,
   View,
@@ -10,7 +17,8 @@ import {
   Image,
   Pressable,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +30,11 @@ import { Chip } from '@/components/ui/Chip';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { PriceText } from '@/components/ui/PriceText';
+import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
+import { ErrorState } from '@/components/feedback/ErrorState';
 import { toast } from '@/store/toastStore';
+import { useOrder } from '@/services/queries/useOrders';
+import { useLocalizer } from '@/i18n';
 import { afterSalesApplySchema, type AfterSalesApplyValues } from '@/forms/schemas/service';
 
 const REFUND_REASON_KEYS = [
@@ -39,8 +51,13 @@ const REFUND_TYPES = [
 ] as const;
 
 export default function AfterSalesApplyPage() {
+  const handleBack = useSafeBack();
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const localize = useLocalizer();
+  // Why: 短期入参 = orderId（由 order/[id].tsx 跳来时传入），长期改为 afterSalesId
+  const { orderId } = useLocalSearchParams<{ orderId: string }>();
+  const { data: order, isLoading, isError, refetch } = useOrder(orderId);
 
   const { control, handleSubmit, setValue } = useForm<AfterSalesApplyValues>({
     resolver: zodResolver(afterSalesApplySchema),
@@ -50,9 +67,55 @@ export default function AfterSalesApplyPage() {
   const typeValue = useWatch({ control, name: 'type' }) as AfterSalesApplyValues['type'];
   const reasonValue = useWatch({ control, name: 'reason' }) as string;
 
+  if (isLoading) {
+    return (
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
+        <StatusBarConfig />
+        <PrimaryHeader
+          title={t('afterSales.applyTitle')}
+          showBack
+          onBackPress={handleBack}
+        />
+        <LoadingOverlay visible />
+      </SafeAreaWrapper>
+    );
+  }
+
+  if (isError || !order) {
+    return (
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
+        <StatusBarConfig />
+        <PrimaryHeader
+          title={t('afterSales.applyTitle')}
+          showBack
+          onBackPress={handleBack}
+        />
+        <ErrorState
+          message={t('errors.orderNotFound', { defaultValue: 'Order not found' })}
+          onRetry={() => refetch()}
+        />
+      </SafeAreaWrapper>
+    );
+  }
+
+  const item = order.items[0];
+  const product = item?.product;
+  const quantity = item?.quantity ?? 1;
+  const refundAmount = order.totalPrice;
+
+  // TODO(长期): 接 useCreateAfterSales mutation（onMutate 乐观更新 + onSuccess 跳 detail）
   const submit = handleSubmit(() => {
     toast.success(t('afterSales.submittedDesc'));
-    router.replace('/order/after-sales-detail');
+    router.replace({
+      pathname: '/order/after-sales-detail',
+      params: { id: orderId },
+    });
   });
 
   return (
@@ -64,7 +127,7 @@ export default function AfterSalesApplyPage() {
       <PrimaryHeader
         title={t('afterSales.applyTitle')}
         showBack
-        onBackPress={() => router.back()}
+        onBackPress={handleBack}
       />
 
       <ScrollView
@@ -72,7 +135,7 @@ export default function AfterSalesApplyPage() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* 商品卡片 */}
+        {/* 商品卡片 - 真实订单商品 */}
         <View
           style={[
             styles.card,
@@ -91,23 +154,23 @@ export default function AfterSalesApplyPage() {
           </View>
           <View style={styles.productRow}>
             <View style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}>
-              <Image
-                source={{
-                  uri: 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=200',
-                }}
-                style={styles.productImg}
-                resizeMode="cover"
-              />
+              {product?.image && (
+                <Image
+                  source={{ uri: product.image }}
+                  style={styles.productImg}
+                  resizeMode="cover"
+                />
+              )}
             </View>
             <View style={styles.productTextBox}>
               <Text style={[styles.productName, { color: colors['on-surface'] }]} numberOfLines={2}>
-                {t('afterSales.mockProduct')}
+                {product ? localize(product.name) : t('afterSales.mockProduct')}
               </Text>
               <View style={styles.productMetaRow}>
                 <Text style={[styles.productMeta, { color: colors['on-surface-variant'] }]}>
-                  × 1
+                  × {quantity}
                 </Text>
-                <PriceText value={25.9} size="md" />
+                <PriceText value={product?.price ?? 0} size="md" />
               </View>
             </View>
           </View>
@@ -275,7 +338,7 @@ export default function AfterSalesApplyPage() {
         </View>
       </ScrollView>
 
-      {/* 底部提交按钮栏 */}
+      {/* 底部提交按钮栏 - 真实订单总价 */}
       <View
         style={[
           styles.bottomBar,
@@ -290,7 +353,7 @@ export default function AfterSalesApplyPage() {
           <Text style={[styles.refundLabel, { color: colors['on-surface-variant'] }]}>
             {t('afterSales.refundAmount', { defaultValue: 'Refund amount' })}
           </Text>
-          <PriceText value={25.9} size="lg" />
+          <PriceText value={refundAmount} size="lg" />
         </View>
         <Pressable
           onPress={submit}

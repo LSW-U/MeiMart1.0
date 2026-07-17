@@ -10,21 +10,25 @@ import {
   ScrollView,
   Image,
   Pressable,
-  Alert,
   Share,
   Dimensions,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { BlurView } from 'expo-blur';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useProduct, useProducts } from '@/services/queries/useProducts';
-import { useAddToCart } from '@/services/queries/useCart';
+import { useAddToCart, useCart } from '@/services/queries/useCart';
 import { useFavorites, useToggleFavorite } from '@/services/queries/useFavorites';
 import { useLocalizer } from '@/i18n';
+import { toast } from '@/store/toastStore';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
+import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -77,12 +81,16 @@ function StarsRow({ size = 14 }: { size?: number }) {
 }
 
 export default function ProductDetailPage() {
+  const handleBack = useSafeBack();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const localize = useLocalizer();
   const { data: product, isLoading, isError, refetch } = useProduct(id);
   const { data: allProducts } = useProducts();
   const { data: favorites } = useFavorites();
+  const { data: cart } = useCart();
+  const totalItems = cart?.totalItems ?? 0;
   const toggleFavoriteMutation = useToggleFavorite();
   const addToCartMutation = useAddToCart();
 
@@ -98,7 +106,7 @@ export default function ProductDetailPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <TopBar activeTab={activeTab} onTabPress={() => {}} onBack={() => router.back()} />
+        <TopBar activeTab={activeTab} onTabPress={() => {}} onBack={handleBack} />
         <View style={styles.center}>
           <Text style={{ color: colors['on-surface-variant'] }}>Loading…</Text>
         </View>
@@ -109,7 +117,7 @@ export default function ProductDetailPage() {
     return (
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
-        <TopBar activeTab={activeTab} onTabPress={() => {}} onBack={() => router.back()} />
+        <TopBar activeTab={activeTab} onTabPress={() => {}} onBack={handleBack} />
         <ErrorState message="Product not found or failed to load" onRetry={() => refetch()} />
       </SafeAreaWrapper>
     );
@@ -119,7 +127,8 @@ export default function ProductDetailPage() {
     addToCartMutation.mutate(
       { product, quantity: 1 },
       {
-        onSuccess: () => Alert.alert('Added to cart', localize(product.name)),
+        onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
+        onError: () => toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
       },
     );
   };
@@ -129,7 +138,10 @@ export default function ProductDetailPage() {
     if (!full) return;
     addToCartMutation.mutate(
       { product: full, quantity: 1 },
-      { onSuccess: () => Alert.alert('Added to cart', localize(full.name)) },
+      {
+        onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
+        onError: () => toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+      },
     );
   };
 
@@ -137,7 +149,11 @@ export default function ProductDetailPage() {
     if (!product) return;
     toggleFavoriteMutation.mutate(product, {
       onSuccess: ({ isFavorite: fav }) =>
-        Alert.alert(fav ? 'Added to favorites' : 'Removed from favorites', localize(product.name)),
+        toast.success(
+          fav
+            ? t('product.addedToFavorites', { defaultValue: 'Added to favorites' })
+            : t('product.removedFromFavorites', { defaultValue: 'Removed from favorites' }),
+        ),
     });
   };
 
@@ -151,13 +167,11 @@ export default function ProductDetailPage() {
   };
 
   const writeReview = () => {
-    Alert.alert(
-      'Write a review',
-      'You can write a review after purchasing this product. Check your order history.',
-    );
+    toast.info(t('product.reviewAfterPurchase', { defaultValue: 'You can write a review after purchasing this product' }));
   };
 
   return (
+    <PageErrorBoundary pageName="product-detail">
     <SafeAreaWrapper
       edges={['top', 'bottom']}
       style={{ backgroundColor: colors.background, flex: 1 }}
@@ -167,8 +181,9 @@ export default function ProductDetailPage() {
       <TopBar
         activeTab={activeTab}
         onTabPress={(t) => setActiveTab(t)}
-        onBack={() => router.back()}
+        onBack={handleBack}
         onShare={shareProduct}
+        cartCount={totalItems}
       />
 
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
@@ -350,7 +365,7 @@ export default function ProductDetailPage() {
             <View
               style={[
                 styles.detailHeader,
-                { backgroundColor: colors['surface-container-highest'] },
+                { backgroundColor: colors['surface-container-high'] },
               ]}
             >
               <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
@@ -476,7 +491,7 @@ export default function ProductDetailPage() {
                   <View
                     style={[styles.relatedImage, { backgroundColor: colors['surface-variant'] }]}
                   >
-                    <Image source={{ uri: p.image }} style={styles.relatedImg} />
+                    <SafeImage source={{ uri: p.image }} style={styles.relatedImg} />
                   </View>
                   <View style={styles.relatedInfo}>
                     <Text
@@ -543,7 +558,7 @@ export default function ProductDetailPage() {
                   <View
                     style={[styles.relatedImage, { backgroundColor: colors['surface-variant'] }]}
                   >
-                    <Image source={{ uri: p.image }} style={styles.relatedImg} />
+                    <SafeImage source={{ uri: p.image }} style={styles.relatedImg} />
                   </View>
                   <View style={styles.relatedInfo}>
                     <Text
@@ -608,6 +623,7 @@ export default function ProductDetailPage() {
         </Pressable>
       </View>
     </SafeAreaWrapper>
+    </PageErrorBoundary>
   );
 }
 
@@ -617,11 +633,13 @@ function TopBar({
   onTabPress,
   onBack,
   onShare,
+  cartCount = 0,
 }: {
   activeTab: TabKey;
   onTabPress: (t: TabKey) => void;
   onBack: () => void;
   onShare?: () => void;
+  cartCount?: number;
 }) {
   const { colors } = useTheme();
 
@@ -688,6 +706,11 @@ function TopBar({
         accessibilityLabel="Shopping cart"
       >
         <Icon symbol="shopping_cart" size={24} color={colors['primary-container']} />
+        {cartCount > 0 && (
+          <View style={styles.cartBadge} accessibilityLabel={`${cartCount} items in cart`}>
+            <Text style={styles.cartBadgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
+          </View>
+        )}
       </Pressable>
     </View>
   );
@@ -707,6 +730,24 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 0,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    backgroundColor: '#dc2626',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  cartBadgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '700',
   },
   tabsWrap: {
     flex: 1,

@@ -46,21 +46,23 @@ export function PrimaryHeader({
           <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
             {title}
           </Text>
-          {showLocation && locationLabel && (
-            <Pressable
-              onPress={onLocationPress}
-              style={styles.locationChip}
-              accessibilityRole="button"
-              accessibilityLabel={`Location: ${locationLabel}`}
-            >
-              <Icon symbol="location_on" size={14} color="#ffffff" />
-              <Text style={styles.locationText} numberOfLines={1}>
-                {locationLabel}
-              </Text>
-              <Icon symbol="expand_more" size={14} color="#ffffff" />
-            </Pressable>
-          )}
         </View>
+
+        {/* Why: 位置胶囊浮在 header 右侧（title 和 rightActions 之间），半透明白底圆角 */}
+        {showLocation && locationLabel && (
+          <Pressable
+            onPress={onLocationPress}
+            style={styles.locationChip}
+            accessibilityRole="button"
+            accessibilityLabel={`Location: ${locationLabel}`}
+          >
+            <Icon symbol="location_on" size={13} color="#ffffff" />
+            <Text style={styles.locationText} numberOfLines={1}>
+              {locationLabel}
+            </Text>
+            <Icon symbol="expand_more" size={13} color="#ffffff" />
+          </Pressable>
+        )}
 
         {rightActions ? (
           <View style={styles.rightActions}>{rightActions}</View>
@@ -77,7 +79,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     paddingHorizontal: spacing['container-margin'],
-    paddingVertical: spacing.md,
+    height: 56,
   },
   bgPattern: {
     position: 'absolute',
@@ -89,7 +91,8 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
+    height: '100%',
   },
   btn: {
     minWidth: 44,
@@ -102,30 +105,31 @@ const styles = StyleSheet.create({
   },
   titleWrap: {
     flex: 1,
-    flexDirection: 'column',
-    gap: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   title: {
     ...typography.h3,
     color: '#ffffff',
     fontWeight: '700',
   },
+  // Why: 位置胶囊 - 半透明白底圆角，浮在 header 右侧
   locationChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    gap: 3,
+    backgroundColor: 'rgba(255,255,255,0.18)',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: 5,
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    maxWidth: 150,
   },
   locationText: {
-    ...typography['label-caps'],
+    ...typography['body-sm'],
     color: '#ffffff',
-    fontSize: 10,
+    fontSize: 12,
+    flexShrink: 1,
   },
   rightActions: {
     flexDirection: 'row',

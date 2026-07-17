@@ -17,19 +17,27 @@ interface AddressRaw {
 }
 
 function transformAddress(raw: AddressRaw): Address {
+  // 兜底：region 可能缺失，字段缺失用默认值
+  const region = raw.region ?? { province: '', city: '' };
   return {
-    id: raw.id,
-    name: raw.name,
-    phone: raw.phone,
-    province: raw.region.province,
-    city: raw.region.city,
-    district: raw.region.district ?? '',
-    detail: raw.detail,
-    isDefault: raw.isDefault,
+    id: raw.id ?? '',
+    name: raw.name ?? '',
+    phone: raw.phone ?? '',
+    province: region.province ?? '',
+    city: region.city ?? '',
+    district: region.district ?? '',
+    detail: raw.detail ?? '',
+    isDefault: raw.isDefault ?? false,
+    lat: raw.lat,
+    lng: raw.lng,
   };
 }
 
 // Why: 前端 Address → 后端 region 嵌套结构
+// Why: 后端下单要求地址有 lat/lng（用于匹配仓库），未选地图时默认东帝汶帝力坐标
+const DILI_LAT = -8.5569;
+const DILI_LNG = 125.5603;
+
 function toAddressPayload(addr: Omit<Address, 'id'>): Record<string, unknown> {
   return {
     name: addr.name,
@@ -41,6 +49,9 @@ function toAddressPayload(addr: Omit<Address, 'id'>): Record<string, unknown> {
     },
     detail: addr.detail,
     isDefault: addr.isDefault,
+    // Why: 未选地图点时用帝力默认坐标，避免下单 409
+    lat: addr.lat ?? DILI_LAT,
+    lng: addr.lng ?? DILI_LNG,
   };
 }
 
@@ -81,6 +92,9 @@ export const addressApi = {
     if (updates.phone !== undefined) body.phone = updates.phone;
     if (updates.detail !== undefined) body.detail = updates.detail;
     if (updates.isDefault !== undefined) body.isDefault = updates.isDefault;
+    // Why: 支持更新 lat/lng（旧地址补坐标用）
+    if (updates.lat !== undefined) body.lat = updates.lat;
+    if (updates.lng !== undefined) body.lng = updates.lng;
     if (updates.province !== undefined || updates.city !== undefined || updates.district !== undefined) {
       // Why: region 是整体更新，需要从老地址补全未传字段（避免部分更新丢失 province/city）
       const existing = mockDb.addresses.find((a) => a.id === id);

@@ -13,10 +13,8 @@ type CulturalColors = {
 };
 
 type SemanticColors = {
-  success: string;
   warning: string;
   error: string;
-  info: string;
 };
 
 export type AppColors = {
@@ -52,14 +50,11 @@ export type AppColors = {
   'on-error-container': string;
   background: string;
   surface: string;
-  'surface-bright': string;
-  'surface-dim': string;
   'surface-variant': string;
   'surface-container': string;
   'surface-container-low': string;
   'surface-container-lowest': string;
   'surface-container-high': string;
-  'surface-container-highest': string;
   'on-background': string;
   'on-surface': string;
   'on-surface-variant': string;
@@ -113,14 +108,11 @@ export const lightColors: AppColors = {
   // Surface Palette（暖粉白色）
   background: '#fff8f7',
   surface: '#fff8f7',
-  'surface-bright': '#fff8f7',
-  'surface-dim': '#eed4d1',
   'surface-variant': '#f7ddd9',
   'surface-container': '#ffe9e6',
   'surface-container-low': '#fff0ee',
   'surface-container-lowest': '#ffffff',
   'surface-container-high': '#fce2df',
-  'surface-container-highest': '#f7ddd9',
   'on-background': '#261816',
   'on-surface': '#261816',
   'on-surface-variant': '#59413d',
@@ -143,10 +135,8 @@ export const lightColors: AppColors = {
 
   // 语义色（用于状态提示，与 HTML 一致）
   semantic: {
-    success: '#2E7D32',
     warning: '#F57C00',
     error: '#C62828',
-    info: '#1565C0',
   },
 } as const;
 
@@ -197,14 +187,11 @@ export const darkColors: AppColors = {
   // Surface Palette
   background: '#201A19',
   surface: '#201A19',
-  'surface-bright': '#3b2f2d',
-  'surface-dim': '#201A19',
   'surface-variant': '#59413d',
   'surface-container': '#362f2d',
   'surface-container-low': '#2c2524',
   'surface-container-lowest': '#1a1413',
   'surface-container-high': '#413a38',
-  'surface-container-highest': '#4c4442',
   'on-background': '#ffedea',
   'on-surface': '#ffedea',
   'on-surface-variant': '#e1bfba',
@@ -227,9 +214,7 @@ export const darkColors: AppColors = {
 
   // 语义色（暗色版调整亮度）
   semantic: {
-    success: '#81C784',
     warning: '#FFB74D',
     error: '#EF9A9A',
-    info: '#64B5F6',
   },
 } as const;

@@ -6,133 +6,105 @@
 // - Top 4-10 紧凑列表：排名 + 16×16 小图 + 标题 + 价格 + 圆形 add
 // - Top 3 加 uma-lulik-shadow（offset 4,4 + #59413d + opacity 0.2）
 // - 横滑分类胶囊 + Primary tais-pattern Header
-import { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, ScrollView, Image } from 'react-native';
-import { router } from 'expo-router';
+import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { EmptyState } from '@/components/feedback/EmptyState';
+import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
+import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { useCategories } from '@/services/queries/useCatalog';
+import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
+import { useLocalizer } from '@/i18n';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
-const CATEGORY_BAR = ['All', 'Coffee', 'Artisanal Food', 'Handicrafts'] as const;
-
-// Top 3 大卡片 mock（HTML 第 145-192 行）
-const TOP_THREE = [
-  {
-    id: 'p001',
-    rank: 1,
-    name: 'Ermera Arabica Coffee Beans',
-    sold: '942+ sold recently',
-    price: 12.5,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDmUYfQODctGuRNTrFmZdlQbTqUXPPZ72Y03aI9kHGCy5m8Yv1b6aOFG5KheToU68XbawxpGTljtdCnU4o1mUKAcJlB_hhPx2YPOdeQJtafcDEyElW-W1s-_P9C02DI3kgw-hN8-br1VIgbAdiAWEERQ8uH9zHeqiTknpYUn_W1jWxHiDE6ioxly5smPxQME0DcEmmpVlgLwFH5xoKF16nFypkFAdl4B0OTUrcJt4K-KVgD-JPzwBB75RcCha7O4mjZdR5ECSvB',
-  },
-  {
-    id: 'p002',
-    rank: 2,
-    name: 'Atauro Island Wild Honey',
-    sold: '754+ sold recently',
-    price: 18.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB1pOvdPdPa3q7WqY1XOy5OFONktDSjis1v9TQRe5NXv6K3NGZrU_YlLKy6_tRbEo12MxEZWFVTEK8i9K3wL5U4SiIVCgYO-UF55rT0y-dInkfr6YQ4TJWwEyN9Y2ps5OaUaDszs0E6HqXKhRs5Q6g7cZCGhGOb3YTktzk_pO5hbvWXhSvR3Vl1JnisxwT9ZRUVq4Gv7JlO93coJPtvqc3rJJHyyc3WvsJI2h2-tcw3VUNH2Jg6sY2jaAwuQX_cZ2pRZ_FbMLE7',
-  },
-  {
-    id: 'p003',
-    rank: 3,
-    name: 'Dili Handmade Pottery Mug',
-    sold: '512+ sold recently',
-    price: 22.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuC1Nl0JyfZ64rkNlEPOfaOfpTWpl5AywMwtPLI_XP_-9lnSAN6GqX2idvD1ajEDvGi4yZlOFN_0vZWSXjt9yG5Nfd6n2Ol__8nQFG04JqsWw4a929DQy7GNVFrgCBz5rHYdm9Vr1oEWO4r2d_E_gh1CO91YMsvXMnBKcZ064gnFuvj_T_hl8jBw3YLWlcJEtanZZLN0fp8j_kxQ9RoVO_ta6sRlJRRb1ynSmTa19UGZyXmbAZIAkb2mnZyEeKZ8PgJ7kwlMZWrw',
-  },
-];
-
-// Top 4-10 紧凑列表 mock（HTML 第 196-278 行）
-const REST_LIST = [
-  {
-    id: 'p004',
-    rank: 4,
-    name: 'Organic Red Rice',
-    sold: '320 sold',
-    price: 4.2,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDR3JKLoD9c-GluQJWQ-al72hUHySGht27Om1qNjiJjkWJPmWwljKK9Mzl8TeGVcZT2zoOr2vEC1EEeVAh-s9fpY0fkOQDrHPzck7tGEZDHXfeYi_uLwJtgwky5R1KkRU21sCREAJDKPrOm3KfIkuiHo8mb6CM8BsH-SYCstj1HKX_LULvMrVyf18HPTII5dcp8e2X-ckDlu6HcI_YymqOOLaWNMyKW3W10x3V_WjNrG-ouvGY6aj5oyhqEfRMpOm_XD60_TEX8',
-  },
-  {
-    id: 'p005',
-    rank: 5,
-    name: 'Artisanal Coconut Sugar',
-    sold: '298 sold',
-    price: 6.5,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCbtMU1AeRajrRyOUwgnAwAbQSd9LAqJTTrRxxeFZ7tejOXfSETc5GoLK3o59veAmKs2tJbQVn0Rge3GOrK6-OYO53HzuDfU2PqQK5Lxj404sFu5m-ZWPYQ_zbbNM5zCDCqIFIcUlr_45wu-iCBAXAt6BYvPB8YsKj0-08gA8GmnBet-Bu1apQ84Fiw0y1CnIT6censpmVUqH4gAVHZUnc4Ep8fzQy8bNpqkIT73T3rP8xz1BVMH7syhFIN1BLqKjuiKQS_vk6d',
-  },
-  {
-    id: 'p006',
-    rank: 6,
-    name: 'Tais Woven Handkerchief',
-    sold: '245 sold',
-    price: 15.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAwfvdrkWk31Bjk5zpVkpC9xAzIDmhA0pFxcDhcEGiyc5g07rkG4C7aTgl24IdkRqGzU8OO9vb0ChvKWe1Cggg2NR535eJMnt_k-siHvzc0BZ4U8olc6Uq_vqOMELQZGoDxTnyJnwYnAT5epm7MnwDWmSffGg_zQAnmZe_9u9BSiQv3uvn5F6WEzf_F5WOpbdbdjTp8c6dcmJ9UM6En4mXqlE76_X26SQZz40P4SysMeqkvYCCUgszI7zbhdFuf2sYMUfpJyHDe',
-  },
-  {
-    id: 'p007',
-    rank: 7,
-    name: 'Organic Vanilla Pods',
-    sold: '210 sold',
-    price: 25.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDBaSvpQ7gdneUFLZtfDdsLmKhYn_0qJJkFLHpshMQuZRgZwOt9j8MJvutYy4-RAC8Up9vKLkg5ZOdaEhCxfgzVma3T0XOo9gl5RFnD5T5MVC581s0eAdAl7D5i-IERS67gfudbv6G3-e0MiBqz7-0IoV1tK5lwV9W4Mz7UM1f7LCsz8GPPyfi9HkbKupCl5z7gcz09EmA66ZVzvd6yhY1ODBdcExB7nNAMbDUZGtb8QUI83aHSa4nI6WvRRzAJrkUE2HCX7yRW',
-  },
-  {
-    id: 'p008',
-    rank: 8,
-    name: 'Handmade Batik Scarf',
-    sold: '186 sold',
-    price: 35.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDkODiY8I4APKHHdRf1T8MBvkGSClhPJy3fSGcYRkomNPg2zSrOnMflXI0pVSjK9-gMhocxnIYDeGEtoT65fiePmHg92NBQ8DejMyeQDzx6OvVhoN5paaFOEbZNI71lvjk8wkXUlupJFQFE996lb-MOIytqCLpZbQ685IJFv5WL0O_yarjGpq6oMQbdfZzRawHpLkKQT2u1stI9ABdMyI3dlKuDb9UnG11ky45ZlhY_2a_hPgY65Ab5NwC39mOXNhSi2WvTkrvw',
-  },
-  {
-    id: 'p009',
-    rank: 9,
-    name: 'Local Raw Cashews',
-    sold: '175 sold',
-    price: 9.5,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuACKaZh_6Bcr6qA9iIPW2o31w9HWkbeZlIbQwY5q7U6WhrjG8L43P3Oqsq_xQljqCPZyO9K1Lu9LOVhYAAPBueDlNbcTTObSjht8b9D8ZlauTljB_MqwZeqh1eofb4-KRxsAf8QRD0cjGf-HOakUJEYkCoWuYne62vrzEwnT33q0PHzsFbIMiGgfpZJY8ol4QvDTbuF1Mjx8ByxwefV7Tax3_bbMO1umh7sg-GB45BXm7uGFYKYDkOdf4Ma6ylMlOLqL4z_pCsH',
-  },
-  {
-    id: 'p010',
-    rank: 10,
-    name: 'Coconut Oil Handmade Soap',
-    sold: '142 sold',
-    price: 5.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCErsVYI8Qd9dmNnVW4nS8sjzd24ZCPIrEkW8h0NU93Kg9OdJjHV74xvvhi2xqRQ_cPYx--PQVPnFg9jPCin2d1GtdmNmQ5zT80hcdV-yAnj_BGDMu9aOssHhFbpighYjanos6lp15UYa66EUzYvfc4VsQuS-plL0hPGVAfrD3yV1dL5R-ZWhoh8NepyrPk2AUg_AAZ5RfezOiUWDwVIl1MPchDmON9UQgKvfEMg4F_om9GrjW4CvZh9sQOtpxGO0IxcFRBE8wN',
-  },
-];
+// "All" 分类标签（点击去掉 URL category 参数，显示全部商品）
+const ALL_CATEGORY = 'All';
 
 export default function ProductListPage() {
   const { colors } = useTheme();
-  const [activeCategory, setActiveCategory] = useState<(typeof CATEGORY_BAR)[number]>('All');
+  const { t } = useTranslation();
+  const localize = useLocalizer();
+  const { category } = useLocalSearchParams<{ category?: string }>();
+  const { data: categories } = useCategories();
+  const currentCategory = categories?.find((c) => c.id === category);
+  const headerTitle = currentCategory?.name ?? 'Local Bestsellers';
 
-  if (TOP_THREE.length === 0 && REST_LIST.length === 0) {
+  // Why: URL 有 category -> 按 category 过滤；无 -> 拿全部
+  const byCategoryQuery = useProductsByCategory(category);
+  const allQuery = useProducts();
+  const products = category ? byCategoryQuery.data : allQuery.data;
+  const isLoading = category ? byCategoryQuery.isLoading : allQuery.isLoading;
+  const isError = category ? byCategoryQuery.isError : allQuery.isError;
+
+  // Category Bar: "All" + 真实分类名
+  const categoryBar = [ALL_CATEGORY, ...(categories?.map((c) => c.name) ?? [])];
+  // Why: Category Bar 点击切换 URL category（保持 URL 驱动，不引入本地 state）
+  const switchCategory = (cat: string) => {
+    if (cat === ALL_CATEGORY) {
+      router.replace('/product/list');
+      return;
+    }
+    const target = categories?.find((c) => c.name === cat);
+    if (target) {
+      router.replace({ pathname: '/product/list', params: { category: target.id } });
+    }
+  };
+
+  if (isLoading) {
     return (
-      <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
         <StatusBarConfig />
-        <Header />
+        <Header title={headerTitle} />
+        <LoadingOverlay visible />
+      </SafeAreaWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
+        <StatusBarConfig />
+        <Header title={headerTitle} />
+        <ErrorState
+          message={t('errors.products', { defaultValue: 'Failed to load products' })}
+        />
+      </SafeAreaWrapper>
+    );
+  }
+
+  if (!products || products.length === 0) {
+    return (
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
+        <StatusBarConfig />
+        <Header title={headerTitle} />
         <EmptyState
-          title="No products"
-          description="No items match this filter"
+          title={t('products.noProducts', { defaultValue: 'No products' })}
+          description={t('products.noProductsDesc', {
+            defaultValue: 'No items match this filter',
+          })}
           icon="package-variant"
         />
       </SafeAreaWrapper>
     );
   }
+
+  const topThree = products.slice(0, 3);
+  const restList = products.slice(3);
 
   return (
     <SafeAreaWrapper
@@ -140,7 +112,7 @@ export default function ProductListPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <Header />
+      <Header title={headerTitle} />
 
       {/* Category Bar 横滑分类 */}
       <View
@@ -154,12 +126,12 @@ export default function ProductListPage() {
       >
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.categoryRow}>
-            {CATEGORY_BAR.map((cat) => {
-              const active = cat === activeCategory;
+            {categoryBar.map((cat) => {
+              const active = cat === ALL_CATEGORY ? !category : cat === currentCategory?.name;
               return (
                 <Pressable
                   key={cat}
-                  onPress={() => setActiveCategory(cat)}
+                  onPress={() => switchCategory(cat)}
                   style={[
                     styles.categoryPill,
                     active
@@ -192,10 +164,10 @@ export default function ProductListPage() {
       >
         {/* Top 3 大卡片 */}
         <View style={styles.topThreeWrap}>
-          {TOP_THREE.map((item) => (
+          {topThree.map((product, idx) => (
             <Pressable
-              key={item.id}
-              onPress={() => router.push(`/product/${item.id}`)}
+              key={product.id}
+              onPress={() => router.push(`/product/${product.id}`)}
               style={({ pressed }) => [
                 styles.topCard,
                 {
@@ -206,10 +178,10 @@ export default function ProductListPage() {
                 pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
               ]}
               accessibilityRole="button"
-              accessibilityLabel={`Rank ${item.rank}: ${item.name}`}
+              accessibilityLabel={`Rank ${idx + 1}: ${localize(product.name)}`}
             >
-              <Text style={[styles.topRank, { color: colors.primary }]}>{item.rank}</Text>
-              <Image source={{ uri: item.image }} style={styles.topImage} />
+              <Text style={[styles.topRank, { color: colors.primary }]}>{idx + 1}</Text>
+              <SafeImage source={{ uri: product.image }} style={styles.topImage} />
               <View style={styles.topInfo}>
                 <View
                   style={[styles.localSpecialtyTag, { backgroundColor: 'rgba(150,24,19,0.1)' }]}
@@ -219,65 +191,55 @@ export default function ProductListPage() {
                   </Text>
                 </View>
                 <Text style={[styles.topName, { color: colors['on-surface'] }]} numberOfLines={1}>
-                  {item.name}
+                  {localize(product.name)}
                 </Text>
                 <Text style={[styles.topSold, { color: colors['on-surface-variant'] }]}>
-                  {item.sold}
+                  {product.salesCount}+ sold
                 </Text>
                 <View style={styles.topPriceRow}>
                   <Text style={[styles.topPrice, { color: colors.primary }]}>
-                    ${item.price.toFixed(2)}
+                    ${product.price.toFixed(2)}
                   </Text>
-                  <Pressable
-                    onPress={() => {}}
-                    style={({ pressed }) => [
-                      styles.topAddBtn,
-                      { backgroundColor: colors.primary },
-                      pressed && { transform: [{ scale: 0.9 }] },
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Add ${item.name} to cart`}
+                  {/* Why: 内层 View 不嵌 Pressable（Web 端 <button> 不能嵌套） */}
+                  <View
+                    style={[styles.topAddBtn, { backgroundColor: colors.primary }]}
+                    accessibilityLabel={`Add ${localize(product.name)} to cart`}
                   >
                     <Icon symbol="add" size={20} color="#ffffff" />
-                  </Pressable>
+                  </View>
                 </View>
               </View>
             </Pressable>
           ))}
         </View>
 
-        {/* Top 4-10 紧凑列表 */}
+        {/* Top 4+ 紧凑列表 */}
         <View style={[styles.restWrap, { borderTopColor: 'rgba(225, 191, 186, 0.2)' }]}>
-          {REST_LIST.map((item) => (
+          {restList.map((product, idx) => (
             <Pressable
-              key={item.id}
-              onPress={() => router.push(`/product/${item.id}`)}
+              key={product.id}
+              onPress={() => router.push(`/product/${product.id}`)}
               style={({ pressed }) => [styles.restRow, pressed && { transform: [{ scale: 0.95 }] }]}
               accessibilityRole="button"
-              accessibilityLabel={`Rank ${item.rank}: ${item.name}`}
+              accessibilityLabel={`Rank ${idx + 4}: ${localize(product.name)}`}
             >
-              <Text style={[styles.restRank, { color: colors.secondary }]}>{item.rank}</Text>
-              <Image source={{ uri: item.image }} style={styles.restImage} />
+              <Text style={[styles.restRank, { color: colors.secondary }]}>{idx + 4}</Text>
+              <SafeImage source={{ uri: product.image }} style={styles.restImage} />
               <View style={styles.restInfo}>
                 <Text style={[styles.restName, { color: colors['on-surface'] }]} numberOfLines={1}>
-                  {item.name}
+                  {localize(product.name)}
                 </Text>
                 <Text style={[styles.restPrice, { color: colors['on-surface-variant'] }]}>
-                  ${item.price.toFixed(2)} • {item.sold}
+                  ${product.price.toFixed(2)} • {product.salesCount} sold
                 </Text>
               </View>
-              <Pressable
-                onPress={() => {}}
-                style={({ pressed }) => [
-                  styles.restAddBtn,
-                  { backgroundColor: colors.primary },
-                  pressed && { transform: [{ scale: 0.9 }] },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={`Add ${item.name} to cart`}
+              {/* Why: 内层 View 不嵌 Pressable（Web 端 <button> 不能嵌套） */}
+              <View
+                style={[styles.restAddBtn, { backgroundColor: colors.primary }]}
+                accessibilityLabel={`Add ${localize(product.name)} to cart`}
               >
                 <Icon symbol="add" size={18} color="#ffffff" />
-              </Pressable>
+              </View>
             </Pressable>
           ))}
         </View>
@@ -287,8 +249,9 @@ export default function ProductListPage() {
 }
 
 // Primary tais-pattern Header（HTML 第 135 行）
-function Header() {
+function Header({ title }: { title: string }) {
   const { colors } = useTheme();
+  const handleBack = useSafeBack();
   return (
     <View style={[styles.header, { backgroundColor: colors.primary }]}>
       <View style={styles.headerPattern} pointerEvents="none">
@@ -296,7 +259,7 @@ function Header() {
       </View>
       <View style={styles.headerRow}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={handleBack}
           hitSlop={8}
           style={styles.headerBtn}
           accessibilityRole="button"
@@ -304,8 +267,8 @@ function Header() {
         >
           <Icon symbol="arrow_back" size={24} color="#ffffff" />
         </Pressable>
-        <Text style={styles.headerTitle} accessibilityRole="header">
-          Local Bestsellers
+        <Text style={styles.headerTitle} accessibilityRole="header" numberOfLines={1}>
+          {title}
         </Text>
         <View style={styles.headerRight}>
           <Pressable

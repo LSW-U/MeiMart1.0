@@ -12,6 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -27,6 +28,7 @@ import type { Coupon } from '@/types';
 type TabKey = 'available' | 'used' | 'expired';
 
 export default function CouponsPage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [tab, setTab] = useState<TabKey>('available');
@@ -73,7 +75,7 @@ export default function CouponsPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <PrimaryHeader title={t('coupons.title')} showBack onBackPress={() => router.back()} />
+      <PrimaryHeader title={t('coupons.title')} showBack onBackPress={handleBack} />
 
       {/* Tab 栏 */}
       <View

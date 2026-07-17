@@ -23,6 +23,8 @@ import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
 import { useOrdersInfinite } from '@/services/queries/useOrders';
 import type { OrderStatus, Order } from '@/types';
+import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 
 const TABS: { key: OrderStatus | 'all'; labelKey: string }[] = [
   { key: 'all', labelKey: 'common.all' },
@@ -49,6 +51,7 @@ export default function OrdersPage() {
   const orders: Order[] = data?.pages.flatMap((p) => p.items) ?? [];
 
   return (
+    <PageErrorBoundary pageName="orders">
     <SafeAreaWrapper
       edges={['top', 'bottom']}
       style={{ backgroundColor: colors.background, flex: 1 }}
@@ -113,9 +116,7 @@ export default function OrdersPage() {
       </View>
 
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        <PageSkeleton variant="list" rows={5} />
       ) : isError ? (
         <ErrorState message={t('errors.orders')} onRetry={() => refetch()} />
       ) : !orders || orders.length === 0 ? (
@@ -153,6 +154,7 @@ export default function OrdersPage() {
         />
       )}
     </SafeAreaWrapper>
+    </PageErrorBoundary>
   );
 }
 

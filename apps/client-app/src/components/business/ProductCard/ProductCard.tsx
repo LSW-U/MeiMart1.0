@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
 import { useLocalizer } from '@/i18n';
@@ -6,6 +6,7 @@ import { useLocalizer } from '@/i18n';
 import { PriceText } from '@/components/ui/PriceText';
 import { Button } from '@/components/ui/Button';
 import type { ProductBadge, ProductBadgeVariant, ProductCardProps } from './ProductCard.types';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 const BADGE_COLORS: Record<ProductBadgeVariant, { bg: string; fg: string; pill?: boolean }> = {
   fresh: { bg: '#059669', fg: '#ffffff' }, // emerald-600
@@ -56,71 +57,79 @@ export function ProductCard({
   const name = localize(product.name);
 
   return (
-    <Pressable
+    <View
       testID={testID}
-      style={({ pressed }) => [
+      style={[
         styles.card,
         {
           backgroundColor: colors['surface-container-lowest'],
           borderColor: colors['outline-variant'],
         },
         shadowPresets.sm,
-        pressed && styles.pressed,
       ]}
-      onPress={onPress ? () => onPress(product) : undefined}
-      accessibilityRole="button"
-      accessibilityLabel={`${name}, price ${product.price}`}
     >
-      <View style={styles.imageWrap}>
-        <Image source={{ uri: product.image }} style={styles.image} accessible={false} />
-        {badge && <BadgeCorner badge={badge} />}
-        {showFavorite && (
-          <Pressable
-            style={styles.favoriteBtn}
-            onPress={onFavoritePress ? () => onFavoritePress(product) : undefined}
-            accessibilityRole="button"
-            accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+      {/* Why: 外层用 View 而非 Pressable，避免 Pressable 嵌套 Pressable
+          （RN Web 渲染为 <button> 嵌套 <button>，违反 HTML 规范导致 hydration 错误） */}
+      <Pressable
+        style={({ pressed }) => [styles.clickableArea, pressed && styles.pressed]}
+        onPress={onPress ? () => onPress(product) : undefined}
+        accessibilityRole="button"
+        accessibilityLabel={`${name}, price ${product.price}`}
+      >
+        <View style={styles.imageWrap}>
+          <SafeImage source={{ uri: product.image }} style={styles.image} accessible={false} />
+          {badge && <BadgeCorner badge={badge} />}
+        </View>
+        <View style={styles.info}>
+          <Text
+            style={[textStyle('body-sm'), { fontWeight: '700', color: colors['on-surface'] }]}
+            numberOfLines={2}
           >
-            <MaterialCommunityIcons
-              name={isFavorite ? 'heart' : 'heart-outline'}
-              size={18}
-              color={isFavorite ? colors.primary : colors['on-surface-variant']}
-            />
-          </Pressable>
-        )}
-      </View>
-      <View style={styles.info}>
-        <Text
-          style={[textStyle('body-sm'), { fontWeight: '700', color: colors['on-surface'] }]}
-          numberOfLines={2}
-        >
-          {name}
-        </Text>
-        <PriceText value={product.price} originalPrice={product.originalPrice} size="md" />
-        {typeof product.rating === 'number' && (
-          <View style={styles.metaRow}>
-            <MaterialCommunityIcons name="star" size={12} color={colors.tertiary} />
-            <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-              {product.rating.toFixed(1)}
-            </Text>
-            {typeof product.salesCount === 'number' && (
+            {name}
+          </Text>
+          <PriceText value={product.price} originalPrice={product.originalPrice} size="md" />
+          {typeof product.rating === 'number' && (
+            <View style={styles.metaRow}>
+              <MaterialCommunityIcons name="star" size={12} color={colors.tertiary} />
               <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-                · {product.salesCount} sold
+                {product.rating.toFixed(1)}
               </Text>
-            )}
-          </View>
-        )}
-        {onAddToCart && (
+              {typeof product.salesCount === 'number' && (
+                <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
+                  · {product.salesCount} sold
+                </Text>
+              )}
+            </View>
+          )}
+        </View>
+      </Pressable>
+
+      {showFavorite && (
+        <Pressable
+          style={styles.favoriteBtn}
+          onPress={onFavoritePress ? () => onFavoritePress(product) : undefined}
+          accessibilityRole="button"
+          accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          <MaterialCommunityIcons
+            name={isFavorite ? 'heart' : 'heart-outline'}
+            size={18}
+            color={isFavorite ? colors.primary : colors['on-surface-variant']}
+          />
+        </Pressable>
+      )}
+
+      {onAddToCart && (
+        <View style={styles.addToCartWrap}>
           <Button
             label="Add to Cart"
             variant="outline"
             size="sm"
             onPress={() => onAddToCart(product)}
-            style={styles.addToCartBtn}
           />
-        )}
-      </View>
-    </Pressable>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -130,6 +139,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
+    position: 'relative',
+  },
+  clickableArea: {
+    flex: 1,
   },
   pressed: {
     opacity: 0.85,
@@ -179,7 +192,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  addToCartBtn: {
-    marginTop: 4,
+  addToCartWrap: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
   },
 });

@@ -9,13 +9,11 @@ import {
   ScrollView,
   ActivityIndicator,
   Pressable,
-  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import {
   useTheme,
   spacing,
@@ -31,6 +29,7 @@ import { CategoryGrid } from '@/components/business/CategoryGrid';
 import { PromoShortcut } from '@/components/business/PromoShortcut';
 import { ProductCard } from '@/components/business/ProductCard';
 import type { ProductBadge } from '@/components/business/ProductCard/ProductCard.types';
+import type { Product } from '@/types';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
@@ -39,7 +38,11 @@ import { UmaLulikSkyline } from '@/components/cultural/UmaLulikSkyline';
 import { Icon } from '@/components/ui/Icon';
 import { useCategories, useBanners } from '@/services/queries/useCatalog';
 import { useRecommendations, useBuyAgain } from '@/services/queries/useProducts';
+import { useAddToCart } from '@/services/queries/useCart';
+import { toast } from '@/store/toastStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
+import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 
 const SHORTCUTS = [
   {
@@ -113,8 +116,20 @@ export default function HomePage() {
   const recommendList = products ?? [];
   const { data: buyAgainProducts } = useBuyAgain();
   const buyAgainList = buyAgainProducts ?? [];
+  const addToCartMutation = useAddToCart();
 
+  // Why: Buy again 加购
+  const handleBuyAgainAddToCart = (item: Product) => {
+    addToCartMutation.mutate(
+      { product: item, quantity: 1 },
+      {
+        onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
+        onError: () => toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+      },
+    );
+  };
   return (
+    <PageErrorBoundary pageName="home">
     <SafeAreaWrapper edges={['top']} style={{ backgroundColor: colors.primary, flex: 1 }}>
       <LinearGradient
         {...gradientPresets.brand}
@@ -134,14 +149,18 @@ export default function HomePage() {
               {t('home.appName')}
             </Text>
           </View>
-          <BlurView
-            intensity={20}
-            tint="light"
-            style={[styles.locationChip, styles.locationChipBorder]}
+          <Pressable
+            onPress={() => router.push('/address/map')}
+            style={styles.locationChip}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.locationLabel')}
           >
-            <Icon symbol="location_on" size={16} color="#ffffff" />
-            <Text style={styles.locationText}>{t('home.locationLabel')}</Text>
-          </BlurView>
+            <Icon symbol="location_on" size={13} color="#ffffff" />
+            <Text style={styles.locationText} numberOfLines={1}>
+              {t('home.locationLabel')}
+            </Text>
+            <Icon symbol="expand_more" size={13} color="#ffffff" />
+          </Pressable>
           <Pressable
             testID="home-messages"
             onPress={() => router.push('/service/notifications')}
@@ -226,7 +245,7 @@ export default function HomePage() {
             <CategoryGrid
               categories={categories.slice(0, 8)}
               onCategoryPress={(c) =>
-                router.push({ pathname: '/product/list', params: { category: c.id } })
+                router.push({ pathname: '/(main)/categories', params: { categoryId: c.id } })
               }
             />
           </View>
@@ -303,46 +322,59 @@ export default function HomePage() {
             contentContainerStyle={styles.hScroll}
           >
             {buyAgainList.map((item) => (
-              <Pressable
+              <View
                 key={item.id}
-                onPress={() => router.push(`/product/${item.id}`)}
-                style={({ pressed }) => [
+                style={[
                   styles.buyAgainCard,
                   {
                     backgroundColor: colors['surface-container-lowest'],
                     borderColor: colors['outline-variant'],
                   },
-                  pressed && { opacity: 0.7 },
                 ]}
-                accessibilityRole="button"
-                accessibilityLabel={t('home.reorderLabel', { name: localize(item.name) })}
               >
-                <View
-                  style={[
-                    styles.buyAgainImageWrap,
-                    { backgroundColor: colors['surface-container'] },
-                  ]}
+                {/* Why: 图片+名称+价格可点击跳转详情；加购按钮独立，避免 Pressable 嵌套 */}
+                <Pressable
+                  onPress={() => router.push(`/product/${item.id}`)}
+                  style={({ pressed }) => [styles.buyAgainMain, pressed && { opacity: 0.7 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View ${localize(item.name)}`}
                 >
-                  <Image source={{ uri: item.image }} style={styles.buyAgainImage} />
-                </View>
-                <Text
-                  style={[styles.buyAgainName, { color: colors['on-surface-variant'] }]}
-                  numberOfLines={1}
-                >
-                  {localize(item.name)}
-                </Text>
-                <View style={styles.buyAgainRow}>
+                  <View
+                    style={[
+                      styles.buyAgainImageWrap,
+                      { backgroundColor: colors['surface-container'] },
+                    ]}
+                  >
+                    <SafeImage source={{ uri: item.image }} style={styles.buyAgainImage} />
+                  </View>
+                  <Text
+                    style={[styles.buyAgainName, { color: colors['on-surface-variant'] }]}
+                    numberOfLines={1}
+                  >
+                    {localize(item.name)}
+                  </Text>
                   <Text style={[styles.buyAgainPrice, { color: colors.primary }]}>
                     ${item.price.toFixed(2)}
                   </Text>
-                  <Icon symbol="add_shopping_cart" size={16} color={colors.primary} />
+                </Pressable>
+                <View style={styles.buyAgainRow}>
+                  <Pressable
+                    onPress={() => handleBuyAgainAddToCart(item)}
+                    hitSlop={8}
+                    style={styles.buyAgainAddBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('product.addToCartLabel', { name: localize(item.name) })}
+                  >
+                    <Icon symbol="add_shopping_cart" size={18} color={colors.primary} />
+                  </Pressable>
                 </View>
-              </Pressable>
+              </View>
             ))}
           </ScrollView>
         </View>
       </ScrollView>
     </SafeAreaWrapper>
+    </PageErrorBoundary>
   );
 }
 
@@ -389,23 +421,22 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '700',
   },
+  // Why: 位置胶囊 - 和 PrimaryHeader 统一样式，半透明白底圆角
   locationChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    gap: 3,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
     borderRadius: 999,
-    gap: spacing.xs,
-  },
-  locationChipBorder: {
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    overflow: 'hidden',
+    maxWidth: 150,
   },
   locationText: {
-    ...typography['label-caps'],
+    ...typography['body-sm'],
     color: '#ffffff',
-    fontSize: 10,
+    fontSize: 12,
+    flexShrink: 1,
   },
   msgBtn: {
     position: 'relative',
@@ -530,7 +561,11 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: borderRadius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    gap: spacing.sm,
+    gap: spacing.xs,
+  },
+  // Why: 可点击主体（图片+名称+价格）
+  buyAgainMain: {
+    gap: spacing.xs,
   },
   buyAgainImageWrap: {
     height: 96,
@@ -546,11 +581,18 @@ const styles = StyleSheet.create({
     ...typography['label-caps'],
     fontSize: 10,
   },
+  // Why: 加购按钮行，靠右对齐
   buyAgainRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     marginTop: spacing.xs,
+  },
+  buyAgainAddBtn: {
+    minWidth: 36,
+    minHeight: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buyAgainPrice: {
     ...typography['price-display'],

@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -150,6 +151,7 @@ export default function SearchResultsPage() {
 // Primary tais-pattern Header + 内嵌只读搜索框（HTML 第 151-168 行）
 function Header({ keyword }: { keyword: string }) {
   const { colors } = useTheme();
+  const handleBack = useSafeBack();
   return (
     <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.lg]}>
       <View style={styles.headerPattern} pointerEvents="none">
@@ -157,7 +159,7 @@ function Header({ keyword }: { keyword: string }) {
       </View>
       <View style={styles.headerRow}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={handleBack}
           hitSlop={8}
           style={styles.headerBtn}
           accessibilityRole="button"
@@ -196,7 +198,7 @@ function Header({ keyword }: { keyword: string }) {
 
         {/* 购物车 + 角标 */}
         <Pressable
-          onPress={() => router.push('/(main)/cart')}
+          onPress={() => router.push('/cart')}
           hitSlop={8}
           style={styles.headerBtn}
           accessibilityRole="button"

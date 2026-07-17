@@ -5,6 +5,13 @@ import type { Product } from '@/types';
 
 // Why: 后端 Product 字段名/单位与前端类型有差异，service 层做转换避免改组件代码。
 // 后端金额单位是「分」（整数），前端 Product.price 用「元」，转换时 /100。
+interface SkuRaw {
+  id: string;
+  productId: string;
+  name: Record<string, string>;
+  price: number;
+  status: string;
+}
 interface ProductRaw {
   id: string;
   shopId: string;
@@ -19,6 +26,8 @@ interface ProductRaw {
   salesCount: number;
   createdAt: string;
   updatedAt: string;
+  // Why: 详情接口额外返回 skus，列表接口不返回
+  skus?: SkuRaw[];
 }
 
 interface ProductListResponse {
@@ -30,16 +39,20 @@ interface ProductListResponse {
 }
 
 // Why: mock 数据 price 已是元，real 数据 priceMin 是分，转换函数只在 real 分支调用，避免双倍转换
+// 兜底：字段缺失时用默认值，防 NaN/undefined 渲染崩溃
 function transformProduct(raw: ProductRaw): Product {
+  // Why: 提取第一个 ACTIVE SKU 作为默认加购 SKU，加购 API 需要 skuId
+  const activeSku = raw.skus?.find((s) => s.status === 'ACTIVE') ?? raw.skus?.[0];
   return {
-    id: raw.id,
+    id: raw.id ?? '',
     // 后端 name 是 Record<string,string>，前端 LocalizableText 结构等价（含部分 locale key 缺失时由组件 fallback）
-    name: raw.name as Product['name'],
-    price: raw.priceMin / 100,
-    image: raw.mainImage,
+    name: (raw.name ?? {}) as Product['name'],
+    price: (raw.priceMin ?? 0) / 100,
+    image: raw.mainImage ?? '',
     category: raw.categoryId ?? '',
-    salesCount: raw.salesCount,
+    salesCount: raw.salesCount ?? 0,
     description: (raw.description ?? undefined) as Product['description'],
+    defaultSkuId: activeSku?.id,
   };
 }
 

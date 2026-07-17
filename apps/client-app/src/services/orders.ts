@@ -73,29 +73,31 @@ function pickLocalized(raw: unknown, fallback = ''): string {
 }
 
 // Why: 后端 OrderItem 扁平结构，前端 CartItem 需要嵌套 Product；构造最小 Product 避免再 fetch 详情
+// 兜底：字段缺失时用默认值，防 NaN/undefined 渲染崩溃
 function transformOrderItem(raw: OrderItemRaw): CartItem {
   return {
-    id: raw.id,
+    id: raw.id ?? '',
     product: {
-      id: raw.productId,
+      id: raw.productId ?? '',
       name: { zh: pickLocalized(raw.productName), en: pickLocalized(raw.productName) } as CartItem['product']['name'],
-      price: raw.unitPrice / 100,
-      image: raw.productImage,
+      price: (raw.unitPrice ?? 0) / 100,
+      image: raw.productImage ?? '',
       category: '',
     },
-    quantity: raw.quantity,
+    quantity: raw.quantity ?? 1,
     selected: true,
   };
 }
 
 function transformOrder(raw: OrderRaw): Order {
   return {
-    id: raw.id,
-    orderNo: raw.orderNo,
-    status: raw.status,
-    items: raw.items.map(transformOrderItem),
-    totalPrice: raw.payableAmount / 100,
-    createdAt: raw.createdAt,
+    id: raw.id ?? '',
+    orderNo: raw.orderNo ?? '',
+    status: raw.status ?? 'PENDING_PAYMENT',
+    // Why: 后端 createOrder 响应不含 items（只有金额/状态），用空数组兜底避免 .map 报错
+    items: (raw.items ?? []).map(transformOrderItem),
+    totalPrice: (raw.payableAmount ?? raw.totalAmount ?? 0) / 100,
+    createdAt: raw.createdAt ?? new Date().toISOString(),
   };
 }
 

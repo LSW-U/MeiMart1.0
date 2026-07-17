@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartApi } from '@/services/cart';
+import { useAuthStore } from '@/store/authStore';
 import type { Cart, CartItem, Product } from '@/types';
 
 export const CART_QUERY_KEY = ['cart'] as const;
@@ -15,11 +16,13 @@ function recomputeTotals(cart: Cart, items: CartItem[]): Cart {
 }
 
 export function useCart() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: CART_QUERY_KEY,
     queryFn: () => cartApi.getCart(),
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',
+    enabled: isAuthenticated, // 未登录时不请求，避免 401
   });
 }
 

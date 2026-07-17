@@ -5,6 +5,7 @@
  */
 
 import type { TextStyle } from 'react-native';
+import { fontFamilies } from './commonPresets';
 
 type TypographyToken = {
   fontFamily: 'NotoSerif' | 'PlusJakartaSans';
@@ -26,50 +27,50 @@ export type TypographyKey =
 
 export const typography: Record<TypographyKey, TypographyToken> = {
   h1: {
-    fontFamily: 'NotoSerif',
+    fontFamily: fontFamilies.serif,
     fontSize: 32,
     lineHeight: 32 * 1.2,
     fontWeight: '700',
   },
   h2: {
-    fontFamily: 'NotoSerif',
+    fontFamily: fontFamilies.serif,
     fontSize: 24,
     lineHeight: 24 * 1.3,
     fontWeight: '700',
   },
   h3: {
-    fontFamily: 'NotoSerif',
+    fontFamily: fontFamilies.serif,
     fontSize: 20,
     lineHeight: 20 * 1.4,
     fontWeight: '600',
   },
   'body-lg': {
-    fontFamily: 'PlusJakartaSans',
+    fontFamily: fontFamilies.sans,
     fontSize: 18,
     lineHeight: 18 * 1.6,
     fontWeight: '400',
   },
   'body-md': {
-    fontFamily: 'PlusJakartaSans',
+    fontFamily: fontFamilies.sans,
     fontSize: 16,
     lineHeight: 16 * 1.5,
     fontWeight: '400',
   },
   'body-sm': {
-    fontFamily: 'PlusJakartaSans',
+    fontFamily: fontFamilies.sans,
     fontSize: 14,
     lineHeight: 14 * 1.5,
     fontWeight: '400',
   },
   'label-caps': {
-    fontFamily: 'PlusJakartaSans',
+    fontFamily: fontFamilies.sans,
     fontSize: 12,
     lineHeight: 12 * 1.2,
     fontWeight: '700',
     letterSpacing: 12 * 0.05,
   },
   'price-display': {
-    fontFamily: 'PlusJakartaSans',
+    fontFamily: fontFamilies.sans,
     fontSize: 20,
     lineHeight: 20 * 1.0,
     fontWeight: '700',

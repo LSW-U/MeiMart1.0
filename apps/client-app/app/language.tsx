@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text, FlatList, Pressable } from 'react-native';
-import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -26,6 +26,7 @@ const LANGUAGES: LanguageItem[] = [
 ];
 
 export default function LanguagePage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
   const locale = useAppStore((s) => s.locale);
@@ -36,7 +37,7 @@ export default function LanguagePage() {
       return;
     }
     void changeLocale(item.code);
-    if (router.canGoBack()) router.back();
+    handleBack();
   };
 
   return (
@@ -45,7 +46,7 @@ export default function LanguagePage() {
       <PageHeader
         title={t('language.title')}
         showBack
-        onBackPress={() => router.back()}
+        onBackPress={handleBack}
         testID="language-back"
       />
       <FlatList

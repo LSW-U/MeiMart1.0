@@ -4,10 +4,11 @@
 // Fix-16: 替换 PageHeader 为 AuthShell + 手机号 + 验证码 + 密码 + 确认密码
 // CP-FIX-2.3: 表单迁移到 react-hook-form + zod（规则 9）
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert } from 'react-native';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -23,9 +24,11 @@ const COUNTDOWN = 60;
 
 export default function RegisterPage() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [counter, setCounter] = useState(0);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const setAuth = useAuthStore((s) => s.setAuth);
   const registerMutation = useRegister();
   const sendMutation = useSendSmsCode();
@@ -47,29 +50,54 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (counter <= 0) return;
-    const t = setTimeout(() => setCounter(counter - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setCounter(counter - 1), 1000);
+    return () => clearTimeout(timer);
   }, [counter]);
 
   const sendCode = () => {
     if (!phoneValue) {
-      Alert.alert('Notice', 'Please enter phone number');
+      setRegisterError(t('auth.enterPhone'));
       return;
     }
-    sendMutation.mutate({ phone: phoneValue }, {
-      onSuccess: () => setCounter(COUNTDOWN),
+    setRegisterError(null);
+    // Why: 必须传 scene='REGISTER'，后端按 scene 区分验证码用途
+    // 不传 scene 会被当作 LOGIN，注册时验证码不匹配，返回 E-USER-003
+    sendMutation.mutate({ phone: phoneValue, scene: 'REGISTER' }, {
+      onSuccess: () => {
+        setCounter(COUNTDOWN);
+        setRegisterError(null);
+      },
+      onError: (error: unknown) => {
+        const err = error as {
+          response?: { data?: { error?: { code?: string; message?: string } } };
+          message?: string;
+        };
+        const msg = err?.response?.data?.error?.message ?? err?.message ?? t('errors.generic');
+        setRegisterError(msg);
+      },
     });
   };
 
   const submit = (values: RegisterValues) => {
+    setRegisterError(null);
     registerMutation.mutate(
-      { phone: values.phone, password: values.password },
+      { phone: values.phone, password: values.password, smsCode: values.code },
       {
         onSuccess: (data) => {
           setAuth(data.accessToken, data.refreshToken);
           router.replace('/(main)/home');
         },
-        onError: () => Alert.alert('Registration failed', 'Please try again later'),
+        onError: (error: unknown) => {
+          // Why: 提取后端错误码，用 i18n 翻译，找不到时回退到 generic
+          const err = error as {
+            response?: { data?: { error?: { code?: string; message?: string } } };
+            message?: string;
+          };
+          const code = err?.response?.data?.error?.code;
+          const fallback = err?.response?.data?.error?.message ?? err?.message;
+          const translated = code ? t(`errors.${code}`, { defaultValue: fallback }) : fallback;
+          setRegisterError(translated ?? t('auth.registerFailed'));
+        },
       },
     );
   };
@@ -78,33 +106,42 @@ export default function RegisterPage() {
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
       <AuthShell
-        welcomeTitle="Registu Kontu"
-        welcomeSub="Welcome! Join us and start shopping."
-        actionLabel="Register"
+        welcomeTitle={t('auth.registerTitle')}
+        welcomeSub={t('auth.registerSub')}
+        actionLabel={t('auth.registerAction')}
         onAction={handleSubmit(submit)}
         loading={registerMutation.isPending}
         secondary={
           <View style={styles.loginRow}>
             <Text style={[styles.loginText, { color: colors.secondary }]}>
-              Already have an account?{' '}
+              {t('auth.alreadyHaveAccount')}{' '}
             </Text>
             <Pressable
-              onPress={() => router.push('/(auth)/login')}
+              onPress={() => router.replace('/(auth)/login')}
               hitSlop={8}
               accessibilityRole="link"
-              accessibilityLabel="Log in"
+              accessibilityLabel={t('auth.logIn')}
             >
-              <Text style={[styles.loginLink, { color: colors.primary }]}>Log In</Text>
+              <Text style={[styles.loginLink, { color: colors.primary }]}>
+                {t('auth.logIn')}
+              </Text>
             </Pressable>
           </View>
         }
         testID="register-page"
       >
+        {registerError && (
+          <View style={styles.registerErrorBox} accessibilityRole="alert">
+            <Text style={[styles.registerErrorText, { color: colors.error }]}>
+              {registerError}
+            </Text>
+          </View>
+        )}
         <FormInput
           control={control}
           name="phone"
-          label="PHONE NUMBER"
-          placeholder="+670 7xx xxxx"
+          label={t('auth.phoneNumber')}
+          placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
           leftIcon="phone"
           testID="register-phone"
@@ -115,8 +152,8 @@ export default function RegisterPage() {
             <FormInput
               control={control}
               name="code"
-              label="VERIFICATION CODE"
-              placeholder="6-digit code"
+              label={t('auth.verificationCode')}
+              placeholder={t('auth.codePlaceholder')}
               keyboardType="number-pad"
               leftIcon="message-text"
               maxLength={6}
@@ -125,7 +162,7 @@ export default function RegisterPage() {
           </View>
           <View style={styles.codeBtn}>
             <Button
-              label={counter > 0 ? `${counter}s` : 'Husu Kódigu'}
+              label={counter > 0 ? `${counter}s` : t('auth.sendCodeBtn')}
               variant="outline"
               size="sm"
               disabled={counter > 0 || sendMutation.isPending}
@@ -138,8 +175,8 @@ export default function RegisterPage() {
         <FormInput
           control={control}
           name="password"
-          label="SET PASSWORD"
-          placeholder="Enter your password"
+          label={t('auth.setPasswordLabel')}
+          placeholder={t('auth.setPasswordPlaceholder')}
           leftIcon="lock"
           rightIcon={showPassword ? 'eye' : 'eye-off'}
           onRightIconPress={() => setShowPassword((v) => !v)}
@@ -150,8 +187,8 @@ export default function RegisterPage() {
         <FormInput
           control={control}
           name="confirmPassword"
-          label="CONFIRM PASSWORD"
-          placeholder="Re-enter your password"
+          label={t('auth.confirmPasswordLabel')}
+          placeholder={t('auth.confirmPasswordPlaceholder')}
           leftIcon="lock-check"
           rightIcon={showConfirm ? 'eye' : 'eye-off'}
           onRightIconPress={() => setShowConfirm((v) => !v)}
@@ -168,11 +205,13 @@ export default function RegisterPage() {
             )}
           />
           <Text style={[styles.agreementText, { color: colors['on-surface-variant'] }]}>
-            {"By logging in, I agree to Mei Mart's "}
+            {t('auth.agreePrefix')}{' '}
             <Text style={{ color: colors.primary, fontWeight: '700' }}>
-              Terms of Service
-            </Text> and{' '}
-            <Text style={{ color: colors.primary, fontWeight: '700' }}>Privacy Policy</Text>.
+              {t('auth.termsOfService')}
+            </Text> {t('auth.and')}{' '}
+            <Text style={{ color: colors.primary, fontWeight: '700' }}>
+              {t('auth.privacyPolicy')}
+            </Text>.
           </Text>
         </View>
         {agreedError && (
@@ -222,5 +261,15 @@ const styles = StyleSheet.create({
   errorText: {
     ...typography['body-sm'],
     marginTop: spacing.xs,
+  },
+  registerErrorBox: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: 8,
+    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+  },
+  registerErrorText: {
+    ...typography['body-sm'],
+    fontWeight: '600',
   },
 });

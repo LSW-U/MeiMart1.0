@@ -23,15 +23,20 @@ const resources = {
 } as const;
 
 async function loadInitialLocale(): Promise<AppLocale> {
-  const persisted = useAppStore.getState().locale as AppLocale;
-  if (SUPPORTED_LOCALES.includes(persisted)) return persisted;
+  // Why: 优先从 AsyncStorage 读取用户主动选择的语言
+  // appStore 的 locale 是 zustand persist 异步恢复，可能在 initI18n 执行时还未恢复
   try {
     const stored = await AsyncStorage.getItem(LOCALE_STORAGE_KEY);
     if (stored && SUPPORTED_LOCALES.includes(stored as AppLocale)) {
       return stored as AppLocale;
     }
   } catch {
-    // fallthrough to device locale
+    // fallthrough to appStore
+  }
+  const persisted = useAppStore.getState().locale as AppLocale;
+  if (SUPPORTED_LOCALES.includes(persisted) && persisted !== 'en') {
+    // Why: appStore 默认值是 'en'，如果还是 'en' 说明未恢复或未选择，跳过用设备语言
+    return persisted;
   }
   const device = getLocales()[0]?.languageCode ?? DEFAULT_LOCALE;
   if (SUPPORTED_LOCALES.includes(device as AppLocale)) return device as AppLocale;

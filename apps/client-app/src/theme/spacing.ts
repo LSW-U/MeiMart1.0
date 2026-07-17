@@ -4,7 +4,6 @@
  */
 
 export type SpacingKey =
-  | 'unit'
   | 'xs'
   | 'sm'
   | 'gutter'
@@ -15,7 +14,6 @@ export type SpacingKey =
   | 'xxl';
 
 export const spacing = {
-  unit: 4,
   xs: 4,
   sm: 8,
   gutter: 12,

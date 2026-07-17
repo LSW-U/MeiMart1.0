@@ -1,12 +1,11 @@
 // ⚠️ 无 HTML 原型，参考 SplashPage 推导实现，待设计确认
 // OnboardingPage — 引导页（参考 SplashPage.html 192 行的视觉风格）
 // D.2: 3 屏滑动 + DiamondPattern + LogoBadge + TaisPattern + 文化装饰
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
   Text,
-  Image,
   FlatList,
   type ViewToken,
   type NativeSyntheticEvent,
@@ -25,6 +24,7 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useAppStore } from '@/store/appStore';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -67,6 +67,10 @@ const MOTIF_ICON: Record<Slide['motif'], string> = {
   lock: 'lock',
 };
 
+// Why: FlatList 的 viewabilityConfig 必须引用稳定，否则触发
+// "Changing onViewableItemsChanged on the fly is not supported"
+const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 60 };
+
 export default function OnboardingPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -76,11 +80,15 @@ export default function OnboardingPage() {
 
   const isLast = index === SLIDES.length - 1;
 
-  const onViewableItemsChanged = ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems[0]?.index != null) {
-      setIndex(viewableItems[0].index);
-    }
-  };
+  // Why: onViewableItemsChanged 必须引用稳定（useCallback），否则 FlatList 报错
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems[0]?.index != null) {
+        setIndex(viewableItems[0].index);
+      }
+    },
+    [],
+  );
 
   const goTo = (i: number) => {
     listRef.current?.scrollToIndex({ index: i, animated: true });
@@ -147,7 +155,7 @@ export default function OnboardingPage() {
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id}
         onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
+        viewabilityConfig={VIEWABILITY_CONFIG}
         onMomentumScrollEnd={onMomentumScrollEnd}
         getItemLayout={(_, i) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * i, index: i })}
         renderItem={({ item }: { item: Slide }) => (
@@ -165,7 +173,7 @@ export default function OnboardingPage() {
                 <Icon symbol={MOTIF_ICON[item.motif]} size={24} color="#ffffff" />
               </View>
               <View style={[styles.imageCard, shadowPresets.lg]}>
-                <Image source={{ uri: item.image }} style={styles.image} resizeMode="cover" />
+                <SafeImage source={{ uri: item.image }} style={styles.image} resizeMode="cover" />
               </View>
             </View>
 

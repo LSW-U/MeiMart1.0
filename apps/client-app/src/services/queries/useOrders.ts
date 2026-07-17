@@ -1,5 +1,6 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderApi } from '@/services/orders';
+import { useAuthStore } from '@/store/authStore';
 import type { OrderStatus, Order } from '@/types';
 
 export const ORDERS_QUERY_KEY = ['orders'] as const;
@@ -8,6 +9,7 @@ const ORDERS_PAGE_SIZE = 20;
 
 // Why: 兼容不依赖分页的旧组件（如 checkout.tsx），返回 Order[]，单页 limit=20
 export function useOrders(status?: OrderStatus | 'all') {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: [...ORDERS_QUERY_KEY, status ?? 'all'],
     queryFn: async () => {
@@ -16,11 +18,13 @@ export function useOrders(status?: OrderStatus | 'all') {
     },
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',
+    enabled: isAuthenticated, // 未登录时不请求
   });
 }
 
 // Why: 游标分页无限加载 hook，订单列表页用。消费 service 的 nextCursor + hasMore。
 export function useOrdersInfinite(status?: OrderStatus | 'all') {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useInfiniteQuery({
     queryKey: [...ORDERS_QUERY_KEY, 'infinite', status ?? 'all'],
     queryFn: ({ pageParam }) => orderApi.getOrders(status, pageParam, ORDERS_PAGE_SIZE),
@@ -28,6 +32,7 @@ export function useOrdersInfinite(status?: OrderStatus | 'all') {
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextCursor : undefined),
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',
+    enabled: isAuthenticated, // 未登录时不请求
   });
 }
 

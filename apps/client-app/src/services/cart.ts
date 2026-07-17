@@ -37,25 +37,27 @@ function pickLocalized(raw: unknown, fallback = ''): string {
 
 function transformCartItem(raw: CartItemRaw): CartItem {
   // Why: 后端 CartItemView 扁平结构，前端 CartItem 需嵌套 Product；构造最小 Product 避免再 fetch
+  // 兜底：字段缺失时用默认值，防 NaN/undefined 渲染崩溃
   return {
-    id: raw.id,
+    id: raw.id ?? '',
     product: {
-      id: raw.productId,
+      id: raw.productId ?? '',
       name: { zh: pickLocalized(raw.productName), en: pickLocalized(raw.productName) } as Product['name'],
-      price: raw.unitPrice / 100,
-      image: raw.productImage,
+      price: (raw.unitPrice ?? 0) / 100,
+      image: raw.productImage ?? '',
       category: '',
     } as Product,
-    quantity: raw.quantity,
-    selected: raw.isSelected,
+    quantity: raw.quantity ?? 1,
+    selected: raw.isSelected ?? false,
   };
 }
 
 function transformCart(raw: CartRaw): Cart {
+  const items = (raw.items ?? []).map(transformCartItem);
   return {
-    items: raw.items.map(transformCartItem),
-    totalPrice: raw.selectedSubtotal / 100,
-    totalItems: raw.items.filter((i) => i.isSelected).reduce((sum, i) => sum + i.quantity, 0),
+    items,
+    totalPrice: (raw.selectedSubtotal ?? 0) / 100,
+    totalItems: items.filter((i) => i.selected).reduce((sum, i) => sum + i.quantity, 0),
   };
 }
 
@@ -66,15 +68,16 @@ export const cartApi = {
     return transformCart(res.data);
   },
 
-  // Why: 加购走 skuId（后端 CartItem 主键是 skuId），MVP 阶段假设每个 product 对应默认 sku，
-  // 用 product.id 作 skuId 调后端；mock 模式保持 product 对象签名不变（组件层零改动）。
+  // Why: 加购走 skuId（后端 CartItem 主键是 skuId）。
+  // 列表接口不返回 skus，product.defaultSkuId 可能为空，需先查详情获取 SKU。
   async addItem(product: Product, quantity = 1): Promise<Cart> {
     if (isMockMode) {
       addOrIncrement(product, quantity);
       recalculateCart();
       return mockResponse(mockDb.cart);
     }
-    await api.post('/client/cart/items', { skuId: product.id, quantity });
+    const skuId = await this.resolveSkuId(product);
+    await api.post('/client/cart/items', { skuId, quantity });
     return this.getCart();
   },
 
@@ -90,9 +93,22 @@ export const cartApi = {
       recalculateCart();
       return mockResponse(mockDb.cart);
     }
-    // Why: real 模式同 addItem，用 productId 作 skuId
-    await api.post('/client/cart/items', { skuId: productId, quantity });
+    // Why: real 模式需查详情获取 SKU ID
+    const detail = await productApi.getProduct(productId);
+    const skuId = detail?.defaultSkuId;
+    if (!skuId) throw new Error('No SKU available for product ' + productId);
+    await api.post('/client/cart/items', { skuId, quantity });
     return this.getCart();
+  },
+
+  // Why: 列表接口不返回 skus，需查详情获取第一个 ACTIVE SKU ID
+  async resolveSkuId(product: Product): Promise<string> {
+    if (product.defaultSkuId) return product.defaultSkuId;
+    const detail = await productApi.getProduct(product.id);
+    if (!detail?.defaultSkuId) {
+      throw new Error('No SKU available for product ' + product.id);
+    }
+    return detail.defaultSkuId;
   },
 
   async updateItem(itemId: string, updates: Partial<CartItem>): Promise<Cart> {

@@ -1,5 +1,5 @@
 import { StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,7 @@ import { FormInput } from '@/forms';
 import { profileEditSchema, type ProfileEditValues } from '@/forms/schemas/user';
 
 export default function ProfileEditPage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { data: user } = useProfile();
@@ -33,7 +34,7 @@ export default function ProfileEditPage() {
     updateMutation.mutate(values, {
       onSuccess: () => {
         toast.success(t('profileEdit.saved'));
-        router.back();
+        handleBack();
       },
     });
   };
@@ -41,7 +42,7 @@ export default function ProfileEditPage() {
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PageHeader title={t('profileEdit.title')} showBack onBackPress={() => router.back()} />
+      <PageHeader title={t('profileEdit.title')} showBack onBackPress={handleBack} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}

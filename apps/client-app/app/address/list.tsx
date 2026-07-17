@@ -13,6 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -164,6 +165,7 @@ function MotifTriangle({ size, color, opacity }: { size: number; color: string; 
 // PrimaryHeader（HTML 第 141-157 行 — primary + tais-pattern + MANAGE bar + arrow_back + help）
 function Header({ title }: { title: string }) {
   const { colors } = useTheme();
+  const handleBack = useSafeBack();
   return (
     <View accessibilityRole="header">
       {/* MANAGE YOUR ADDRESSES — h-8 primary tracker */}
@@ -177,7 +179,7 @@ function Header({ title }: { title: string }) {
         </View>
         <View style={styles.headerRow}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"

@@ -1,9 +1,10 @@
 // SplashPage — Web fallback（跳过 reanimated 原生动画，静态渲染）
 import { useEffect } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { Image } from 'expo-image';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme, spacing, typography } from '@/theme';
 import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { useAuthStore } from '@/store/authStore';
@@ -18,6 +19,16 @@ export default function SplashPage() {
   const { colors } = useTheme();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const onboardingCompleted = useAppStore((s) => s.onboardingCompleted);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const setOnboardingCompleted = useAppStore((s) => s.setOnboardingCompleted);
+
+  // 开发环境：清除所有存储并重置到登录页
+  const resetDevState = async () => {
+    await AsyncStorage.clear();
+    clearAuth();
+    setOnboardingCompleted(false);
+    router.replace('/(auth)/login');
+  };
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -66,6 +77,16 @@ export default function SplashPage() {
       </View>
 
       <View style={styles.bottomCol}>
+        {/* 开发环境：重置按钮 */}
+        {__DEV__ && (
+          <Pressable
+            onPress={resetDevState}
+            style={[styles.resetBtn, { backgroundColor: colors.error }]}
+            accessibilityLabel="Reset app state"
+          >
+            <Text style={styles.resetText}>Reset & Go to Login</Text>
+          </Pressable>
+        )}
         <View style={styles.dotsRow}>
           <View style={[styles.loadingDot, { backgroundColor: colors.secondary }]} />
           <View style={[styles.loadingDot, { backgroundColor: colors.primary }]} />
@@ -151,6 +172,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: spacing.xl,
     gap: spacing.sm,
+  },
+  resetBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 8,
+    marginBottom: spacing.sm,
+  },
+  resetText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 14,
   },
   dotsRow: {
     flexDirection: 'row',

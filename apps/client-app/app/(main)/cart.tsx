@@ -10,7 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Image,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,7 @@ import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/th
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
+import { toast } from '@/store/toastStore';
 import { CartItemRow } from '@/components/business/CartItemRow';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -27,42 +28,26 @@ import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
 import {
   useCart,
+  useAddToCart,
   useRemoveCartItem,
   useToggleCartItem,
   useUpdateCartItem,
 } from '@/services/queries/useCart';
+import { useProducts } from '@/services/queries/useProducts';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { useLocalizer } from '@/i18n';
 import type { CartItem } from '@/types';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
+import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 
-// "PEOPLE ALSO BOUGHT" 推荐 mock（HTML 第 228-253 行）
-interface RecommendItem {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-}
-
-const RECOMMENDED: RecommendItem[] = [
-  {
-    id: 'p003',
-    name: 'Foos Lafaek 5kg',
-    price: 4.8,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBXs-CQLr3ottuFHa8A8jV5U8wot6MLv7kddnkUZL7B_NigcoSIRd1bc0r32kBq2SNUzS5SVcna2oK31NPahWdDm8rATsDVi5n2Zlq-LbgXQh_IqjlESZXtk_4VpPW3u_9BbTW4KERum0HVRbYzjb-csWo9tDgiXG1JwcflhuaDQGtcsCw5Y4V1OYmP5y1N_wSttHNPb_hOC4IhFdBUIZ5B7TaiedXTLNI26vu379e5PAWkq6diJlV3zzSmrF-O8JELi-xN4n0B',
-  },
-  {
-    id: 'p005',
-    name: 'Bee Botir 600ml',
-    price: 0.5,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCE3sTv-XZhtRhkl92P2N_5rhCCODDi4Xps8vSc5b2WRUe11tpJKJHGsGCdTwOySKJ6sKq6LmnuxAHrj2vwCrBtdgr9_akZcFV-N0FUFEn2Tt8zqIEIzta9uDm-xRPhhQUCcbZSdOV7n7sfYVF3II4r9FKwsXEMF0cd0nvTA8J0oVyo0EjoqVatlIK_xCLblnx95w1K5kqdwoxhKJmvlVZ1XnMA6DgTPRoDNOGKNrG0QoqRFVrej3MwLxWgSGljQvxxXECepyJO',
-  },
-];
+// Why: "PEOPLE ALSO BOUGHT" 推荐改用真实商品（避免 mock id 'p003' 跳转详情 404）
 
 export default function CartPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const { data: realProducts } = useProducts();
+  const recommended = (realProducts ?? []).slice(0, 6);
+  const addToCartMutation = useAddToCart();
   const localize = useLocalizer();
   const { isOffline } = useWeakNetworkUI();
   const { data: cart, isLoading, isError, refetch } = useCart();
@@ -85,6 +70,13 @@ export default function CartPage() {
   };
 
   const remove = (item: CartItem) => {
+    // Why: Web 端 Alert.alert 不显示，直接删除 + toast；Native 端用 Alert 确认
+    if (Platform.OS === 'web') {
+      removeMutation.mutate(item.id, {
+        onSuccess: () => toast.success(t('cart.removed', { defaultValue: 'Removed' })),
+      });
+      return;
+    }
     Alert.alert(
       t('cart.removeTitle'),
       t('cart.removeWithNameConfirm', { name: localize(item.product.name) }),
@@ -100,6 +92,7 @@ export default function CartPage() {
   };
 
   return (
+    <PageErrorBoundary pageName="cart">
     <SafeAreaWrapper
       edges={['top', 'bottom']}
       style={{ backgroundColor: colors.background, flex: 1 }}
@@ -109,6 +102,7 @@ export default function CartPage() {
         title={t('tabs.cart')}
         showLocation
         locationLabel={t('home.locationLabel')}
+        onLocationPress={() => router.push('/address/map')}
         rightActions={
           <Pressable
             onPress={() => router.push('/search')}
@@ -194,7 +188,7 @@ export default function CartPage() {
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.recommendRow}>
-                {RECOMMENDED.map((rec) => (
+                {recommended.map((rec) => (
                   <View
                     key={rec.id}
                     style={[
@@ -205,31 +199,54 @@ export default function CartPage() {
                       },
                     ]}
                   >
-                    <View
-                      style={[
-                        styles.recommendImageWrap,
-                        { backgroundColor: colors['surface-container'] },
-                      ]}
+                    {/* Why: 图片+名称可点击跳转详情；+ 按钮独立加购，避免 Pressable 嵌套 */}
+                    <Pressable
+                      onPress={() => router.push(`/product/${rec.id}`)}
+                      style={styles.recommendClickable}
+                      accessibilityRole="button"
+                      accessibilityLabel={`View ${localize(rec.name)}`}
                     >
-                      <Image source={{ uri: rec.image }} style={styles.recommendImage} />
-                    </View>
-                    <Text
-                      style={[styles.recommendName, { color: colors['on-surface-variant'] }]}
-                      numberOfLines={1}
-                    >
-                      {rec.name}
-                    </Text>
-                    <View style={styles.recommendBottom}>
+                      <View
+                        style={[
+                          styles.recommendImageWrap,
+                          { backgroundColor: colors['surface-container'] },
+                        ]}
+                      >
+                        <SafeImage source={{ uri: rec.image }} style={styles.recommendImage} />
+                      </View>
+                      <Text
+                        style={[styles.recommendName, { color: colors['on-surface-variant'] }]}
+                        numberOfLines={1}
+                      >
+                        {localize(rec.name)}
+                      </Text>
                       <Text style={[styles.recommendPrice, { color: colors.primary }]}>
                         ${rec.price.toFixed(2)}
                       </Text>
+                    </Pressable>
+                    <View style={styles.recommendBottom}>
                       <Pressable
-                        onPress={() => router.push(`/product/${rec.id}`)}
+                        onPress={() =>
+                          addToCartMutation.mutate(
+                            { product: rec, quantity: 1 },
+                            {
+                              onSuccess: () =>
+                                toast.success(
+                                  t('product.addedToCart', { defaultValue: 'Added to cart' }),
+                                ),
+                              onError: () =>
+                                toast.error(
+                                  t('product.addToCartFailed', { defaultValue: 'Add to cart failed' }),
+                                ),
+                            },
+                          )
+                        }
                         hitSlop={8}
+                        style={styles.recommendAddBtn}
                         accessibilityRole="button"
-                        accessibilityLabel={`Add ${rec.name} to cart`}
+                        accessibilityLabel={`Add ${localize(rec.name)} to cart`}
                       >
-                        <Icon symbol="add_circle" size={20} color={colors.primary} />
+                        <Icon symbol="add_circle" size={24} color={colors.primary} />
                       </Pressable>
                     </View>
                   </View>
@@ -306,6 +323,7 @@ export default function CartPage() {
         </View>
       )}
     </SafeAreaWrapper>
+    </PageErrorBoundary>
   );
 }
 
@@ -364,6 +382,9 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     gap: spacing.sm,
   },
+  recommendClickable: {
+    gap: spacing.xs,
+  },
   recommendImageWrap: {
     height: 96,
     borderRadius: borderRadius.md,
@@ -381,8 +402,14 @@ const styles = StyleSheet.create({
   recommendBottom: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     marginTop: 2,
+  },
+  recommendAddBtn: {
+    minWidth: 36,
+    minHeight: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   recommendPrice: {
     ...typography['price-display'],

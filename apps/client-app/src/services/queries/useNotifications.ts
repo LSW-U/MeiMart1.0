@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '@/services/notifications';
+import { useAuthStore } from '@/store/authStore';
 import type { Notification } from '@/types';
 
 // Why: 从 useUser.ts 拆出来，notifications 模块自包含（service + hook 都在）
@@ -8,20 +9,24 @@ export const NOTIFICATIONS_QUERY_KEY = ['user', 'notifications'] as const;
 export const UNREAD_COUNT_QUERY_KEY = ['user', 'notifications', 'unread-count'] as const;
 
 export function useNotifications(onlyUnread = false) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: [...NOTIFICATIONS_QUERY_KEY, onlyUnread ? 'unread' : 'all'],
     queryFn: () => notificationsApi.list(onlyUnread),
     staleTime: 30 * 1000,
     networkMode: 'offlineFirst',
+    enabled: isAuthenticated, // 未登录时不请求
   });
 }
 
 export function useUnreadCount() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: UNREAD_COUNT_QUERY_KEY,
     queryFn: () => notificationsApi.getUnreadCount(),
     staleTime: 30 * 1000,
     networkMode: 'offlineFirst',
+    enabled: isAuthenticated, // 未登录时不请求
   });
 }
 

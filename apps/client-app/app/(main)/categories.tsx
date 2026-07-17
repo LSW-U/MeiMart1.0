@@ -2,9 +2,10 @@
 // HTML → RN 行数比：368 → ~470（含样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 128%）
 // Fix-15: Primary tais-pattern Header + 侧栏图标 + Daily Deals + 分类标题 + TaisDivider + HOT PRODUCTS + VIEW ALL + Skeleton
+// 优化: 商品卡片整体可点击跳转 + 加购按钮真正加购 + 真实商品替换 mock + 商品网格 2 列 8 个
 import { useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView, Image } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
 import { useLocalizer } from '@/i18n';
@@ -15,51 +16,15 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCategories } from '@/services/queries/useCatalog';
-import { useProductsByCategory } from '@/services/queries/useProducts';
-import type { Product } from '@/types';
+import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
+import { useAddToCart } from '@/services/queries/useCart';
+import { toast } from '@/store/toastStore';
+import type { Product, Category } from '@/types';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
-// 侧栏分类图标（HTML 第 159-182 行：restaurant / checkroom / local_florist / bolt / auto_stories / brush）
-interface SidebarCategory {
-  id: string;
-  labelKey: string;
-  icon: string;
-  contentTitleKey: string;
-}
-
-const SIDEBAR_CATEGORIES: SidebarCategory[] = [
-  {
-    id: 'food',
-    labelKey: 'category.food',
-    icon: 'restaurant',
-    contentTitleKey: 'category.foodTitle',
-  },
-  {
-    id: 'fashion',
-    labelKey: 'category.fashion',
-    icon: 'checkroom',
-    contentTitleKey: 'category.fashionTitle',
-  },
-  {
-    id: 'home',
-    labelKey: 'category.home',
-    icon: 'local_florist',
-    contentTitleKey: 'category.homeTitle',
-  },
-  { id: 'tech', labelKey: 'category.tech', icon: 'bolt', contentTitleKey: 'category.techTitle' },
-  {
-    id: 'crafts',
-    labelKey: 'category.crafts',
-    icon: 'auto_stories',
-    contentTitleKey: 'category.craftsTitle',
-  },
-  {
-    id: 'beauty',
-    labelKey: 'category.beauty',
-    icon: 'brush',
-    contentTitleKey: 'category.beautyTitle',
-  },
-];
+// Why: 侧栏分类改用后端 useCategories() 真实数据（含图片），移除硬编码 SIDEBAR_CATEGORIES
 
 // 子分类（圆形图标 + 文字）（HTML 第 244-256 行）
 const SUB_CATEGORIES = [
@@ -77,46 +42,52 @@ const SUB_CATEGORIES = [
   },
 ];
 
-// HOT PRODUCTS mock（HTML 第 264-289 行）
-const HOT_PRODUCTS: Product[] = [
-  {
-    id: 'hot-1',
-    name: { zh: 'Ermera 优质咖啡', en: 'Ermera Premium Coffee', tet: 'Kafé Premium Ermera' },
-    price: 12.5,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCyjrHeeobiFoXak9PGkXAhLYNsiqtIdDeqqbao1sLfr8sjL2EhbmGIM-xxxOwwxTok9M2bZK0wnh3cMxKJ7uy1L6DuPMqf2saImFPxCaN0WUPSZf-wg4uHLF14L6fUPy5GQokcdrQra1OaEV7avlq2P1f_ggcW5VwGQU33jvd7WqE6JMgp4WGcOm2-thR50XXQpVxe8YdMngLWc5o1B8d1hhtmzodB54ggassp7ZQchzykOEMi5WQgvNYshq2rYUXGpjSb3u3C',
-    category: 'Coffee',
-    description: { zh: '', en: '', tet: '' },
-  },
-  {
-    id: 'hot-2',
-    name: { zh: '野生森林蜂蜜', en: 'Wild Forest Honey', tet: 'Fuan Foho Metan' },
-    price: 8.0,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCuSltztY2InuCouNxLFTR3dvUPAeuO2NHMnDjtODHFeFj_tFlXPGzC28qveja3V9KkA1PTJ78rhE-VEXDbed8jwb58ymI9L0SxtegdKxZVZeBgOPUQlcmX1vxXeyjq0FehsY3AjQUiQkbvpcY-PIwjZgiOrevERR-jbyGYSUsI5p17iXnA1akgKciu-u40VRfXuKsbrLoCXuMsgzipjKTN07dCJXiMsCBFVewiUnDq8q8JTTWGMw-qbQ6u8jurlbHH-80k_TrD',
-    category: 'Honey',
-    description: { zh: '', en: '', tet: '' },
-  },
-];
+// Why: HOT_PRODUCTS mock 已删除，改用 useProductsByCategory 获取真实商品
 
 export default function CategoriesPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const localize = useLocalizer();
+  const { categoryId: urlCategoryId } = useLocalSearchParams<{ categoryId?: string }>();
   const {
     data: categories,
     isLoading: catLoading,
     isError: catError,
     refetch: catRefetch,
   } = useCategories();
-  // activeId 默认使用 SIDEBAR_CATEGORIES 第一项，避免初始 useState 拿不到 categories 数据
-  const [activeId, setActiveId] = useState<string>(SIDEBAR_CATEGORIES[0].id);
+  // Why: activeId 优先用 URL 参数（从 home 跳转传入），否则用第一个分类
+  const [activeId, setActiveId] = useState<string>(urlCategoryId ?? '');
   const {
     data: products,
     isLoading: prodLoading,
     isError: prodError,
     refetch: prodRefetch,
-  } = useProductsByCategory(activeId);
+  } = useProductsByCategory(activeId || undefined);
+  const { data: allProducts } = useProducts();
+  const addToCartMutation = useAddToCart();
+
+  // Why: categories 加载后，如果 activeId 为空或无效，设为第一个分类
+  const validActiveId =
+    activeId && categories?.some((c) => c.id === activeId)
+      ? activeId
+      : categories?.[0]?.id ?? '';
+  const activeCategory = categories?.find((c) => c.id === validActiveId);
+
+  // Why: "为你推荐"取所有商品的前 4 个（排除当前分类），丰富页面内容
+  const recommended = (allProducts ?? [])
+    .filter((p) => !products?.some((cp) => cp.id === p.id))
+    .slice(0, 4);
+
+  // Why: 加购成功提示
+  const handleAddToCart = (product: Product) => {
+    addToCartMutation.mutate(
+      { product, quantity: 1 },
+      {
+        onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
+        onError: () => toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+      },
+    );
+  };
 
   if (catLoading) {
     return (
@@ -137,8 +108,6 @@ export default function CategoriesPage() {
     );
   }
 
-  const activeCategory = SIDEBAR_CATEGORIES.find((c) => c.id === activeId) ?? SIDEBAR_CATEGORIES[0];
-
   return (
     <SafeAreaWrapper
       edges={['top', 'bottom']}
@@ -151,41 +120,14 @@ export default function CategoriesPage() {
         {/* 侧栏 */}
         <View style={[styles.sidebar, { backgroundColor: colors['surface-container-low'] }]}>
           <ScrollView showsVerticalScrollIndicator={false}>
-            {SIDEBAR_CATEGORIES.map((cat) => {
-              const active = cat.id === activeId;
-              return (
-                <Pressable
-                  key={cat.id}
-                  onPress={() => setActiveId(cat.id)}
-                  style={[
-                    styles.sidebarItem,
-                    active && {
-                      backgroundColor: 'rgba(150,24,19,0.1)',
-                      borderLeftColor: colors.primary,
-                    },
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={t(cat.labelKey)}
-                >
-                  <Icon
-                    symbol={cat.icon}
-                    size={22}
-                    color={active ? colors.primary : colors['on-surface-variant']}
-                  />
-                  <Text
-                    style={[
-                      styles.sidebarLabel,
-                      {
-                        color: active ? colors.primary : colors['on-surface-variant'],
-                      },
-                    ]}
-                  >
-                    {t(cat.labelKey)}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            {categories.map((cat) => (
+              <SidebarItem
+                key={cat.id}
+                category={cat}
+                active={cat.id === validActiveId}
+                onPress={() => setActiveId(cat.id)}
+              />
+            ))}
           </ScrollView>
         </View>
 
@@ -237,7 +179,7 @@ export default function CategoriesPage() {
               {/* 分类标题 + TaisDivider */}
               <View style={styles.titleWrap}>
                 <Text style={[styles.catTitle, { color: colors['on-surface'] }]}>
-                  {t(activeCategory.contentTitleKey)}
+                  {activeCategory?.name ?? ''}
                 </Text>
                 <TaisDivider width={64} />
               </View>
@@ -261,7 +203,7 @@ export default function CategoriesPage() {
                         },
                       ]}
                     >
-                      <Image source={{ uri: sub.image }} style={styles.subImage} />
+                      <SafeImage source={{ uri: sub.image }} style={styles.subImage} />
                     </View>
                     <Text
                       style={[styles.subLabel, { color: colors['on-surface'] }]}
@@ -284,60 +226,14 @@ export default function CategoriesPage() {
               {prodError ? (
                 <ErrorState message={t('errors.products')} onRetry={() => prodRefetch()} />
               ) : !products || products.length === 0 ? (
-                <View style={styles.hotGrid}>
-                  {HOT_PRODUCTS.map((p) => (
-                    <View
-                      key={p.id}
-                      style={[
-                        styles.hotCard,
-                        {
-                          backgroundColor: colors['surface-container-lowest'],
-                          borderColor: 'rgba(141,112,108,0.1)',
-                        },
-                      ]}
-                    >
-                      <Pressable
-                        onPress={() => router.push(`/product/${p.id}`)}
-                        style={styles.hotImageWrap}
-                      >
-                        <Image source={{ uri: p.image }} style={styles.hotImage} />
-                        {p.id === 'hot-1' && (
-                          <View style={[styles.hotBadge, { backgroundColor: colors.primary }]}>
-                            <Text style={styles.hotBadgeText}>{t('common.badgeNew')}</Text>
-                          </View>
-                        )}
-                      </Pressable>
-                      <Text
-                        style={[styles.hotName, { color: colors['on-surface'] }]}
-                        numberOfLines={1}
-                      >
-                        {localize(p.name)}
-                      </Text>
-                      <View style={styles.hotPriceRow}>
-                        <Text style={[styles.hotPrice, { color: colors.primary }]}>
-                          ${p.price.toFixed(2)}
-                        </Text>
-                        <Pressable
-                          onPress={() => router.push(`/product/${p.id}`)}
-                          style={({ pressed }) => [
-                            styles.hotAddBtn,
-                            { backgroundColor: colors.primary },
-                            pressed && { transform: [{ scale: 0.9 }] },
-                          ]}
-                          accessibilityRole="button"
-                          accessibilityLabel={t('product.addToCartLabel', {
-                            name: localize(p.name),
-                          })}
-                        >
-                          <Icon symbol="add_shopping_cart" size={18} color="#ffffff" />
-                        </Pressable>
-                      </View>
-                    </View>
-                  ))}
+                <View style={styles.emptyWrap}>
+                  <Text style={[styles.emptyText, { color: colors['on-surface-variant'] }]}>
+                    {t('common.empty')}
+                  </Text>
                 </View>
               ) : (
                 <View style={styles.hotGrid}>
-                  {products.slice(0, 4).map((p) => (
+                  {products.slice(0, 8).map((p) => (
                     <View
                       key={p.id}
                       style={[
@@ -348,24 +244,42 @@ export default function CategoriesPage() {
                         },
                       ]}
                     >
+                      {/* Why: 图片+名称+价格可点击跳转详情；+ 按钮独立加购，避免 Pressable 嵌套 */}
                       <Pressable
                         onPress={() => router.push(`/product/${p.id}`)}
-                        style={styles.hotImageWrap}
+                        style={styles.hotClickable}
+                        accessibilityRole="button"
+                        accessibilityLabel={`View ${localize(p.name)}`}
                       >
-                        <Image source={{ uri: p.image }} style={styles.hotImage} />
-                      </Pressable>
-                      <Text
-                        style={[styles.hotName, { color: colors['on-surface'] }]}
-                        numberOfLines={1}
-                      >
-                        {localize(p.name)}
-                      </Text>
-                      <View style={styles.hotPriceRow}>
+                        <View style={styles.hotImageWrap}>
+                          <SafeImage source={{ uri: p.image }} style={styles.hotImage} />
+                          {p.salesCount && p.salesCount > 100 && (
+                            <View style={[styles.hotBadge, { backgroundColor: colors.primary }]}>
+                              <Text style={styles.hotBadgeText}>{t('common.badgeNew')}</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text
+                          style={[styles.hotName, { color: colors['on-surface'] }]}
+                          numberOfLines={2}
+                        >
+                          {localize(p.name)}
+                        </Text>
                         <Text style={[styles.hotPrice, { color: colors.primary }]}>
                           ${p.price.toFixed(2)}
                         </Text>
+                      </Pressable>
+                      <View style={styles.hotBottomRow}>
+                        {typeof p.rating === 'number' && (
+                          <View style={styles.ratingRow}>
+                            <Icon symbol="star" size={12} color={colors.tertiary} />
+                            <Text style={[styles.ratingText, { color: colors['on-surface-variant'] }]}>
+                              {p.rating.toFixed(1)}
+                            </Text>
+                          </View>
+                        )}
                         <Pressable
-                          onPress={() => router.push(`/product/${p.id}`)}
+                          onPress={() => handleAddToCart(p)}
                           style={({ pressed }) => [
                             styles.hotAddBtn,
                             { backgroundColor: colors.primary },
@@ -384,9 +298,83 @@ export default function CategoriesPage() {
                 </View>
               )}
 
+              {/* 为你推荐 */}
+              {recommended.length > 0 && (
+                <>
+                  <View style={[styles.hotHeader, { marginTop: spacing.lg }]}>
+                    <Text style={[styles.hotTitle, { color: colors['on-surface-variant'] }]}>
+                      {t('category.recommendForYou', { defaultValue: 'Recommended For You' })}
+                    </Text>
+                    <View style={[styles.hotLine, { backgroundColor: 'rgba(141,112,108,0.2)' }]} />
+                  </View>
+                  <View style={styles.hotGrid}>
+                    {recommended.map((p) => (
+                      <View
+                        key={p.id}
+                        style={[
+                          styles.hotCard,
+                          {
+                            backgroundColor: colors['surface-container-lowest'],
+                            borderColor: 'rgba(141,112,108,0.1)',
+                          },
+                        ]}
+                      >
+                        <Pressable
+                          onPress={() => router.push(`/product/${p.id}`)}
+                          style={styles.hotClickable}
+                          accessibilityRole="button"
+                          accessibilityLabel={`View ${localize(p.name)}`}
+                        >
+                          <View style={styles.hotImageWrap}>
+                            <SafeImage source={{ uri: p.image }} style={styles.hotImage} />
+                          </View>
+                          <Text
+                            style={[styles.hotName, { color: colors['on-surface'] }]}
+                            numberOfLines={2}
+                          >
+                            {localize(p.name)}
+                          </Text>
+                          <Text style={[styles.hotPrice, { color: colors.primary }]}>
+                            ${p.price.toFixed(2)}
+                          </Text>
+                        </Pressable>
+                        <View style={styles.hotBottomRow}>
+                          {typeof p.rating === 'number' && (
+                            <View style={styles.ratingRow}>
+                              <Icon symbol="star" size={12} color={colors.tertiary} />
+                              <Text
+                                style={[styles.ratingText, { color: colors['on-surface-variant'] }]}
+                              >
+                                {p.rating.toFixed(1)}
+                              </Text>
+                            </View>
+                          )}
+                          <Pressable
+                            onPress={() => handleAddToCart(p)}
+                            style={({ pressed }) => [
+                              styles.hotAddBtn,
+                              { backgroundColor: colors.primary },
+                              pressed && { transform: [{ scale: 0.9 }] },
+                            ]}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('product.addToCartLabel', {
+                              name: localize(p.name),
+                            })}
+                          >
+                            <Icon symbol="add_shopping_cart" size={18} color="#ffffff" />
+                          </Pressable>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              )}
+
               {/* VIEW ALL PRODUCTS 按钮 */}
               <Pressable
-                onPress={() => router.push('/product/list')}
+                onPress={() =>
+                  router.push({ pathname: '/product/list', params: { category: activeId } })
+                }
                 style={({ pressed }) => [
                   styles.viewAllBtn,
                   { borderColor: colors.primary },
@@ -407,6 +395,62 @@ export default function CategoriesPage() {
   );
 }
 
+// Why: 侧栏单项 - 图片渲染 + onError fallback 到 tag 图标
+function SidebarItem({
+  category,
+  active,
+  onPress,
+}: {
+  category: Category;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  const [imageError, setImageError] = useState(false);
+  const hasImage = Boolean(category.image) && !imageError;
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.sidebarItem,
+        active && {
+          backgroundColor: 'rgba(150,24,19,0.1)',
+          borderLeftColor: colors.primary,
+        },
+      ]}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      accessibilityLabel={category.name}
+    >
+      {hasImage ? (
+        <Image
+          source={{ uri: category.image }}
+          style={styles.sidebarImage}
+          onError={() => setImageError(true)}
+          accessible={false}
+        />
+      ) : (
+        <MaterialCommunityIcons
+          name="tag"
+          size={22}
+          color={active ? colors.primary : colors['on-surface-variant']}
+        />
+      )}
+      <Text
+        style={[
+          styles.sidebarLabel,
+          {
+            color: active ? colors.primary : colors['on-surface-variant'],
+          },
+        ]}
+        numberOfLines={1}
+      >
+        {category.name}
+      </Text>
+    </Pressable>
+  );
+}
+
 // Primary tais-pattern Header（HTML 第 141-153 行）
 function CategoriesHeader() {
   const { t } = useTranslation();
@@ -415,6 +459,7 @@ function CategoriesHeader() {
       title=""
       showLocation
       locationLabel={t('home.locationLabel')}
+      onLocationPress={() => router.push('/address/map')}
       rightActions={
         <Pressable
           onPress={() => router.push('/search')}
@@ -496,9 +541,16 @@ const styles = StyleSheet.create({
   sidebarItem: {
     alignItems: 'center',
     gap: spacing.xs,
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
     borderLeftWidth: 2,
     borderLeftColor: 'transparent',
+  },
+  // Why: 侧栏分类图片 - 圆形，选中时加边框高亮
+  sidebarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    resizeMode: 'cover',
   },
   sidebarLabel: {
     ...typography['label-caps'],
@@ -625,6 +677,9 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
+  hotClickable: {
+    gap: spacing.xs,
+  },
   hotBadge: {
     position: 'absolute',
     top: 8,
@@ -643,16 +698,26 @@ const styles = StyleSheet.create({
     ...typography['body-sm'],
     fontWeight: '600',
     marginTop: spacing.xs,
+    minHeight: 36,
   },
-  hotPriceRow: {
+  hotPrice: {
+    ...typography['price-display'],
+    fontSize: 16,
+  },
+  hotBottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: spacing.xs,
   },
-  hotPrice: {
-    ...typography['price-display'],
-    fontSize: 16,
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  ratingText: {
+    ...typography['body-sm'],
+    fontSize: 11,
   },
   hotAddBtn: {
     width: 32,
@@ -660,6 +725,13 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  emptyWrap: {
+    paddingVertical: spacing.xxl,
+    alignItems: 'center',
+  },
+  emptyText: {
+    ...typography['body-md'],
   },
   viewAllBtn: {
     width: '100%',

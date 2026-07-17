@@ -1,21 +1,21 @@
 [
   {
-    "id": "laispay",
+    "id": "cod",
     "name": {
-      "zh": "LaisPay 钱包",
-      "en": "LaisPay (Local Wallet)",
-      "tet": "LaisPay (Carteira Lokál)"
+      "zh": "货到付款",
+      "en": "Cash on Delivery",
+      "tet": "Paga Serbi Boot"
     },
     "subtitle": {
-      "zh": "余额: $45.00",
-      "en": "Balance: $45.00",
-      "tet": "Saldo: $45.00"
+      "zh": "收货时支付现金",
+      "en": "Pay cash when received",
+      "tet": "PagaoS konaba simu"
     },
-    "icon": "account_balance_wallet",
+    "icon": "payments",
     "isDefault": true
   },
   {
-    "id": "bank",
+    "id": "bank_transfer",
     "name": {
       "zh": "银行转账",
       "en": "Bank Transfer",
@@ -29,7 +29,7 @@
     "icon": "account_balance"
   },
   {
-    "id": "card",
+    "id": "stripe",
     "name": {
       "zh": "信用卡 / 借记卡",
       "en": "Credit / Debit Card",

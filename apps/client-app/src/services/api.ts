@@ -6,6 +6,8 @@ import {
 } from 'axios';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
 
 const env = Constants.expoConfig?.extra as {
@@ -31,31 +33,51 @@ export const api = axiosCreate({
 export const isMockMode =
   env?.USE_MOCK !== 'false' && env?.APP_ENV === 'development';
 
+// Why: SecureStore 不支持 Web，Web 端用 AsyncStorage 替代
+// Native 端保持 SecureStore（更安全）
 const TOKEN_KEY = 'meimart.token';
 const REFRESH_KEY = 'meimart.refresh';
+
+const isWeb = Platform.OS === 'web';
 
 export const tokenStorage = {
   async get(): Promise<string | null> {
     try {
+      if (isWeb) {
+        return await AsyncStorage.getItem(TOKEN_KEY);
+      }
       return await SecureStore.getItemAsync(TOKEN_KEY);
     } catch {
       return null;
     }
   },
   async set(token: string, refreshToken: string): Promise<void> {
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
-    await SecureStore.setItemAsync(REFRESH_KEY, refreshToken);
+    if (isWeb) {
+      await AsyncStorage.setItem(TOKEN_KEY, token);
+      await AsyncStorage.setItem(REFRESH_KEY, refreshToken);
+    } else {
+      await SecureStore.setItemAsync(TOKEN_KEY, token);
+      await SecureStore.setItemAsync(REFRESH_KEY, refreshToken);
+    }
   },
   async getRefresh(): Promise<string | null> {
     try {
+      if (isWeb) {
+        return await AsyncStorage.getItem(REFRESH_KEY);
+      }
       return await SecureStore.getItemAsync(REFRESH_KEY);
     } catch {
       return null;
     }
   },
   async clear(): Promise<void> {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
-    await SecureStore.deleteItemAsync(REFRESH_KEY);
+    if (isWeb) {
+      await AsyncStorage.removeItem(TOKEN_KEY);
+      await AsyncStorage.removeItem(REFRESH_KEY);
+    } else {
+      await SecureStore.deleteItemAsync(TOKEN_KEY);
+      await SecureStore.deleteItemAsync(REFRESH_KEY);
+    }
   },
 };
 

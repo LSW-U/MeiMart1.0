@@ -1,13 +1,15 @@
 // MapPickPage — 还原自 MapPickPage.html（250 行）
 // HTML 行数 250 → RN ~310（含样式），满足 CLAUDE.md 规则 #28 的 30% 门槛
 // Fix-22: PrimaryHeader + tais-pattern + my_location/search/location_on/location_city/info + map image + pin overlay + nearby POIs
-import { StyleSheet, View, Text, Pressable, ScrollView, Image, TextInput } from 'react-native';
+import { StyleSheet, View, Text, Pressable, ScrollView, TextInput } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 const MAP_IMAGE =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuBrBlz0t4Xye-Idd-bo1fQyerd6mU_zw8_X50qYJD1a83k9PDIjBA7junBX8kBzu9FdiEKHLHFH6qo93wFYLHNSl7aqlk4CxHzyRGGdjRm9UxPiAPhHpY_qWm6id6gnwgvOvvyRa7QB-Wv3tg5xagfCaiGEs7NjoUHtjgiMXnDKUDl7ZnXXIRL7fWteZCLuUye8eDhkv3Lw7q0XZaElkxMwu6TDiyl9Ix3fQazwGn9DAfPmh9Rlsu6jonkflEfRFQsTUvR8Fnn2';
@@ -28,6 +30,7 @@ const NEARBY_PLACES: NearbyPlace[] = [
 ];
 
 export default function MapPickPage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
 
   return (
@@ -45,7 +48,7 @@ export default function MapPickPage() {
       >
         {/* 地图区（HTML 第 159-182 行 — image + floating search + center pin + controls） */}
         <View style={styles.mapWrap}>
-          <Image source={{ uri: MAP_IMAGE }} style={styles.mapImage} />
+          <SafeImage source={{ uri: MAP_IMAGE }} style={styles.mapImage} />
 
           {/* Floating search bar（HTML 第 162-168 行） */}
           <View style={styles.searchFloat}>
@@ -143,7 +146,7 @@ export default function MapPickPage() {
             {NEARBY_PLACES.map((place, idx) => (
               <Pressable
                 key={place.id}
-                onPress={() => router.back()}
+                onPress={handleBack}
                 style={({ pressed }) => [
                   styles.placeRow,
                   idx > 0 && {
@@ -198,7 +201,7 @@ export default function MapPickPage() {
         ]}
       >
         <Pressable
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={({ pressed }) => [
             styles.saveBtn,
             { backgroundColor: colors.primary },
@@ -236,6 +239,7 @@ function MotifTriangle({ size, color, opacity }: { size: number; color: string; 
 // PrimaryHeader
 function Header({ title }: { title: string }) {
   const { colors } = useTheme();
+  const handleBack = useSafeBack();
   return (
     <View accessibilityRole="header">
       <View style={[styles.trackerBar, { backgroundColor: colors.primary }]}>
@@ -247,7 +251,7 @@ function Header({ title }: { title: string }) {
         </View>
         <View style={styles.headerRow}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"

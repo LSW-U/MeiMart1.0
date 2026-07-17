@@ -8,8 +8,6 @@ import {
   Text,
   ScrollView,
   Pressable,
-  ActivityIndicator,
-  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +19,9 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useProfile } from '@/services/queries/useUser';
 import { useAuthStore } from '@/store/authStore';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
+import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 
 // 默认头像 mock（HTML 第 150 行）
 const DEFAULT_AVATAR =
@@ -68,6 +69,7 @@ interface FunctionItem {
 
 // 功能菜单（HTML 第 200-244 行）—— language 项已移到 settings 页，profile 不重复
 const FUNCTION_ITEMS: FunctionItem[] = [
+  { id: 'favorites', labelKey: 'profile.favorites', icon: 'favorite', route: '/favorites' },
   { id: 'coupons', labelKey: 'profile.coupons', icon: 'confirmation_number', route: '/coupons' },
   { id: 'address', labelKey: 'address.list', icon: 'location_on', route: '/address/list' },
   { id: 'help', labelKey: 'profile.help', icon: 'help', route: '/service/help' },
@@ -95,9 +97,7 @@ export default function ProfilePage() {
       <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
         <ProfileHeader />
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        <PageSkeleton variant="list" rows={4} />
       </SafeAreaWrapper>
     );
   }
@@ -121,6 +121,7 @@ export default function ProfilePage() {
   };
 
   return (
+    <PageErrorBoundary pageName="profile">
     <SafeAreaWrapper
       edges={['top', 'bottom']}
       style={{ backgroundColor: colors.background, flex: 1 }}
@@ -150,7 +151,7 @@ export default function ProfilePage() {
             accessibilityLabel={t('profile.edit')}
           >
             <View style={styles.avatarWrap}>
-              <Image source={{ uri: user.avatar ?? DEFAULT_AVATAR }} style={styles.avatar} />
+              <SafeImage source={{ uri: user.avatar ?? DEFAULT_AVATAR }} style={styles.avatar} />
             </View>
             <View style={styles.userText}>
               <Text style={[styles.userName, { color: colors['on-surface'] }]}>{user.name}</Text>
@@ -270,6 +271,7 @@ export default function ProfilePage() {
         </View>
       </ScrollView>
     </SafeAreaWrapper>
+    </PageErrorBoundary>
   );
 }
 
@@ -285,7 +287,7 @@ function ProfileHeader() {
         rightActions={
           <View style={profileHeaderStyles.actions}>
             <Pressable
-              onPress={() => router.push('/service/customer')}
+              onPress={() => router.push('/service')}
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel={t('profile.customerService')}
@@ -321,7 +323,7 @@ function ProfileEmpty() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const onRequireLogin = () => {
-    router.push('/(auth)/login');
+    router.replace('/(auth)/login');
   };
   return (
     <SafeAreaWrapper

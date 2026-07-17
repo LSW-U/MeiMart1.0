@@ -2,7 +2,7 @@
 // FeedbackPage — 反馈表单（参考 CheckoutPage.html 的表单样式）
 // D.8: PrimaryHeader + 类型 Chip + 内容 textarea + 联系方式 + 照片占位 + 提交按钮
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable } from 'react-native';
-import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,6 +26,7 @@ const FEEDBACK_TYPE_KEYS = [
 ];
 
 export default function FeedbackPage() {
+  const handleBack = useSafeBack();
   const { t } = useTranslation();
   const { colors } = useTheme();
 
@@ -39,7 +40,7 @@ export default function FeedbackPage() {
 
   const submit = handleSubmit(() => {
     toast.success(t('service.feedback.submitted'));
-    router.back();
+    handleBack();
   });
 
   return (
@@ -51,7 +52,7 @@ export default function FeedbackPage() {
       <PrimaryHeader
         title={t('service.feedback.title')}
         showBack
-        onBackPress={() => router.back()}
+        onBackPress={handleBack}
       />
 
       <ScrollView

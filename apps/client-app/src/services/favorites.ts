@@ -22,17 +22,18 @@ interface FavoriteRaw {
 
 function transformFavorite(raw: FavoriteRaw): Product {
   // Why: ProductSummary.price 是分（继承 priceMin），转元 /100；name 多语言结构兼容
-  const nameRecord = raw.product.name as Record<string, string>;
+  // 兜底：字段缺失时用默认值，防 NaN/undefined
+  const nameRecord = (raw.product?.name ?? {}) as Record<string, string>;
   return {
-    id: raw.product.id,
+    id: raw.product?.id ?? '',
     name: {
       zh: nameRecord.zh ?? nameRecord.en ?? '',
       en: nameRecord.en ?? nameRecord.zh ?? '',
     } as Product['name'],
-    price: raw.product.price / 100,
-    image: raw.product.image,
+    price: (raw.product?.price ?? 0) / 100,
+    image: raw.product?.image ?? '',
     category: '',
-    salesCount: raw.product.salesCount,
+    salesCount: raw.product?.salesCount ?? 0,
   };
 }
 

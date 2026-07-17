@@ -13,10 +13,10 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
-  Image,
   Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/format';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
@@ -30,6 +30,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
 import { toast } from '@/store/toastStore';
 import type { OrderStatus, Order, CartItem } from '@/types';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 // === 状态视觉映射 ===
 
@@ -238,6 +239,7 @@ function buildTimelineSteps(status: OrderStatus): TimelineStepData[] {
 // === Page ===
 
 export default function OrderDetailPage() {
+  const handleBack = useSafeBack();
   const { t, i18n } = useTranslation();
   const localize = useLocalizer();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -288,7 +290,7 @@ export default function OrderDetailPage() {
       cancelMutation.mutate(order.id, {
         onSuccess: () => {
           toast.success(t('order.cancelled', { defaultValue: 'Order cancelled' }));
-          router.back();
+          handleBack();
         },
       });
       return;
@@ -298,7 +300,7 @@ export default function OrderDetailPage() {
       {
         text: t('common.confirm', { defaultValue: 'Confirm' }),
         style: 'destructive',
-        onPress: () => cancelMutation.mutate(order.id, { onSuccess: () => router.back() }),
+        onPress: () => cancelMutation.mutate(order.id, { onSuccess: handleBack }),
       },
     ]);
   };
@@ -379,7 +381,7 @@ export default function OrderDetailPage() {
                 </Text>
               </View>
               <Pressable
-                onPress={() => router.push('/address')}
+                onPress={() => router.push('/address/list')}
                 hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel={t('checkout.address.change', { defaultValue: 'Edit' })}
@@ -523,6 +525,7 @@ export default function OrderDetailPage() {
 
 function Header({ title, orderNo }: { title: string; orderNo?: string }) {
   const { colors } = useTheme();
+  const handleBack = useSafeBack();
   return (
     <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.umaLulik]}>
       <View style={styles.headerPattern} pointerEvents="none">
@@ -530,7 +533,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
       </View>
       <View style={styles.headerRow}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={handleBack}
           hitSlop={8}
           style={styles.headerBtn}
           accessibilityRole="button"
@@ -594,7 +597,7 @@ function OrderItemRow({
       accessibilityLabel={`View product: ${localize(item.product.name)}`}
     >
       <View style={[styles.itemImageWrap, { backgroundColor: colors['surface-variant'] }]}>
-        <Image source={{ uri: item.product.image }} style={styles.itemImage} />
+        <SafeImage source={{ uri: item.product.image }} style={styles.itemImage} />
       </View>
       <View style={styles.itemInfo}>
         <View>
@@ -792,7 +795,7 @@ function BottomActions({
         <>
           {outline(
             t('order.actions.afterSales', { defaultValue: 'After-Sales' }),
-            () => router.push({ pathname: '/order/after-sales-detail', params: { id: order.id } }),
+            () => router.push({ pathname: '/order/after-sales-apply', params: { orderId: order.id } }),
             'order-aftersales',
           )}
           {solid(

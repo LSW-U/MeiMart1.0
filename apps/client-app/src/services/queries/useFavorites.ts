@@ -1,16 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { favoritesApi } from '@/services/favorites';
+import { useAuthStore } from '@/store/authStore';
 import type { Product } from '@/types';
 
 // Why: 从 useUser.ts 拆出来，favorites 模块自包含（service + hook 都在）
 export const FAVORITES_QUERY_KEY = ['user', 'favorites'] as const;
 
 export function useFavorites() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: FAVORITES_QUERY_KEY,
     queryFn: () => favoritesApi.list(),
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',
+    enabled: isAuthenticated, // 未登录时不请求
   });
 }
 

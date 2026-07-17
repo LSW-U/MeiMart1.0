@@ -9,20 +9,23 @@ import {
   TextInput,
   Pressable,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { Controller, useForm } from 'react-hook-form';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { Switch } from '@/components/ui/Switch';
+import { SelectField } from '@/components/ui/SelectField/SelectField';
+import { toast } from '@/store/toastStore';
 import { useAddresses, useCreateAddress, useUpdateAddress } from '@/services/queries/useAddress';
 import { addressEditSchema, type AddressEditValues } from '@/forms/schemas/user';
 import type { Address } from '@/types';
@@ -42,7 +45,9 @@ function toFormValues(existing?: Address): AddressEditValues {
 }
 
 export default function AddressEditPage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { data: addresses } = useAddresses();
   const existing = addresses?.find((a) => a.id === id);
@@ -59,7 +64,8 @@ export default function AddressEditPage() {
       <Header title={isEditing ? 'Edit Address' : 'Add New Address'} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
+        // Why: position relative 让 bottomBar absolute 相对此容器定位，避免 Web 端定位错误
+        style={{ flex: 1, position: 'relative' }}
       >
         <AddressForm
           key={existing?.id ?? 'new'}
@@ -74,14 +80,40 @@ export default function AddressEditPage() {
               district: values.district,
               detail: values.detail,
               isDefault: values.isDefault,
+              // Why: 旧地址可能没有 lat/lng，编辑时补上帝力默认坐标，避免下单 409
+              lat: existing?.lat ?? -8.5569,
+              lng: existing?.lng ?? 125.5603,
+            };
+            const onError = (error: unknown) => {
+              // Why: 提取后端错误码，用 i18n 翻译，找不到时回退到 generic
+              const err = error as {
+                response?: { data?: { error?: { code?: string; message?: string } } };
+                message?: string;
+              };
+              const code = err?.response?.data?.error?.code;
+              const fallback = err?.response?.data?.error?.message ?? err?.message;
+              const translated = code ? t(`errors.${code}`, { defaultValue: fallback }) : fallback;
+              toast.error(translated ?? t('errors.generic'));
             };
             if (existing) {
               updateMutation.mutate(
                 { id: existing.id, updates: payload },
-                { onSuccess: () => router.back() },
+                {
+                  onSuccess: () => {
+                    toast.success(t('address.saved', { defaultValue: 'Address saved' }));
+                    handleBack();
+                  },
+                  onError,
+                },
               );
             } else {
-              createMutation.mutate(payload, { onSuccess: () => router.back() });
+              createMutation.mutate(payload, {
+                onSuccess: () => {
+                  toast.success(t('address.saved', { defaultValue: 'Address saved' }));
+                  handleBack();
+                },
+                onError,
+              });
             }
           }}
         />
@@ -98,6 +130,7 @@ interface AddressFormProps {
 
 function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const { control, handleSubmit } = useForm<AddressEditValues>({
     resolver: zodResolver(addressEditSchema),
@@ -105,7 +138,17 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
     mode: 'onBlur',
   });
 
-  const submit = handleSubmit((values) => onSubmit(values));
+  // Why: 校验失败时 toast 提示第一个错误，避免用户点击无反应
+  const submit = handleSubmit(
+    (values) => onSubmit(values),
+    (errors) => {
+      const firstError = Object.values(errors)[0];
+      const message = firstError?.message;
+      if (message) {
+        toast.error(typeof message === 'string' ? message : t('errors.generic'));
+      }
+    },
+  );
 
   return (
     <>
@@ -166,45 +209,15 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
         </View>
 
         {/* DISTRICT / REGION select */}
-        <View>
-          <FieldLabel icon="location_city" label="DISTRICT / REGION" />
-          <Controller
-            control={control}
-            name="province"
-            render={({ field: { value, onChange } }) => (
-              <Pressable
-                onPress={() => {
-                  Alert.alert(
-                    'Select District',
-                    'Choose your district',
-                    DISTRICTS.map((d) => ({ text: d, onPress: () => onChange(d) })),
-                  );
-                }}
-                style={[
-                  styles.selectBox,
-                  {
-                    backgroundColor: colors['surface-container-lowest'],
-                    borderColor: colors['outline-variant'],
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={`Select district, current ${value || 'none'}`}
-              >
-                <Text
-                  style={[
-                    styles.selectText,
-                    {
-                      color: value ? colors['on-surface'] : colors['on-surface-variant'],
-                    },
-                  ]}
-                >
-                  {value || 'Select District'}
-                </Text>
-                <Icon symbol="expand_more" size={20} color={colors['on-surface-variant']} />
-              </Pressable>
-            )}
-          />
-        </View>
+        <SelectField
+          control={control}
+          name="province"
+          label="DISTRICT / REGION"
+          icon="location_city"
+          placeholder="Select District"
+          options={DISTRICTS}
+          testID="addr-province"
+        />
 
         {/* COMPLETE ADDRESS + city/sub-district */}
         <View>
@@ -432,6 +445,7 @@ function MotifTriangle({ size, color, opacity }: { size: number; color: string; 
 
 function Header({ title }: { title: string }) {
   const { colors } = useTheme();
+  const handleBack = useSafeBack();
   return (
     <View accessibilityRole="header">
       <View style={[styles.trackerBar, { backgroundColor: colors.primary }]}>
@@ -443,7 +457,7 @@ function Header({ title }: { title: string }) {
         </View>
         <View style={styles.headerRow}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"

@@ -3,6 +3,7 @@
 // D.7: PrimaryHeader + 服务入口卡片 + 工作时间 + FAQ + 联系方式
 import { StyleSheet, View, Text, ScrollView, Pressable, Linking } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -30,6 +31,7 @@ interface FaqEntry {
 }
 
 export default function CustomerServicePage() {
+  const handleBack = useSafeBack();
   const { t } = useTranslation();
   const { colors } = useTheme();
 
@@ -116,7 +118,7 @@ export default function CustomerServicePage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <PrimaryHeader title={t('service.title')} showBack onBackPress={() => router.back()} />
+      <PrimaryHeader title={t('service.title')} showBack onBackPress={handleBack} />
 
       <ScrollView
         style={{ flex: 1 }}

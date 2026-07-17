@@ -5,6 +5,7 @@ import { StyleSheet, View, Text, ScrollView, Pressable, Image } from 'react-nati
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { Icon } from '@/components/ui/Icon';
+import { LocaleSwitch } from '@/components/business/LocaleSwitch/LocaleSwitch';
 import type { AuthShellProps } from './AuthShell.types';
 
 const CULTURAL_IMAGE =
@@ -111,6 +112,9 @@ export function AuthShell({
           </Text>
         </View>
       </View>
+
+      {/* 语言切换按钮（底部，所有 auth 页面共用） */}
+      <LocaleSwitch />
     </ScrollView>
   );
 }

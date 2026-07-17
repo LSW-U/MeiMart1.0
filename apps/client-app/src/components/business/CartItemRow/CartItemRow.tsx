@@ -21,20 +21,15 @@ export function CartItemRow({
   const name = localize(product.name);
 
   return (
-    <Pressable
+    <View
       testID={testID}
-      onPress={onItemPress ? () => onItemPress(item) : undefined}
-      disabled={!onItemPress}
-      style={({ pressed }) => [
+      style={[
         styles.row,
         {
           backgroundColor: colors['surface-container-lowest'],
           borderColor: colors['outline-variant'],
         },
-        pressed && { opacity: 0.85 },
       ]}
-      accessibilityRole={onItemPress ? 'button' : undefined}
-      accessibilityLabel={onItemPress ? `View ${name}` : undefined}
     >
       {showControls && (
         <Checkbox
@@ -43,55 +38,65 @@ export function CartItemRow({
           accessibilityLabel="Select item"
         />
       )}
-      <View style={[styles.imageWrap, { backgroundColor: colors['surface-container'] }]}>
-        <Image source={{ uri: product.image }} style={styles.image} accessible={false} />
-      </View>
-      <View style={styles.info}>
-        <Text
-          style={[textStyle('body-md'), { fontWeight: '700', color: colors['on-surface'] }]}
-          numberOfLines={2}
-        >
-          {name}
-        </Text>
-        <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-          {product.category}
-        </Text>
-        <View style={styles.bottomRow}>
-          <PriceText value={product.price} size="sm" />
-          {showControls && onQuantityChange && (
-            <View style={[styles.qtyRow, { backgroundColor: colors['surface-container'] }]}>
-              <Pressable
-                onPress={() => onQuantityChange(Math.max(1, quantity - 1))}
-                hitSlop={8}
-                style={styles.qtyBtn}
-                accessibilityRole="button"
-                accessibilityLabel="Decrease quantity"
-              >
-                <MaterialCommunityIcons name="minus" size={18} color={colors.primary} />
-              </Pressable>
-              <Text
-                style={[textStyle('body-sm'), { color: colors['on-surface'], fontWeight: '700' }]}
-              >
-                {quantity}
-              </Text>
-              <Pressable
-                onPress={() => onQuantityChange(quantity + 1)}
-                hitSlop={8}
-                style={styles.qtyBtn}
-                accessibilityRole="button"
-                accessibilityLabel="Increase quantity"
-              >
-                <MaterialCommunityIcons name="plus" size={18} color={colors.primary} />
-              </Pressable>
-            </View>
-          )}
-          {!showControls && (
-            <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-              × {quantity}
-            </Text>
-          )}
+      {/* Why: 外层用 View 而非 Pressable，避免 Pressable 嵌套 Pressable
+          （RN Web 渲染为 <button> 嵌套 <button>，违反 HTML 规范导致 hydration 错误） */}
+      <Pressable
+        onPress={onItemPress ? () => onItemPress(item) : undefined}
+        disabled={!onItemPress}
+        style={({ pressed }) => [styles.mainContent, pressed && { opacity: 0.85 }]}
+        accessibilityRole={onItemPress ? 'button' : undefined}
+        accessibilityLabel={onItemPress ? `View ${name}` : undefined}
+      >
+        <View style={[styles.imageWrap, { backgroundColor: colors['surface-container'] }]}>
+          <Image source={{ uri: product.image }} style={styles.image} accessible={false} />
         </View>
-      </View>
+        <View style={styles.info}>
+          <Text
+            style={[textStyle('body-md'), { fontWeight: '700', color: colors['on-surface'] }]}
+            numberOfLines={2}
+          >
+            {name}
+          </Text>
+          <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
+            {product.category}
+          </Text>
+          <View style={styles.bottomRow}>
+            <PriceText value={product.price} size="sm" />
+            {!showControls && (
+              <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
+                × {quantity}
+              </Text>
+            )}
+          </View>
+        </View>
+      </Pressable>
+      {showControls && onQuantityChange && (
+        <View style={[styles.qtyRow, { backgroundColor: colors['surface-container'] }]}>
+          <Pressable
+            onPress={() => onQuantityChange(Math.max(1, quantity - 1))}
+            hitSlop={8}
+            style={styles.qtyBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Decrease quantity"
+          >
+            <MaterialCommunityIcons name="minus" size={18} color={colors.primary} />
+          </Pressable>
+          <Text
+            style={[textStyle('body-sm'), { color: colors['on-surface'], fontWeight: '700' }]}
+          >
+            {quantity}
+          </Text>
+          <Pressable
+            onPress={() => onQuantityChange(quantity + 1)}
+            hitSlop={8}
+            style={styles.qtyBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Increase quantity"
+          >
+            <MaterialCommunityIcons name="plus" size={18} color={colors.primary} />
+          </Pressable>
+        </View>
+      )}
       {showControls && onDelete && (
         <Pressable
           onPress={() => onDelete(item)}
@@ -103,7 +108,7 @@ export function CartItemRow({
           <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.error} />
         </Pressable>
       )}
-    </Pressable>
+    </View>
   );
 }
 
@@ -116,6 +121,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     borderRadius: borderRadius.lg,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  mainContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
   },
   imageWrap: {
     width: 64,

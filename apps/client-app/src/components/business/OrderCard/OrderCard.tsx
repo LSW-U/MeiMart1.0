@@ -28,30 +28,34 @@ export function OrderCard({ order, onPress, onAction, testID }: OrderCardProps) 
   const actions = getOrderActions(order.status);
 
   return (
-    <Pressable
+    <View
       testID={testID}
-      style={({ pressed }) => [
+      style={[
         styles.card,
         {
           backgroundColor: colors['surface-container-lowest'],
           borderColor: colors['outline-variant'],
         },
         shadowPresets.sm,
-        pressed && styles.pressed,
       ]}
-      onPress={onPress ? () => onPress(order) : undefined}
-      accessibilityRole="button"
-      accessibilityLabel={`Order ${order.orderNo}, status ${statusLabel}`}
     >
+      {/* Why: 外层用 View 而非 Pressable，避免 Pressable 嵌套 Pressable/Button
+          （RN Web 渲染为 <button> 嵌套 <button>，违反 HTML 规范导致 hydration 错误） */}
       <View style={[styles.header, { borderBottomColor: colors['outline-variant'] }]}>
-        <View style={styles.headerLeft}>
+        <Pressable
+          onPress={onPress ? () => onPress(order) : undefined}
+          style={({ pressed }) => [styles.headerLeft, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel={`Order ${order.orderNo}, status ${statusLabel}`}
+          disabled={!onPress}
+        >
           <Text style={[textStyle('label-caps'), { color: colors.primary, fontSize: 10 }]}>
             #{order.orderNo}
           </Text>
           <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
             {order.createdAt}
           </Text>
-        </View>
+        </Pressable>
         <View style={styles.headerRight}>
           <View style={[styles.statusPill, { backgroundColor: pill.bg }]}>
             <View style={[styles.statusDot, { backgroundColor: pill.dot }]} />
@@ -74,47 +78,55 @@ export function OrderCard({ order, onPress, onAction, testID }: OrderCardProps) 
       </View>
 
       <View style={styles.body}>
-        <View style={styles.thumbRow}>
-          {thumbnails.map((item) => (
-            <View
-              key={item.id}
-              style={[
-                styles.thumb,
-                {
-                  backgroundColor: colors['surface-container'],
-                  borderColor: colors['outline-variant'],
-                },
-              ]}
-            >
-              <Image
-                source={{ uri: item.product.image }}
-                style={styles.thumbImg}
-                accessible={false}
-                accessibilityLabel={localize(item.product.name)}
-              />
-            </View>
-          ))}
-          {overflow > 0 && (
-            <View
-              style={[
-                styles.thumb,
-                {
-                  backgroundColor: colors['surface-container'],
-                  borderColor: colors['outline-variant'],
-                },
-              ]}
-            >
-              <Text
+        <Pressable
+          onPress={onPress ? () => onPress(order) : undefined}
+          style={({ pressed }) => [styles.thumbRowWrap, pressed && styles.pressed]}
+          accessibilityRole={onPress ? 'button' : undefined}
+          accessibilityLabel={onPress ? `View order ${order.orderNo} details` : undefined}
+          disabled={!onPress}
+        >
+          <View style={styles.thumbRow}>
+            {thumbnails.map((item) => (
+              <View
+                key={item.id}
                 style={[
-                  textStyle('label-caps'),
-                  { color: colors['on-surface-variant'], fontSize: 10 },
+                  styles.thumb,
+                  {
+                    backgroundColor: colors['surface-container'],
+                    borderColor: colors['outline-variant'],
+                  },
                 ]}
               >
-                +{overflow} ITEM
-              </Text>
-            </View>
-          )}
-        </View>
+                <Image
+                  source={{ uri: item.product.image }}
+                  style={styles.thumbImg}
+                  accessible={false}
+                  accessibilityLabel={localize(item.product.name)}
+                />
+              </View>
+            ))}
+            {overflow > 0 && (
+              <View
+                style={[
+                  styles.thumb,
+                  {
+                    backgroundColor: colors['surface-container'],
+                    borderColor: colors['outline-variant'],
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    textStyle('label-caps'),
+                    { color: colors['on-surface-variant'], fontSize: 10 },
+                  ]}
+                >
+                  +{overflow} ITEM
+                </Text>
+              </View>
+            )}
+          </View>
+        </Pressable>
 
         <View style={styles.footer}>
           <View style={styles.totalBox}>
@@ -138,7 +150,7 @@ export function OrderCard({ order, onPress, onAction, testID }: OrderCardProps) 
           )}
         </View>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -187,6 +199,9 @@ const styles = StyleSheet.create({
   body: {
     padding: spacing.md,
     gap: spacing.md,
+  },
+  thumbRowWrap: {
+    flexDirection: 'row',
   },
   thumbRow: {
     flexDirection: 'row',

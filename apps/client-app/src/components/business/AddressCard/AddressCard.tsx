@@ -18,18 +18,19 @@ export function AddressCard({
   const fullAddress = `${address.province}${address.city}${address.district}${address.detail}`;
 
   return (
-    <Pressable
+    <View
       testID={testID}
-      style={({ pressed }) => [
-        styles.card,
-        { backgroundColor: colors['surface-container-low'] },
-        pressed && styles.pressed,
-      ]}
-      onPress={onPress ? () => onPress(address) : undefined}
-      accessibilityRole="button"
-      accessibilityLabel={`Address for ${address.name}, ${fullAddress}`}
+      style={[styles.card, { backgroundColor: colors['surface-container-low'] }]}
     >
-      <View style={styles.row}>
+      {/* Why: 外层用 View 而非 Pressable，避免 Pressable 嵌套 Pressable/Checkbox
+          （RN Web 渲染为 <button> 嵌套 <button>，违反 HTML 规范导致 hydration 错误） */}
+      <Pressable
+        onPress={onPress ? () => onPress(address) : undefined}
+        disabled={!onPress}
+        style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+        accessibilityRole={onPress ? 'button' : undefined}
+        accessibilityLabel={`Address for ${address.name}, ${fullAddress}`}
+      >
         {selectable && (
           <Checkbox
             checked={selected}
@@ -67,7 +68,7 @@ export function AddressCard({
             {fullAddress}
           </Text>
         </View>
-      </View>
+      </Pressable>
       {(onEdit || onDelete) && (
         <View style={[styles.actions, { borderTopColor: colors['outline-variant'] }]}>
           {onEdit && (
@@ -94,7 +95,7 @@ export function AddressCard({
           )}
         </View>
       )}
-    </Pressable>
+    </View>
   );
 }
 

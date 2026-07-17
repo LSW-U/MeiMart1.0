@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -10,13 +11,14 @@ import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function PaymentResultPage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
 
   return (
     <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
-      <PrimaryHeader title={t('result.title')} showBack onBackPress={() => router.back()} />
+      <PrimaryHeader title={t('result.title')} showBack onBackPress={handleBack} />
       <View style={styles.body}>
         <View
           style={[styles.iconBox, { backgroundColor: colors.primary }]}
