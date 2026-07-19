@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +16,7 @@ function pickLabel(label: { zh: string; en: string }): string {
   return record[locale] ?? label.en;
 }
 
-export function OrderCard({ order, onPress, onAction, testID }: OrderCardProps) {
+function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const localize = useLocalizer();
@@ -153,6 +154,8 @@ export function OrderCard({ order, onPress, onAction, testID }: OrderCardProps) 
     </View>
   );
 }
+
+export const OrderCard = memo(OrderCardBase);
 
 const styles = StyleSheet.create({
   card: {

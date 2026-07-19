@@ -214,6 +214,9 @@ export default function FavoritesPage() {
         <FlatList
           data={favorites}
           keyExtractor={(item) => item.id}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
           numColumns={2}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}

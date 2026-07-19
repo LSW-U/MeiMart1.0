@@ -72,6 +72,9 @@ export function SelectField<T extends FieldValues>({
               <FlatList
                 data={options}
                 keyExtractor={(item) => item}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
                 renderItem={({ item }) => (
                   <Pressable
                     onPress={() => {

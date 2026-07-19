@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
@@ -6,7 +7,7 @@ import { PriceText } from '@/components/ui/PriceText';
 import { Checkbox } from '@/components/ui/Checkbox';
 import type { CartItemRowProps } from './CartItemRow.types';
 
-export function CartItemRow({
+function CartItemRowBase({
   item,
   onPress,
   onItemPress,
@@ -111,6 +112,8 @@ export function CartItemRow({
     </View>
   );
 }
+
+export const CartItemRow = memo(CartItemRowBase);
 
 const styles = StyleSheet.create({
   row: {

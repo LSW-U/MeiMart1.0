@@ -131,6 +131,9 @@ export default function OrdersPage() {
         <FlatList
           data={orders}
           keyExtractor={(item) => item.id}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
           contentContainerStyle={styles.list}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage) fetchNextPage();

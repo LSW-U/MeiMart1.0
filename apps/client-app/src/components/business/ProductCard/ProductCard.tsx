@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
@@ -42,7 +43,7 @@ function BadgeCorner({ badge }: { badge: ProductBadge }) {
   );
 }
 
-export function ProductCard({
+function ProductCardBase({
   product,
   onPress,
   onAddToCart,
@@ -132,6 +133,8 @@ export function ProductCard({
     </View>
   );
 }
+
+export const ProductCard = memo(ProductCardBase);
 
 const styles = StyleSheet.create({
   card: {

@@ -154,6 +154,9 @@ export default function OnboardingPage() {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={VIEWABILITY_CONFIG}
         onMomentumScrollEnd={onMomentumScrollEnd}

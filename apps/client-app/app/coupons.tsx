@@ -181,6 +181,9 @@ export default function CouponsPage() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
           renderItem={({ item }: { item: Coupon }) => (

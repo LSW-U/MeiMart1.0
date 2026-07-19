@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
 import { Checkbox } from '@/components/ui/Checkbox';
 import type { AddressCardProps } from './AddressCard.types';
 
-export function AddressCard({
+function AddressCardBase({
   address,
   onPress,
   onEdit,
@@ -98,6 +99,8 @@ export function AddressCard({
     </View>
   );
 }
+
+export const AddressCard = memo(AddressCardBase);
 
 const styles = StyleSheet.create({
   card: {

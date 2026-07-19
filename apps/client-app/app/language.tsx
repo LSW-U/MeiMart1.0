@@ -52,6 +52,9 @@ export default function LanguagePage() {
       <FlatList
         data={LANGUAGES}
         keyExtractor={(item) => item.code}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => {
           const active = locale === item.code;

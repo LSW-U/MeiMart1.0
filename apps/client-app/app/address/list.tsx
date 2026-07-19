@@ -114,6 +114,9 @@ export default function AddressListPage() {
           <FlatList
             data={addresses}
             keyExtractor={(item) => item.id}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
             scrollEnabled={false}
             contentContainerStyle={styles.list}
             renderItem={({ item }: { item: Address }) => (

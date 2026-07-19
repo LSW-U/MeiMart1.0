@@ -180,6 +180,9 @@ export default function NotificationsPage() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
           renderItem={({ item }) => (
