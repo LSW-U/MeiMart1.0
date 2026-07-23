@@ -1,0 +1,4 @@
+node-linker: hoisted
+allowBuilds:
+  '@sentry/cli': false
+  unrs-resolver: false
