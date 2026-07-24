@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme, textStyle, spacing, gradientPresets, shadowPresets } from '@/theme';
 import { DecorativeCorner } from '@/components/cultural/DecorativeCorner';
 import type { Banner, BannerTheme } from '@/types';
+import type { AppColors } from '@/theme/colors';
 import type { BannerCarouselProps } from './BannerCarousel.types';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -25,11 +26,19 @@ const THEME_GRADIENT: Record<BannerTheme, keyof typeof gradientPresets> = {
   blue: 'blueFade',
 };
 
-const THEME_BG: Record<BannerTheme, string> = {
-  primary: '#961813',
-  emerald: '#065f46',
-  blue: '#1d4ed8',
-};
+// Why: banner 底色从 theme 派生（dark mode 自动适配）。emerald→success、blue→info。
+// 注：emerald 由旧 #065f46 改为 semantic.success #059669（亮绿），肉眼可辨色变；
+// 配套 gradientPresets.emeraldFade 已同步改为 #059669 系（见 gradients.ts）。
+function getBannerBg(theme: BannerTheme, colors: AppColors): string {
+  switch (theme) {
+    case 'primary':
+      return colors.primary;
+    case 'emerald':
+      return colors.semantic.success;
+    case 'blue':
+      return colors.semantic.info;
+  }
+}
 
 export function BannerCarousel({
   banners,
@@ -103,9 +112,10 @@ export function BannerCarousel({
 }
 
 function BannerCard({ banner, onPress }: { banner: Banner; onPress?: () => void }) {
+  const { colors } = useTheme();
   const theme = banner.theme ?? 'primary';
   const gradientPreset = gradientPresets[THEME_GRADIENT[theme]];
-  const bgColor = THEME_BG[theme];
+  const bgColor = getBannerBg(theme, colors);
 
   return (
     <Pressable
@@ -133,12 +143,12 @@ function BannerCard({ banner, onPress }: { banner: Banner; onPress?: () => void 
 
       {/* 文案 + CTA */}
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={3}>
+        <Text style={[styles.title, { color: colors['on-primary'] }]} numberOfLines={3}>
           {banner.title}
         </Text>
         {banner.ctaLabel && (
           <View style={[styles.ctaBtn, shadowPresets.lg]}>
-            <Text style={styles.ctaText}>{banner.ctaLabel}</Text>
+            <Text style={[styles.ctaText, { color: colors['on-primary'] }]}>{banner.ctaLabel}</Text>
           </View>
         )}
       </View>
@@ -187,7 +197,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...textStyle('h2'),
-    color: '#ffffff',
     fontWeight: '700',
     marginBottom: spacing.sm,
   },
@@ -200,7 +209,6 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     ...textStyle('label-caps'),
-    color: '#ffffff',
     fontSize: 11,
     letterSpacing: 0.05,
   },

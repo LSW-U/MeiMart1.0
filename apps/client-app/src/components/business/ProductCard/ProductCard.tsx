@@ -9,23 +9,29 @@ import { Button } from '@/components/ui/Button';
 import type { ProductBadge, ProductBadgeVariant, ProductCardProps } from './ProductCard.types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
-const BADGE_COLORS: Record<ProductBadgeVariant, { bg: string; fg: string; pill?: boolean }> = {
-  fresh: { bg: '#059669', fg: '#ffffff' }, // emerald-600
-  'best-seller': { bg: '#961813', fg: '#ffffff' }, // primary
-  new: { bg: '#634700', fg: '#ffffff' }, // tertiary
-  'top-rated': { bg: '#f59e0b', fg: '#ffffff' }, // amber-500
-  local: { bg: 'rgba(150,24,19,0.1)', fg: '#961813', pill: true }, // primary/10
-};
+type BadgeColorEntry = { bg: string; fg: string; pill?: boolean };
 
-function BadgeCorner({ badge }: { badge: ProductBadge }) {
-  const colors = BADGE_COLORS[badge.variant];
+// Why: badge 配色从 useTheme 派生（dark mode 自动适配），不再用模块级硬编码常量。
+// top-rated 映射到 semantic.warning (#F57C00，旧 #f59e0b 偏黄)，肉眼可辨色变。
+function useBadgeColors(): Record<ProductBadgeVariant, BadgeColorEntry> {
+  const { colors } = useTheme();
+  return {
+    fresh: { bg: colors.semantic.success, fg: colors['on-primary'] },
+    'best-seller': { bg: colors.primary, fg: colors['on-primary'] },
+    new: { bg: colors.tertiary, fg: colors['on-primary'] },
+    'top-rated': { bg: colors.semantic.warning, fg: colors['on-primary'] },
+    local: { bg: `${colors.primary}1A`, fg: colors.primary, pill: true }, // 1A = ~10% opacity
+  };
+}
+
+function BadgeCorner({ badge, entry }: { badge: ProductBadge; entry: BadgeColorEntry }) {
   return (
     <View
       style={[
         styles.badge,
         {
-          backgroundColor: colors.bg,
-          borderRadius: colors.pill ? 999 : 2,
+          backgroundColor: entry.bg,
+          borderRadius: entry.pill ? 999 : 2,
         },
       ]}
     >
@@ -33,7 +39,7 @@ function BadgeCorner({ badge }: { badge: ProductBadge }) {
         style={[
           styles.badgeText,
           {
-            color: colors.fg,
+            color: entry.fg,
           },
         ]}
       >
@@ -54,6 +60,7 @@ function ProductCardBase({
   testID,
 }: ProductCardProps) {
   const { colors } = useTheme();
+  const badgeColors = useBadgeColors();
   const localize = useLocalizer();
   const name = localize(product.name);
 
@@ -77,9 +84,9 @@ function ProductCardBase({
         accessibilityRole="button"
         accessibilityLabel={`${name}, price ${product.price}`}
       >
-        <View style={styles.imageWrap}>
+        <View style={[styles.imageWrap, { backgroundColor: colors['surface-container-lowest'] }]}>
           <SafeImage source={{ uri: product.image }} style={styles.image} accessible={false} />
-          {badge && <BadgeCorner badge={badge} />}
+          {badge && <BadgeCorner badge={badge} entry={badgeColors[badge.variant]} />}
         </View>
         <View style={styles.info}>
           <Text
@@ -154,7 +161,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     aspectRatio: 1,
-    backgroundColor: '#ffffff',
   },
   image: {
     width: '100%',

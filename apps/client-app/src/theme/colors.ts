@@ -13,8 +13,14 @@ type CulturalColors = {
 };
 
 type SemanticColors = {
+  success: string;
+  'success-container': string;
+  info: string;
+  'info-container': string;
   warning: string;
+  'warning-container': string;
   error: string;
+  'error-container': string;
 };
 
 export type AppColors = {
@@ -133,10 +139,16 @@ export const lightColors: AppColors = {
     diamondRed: '#a20513',
   },
 
-  // 语义色（用于状态提示，与 HTML 一致）
+  // 语义色（用于状态提示 / pill 配色；container 取自 orderStatusConfig 现有 bg，主色为通用语义角色色）
   semantic: {
+    success: '#059669',
+    'success-container': '#d1fae5',
+    info: '#1d4ed8',
+    'info-container': '#dbeafe',
     warning: '#F57C00',
+    'warning-container': '#fef3c7',
     error: '#C62828',
+    'error-container': '#fee2e2',
   },
 } as const;
 
@@ -214,7 +226,13 @@ export const darkColors: AppColors = {
 
   // 语义色（暗色版调整亮度）
   semantic: {
+    success: '#34D399',
+    'success-container': '#064e3b',
+    info: '#60A5FA',
+    'info-container': '#1e3a8a',
     warning: '#FFB74D',
+    'warning-container': '#78350f',
     error: '#EF9A9A',
+    'error-container': '#7f1d1d',
   },
 } as const;

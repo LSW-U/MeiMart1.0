@@ -47,6 +47,8 @@ const styles = StyleSheet.create({
   },
   text: {
     position: 'absolute',
+    // Why: 文字色固定白——bg 由调用方传入饱和色（#F97316 / #059669 等，不随 theme 变），
+    // 文字须保持固定高对比色。dark mode 适配需改为 textColor prop 由调用方传，留 follow-up。
     color: '#ffffff',
     ...typography['label-caps'],
     fontSize: 10,

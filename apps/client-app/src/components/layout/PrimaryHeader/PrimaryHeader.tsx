@@ -36,14 +36,14 @@ export function PrimaryHeader({
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Icon symbol="arrow_back" size={24} color="#ffffff" />
+            <Icon symbol="arrow_back" size={24} color={colors['on-primary']} />
           </Pressable>
         ) : (
           <View style={styles.btnPlaceholder} />
         )}
 
         <View style={styles.titleWrap}>
-          <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
+          <Text style={[styles.title, { color: colors['on-primary'] }]} numberOfLines={1} accessibilityRole="header">
             {title}
           </Text>
         </View>
@@ -56,11 +56,11 @@ export function PrimaryHeader({
             accessibilityRole="button"
             accessibilityLabel={`Location: ${locationLabel}`}
           >
-            <Icon symbol="location_on" size={13} color="#ffffff" />
-            <Text style={styles.locationText} numberOfLines={1}>
+            <Icon symbol="location_on" size={13} color={colors['on-primary']} />
+            <Text style={[styles.locationText, { color: colors['on-primary'] }]} numberOfLines={1}>
               {locationLabel}
             </Text>
-            <Icon symbol="expand_more" size={13} color="#ffffff" />
+            <Icon symbol="expand_more" size={13} color={colors['on-primary']} />
           </Pressable>
         )}
 
@@ -111,7 +111,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h3,
-    color: '#ffffff',
     fontWeight: '700',
   },
   // Why: 位置胶囊 - 半透明白底圆角，浮在 header 右侧
@@ -127,7 +126,6 @@ const styles = StyleSheet.create({
   },
   locationText: {
     ...typography['body-sm'],
-    color: '#ffffff',
     fontSize: 12,
     flexShrink: 1,
   },

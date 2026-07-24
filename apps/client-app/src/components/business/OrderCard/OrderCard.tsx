@@ -6,7 +6,7 @@ import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/the
 import { useLocalizer, getCurrentLocale } from '@/i18n';
 import { PriceText } from '@/components/ui/PriceText';
 import { Button } from '@/components/ui/Button';
-import { ORDER_STATUS_VISUAL, getOrderActions } from '@/lib/orderStatusConfig';
+import { ORDER_STATUS_VISUAL, getStatusPill, getOrderActions } from '@/lib/orderStatusConfig';
 import type { OrderCardProps, OrderAction } from './OrderCard.types';
 
 // Why: orderStatusConfig 的 label 是 {zh, en}，按当前 locale 取 string（tet fallback 到 en）
@@ -21,7 +21,7 @@ function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
   const { colors } = useTheme();
   const localize = useLocalizer();
   const visual = ORDER_STATUS_VISUAL[order.status];
-  const pill = visual.pill;
+  const pill = getStatusPill(order.status, colors);
   const statusLabel = pickLabel(visual.label);
   const thumbnails = order.items.slice(0, 2);
   const overflow = Math.max(0, order.items.length - 2);

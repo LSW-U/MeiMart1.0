@@ -43,14 +43,14 @@ export function AuthShell({
             style={[
               styles.logoBadge,
               {
-                backgroundColor: '#ffffff',
+                backgroundColor: colors['surface-container-lowest'],
                 borderColor: 'rgba(150,24,19,0.1)',
               },
             ]}
           >
             <Icon symbol="shopping_basket" size={40} color={colors.primary} />
           </View>
-          <Text style={styles.brandTitle}>MEI MART</Text>
+          <Text style={[styles.brandTitle, { color: colors['on-primary-container'] }]}>MEI MART</Text>
           <Text style={styles.brandSubtitle}>EST. 2024 • DILI</Text>
         </View>
       </View>
@@ -88,7 +88,7 @@ export function AuthShell({
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
         >
-          <Text style={styles.actionText}>{actionLabel}</Text>
+          <Text style={[styles.actionText, { color: colors['on-tertiary-container'] }]}>{actionLabel}</Text>
           <Icon symbol="arrow_forward" size={22} color={colors['on-primary']} />
         </Pressable>
 
@@ -156,7 +156,6 @@ const styles = StyleSheet.create({
   },
   brandTitle: {
     ...typography.h1,
-    color: '#ffffff',
     fontWeight: '700',
     letterSpacing: -0.5,
   },
@@ -197,7 +196,6 @@ const styles = StyleSheet.create({
     ...shadowPresets.md,
   },
   actionText: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: '700',
   },

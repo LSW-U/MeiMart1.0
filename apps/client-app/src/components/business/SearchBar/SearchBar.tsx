@@ -43,7 +43,7 @@ export function SearchBar({
   const leadingIconColor = iconColor ?? (isCard ? colors.outline : colors.primary);
   const containerBg = isCard ? colors['surface-container-lowest'] : 'rgba(255,255,255,0.1)';
   const borderColor = isCard ? colors['outline-variant'] : 'rgba(255,255,255,0.2)';
-  const textColor = isCard ? colors['on-surface'] : '#ffffff';
+  const textColor = isCard ? colors['on-surface'] : colors['on-primary'];
   const placeholderColor = isCard ? colors['on-surface-variant'] : 'rgba(255,255,255,0.7)';
 
   return (

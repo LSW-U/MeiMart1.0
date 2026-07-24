@@ -23,7 +23,7 @@ import type { LinearGradientProps } from 'expo-linear-gradient';
 export type GradientPreset = Pick<LinearGradientProps, 'colors' | 'start' | 'end'>;
 
 const FADE_STOPS = ['rgba(150,24,19,0.9)', 'rgba(150,24,19,0)'] as const;
-const DARK_GREEN_STOPS = ['#064e3b', 'rgba(6,78,59,0)'] as const;
+const GREEN_STOPS = ['#059669', 'rgba(5,150,105,0)'] as const; // 与 banner emerald bg #059669 同源（Step1 同步）
 const DARK_BLUE_STOPS = ['#1e3a8a', 'rgba(30,58,138,0)'] as const;
 
 export const gradientPresets = {
@@ -35,7 +35,7 @@ export const gradientPresets = {
   },
   /** 翡翠绿横向往右淡出（new user banner） */
   emeraldFade: {
-    colors: [...DARK_GREEN_STOPS],
+    colors: [...GREEN_STOPS],
     start: { x: 0, y: 0.5 },
     end: { x: 1, y: 0.5 },
   },

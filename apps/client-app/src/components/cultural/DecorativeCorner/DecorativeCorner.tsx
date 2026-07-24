@@ -32,7 +32,7 @@ export type DecorativeCornerProps = {
 
 export function DecorativeCorner({ size = 120, variant = 'light', testID }: DecorativeCornerProps) {
   const { colors } = useTheme();
-  const stroke = variant === 'light' ? '#ffffff' : colors.primary;
+  const stroke = variant === 'light' ? colors['on-primary'] : colors.primary;
   const gold = colors.cultural.gold;
 
   return (

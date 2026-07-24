@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 
 import type { ButtonProps } from './Button.types';
@@ -27,6 +28,7 @@ export function Button({
   testID,
 }: ButtonProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const isDisabled = disabled || loading;
 
   const bgByVariant: Record<NonNullable<ButtonProps['variant']>, string> = {
@@ -34,6 +36,7 @@ export function Button({
     secondary: colors['secondary-container'],
     text: 'transparent',
     outline: 'transparent',
+    danger: colors.semantic.error,
   };
 
   const textColorByVariant: Record<NonNullable<ButtonProps['variant']>, string> = {
@@ -41,6 +44,7 @@ export function Button({
     secondary: colors['on-secondary-container'],
     text: colors.primary,
     outline: colors.primary,
+    danger: colors['on-error'],
   };
 
   return (
@@ -69,7 +73,7 @@ export function Button({
           <ActivityIndicator
             color={textColorByVariant[variant]}
             size="small"
-            accessibilityLabel="Loading"
+            accessibilityLabel={t('common.loading')}
           />
         )}
         <Text
