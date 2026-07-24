@@ -13,6 +13,7 @@ import { useState, type ReactNode } from 'react';
 import { Image as ExpoImage } from 'expo-image';
 import { View, StyleSheet, type ImageStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '@/theme';
 
 type ContentFit = 'cover' | 'contain' | 'fill' | 'scale-down' | 'none';
 
@@ -40,13 +41,18 @@ export function SafeImage({
   transition = 300,
   ...rest
 }: SafeImageProps) {
+  const { colors } = useTheme();
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {
     return (
-      <View style={[styles.fallback, style]}>
+      <View style={[styles.fallback, style, { backgroundColor: colors['surface-container-low'] }]}>
         {fallback ?? (
-          <MaterialCommunityIcons name="image-off-outline" size={24} color="#bdbdbd" />
+          <MaterialCommunityIcons
+            name="image-off-outline"
+            size={24}
+            color={colors['on-surface-variant']}
+          />
         )}
       </View>
     );
@@ -69,6 +75,5 @@ const styles = StyleSheet.create({
   fallback: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f5f5f5',
   },
 });

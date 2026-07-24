@@ -147,7 +147,7 @@ function BannerCard({ banner, onPress }: { banner: Banner; onPress?: () => void 
           {banner.title}
         </Text>
         {banner.ctaLabel && (
-          <View style={[styles.ctaBtn, shadowPresets.lg]}>
+          <View style={[styles.ctaBtn, { backgroundColor: colors.tertiary }, shadowPresets.lg]}>
             <Text style={[styles.ctaText, { color: colors['on-primary'] }]}>{banner.ctaLabel}</Text>
           </View>
         )}
@@ -201,7 +201,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   ctaBtn: {
-    backgroundColor: '#634700',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: 8,
