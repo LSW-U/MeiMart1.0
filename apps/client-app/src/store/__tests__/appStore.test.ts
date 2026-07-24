@@ -1,14 +1,14 @@
 import { useAppStore } from '../appStore';
 
 describe('appStore', () => {
-  it('starts with default locale zh', () => {
-    expect(useAppStore.getState().locale).toBe('zh');
+  it('starts with default locale en', () => {
+    expect(useAppStore.getState().locale).toBe('en');
   });
 
   it('setLocale updates locale', () => {
-    useAppStore.getState().setLocale('en');
-    expect(useAppStore.getState().locale).toBe('en');
     useAppStore.getState().setLocale('zh');
+    expect(useAppStore.getState().locale).toBe('zh');
+    useAppStore.getState().setLocale('en'); // 重置为默认
   });
 
   it('setThemeMode updates theme', () => {
