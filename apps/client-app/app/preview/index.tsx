@@ -20,7 +20,7 @@ import {
   Pressable,
   type TextStyle,
 } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, type Href } from 'expo-router';
 import { useTheme, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 
@@ -144,7 +144,7 @@ export default function PreviewIndex() {
           <View style={{ gap: 8 }}>
             <Text style={[typography.h3, { marginBottom: 12 }]}>所有页面（点击进入预览）</Text>
             {PAGES.map((page) => (
-              <Link key={page.id} href={page.path as any} asChild>
+              <Link key={page.id} href={page.path as Href} asChild>
                 <Pressable
                   style={{
                     flexDirection: 'row',

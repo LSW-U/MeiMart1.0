@@ -39,4 +39,17 @@
 
 - `tailwind.config.js` — 设计 Token 字典
 - `docs/tailwind-to-rn-mapping.md` — Tailwind class → RN StyleSheet 翻译参考表
-- `src/theme/` — colors / typography / spacing / shadows / gradients
+- `src/theme/` — colors / typography / spacing / gradients
+
+## HTML 原型内联阴影值（存档）
+
+RN 无法直接消费 CSS `box-shadow` 字符串，因此这些源自 HTML 原型的内联 shadow 值不进入 `src/theme/`，仅在此存档。RN 侧的阴影统一走 `src/theme/shadowPresets.ts`（iOS `shadow*` + Android `elevation`）。下方为各业务元素在 HTML 原型中的原始取值，翻译对应页面时可查阅：
+
+| 元素 | HTML 原型 shadow |
+| --- | --- |
+| floating-cart | `0px 4px 6px rgba(150,24,19,0.2)` |
+| bottom-nav | `0px -4px 6px -1px rgba(38,24,22,0.1)` |
+| sticky-footer | `0px -4px 20px rgba(0,0,0,0.05)` |
+| checkout-bar | `0px -10px 20px rgba(0,0,0,0.02)` |
+| delivery-tracking | `0px -4px 12px 0px rgba(93,66,0,0.05)` |
+| stamp-button | `4px 4px 0px 0px rgba(141,112,108,0.2)` |
