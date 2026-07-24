@@ -1,116 +1,90 @@
-# Mutation 完整性审计（Task B.5）
+# Mutation 完整性审计
 
-> 初次扫描：2026-06-15  
-> 最近更新：2026-06-20（补 useUser.ts 两个新增 mutation）  
-> 范围：`src/services/queries/use*.ts` 全部 mutation  
-> 评判规则：CLAUDE.md 规则 #25 — "用户点击后期望立即视觉反馈的写操作，必须有 onMutate"
+> 初次扫描：2026-06-15（Task B.5）
+> 最近重审：**2026-07-24**（全量精确重审，逐个 mutation 读代码核实，修正了 grep 误报）
+> 范围：`src/services/queries/use*.ts`（11 个文件，其中 7 个含 mutation）
+> 评判规则：CLAUDE.md 规则 #25 — "用户点击后期望立即视觉反馈的写操作，必须有 onMutate；纯异步操作（登录/注册/发码）可豁免"
+
+---
+
+## 重审结论：全部合规 ✅
+
+2026-07-24 全量重审，7 个含 mutation 的文件、**19 个 mutation 全部合规**。代码较 06-20 不但没回退，createOrder / updateProfile 还补齐了乐观更新（见 §变化）。
 
 ## 总览
 
-| 文件            | useMutation 总数 | 有 onMutate | 有 onError | 有 onSettled | 状态                          |
-| --------------- | ---------------- | ----------- | ---------- | ------------ | ----------------------------- |
-| `useAuth.ts`    | 5                | 0           | 0          | 0            | ✅ 合规（全豁免）             |
-| `useCart.ts`    | 4                | 4           | 4          | 4            | ✅ 合规                       |
-| `useAddress.ts` | 4                | 4           | 4          | 4            | ✅ 合规                       |
-| `useOrders.ts`  | 2                | 1           | 1          | 1            | ✅ 合规（createOrder 豁免）   |
-| `useUser.ts`    | 4                | 3           | 3          | 3            | ✅ 合规（updateProfile 豁免） |
-| **合计**        | **19**           | **12**      | **12**     | **12**       | —                             |
+| 文件 | mutation 数 | 有 onMutate | 豁免 | 状态 |
+|---|---|---|---|---|
+| useAuth.ts | 5 | 0 | 5（全异步）| ✅ |
+| useCart.ts | 4 | 4 | 0 | ✅ |
+| useAddress.ts | 4 | 4 | 0 | ✅ |
+| useOrders.ts | 2 | 2 | 0 | ✅ |
+| useNotifications.ts | 2 | 2 | 0 | ✅ |
+| useFavorites.ts | 1 | 1 | 0 | ✅ |
+| useUser.ts | 1 | 1 | 0 | ✅ |
+| **合计** | **19** | **14** | **5** | — |
 
-## 2026-06-20 增量
+无 mutation 的纯 query 文件：`useCatalog` / `usePayment` / `useProducts` / `useTracking`。
 
-`useUser.ts` 在 Task 4.3 之后又新增了 2 个 mutation（用 i18n 期间发现需要）：
+---
 
-- `useToggleFavorite`：收藏切换，需要乐观更新（用户希望立刻看到心形切换）
-- `useMarkNotificationRead`：消息标记已读，需要乐观更新
+## ⚠️ grep 脚本误报教训（重要）
 
-两个都按规则 #25 补齐了 `onMutate` + `onError` + `onSettled` 三件套。
+CLAUDE.md 规则 26 的检查脚本用 `grep -c "useMutation"` 计数，会把第 1 行 `import { useMutation }` 也算进去，**导致每个文件 useMutation 数恒比实际多 1**。配合 `grep -c "onMutate"`（这个只数实现，但会误匹配注释里的字样，如 useAuth 文件头"不实现 onMutate"），脚本一度呈现"7 个文件 useMutation > onMutate"的**覆盖率回退假象**。
 
-## 逐项说明
+**正确做法**：grep 计数仅用于初筛，合规判定必须读代码确认每个 mutation 的用途与三件套实现。本次重审即修正了该误报。
 
-### ✅ useAuth.ts（5 个，0 个 onMutate，合规）
+> 建议后续把规则 26 脚本改成 `grep -cE "^\s*useMutation\("` 只数调用处，或直接基于 AST。
 
-| Hook               | 行为       | 是否需要 onMutate | 原因                         |
-| ------------------ | ---------- | ----------------- | ---------------------------- |
-| `useLoginPassword` | 密码登录   | ❌ 不需要         | 异步操作，登录成功后才跳转   |
-| `useLoginSms`      | 短信登录   | ❌ 不需要         | 异步操作                     |
-| `useRegister`      | 注册       | ❌ 不需要         | 异步操作，注册成功后才跳转   |
-| `useSendSmsCode`   | 发送验证码 | ❌ 不需要         | 异步操作，按钮启动倒计时即可 |
-| `useResetPassword` | 重置密码   | ❌ 不需要         | 异步操作，成功后才跳转       |
+---
 
-按 CLAUDE.md 规则 #25："除非该 mutation 是「纯创建且不需要立即更新列表」（如提交评价、发送验证码等异步操作）"。登录/注册/验证码均属于此类。
+## vs 旧版（06-20）的变化
 
-### ✅ useCart.ts（4 个，全部有 onMutate）
+| 变化 | 说明 |
+|---|---|
+| `useFavorites.ts` 新增 | 从 useUser 拆出，`useToggleFavorite` 有完整三件套 |
+| `useNotifications.ts` 新增 | 从 useUser 拆出，含 `useMarkNotificationRead`（旧版在 useUser）+ 新增 `useMarkAllNotificationsRead`，都有三件套 |
+| `useCreateOrder` 升级 | 旧版豁免（仅 onSuccess invalidate）→ **新版补 onMutate**，乐观插入临时订单避免列表空白闪现 |
+| `useUpdateProfile` 升级 | 旧版豁免 → **新版补 onMutate**，乐观更新 profile 缓存 |
 
-| Hook                | onMutate 行为                         |
-| ------------------- | ------------------------------------- |
-| `useAddToCart`      | 添加商品到购物车，立即更新数量        |
-| `useUpdateCartItem` | 改数量/勾选单个，立即更新合计         |
-| `useRemoveCartItem` | 删除商品，立即从列表移除              |
-| `useToggleCartItem` | 勾选 checkbox，立即切换 selected 状态 |
+---
 
-Tasks B.1/B.2/B.3 已全部完成。
+## 逐文件明细
 
-### ✅ useAddress.ts（4 个，全部有 onMutate）
+### useAuth.ts（5，全豁免）
 
-| Hook                   | onMutate 行为                                    |
-| ---------------------- | ------------------------------------------------ |
-| `useCreateAddress`     | 临时 id 追加，必要时 enforceSingleDefault        |
-| `useUpdateAddress`     | merge updates，isDefault 时 enforceSingleDefault |
-| `useDeleteAddress`     | filter 移除                                      |
-| `useSetDefaultAddress` | mutex 切换默认                                   |
+`useLoginPassword` / `useLoginSms` / `useRegister` / `useSendSmsCode` / `useResetPassword` —— 纯异步操作，提交后不更新任何列表，调用方在 onSuccess 后跳转。文件头有豁免说明注释（规范）。
 
-Task B.4 已完成。
+### useCart.ts（4，全有三件套）
 
-### ⚠️ useOrders.ts（2 个，1 个 onMutate，**已修**）
+`useAddToCart` / `useUpdateCartItem` / `useRemoveCartItem` / `useToggleCartItem` —— 购物车写操作，全部乐观更新 + `recomputeTotals` 重算 totalItems/totalPrice。
 
-| Hook             | 当前实现                   | 是否需要 onMutate                     | 操作                                                          |
-| ---------------- | -------------------------- | ------------------------------------- | ------------------------------------------------------------- |
-| `useCreateOrder` | onSuccess invalidate       | ❌ 不需要（提交订单异步，跳转支付页） | 保留现状                                                      |
-| `useCancelOrder` | **已加 onMutate**（B.5.1） | ✅ 需要（用户期望订单状态立即变化）   | ✅ 完成：立即把订单状态改为 'cancelled'，多状态变体列表均同步 |
+### useAddress.ts（4，全有三件套）
 
-### ⚠️ useUser.ts（2 个，1 个 onMutate，**已修**）
+`useCreateAddress`（临时 id 追加）/ `useUpdateAddress`（merge）/ `useDeleteAddress`（filter）/ `useSetDefaultAddress`（`enforceSingleDefault` 互斥切默认）。
 
-| Hook                      | 当前实现                   | 是否需要 onMutate                | 操作                                                   |
-| ------------------------- | -------------------------- | -------------------------------- | ------------------------------------------------------ |
-| `useUpdateProfile`        | onSuccess invalidate       | ⚠️ 边界                          | 更新资料后跳转回上一页，可保留 invalidate；不强制要求  |
-| `useMarkNotificationRead` | **已加 onMutate**（B.5.2） | ✅ 需要（红点/未读数应立即消失） | ✅ 完成：立即把消息标记为已读，触发红点/未读数即时消失 |
+### useOrders.ts（2，全有三件套）
 
-## 缺失的 mutation（应存在但未实现）
+- `useCreateOrder`：onMutate 乐观插入临时订单（tempId + orderNo），onSuccess 用真实 Order 替换 tempId，onError 回滚。避免下单后跳列表时空白闪现。
+- `useCancelOrder`：onMutate 立即把 status 改为 `CANCELLED`，`setQueriesData` 同步所有状态变体（all/pending/paid/...）。
 
-| 功能       | 现状                                                      | 建议                                  |
-| ---------- | --------------------------------------------------------- | ------------------------------------- |
-| 收藏切换   | 无 `useToggleFavorite` hook，ProductCard 心形按钮未接 API | 待业务实现时一并加 onMutate           |
-| 优惠券领取 | 无 hook                                                   | 待业务实现                            |
-| 评价提交   | 无 hook                                                   | 按 CLAUDE.md 规则 #25 可豁免 onMutate |
+### useNotifications.ts（2，全有三件套）
 
-## 待补 Tasks
+`useMarkNotificationRead`（标记单条 + 未读数 -1）/ `useMarkAllNotificationsRead`（全标已读 + 未读数归零）。
 
-### B.5.1 — useCancelOrder 加 onMutate ✅ 完成
+### useFavorites.ts（1，有三件套）
 
-`onMutate`：snapshot 所有 ORDERS_QUERY_KEY 变体（all/pending/paid/...），用 `setQueriesData` 把目标订单 status 改为 'cancelled'。
+`useToggleFavorite`：乐观加入/移除，复用组件传入的 product 对象（已含完整字段）避免额外 fetch。
 
-`onError`：把 snapshot 中每个 `[key, data]` 写回。
+### useUser.ts（1，有三件套）
 
-`onSettled`：invalidate。
+`useUpdateProfile`：onMutate merge updates 到 PROFILE_QUERY_KEY 缓存。
 
-### B.5.2 — useMarkNotificationRead 加 onMutate ✅ 完成
-
-`onMutate`：cancel + snapshot + map 标记目标通知 `read: true`。
-
-`onError`：rollback。
-
-`onSettled`：invalidate。
-
-### B.5.3 — useUpdateProfile（不做）
-
-更新资料后跳转，列表本身不展示，invalidate 即可。不强求 onMutate。
+---
 
 ## 验收
 
-- `useCart.ts`：4/4 全部有 onMutate ✅
-- `useAddress.ts`：4/4 全部有 onMutate ✅
-- `useOrders.ts`：1/2（createOrder 豁免）✅
-- `useUser.ts`：1/2（updateProfile 豁免）✅
-- `useAuth.ts`：5/5 全部异步操作豁免 ✅
-
-**全部合规，CP-FIX-1 验收通过。**
+- 7 个含 mutation 文件全部合规 ✅
+- 19 个 mutation：14 个有 onMutate + 5 个合规豁免 ✅
+- 无 mutation 的 4 个 query 文件无需检查 ✅
+- CP3 mutation 覆盖率检查通过 ✅
