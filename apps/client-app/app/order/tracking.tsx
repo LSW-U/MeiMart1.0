@@ -13,7 +13,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, statusBannerPalettes } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PriceText } from '@/components/ui/PriceText';
@@ -133,23 +133,23 @@ export default function DeliveryTrackingPage() {
                 Placed May 12, 2024
               </Text>
             </View>
-            <StatusBadge text="PROCESSING" backgroundColor="#F97316" />
+            <StatusBadge text="PROCESSING" backgroundColor={statusBannerPalettes.pending.badgeBg} />
           </View>
 
-          {/* ESTIMATED DELIVERY（HTML 第 168-174 行 — blue-50/50 bg） */}
+          {/* ESTIMATED DELIVERY（HTML 第 168-174 行 — blue-50/50 bg；复用 pending 色板）*/}
           <View
             style={[
               styles.etaRow,
               {
-                backgroundColor: 'rgba(59,130,246,0.08)',
-                borderColor: 'rgba(59,130,246,0.25)',
+                backgroundColor: statusBannerPalettes.pending.bannerBg,
+                borderColor: statusBannerPalettes.pending.bannerBorder,
               },
             ]}
           >
-            <Icon symbol="local_shipping" size={20} color="#1d4ed8" />
+            <Icon symbol="local_shipping" size={20} color={statusBannerPalettes.pending.bannerIcon} />
             <View style={styles.flex1}>
-              <Text style={[styles.etaLabel, { color: '#1e3a8a' }]}>ESTIMATED DELIVERY</Text>
-              <Text style={[styles.etaValue, { color: '#0c2461' }]}>
+              <Text style={[styles.etaLabel, { color: statusBannerPalettes.pending.bannerLabelColor }]}>ESTIMATED DELIVERY</Text>
+              <Text style={[styles.etaValue, { color: statusBannerPalettes.pending.bannerValueColor }]}>
                 Arriving Today 4:00 PM - 6:00 PM
               </Text>
             </View>

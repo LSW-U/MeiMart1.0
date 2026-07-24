@@ -22,6 +22,11 @@ export {
   type StatusBannerPaletteKey,
 } from './statusBannerThemes';
 export { shortcutThemes, type ShortcutTheme, type ShortcutThemeKey } from './shortcutThemes';
+export {
+  serviceEntryThemes,
+  type ServiceEntryTheme,
+  type ServiceEntryThemeKey,
+} from './serviceEntryThemes';
 export { symbolToMc, type IconName } from './iconMapping';
 export {
   fontFamilies,

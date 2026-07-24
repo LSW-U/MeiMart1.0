@@ -6,7 +6,7 @@ import { StyleSheet, View, Text, ScrollView, Pressable, TextInput } from 'react-
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, serviceEntryThemes, type ServiceEntryThemeKey } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -19,8 +19,7 @@ interface HelpCategory {
   id: string;
   labelKey: string;
   icon: string;
-  bg: string;
-  iconBg: string;
+  theme: ServiceEntryThemeKey;
 }
 
 const CATEGORIES: HelpCategory[] = [
@@ -28,29 +27,25 @@ const CATEGORIES: HelpCategory[] = [
     id: 'order',
     labelKey: 'service.help.cat.order',
     icon: 'receipt_long',
-    bg: '#dbeafe',
-    iconBg: '#3b82f6',
+    theme: 'info',
   },
   {
     id: 'payment',
     labelKey: 'service.help.cat.payment',
     icon: 'credit_card',
-    bg: '#d1fae5',
-    iconBg: '#10b981',
+    theme: 'success',
   },
   {
     id: 'shipping',
     labelKey: 'service.help.cat.shipping',
     icon: 'local_shipping',
-    bg: '#fef3c7',
-    iconBg: '#f59e0b',
+    theme: 'warning',
   },
   {
     id: 'return',
     labelKey: 'service.help.cat.return',
     icon: 'history',
-    bg: '#fee2e2',
-    iconBg: '#ef4444',
+    theme: 'error',
   },
 ];
 
@@ -123,8 +118,8 @@ export default function HelpCenterPage() {
               accessibilityLabel={t(cat.labelKey)}
               testID={`help-cat-${cat.id}`}
             >
-              <View style={[styles.categoryIconWrap, { backgroundColor: cat.bg }]}>
-                <View style={[styles.categoryIconInner, { backgroundColor: cat.iconBg }]}>
+              <View style={[styles.categoryIconWrap, { backgroundColor: serviceEntryThemes[cat.theme].bg }]}>
+                <View style={[styles.categoryIconInner, { backgroundColor: serviceEntryThemes[cat.theme].iconBg }]}>
                   <Icon symbol={cat.icon} size={20} color="#ffffff" />
                 </View>
               </View>
@@ -197,7 +192,7 @@ export default function HelpCenterPage() {
                     ]}
                   >
                     <View style={[styles.aIconWrap, { backgroundColor: 'rgba(16,185,129,0.12)' }]}>
-                      <Text style={[styles.aIcon, { color: '#10b981' }]}>A</Text>
+                      <Text style={[styles.aIcon, { color: serviceEntryThemes.success.iconBg }]}>A</Text>
                     </View>
                     <Text style={[styles.answer, { color: colors['on-surface-variant'] }]}>
                       {t(`service.help.faq.a${id.slice(1)}`)}

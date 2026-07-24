@@ -5,7 +5,7 @@ import { StyleSheet, View, Text, ScrollView, Pressable, Linking } from 'react-na
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, serviceEntryThemes, type ServiceEntryThemeKey } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -17,8 +17,7 @@ interface ChannelCard {
   labelKey: string;
   descKey: string;
   icon: string;
-  bg: string;
-  iconBg: string;
+  theme: ServiceEntryThemeKey;
   onPress: () => void;
 }
 
@@ -41,8 +40,7 @@ export default function CustomerServicePage() {
       labelKey: 'service.channels.online',
       descKey: 'service.channels.onlineDesc',
       icon: 'headset_mic',
-      bg: '#dbeafe',
-      iconBg: '#3b82f6',
+      theme: 'info',
       onPress: () => router.push('/service/feedback'),
     },
     {
@@ -50,8 +48,7 @@ export default function CustomerServicePage() {
       labelKey: 'service.channels.phone',
       descKey: 'service.channels.phoneDesc',
       icon: 'call',
-      bg: '#d1fae5',
-      iconBg: '#10b981',
+      theme: 'success',
       onPress: () => Linking.openURL('tel:+67077000000'),
     },
     {
@@ -59,8 +56,7 @@ export default function CustomerServicePage() {
       labelKey: 'service.channels.email',
       descKey: 'service.channels.emailDesc',
       icon: 'mail',
-      bg: '#fef3c7',
-      iconBg: '#f59e0b',
+      theme: 'warning',
       onPress: () => Linking.openURL('mailto:support@meimart.tl'),
     },
     {
@@ -68,8 +64,7 @@ export default function CustomerServicePage() {
       labelKey: 'service.channels.faq',
       descKey: 'service.channels.faqDesc',
       icon: 'help',
-      bg: '#fee2e2',
-      iconBg: '#ef4444',
+      theme: 'error',
       onPress: () => router.push('/service/help'),
     },
   ];
@@ -157,8 +152,8 @@ export default function CustomerServicePage() {
               accessibilityRole="button"
               accessibilityLabel={t(ch.labelKey)}
             >
-              <View style={[styles.channelIconWrap, { backgroundColor: ch.bg }]}>
-                <View style={[styles.channelIconInner, { backgroundColor: ch.iconBg }]}>
+              <View style={[styles.channelIconWrap, { backgroundColor: serviceEntryThemes[ch.theme].bg }]}>
+                <View style={[styles.channelIconInner, { backgroundColor: serviceEntryThemes[ch.theme].iconBg }]}>
                   <Icon symbol={ch.icon} size={20} color="#ffffff" />
                 </View>
               </View>
@@ -201,7 +196,7 @@ export default function CustomerServicePage() {
               </Text>
             </View>
             <View style={[styles.onlinePill, { backgroundColor: colors.semantic['success-container'] }]}>
-              <View style={[styles.onlineDot, { backgroundColor: '#10b981' }]} />
+              <View style={[styles.onlineDot, { backgroundColor: serviceEntryThemes.success.iconBg }]} />
               <Text style={styles.onlineText}>
                 {t('service.online', { defaultValue: 'Online' })}
               </Text>
