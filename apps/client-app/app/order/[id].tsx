@@ -19,7 +19,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/format';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, statusBannerPalettes, type StatusBannerPaletteKey } from '@/theme';
 import { useLocalizer } from '@/i18n';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -35,16 +35,10 @@ import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 // === 状态视觉映射 ===
 
 type StatusVisual = {
-  /** 状态徽章背景色（HTML：PROCESSING=#F97316 / SHIPPED=orange-500 / DELIVERED=emerald-600） */
-  badgeBg: string;
+  /** 状态色板 key（颜色统一从 statusBannerPalettes 取，不再内联 hex） */
+  palette: StatusBannerPaletteKey;
   /** 状态徽章文案（label-caps 大写） */
   badgeText: string;
-  /** Delivery banner 整体色调：浅底色 / 边色 / icon色 / 标签色 / 描述色 */
-  bannerBg: string;
-  bannerBorder: string;
-  bannerIcon: string;
-  bannerLabelColor: string;
-  bannerValueColor: string;
   /** Banner 顶部小标签（ESTIMATED DELIVERY / DELIVERY STATUS 等） */
   bannerLabel: string;
   /** Banner 主文案 */
@@ -56,130 +50,80 @@ type StatusVisual = {
 const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
   // 待付款（PROCESSING 等价的橙色）
   PENDING_PAYMENT: {
-    badgeBg: '#F97316',
+    palette: 'pending',
     badgeText: 'TO PAY',
-    bannerBg: 'rgba(59,130,246,0.08)',
-    bannerBorder: 'rgba(59,130,246,0.25)',
-    bannerIcon: '#1d4ed8',
-    bannerLabelColor: '#1e3a8a',
-    bannerValueColor: '#0c2461',
     bannerLabel: 'PAYMENT DEADLINE',
     bannerValue: 'Please complete payment soon',
     bannerIconSymbol: 'schedule',
   },
   // 待确认（已付款等审核，颜色同 PENDING_PAYMENT）
   PENDING_CONFIRM: {
-    badgeBg: '#F97316',
+    palette: 'pending',
     badgeText: 'PROCESSING',
-    bannerBg: 'rgba(59,130,246,0.08)',
-    bannerBorder: 'rgba(59,130,246,0.25)',
-    bannerIcon: '#1d4ed8',
-    bannerLabelColor: '#1e3a8a',
-    bannerValueColor: '#0c2461',
     bannerLabel: 'ORDER STATUS',
     bannerValue: 'Order is being confirmed',
     bannerIconSymbol: 'hourglass_empty',
   },
   // 已确认（PROCESSING 配色）
   CONFIRMED: {
-    badgeBg: '#F97316',
+    palette: 'pending',
     badgeText: 'PROCESSING',
-    bannerBg: 'rgba(59,130,246,0.08)',
-    bannerBorder: 'rgba(59,130,246,0.25)',
-    bannerIcon: '#1d4ed8',
-    bannerLabelColor: '#1e3a8a',
-    bannerValueColor: '#0c2461',
     bannerLabel: 'ESTIMATED DELIVERY',
     bannerValue: 'Arriving in 2-3 days',
     bannerIconSymbol: 'local_shipping',
   },
   // 已拣货（同 SHIPPED 配色）
   PICKED: {
-    badgeBg: '#F97316',
+    palette: 'pending',
     badgeText: 'PICKED',
-    bannerBg: 'rgba(59,130,246,0.08)',
-    bannerBorder: 'rgba(59,130,246,0.25)',
-    bannerIcon: '#1d4ed8',
-    bannerLabelColor: '#1e3a8a',
-    bannerValueColor: '#0c2461',
     bannerLabel: 'ESTIMATED DELIVERY',
     bannerValue: 'Package picked, on the way soon',
     bannerIconSymbol: 'inventory_2',
   },
   // 配送中 — HTML DeliveryTrackingPage2
   OUT_FOR_DELIVERY: {
-    badgeBg: '#F97316',
+    palette: 'pending',
     badgeText: 'SHIPPED',
-    bannerBg: 'rgba(59,130,246,0.08)',
-    bannerBorder: 'rgba(59,130,246,0.25)',
-    bannerIcon: '#1d4ed8',
-    bannerLabelColor: '#1e3a8a',
-    bannerValueColor: '#0c2461',
     bannerLabel: 'ESTIMATED DELIVERY',
     bannerValue: 'Out for delivery - Expected by 5:30 PM',
     bannerIconSymbol: 'local_shipping',
   },
   // 已送达（已付款） — HTML DeliveryTrackingPage3
   DELIVERED_PAID: {
-    badgeBg: '#059669',
+    palette: 'delivered',
     badgeText: 'DELIVERED',
-    bannerBg: 'rgba(16,185,129,0.08)',
-    bannerBorder: 'rgba(16,185,129,0.25)',
-    bannerIcon: '#059669',
-    bannerLabelColor: '#065f46',
-    bannerValueColor: '#064e3b',
     bannerLabel: 'DELIVERY STATUS',
     bannerValue: 'Delivered - hope you enjoyed your order',
     bannerIconSymbol: 'check_circle',
   },
   // 已送达（货到付款）
   DELIVERED_UNPAID: {
-    badgeBg: '#059669',
+    palette: 'delivered',
     badgeText: 'DELIVERED',
-    bannerBg: 'rgba(16,185,129,0.08)',
-    bannerBorder: 'rgba(16,185,129,0.25)',
-    bannerIcon: '#059669',
-    bannerLabelColor: '#065f46',
-    bannerValueColor: '#064e3b',
     bannerLabel: 'PAYMENT ON DELIVERY',
     bannerValue: 'Delivered - please pay the rider',
     bannerIconSymbol: 'payments',
   },
   // 已送达（通用）
   DELIVERED: {
-    badgeBg: '#059669',
+    palette: 'delivered',
     badgeText: 'DELIVERED',
-    bannerBg: 'rgba(16,185,129,0.08)',
-    bannerBorder: 'rgba(16,185,129,0.25)',
-    bannerIcon: '#059669',
-    bannerLabelColor: '#065f46',
-    bannerValueColor: '#064e3b',
     bannerLabel: 'DELIVERY STATUS',
     bannerValue: 'Delivered - hope you enjoyed your order',
     bannerIconSymbol: 'check_circle',
   },
   // 已完成
   COMPLETED: {
-    badgeBg: '#059669',
+    palette: 'delivered',
     badgeText: 'COMPLETED',
-    bannerBg: 'rgba(16,185,129,0.08)',
-    bannerBorder: 'rgba(16,185,129,0.25)',
-    bannerIcon: '#059669',
-    bannerLabelColor: '#065f46',
-    bannerValueColor: '#064e3b',
     bannerLabel: 'ORDER COMPLETED',
     bannerValue: 'Order completed - thank you',
     bannerIconSymbol: 'task_alt',
   },
   // 已取消
   CANCELLED: {
-    badgeBg: '#dc2626',
+    palette: 'cancelled',
     badgeText: 'CANCELLED',
-    bannerBg: 'rgba(220,38,38,0.08)',
-    bannerBorder: 'rgba(220,38,38,0.25)',
-    bannerIcon: '#dc2626',
-    bannerLabelColor: '#991b1b',
-    bannerValueColor: '#7f1d1d',
     bannerLabel: 'ORDER CANCELLED',
     bannerValue: 'Order was cancelled',
     bannerIconSymbol: 'cancel',
@@ -276,6 +220,7 @@ export default function OrderDetailPage() {
   }
 
   const visual = STATUS_VISUAL[order.status];
+  const statusTheme = statusBannerPalettes[visual.palette];
   const shippingFee = 2.0;
   const discount = 5.0;
   const subtotal = order.totalPrice + discount - shippingFee;
@@ -339,7 +284,7 @@ export default function OrderDetailPage() {
                 {formatDate(order.createdAt, i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
               </Text>
             </View>
-            <StatusBadge text={visual.badgeText} backgroundColor={visual.badgeBg} />
+            <StatusBadge text={visual.badgeText} backgroundColor={statusTheme.badgeBg} />
           </View>
 
           {/* Delivery banner（HTML 第 168-174 行：状态色边浅底 + icon + 标签 + 描述） */}
@@ -347,17 +292,17 @@ export default function OrderDetailPage() {
             style={[
               styles.etaRow,
               {
-                backgroundColor: visual.bannerBg,
-                borderColor: visual.bannerBorder,
+                backgroundColor: statusTheme.bannerBg,
+                borderColor: statusTheme.bannerBorder,
               },
             ]}
           >
-            <Icon symbol={visual.bannerIconSymbol} size={20} color={visual.bannerIcon} />
+            <Icon symbol={visual.bannerIconSymbol} size={20} color={statusTheme.bannerIcon} />
             <View style={styles.flex1}>
-              <Text style={[styles.etaLabel, { color: visual.bannerLabelColor }]}>
+              <Text style={[styles.etaLabel, { color: statusTheme.bannerLabelColor }]}>
                 {visual.bannerLabel}
               </Text>
-              <Text style={[styles.etaValue, { color: visual.bannerValueColor }]}>
+              <Text style={[styles.etaValue, { color: statusTheme.bannerValueColor }]}>
                 {visual.bannerValue}
               </Text>
             </View>

@@ -22,6 +22,7 @@ import {
   shadowPresets,
   gradientPresets,
   borderRadius,
+  type ShortcutThemeKey,
 } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -45,17 +46,21 @@ import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 
-const SHORTCUTS = [
+type ShortcutConfig = {
+  id: ShortcutThemeKey;
+  labelKey: string;
+  titleKey: string;
+  icon: string;
+  withCorner?: boolean;
+  link: string;
+};
+
+const SHORTCUTS: ShortcutConfig[] = [
   {
     id: 'deals',
     labelKey: 'shortcut.dealsLabel',
     titleKey: 'shortcut.deals',
     icon: 'local_offer',
-    bgColor: 'rgba(150,24,19,0.05)',
-    borderColor: 'rgba(150,24,19,0.2)',
-    labelColor: '#961813',
-    titleColor: '#961813',
-    iconColor: '#961813',
     withCorner: true,
     link: '/product/list?promotion=flash',
   },
@@ -64,11 +69,6 @@ const SHORTCUTS = [
     labelKey: 'shortcut.newLabel',
     titleKey: 'shortcut.newUser',
     icon: 'person_add',
-    bgColor: '#ecfdf5',
-    borderColor: '#d1fae5',
-    labelColor: '#047857',
-    titleColor: '#047857',
-    iconColor: '#059669',
     link: '/coupons',
   },
   {
@@ -76,11 +76,6 @@ const SHORTCUTS = [
     labelKey: 'shortcut.couponsLabel',
     titleKey: 'profile.coupons',
     icon: 'confirmation_number',
-    bgColor: 'rgba(99,71,0,0.1)',
-    borderColor: 'rgba(99,71,0,0.2)',
-    labelColor: '#634700',
-    titleColor: '#000000',
-    iconColor: '#634700',
     link: '/coupons',
   },
   {
@@ -88,11 +83,6 @@ const SHORTCUTS = [
     labelKey: 'shortcut.deliveryLabel',
     titleKey: 'shortcut.freeDelivery',
     icon: 'moped',
-    bgColor: '#eff6ff',
-    borderColor: '#bfdbfe',
-    labelColor: '#1d4ed8',
-    titleColor: '#1d4ed8',
-    iconColor: '#2563eb',
     link: '/product/list',
   },
 ];

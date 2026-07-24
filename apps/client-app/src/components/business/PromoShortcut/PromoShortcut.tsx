@@ -1,5 +1,5 @@
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
-import { textStyle, spacing, layout } from '@/theme';
+import { textStyle, spacing, layout, shortcutThemes } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
 import { DecorativeCorner } from '@/components/cultural/DecorativeCorner';
 import type { PromoShortcutItem, PromoShortcutProps } from './PromoShortcut.types';
@@ -26,13 +26,14 @@ function PromoCard({
   item: PromoShortcutItem;
   onPress?: (item: PromoShortcutItem) => void;
 }) {
+  const theme = shortcutThemes[item.id];
   return (
     <Pressable
       style={({ pressed }) => [
         styles.card,
         {
-          backgroundColor: item.bgColor,
-          borderColor: item.borderColor,
+          backgroundColor: theme.bg,
+          borderColor: theme.border,
         },
         pressed && { opacity: 0.85 },
       ]}
@@ -47,16 +48,16 @@ function PromoCard({
       )}
 
       <View style={styles.textCol}>
-        <Text style={[styles.label, { color: item.labelColor }]} numberOfLines={1}>
+        <Text style={[styles.label, { color: theme.label }]} numberOfLines={1}>
           {item.label}
         </Text>
-        <Text style={[styles.title, { color: item.titleColor }]} numberOfLines={1}>
+        <Text style={[styles.title, { color: theme.title }]} numberOfLines={1}>
           {item.title}
         </Text>
       </View>
 
       <View style={styles.iconWrap}>
-        <Icon symbol={item.icon} size={30} color={item.iconColor} accessibilityLabel={item.title} />
+        <Icon symbol={item.icon} size={30} color={theme.icon} accessibilityLabel={item.title} />
       </View>
     </Pressable>
   );

@@ -16,6 +16,12 @@ export {
   type ShadowPresetKey,
 } from './shadowPresets';
 export { gradientPresets, type GradientPreset, type GradientPresetKey } from './gradients';
+export {
+  statusBannerPalettes,
+  type StatusBannerTheme,
+  type StatusBannerPaletteKey,
+} from './statusBannerThemes';
+export { shortcutThemes, type ShortcutTheme, type ShortcutThemeKey } from './shortcutThemes';
 export { symbolToMc, type IconName } from './iconMapping';
 export {
   fontFamilies,
