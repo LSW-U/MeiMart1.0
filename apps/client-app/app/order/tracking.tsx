@@ -13,7 +13,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, statusBannerPalettes } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, getStatusBannerTheme } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PriceText } from '@/components/ui/PriceText';
@@ -100,6 +100,8 @@ export default function DeliveryTrackingPage() {
   }
 
   const trackingNo = order.trackingNo ?? order.orderNo;
+  // Why: 按订单状态动态取 banner 配色（与 [id].tsx 一致，不再写死 pending）
+  const statusTheme = getStatusBannerTheme(order.status);
   const address = order.address;
 
   return (
@@ -135,7 +137,7 @@ export default function DeliveryTrackingPage() {
                 Placed May 12, 2024
               </Text>
             </View>
-            <StatusBadge text="PROCESSING" backgroundColor={statusBannerPalettes.pending.badgeBg} />
+            <StatusBadge text="PROCESSING" backgroundColor={statusTheme.badgeBg} />
           </View>
 
           {/* ESTIMATED DELIVERY（HTML 第 168-174 行 — blue-50/50 bg；复用 pending 色板）*/}
@@ -143,15 +145,15 @@ export default function DeliveryTrackingPage() {
             style={[
               styles.etaRow,
               {
-                backgroundColor: statusBannerPalettes.pending.bannerBg,
-                borderColor: statusBannerPalettes.pending.bannerBorder,
+                backgroundColor: statusTheme.bannerBg,
+                borderColor: statusTheme.bannerBorder,
               },
             ]}
           >
-            <Icon symbol="local_shipping" size={20} color={statusBannerPalettes.pending.bannerIcon} />
+            <Icon symbol="local_shipping" size={20} color={statusTheme.bannerIcon} />
             <View style={styles.flex1}>
-              <Text style={[styles.etaLabel, { color: statusBannerPalettes.pending.bannerLabelColor }]}>ESTIMATED DELIVERY</Text>
-              <Text style={[styles.etaValue, { color: statusBannerPalettes.pending.bannerValueColor }]}>
+              <Text style={[styles.etaLabel, { color: statusTheme.bannerLabelColor }]}>ESTIMATED DELIVERY</Text>
+              <Text style={[styles.etaValue, { color: statusTheme.bannerValueColor }]}>
                 Arriving Today 4:00 PM - 6:00 PM
               </Text>
             </View>

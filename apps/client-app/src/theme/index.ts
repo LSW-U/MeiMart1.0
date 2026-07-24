@@ -18,6 +18,7 @@ export {
 export { gradientPresets, type GradientPreset, type GradientPresetKey } from './gradients';
 export {
   statusBannerPalettes,
+  getStatusBannerTheme,
   type StatusBannerTheme,
   type StatusBannerPaletteKey,
 } from './statusBannerThemes';

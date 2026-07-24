@@ -12,6 +12,8 @@
  * 暗色模式：HTML 原型仅亮色，darkColors 暂未覆盖场景色板；待 dark mode 落地时此处加 dark 变体。
  */
 
+import type { OrderStatus } from '@/types';
+
 export type StatusBannerPaletteKey = 'pending' | 'delivered' | 'cancelled';
 
 export interface StatusBannerTheme {
@@ -58,3 +60,23 @@ export const statusBannerPalettes: Record<StatusBannerPaletteKey, StatusBannerTh
     bannerValueColor: '#7f1d1d',
   },
 };
+
+// Why: status → palette key 映射（与 [id].tsx STATUS_VISUAL.palette 同源，抽此共享，
+// tracking.tsx 可按 order.status 动态取色，不再写死 pending）。
+const STATUS_TO_PALETTE: Record<OrderStatus, StatusBannerPaletteKey> = {
+  PENDING_PAYMENT: 'pending',
+  PENDING_CONFIRM: 'pending',
+  CONFIRMED: 'pending',
+  PICKED: 'pending',
+  OUT_FOR_DELIVERY: 'pending',
+  DELIVERED_PAID: 'delivered',
+  DELIVERED_UNPAID: 'delivered',
+  DELIVERED: 'delivered',
+  COMPLETED: 'delivered',
+  CANCELLED: 'cancelled',
+};
+
+/** 按订单状态取 banner 主题（tracking / [id] 共用，避免各处写死 palette key） */
+export function getStatusBannerTheme(status: OrderStatus): StatusBannerTheme {
+  return statusBannerPalettes[STATUS_TO_PALETTE[status]];
+}
