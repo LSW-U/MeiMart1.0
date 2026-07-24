@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, typography, shadowPresets, borderRadius } from '@/theme';
+import { useTheme, spacing, layout, typography, shadowPresets, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -461,7 +461,7 @@ function ProfileEmpty() {
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     paddingTop: spacing.md,
     paddingBottom: spacing.xxl * 2,
     gap: spacing.md,

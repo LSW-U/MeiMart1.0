@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
-import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ProductCard } from '@/components/business/ProductCard';
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   header: {
     position: 'relative',
     overflow: 'hidden',
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     paddingVertical: spacing.sm,
   },
   headerPattern: {
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   scrollContent: {
-    padding: spacing['container-margin'],
+    padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
   },
   sortWrap: {
@@ -312,11 +312,11 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -spacing.gutter / 2,
+    marginHorizontal: -layout.gutter / 2,
   },
   gridCell: {
     width: '50%',
-    paddingHorizontal: spacing.gutter / 2,
+    paddingHorizontal: layout.gutter / 2,
     marginBottom: spacing.lg,
   },
   loadMore: {

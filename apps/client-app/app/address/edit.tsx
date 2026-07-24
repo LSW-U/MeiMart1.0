@@ -18,7 +18,7 @@ import { Controller, useForm } from 'react-hook-form';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, typography, borderRadius } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     height: 72,
     overflow: 'hidden',
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     justifyContent: 'center',
   },
   headerPattern: {
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   scroll: {
-    padding: spacing['container-margin'],
+    padding: layout['container-margin'],
     paddingBottom: 120,
     gap: spacing.lg,
   },
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: spacing['container-margin'],
+    padding: layout['container-margin'],
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   saveBtn: {

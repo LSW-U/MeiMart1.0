@@ -19,7 +19,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/format';
-import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { useLocalizer } from '@/i18n';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -825,7 +825,7 @@ function BottomActions({
 
 const styles = StyleSheet.create({
   scroll: {
-    padding: spacing['container-margin'],
+    padding: layout['container-margin'],
     gap: spacing.md,
     paddingBottom: 120,
   },
@@ -846,7 +846,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     height: 64,
     overflow: 'hidden',
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     justifyContent: 'center',
   },
   headerPattern: {
@@ -1094,7 +1094,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     gap: spacing.md,
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     paddingVertical: spacing.md,
     paddingBottom: Platform.OS === 'ios' ? spacing.md : spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,

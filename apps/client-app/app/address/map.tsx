@@ -4,7 +4,7 @@
 import { StyleSheet, View, Text, Pressable, ScrollView, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
-import { useTheme, spacing, typography, borderRadius } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     height: 72,
     overflow: 'hidden',
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     justifyContent: 'center',
   },
   headerPattern: {
@@ -337,9 +337,9 @@ const styles = StyleSheet.create({
   },
   searchFloat: {
     position: 'absolute',
-    top: spacing['container-margin'],
-    left: spacing['container-margin'],
-    right: spacing['container-margin'],
+    top: layout['container-margin'],
+    left: layout['container-margin'],
+    right: layout['container-margin'],
     zIndex: 20,
   },
   searchBox: {
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   },
   // Form
   formWrap: {
-    padding: spacing['container-margin'],
+    padding: layout['container-margin'],
     gap: spacing.lg,
   },
   previewCard: {
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: spacing['container-margin'],
+    padding: layout['container-margin'],
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   saveBtn: {

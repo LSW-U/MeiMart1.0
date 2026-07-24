@@ -10,7 +10,7 @@ import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
-import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { EmptyState } from '@/components/feedback/EmptyState';
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     height: 56,
     position: 'relative',
     overflow: 'hidden',
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     justifyContent: 'center',
   },
   headerPattern: {
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   },
   categoryBar: {
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   categoryRow: {
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   scrollContent: {
-    padding: spacing['container-margin'],
+    padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
   },
   topThreeWrap: {

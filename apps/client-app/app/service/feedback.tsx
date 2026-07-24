@@ -6,7 +6,7 @@ import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -256,7 +256,7 @@ export default function FeedbackPage() {
 
 const styles = StyleSheet.create({
   scroll: {
-    padding: spacing['container-margin'],
+    padding: layout['container-margin'],
     paddingBottom: 120,
     gap: spacing.md,
   },

@@ -7,7 +7,7 @@ import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import Svg, { Polygon } from 'react-native-svg';
-import { useTheme, spacing, typography, borderRadius } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { SearchBar } from '@/components/business/SearchBar';
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   headerContent: {
     position: 'relative',
     flex: 1,
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     paddingTop: spacing.lg,
   },
   toolbar: {
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   filterTagsRow: {
     flexDirection: 'row',
     gap: spacing.sm,
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
   },
   filterTag: {
     paddingHorizontal: spacing.md,
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   section: {
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     marginTop: spacing.xl,
     gap: spacing.md,
   },

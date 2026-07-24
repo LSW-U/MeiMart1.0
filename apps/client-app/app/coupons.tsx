@@ -14,7 +14,7 @@ import {
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   },
   tabRow: {
     flexDirection: 'row',
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
   },
   tabBtn: {
     position: 'relative',
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    margin: spacing['container-margin'],
+    margin: layout['container-margin'],
     padding: spacing.md,
     borderRadius: borderRadius.xl,
   },
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   list: {
-    padding: spacing['container-margin'],
+    padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
   },
   center: {

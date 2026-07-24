@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import {
   useTheme,
   spacing,
+  layout,
   typography,
   shadowPresets,
   gradientPresets,
@@ -406,7 +407,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     paddingVertical: spacing.md,
     gap: spacing.md,
     zIndex: 1,
@@ -477,7 +478,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   searchSection: {
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     paddingTop: spacing.md,
   },
   searchCard: {
@@ -497,7 +498,7 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: spacing.xl,
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     gap: spacing.md,
   },
   sectionHeader: {
@@ -522,7 +523,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     paddingVertical: spacing.md,
     gap: spacing.md,
     marginTop: spacing.xl,
@@ -535,14 +536,14 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
   },
   recommendHeader: {
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     marginBottom: spacing.md,
   },
   loader: {
     paddingVertical: spacing.lg,
   },
   hScroll: {
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     gap: spacing.md,
     paddingBottom: spacing.sm,
   },
@@ -553,7 +554,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
   },
   buyAgainHeader: {
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     marginBottom: spacing.md,
   },
   buyAgainCard: {

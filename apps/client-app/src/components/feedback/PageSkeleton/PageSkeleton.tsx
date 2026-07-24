@@ -8,7 +8,7 @@
  *   if (isLoading) return <PageSkeleton variant="list" />;
  */
 import { StyleSheet, View } from 'react-native';
-import { useTheme, spacing } from '@/theme';
+import { useTheme, spacing, layout } from '@/theme';
 import { Skeleton } from '@/components/ui/Skeleton';
 
 interface PageSkeletonProps {
@@ -78,7 +78,7 @@ export function PageSkeleton({ variant = 'list', rows = 4, testID }: PageSkeleto
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: spacing['container-margin'], gap: spacing.md },
+  content: { padding: layout['container-margin'], gap: spacing.md },
   listItem: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
   listText: { flex: 1, gap: 6 },
   gridRow: { flexDirection: 'row', gap: spacing.md },

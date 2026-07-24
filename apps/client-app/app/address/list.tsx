@@ -15,7 +15,7 @@ import {
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, typography, borderRadius } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     height: 72,
     overflow: 'hidden',
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     justifyContent: 'center',
   },
   headerPattern: {
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   },
   // Body
   scroll: {
-    padding: spacing['container-margin'],
+    padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
   },
   center: {

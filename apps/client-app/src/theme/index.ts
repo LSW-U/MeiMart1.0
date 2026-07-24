@@ -1,6 +1,14 @@
 export { lightColors, darkColors, type AppColors } from './colors';
 export { typography, textStyle, type TypographyKey, type Typography } from './typography';
-export { spacing, borderRadius, type Spacing, type SpacingKey } from './spacing';
+export {
+  spacing,
+  layout,
+  borderRadius,
+  type Spacing,
+  type SpacingKey,
+  type Layout,
+  type LayoutKey,
+} from './spacing';
 export {
   shadowPresets,
   withShadow,

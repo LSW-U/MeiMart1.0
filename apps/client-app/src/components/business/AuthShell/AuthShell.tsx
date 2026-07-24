@@ -2,7 +2,7 @@
 // 还原自 5 个 auth 页面 HTML 的共性结构（Header + DiamondPattern + Welcome Card + Cultural Image）
 // Fix-16: 避免在 5 个 auth 页面重复同样的 300 行外壳代码
 import { StyleSheet, View, Text, ScrollView, Pressable, Image } from 'react-native';
-import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { Icon } from '@/components/ui/Icon';
 import { LocaleSwitch } from '@/components/business/LocaleSwitch/LocaleSwitch';
@@ -121,7 +121,7 @@ export function AuthShell({
 
 const styles = StyleSheet.create({
   scroll: {
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     paddingBottom: spacing.xxl,
   },
   header: {
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingBottom: spacing.xxl,
     overflow: 'hidden',
-    marginHorizontal: -spacing['container-margin'],
+    marginHorizontal: -layout['container-margin'],
   },
   headerPattern: {
     position: 'absolute',

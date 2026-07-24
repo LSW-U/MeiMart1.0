@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, Pressable } from 'react-native';
-import { useTheme, typography, spacing, shadowPresets } from '@/theme';
+import { useTheme, typography, spacing, layout, shadowPresets } from '@/theme';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import type { PrimaryHeaderProps } from './PrimaryHeader.types';
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   header: {
     position: 'relative',
     overflow: 'hidden',
-    paddingHorizontal: spacing['container-margin'],
+    paddingHorizontal: layout['container-margin'],
     height: 56,
   },
   bgPattern: {
