@@ -154,11 +154,15 @@ export const authApi = {
     if (isMockMode) {
       return mockResponse(buildMockAuthResult(payload.role), 500);
     }
-    const res = await api.post<MockLoginRawResponse>('/common/auth/mock-login', payload);
+    // Why: 后端 mock-login 要求 role 大写（SUPER_ADMIN/CUSTOMER/RIDER...），前端内部用小写
+    const res = await api.post<MockLoginRawResponse>('/common/auth/mock-login', {
+      ...payload,
+      role: payload.role.toUpperCase() as Uppercase<UserRole>,
+    });
     const { user, ...rest } = res.data;
     return {
       userId: user.id,
-      role: user.role,
+      role: user.role.toLowerCase() as UserRole,
       ...rest,
     };
   },

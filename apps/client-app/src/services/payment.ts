@@ -64,8 +64,9 @@ export const paymentApi = {
     if (isMockMode) return;
     const baseURL = api.defaults.baseURL ?? '';
     // Why: 独立 axios 请求避免 client api 拦截器注入 customer token
+    // 后端 mock-login 要求 role 大写
     const loginRes = await axios.post(`${baseURL}/common/auth/mock-login`, {
-      role: 'super_admin',
+      role: 'SUPER_ADMIN',
       deviceType: 'admin_web',
     });
     const adminToken = loginRes.data?.data?.accessToken;

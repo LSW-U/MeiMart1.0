@@ -120,7 +120,7 @@ export const authApi = {
       });
       return {
         userId: res.data.user.id,
-        role: res.data.user.role,
+        role: res.data.user.role.toLowerCase() as AuthResult['role'],
         phone: res.data.user.phone,
         email: res.data.user.email,
         name: res.data.user.name,
@@ -136,7 +136,7 @@ export const authApi = {
       });
       return {
         userId: res.data.user.id,
-        role: res.data.user.role,
+        role: res.data.user.role.toLowerCase() as AuthResult['role'],
         phone: res.data.user.phone,
         email: res.data.user.email,
         name: res.data.user.name,
@@ -170,13 +170,14 @@ export const authApi = {
       );
     }
     const deviceType = role === 'rider' ? 'rider_app' : 'client_app';
+    // Why: 后端 mock-login 要求 role 大写（RIDER/CUSTOMER），前端内部用小写
     const res = await api.post<MockLoginResponse>('/common/auth/mock-login', {
-      role,
+      role: role.toUpperCase(),
       deviceType,
     });
     return {
       userId: res.data.user.id,
-      role: res.data.user.role,
+      role: res.data.user.role.toLowerCase() as AuthResult['role'],
       phone: res.data.user.phone,
       email: res.data.user.email,
       name: res.data.user.name,
