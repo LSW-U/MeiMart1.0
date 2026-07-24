@@ -170,8 +170,8 @@ export default function HomePage() {
             accessibilityLabel={t('home.messagesLabel')}
           >
             <Icon symbol="mail" size={24} color="#ffffff" />
-            <View style={styles.msgBadge}>
-              <Text style={styles.msgBadgeText}>2</Text>
+            <View style={[styles.msgBadge, { borderColor: colors.primary }]}>
+              <Text style={[styles.msgBadgeText, { color: colors.primary }]}>2</Text>
             </View>
           </Pressable>
         </View>
@@ -454,10 +454,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#961813',
   },
   msgBadgeText: {
-    color: '#961813',
     fontSize: 10,
     fontWeight: '700',
   },

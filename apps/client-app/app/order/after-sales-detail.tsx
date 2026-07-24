@@ -148,7 +148,7 @@ export default function AfterSalesDetailPage() {
         showsVerticalScrollIndicator={false}
       >
         {/* 状态色块 */}
-        <View style={[styles.statusBlock, { backgroundColor: '#fef3c7' }, shadowPresets.sm]}>
+        <View style={[styles.statusBlock, { backgroundColor: colors.semantic['warning-container'] }, shadowPresets.sm]}>
           <View style={styles.statusPattern} pointerEvents="none">
             <TaisPattern width={400} height={100} opacity={0.2} />
           </View>

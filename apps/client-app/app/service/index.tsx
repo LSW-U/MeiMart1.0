@@ -200,7 +200,7 @@ export default function CustomerServicePage() {
                 })}
               </Text>
             </View>
-            <View style={[styles.onlinePill, { backgroundColor: '#d1fae5' }]}>
+            <View style={[styles.onlinePill, { backgroundColor: colors.semantic['success-container'] }]}>
               <View style={[styles.onlineDot, { backgroundColor: '#10b981' }]} />
               <Text style={styles.onlineText}>
                 {t('service.online', { defaultValue: 'Online' })}

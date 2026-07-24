@@ -222,7 +222,7 @@ export default function ProductDetailPage() {
             {[0, 1, 2, 3, 4].map((n) => (
               <View
                 key={n}
-                style={[styles.dot, n === activeImage ? styles.dotActive : styles.dotIdle]}
+                style={[styles.dot, n === activeImage ? [styles.dotActive, { backgroundColor: colors.primary }] : styles.dotIdle]}
               />
             ))}
           </View>
@@ -784,7 +784,6 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     width: 24,
-    backgroundColor: '#961813',
   },
   dotIdle: {
     width: 6,

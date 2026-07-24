@@ -251,7 +251,7 @@ export default function CategoriesPage() {
                         accessibilityRole="button"
                         accessibilityLabel={`View ${localize(p.name)}`}
                       >
-                        <View style={styles.hotImageWrap}>
+                        <View style={[styles.hotImageWrap, { backgroundColor: colors['surface-container'] }]}>
                           <SafeImage source={{ uri: p.image }} style={styles.hotImage} />
                           {p.salesCount && p.salesCount > 100 && (
                             <View style={[styles.hotBadge, { backgroundColor: colors.primary }]}>
@@ -325,7 +325,7 @@ export default function CategoriesPage() {
                           accessibilityRole="button"
                           accessibilityLabel={`View ${localize(p.name)}`}
                         >
-                          <View style={styles.hotImageWrap}>
+                          <View style={[styles.hotImageWrap, { backgroundColor: colors['surface-container'] }]}>
                             <SafeImage source={{ uri: p.image }} style={styles.hotImage} />
                           </View>
                           <Text
@@ -670,7 +670,6 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    backgroundColor: '#ffe9e6',
   },
   hotImage: {
     width: '100%',
