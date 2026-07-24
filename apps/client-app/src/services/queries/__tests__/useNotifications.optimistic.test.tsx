@@ -5,10 +5,14 @@ import {
   NOTIFICATIONS_QUERY_KEY,
   UNREAD_COUNT_QUERY_KEY,
   useMarkNotificationRead,
+  useMarkAllNotificationsRead,
 } from '../useNotifications';
 import { createTestQueryClient, renderHookWithClient } from './testHarness';
 
 jest.mock('@/services/notifications');
+
+const ALL_KEY = [...NOTIFICATIONS_QUERY_KEY, 'all'] as const;
+const UNREAD_KEY = [...NOTIFICATIONS_QUERY_KEY, 'unread'] as const;
 
 const baseNotifications: Notification[] = [
   {
@@ -29,12 +33,13 @@ const baseNotifications: Notification[] = [
   },
 ];
 
-function setup(returnAfterRead: Notification[] = baseNotifications) {
-  (notificationsApi.list as jest.Mock).mockResolvedValue(returnAfterRead);
+function setup() {
+  (notificationsApi.list as jest.Mock).mockResolvedValue(baseNotifications);
   (notificationsApi.getUnreadCount as jest.Mock).mockResolvedValue(2);
   const qc = createTestQueryClient();
   // Why: useNotifications 用 [...NOTIFICATIONS_QUERY_KEY, 'all' | 'unread'] 作为 queryKey
-  qc.setQueryData([...NOTIFICATIONS_QUERY_KEY, 'all'], baseNotifications);
+  qc.setQueryData(ALL_KEY, baseNotifications);
+  qc.setQueryData(UNREAD_KEY, baseNotifications); // 初始两条都未读
   qc.setQueryData(UNREAD_COUNT_QUERY_KEY, 2);
   return qc;
 }
@@ -42,22 +47,28 @@ function setup(returnAfterRead: Notification[] = baseNotifications) {
 describe('useNotifications 乐观更新', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('useMarkNotificationRead 立即标记 read=true 并 -1 未读数', async () => {
+  it('useMarkNotificationRead 立即标记 read=true、从未读列表移除、未读数 -1', async () => {
     (notificationsApi.markRead as jest.Mock).mockResolvedValue({ success: true });
-    const after: Notification[] = [{ ...baseNotifications[0], read: true }, baseNotifications[1]];
-    const qc = setup(after);
+    const qc = setup();
 
     const { result } = renderHookWithClient(() => useMarkNotificationRead(), qc);
     await act(async () => {
       await result.current.mutateAsync('n1');
     });
 
-    const list = qc.getQueryData<Notification[]>([...NOTIFICATIONS_QUERY_KEY, 'all']);
-    expect(list?.find((n) => n.id === 'n1')?.read).toBe(true);
-    expect(list?.find((n) => n.id === 'n2')?.read).toBe(false);
+    // all 列表：n1 已读，n2 仍未读
+    const all = qc.getQueryData<Notification[]>(ALL_KEY)!;
+    expect(all.find((n) => n.id === 'n1')?.read).toBe(true);
+    expect(all.find((n) => n.id === 'n2')?.read).toBe(false);
+    // unread 列表契约（仅未读）：n1 被移除，n2 保留
+    const unread = qc.getQueryData<Notification[]>(UNREAD_KEY)!;
+    expect(unread.find((n) => n.id === 'n1')).toBeUndefined();
+    expect(unread.find((n) => n.id === 'n2')).toBeTruthy();
+    // 未读数 -1
+    expect(qc.getQueryData<number>(UNREAD_COUNT_QUERY_KEY)).toBe(1);
   });
 
-  it('useMarkNotificationRead 服务端失败时 rollback', async () => {
+  it('useMarkNotificationRead 服务端失败时 rollback（all/unread/count 全还原）', async () => {
     (notificationsApi.markRead as jest.Mock).mockRejectedValue(new Error('network'));
     const qc = setup();
 
@@ -70,7 +81,26 @@ describe('useNotifications 乐观更新', () => {
       }
     });
 
-    const list = qc.getQueryData<Notification[]>([...NOTIFICATIONS_QUERY_KEY, 'all']);
-    expect(list?.find((n) => n.id === 'n1')?.read).toBe(false);
+    const all = qc.getQueryData<Notification[]>(ALL_KEY)!;
+    expect(all.find((n) => n.id === 'n1')?.read).toBe(false);
+    // unread 列表 n1 回来（rollback 后重新包含）
+    const unread = qc.getQueryData<Notification[]>(UNREAD_KEY)!;
+    expect(unread.find((n) => n.id === 'n1')).toBeTruthy();
+    expect(qc.getQueryData<number>(UNREAD_COUNT_QUERY_KEY)).toBe(2);
+  });
+
+  it('useMarkAllNotificationsRead 全部标记已读、清空未读列表、未读数归零', async () => {
+    (notificationsApi.markAllRead as jest.Mock).mockResolvedValue({ success: true });
+    const qc = setup();
+
+    const { result } = renderHookWithClient(() => useMarkAllNotificationsRead(), qc);
+    await act(async () => {
+      await result.current.mutateAsync();
+    });
+
+    const all = qc.getQueryData<Notification[]>(ALL_KEY)!;
+    expect(all.every((n) => n.read)).toBe(true);
+    expect(qc.getQueryData<Notification[]>(UNREAD_KEY)).toEqual([]);
+    expect(qc.getQueryData<number>(UNREAD_COUNT_QUERY_KEY)).toBe(0);
   });
 });
