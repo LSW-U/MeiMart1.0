@@ -28,6 +28,11 @@ import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import type { OrderStatus } from '@/types';
 
+// 售后处理中状态色（琥珀）：HTML 用 amber-500/700，与 semantic.warning（橙）色阶不同，
+// 单点使用不立项 token，保留 hex + 豁免尾注（见 check-hardcoded-colors.sh）。
+const REFUND_STATUS_ICON = '#f59e0b'; // 原因：售后处理中琥珀图标（amber-500）
+const REFUND_STATUS_TEXT = '#b45309'; // 原因：售后处理中深琥珀文字（amber-700）
+
 type StepKey =
   | 'submitted'
   | 'reviewing'
@@ -153,15 +158,15 @@ export default function AfterSalesDetailPage() {
             <TaisPattern width={400} height={100} opacity={0.2} />
           </View>
           <View style={styles.statusIconWrap}>
-            <View style={[styles.statusIcon, { backgroundColor: '#f59e0b' }]}>
+            <View style={[styles.statusIcon, { backgroundColor: REFUND_STATUS_ICON }]}>
               <Icon symbol={STEP_ICON[stepKey]} size={22} color="#ffffff" />
             </View>
           </View>
           <View style={styles.statusTextBox}>
-            <Text style={[styles.statusText, { color: '#b45309' }]} accessibilityRole="header">
+            <Text style={[styles.statusText, { color: REFUND_STATUS_TEXT }]} accessibilityRole="header">
               {t('afterSales.processing')}
             </Text>
-            <Text style={[styles.statusDesc, { color: '#b45309', opacity: 0.7 }]}>
+            <Text style={[styles.statusDesc, { color: REFUND_STATUS_TEXT, opacity: 0.7 }]}>
               {t('afterSales.processingDesc')}
             </Text>
           </View>
@@ -221,8 +226,8 @@ export default function AfterSalesDetailPage() {
           </View>
           <View style={styles.refundAmountRow}>
             <PriceText value={refundAmount} size="lg" />
-            <View style={[styles.refundPill, { backgroundColor: '#f0fdf4' }]}>
-              <Text style={styles.refundPillText}>
+            <View style={[styles.refundPill, { backgroundColor: colors.semantic['positive-container'] }]}>
+              <Text style={[styles.refundPillText, { color: colors.semantic.positive }]}>
                 {t('afterSales.refundMethod', { defaultValue: 'Original payment' })}
               </Text>
             </View>
@@ -470,7 +475,6 @@ const styles = StyleSheet.create({
   refundPillText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#16a34a',
   },
   refundNote: {
     ...typography['label-caps'],

@@ -17,6 +17,18 @@ import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
 import type { ReactNode } from 'react';
 
+// 设置项分类图标配色（HTML 各 category 配不同 Tailwind-500 色，纯视觉区分无语义角色，
+// 单文件保留 + 豁免尾注）。
+const ICON_BG = {
+  purple: '#a855f7', // 原因：设置分类图标（purple-500）
+  blue: '#3b82f6', // 原因：设置分类图标（blue-500）
+  amber: '#f59e0b', // 原因：设置分类图标（amber-500）
+  red: '#ef4444', // 原因：设置分类图标（red-500）
+  green: '#10b981', // 原因：设置分类图标（green-500）
+  indigo: '#6366f1', // 原因：设置分类图标（indigo-500）
+  violet: '#8b5cf6', // 原因：设置分类图标（violet-500）
+} as const;
+
 export default function SettingsPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
@@ -75,7 +87,7 @@ export default function SettingsPage() {
           <RowItem
             label={t('settings.theme')}
             icon="palette"
-            iconBg="#a855f7"
+            iconBg={ICON_BG.purple}
             color={colors.primary}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
@@ -104,7 +116,7 @@ export default function SettingsPage() {
           <PressableRow
             label={t('settings.language')}
             icon="language"
-            iconBg="#3b82f6"
+            iconBg={ICON_BG.blue}
             value={locale === 'zh' ? '中文' : locale === 'en' ? 'English' : locale.toUpperCase()}
             color={colors.primary}
             textColor={colors['on-surface']}
@@ -116,7 +128,7 @@ export default function SettingsPage() {
           <RowItem
             label={t('settings.push')}
             icon="notifications"
-            iconBg="#f59e0b"
+            iconBg={ICON_BG.amber}
             color={colors.primary}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
@@ -127,7 +139,7 @@ export default function SettingsPage() {
           <PressableRow
             label={t('settings.clearCache')}
             icon="delete"
-            iconBg="#ef4444"
+            iconBg={ICON_BG.red}
             value="1.2 MB"
             color={colors.primary}
             textColor={colors['on-surface']}
@@ -153,7 +165,7 @@ export default function SettingsPage() {
           <PressableRow
             label={t('settings.accountSecurity', { defaultValue: 'Account Security' })}
             icon="lock"
-            iconBg="#10b981"
+            iconBg={ICON_BG.green}
             color={colors.primary}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
@@ -164,7 +176,7 @@ export default function SettingsPage() {
           <PressableRow
             label={t('settings.privacyPolicy', { defaultValue: 'Privacy Policy' })}
             icon="security"
-            iconBg="#6366f1"
+            iconBg={ICON_BG.indigo}
             color={colors.primary}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
@@ -209,7 +221,7 @@ export default function SettingsPage() {
           <PressableRow
             label={t('settings.terms')}
             icon="auto_stories"
-            iconBg="#8b5cf6"
+            iconBg={ICON_BG.violet}
             color={colors.primary}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}

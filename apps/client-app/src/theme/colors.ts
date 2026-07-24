@@ -21,6 +21,9 @@ type SemanticColors = {
   'warning-container': string;
   error: string;
   'error-container': string;
+  /** 折扣 / 省钱 / 安全支付提示（纯绿 green-600，区别于 emerald 系 success） */
+  positive: string;
+  'positive-container': string;
 };
 
 export type AppColors = {
@@ -149,6 +152,9 @@ export const lightColors: AppColors = {
     'warning-container': '#fef3c7',
     error: '#C62828',
     'error-container': '#fee2e2',
+    // 折扣 / 省钱 / 安全支付（green-600/50，纯绿，与 emerald 系 success 区分）
+    positive: '#16a34a',
+    'positive-container': '#f0fdf4',
   },
 } as const;
 
@@ -234,5 +240,7 @@ export const darkColors: AppColors = {
     'warning-container': '#78350f',
     error: '#EF9A9A',
     'error-container': '#7f1d1d',
+    positive: '#4ADE80',
+    'positive-container': '#052e16',
   },
 } as const;

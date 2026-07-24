@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
     padding: 24,
-    backgroundColor: '#fef2f2',
+    backgroundColor: '#fef2f2', // 原因：错误边界自洽，不依赖 ThemeProvider（Provider 崩溃时仍需渲染）
   },
   emoji: {
     fontSize: 48,
@@ -84,11 +84,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#dc2626',
+    color: '#dc2626', // 原因：错误边界自洽错误红
   },
   message: {
     fontSize: 13,
-    color: '#991b1b',
+    color: '#991b1b', // 原因：错误边界自洽深错误红
     textAlign: 'center',
     lineHeight: 18,
   },
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: '#961813',
+    backgroundColor: '#961813', // 原因：错误边界自洽品牌红 CTA
   },
   buttonText: {
     color: '#ffffff',

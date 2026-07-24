@@ -293,8 +293,8 @@ export default function CartPage() {
               <Text style={[styles.discountLabel, { color: colors['on-surface-variant'] }]}>
                 {t('order.discount')}
               </Text>
-              <View style={[styles.discountPill, { backgroundColor: '#f0fdf4' }]}>
-                <Text style={styles.discountText}>-${discount.toFixed(2)}</Text>
+              <View style={[styles.discountPill, { backgroundColor: colors.semantic['positive-container'] }]}>
+                <Text style={[styles.discountText, { color: colors.semantic.positive }]}>-${discount.toFixed(2)}</Text>
               </View>
             </View>
             <View style={styles.totalRow}>
@@ -458,7 +458,6 @@ const styles = StyleSheet.create({
   discountText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#16a34a',
   },
   totalRow: {
     flexDirection: 'row',

@@ -57,6 +57,8 @@ const TIMELINE = [
   },
 ];
 
+const STAR_COLOR = '#f59e0b'; // 原因：骑手评分星标金色（HTML star gold amber-500），semantic 无对应角色
+
 export default function DeliveryTrackingPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -458,7 +460,7 @@ function CourierCard({ courier }: { courier: typeof COURIER }) {
           {courier.vehicle}
         </Text>
         <View style={styles.ratingRow}>
-          <Icon symbol="star" size={12} color="#f59e0b" />
+          <Icon symbol="star" size={12} color={STAR_COLOR} />
           <Text style={[styles.ratingText, { color: colors['on-surface-variant'] }]}>
             {courier.rating.toFixed(1)} • On the way
           </Text>

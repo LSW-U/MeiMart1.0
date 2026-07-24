@@ -71,10 +71,11 @@ const RATING_DISTRIBUTION = [
 ];
 
 function StarsRow({ size = 14 }: { size?: number }) {
+  const { colors } = useTheme();
   return (
     <View style={{ flexDirection: 'row' }}>
       {[1, 2, 3, 4, 5].map((n) => (
-        <Icon key={n} symbol="star" size={size} color="#825d00" />
+        <Icon key={n} symbol="star" size={size} color={colors['tertiary-container']} />
       ))}
     </View>
   );
@@ -739,7 +740,7 @@ const styles = StyleSheet.create({
     height: 18,
     paddingHorizontal: 4,
     borderRadius: 9,
-    backgroundColor: '#dc2626',
+    backgroundColor: '#dc2626', // 原因：断货 badge 红（HTML out-of-stock red-600），与 semantic.error 色阶不同
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
@@ -877,11 +878,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 999,
-    backgroundColor: '#15803d',
+    backgroundColor: '#15803d', // 原因：有货/在库 badge 绿（green-700），与 semantic.success 色阶不同
   },
   stockText: {
     ...typography['label-caps'],
-    color: '#15803d',
+    color: '#15803d', // 原因：同上（有货绿文字）
     fontSize: 12,
   },
   stockSold: {

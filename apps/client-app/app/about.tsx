@@ -174,6 +174,7 @@ function InfoRow({
   testID?: string;
   onPress?: () => void;
 }) {
+  const { colors } = useTheme();
   const Wrapper = onPress ? Pressable : View;
   return (
     <Wrapper
@@ -183,7 +184,7 @@ function InfoRow({
       accessibilityRole={onPress ? 'button' : undefined}
     >
       <View style={[styles.infoIcon, { backgroundColor: 'rgba(150,24,19,0.08)' }]}>
-        <Icon symbol={icon} size={18} color="#961813" />
+        <Icon symbol={icon} size={18} color={colors.primary} />
       </View>
       <View style={styles.infoText}>
         <Text style={[styles.infoLabel, { color: subColor }]}>{label}</Text>

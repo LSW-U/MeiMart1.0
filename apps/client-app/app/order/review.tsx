@@ -57,6 +57,7 @@ export default function OrderReviewPage() {
     mode: 'onBlur',
   });
   const ratingValue = useWatch({ control, name: 'rating' }) as number;
+  const STAR_ACTIVE = '#f59e0b'; // 原因：评分星标金色（HTML star gold amber-500），semantic 无对应角色
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -148,7 +149,7 @@ export default function OrderReviewPage() {
                       <Icon
                         symbol="star_rate"
                         size={32}
-                        color={n <= ratingValue ? '#f59e0b' : colors['outline-variant']}
+                        color={n <= ratingValue ? STAR_ACTIVE : colors['outline-variant']}
                       />
                     </Pressable>
                   )}

@@ -399,7 +399,7 @@ export default function OrderDetailPage() {
             <SummaryRow
               label={t('order.discount', { defaultValue: 'Discount' })}
               value={`-$${discount.toFixed(2)}`}
-              color="#059669"
+              color={colors.semantic.success}
             />
             <View style={[styles.totalRow, { borderTopColor: 'rgba(141,112,108,0.3)' }]}>
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>

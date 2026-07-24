@@ -332,8 +332,8 @@ export default function CheckoutPage() {
                 </Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={styles.discountLabel}>{t('checkout.summary.discount')}</Text>
-                <Text style={styles.discountLabel}>-${DISCOUNT.toFixed(2)}</Text>
+                <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>{t('checkout.summary.discount')}</Text>
+                <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>-${DISCOUNT.toFixed(2)}</Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={[styles.summaryLabel, { color: colors['on-surface-variant'] }]}>
@@ -361,8 +361,8 @@ export default function CheckoutPage() {
       >
         <View style={styles.priceInfo}>
           <View style={styles.secureRow}>
-            <Icon symbol="verified" size={14} color="#16a34a" />
-            <Text style={styles.secureText}>{t('checkout.secure')}</Text>
+            <Icon symbol="verified" size={14} color={colors.semantic.positive} />
+            <Text style={[styles.secureText, { color: colors.semantic.positive }]}>{t('checkout.secure')}</Text>
           </View>
           <View style={styles.finalRow}>
             <Text style={[styles.finalLabel, { color: colors['on-surface-variant'] }]}>
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
   summaryLabel: { ...typography['body-sm'], flexShrink: 1 },
   summaryValue: { ...typography['body-sm'] },
   summaryValueBold: { ...typography['body-sm'], fontWeight: '700' },
-  discountLabel: { ...typography['body-sm'], color: '#16a34a' },
+  discountLabel: { ...typography['body-sm'] },
   dividerRow: { marginVertical: spacing.xs },
   emptyText: { ...typography['body-md'], textAlign: 'center', padding: spacing.lg },
 
@@ -500,7 +500,6 @@ const styles = StyleSheet.create({
   secureText: {
     ...typography['label-caps'],
     fontSize: 10,
-    color: '#16a34a',
   },
   finalRow: {
     flexDirection: 'row',

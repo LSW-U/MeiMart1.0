@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
   onlineText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#047857',
+    color: '#047857', // 原因：在线状态深绿文字（emerald-700），与 semantic.success 色阶不同
   },
   sectionTitle: {
     ...typography['label-caps'],
