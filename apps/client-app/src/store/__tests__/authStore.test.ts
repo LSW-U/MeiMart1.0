@@ -28,12 +28,14 @@ describe('authStore', () => {
     expect(state.refreshToken).toBeNull();
   });
 
-  it('persist partialize only keeps isAuthenticated — token never lands in AsyncStorage', async () => {
+  it('persist 不落任何敏感状态 — token/isAuthenticated 都不进 AsyncStorage', async () => {
     useAuthStore.getState().setAuth('tok-secret', 'ref-secret');
     const persistedRaw = await AsyncStorage.getItem('auth-storage');
     const persisted = JSON.parse(persistedRaw ?? '{}');
-    expect(persisted.state.isAuthenticated).toBe(true);
-    expect(persisted.state.accessToken).toBeUndefined();
-    expect(persisted.state.refreshToken).toBeUndefined();
+    // Why: partialize:()=>({}) 刻意不持久化；token 唯一来源是 tokenStorage（SecureStore），
+    // isAuthenticated 在 initFromStorage 启动时从 tokenStorage 动态计算，不进 store
+    expect(persisted.state?.accessToken).toBeUndefined();
+    expect(persisted.state?.refreshToken).toBeUndefined();
+    expect(persisted.state?.isAuthenticated).toBeUndefined();
   });
 });

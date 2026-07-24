@@ -30,8 +30,10 @@ export const useAuthStore = create<AuthState>()(
         void tokenStorage.clear();
       },
       initFromStorage: async () => {
-        // Why: 应用启动时从 SecureStore/AsyncStorage 恢复 token
+        // Why: 应用启动时从 tokenStorage（SecureStore）恢复 token
         // 避免 isAuthenticated 与 token 状态不一致（isAuthenticated=true 但 token 已清除）
+        // TODO(cookie 改造): token 进 httpOnly cookie 后 tokenStorage 消失，此处改为调
+        //   GET /client/user/profile 验 cookie 设登录态（接口已存在，见 src/services/user.ts）
         const token = await tokenStorage.get();
         const refresh = await tokenStorage.getRefresh();
         if (token && refresh) {
