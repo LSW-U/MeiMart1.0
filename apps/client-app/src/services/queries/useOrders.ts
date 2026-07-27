@@ -22,6 +22,31 @@ export function useOrders(status?: OrderStatus | 'all') {
   });
 }
 
+// P2 §4.1: 个人中心 4 宫格订单计数 - 从 useOrders('all') 派生（auth 自动 gating）
+// Why: 方案 §4.1 称「useOrders 不存在」有误，实际已存在；这里薄封装按状态集归并 4 个宫格
+// 业务映射（基于 legacyStatusMap 后的新 enum；mock 5 单覆盖 4 态各 1）：
+//   to-pay 待付款 = PENDING_PAYMENT
+//   to-ship 待发货 = PENDING_CONFIRM + CONFIRMED（已付款待发货）
+//   to-receive 待收货 = PICKED + OUT_FOR_DELIVERY（已发货在途）
+//   review 待评价 = DELIVERED + COMPLETED（已收货可评价）
+// Caveat: real 模式 useOrders 单页 limit=20，订单超 20 时计数会偏低；后端订单计数接口就绪后替换。
+const ORDER_COUNT_MAP: Record<string, OrderStatus[]> = {
+  'to-pay': ['PENDING_PAYMENT'],
+  'to-ship': ['PENDING_CONFIRM', 'CONFIRMED'],
+  'to-receive': ['PICKED', 'OUT_FOR_DELIVERY'],
+  review: ['DELIVERED', 'COMPLETED'],
+};
+
+export function useOrderCounts(): Record<string, number> {
+  const { data } = useOrders('all');
+  const orders = data ?? [];
+  const counts: Record<string, number> = {};
+  for (const [cell, statuses] of Object.entries(ORDER_COUNT_MAP)) {
+    counts[cell] = orders.filter((o) => statuses.includes(o.status)).length;
+  }
+  return counts;
+}
+
 // Why: 游标分页无限加载 hook，订单列表页用。消费 service 的 nextCursor + hasMore。
 export function useOrdersInfinite(status?: OrderStatus | 'all') {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);

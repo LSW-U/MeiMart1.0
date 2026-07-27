@@ -98,6 +98,9 @@ export interface User {
   phone: string;
   email?: string;
   avatar?: string;
+  // Why: P2 §4.2 会员/积分 - 可选，后端不返回时降级（隐藏 GOLD 标签 / 积分显 0）
+  memberLevel?: string;
+  points?: number;
 }
 
 export type CouponType = 'percentage' | 'fixed';

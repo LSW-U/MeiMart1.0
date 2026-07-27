@@ -18,7 +18,9 @@ import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
-import { useProfile } from '@/services/queries/useUser';
+import { useProfile, useCoupons } from '@/services/queries/useUser';
+import { useFavorites } from '@/services/queries/useFavorites';
+import { useOrderCounts } from '@/services/queries/useOrders';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -37,17 +39,15 @@ interface OrderEntry {
     | 'order.statusToReceive'
     | 'order.actions.review';
   icon: Parameters<typeof Icon>[0]['symbol'];
-  badge?: number; // P2 Commit 2 接真实订单计数，无值则隐藏
   route?: string;
 }
 
-// 4 宫格订单入口（HTML 第 170-197 行）- badge 当前为占位，Commit 2 接 useOrderCounts
+// 4 宫格订单入口（HTML 第 170-197 行）- badge 由 useOrderCounts 派生（id 对应 ORDER_COUNT_MAP）
 const ORDER_ENTRIES: OrderEntry[] = [
   {
     id: 'to-pay',
     labelKey: 'order.statusToPay',
     icon: 'account_balance_wallet',
-    badge: 1,
     route: '/(main)/orders',
   },
   { id: 'to-ship', labelKey: 'order.statusToShip', icon: 'package_', route: '/(main)/orders' },
@@ -55,7 +55,6 @@ const ORDER_ENTRIES: OrderEntry[] = [
     id: 'to-receive',
     labelKey: 'order.statusToReceive',
     icon: 'local_shipping',
-    badge: 2,
     route: '/(main)/orders',
   },
   { id: 'review', labelKey: 'order.actions.review', icon: 'star_rate', route: '/order/review' },
@@ -104,6 +103,10 @@ export default function ProfilePage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { data: user, isLoading, isError, refetch } = useProfile();
+  // P2 §4.3 统计条 + §4.1 订单 badge 数据源（auth gating 由各 hook 内部处理）
+  const { data: coupons } = useCoupons();
+  const { data: favorites } = useFavorites();
+  const orderCounts = useOrderCounts();
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
@@ -130,6 +133,12 @@ export default function ProfilePage() {
       </SafeAreaWrapper>
     );
   }
+
+  // P2 §4.2/§4.3 派生展示值：会员降级（无 memberLevel 隐藏 GOLD）/ 积分默认 0 / 优惠券按未用 / 收藏全量
+  const isGold = user.memberLevel === 'gold';
+  const points = user.points ?? 0;
+  const couponCount = (coupons ?? []).filter((c) => !c.used).length;
+  const favoriteCount = (favorites ?? []).length;
 
   const onItemPress = (item: FunctionItem) => {
     if (item.id === 'logout') {
@@ -183,22 +192,27 @@ export default function ProfilePage() {
               <View style={styles.memberText}>
                 <View style={styles.memberNameRow}>
                   <Text style={styles.memberName} numberOfLines={1}>{user.name}</Text>
-                  {/* GOLD 胶囊：半透明白底（§3.1），Commit 2 按 memberLevel 显示/隐藏 */}
-                  <View style={styles.memberBadge}>
-                    <Text style={styles.memberBadgeText}>GOLD</Text>
+                  {/* GOLD 胶囊：半透明白底（§3.1），§4.2 无 memberLevel 时降级隐藏 */}
+                  {isGold && (
+                    <View style={styles.memberBadge}>
+                      <Text style={styles.memberBadgeText}>GOLD</Text>
+                    </View>
+                  )}
+                </View>
+                {/* §4.2 会员等级行仅 gold 显示（其他等级/无等级降级隐藏，避免文案错配） */}
+                {isGold && (
+                  <View style={styles.memberTier}>
+                    <Icon symbol="workspace_premium" size={13} color={colors['tertiary-fixed-dim']} />
+                    <Text style={styles.memberTierText}>{t('profile.goldMember')}</Text>
                   </View>
-                </View>
-                <View style={styles.memberTier}>
-                  <Icon symbol="workspace_premium" size={13} color={colors['tertiary-fixed-dim']} />
-                  <Text style={styles.memberTierText}>{t('profile.goldMember')}</Text>
-                </View>
+                )}
               </View>
               <View style={styles.editBtnNew}>
                 <Icon symbol="edit" size={18} color="#ffffff" />
               </View>
             </Pressable>
           </LinearGradient>
-          {/* points-strip 三格统计条 - Commit 2 接 user.points / useCoupons / useFavorites */}
+          {/* points-strip 三格统计条 - §4.3 接 user.points / useCoupons(未用) / useFavorites(全量) */}
           <View
             style={[
               styles.pointsStrip,
@@ -210,7 +224,9 @@ export default function ProfilePage() {
               accessibilityRole="button"
               accessibilityLabel={t('profile.pointsUnit')}
             >
-              <Text style={[styles.pointsNum, { color: colors.primary }]}>1,250</Text>
+              <Text style={[styles.pointsNum, { color: colors.primary }]}>
+                {points.toLocaleString('en-US')}
+              </Text>
               <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
                 {t('profile.pointsUnit')}
               </Text>
@@ -225,7 +241,9 @@ export default function ProfilePage() {
               accessibilityRole="button"
               accessibilityLabel={t('profile.coupons')}
             >
-              <Text style={[styles.pointsNumMuted, { color: colors['on-surface-variant'] }]}>3</Text>
+              <Text style={[styles.pointsNumMuted, { color: colors['on-surface-variant'] }]}>
+                {couponCount}
+              </Text>
               <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
                 {t('profile.coupons')}
               </Text>
@@ -236,7 +254,9 @@ export default function ProfilePage() {
               accessibilityRole="button"
               accessibilityLabel={t('profile.favorites')}
             >
-              <Text style={[styles.pointsNumMuted, { color: colors['on-surface-variant'] }]}>12</Text>
+              <Text style={[styles.pointsNumMuted, { color: colors['on-surface-variant'] }]}>
+                {favoriteCount}
+              </Text>
               <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
                 {t('profile.favorites')}
               </Text>
@@ -274,7 +294,8 @@ export default function ProfilePage() {
               >
                 <View style={styles.orderTileNew}>
                   <Icon symbol={entry.icon} size={26} color={colors.primary} />
-                  {entry.badge ? (
+                  {/* §4.1 badge 接 useOrderCounts 派生计数，无值（0）隐藏不显示假数据 */}
+                  {orderCounts[entry.id] > 0 ? (
                     <View
                       style={[
                         styles.orderBadge,
@@ -284,7 +305,7 @@ export default function ProfilePage() {
                         },
                       ]}
                     >
-                      <Text style={styles.orderBadgeText}>{entry.badge}</Text>
+                      <Text style={styles.orderBadgeText}>{orderCounts[entry.id]}</Text>
                     </View>
                   ) : null}
                 </View>
