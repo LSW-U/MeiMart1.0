@@ -32,6 +32,10 @@ import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 const DEFAULT_AVATAR =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDTkRvY5IQj5crQ9J0WxeHh9B2lcLBNp6NrIk8FZoL0iBqr3sNYwIAnUgGA9a2lhDAGKNs0Y9WP7AFn3BXuHbbNV7ChtSLtV93tdcfLwqA5V1EEjiStXWYL7QF3KOaH2l2PSyl5nStpLu1j2Cein2M6_AQtoHf00DN0oQPQOhhyzWkt_l5Oaz_nW5Iw9W39bkQ1JLpw4LUIxhhdXtyzNK92y_yuLRTLO2aeZVgFGYM2UUOHzMkK6ya9RMSg3S47jxi0Fx098Wwl';
 
+// 原因：红底 banner / primary header / 主按钮上的固定白字。两种模式都是品牌红底，白字正确不变。
+// 不可用 colors['on-primary']：dark 模式下 on-primary 翻为 #690005（暗红），叠红底会裂色。
+const ON_PRIMARY = '#ffffff';
+
 interface OrderEntry {
   id: string;
   labelKey:
@@ -118,7 +122,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+      <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
         <ProfileHeader />
         <PageSkeleton variant="list" rows={4} />
@@ -127,7 +131,7 @@ export default function ProfilePage() {
   }
   if (isError || !user) {
     return (
-      <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+      <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
         <ProfileHeader />
         <ErrorState message={t('errors.profile')} onRetry={() => refetch()} />
@@ -153,11 +157,8 @@ export default function ProfilePage() {
   };
 
   // P2 §6: Discover 功能 C1 占位 -> toast「功能开发中」（功能按 F2->F1->F4->F3 后续实现）
-  const onDiscoverPress = (item: DiscoverEntry) => {
-    toast.info(
-      t('profile.featureComingSoon', { defaultValue: 'Feature coming soon' }),
-    );
-    void item;
+  const onDiscoverPress = () => {
+    toast.info(t('profile.featureComingSoon', { defaultValue: 'Feature coming soon' }));
   };
 
   return (
@@ -234,7 +235,7 @@ export default function ProfilePage() {
                 </View>
               </View>
               <View style={styles.editBtnNew}>
-                <Icon symbol="edit" size={18} color="#ffffff" />
+                <Icon symbol="edit" size={18} color={ON_PRIMARY} />
               </View>
             </Pressable>
           </LinearGradient>
@@ -349,7 +350,7 @@ export default function ProfilePage() {
           {DISCOVER_ENTRIES.map((entry) => (
             <Pressable
               key={entry.id}
-              onPress={() => onDiscoverPress(entry)}
+              onPress={onDiscoverPress}
               style={({ pressed }) => [styles.quickCell, pressed && { opacity: 0.7 }]}
               accessibilityRole="button"
               accessibilityLabel={t(entry.labelKey)}
@@ -449,7 +450,7 @@ function ProfileHeader() {
               accessibilityRole="button"
               accessibilityLabel={t('profile.customerService')}
             >
-              <Icon symbol="headset" size={24} color="#ffffff" />
+              <Icon symbol="headset" size={24} color={ON_PRIMARY} />
             </Pressable>
             <Pressable
               onPress={() => router.push('/service/notifications')}
@@ -457,7 +458,7 @@ function ProfileHeader() {
               accessibilityRole="button"
               accessibilityLabel={t('profile.notifications')}
             >
-              <Icon symbol="notifications" size={24} color="#ffffff" />
+              <Icon symbol="notifications" size={24} color={ON_PRIMARY} />
             </Pressable>
           </View>
         }
@@ -678,7 +679,7 @@ const styles = StyleSheet.create({
     ...typography.h2,
     fontWeight: '700',
     fontSize: 18,
-    color: '#ffffff',
+    color: ON_PRIMARY,
     flexShrink: 1,
   },
   memberBadge: {
@@ -688,7 +689,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   memberBadgeText: {
-    color: '#ffffff',
+    color: ON_PRIMARY,
     fontSize: 9,
     fontWeight: '700',
     letterSpacing: 0.6,
@@ -812,7 +813,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   orderBadgeText: {
-    color: '#ffffff',
+    color: ON_PRIMARY,
     fontSize: 9,
     fontWeight: '700',
   },
@@ -944,7 +945,7 @@ const styles = StyleSheet.create({
     ...shadowPresets.md,
   },
   loginBtnText: {
-    color: '#ffffff',
+    color: ON_PRIMARY,
     ...typography['label-caps'],
     letterSpacing: 1.5,
   },
