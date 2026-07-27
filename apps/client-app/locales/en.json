@@ -203,7 +203,25 @@
     "stock": "Stock",
     "badgeFresh": "Fresh",
     "badgeBestSeller": "Best Seller",
-    "addToCartLabel": "Add {{name}} to cart"
+    "addToCartLabel": "Add {{name}} to cart",
+    "tagLocal": "LOCAL PRODUCT",
+    "inStock": "In Stock",
+    "deliverTo": "DELIVER TO",
+    "eta": "ETA",
+    "shipping": "SHIPPING",
+    "selectVariant": "Select Variant",
+    "detailsTitle": "Product Details",
+    "reviewsTitle": "Reviews",
+    "writeReview": "WRITE A REVIEW",
+    "pairsWellWith": "Pairs Well With",
+    "noDescription": "No description yet",
+    "selectAddress": "Select address",
+    "tab": {
+      "product": "PRODUCT",
+      "reviews": "REVIEWS",
+      "recommended": "RECOMMENDED",
+      "details": "DETAILS"
+    }
   },
   "order": {
     "status": {

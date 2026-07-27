@@ -40,10 +40,10 @@ const GRIND_TYPES = ['FINE', 'MEDIUM', 'COARSE'] as const;
 // 配对商品（HTML 第 376-408 行）— 用真实 mockDb id，数据从 useProducts 动态拉取
 const PAIRS_WELL_WITH_IDS = ['p003', 'p005', 'p008'];
 
-// You May Also Like（HTML 第 418-437 行）— 用真实 mockDb id
+// {t('product.relatedProducts')}（HTML 第 418-437 行）— 用真实 mockDb id
 const YOU_MAY_LIKE_IDS = ['p006', 'p009'];
 
-// Reviews mock（HTML 第 337-370 行：英文名 + 英文评论）
+// {t('product.reviewsTitle')} mock（HTML 第 337-370 行：英文名 + 英文评论）
 const REVIEWS = [
   {
     id: 'r1',
@@ -230,7 +230,7 @@ export default function ProductDetailPage() {
           {/* Play Button */}
           <View style={styles.playWrap} pointerEvents="none">
             <BlurView intensity={40} tint="light" style={styles.playBtn}>
-              <Icon symbol="play_arrow" size={36} color="#ffffff" />
+              <Icon symbol="play_arrow" size={36} color={colors['on-primary']} />
             </BlurView>
           </View>
         </View>
@@ -244,11 +244,11 @@ export default function ProductDetailPage() {
                 <Text
                   style={[styles.tagTertiaryText, { color: colors['on-tertiary-fixed-variant'] }]}
                 >
-                  LOCAL PRODUCT
+                  {t('product.tagLocal')}
                 </Text>
               </View>
               <View style={[styles.tagPrimary, { backgroundColor: colors['primary-fixed'] }]}>
-                <Text style={[styles.tagPrimaryText, { color: colors.primary }]}>BEST SELLER</Text>
+                <Text style={[styles.tagPrimaryText, { color: colors.primary }]}>{t('product.badgeBestSeller')}</Text>
               </View>
             </View>
             <Text style={[styles.h1, { color: colors['on-surface'] }]}>
@@ -275,7 +275,7 @@ export default function ProductDetailPage() {
             >
               <View style={styles.stockLeft}>
                 <View style={styles.stockDot} />
-                <Text style={styles.stockText}>IN STOCK</Text>
+                <Text style={styles.stockText}>{t('product.inStock')}</Text>
               </View>
               <Text style={[styles.stockSold, { color: colors['on-surface-variant'] }]}>
                 1.2k sold / month
@@ -291,7 +291,7 @@ export default function ProductDetailPage() {
                   <Icon symbol="local_shipping" size={24} color={colors.primary} />
                   <View>
                     <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>
-                      DELIVER TO
+                      {t('product.deliverTo')}
                     </Text>
                     <Text style={[styles.deliveryAddress, { color: colors['on-surface'] }]}>
                       Dili, Christo Rei
@@ -302,13 +302,13 @@ export default function ProductDetailPage() {
               </View>
               <View style={[styles.deliverySplit, { borderTopColor: 'rgba(225, 191, 186, 0.3)' }]}>
                 <View style={styles.deliveryCell}>
-                  <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>ETA</Text>
+                  <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>{t('product.eta')}</Text>
                   <Text style={[styles.deliveryValue, { color: colors['on-surface'] }]}>
                     Arrives Today 6:00 PM
                   </Text>
                 </View>
                 <View style={styles.deliveryCell}>
-                  <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>SHIPPING</Text>
+                  <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>{t('product.shipping')}</Text>
                   <Text
                     style={[styles.deliveryValue, { color: colors.primary, fontWeight: '700' }]}
                   >
@@ -323,7 +323,7 @@ export default function ProductDetailPage() {
           <View style={styles.section}>
             <View>
               <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                Select Grind Type
+                {t('product.selectVariant')}
               </Text>
               <View
                 style={[styles.titleUnderline, { backgroundColor: colors['tertiary-fixed-dim'] }]}
@@ -339,7 +339,7 @@ export default function ProductDetailPage() {
                     style={[
                       styles.grindPill,
                       {
-                        backgroundColor: active ? colors.primary : '#ffffff',
+                        backgroundColor: active ? colors.primary : colors['surface-container-lowest'],
                         borderColor: active ? colors.primary : colors.outline,
                       },
                     ]}
@@ -350,7 +350,7 @@ export default function ProductDetailPage() {
                     <Text
                       style={[
                         styles.grindText,
-                        { color: active ? '#ffffff' : colors['on-surface-variant'] },
+                        { color: active ? colors['on-primary'] : colors['on-surface-variant'] },
                       ]}
                     >
                       {g}
@@ -361,7 +361,7 @@ export default function ProductDetailPage() {
             </View>
           </View>
 
-          {/* Product Details Section */}
+          {/* {t('product.detailsTitle')} Section */}
           <View style={styles.section} collapsable={false}>
             <View
               style={[
@@ -370,7 +370,7 @@ export default function ProductDetailPage() {
               ]}
             >
               <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                Product Details
+                {t('product.detailsTitle')}
               </Text>
             </View>
             <View style={[styles.detailVideo, shadowPresets.md]}>
@@ -387,15 +387,15 @@ export default function ProductDetailPage() {
               <Text style={[styles.detailBody, { color: colors['on-surface-variant'] }]}>
                 {product.description
                   ? localize(product.description)
-                  : 'Sourced from the misty highlands of Ermera, our 100% organic Arabica beans are hand-picked by local cooperatives. Each bean carries the legacy of traditional sun-drying methods, resulting in a rich, velvety profile with notes of dark chocolate and native citrus.'}
+                  : t('product.noDescription')}
               </Text>
             </View>
           </View>
 
-          {/* Reviews Section */}
+          {/* {t('product.reviewsTitle')} Section */}
           <View style={styles.section} collapsable={false}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>Reviews</Text>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>{t('product.reviewsTitle')}</Text>
               <Pressable
                 onPress={writeReview}
                 style={[styles.writeReviewBtn, { borderBottomColor: colors.primary }]}
@@ -403,7 +403,7 @@ export default function ProductDetailPage() {
                 accessibilityLabel="Write a review"
               >
                 <Text style={[styles.writeReviewText, { color: colors.primary }]}>
-                  WRITE A REVIEW
+                  {t('product.writeReview')}
                 </Text>
               </Pressable>
             </View>
@@ -443,7 +443,7 @@ export default function ProductDetailPage() {
                   style={[
                     styles.reviewCard,
                     {
-                      backgroundColor: '#ffffff',
+                      backgroundColor: colors['surface-container-lowest'],
                       borderColor: 'rgba(141,112,108,0.1)',
                     },
                   ]}
@@ -467,10 +467,10 @@ export default function ProductDetailPage() {
             </View>
           </View>
 
-          {/* Pairs Well With 横滑 */}
+          {/* {t('product.pairsWellWith')} 横滑 */}
           <View style={styles.section} collapsable={false}>
             <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              Pairs Well With
+              {t('product.pairsWellWith')}
             </Text>
             <ScrollView
               horizontal
@@ -483,7 +483,7 @@ export default function ProductDetailPage() {
                   onPress={() => router.push(`/product/${p.id}`)}
                   style={({ pressed }) => [
                     styles.relatedCard,
-                    { backgroundColor: '#ffffff', borderColor: 'rgba(141,112,108,0.1)' },
+                    { backgroundColor: colors['surface-container-lowest'], borderColor: 'rgba(141,112,108,0.1)' },
                     pressed && { opacity: 0.85 },
                   ]}
                   accessibilityRole="button"
@@ -515,7 +515,7 @@ export default function ProductDetailPage() {
                       accessibilityLabel={`Add ${p.name} to cart`}
                     >
                       <Text style={[styles.relatedAddText, { color: colors.primary }]}>
-                        ADD TO CART
+                        {t('product.addToCart')}
                       </Text>
                     </Pressable>
                   </View>
@@ -524,7 +524,7 @@ export default function ProductDetailPage() {
             </ScrollView>
           </View>
 
-          {/* You May Also Like 横滑 */}
+          {/* {t('product.relatedProducts')} 横滑 */}
           <View
             style={[
               styles.section,
@@ -533,7 +533,7 @@ export default function ProductDetailPage() {
           >
             <View>
               <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                You May Also Like
+                {t('product.relatedProducts')}
               </Text>
               <View
                 style={[styles.titleUnderline2, { backgroundColor: colors['tertiary-fixed-dim'] }]}
@@ -550,7 +550,7 @@ export default function ProductDetailPage() {
                   onPress={() => router.push(`/product/${p.id}`)}
                   style={({ pressed }) => [
                     styles.relatedCard,
-                    { backgroundColor: '#ffffff', borderColor: 'rgba(141,112,108,0.1)' },
+                    { backgroundColor: colors['surface-container-lowest'], borderColor: 'rgba(141,112,108,0.1)' },
                     pressed && { opacity: 0.85 },
                   ]}
                   accessibilityRole="button"
@@ -607,7 +607,7 @@ export default function ProductDetailPage() {
               { color: isFavorite ? colors.primary : colors['on-surface'] },
             ]}
           >
-            FAVORITE
+            {t('product.favorite')}
           </Text>
         </Pressable>
         <Pressable
@@ -620,7 +620,7 @@ export default function ProductDetailPage() {
           accessibilityRole="button"
           accessibilityLabel="Add to cart"
         >
-          <Text style={styles.cartBtnText}>ADD TO CART</Text>
+          <Text style={styles.cartBtnText}>{t('product.addToCart')}</Text>
         </Pressable>
       </View>
     </SafeAreaWrapper>
@@ -643,12 +643,13 @@ function TopBar({
   cartCount?: number;
 }) {
   const { colors } = useTheme();
+  const { t: translate } = useTranslation();
 
   return (
     <View
       style={[
         styles.topBar,
-        { backgroundColor: '#ffffff', borderBottomColor: 'rgba(141,112,108,0.1)' },
+        { backgroundColor: colors['surface-container-lowest'], borderBottomColor: 'rgba(141,112,108,0.1)' },
       ]}
     >
       <Pressable
@@ -684,7 +685,7 @@ function TopBar({
                   },
                 ]}
               >
-                {t}
+                {translate(`product.tab.${t.toLowerCase()}`)}
               </Text>
             </Pressable>
           );

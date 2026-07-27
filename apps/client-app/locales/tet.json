@@ -160,7 +160,25 @@
     "stock": "",
     "badgeFresh": "",
     "badgeBestSeller": "",
-    "addToCartLabel": ""
+    "addToCartLabel": "",
+    "tagLocal": "[TET] LOCAL PRODUCT",
+    "inStock": "[TET] In Stock",
+    "deliverTo": "[TET] DELIVER TO",
+    "eta": "[TET] ETA",
+    "shipping": "[TET] SHIPPING",
+    "selectVariant": "[TET] Select Variant",
+    "detailsTitle": "[TET] Product Details",
+    "reviewsTitle": "[TET] Reviews",
+    "writeReview": "[TET] WRITE A REVIEW",
+    "pairsWellWith": "[TET] Pairs Well With",
+    "noDescription": "[TET] No description yet",
+    "selectAddress": "[TET] Select address",
+    "tab": {
+      "product": "[TET] PRODUCT",
+      "reviews": "[TET] REVIEWS",
+      "recommended": "[TET] RECOMMENDED",
+      "details": "[TET] DETAILS"
+    }
   },
   "order": {
     "status": {

@@ -203,7 +203,25 @@
     "stock": "库存",
     "badgeFresh": "新鲜",
     "badgeBestSeller": "热销",
-    "addToCartLabel": "将 {{name}} 加入购物车"
+    "addToCartLabel": "将 {{name}} 加入购物车",
+    "tagLocal": "本地产品",
+    "inStock": "有货",
+    "deliverTo": "配送至",
+    "eta": "预计送达",
+    "shipping": "配送",
+    "selectVariant": "选择规格",
+    "detailsTitle": "商品详情",
+    "reviewsTitle": "评价",
+    "writeReview": "写评价",
+    "pairsWellWith": "搭配推荐",
+    "noDescription": "暂无描述",
+    "selectAddress": "选择地址",
+    "tab": {
+      "product": "商品",
+      "reviews": "评价",
+      "recommended": "推荐",
+      "details": "详情"
+    }
   },
   "order": {
     "status": {
