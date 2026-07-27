@@ -51,7 +51,7 @@
     "extra": {
       "APP_ENV": "development",
       "API_BASE_URL": "http://localhost:3000/api/v1",
-      "USE_MOCK": "false",
+      "USE_MOCK": "true",
       "SENTRY_DSN": "",
       "eas": {
         "projectId": "your-eas-project-id"
