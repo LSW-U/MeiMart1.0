@@ -709,32 +709,39 @@ export default function ProductDetailPage() {
               contentContainerStyle={styles.hScroll}
             >
               {pairsWellWith.map((p) => (
-                <Pressable
+                <View
                   key={p.id}
-                  onPress={() => router.push(`/product/${p.id}`)}
-                  style={({ pressed }) => [
+                  style={[
                     styles.relatedCard,
                     { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
-                    pressed && { opacity: 0.85 },
                   ]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`View ${p.name}`}
                 >
-                  <View
-                    style={[styles.relatedImage, { backgroundColor: colors['surface-variant'] }]}
+                  {/* Why: 外层 View 而非 Pressable，避免 Pressable 嵌套 Pressable
+                      （RN Web 渲染为 button 套 button，违反 HTML 规范导致 hydration 错误） */}
+                  <Pressable
+                    onPress={() => router.push(`/product/${p.id}`)}
+                    style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`View ${p.name}`}
                   >
-                    <SafeImage source={{ uri: p.image }} style={styles.relatedImg} />
-                  </View>
-                  <View style={styles.relatedInfo}>
-                    <Text
-                      style={[styles.relatedName, { color: colors['on-surface'] }]}
-                      numberOfLines={1}
+                    <View
+                      style={[styles.relatedImage, { backgroundColor: colors['surface-variant'] }]}
                     >
-                      {localize(p.name)}
-                    </Text>
-                    <Text style={[styles.relatedPrice, { color: colors.primary }]}>
-                      ${p.price.toFixed(2)}
-                    </Text>
+                      <SafeImage source={{ uri: p.image }} style={styles.relatedImg} />
+                    </View>
+                    <View style={styles.relatedInfo}>
+                      <Text
+                        style={[styles.relatedName, { color: colors['on-surface'] }]}
+                        numberOfLines={1}
+                      >
+                        {localize(p.name)}
+                      </Text>
+                      <Text style={[styles.relatedPrice, { color: colors.primary }]}>
+                        ${p.price.toFixed(2)}
+                      </Text>
+                    </View>
+                  </Pressable>
+                  <View style={styles.relatedAddWrap}>
                     <Pressable
                       onPress={() => addRelatedToCart(p)}
                       style={({ pressed }) => [
@@ -750,7 +757,7 @@ export default function ProductDetailPage() {
                       </Text>
                     </Pressable>
                   </View>
-                </Pressable>
+                </View>
               ))}
             </ScrollView>
           </View>
@@ -1646,6 +1653,10 @@ const styles = StyleSheet.create({
   relatedInfo: {
     padding: spacing.sm,
     gap: spacing.xs,
+  },
+  relatedAddWrap: {
+    paddingHorizontal: spacing.sm,
+    paddingBottom: spacing.sm,
   },
   relatedName: {
     ...typography['body-sm'],
