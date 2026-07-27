@@ -18,6 +18,7 @@ import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
+import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { useProfile, useCoupons } from '@/services/queries/useUser';
 import { useFavorites } from '@/services/queries/useFavorites';
 import { useOrderCounts } from '@/services/queries/useOrders';
@@ -134,8 +135,10 @@ export default function ProfilePage() {
     );
   }
 
-  // P2 §4.2/§4.3 派生展示值：会员降级（无 memberLevel 隐藏 GOLD）/ 积分默认 0 / 优惠券按未用 / 收藏全量
-  const isGold = user.memberLevel === 'gold';
+  // P2 §4.2/§4.3 派生展示值：会员标志始终显示（无 memberLevel 时灰度，而非隐藏）/ 积分默认 0 / 优惠券按未用 / 收藏全量
+  const memberLevel = user.memberLevel;
+  const hasMember = Boolean(memberLevel);
+  const memberBadgeText = (memberLevel ?? 'gold').toUpperCase(); // 非会员时显灰度 GOLD（"待解锁"语义）
   const points = user.points ?? 0;
   const couponCount = (coupons ?? []).filter((c) => !c.used).length;
   const favoriteCount = (favorites ?? []).length;
@@ -175,11 +178,15 @@ export default function ProfilePage() {
         <View style={[styles.userCardNew, shadowPresets.md]}>
           {/* member-banner */}
           <LinearGradient
-            colors={[colors.primary, '#b53026']} // 原因：banner 渐变终止色（HTML 原型 #b53026，primary 暗化版），dark 不变
+            colors={[colors.primary, '#d4453a']} // 原因：banner 渐变终止色，比 primary 亮一档让渐变可见（dark 不变）
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.memberBanner}
           >
+            {/* 编织背景：TaisPattern 叠层（文化母题，用户要求补上），绝对定位铺在内容下层 */}
+            <View style={styles.bannerPattern} pointerEvents="none">
+              <TaisPattern height={140} opacity={0.2} />
+            </View>
             <Pressable
               onPress={() => router.push('/profile/edit')}
               style={styles.memberRow}
@@ -192,20 +199,39 @@ export default function ProfilePage() {
               <View style={styles.memberText}>
                 <View style={styles.memberNameRow}>
                   <Text style={styles.memberName} numberOfLines={1}>{user.name}</Text>
-                  {/* GOLD 胶囊：半透明白底（§3.1），§4.2 无 memberLevel 时降级隐藏 */}
-                  {isGold && (
-                    <View style={styles.memberBadge}>
-                      <Text style={styles.memberBadgeText}>GOLD</Text>
-                    </View>
-                  )}
-                </View>
-                {/* §4.2 会员等级行仅 gold 显示（其他等级/无等级降级隐藏，避免文案错配） */}
-                {isGold && (
-                  <View style={styles.memberTier}>
-                    <Icon symbol="workspace_premium" size={13} color={colors['tertiary-fixed-dim']} />
-                    <Text style={styles.memberTierText}>{t('profile.goldMember')}</Text>
+                  {/* GOLD 胶囊：半透明白底（§3.1）；非会员灰度显示（不隐藏，"待解锁"视觉） */}
+                  <View
+                    style={[
+                      styles.memberBadge,
+                      !hasMember && styles.memberBadgeMuted,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.memberBadgeText,
+                        !hasMember && styles.memberBadgeTextMuted,
+                      ]}
+                    >
+                      {memberBadgeText}
+                    </Text>
                   </View>
-                )}
+                </View>
+                {/* 会员等级行始终显示，非会员灰度（与胶囊同步） */}
+                <View style={styles.memberTier}>
+                  <Icon
+                    symbol="workspace_premium"
+                    size={13}
+                    color={hasMember ? colors['tertiary-fixed-dim'] : 'rgba(255,255,255,0.3)'}
+                  />
+                  <Text
+                    style={[
+                      styles.memberTierText,
+                      !hasMember && styles.memberTierTextMuted,
+                    ]}
+                  >
+                    {t('profile.goldMember')}
+                  </Text>
+                </View>
               </View>
               <View style={styles.editBtnNew}>
                 <Icon symbol="edit" size={18} color="#ffffff" />
@@ -230,11 +256,7 @@ export default function ProfilePage() {
               <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
                 {t('profile.pointsUnit')}
               </Text>
-              <Icon
-                symbol="chevron_right"
-                size={12}
-                color={colors.outline}
-              />
+              <Icon symbol="chevron_right" size={12} color={colors.outline} style={styles.pointsChevron} />
             </Pressable>
             <Pressable
               style={[styles.pointsCell, { borderLeftColor: colors['outline-variant'], borderLeftWidth: StyleSheet.hairlineWidth }]}
@@ -247,7 +269,7 @@ export default function ProfilePage() {
               <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
                 {t('profile.coupons')}
               </Text>
-              <Icon symbol="chevron_right" size={12} color={colors.outline} />
+              <Icon symbol="chevron_right" size={12} color={colors.outline} style={styles.pointsChevron} />
             </Pressable>
             <Pressable
               style={[styles.pointsCell, { borderLeftColor: colors['outline-variant'], borderLeftWidth: StyleSheet.hairlineWidth }]}
@@ -260,7 +282,7 @@ export default function ProfilePage() {
               <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
                 {t('profile.favorites')}
               </Text>
-              <Icon symbol="chevron_right" size={12} color={colors.outline} />
+              <Icon symbol="chevron_right" size={12} color={colors.outline} style={styles.pointsChevron} />
             </Pressable>
           </View>
         </View>
@@ -611,6 +633,16 @@ const styles = StyleSheet.create({
   memberBanner: {
     padding: spacing.lg,
     paddingBottom: spacing.lg + 6,
+    position: 'relative', // Why: 承载 bannerPattern 绝对定位的 TaisPattern 叠层
+    overflow: 'hidden', // Why: 裁剪 TaisPattern（screenWidth 渲染）到 banner 范围，不溢出到 points-strip
+  },
+  bannerPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
   },
   memberRow: {
     flexDirection: 'row',
@@ -661,6 +693,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.6,
   },
+  // 非会员灰度态（始终显示会员标志，但不活跃）
+  memberBadgeMuted: {
+    backgroundColor: 'rgba(0,0,0,0.2)', // 原因：非会员灰度胶囊叠红底，dark 不变
+  },
+  memberBadgeTextMuted: {
+    color: 'rgba(255,255,255,0.5)',
+  },
   memberTier: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -670,6 +709,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.85)', // 原因：会员等级副文字叠红底，dark 不变
+  },
+  memberTierTextMuted: {
+    color: 'rgba(255,255,255,0.4)',
   },
   editBtnNew: {
     width: 36,
@@ -706,6 +748,12 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '600',
     letterSpacing: 0.4,
+  },
+  pointsChevron: {
+    position: 'absolute',
+    right: 4,
+    top: '50%',
+    marginTop: -6,
   },
   // === card 通用 ===
   card: {
