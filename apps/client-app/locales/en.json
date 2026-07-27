@@ -221,7 +221,8 @@
       "reviews": "REVIEWS",
       "recommended": "RECOMMENDED",
       "details": "DETAILS"
-    }
+    },
+    "verifiedPurchase": "Verified Purchase"
   },
   "order": {
     "status": {

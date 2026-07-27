@@ -178,7 +178,8 @@
       "reviews": "[TET] REVIEWS",
       "recommended": "[TET] RECOMMENDED",
       "details": "[TET] DETAILS"
-    }
+    },
+    "verifiedPurchase": "[TET] Verified Purchase"
   },
   "order": {
     "status": {

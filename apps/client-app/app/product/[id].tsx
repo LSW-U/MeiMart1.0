@@ -220,17 +220,23 @@ export default function ProductDetailPage() {
           </ScrollView>
           {/* Pagination Dots */}
           <View style={styles.dotsWrap}>
-            {[0, 1, 2, 3, 4].map((n) => (
+            {[0, 1, 2].map((n) => (
               <View
                 key={n}
                 style={[styles.dot, n === activeImage ? [styles.dotActive, { backgroundColor: colors.primary }] : styles.dotIdle]}
               />
             ))}
           </View>
-          {/* Play Button */}
+          {/* U5: 图片计数器 右下角（替原 play 按钮居中占位） */}
+          <View style={styles.imageCounter} pointerEvents="none">
+            <Text style={styles.imageCounterText}>
+              {activeImage + 1}/3
+            </Text>
+          </View>
+          {/* U5: Play 按钮缩到右上小尺寸（视频入口保留但不抢眼） */}
           <View style={styles.playWrap} pointerEvents="none">
-            <BlurView intensity={40} tint="light" style={styles.playBtn}>
-              <Icon symbol="play_arrow" size={36} color={colors['on-primary']} />
+            <BlurView intensity={30} tint="light" style={styles.playBtn}>
+              <Icon symbol="play_arrow" size={20} color={colors['on-primary']} />
             </BlurView>
           </View>
         </View>
@@ -450,9 +456,18 @@ export default function ProductDetailPage() {
                 >
                   <View style={styles.reviewHeader}>
                     <View>
-                      <Text style={[styles.reviewName, { color: colors['on-surface'] }]}>
-                        {r.userName}
-                      </Text>
+                      <View style={styles.reviewNameRow}>
+                        <Text style={[styles.reviewName, { color: colors['on-surface'] }]}>
+                          {r.userName}
+                        </Text>
+                        {/* U6: verified purchase 绿色标签 */}
+                        <View style={styles.verifiedBadge}>
+                          <Icon symbol="check" size={10} color={colors.semantic.positive} />
+                          <Text style={[styles.verifiedText, { color: colors.semantic.positive }]}>
+                            {t('product.verifiedPurchase')}
+                          </Text>
+                        </View>
+                      </View>
                       <StarsRow size={14} />
                     </View>
                     <Text style={[styles.reviewDate, { color: colors.secondary }]}>
@@ -579,12 +594,12 @@ export default function ProductDetailPage() {
         </View>
       </ScrollView>
 
-      {/* Sticky Bottom Actions */}
+      {/* Sticky Bottom Actions — U4 三键：收藏(48px) + 立即购买(flex:1描边) + 加购(flex:1) */}
       <View
         style={[
           styles.bottomBar,
           {
-            backgroundColor: '#ffffff',
+            backgroundColor: colors['surface-container-lowest'],
             borderTopColor: 'rgba(141,112,108,0.1)',
           },
         ]}
@@ -611,6 +626,20 @@ export default function ProductDetailPage() {
           </Text>
         </Pressable>
         <Pressable
+          onPress={() => router.push('/order/checkout')}
+          style={({ pressed }) => [
+            styles.buyNowBtn,
+            { borderColor: colors.primary },
+            pressed && { opacity: 0.85 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t('product.buyNow')}
+        >
+          <Text style={[styles.buyNowText, { color: colors.primary }]}>
+            {t('product.buyNow')}
+          </Text>
+        </Pressable>
+        <Pressable
           onPress={addToCart}
           style={({ pressed }) => [
             styles.cartBtn,
@@ -620,7 +649,9 @@ export default function ProductDetailPage() {
           accessibilityRole="button"
           accessibilityLabel="Add to cart"
         >
-          <Text style={styles.cartBtnText}>{t('product.addToCart')}</Text>
+          <Text style={[styles.cartBtnText, { color: colors['on-primary-container'] }]}>
+            {t('product.addToCart')}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaWrapper>
@@ -793,17 +824,14 @@ const styles = StyleSheet.create({
   },
   playWrap: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: spacing.sm,
+    right: spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 64,
   },
   playBtn: {
-    width: 64,
-    height: 64,
+    width: 36,
+    height: 36,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.5)',
@@ -811,6 +839,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+  },
+  imageCounter: {
+    position: 'absolute',
+    bottom: spacing.sm,
+    right: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  imageCounterText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
   },
   canvas: {
     paddingHorizontal: layout['container-margin'],
@@ -1058,6 +1100,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+  reviewNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  verifiedText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
   reviewName: {
     ...typography['body-md'],
     fontWeight: '700',
@@ -1125,7 +1182,7 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   favoriteBtn: {
-    flex: 0.25,
+    width: 48,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
@@ -1133,6 +1190,19 @@ const styles = StyleSheet.create({
   favoriteText: {
     ...typography['label-caps'],
     fontSize: 10,
+  },
+  buyNowBtn: {
+    flex: 1,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buyNowText: {
+    ...typography['label-caps'],
+    fontSize: 14,
+    fontWeight: '700',
   },
   cartBtn: {
     flex: 1,
@@ -1143,7 +1213,6 @@ const styles = StyleSheet.create({
   },
   cartBtnText: {
     ...typography['label-caps'],
-    color: '#ffffff',
     fontSize: 14,
     fontWeight: '700',
   },

@@ -221,7 +221,8 @@
       "reviews": "评价",
       "recommended": "推荐",
       "details": "详情"
-    }
+    },
+    "verifiedPurchase": "已验证购买"
   },
   "order": {
     "status": {
