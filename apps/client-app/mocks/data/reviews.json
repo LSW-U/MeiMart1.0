@@ -5,10 +5,16 @@
     "userId": "u001",
     "userName": "Maria S.",
     "rating": 5,
-    "content": "苹果很新鲜，甜脆多汁，配送也很快！",
-    "tags": ["quality", "fresh"],
+    "content": "品质很好，甜脆多汁，推荐！",
+    "tags": [
+      "quality",
+      "fresh"
+    ],
     "isVerified": true,
-    "createdAt": "2026-07-25T08:30:00Z"
+    "createdAt": "2026-07-19T10:10:00Z",
+    "images": [
+      "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=200&q=80"
+    ]
   },
   {
     "id": "rv002",
@@ -16,11 +22,12 @@
     "userId": "u002",
     "userName": "Antonio L.",
     "rating": 4,
-    "content": "苹果不错，就是有个别碰伤了",
-    "images": ["https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=200&q=80"],
-    "tags": ["goodPackaging"],
+    "content": "新鲜，配送也很快",
+    "tags": [
+      "fresh"
+    ],
     "isVerified": true,
-    "createdAt": "2026-07-20T14:00:00Z"
+    "createdAt": "2026-07-18T10:20:00Z"
   },
   {
     "id": "rv003",
@@ -28,83 +35,367 @@
     "userId": "u003",
     "userName": "João P.",
     "rating": 5,
-    "content": "Produtu diak tebes! Recomenda ba hotu.",
-    "tags": ["quality", "repurchase", "goodValue"],
+    "content": "性价比高，会回购",
+    "tags": [
+      "goodValue",
+      "repurchase"
+    ],
     "isVerified": true,
-    "createdAt": "2026-07-18T09:15:00Z"
+    "createdAt": "2026-07-17T10:30:00Z"
   },
   {
     "id": "rv004",
-    "productId": "p001",
+    "productId": "p002",
     "userId": "u004",
     "userName": "Ana M.",
-    "rating": 3,
-    "content": "还行吧，价格略贵",
-    "isVerified": false,
-    "createdAt": "2026-07-15T16:30:00Z"
+    "rating": 5,
+    "content": "包装精美，没破损",
+    "tags": [
+      "goodPackaging"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-16T10:40:00Z"
   },
   {
     "id": "rv005",
-    "productId": "p001",
+    "productId": "p002",
     "userId": "u005",
     "userName": "Carlos R.",
-    "rating": 5,
-    "content": "家人都说好吃，已经第三次买了",
-    "tags": ["repurchase", "fresh"],
-    "isVerified": true,
-    "createdAt": "2026-07-10T11:00:00Z"
+    "rating": 4,
+    "content": "家人都说好，已经第二次买了",
+    "tags": [
+      "quality",
+      "repurchase"
+    ],
+    "isVerified": false,
+    "createdAt": "2026-07-15T10:50:00Z"
   },
   {
     "id": "rv006",
     "productId": "p002",
-    "userId": "u001",
-    "userName": "Maria S.",
-    "rating": 4,
-    "content": "香蕉熟度刚好",
-    "tags": ["fresh"],
+    "userId": "u006",
+    "userName": "Rita F.",
+    "rating": 5,
+    "content": "Diak tebes! Recomenda ba hotu.",
+    "tags": [
+      "quality"
+    ],
     "isVerified": true,
-    "createdAt": "2026-07-22T10:00:00Z"
+    "createdAt": "2026-07-14T10:00:00Z"
   },
   {
     "id": "rv007",
-    "productId": "p002",
-    "userId": "u003",
-    "userName": "João P.",
+    "productId": "p003",
+    "userId": "u001",
+    "userName": "Maria S.",
     "rating": 5,
-    "content": "Diak tebes!",
+    "content": "还行，价格略贵",
+    "tags": [],
     "isVerified": true,
-    "createdAt": "2026-07-19T13:00:00Z"
+    "createdAt": "2026-07-13T10:10:00Z"
   },
   {
     "id": "rv008",
-    "productId": "p002",
-    "userId": "u006",
-    "userName": "Rita F.",
-    "rating": 2,
-    "content": "有几个压坏了",
-    "images": ["https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=200&q=80"],
+    "productId": "p003",
+    "userId": "u002",
+    "userName": "Antonio L.",
+    "rating": 4,
+    "content": "满意，符合预期",
+    "tags": [
+      "quality"
+    ],
     "isVerified": true,
-    "createdAt": "2026-07-16T15:00:00Z"
+    "createdAt": "2026-07-12T10:20:00Z"
   },
   {
     "id": "rv009",
-    "productId": "p004",
-    "userId": "u002",
-    "userName": "Antonio L.",
+    "productId": "p003",
+    "userId": "u003",
+    "userName": "João P.",
     "rating": 5,
-    "content": "品质很好",
-    "tags": ["quality"],
+    "content": "品质很好，甜脆多汁，推荐！",
+    "tags": [
+      "quality",
+      "fresh"
+    ],
     "isVerified": true,
-    "createdAt": "2026-07-21T09:00:00Z"
+    "createdAt": "2026-07-11T10:30:00Z"
   },
   {
     "id": "rv010",
     "productId": "p004",
+    "userId": "u004",
+    "userName": "Ana M.",
+    "rating": 5,
+    "content": "新鲜，配送也很快",
+    "tags": [
+      "fresh"
+    ],
+    "isVerified": false,
+    "createdAt": "2026-07-10T10:40:00Z"
+  },
+  {
+    "id": "rv011",
+    "productId": "p004",
     "userId": "u005",
     "userName": "Carlos R.",
     "rating": 4,
-    "content": "满意",
+    "content": "性价比高，会回购",
+    "tags": [
+      "goodValue",
+      "repurchase"
+    ],
     "isVerified": true,
-    "createdAt": "2026-07-14T14:00:00Z"
+    "createdAt": "2026-07-09T10:50:00Z"
+  },
+  {
+    "id": "rv012",
+    "productId": "p004",
+    "userId": "u006",
+    "userName": "Rita F.",
+    "rating": 5,
+    "content": "包装精美，没破损",
+    "tags": [
+      "goodPackaging"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-08T10:00:00Z"
+  },
+  {
+    "id": "rv013",
+    "productId": "p005",
+    "userId": "u001",
+    "userName": "Maria S.",
+    "rating": 5,
+    "content": "家人都说好，已经第二次买了",
+    "tags": [
+      "quality",
+      "repurchase"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-07T10:10:00Z"
+  },
+  {
+    "id": "rv014",
+    "productId": "p005",
+    "userId": "u002",
+    "userName": "Antonio L.",
+    "rating": 4,
+    "content": "Diak tebes! Recomenda ba hotu.",
+    "tags": [
+      "quality"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-06T10:20:00Z"
+  },
+  {
+    "id": "rv015",
+    "productId": "p005",
+    "userId": "u003",
+    "userName": "João P.",
+    "rating": 5,
+    "content": "还行，价格略贵",
+    "tags": [],
+    "isVerified": false,
+    "createdAt": "2026-07-05T10:30:00Z"
+  },
+  {
+    "id": "rv016",
+    "productId": "p006",
+    "userId": "u004",
+    "userName": "Ana M.",
+    "rating": 5,
+    "content": "满意，符合预期",
+    "tags": [
+      "quality"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-04T10:40:00Z"
+  },
+  {
+    "id": "rv017",
+    "productId": "p006",
+    "userId": "u005",
+    "userName": "Carlos R.",
+    "rating": 4,
+    "content": "品质很好，甜脆多汁，推荐！",
+    "tags": [
+      "quality",
+      "fresh"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-03T10:50:00Z"
+  },
+  {
+    "id": "rv018",
+    "productId": "p006",
+    "userId": "u006",
+    "userName": "Rita F.",
+    "rating": 5,
+    "content": "新鲜，配送也很快",
+    "tags": [
+      "fresh"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-02T10:00:00Z"
+  },
+  {
+    "id": "rv019",
+    "productId": "p007",
+    "userId": "u001",
+    "userName": "Maria S.",
+    "rating": 5,
+    "content": "性价比高，会回购",
+    "tags": [
+      "goodValue",
+      "repurchase"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-01T10:10:00Z"
+  },
+  {
+    "id": "rv020",
+    "productId": "p007",
+    "userId": "u002",
+    "userName": "Antonio L.",
+    "rating": 4,
+    "content": "包装精美，没破损",
+    "tags": [
+      "goodPackaging"
+    ],
+    "isVerified": false,
+    "createdAt": "2026-07-01T10:20:00Z"
+  },
+  {
+    "id": "rv021",
+    "productId": "p007",
+    "userId": "u003",
+    "userName": "João P.",
+    "rating": 5,
+    "content": "家人都说好，已经第二次买了",
+    "tags": [
+      "quality",
+      "repurchase"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-01T10:30:00Z"
+  },
+  {
+    "id": "rv022",
+    "productId": "p008",
+    "userId": "u004",
+    "userName": "Ana M.",
+    "rating": 5,
+    "content": "Diak tebes! Recomenda ba hotu.",
+    "tags": [
+      "quality"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-01T10:40:00Z"
+  },
+  {
+    "id": "rv023",
+    "productId": "p008",
+    "userId": "u005",
+    "userName": "Carlos R.",
+    "rating": 4,
+    "content": "还行，价格略贵",
+    "tags": [],
+    "isVerified": true,
+    "createdAt": "2026-07-01T10:50:00Z"
+  },
+  {
+    "id": "rv024",
+    "productId": "p008",
+    "userId": "u006",
+    "userName": "Rita F.",
+    "rating": 5,
+    "content": "满意，符合预期",
+    "tags": [
+      "quality"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-01T10:00:00Z"
+  },
+  {
+    "id": "rv025",
+    "productId": "p009",
+    "userId": "u001",
+    "userName": "Maria S.",
+    "rating": 5,
+    "content": "品质很好，甜脆多汁，推荐！",
+    "tags": [
+      "quality",
+      "fresh"
+    ],
+    "isVerified": false,
+    "createdAt": "2026-07-01T10:10:00Z"
+  },
+  {
+    "id": "rv026",
+    "productId": "p009",
+    "userId": "u002",
+    "userName": "Antonio L.",
+    "rating": 4,
+    "content": "新鲜，配送也很快",
+    "tags": [
+      "fresh"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-01T10:20:00Z"
+  },
+  {
+    "id": "rv027",
+    "productId": "p009",
+    "userId": "u003",
+    "userName": "João P.",
+    "rating": 5,
+    "content": "性价比高，会回购",
+    "tags": [
+      "goodValue",
+      "repurchase"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-01T10:30:00Z"
+  },
+  {
+    "id": "rv028",
+    "productId": "p010",
+    "userId": "u004",
+    "userName": "Ana M.",
+    "rating": 5,
+    "content": "包装精美，没破损",
+    "tags": [
+      "goodPackaging"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-01T10:40:00Z"
+  },
+  {
+    "id": "rv029",
+    "productId": "p010",
+    "userId": "u005",
+    "userName": "Carlos R.",
+    "rating": 4,
+    "content": "家人都说好，已经第二次买了",
+    "tags": [
+      "quality",
+      "repurchase"
+    ],
+    "isVerified": true,
+    "createdAt": "2026-07-01T10:50:00Z"
+  },
+  {
+    "id": "rv030",
+    "productId": "p010",
+    "userId": "u006",
+    "userName": "Rita F.",
+    "rating": 5,
+    "content": "Diak tebes! Recomenda ba hotu.",
+    "tags": [
+      "quality"
+    ],
+    "isVerified": false,
+    "createdAt": "2026-07-01T10:00:00Z"
   }
 ]

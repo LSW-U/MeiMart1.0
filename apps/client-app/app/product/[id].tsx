@@ -492,9 +492,6 @@ export default function ProductDetailPage() {
                 <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
                   {t('product.selectVariant')}
                 </Text>
-                <View
-                  style={[styles.titleUnderline, { backgroundColor: colors['tertiary-fixed-dim'] }]}
-                />
               </View>
               {variants.map((group) => {
                 const selectedLabel =
@@ -769,9 +766,6 @@ export default function ProductDetailPage() {
               <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
                 {t('product.relatedProducts')}
               </Text>
-              <View
-                style={[styles.titleUnderline2, { backgroundColor: colors['tertiary-fixed-dim'] }]}
-              />
             </View>
             <ScrollView
               horizontal
