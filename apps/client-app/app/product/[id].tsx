@@ -717,7 +717,7 @@ export default function ProductDetailPage() {
                   onPress={() => router.push(`/product/${p.id}`)}
                   style={({ pressed }) => [
                     styles.relatedCard,
-                    { backgroundColor: colors['surface-container-lowest'], borderColor: 'rgba(141,112,108,0.1)' },
+                    { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
                     pressed && { opacity: 0.85 },
                   ]}
                   accessibilityRole="button"
@@ -743,7 +743,7 @@ export default function ProductDetailPage() {
                       style={({ pressed }) => [
                         styles.relatedAddBtn,
                         { borderColor: colors.primary },
-                        pressed && { backgroundColor: 'rgba(150,24,19,0.05)' },
+                        pressed && { opacity: 0.85 },
                       ]}
                       accessibilityRole="button"
                       accessibilityLabel={`Add ${p.name} to cart`}
@@ -762,7 +762,7 @@ export default function ProductDetailPage() {
           <View
             style={[
               styles.section,
-              { borderTopColor: 'rgba(141,112,108,0.1)', borderTopWidth: StyleSheet.hairlineWidth },
+              { borderTopColor: colors['outline-variant'], borderTopWidth: StyleSheet.hairlineWidth },
             ]}
           >
             <View>
@@ -784,7 +784,7 @@ export default function ProductDetailPage() {
                   onPress={() => router.push(`/product/${p.id}`)}
                   style={({ pressed }) => [
                     styles.relatedCard,
-                    { backgroundColor: colors['surface-container-lowest'], borderColor: 'rgba(141,112,108,0.1)' },
+                    { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
                     pressed && { opacity: 0.85 },
                   ]}
                   accessibilityRole="button"
@@ -1028,7 +1028,7 @@ function TopBar({
     <View
       style={[
         styles.topBar,
-        { backgroundColor: colors['surface-container-lowest'], borderBottomColor: 'rgba(141,112,108,0.1)' },
+        { backgroundColor: colors['surface-container-lowest'], borderBottomColor: colors['outline-variant'] },
       ]}
     >
       <Pressable
