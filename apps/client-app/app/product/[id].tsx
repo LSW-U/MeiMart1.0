@@ -626,7 +626,11 @@ export default function ProductDetailPage() {
           </Text>
         </Pressable>
         <Pressable
-          onPress={() => router.push('/order/checkout')}
+          onPress={() => {
+            // Why: 立即购买 = 加购该商品 + 跳结算（addToCart 乐观更新 cart 缓存，checkout 立即看到）
+            addToCart();
+            router.push('/order/checkout');
+          }}
           style={({ pressed }) => [
             styles.buyNowBtn,
             { borderColor: colors.primary },
@@ -778,6 +782,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   cartBadgeText: {
+    // 原因：购物车角标红底(#dc2626)白字，固定对比色，dark 不变
     color: '#ffffff',
     fontSize: 10,
     fontWeight: '700',
@@ -850,6 +855,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   imageCounterText: {
+    // 原因：图片计数器黑底(rgba(0,0,0,0.5))白字，固定对比色，dark 不变
     color: '#ffffff',
     fontSize: 11,
     fontWeight: '700',
