@@ -35,6 +35,14 @@
       "offline": "No internet connection",
       "weak": "Slow network — data saver on",
       "restored": "Network restored"
+    },
+    "relTime": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}} min ago",
+      "hoursAgo": "{{count}} hr ago",
+      "daysAgo": "{{count}} days ago",
+      "weeksAgo": "{{count}} weeks ago",
+      "monthsAgo": "{{count}} months ago"
     }
   },
   "splash": {
@@ -222,7 +230,17 @@
       "recommended": "RECOMMENDED",
       "details": "DETAILS"
     },
-    "verifiedPurchase": "Verified Purchase"
+    "verifiedPurchase": "Verified Purchase",
+    "lowStock": "Low Stock",
+    "onlyLeft": "Only {{count}} left!",
+    "soldOut": "Sold Out",
+    "soldOutDesc": "This product is sold out. Please check other items.",
+    "stockMax": "Max {{max}}",
+    "stockExceeded": "Exceeds available stock",
+    "quantity": "Quantity",
+    "noReviews": "No reviews yet",
+    "noReviewsDesc": "Be the first to review",
+    "viewAllReviews": "View all {{count}} reviews"
   },
   "order": {
     "status": {
@@ -506,7 +524,16 @@
     "photosLabel": "Add photos (optional)",
     "addPhoto": "Add",
     "anonymousTitle": "Anonymous review",
-    "anonymousDesc": "Hide your name publicly"
+    "anonymousDesc": "Hide your name publicly",
+    "you": "You",
+    "tag": {
+      "quality": "Quality",
+      "fastDelivery": "Fast delivery",
+      "goodPackaging": "Good packaging",
+      "goodValue": "Good value",
+      "fresh": "Fresh",
+      "repurchase": "Repurchase"
+    }
   },
   "profileEdit": {
     "title": "Edit profile",

@@ -35,6 +35,14 @@
       "offline": "",
       "weak": "",
       "restored": ""
+    },
+    "relTime": {
+      "justNow": "[TET] Just now",
+      "minutesAgo": "[TET] {{count}} min ago",
+      "hoursAgo": "[TET] {{count}} hr ago",
+      "daysAgo": "[TET] {{count}} days ago",
+      "weeksAgo": "[TET] {{count}} weeks ago",
+      "monthsAgo": "[TET] {{count}} months ago"
     }
   },
   "splash": {
@@ -179,7 +187,17 @@
       "recommended": "[TET] RECOMMENDED",
       "details": "[TET] DETAILS"
     },
-    "verifiedPurchase": "[TET] Verified Purchase"
+    "verifiedPurchase": "[TET] Verified Purchase",
+    "lowStock": "[TET] Low Stock",
+    "onlyLeft": "[TET] Only {{count}} left!",
+    "soldOut": "[TET] Sold Out",
+    "soldOutDesc": "[TET] This product is sold out. Please check other items.",
+    "stockMax": "[TET] Max {{max}}",
+    "stockExceeded": "[TET] Exceeds available stock",
+    "quantity": "[TET] Quantity",
+    "noReviews": "[TET] No reviews yet",
+    "noReviewsDesc": "[TET] Be the first to review",
+    "viewAllReviews": "[TET] View all {{count}} reviews"
   },
   "order": {
     "status": {
@@ -458,7 +476,16 @@
     "photosLabel": "",
     "addPhoto": "",
     "anonymousTitle": "",
-    "anonymousDesc": ""
+    "anonymousDesc": "",
+    "you": "[TET] You",
+    "tag": {
+      "quality": "[TET] Quality",
+      "fastDelivery": "[TET] Fast delivery",
+      "goodPackaging": "[TET] Good packaging",
+      "goodValue": "[TET] Good value",
+      "fresh": "[TET] Fresh",
+      "repurchase": "[TET] Repurchase"
+    }
   },
   "profileEdit": {
     "title": "",

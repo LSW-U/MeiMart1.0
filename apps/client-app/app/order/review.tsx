@@ -11,6 +11,7 @@ import {
   Image,
   Pressable,
 } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -23,16 +24,21 @@ import { Chip } from '@/components/ui/Chip';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { PriceText } from '@/components/ui/PriceText';
+import { useProduct } from '@/services/queries/useProducts';
+import { useSubmitReview } from '@/services/queries/useReviews';
+import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import { reviewSchema, type ReviewValues } from '@/forms/schemas/service';
 
+// Why: TAGS 用 i18n key 渲染 Chip，提交时需还原为存储标识（quality/fresh 等，与 reviews.json 对齐）
+const REVIEW_TAG_PREFIX = 'review.tag.';
 const TAGS = [
-  'review.tag.quality',
-  'review.tag.fastDelivery',
-  'review.tag.goodPackaging',
-  'review.tag.goodValue',
-  'review.tag.fresh',
-  'review.tag.repurchase',
+  `${REVIEW_TAG_PREFIX}quality`,
+  `${REVIEW_TAG_PREFIX}fastDelivery`,
+  `${REVIEW_TAG_PREFIX}goodPackaging`,
+  `${REVIEW_TAG_PREFIX}goodValue`,
+  `${REVIEW_TAG_PREFIX}fresh`,
+  `${REVIEW_TAG_PREFIX}repurchase`,
 ];
 
 const RATING_KEYS = [
@@ -49,6 +55,12 @@ export default function OrderReviewPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const localize = useLocalizer();
+  // Why: §8 评论模块 - 读 productId（订单详情跳转时传入）；缺省回退 p001 便于 dev 自测闭环
+  const { productId: productIdParam } = useLocalSearchParams<{ productId?: string; id?: string }>();
+  const productId = productIdParam ?? 'p001';
+  const { data: product } = useProduct(productId);
+  const submitReviewMutation = useSubmitReview();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const { control, handleSubmit } = useForm<ReviewValues>({
@@ -65,9 +77,25 @@ export default function OrderReviewPage() {
     );
   };
 
-  const submit = handleSubmit(() => {
-    toast.success(t('review.successDesc'));
-    handleBack();
+  // Why: §8 提交接 useSubmitReview（乐观写入 reviews 缓存 -> 详情页立即可见 + 绿色置顶）
+  const submit = handleSubmit((values) => {
+    submitReviewMutation.mutate(
+      {
+        productId,
+        rating: values.rating,
+        content: values.content,
+        tags: selectedTags.map((tk) => tk.replace(REVIEW_TAG_PREFIX, '')),
+        images: values.images,
+      },
+      {
+        onSuccess: () => {
+          toast.success(t('review.successDesc'));
+          handleBack();
+        },
+        onError: () =>
+          toast.error(t('review.submitFailed', { defaultValue: 'Submit failed, please retry' })),
+      },
+    );
   });
 
   return (
@@ -98,7 +126,7 @@ export default function OrderReviewPage() {
             <View style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}>
               <Image
                 source={{
-                  uri: 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=200',
+                  uri: product?.image ?? 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=200',
                 }}
                 style={styles.productImg}
                 resizeMode="cover"
@@ -106,13 +134,13 @@ export default function OrderReviewPage() {
             </View>
             <View style={styles.productTextBox}>
               <Text style={[styles.productName, { color: colors['on-surface'] }]} numberOfLines={2}>
-                {t('review.mockProductName')}
+                {product ? localize(product.name) : t('review.mockProductName')}
               </Text>
               <View style={styles.productMetaRow}>
                 <Text style={[styles.productMeta, { color: colors['on-surface-variant'] }]}>
-                  × 2
+                  × 1
                 </Text>
-                <PriceText value={9.8} size="md" />
+                <PriceText value={product?.price ?? 0} size="md" />
               </View>
             </View>
           </View>
@@ -288,16 +316,29 @@ export default function OrderReviewPage() {
       >
         <Pressable
           onPress={submit}
+          disabled={submitReviewMutation.isPending}
           style={({ pressed }) => [
             styles.submitBtn,
-            { backgroundColor: colors.primary },
-            pressed && { transform: [{ scale: 0.98 }] },
+            {
+              backgroundColor: submitReviewMutation.isPending
+                ? colors['surface-container-high']
+                : colors.primary,
+            },
+            pressed && !submitReviewMutation.isPending && { transform: [{ scale: 0.98 }] },
           ]}
           accessibilityRole="button"
           accessibilityLabel={t('review.submit')}
+          accessibilityState={{ disabled: submitReviewMutation.isPending }}
           testID="review-submit"
         >
-          <Text style={styles.submitText}>{t('review.submit')}</Text>
+          <Text
+            style={[
+              styles.submitText,
+              { color: submitReviewMutation.isPending ? colors['on-surface-variant'] : '#ffffff' },
+            ]}
+          >
+            {t('review.submit')}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaWrapper>

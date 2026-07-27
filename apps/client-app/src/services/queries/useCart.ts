@@ -29,8 +29,18 @@ export function useCart() {
 export function useAddToCart() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ product, quantity }: { product: Product; quantity?: number }) =>
-      cartApi.addItem(product, quantity),
+    mutationFn: ({ product, quantity = 1 }: { product: Product; quantity?: number }) => {
+      // Why: §7.3 加购前库存二次校验。读当前购物车缓存，断货/超限抛错触发组件 onError toast，防止超卖。
+      //      错误 message 用稳定标识（SOLD_OUT / STOCK_EXCEEDED），组件层按文案映射 i18n。
+      if (product.stock != null) {
+        const cart = qc.getQueryData<Cart>(CART_QUERY_KEY);
+        const existingQty =
+          cart?.items.find((i) => i.product.id === product.id)?.quantity ?? 0;
+        if (product.stock === 0) throw new Error('SOLD_OUT');
+        if (existingQty + quantity > product.stock) throw new Error('STOCK_EXCEEDED');
+      }
+      return cartApi.addItem(product, quantity);
+    },
     onMutate: async ({ product, quantity = 1 }) => {
       await qc.cancelQueries({ queryKey: CART_QUERY_KEY });
       const previous = qc.getQueryData(CART_QUERY_KEY);

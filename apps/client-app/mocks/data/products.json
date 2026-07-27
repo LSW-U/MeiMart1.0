@@ -12,6 +12,7 @@
     "category": "fruits",
     "rating": 4.8,
     "salesCount": 1280,
+    "stock": 85,
     "description": {
       "zh": "山东烟台直供新鲜红富士苹果，个大脆甜",
       "en": "Fresh Red Fuji apples sourced directly from Yantai — crisp and sweet",
@@ -31,6 +32,7 @@
     "category": "eggs",
     "rating": 4.9,
     "salesCount": 2450,
+    "stock": 12,
     "description": {
       "zh": "农家散养土鸡蛋，新鲜直达",
       "en": "Free-range farm eggs delivered fresh",
@@ -48,7 +50,8 @@
     "image": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400",
     "category": "grain",
     "rating": 4.7,
-    "salesCount": 890
+    "salesCount": 890,
+    "stock": 0
   },
   {
     "id": "p004",
@@ -62,7 +65,8 @@
     "image": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
     "category": "oil",
     "rating": 4.6,
-    "salesCount": 1560
+    "salesCount": 1560,
+    "stock": 50
   },
   {
     "id": "p005",
@@ -75,7 +79,8 @@
     "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
     "category": "dairy",
     "rating": 4.8,
-    "salesCount": 3200
+    "salesCount": 3200,
+    "stock": 3
   },
   {
     "id": "p006",
@@ -89,7 +94,8 @@
     "image": "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400",
     "category": "drinks",
     "rating": 4.7,
-    "salesCount": 1890
+    "salesCount": 1890,
+    "stock": 40
   },
   {
     "id": "p007",
@@ -102,7 +108,8 @@
     "image": "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400",
     "category": "snacks",
     "rating": 4.5,
-    "salesCount": 980
+    "salesCount": 980,
+    "stock": 25
   },
   {
     "id": "p008",
@@ -115,7 +122,8 @@
     "image": "https://images.unsplash.com/photo-1559591937-abc5e0e8e21a?w=400",
     "category": "household",
     "rating": 4.9,
-    "salesCount": 4500
+    "salesCount": 4500,
+    "stock": 0
   },
   {
     "id": "p009",
@@ -129,7 +137,8 @@
     "image": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400",
     "category": "household",
     "rating": 4.8,
-    "salesCount": 5200
+    "salesCount": 5200,
+    "stock": 18
   },
   {
     "id": "p010",
@@ -142,6 +151,7 @@
     "image": "https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400",
     "category": "seafood",
     "rating": 4.9,
-    "salesCount": 670
+    "salesCount": 670,
+    "stock": 60
   }
 ]

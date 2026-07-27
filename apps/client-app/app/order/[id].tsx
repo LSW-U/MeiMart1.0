@@ -730,7 +730,15 @@ function BottomActions({
           )}
           {solid(
             t('order.actions.review', { defaultValue: 'Write a Review' }),
-            () => router.push({ pathname: '/order/review', params: { id: order.id } }),
+            () =>
+              router.push({
+                pathname: '/order/review',
+                params: {
+                  id: order.id,
+                  // Why: §8 把订单首商品 id 传给评价页，submit 时归属到正确商品
+                  productId: order.items[0]?.product.id,
+                },
+              }),
             'order-review',
           )}
         </>

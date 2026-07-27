@@ -26,6 +26,8 @@ export interface Product {
   description?: LocalizableText;
   // Why: 加购需要 SKU ID（后端 cart items 主键是 skuId），列表接口不返回，详情接口返回
   defaultSkuId?: string;
+  // Why: §7 库存接入 — 可选，后端不返回时 undefined，UI 按无库存信息降级（绿点「有货」）
+  stock?: number;
 }
 
 export interface CartItem {
@@ -153,11 +155,18 @@ export interface Notification {
 
 export interface Review {
   id: string;
+  // Why: §8 评论模块 — 评论归属的商品 id，详情页按此查询
+  productId: string;
   userId: string;
   userName: string;
   rating: number;
   content: string;
   images?: string[];
+  // Why: §8 评论模块 — 评价标签（quality/fresh 等，复用 review.tsx 的 6 标签体系）
+  tags?: string[];
+  // Why: §8 评论模块 — 是否已验证购买，true 时评论卡显示绿色 ✓ Verified Purchase
+  isVerified?: boolean;
+  // Why: §8 评论模块 — ISO 时间戳，前端用 formatRelativeTime 渲染「2 days ago」
   createdAt: string;
 }
 

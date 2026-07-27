@@ -35,6 +35,14 @@
       "offline": "网络连接已断开",
       "weak": "网络较慢，已切换省流模式",
       "restored": "网络已恢复"
+    },
+    "relTime": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{count}} 分钟前",
+      "hoursAgo": "{{count}} 小时前",
+      "daysAgo": "{{count}} 天前",
+      "weeksAgo": "{{count}} 周前",
+      "monthsAgo": "{{count}} 个月前"
     }
   },
   "splash": {
@@ -222,7 +230,17 @@
       "recommended": "推荐",
       "details": "详情"
     },
-    "verifiedPurchase": "已验证购买"
+    "verifiedPurchase": "已验证购买",
+    "lowStock": "库存紧张",
+    "onlyLeft": "仅剩 {{count}} 件！",
+    "soldOut": "已售罄",
+    "soldOutDesc": "此商品已售罄，请看看其他商品。",
+    "stockMax": "最多 {{max}} 件",
+    "stockExceeded": "超出库存上限",
+    "quantity": "数量",
+    "noReviews": "暂无评价",
+    "noReviewsDesc": "购买后发表第一条评价",
+    "viewAllReviews": "查看全部 {{count}} 条评价"
   },
   "order": {
     "status": {
@@ -506,7 +524,16 @@
     "photosLabel": "添加照片（可选）",
     "addPhoto": "添加",
     "anonymousTitle": "匿名评价",
-    "anonymousDesc": "公开时隐藏你的姓名"
+    "anonymousDesc": "公开时隐藏你的姓名",
+    "you": "你",
+    "tag": {
+      "quality": "品质",
+      "fastDelivery": "配送快",
+      "goodPackaging": "包装好",
+      "goodValue": "性价比",
+      "fresh": "新鲜",
+      "repurchase": "会回购"
+    }
   },
   "profileEdit": {
     "title": "编辑资料",

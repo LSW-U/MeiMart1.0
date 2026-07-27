@@ -10,6 +10,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 const review: Review = {
   id: 'r1',
+  productId: 'p001',
   userId: 'u1',
   userName: 'Alice',
   rating: 4,

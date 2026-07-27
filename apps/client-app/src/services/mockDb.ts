@@ -8,6 +8,7 @@ import userData from '../../mocks/data/user.json';
 import couponsData from '../../mocks/data/coupons.json';
 import notificationsData from '../../mocks/data/notifications.json';
 import paymentsData from '../../mocks/data/payments.json';
+import reviewsData from '../../mocks/data/reviews.json';
 
 import type {
   Product,
@@ -20,6 +21,7 @@ import type {
   Coupon,
   Notification,
   PaymentMethod,
+  Review,
 } from '@/types';
 
 export const mockDb = {
@@ -34,6 +36,8 @@ export const mockDb = {
   notifications: notificationsData as Notification[],
   payments: paymentsData as PaymentMethod[],
   favorites: [productsData[0] as Product, productsData[3] as Product, productsData[7] as Product],
+  // Why: §8 评论模块 — mock 评论数据，可变数组（submitReview 直接 push 进来，跨页即可见）
+  reviews: reviewsData as Review[],
 };
 
 const delay = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms));
