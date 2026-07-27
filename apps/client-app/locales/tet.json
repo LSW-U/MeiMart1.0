@@ -149,11 +149,16 @@
     "removeAction": "",
     "removeWithNameConfirm": "",
     "yourItems": "",
-    "itemCount_one": "",
-    "itemCount_other": "",
     "selectedTotal": "",
     "selectAllLabel": "",
-    "peopleAlsoBought": ""
+    "peopleAlsoBought": "",
+    "manage": "",
+    "selectItems": "",
+    "cancelManage": "",
+    "selectedCount": "",
+    "deleteSelected": "",
+    "deleteConfirm": "",
+    "couponsAvailable": ""
   },
   "product": {
     "addToCart": "",

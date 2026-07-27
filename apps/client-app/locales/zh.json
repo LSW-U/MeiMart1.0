@@ -192,11 +192,16 @@
     "removeAction": "删除",
     "removeWithNameConfirm": "将\"{{name}}\"从购物车移除？",
     "yourItems": "您的商品",
-    "itemCount_one": "{{count}} 件",
-    "itemCount_other": "{{count}} 件",
     "selectedTotal": "已选合计",
     "selectAllLabel": "全选所有商品",
-    "peopleAlsoBought": "买了又买"
+    "peopleAlsoBought": "买了又买",
+    "manage": "管理",
+    "selectItems": "选择商品",
+    "cancelManage": "取消",
+    "selectedCount": "已选 {{count}} 件",
+    "deleteSelected": "删除",
+    "deleteConfirm": "确定删除 {{count}} 件商品？",
+    "couponsAvailable": "优惠券 ({{count}})"
   },
   "product": {
     "addToCart": "加入购物车",

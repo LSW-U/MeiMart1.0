@@ -192,11 +192,16 @@
     "removeAction": "Remove",
     "removeWithNameConfirm": "Remove \"{{name}}\" from cart?",
     "yourItems": "Your Items",
-    "itemCount_one": "{{count}} Item",
-    "itemCount_other": "{{count}} Items",
     "selectedTotal": "Selected Total",
     "selectAllLabel": "Select all items",
-    "peopleAlsoBought": "PEOPLE ALSO BOUGHT"
+    "peopleAlsoBought": "People also bought",
+    "manage": "Manage",
+    "selectItems": "Select Items",
+    "cancelManage": "Cancel",
+    "selectedCount": "{{count}} Selected",
+    "deleteSelected": "Delete",
+    "deleteConfirm": "Remove {{count}} items from cart?",
+    "couponsAvailable": "Coupons ({{count}})"
   },
   "product": {
     "addToCart": "Add to cart",

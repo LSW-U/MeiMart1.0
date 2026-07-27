@@ -26,6 +26,7 @@ import { OfflineBanner } from '@/components/feedback/OfflineBanner';
 import { PriceText } from '@/components/ui/PriceText';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
+import { Checkbox } from '@/components/ui/Checkbox';
 import {
   useCart,
   useAddToCart,
@@ -34,6 +35,7 @@ import {
   useUpdateCartItem,
 } from '@/services/queries/useCart';
 import { useProducts } from '@/services/queries/useProducts';
+import { useCoupons } from '@/services/queries/useUser';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { useLocalizer } from '@/i18n';
 import type { CartItem } from '@/types';
@@ -41,6 +43,10 @@ import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 
 // Why: "PEOPLE ALSO BOUGHT" 推荐改用真实商品（避免 mock id 'p003' 跳转详情 404）
+
+// 原因：primary header / CHECKOUT 按钮上的固定白字。两种模式都是品牌红底，白字正确不变。
+// 不可用 colors['on-primary']：dark 模式下翻为 #690005（暗红），叠红底会裂色（同 P2 ON_PRIMARY）。
+const ON_PRIMARY = '#ffffff';
 
 export default function CartPage() {
   const { colors } = useTheme();
@@ -51,6 +57,7 @@ export default function CartPage() {
   const localize = useLocalizer();
   const { isOffline } = useWeakNetworkUI();
   const { data: cart, isLoading, isError, refetch } = useCart();
+  const { data: coupons } = useCoupons();
   const removeMutation = useRemoveCartItem();
   const toggleMutation = useToggleCartItem();
   const updateMutation = useUpdateCartItem();
@@ -59,6 +66,7 @@ export default function CartPage() {
   const allSelected = !isEmpty && cart.items.every((i) => i.selected);
   const totalPrice = cart?.totalPrice ?? 0;
   const totalItems = cart?.totalItems ?? 0;
+  const couponCount = (coupons ?? []).filter((c) => !c.used).length; // §5.1 可用优惠券计数
   const discount = 5.0; // mock
 
   const toggleAll = () => {
@@ -111,7 +119,7 @@ export default function CartPage() {
             accessibilityRole="button"
             accessibilityLabel={t('common.search')}
           >
-            <Icon symbol="search" size={24} color="#ffffff" />
+            <Icon symbol="search" size={24} color={ON_PRIMARY} />
           </Pressable>
         }
       />
@@ -139,14 +147,22 @@ export default function CartPage() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Your Items 标题 + 数量 */}
+          {/* Your Items 标题 + Coupons 入口（§3.2 去掉 N Items 冗余计数，加可用优惠券入口） */}
           <View style={styles.itemsHeader}>
             <Text style={[styles.itemsTitle, { color: colors['on-surface'] }]}>
               {t('cart.yourItems')}
             </Text>
-            <Text style={[styles.itemsCount, { color: colors.primary }]}>
-              {t('cart.itemCount', { count: totalItems })}
-            </Text>
+            <Pressable
+              onPress={() => router.push('/coupons')}
+              style={styles.couponsEntry}
+              accessibilityRole="button"
+              accessibilityLabel={t('cart.couponsAvailable', { count: couponCount })}
+            >
+              <Icon symbol="confirmation_number" size={16} color={colors.primary} />
+              <Text style={[styles.couponsEntryText, { color: colors.primary }]}>
+                {t('cart.couponsAvailable', { count: couponCount })}
+              </Text>
+            </Pressable>
           </View>
 
           {/* 购物车商品列表 */}
@@ -158,7 +174,7 @@ export default function CartPage() {
                   styles.cartItemWrap,
                   {
                     backgroundColor: colors['surface-container-lowest'],
-                    borderColor: 'rgba(141,112,108,0.3)',
+                    borderColor: colors['outline-variant'],
                   },
                 ]}
               >
@@ -195,7 +211,7 @@ export default function CartPage() {
                       styles.recommendCard,
                       {
                         backgroundColor: colors['surface-container-lowest'],
-                        borderColor: 'rgba(141,112,108,0.1)',
+                        borderColor: colors['outline-variant'],
                       },
                     ]}
                   >
@@ -242,11 +258,15 @@ export default function CartPage() {
                           )
                         }
                         hitSlop={8}
-                        style={styles.recommendAddBtn}
+                        style={({ pressed }) => [
+                          styles.recommendAddBtn,
+                          { backgroundColor: colors.primary },
+                          pressed && { opacity: 0.85 },
+                        ]}
                         accessibilityRole="button"
                         accessibilityLabel={`Add ${localize(rec.name)} to cart`}
                       >
-                        <Icon symbol="add_circle" size={24} color={colors.primary} />
+                        <Icon symbol="add" size={18} color={ON_PRIMARY} />
                       </Pressable>
                     </View>
                   </View>
@@ -264,28 +284,18 @@ export default function CartPage() {
             styles.checkoutBar,
             {
               backgroundColor: colors['surface-container-lowest'],
-              borderColor: 'rgba(141,112,108,0.3)',
+              borderColor: colors['outline-variant'],
             },
             shadowPresets.md,
           ]}
         >
-          {/* 全选 checkbox */}
-          <Pressable
+          {/* 全选 checkbox — U4 改方形 Checkbox 组件，与商品行视觉统一 */}
+          <Checkbox
+            checked={allSelected}
             onPress={toggleAll}
-            style={styles.selectAllBtn}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: allSelected }}
+            label={t('common.all')}
             accessibilityLabel={t('cart.selectAllLabel')}
-          >
-            <Icon
-              symbol={allSelected ? 'check_circle' : 'radio_button_unchecked'}
-              size={20}
-              color={allSelected ? colors.primary : colors['outline-variant']}
-            />
-            <Text style={[styles.selectAllText, { color: colors['on-surface-variant'] }]}>
-              {t('common.all')}
-            </Text>
-          </Pressable>
+          />
 
           {/* 合计 + 折扣 */}
           <View style={styles.totalBox}>
@@ -348,7 +358,12 @@ const styles = StyleSheet.create({
     ...typography.h3,
     fontWeight: '700',
   },
-  itemsCount: {
+  couponsEntry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  couponsEntryText: {
     ...typography['body-sm'],
     fontWeight: '600',
   },
@@ -368,7 +383,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   recommendTitle: {
-    ...typography['label-caps'],
+    ...typography['body-md'],
+    fontWeight: '700',
     marginBottom: spacing.md,
   },
   recommendRow: {
@@ -381,6 +397,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: spacing.sm,
     gap: spacing.sm,
+    ...shadowPresets.sm,
   },
   recommendClickable: {
     gap: spacing.xs,
@@ -406,8 +423,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   recommendAddBtn: {
-    minWidth: 36,
-    minHeight: 36,
+    width: 32,
+    height: 32,
+    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -426,12 +444,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     gap: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  selectAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingRight: spacing.xs,
   },
   selectAllText: {
     ...typography['label-caps'],
@@ -474,7 +486,7 @@ const styles = StyleSheet.create({
     ...shadowPresets.md,
   },
   checkoutText: {
-    color: '#ffffff',
+    color: ON_PRIMARY,
     ...typography['label-caps'],
     fontWeight: '700',
   },
