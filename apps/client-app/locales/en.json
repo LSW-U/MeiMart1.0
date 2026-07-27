@@ -352,7 +352,14 @@
     "loginRegister": "LOGIN / REGISTER",
     "loginOrRegister": "Login or register",
     "loginRequiredSuffix": "{{label}} (login required)",
-    "version": "v2.4.0 (Timor-Leste)"
+    "version": "v2.4.0 (Timor-Leste)",
+    "sectionDiscover": "Discover",
+    "sectionAccount": "Account & Service",
+    "invite": "Invite",
+    "history": "History",
+    "becomeSeller": "Seller",
+    "scan": "Scan",
+    "pointsUnit": "Points"
   },
   "settings": {
     "title": "Settings",

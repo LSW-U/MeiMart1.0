@@ -304,7 +304,14 @@
     "loginRegister": "",
     "loginOrRegister": "",
     "loginRequiredSuffix": "",
-    "version": ""
+    "version": "",
+    "sectionDiscover": "[TET] Discover",
+    "sectionAccount": "[TET] Account & Service",
+    "invite": "[TET] Invite",
+    "history": "[TET] History",
+    "becomeSeller": "[TET] Seller",
+    "scan": "[TET] Scan",
+    "pointsUnit": "[TET] Points"
   },
   "settings": {
     "title": "",

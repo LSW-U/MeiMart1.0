@@ -352,7 +352,14 @@
     "loginRegister": "登录 / 注册",
     "loginOrRegister": "登录或注册",
     "loginRequiredSuffix": "{{label}}（需登录）",
-    "version": "v2.4.0（东帝汶）"
+    "version": "v2.4.0（东帝汶）",
+    "sectionDiscover": "发现",
+    "sectionAccount": "账户与服务",
+    "invite": "邀请好友",
+    "history": "浏览历史",
+    "becomeSeller": "成为商家",
+    "scan": "扫码",
+    "pointsUnit": "积分"
   },
   "settings": {
     "title": "设置",
