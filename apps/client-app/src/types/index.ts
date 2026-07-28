@@ -35,6 +35,8 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selected: boolean;
+  // Why: 用户加购时选的规格（如「500g」「大份」），有则在小卡片分类下展示，无则隐藏
+  spec?: string;
 }
 
 export interface Address {

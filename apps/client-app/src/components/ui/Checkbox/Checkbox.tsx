@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   box: {
     width: 24,
     height: 24,
-    borderRadius: 4,
+    borderRadius: 999, // 圆形（用户要求：选择框全部改圆）
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',

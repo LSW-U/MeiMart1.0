@@ -12,13 +12,14 @@ function CartItemRowBase({
   onPress,
   onItemPress,
   onQuantityChange,
+  onDelete,
   checkedOverride,
   showControls = true,
   testID,
 }: CartItemRowProps) {
   const { colors } = useTheme();
   const localize = useLocalizer();
-  const { product, quantity, selected } = item;
+  const { product, quantity, selected, spec } = item;
   const name = localize(product.name);
   const isChecked = checkedOverride ?? selected;
 
@@ -62,6 +63,12 @@ function CartItemRowBase({
           <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
             {product.category}
           </Text>
+          {/* 规格行：有 spec（如「500g」「大份」）才显示，无则隐藏 */}
+          {spec ? (
+            <Text style={[textStyle('label-caps'), { fontSize: 10, color: colors.primary }]}>
+              {spec}
+            </Text>
+          ) : null}
           <View style={styles.bottomRow}>
             <PriceText value={product.price} size="sm" />
             {!showControls && (
@@ -98,6 +105,18 @@ function CartItemRowBase({
             <MaterialCommunityIcons name="plus" size={18} color={colors.primary} />
           </Pressable>
         </View>
+      )}
+      {/* 管理态：最右侧删除按钮（onDelete 由 cart.tsx 管理态传入，默认态不传→不显示） */}
+      {showControls && onDelete && (
+        <Pressable
+          onPress={() => onDelete(item)}
+          hitSlop={8}
+          style={styles.deleteBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Delete item"
+        >
+          <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.error} />
+        </Pressable>
       )}
     </View>
   );

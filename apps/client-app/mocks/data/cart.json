@@ -15,7 +15,8 @@
         "category": "fruits"
       },
       "quantity": 2,
-      "selected": true
+      "selected": true,
+      "spec": "大果 · 1kg"
     },
     {
       "id": "ci002",
@@ -31,7 +32,8 @@
         "category": "dairy"
       },
       "quantity": 1,
-      "selected": true
+      "selected": true,
+      "spec": "全脂"
     },
     {
       "id": "ci003",

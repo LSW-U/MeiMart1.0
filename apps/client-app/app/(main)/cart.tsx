@@ -108,6 +108,17 @@ export default function CartPage() {
     setManageMode(false);
   };
 
+  // 管理态单个删除（卡片最右侧 trash）：直删 + toast，同步从 selectedForDelete 移除
+  const removeOne = (item: CartItem) => {
+    removeMutation.mutate(item.id);
+    setSelectedForDelete((prev) => {
+      const next = new Set(prev);
+      next.delete(item.id);
+      return next;
+    });
+    toast.success(t('cart.removed', { defaultValue: 'Removed' }));
+  };
+
   // §5.3 批量删除：循环 useRemoveCartItem（mock 量小可接受）；复用 Alert 确认
   const deleteSelected = () => {
     const count = selectedForDelete.size;
@@ -260,6 +271,7 @@ export default function CartPage() {
                       : (qty) =>
                           updateMutation.mutate({ itemId: item.id, updates: { quantity: qty } })
                   }
+                  onDelete={manageMode ? removeOne : undefined}
                   showControls
                 />
               </View>
