@@ -201,7 +201,14 @@
     "selectedCount": "{{count}} Selected",
     "deleteSelected": "Delete",
     "deleteConfirm": "Remove {{count}} items from cart?",
-    "couponsAvailable": "Coupons ({{count}})"
+    "couponsAvailable": "Coupons ({{count}})",
+    "a11y": {
+      "selectItem": "Select item",
+      "viewItem": "View {{name}}",
+      "decreaseQty": "Decrease quantity",
+      "increaseQty": "Increase quantity",
+      "deleteItem": "Delete item"
+    }
   },
   "product": {
     "addToCart": "Add to cart",

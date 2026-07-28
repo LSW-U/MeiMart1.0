@@ -201,7 +201,14 @@
     "selectedCount": "已选 {{count}} 件",
     "deleteSelected": "删除",
     "deleteConfirm": "确定删除 {{count}} 件商品？",
-    "couponsAvailable": "优惠券 ({{count}})"
+    "couponsAvailable": "优惠券 ({{count}})",
+    "a11y": {
+      "selectItem": "选择商品",
+      "viewItem": "查看 {{name}}",
+      "decreaseQty": "减少数量",
+      "increaseQty": "增加数量",
+      "deleteItem": "删除商品"
+    }
   },
   "product": {
     "addToCart": "加入购物车",

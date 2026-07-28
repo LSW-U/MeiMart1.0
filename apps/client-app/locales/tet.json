@@ -158,7 +158,14 @@
     "selectedCount": "",
     "deleteSelected": "",
     "deleteConfirm": "",
-    "couponsAvailable": ""
+    "couponsAvailable": "",
+    "a11y": {
+      "selectItem": "",
+      "viewItem": "",
+      "decreaseQty": "",
+      "increaseQty": "",
+      "deleteItem": ""
+    }
   },
   "product": {
     "addToCart": "",

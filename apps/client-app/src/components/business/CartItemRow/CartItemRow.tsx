@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
 import { useLocalizer } from '@/i18n';
 import { PriceText } from '@/components/ui/PriceText';
@@ -18,6 +19,7 @@ function CartItemRowBase({
   testID,
 }: CartItemRowProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const localize = useLocalizer();
   const { product, quantity, selected, spec } = item;
   const name = localize(product.name);
@@ -38,7 +40,7 @@ function CartItemRowBase({
         <Checkbox
           checked={isChecked}
           onPress={() => onPress?.(item)}
-          accessibilityLabel="Select item"
+          accessibilityLabel={t('cart.a11y.selectItem')}
         />
       )}
       {/* Why: 外层用 View 而非 Pressable，避免 Pressable 嵌套 Pressable
@@ -48,7 +50,7 @@ function CartItemRowBase({
         disabled={!onItemPress}
         style={({ pressed }) => [styles.mainContent, pressed && { opacity: 0.85 }]}
         accessibilityRole={onItemPress ? 'button' : undefined}
-        accessibilityLabel={onItemPress ? `View ${name}` : undefined}
+        accessibilityLabel={onItemPress ? t('cart.a11y.viewItem', { name }) : undefined}
       >
         <View style={[styles.imageWrap, { backgroundColor: colors['surface-container'] }]}>
           <Image source={{ uri: product.image }} style={styles.image} accessible={false} />
@@ -60,9 +62,8 @@ function CartItemRowBase({
           >
             {name}
           </Text>
-          <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-            {product.category}
-          </Text>
+          {/* 审查 Q1：去掉 product.category 行（mock 是英文 slug、real 是 uuid，均不可读；
+              名字+规格+价格已够，购物车行不需要分类） */}
           {/* 规格行：有 spec（如「500g」「大份」）才显示，无则隐藏 */}
           {spec ? (
             <Text style={[textStyle('label-caps'), { fontSize: 10, color: colors.primary }]}>
@@ -86,7 +87,7 @@ function CartItemRowBase({
             hitSlop={8}
             style={styles.qtyBtn}
             accessibilityRole="button"
-            accessibilityLabel="Decrease quantity"
+            accessibilityLabel={t('cart.a11y.decreaseQty')}
           >
             <MaterialCommunityIcons name="minus" size={18} color={colors.primary} />
           </Pressable>
@@ -100,7 +101,7 @@ function CartItemRowBase({
             hitSlop={8}
             style={styles.qtyBtn}
             accessibilityRole="button"
-            accessibilityLabel="Increase quantity"
+            accessibilityLabel={t('cart.a11y.increaseQty')}
           >
             <MaterialCommunityIcons name="plus" size={18} color={colors.primary} />
           </Pressable>
@@ -113,7 +114,7 @@ function CartItemRowBase({
           hitSlop={8}
           style={styles.deleteBtn}
           accessibilityRole="button"
-          accessibilityLabel="Delete item"
+          accessibilityLabel={t('cart.a11y.deleteItem')}
         >
           <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.error} />
         </Pressable>

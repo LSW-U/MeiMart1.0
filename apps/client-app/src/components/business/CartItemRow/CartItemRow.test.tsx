@@ -4,6 +4,11 @@ import { ThemeProvider } from '@/theme';
 import { CartItemRow } from './CartItemRow';
 import type { CartItem } from '@/types';
 
+// 测试环境未初始化 i18n，mock useTranslation 返回 key（验证组件确实走了 t()）
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );
@@ -35,9 +40,9 @@ describe('CartItemRow', () => {
       <CartItemRow item={item} onQuantityChange={onQuantityChange} />,
       { wrapper },
     );
-    fireEvent.press(getByLabelText('Increase quantity'));
+    fireEvent.press(getByLabelText('cart.a11y.increaseQty'));
     expect(onQuantityChange).toHaveBeenCalledWith(3);
-    fireEvent.press(getByLabelText('Decrease quantity'));
+    fireEvent.press(getByLabelText('cart.a11y.decreaseQty'));
     expect(onQuantityChange).toHaveBeenCalledWith(1);
   });
 
@@ -48,7 +53,7 @@ describe('CartItemRow', () => {
       <CartItemRow item={item} checkedOverride={false} onPress={onPress} />,
       { wrapper },
     );
-    const checkbox = getByLabelText('Select item');
+    const checkbox = getByLabelText('cart.a11y.selectItem');
     expect(checkbox.props.accessibilityState?.checked).toBe(false);
     fireEvent.press(checkbox);
     expect(onPress).toHaveBeenCalledWith(item);
