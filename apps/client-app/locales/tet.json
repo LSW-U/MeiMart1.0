@@ -394,6 +394,7 @@
       "paymentMethod": "",
       "orderSummary": ""
     },
+    "placingOrder": "",
     "address": {
       "change": "",
       "changeA11y": ""

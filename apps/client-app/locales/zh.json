@@ -442,6 +442,7 @@
       "paymentMethod": "支付方式",
       "orderSummary": "订单明细"
     },
+    "placingOrder": "下单中...",
     "address": {
       "change": "修改",
       "changeA11y": "修改地址"

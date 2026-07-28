@@ -438,10 +438,11 @@
       "card": "Bank card"
     },
     "section": {
-      "deliveryAddress": "DELIVERY ADDRESS",
-      "paymentMethod": "PAYMENT METHOD",
-      "orderSummary": "Order Summary"
+      "deliveryAddress": "Delivery address",
+      "paymentMethod": "Payment method",
+      "orderSummary": "Order summary"
     },
+    "placingOrder": "Placing order...",
     "address": {
       "change": "Change",
       "changeA11y": "Change address"

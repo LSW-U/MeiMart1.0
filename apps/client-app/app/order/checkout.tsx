@@ -7,6 +7,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -19,7 +20,6 @@ import { toast } from '@/store/toastStore';
 import { productApi } from '@/services/products';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
-import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
 import { useCart } from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
@@ -30,6 +30,10 @@ import { useState } from 'react';
 
 const DISCOUNT = 5.0; // mock 优惠金额（与 cart 页一致）
 const DELIVERY_FEE = 0.0; // mock 满 $20 免运费
+
+// 原因：客服 / CONFIRM&PAY 按钮上的固定白字（primary 红底），两种模式不变。
+// 不可用 colors['on-primary']：dark 模式翻为 #690005（暗红）叠红底会裂色（同 P2/P3）。
+const ON_PRIMARY = '#ffffff';
 
 export default function CheckoutPage() {
   const handleBack = useSafeBack();
@@ -154,7 +158,7 @@ export default function CheckoutPage() {
             accessibilityRole="button"
             accessibilityLabel={t('checkout.customerService')}
           >
-            <Icon symbol="headset_mic" size={24} color="#ffffff" />
+            <Icon symbol="headset_mic" size={24} color={ON_PRIMARY} />
           </Pressable>
         }
       />
@@ -177,17 +181,15 @@ export default function CheckoutPage() {
               <Pressable
                 onPress={() => router.push('/address/list')}
                 hitSlop={8}
-                style={({ pressed }) => [styles.changeBtn, pressed && { opacity: 0.7 }]}
+                style={({ pressed }) => [
+                  styles.changeBtn,
+                  { borderColor: colors['outline-variant'] },
+                  pressed && { opacity: 0.7 },
+                ]}
                 accessibilityRole="button"
                 accessibilityLabel={t('checkout.address.changeA11y')}
               >
                 <Icon symbol="edit" size={16} color={colors.primary} />
-                <Text
-                  style={[styles.changeText, { color: colors.primary }]}
-                  accessibilityLabel={t('checkout.address.change')}
-                >
-                  {t('checkout.address.change')}
-                </Text>
               </Pressable>
             )}
           </View>
@@ -212,13 +214,20 @@ export default function CheckoutPage() {
                 </View>
               </View>
             ) : (
-              <Text style={[styles.noAddress, { color: colors['on-surface-variant'] }]}>
-                {t('checkout.selectAddress')}
-              </Text>
+              // U3 无地址态：图标 + 文字 + 箭头，引导点击
+              <View style={styles.noAddressRow}>
+                <Icon symbol="add_location_alt" size={20} color={colors['on-surface-variant']} />
+                <Text style={[styles.noAddress, { color: colors['on-surface-variant'] }]}>
+                  {t('checkout.selectAddress')}
+                </Text>
+                <Icon symbol="chevron_right" size={20} color={colors['on-surface-variant']} />
+              </View>
             )}
           </Pressable>
         </View>
 
+        {/* U6 支付 + 摘要紧凑分组（gap md），地址卡独立留 lg 间距 */}
+        <View style={styles.detailGroup}>
         {/* PAYMENT METHOD 区 */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
@@ -251,7 +260,7 @@ export default function CheckoutPage() {
                         styles.paymentIconBox,
                         {
                           backgroundColor: selected
-                            ? 'rgba(150,24,19,0.1)'
+                            ? colors.primary + '14' // 原因：选中态 8% primary tint（'14'=0x14≈8% alpha），dark 自适应
                             : colors['surface-container'],
                         },
                       ]}
@@ -307,21 +316,34 @@ export default function CheckoutPage() {
                 </Text>
               ) : (
                 selectedItems.map((item) => (
-                  <View key={item.id} style={styles.summaryRow}>
-                    <Text
-                      style={[styles.summaryLabel, { color: colors['on-surface-variant'] }]}
-                      numberOfLines={1}
-                    >
-                      {localize(item.product.name)} (x{item.quantity})
-                    </Text>
+                  <View key={item.id} style={styles.summaryItemRow}>
+                    {/* U2 加 40×40 缩略图 */}
+                    <Image
+                      source={{ uri: item.product.image }}
+                      style={styles.summaryThumb}
+                    />
+                    <View style={styles.summaryItemInfo}>
+                      <Text
+                        style={[styles.summaryItemName, { color: colors['on-surface'] }]}
+                        numberOfLines={1}
+                      >
+                        {localize(item.product.name)}
+                      </Text>
+                      <Text style={[styles.summaryItemQty, { color: colors['on-surface-variant'] }]}>
+                        × {item.quantity}
+                      </Text>
+                    </View>
                     <Text style={[styles.summaryValueBold, { color: colors['on-surface'] }]}>
                       ${(item.product.price * item.quantity).toFixed(2)}
                     </Text>
                   </View>
                 ))
               )}
-              <View style={styles.dividerRow}>
-                <TaisDivider width={120} />
+              {/* U4 方案 F：SUMMARY 居中 + 两侧虚线（替 TaisDivider） */}
+              <View style={styles.summaryDivider}>
+                <View style={[styles.dashedLine, { borderBottomColor: colors['outline-variant'] }]} />
+                <Text style={[styles.summaryDividerLabel, { color: colors.outline }]}>SUMMARY</Text>
+                <View style={[styles.dashedLine, { borderBottomColor: colors['outline-variant'] }]} />
               </View>
               <View style={styles.summaryRow}>
                 <Text style={[styles.summaryLabel, { color: colors['on-surface-variant'] }]}>
@@ -345,6 +367,7 @@ export default function CheckoutPage() {
               </View>
             </View>
           </View>
+        </View>
         </View>
       </ScrollView>
 
@@ -415,22 +438,21 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography['label-caps'],
-    fontSize: 11,
+    fontSize: 13, // U7 11→13 提升可读性（局部覆盖，不动 label-caps）
   },
   section: { gap: spacing.sm },
+  // U6 地址卡与支付+摘要分组：detailGroup 内部紧凑
+  detailGroup: { gap: spacing.md },
 
   // Address
   changeBtn: {
-    flexDirection: 'row',
+    // U7 改纯图标描边方按钮（32×32）
+    width: 32,
+    height: 32,
     alignItems: 'center',
-    gap: 4,
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-  },
-  changeText: {
-    ...typography['label-caps'],
-    fontSize: 12,
-    fontWeight: '700',
+    justifyContent: 'center',
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
   },
   addressBody: {
     flexDirection: 'row',
@@ -440,7 +462,12 @@ const styles = StyleSheet.create({
   addressText: { flex: 1, gap: 2 },
   addrName: { ...typography['body-sm'], fontWeight: '700' },
   addrDetail: { ...typography['body-sm'], fontSize: 12 },
-  noAddress: { ...typography['body-md'] },
+  noAddressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  noAddress: { ...typography['body-md'], flex: 1 },
 
   // Payment
   paymentList: { gap: spacing.sm },
@@ -479,7 +506,38 @@ const styles = StyleSheet.create({
   summaryValue: { ...typography['body-sm'] },
   summaryValueBold: { ...typography['body-sm'], fontWeight: '700' },
   discountLabel: { ...typography['body-sm'] },
-  dividerRow: { marginVertical: spacing.xs },
+  // U2 商品行：缩略图 + 名称/数量 + 价格
+  summaryItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  summaryThumb: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    backgroundColor: 'transparent',
+  },
+  summaryItemInfo: { flex: 1, gap: 2 },
+  summaryItemName: { ...typography['body-sm'], fontWeight: '600', fontSize: 13 },
+  summaryItemQty: { ...typography['body-sm'], fontSize: 11 },
+  // U4 方案 F：SUMMARY 居中 + 两侧虚线
+  summaryDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginVertical: spacing.xs,
+  },
+  dashedLine: {
+    flex: 1,
+    borderBottomWidth: 1.5,
+    borderStyle: 'dashed',
+  },
+  summaryDividerLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
   emptyText: { ...typography['body-md'], textAlign: 'center', padding: spacing.lg },
 
   // Bottom bar
@@ -520,7 +578,7 @@ const styles = StyleSheet.create({
     ...shadowPresets.md,
   },
   payBtnText: {
-    color: '#ffffff',
+    color: ON_PRIMARY,
     ...typography['label-caps'],
     fontSize: 13,
     fontWeight: '700',
