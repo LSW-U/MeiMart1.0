@@ -375,13 +375,14 @@ export default function CartPage() {
             shadowPresets.md,
           ]}
         >
-          {/* 左：全选按钮（替「已选 X 件」文本）；右：DELETE 按钮（带 count） */}
+          {/* 左：全选按钮（替「已选 X 件」文本）；右：DELETE 按钮（带 count，spacer 顶到最右） */}
           <Checkbox
             checked={allForDelete}
             onPress={toggleAllForDelete}
             label={t('common.all')}
             accessibilityLabel={t('cart.selectAllLabel')}
           />
+          <View style={styles.barSpacer} />
           <Pressable
             onPress={deleteSelected}
             disabled={selectedForDelete.size === 0}
@@ -592,6 +593,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   // §4.3 管理态删除栏
+  barSpacer: {
+    flex: 1, // Why: 把 DELETE 按钮顶到底部栏最右侧（同结算栏 totalBox 的作用）
+  },
   deleteBtnBar: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
