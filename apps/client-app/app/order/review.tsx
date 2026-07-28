@@ -56,9 +56,14 @@ export default function OrderReviewPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const localize = useLocalizer();
-  // Why: §8 评论模块 - 读 productId（订单详情跳转时传入）；缺省回退 p001 便于 dev 自测闭环
-  const { productId: productIdParam } = useLocalSearchParams<{ productId?: string; id?: string }>();
+  // Why: §8 评论模块 - 订单详情跳转时传 id(orderId) + productId（订单首商品）。
+  //      orderId 是后端 POST /orders/:orderId/review 的路径参数（real 必填）；productId 缺省回退 p001 便于 dev 自测。
+  const { productId: productIdParam, id: orderIdParam } = useLocalSearchParams<{
+    productId?: string;
+    id?: string;
+  }>();
   const productId = productIdParam ?? 'p001';
+  const orderId = orderIdParam ?? '';
   const { data: product } = useProduct(productId);
   const submitReviewMutation = useSubmitReview();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -77,11 +82,14 @@ export default function OrderReviewPage() {
     );
   };
 
-  // Why: §8 提交接 useSubmitReview（乐观写入 reviews 缓存 -> 详情页立即可见 + 绿色置顶）
+  // Why: §8 提交接 useSubmitReview（乐观写入 reviews 缓存 -> 详情页立即可见 + 绿色置顶）。
+  //      category='PRODUCT'（本页是商品评论入口）；orderId 缺省时 real 模式会 404，mock 不影响。
   const submit = handleSubmit((values) => {
     submitReviewMutation.mutate(
       {
+        orderId,
         productId,
+        category: 'PRODUCT',
         rating: values.rating,
         content: values.content,
         tags: selectedTags.map((tk) => tk.replace(REVIEW_TAG_PREFIX, '')),

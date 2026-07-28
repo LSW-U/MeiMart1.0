@@ -18,18 +18,21 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { toast } from '@/store/toastStore';
 import { productApi } from '@/services/products';
+import { isMockMode } from '@/services/api';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
-import { useCart } from '@/services/queries/useCart';
+import { useCart, useCheckoutPreview } from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
 import { usePaymentMethods } from '@/services/queries/usePayment';
 import { useCreateOrder } from '@/services/queries/useOrders';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { useState } from 'react';
 
-const DISCOUNT = 5.0; // mock 优惠金额（与 cart 页一致）
-const DELIVERY_FEE = 0.0; // mock 满 $20 免运费
+// Why: mock demo 金额（与 cart 页一致）。real 模式由 useCheckoutPreview（运费）+ 券码 validate（折扣）决定。
+//      折扣暂无券码选择 UI（P4 未含），real 模式 discount=0，待券选择 + promotionApi.validate 接入后补。
+const MOCK_DISCOUNT = 5.0;
+const MOCK_DELIVERY_FEE = 0.0;
 
 // 原因：客服 / CONFIRM&PAY 按钮上的固定白字（primary 红底），两种模式不变。
 // 不可用 colors['on-primary']：dark 模式翻为 #690005（暗红）叠红底会裂色（同 P2/P3）。
@@ -47,14 +50,21 @@ export default function CheckoutPage() {
   const createOrder = useCreateOrder();
   const selectedItems = cart?.items.filter((i) => i.selected) ?? [];
   const defaultAddress = addresses?.find((a) => a.isDefault) ?? addresses?.[0];
+  // Why: real 模式按默认地址查运费 + 仓库匹配；mock 模式不调（enabled 内已 gate），preview 为 undefined
+  const { data: preview } = useCheckoutPreview(defaultAddress?.id);
 
   const defaultMethodId = paymentMethods?.find((m) => m.isDefault)?.id ?? paymentMethods?.[0]?.id;
   const [selectedMethod, setSelectedMethod] = useState<string | undefined>(defaultMethodId);
   // Why: 防止 submit 期间重复点击（Promise.all 查 SKU 时 createOrder.isPending 还是 false）
   const [submitting, setSubmitting] = useState(false);
 
+  // Why: subtotal 用本地购物车算（line item 单价 × 数量，与商品行展示一致）；
+  //      deliveryFee real 取 checkoutPreview（按地址 PostGIS 匹配仓库），mock 用 demo 常量；
+  //      discount real 暂 0（无券码 UI），mock 用 demo 常量。preview 未加载时回退 mock 常量。
   const subtotal = selectedItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-  const finalTotal = Math.max(0, subtotal - DISCOUNT + DELIVERY_FEE);
+  const deliveryFee = preview?.deliveryFee ?? (isMockMode ? MOCK_DELIVERY_FEE : 0);
+  const discount = isMockMode ? MOCK_DISCOUNT : 0;
+  const finalTotal = Math.max(0, subtotal - discount + deliveryFee);
 
   if (isLoading) {
     return (
@@ -362,14 +372,14 @@ export default function CheckoutPage() {
               </View>
               <View style={styles.summaryRow}>
                 <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>{t('checkout.summary.discount')}</Text>
-                <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>-${DISCOUNT.toFixed(2)}</Text>
+                <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>-${discount.toFixed(2)}</Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={[styles.summaryLabel, { color: colors['on-surface-variant'] }]}>
                   {t('checkout.summary.deliveryFee')}
                 </Text>
                 <Text style={[styles.summaryValue, { color: colors['on-surface-variant'] }]}>
-                  ${DELIVERY_FEE.toFixed(2)}
+                  ${deliveryFee.toFixed(2)}
                 </Text>
               </View>
             </View>

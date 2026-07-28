@@ -173,6 +173,10 @@ export interface Review {
   isVerified?: boolean;
   // Why: §8 评论模块 — ISO 时间戳，前端用 formatRelativeTime 渲染「2 days ago」
   createdAt: string;
+  // Why: 后端 ReviewView 派生字段（real 模式）：评论所属订单 + 分类 + 头像
+  orderId?: string;
+  category?: 'PRODUCT' | 'DELIVERY';
+  avatarUrl?: string;
 }
 
 export interface TrackingStep {

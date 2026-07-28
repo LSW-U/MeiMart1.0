@@ -44,12 +44,17 @@ export function useSubmitReview() {
       return reviewsApi.submitReview({ ...input, ...author });
     },
     onMutate: async (input) => {
-      const key = REVIEWS_QUERY_KEY(input.productId);
+      // Why: productId 可选（订单整体评论无绑定商品）；缺省用空串作 key，与详情页查询自然不匹配
+      //      （仅失去乐观置顶，onSettled 仍会 invalidate 拉真实数据）
+      const productIdKey = input.productId ?? '';
+      const key = REVIEWS_QUERY_KEY(productIdKey);
       await qc.cancelQueries({ queryKey: key });
       const previous = qc.getQueryData<ReviewListResult>(key);
       const optimisticReview: Review = {
         id: `rv-opt-${Date.now()}`,
-        productId: input.productId,
+        productId: productIdKey,
+        orderId: input.orderId,
+        category: input.category,
         userId: me?.id ?? 'me',
         userName: me?.name ?? t('review.you', { defaultValue: 'You' }),
         rating: input.rating,
@@ -73,7 +78,7 @@ export function useSubmitReview() {
       _lastSubmittedReviewId = review.id;
     },
     onSettled: (_data, _err, input) => {
-      qc.invalidateQueries({ queryKey: REVIEWS_QUERY_KEY(input.productId) });
+      qc.invalidateQueries({ queryKey: REVIEWS_QUERY_KEY(input.productId ?? '') });
     },
   });
 }

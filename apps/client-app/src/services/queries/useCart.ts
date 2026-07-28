@@ -1,9 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartApi } from '@/services/cart';
+import { isMockMode } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import type { Cart, CartItem, Product } from '@/types';
 
 export const CART_QUERY_KEY = ['cart'] as const;
+
+// Why: 结算预览按地址查（运费/仓库匹配），地址变 → key 变 → 自动重查
+export const CHECKOUT_PREVIEW_KEY = (addressId: string) => ['checkout-preview', addressId] as const;
 
 function recomputeTotals(cart: Cart, items: CartItem[]): Cart {
   const selectedItems = items.filter((i) => i.selected);
@@ -23,6 +27,19 @@ export function useCart() {
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated, // 未登录时不请求，避免 401
+  });
+}
+
+// Why: 结算页预览 —— real 模式按地址查运费 + 仓库匹配（cartApi.checkoutPreview）。
+//      mock 模式不调（用 demo 常量 MOCK_DELIVERY_FEE/MOCK_DISCOUNT 保持展示稳定）。
+export function useCheckoutPreview(addressId: string | undefined) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  return useQuery({
+    queryKey: CHECKOUT_PREVIEW_KEY(addressId ?? ''),
+    queryFn: () => cartApi.checkoutPreview(addressId as string),
+    staleTime: 30 * 1000,
+    networkMode: 'offlineFirst',
+    enabled: !isMockMode && isAuthenticated && Boolean(addressId),
   });
 }
 
