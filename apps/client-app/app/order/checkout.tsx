@@ -30,7 +30,8 @@ import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { useState } from 'react';
 
 // Why: mock demo 金额（与 cart 页一致）。real 模式由 useCheckoutPreview（运费）+ 券码 validate（折扣）决定。
-//      折扣暂无券码选择 UI（P4 未含），real 模式 discount=0，待券选择 + promotionApi.validate 接入后补。
+//      券数据层已就绪（useCoupons + useValidateCoupon，见 services/queries/usePromotion.ts），
+//      checkout 券选择 UI 待做（无 HTML 原型），落地后 real discount 即接。
 const MOCK_DISCOUNT = 5.0;
 const MOCK_DELIVERY_FEE = 0.0;
 
