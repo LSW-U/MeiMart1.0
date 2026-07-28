@@ -58,7 +58,7 @@ export default function CheckoutPage() {
 
   if (isLoading) {
     return (
-      <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+      <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
         <PrimaryHeader title={t('checkout.title')} showBack onBackPress={handleBack} />
         <View style={styles.center}>
@@ -69,7 +69,7 @@ export default function CheckoutPage() {
   }
   if (isError) {
     return (
-      <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+      <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
         <PrimaryHeader title={t('checkout.title')} showBack onBackPress={handleBack} />
         <ErrorState message={t('checkout.loadError')} onRetry={() => refetch()} />
@@ -144,7 +144,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+    <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
       <PrimaryHeader
         title={t('checkout.title')}
@@ -198,6 +198,12 @@ export default function CheckoutPage() {
             testID="checkout-address"
             onPress={() => router.push('/address/list')}
             style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={
+              defaultAddress
+                ? `${defaultAddress.name}，${defaultAddress.district}${defaultAddress.detail}`
+                : t('checkout.selectAddress')
+            }
           >
             {defaultAddress ? (
               <View style={styles.addressBody}>
