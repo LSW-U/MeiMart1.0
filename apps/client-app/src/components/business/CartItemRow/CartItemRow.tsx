@@ -12,7 +12,7 @@ function CartItemRowBase({
   onPress,
   onItemPress,
   onQuantityChange,
-  onDelete,
+  checkedOverride,
   showControls = true,
   testID,
 }: CartItemRowProps) {
@@ -20,6 +20,7 @@ function CartItemRowBase({
   const localize = useLocalizer();
   const { product, quantity, selected } = item;
   const name = localize(product.name);
+  const isChecked = checkedOverride ?? selected;
 
   return (
     <View
@@ -34,7 +35,7 @@ function CartItemRowBase({
     >
       {showControls && (
         <Checkbox
-          checked={selected}
+          checked={isChecked}
           onPress={() => onPress?.(item)}
           accessibilityLabel="Select item"
         />
@@ -97,17 +98,6 @@ function CartItemRowBase({
             <MaterialCommunityIcons name="plus" size={18} color={colors.primary} />
           </Pressable>
         </View>
-      )}
-      {showControls && onDelete && (
-        <Pressable
-          onPress={() => onDelete(item)}
-          hitSlop={8}
-          style={styles.deleteBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Delete item"
-        >
-          <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.error} />
-        </Pressable>
       )}
     </View>
   );

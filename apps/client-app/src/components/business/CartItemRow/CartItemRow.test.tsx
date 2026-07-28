@@ -41,12 +41,16 @@ describe('CartItemRow', () => {
     expect(onQuantityChange).toHaveBeenCalledWith(1);
   });
 
-  it('calls onDelete when trash pressed', () => {
-    const onDelete = jest.fn();
-    const { getByLabelText } = render(<CartItemRow item={item} onDelete={onDelete} />, {
-      wrapper,
-    });
-    fireEvent.press(getByLabelText('Delete item'));
-    expect(onDelete).toHaveBeenCalledWith(item);
+  it('reflects checkedOverride instead of item.selected when provided', () => {
+    // §4.2 管理模式：item.selected=true 但 checkedOverride=false 应让 checkbox 显示未选
+    const onPress = jest.fn();
+    const { getByLabelText } = render(
+      <CartItemRow item={item} checkedOverride={false} onPress={onPress} />,
+      { wrapper },
+    );
+    const checkbox = getByLabelText('Select item');
+    expect(checkbox.props.accessibilityState?.checked).toBe(false);
+    fireEvent.press(checkbox);
+    expect(onPress).toHaveBeenCalledWith(item);
   });
 });

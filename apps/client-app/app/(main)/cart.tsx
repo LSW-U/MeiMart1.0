@@ -2,6 +2,7 @@
 // HTML → RN 行数比：358 → ~440（含样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 123%）
 // Fix-19: Primary tais-pattern Header + 商品缩略图 + TaisDivider + You May Also Like + Checkout Bar
+import { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -67,7 +68,10 @@ export default function CartPage() {
   const totalPrice = cart?.totalPrice ?? 0;
   const totalItems = cart?.totalItems ?? 0;
   const couponCount = (coupons ?? []).filter((c) => !c.used).length; // §5.1 可用优惠券计数
-  const discount = 5.0; // mock
+
+  // §4 管理模式 state（批量删除替代单个 trash 按钮）
+  const [manageMode, setManageMode] = useState(false);
+  const [selectedForDelete, setSelectedForDelete] = useState<Set<string>>(new Set());
 
   const toggleAll = () => {
     cart?.items.forEach((item) => {
@@ -77,24 +81,45 @@ export default function CartPage() {
     });
   };
 
-  const remove = (item: CartItem) => {
-    // Why: Web 端 Alert.alert 不显示，直接删除 + toast；Native 端用 Alert 确认
+  // §4.2 管理态：checkbox 切删除选中（selectedForDelete），与结算选中 item.selected 解耦
+  const toggleDeleteSelect = (item: CartItem) => {
+    setSelectedForDelete((prev) => {
+      const next = new Set(prev);
+      if (next.has(item.id)) next.delete(item.id);
+      else next.add(item.id);
+      return next;
+    });
+  };
+  const enterManage = () => {
+    setSelectedForDelete(new Set());
+    setManageMode(true);
+  };
+  const exitManage = () => {
+    setSelectedForDelete(new Set());
+    setManageMode(false);
+  };
+
+  // §5.3 批量删除：循环 useRemoveCartItem（mock 量小可接受）；复用 Alert 确认
+  const deleteSelected = () => {
+    const count = selectedForDelete.size;
+    if (count === 0) return;
+    const ids = Array.from(selectedForDelete);
+    const doDelete = () => {
+      ids.forEach((id) => removeMutation.mutate(id));
+      setSelectedForDelete(new Set());
+      setManageMode(false);
+      toast.success(t('cart.removed', { defaultValue: 'Removed' }));
+    };
     if (Platform.OS === 'web') {
-      removeMutation.mutate(item.id, {
-        onSuccess: () => toast.success(t('cart.removed', { defaultValue: 'Removed' })),
-      });
+      doDelete();
       return;
     }
     Alert.alert(
       t('cart.removeTitle'),
-      t('cart.removeWithNameConfirm', { name: localize(item.product.name) }),
+      t('cart.deleteConfirm', { count }),
       [
         { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('cart.removeAction'),
-          style: 'destructive',
-          onPress: () => removeMutation.mutate(item.id),
-        },
+        { text: t('cart.deleteSelected'), style: 'destructive', onPress: doDelete },
       ],
     );
   };
@@ -147,22 +172,54 @@ export default function CartPage() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Your Items 标题 + Coupons 入口（§3.2 去掉 N Items 冗余计数，加可用优惠券入口） */}
+          {/* 顶部操作行：默认 Your Items + Coupons + Manage；管理态 Select Items + Cancel（§4.1） */}
           <View style={styles.itemsHeader}>
-            <Text style={[styles.itemsTitle, { color: colors['on-surface'] }]}>
-              {t('cart.yourItems')}
-            </Text>
-            <Pressable
-              onPress={() => router.push('/coupons')}
-              style={styles.couponsEntry}
-              accessibilityRole="button"
-              accessibilityLabel={t('cart.couponsAvailable', { count: couponCount })}
-            >
-              <Icon symbol="confirmation_number" size={16} color={colors.primary} />
-              <Text style={[styles.couponsEntryText, { color: colors.primary }]}>
-                {t('cart.couponsAvailable', { count: couponCount })}
+            {manageMode ? (
+              <Text style={[styles.itemsTitle, { color: colors['on-surface'] }]}>
+                {t('cart.selectItems')}
               </Text>
-            </Pressable>
+            ) : (
+              <Text style={[styles.itemsTitle, { color: colors['on-surface'] }]}>
+                {t('cart.yourItems')}
+              </Text>
+            )}
+            {manageMode ? (
+              <Pressable
+                onPress={exitManage}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('cart.cancelManage')}
+              >
+                <Text style={[styles.manageBtn, { color: colors.primary }]}>
+                  {t('cart.cancelManage')}
+                </Text>
+              </Pressable>
+            ) : (
+              <View style={styles.itemsHeaderRight}>
+                <Pressable
+                  onPress={() => router.push('/coupons')}
+                  style={styles.couponsEntry}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('cart.couponsAvailable', { count: couponCount })}
+                >
+                  <Icon symbol="confirmation_number" size={16} color={colors.primary} />
+                  <Text style={[styles.couponsEntryText, { color: colors.primary }]}>
+                    {t('cart.couponsAvailable', { count: couponCount })}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={enterManage}
+                  hitSlop={8}
+                  style={[styles.manageBtnWrap, { borderColor: colors.primary }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('cart.manage')}
+                >
+                  <Text style={[styles.manageBtn, { color: colors.primary }]}>
+                    {t('cart.manage')}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
           </View>
 
           {/* 购物车商品列表 */}
@@ -180,12 +237,20 @@ export default function CartPage() {
               >
                 <CartItemRow
                   item={item}
-                  onPress={(i) => toggleMutation.mutate({ itemId: i.id, selected: !i.selected })}
-                  onItemPress={(i) => router.push(`/product/${i.product.id}`)}
-                  onQuantityChange={(qty) =>
-                    updateMutation.mutate({ itemId: item.id, updates: { quantity: qty } })
+                  // §4.2 管理态：checkbox 切删除选中 + 反映 selectedForDelete；步进器隐藏（onQuantityChange=undefined）
+                  onPress={
+                    manageMode
+                      ? (i) => toggleDeleteSelect(i)
+                      : (i) => toggleMutation.mutate({ itemId: i.id, selected: !i.selected })
                   }
-                  onDelete={() => remove(item)}
+                  checkedOverride={manageMode ? selectedForDelete.has(item.id) : undefined}
+                  onItemPress={manageMode ? undefined : (i) => router.push(`/product/${i.product.id}`)}
+                  onQuantityChange={
+                    manageMode
+                      ? undefined
+                      : (qty) =>
+                          updateMutation.mutate({ itemId: item.id, updates: { quantity: qty } })
+                  }
                   showControls
                 />
               </View>
@@ -277,8 +342,40 @@ export default function CartPage() {
         </ScrollView>
       )}
 
-      {/* Checkout Bar（HTML 第 256-270 行 — fixed bottom） */}
-      {!isEmpty && (
+      {/* 底部栏：管理态显删除栏（§4.3），默认显结算栏（§3.4 锁定，仅去 discount 行） */}
+      {!isEmpty && manageMode && (
+        <View
+          style={[
+            styles.checkoutBar,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
+            shadowPresets.md,
+          ]}
+        >
+          <Text style={[styles.selectedCount, { color: colors['on-surface'] }]}>
+            {t('cart.selectedCount', { count: selectedForDelete.size })}
+          </Text>
+          <Pressable
+            onPress={deleteSelected}
+            disabled={selectedForDelete.size === 0}
+            style={({ pressed }) => [
+              styles.deleteBtnBar,
+              { backgroundColor: colors.error },
+              pressed && selectedForDelete.size > 0 && { transform: [{ scale: 0.98 }] },
+              selectedForDelete.size === 0 && { opacity: 0.5 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('cart.deleteSelected')}
+          >
+            <Text style={styles.deleteBtnBarText}>
+              {t('cart.deleteSelected').toUpperCase()}
+            </Text>
+          </Pressable>
+        </View>
+      )}
+      {!isEmpty && !manageMode && (
         <View
           style={[
             styles.checkoutBar,
@@ -297,21 +394,13 @@ export default function CartPage() {
             accessibilityLabel={t('cart.selectAllLabel')}
           />
 
-          {/* 合计 + 折扣 */}
+          {/* 合计（§5.2 去写死 discount，无优惠券接口隐藏折扣行，总价 = totalPrice） */}
           <View style={styles.totalBox}>
-            <View style={styles.discountRow}>
-              <Text style={[styles.discountLabel, { color: colors['on-surface-variant'] }]}>
-                {t('order.discount')}
-              </Text>
-              <View style={[styles.discountPill, { backgroundColor: colors.semantic['positive-container'] }]}>
-                <Text style={[styles.discountText, { color: colors.semantic.positive }]}>-${discount.toFixed(2)}</Text>
-              </View>
-            </View>
             <View style={styles.totalRow}>
               <Text style={[styles.selectedLabel, { color: colors['on-surface-variant'] }]}>
                 {t('cart.selectedTotal')}
               </Text>
-              <PriceText value={Math.max(0, totalPrice - discount)} size="lg" />
+              <PriceText value={Math.max(0, totalPrice)} size="lg" />
             </View>
           </View>
 
@@ -366,6 +455,23 @@ const styles = StyleSheet.create({
   couponsEntryText: {
     ...typography['body-sm'],
     fontWeight: '600',
+  },
+  // §3.2 顶部右侧 Coupons + Manage 组合
+  itemsHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  manageBtnWrap: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: spacing.md - 2,
+    paddingVertical: 4,
+  },
+  manageBtn: {
+    ...typography['label-caps'],
+    fontSize: 12,
+    fontWeight: '700',
   },
   cartList: {
     gap: spacing.md,
@@ -452,25 +558,6 @@ const styles = StyleSheet.create({
   totalBox: {
     flex: 1,
   },
-  discountRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  discountLabel: {
-    ...typography['label-caps'],
-    fontSize: 10,
-  },
-  discountPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 999,
-  },
-  discountText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
   totalRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -478,6 +565,23 @@ const styles = StyleSheet.create({
   },
   selectedLabel: {
     fontSize: 12,
+  },
+  // §4.3 管理态删除栏
+  selectedCount: {
+    ...typography['body-md'],
+    fontWeight: '600',
+    flex: 1,
+  },
+  deleteBtnBar: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    ...shadowPresets.md,
+  },
+  deleteBtnBarText: {
+    color: ON_PRIMARY,
+    ...typography['label-caps'],
+    fontWeight: '700',
   },
   checkoutBtn: {
     paddingHorizontal: spacing.lg,

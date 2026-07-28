@@ -7,7 +7,11 @@ export interface CartItemRowProps {
   /** 点击商品行（图/名/价格区域）触发，通常用于跳商品详情 */
   onItemPress?: (item: CartItem) => void;
   onQuantityChange?: (quantity: number) => void;
-  onDelete?: (item: CartItem) => void;
+  /**
+   * 覆盖 Checkbox 选中态。默认读 item.selected；
+   * 管理模式传入 selectedForDelete.has(item.id)，让 checkbox 反映删除选中而非结算选中。
+   */
+  checkedOverride?: boolean;
   showControls?: boolean;
   testID?: string;
 }
