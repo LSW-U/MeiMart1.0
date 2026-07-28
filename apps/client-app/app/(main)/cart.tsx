@@ -81,6 +81,15 @@ export default function CartPage() {
     });
   };
 
+  // 管理态全选：checkbox 勾选 = 全部加入 selectedForDelete，取消 = 清空
+  const allForDelete =
+    !isEmpty && cart.items.length > 0 && cart.items.every((i) => selectedForDelete.has(i.id));
+  const toggleAllForDelete = () => {
+    setSelectedForDelete(
+      allForDelete ? new Set() : new Set((cart?.items ?? []).map((i) => i.id)),
+    );
+  };
+
   // §4.2 管理态：checkbox 切删除选中（selectedForDelete），与结算选中 item.selected 解耦
   const toggleDeleteSelect = (item: CartItem) => {
     setSelectedForDelete((prev) => {
@@ -354,9 +363,13 @@ export default function CartPage() {
             shadowPresets.md,
           ]}
         >
-          <Text style={[styles.selectedCount, { color: colors['on-surface'] }]}>
-            {t('cart.selectedCount', { count: selectedForDelete.size })}
-          </Text>
+          {/* 左：全选按钮（替「已选 X 件」文本）；右：DELETE 按钮（带 count） */}
+          <Checkbox
+            checked={allForDelete}
+            onPress={toggleAllForDelete}
+            label={t('common.all')}
+            accessibilityLabel={t('cart.selectAllLabel')}
+          />
           <Pressable
             onPress={deleteSelected}
             disabled={selectedForDelete.size === 0}
@@ -370,7 +383,7 @@ export default function CartPage() {
             accessibilityLabel={t('cart.deleteSelected')}
           >
             <Text style={styles.deleteBtnBarText}>
-              {t('cart.deleteSelected').toUpperCase()}
+              {t('cart.deleteSelected').toUpperCase()} ({selectedForDelete.size})
             </Text>
           </Pressable>
         </View>
@@ -567,11 +580,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   // §4.3 管理态删除栏
-  selectedCount: {
-    ...typography['body-md'],
-    fontWeight: '600',
-    flex: 1,
-  },
   deleteBtnBar: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
