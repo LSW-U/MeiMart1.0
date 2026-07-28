@@ -6,8 +6,9 @@ import type { Cart, CartItem, Product } from '@/types';
 
 export const CART_QUERY_KEY = ['cart'] as const;
 
-// Why: 结算预览按地址查（运费/仓库匹配），地址变 → key 变 → 自动重查
-export const CHECKOUT_PREVIEW_KEY = (addressId: string) => ['checkout-preview', addressId] as const;
+// Why: 结算预览按地址 + 券码查（运费/仓库匹配/折扣），地址或券变 → key 变 → 自动重查
+export const CHECKOUT_PREVIEW_KEY = (addressId: string, couponCode: string) =>
+  ['checkout-preview', addressId, couponCode] as const;
 
 function recomputeTotals(cart: Cart, items: CartItem[]): Cart {
   const selectedItems = items.filter((i) => i.selected);
@@ -30,13 +31,15 @@ export function useCart() {
   });
 }
 
-// Why: 结算页预览 —— real 模式按地址查运费 + 仓库匹配（cartApi.checkoutPreview）。
+// Why: 结算页预览 —— real 模式按地址 + 券码查运费 + 仓库匹配 + 折扣聚合（cartApi.checkoutPreview）。
 //      mock 模式不调（用 demo 常量 MOCK_DELIVERY_FEE/MOCK_DISCOUNT 保持展示稳定）。
-export function useCheckoutPreview(addressId: string | undefined) {
+//      couponCode 变（选/换/清券）-> key 变 -> 重查，preview.discount/payableAmount 自动更新。
+export function useCheckoutPreview(addressId: string | undefined, couponCode?: string) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const code = couponCode ?? '';
   return useQuery({
-    queryKey: CHECKOUT_PREVIEW_KEY(addressId ?? ''),
-    queryFn: () => cartApi.checkoutPreview(addressId as string),
+    queryKey: CHECKOUT_PREVIEW_KEY(addressId ?? '', code),
+    queryFn: () => cartApi.checkoutPreview(addressId as string, code || undefined),
     staleTime: 30 * 1000,
     networkMode: 'offlineFirst',
     enabled: !isMockMode && isAuthenticated && Boolean(addressId),

@@ -461,6 +461,14 @@
       "deliveryFee": "Delivery Fee",
       "finalTotal": "Final Total"
     },
+    "coupon": {
+      "title": "Select Coupon",
+      "select": "Select Coupon",
+      "change": "Change coupon",
+      "none": "No coupon",
+      "minOrder": "Min order ${{amount}}",
+      "empty": "No coupons available"
+    },
     "secure": "Secure Checkout",
     "confirmAndPay": "CONFIRM & PAY ${{amount}}",
     "customerService": "Customer Service",

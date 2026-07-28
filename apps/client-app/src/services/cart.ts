@@ -147,26 +147,45 @@ export const cartApi = {
     return this.getCart();
   },
 
-  // Why: checkout-preview 是结算页关键端点，返回配送费/起送价校验/仓库匹配结果
-  async checkoutPreview(addressId?: string): Promise<{
+  // Why: checkout-preview 是结算页关键端点（B5 聚合 discount）：
+  //   入参 addressId（查仓库算运费）+ couponCode?（传券码时后端聚合 discount + couponValid）。
+  //   payableAmount 已减折扣 = itemsSubtotal + deliveryFee - discount，前端直接用作实付金额。
+  async checkoutPreview(addressId?: string, couponCode?: string): Promise<{
     items: CartItemRaw[];
     warehouseMatch: { id: string; code: string; deliveryFee: number } | null;
     itemsSubtotal: number;
     deliveryFee: number;
     payableAmount: number;
+    /** 折扣金额（B5：传 couponCode 时后端聚合，未传=0） */
+    discount: number;
+    /** 当前生效的券码（未选/无效时为 null） */
+    couponCode: string | null;
+    /** 券是否有效（minOrderAmount/有效期等校验结果） */
+    couponValid: boolean;
     warnings: string[];
+    /** 配送时效 ETA（B9，ISO 时间） */
+    estimatedDeliveryTime: string;
   }> {
     if (isMockMode) {
+      // Why: mock 模式不在此算折扣（useCheckoutPreview 在 mock 下不调，走 checkout.tsx 的 MOCK 常量）。
+      //      返回结构齐全保持类型一致，discount=0 / couponCode=null。
       return mockResponse({
         items: [],
         warehouseMatch: null,
         itemsSubtotal: 0,
         deliveryFee: 0,
         payableAmount: 0,
+        discount: 0,
+        couponCode: null,
+        couponValid: false,
         warnings: [],
+        estimatedDeliveryTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       });
     }
-    const res = await api.post('/client/cart/checkout-preview', { addressId });
+    const res = await api.post('/client/cart/checkout-preview', {
+      addressId,
+      ...(couponCode ? { couponCode } : {}),
+    });
     return res.data;
   },
 };

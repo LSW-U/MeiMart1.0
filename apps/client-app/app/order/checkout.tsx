@@ -22,18 +22,35 @@ import { isMockMode } from '@/services/api';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
+import { Modal } from '@/components/ui/Modal/Modal';
 import { useCart, useCheckoutPreview } from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
 import { usePaymentMethods } from '@/services/queries/usePayment';
 import { useCreateOrder } from '@/services/queries/useOrders';
+import { useCoupons } from '@/services/queries/usePromotion';
+import type { ClientCoupon } from '@/services/promotion';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { useState } from 'react';
 
-// Why: mock demo 金额（与 cart 页一致）。real 模式由 useCheckoutPreview（运费）+ 券码 validate（折扣）决定。
-//      券数据层已就绪（useCoupons + useValidateCoupon，见 services/queries/usePromotion.ts），
-//      checkout 券选择 UI 待做（无 HTML 原型），落地后 real discount 即接。
+// Why: mock demo 金额（与 cart 页一致）。real 模式由 useCheckoutPreview 一次拿全金额
+//      —— preview.payableAmount 后端已聚合（itemsSubtotal + deliveryFee - discount，传 couponCode 时算折扣）。
+//      ⚠️ checkout 券选择 Modal 无 HTML 原型（CheckoutPage.html 无券 UI），按 coupons.tsx 卡片风格推导实现，待设计确认。
 const MOCK_DISCOUNT = 5.0;
 const MOCK_DELIVERY_FEE = 0.0;
+
+// Why: ClientCoupon.type -> 展示文本。后端 type 是大写枚举，UI 需要可读折扣描述。
+function formatCouponValue(coupon: ClientCoupon): string {
+  switch (coupon.type) {
+    case 'PERCENTAGE':
+      return `${coupon.value}% OFF`;
+    case 'FIXED_AMOUNT':
+      return `-$${coupon.value}`;
+    case 'FREE_DELIVERY':
+      return 'FREE DELIVERY';
+    default:
+      return '';
+  }
+}
 
 // 原因：客服 / CONFIRM&PAY 按钮上的固定白字（primary 红底），两种模式不变。
 // 不可用 colors['on-primary']：dark 模式翻为 #690005（暗红）叠红底会裂色（同 P2/P3）。
@@ -51,21 +68,26 @@ export default function CheckoutPage() {
   const createOrder = useCreateOrder();
   const selectedItems = cart?.items.filter((i) => i.selected) ?? [];
   const defaultAddress = addresses?.find((a) => a.isDefault) ?? addresses?.[0];
-  // Why: real 模式按默认地址查运费 + 仓库匹配；mock 模式不调（enabled 内已 gate），preview 为 undefined
-  const { data: preview } = useCheckoutPreview(defaultAddress?.id);
+  // Why: real 模式选券 —— selectedCouponCode 驱动 preview 重查（key 含 couponCode），后端聚合 discount
+  const [selectedCouponCode, setSelectedCouponCode] = useState<string | undefined>(undefined);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  // Why: 券列表（Modal 数据源，real + mock 都拉，mock 走 mockDb 适配）
+  const { data: coupons } = useCoupons();
+  // Why: real 模式按默认地址 + 选中券查运费 + 折扣聚合；mock 模式不调（enabled 内已 gate），preview 为 undefined
+  const { data: preview } = useCheckoutPreview(defaultAddress?.id, selectedCouponCode);
 
   const defaultMethodId = paymentMethods?.find((m) => m.isDefault)?.id ?? paymentMethods?.[0]?.id;
   const [selectedMethod, setSelectedMethod] = useState<string | undefined>(defaultMethodId);
   // Why: 防止 submit 期间重复点击（Promise.all 查 SKU 时 createOrder.isPending 还是 false）
   const [submitting, setSubmitting] = useState(false);
 
-  // Why: subtotal 用本地购物车算（line item 单价 × 数量，与商品行展示一致）；
-  //      deliveryFee real 取 checkoutPreview（按地址 PostGIS 匹配仓库），mock 用 demo 常量；
-  //      discount real 暂 0（无券码 UI），mock 用 demo 常量。preview 未加载时回退 mock 常量。
+  // Why: subtotal 用本地购物车算（line item 单价 × 数量，与商品行展示一致）。
+  //      real 模式 payableAmount 后端已聚合（itemsSubtotal + deliveryFee - discount），直接用作实付；
+  //      discount 用 preview.discount（传券时后端聚合）；mock/preview 未加载用 demo 常量。
   const subtotal = selectedItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
   const deliveryFee = preview?.deliveryFee ?? (isMockMode ? MOCK_DELIVERY_FEE : 0);
-  const discount = isMockMode ? MOCK_DISCOUNT : 0;
-  const finalTotal = Math.max(0, subtotal - discount + deliveryFee);
+  const discount = preview?.discount ?? (isMockMode ? MOCK_DISCOUNT : 0);
+  const finalTotal = preview?.payableAmount ?? Math.max(0, subtotal - discount + deliveryFee);
 
   if (isLoading) {
     return (
@@ -371,10 +393,40 @@ export default function CheckoutPage() {
                   ${subtotal.toFixed(2)}
                 </Text>
               </View>
-              <View style={styles.summaryRow}>
-                <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>{t('checkout.summary.discount')}</Text>
-                <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>-${discount.toFixed(2)}</Text>
-              </View>
+              {/* Why: mock 纯展示 demo 折扣；real 模式整行可点 → 打开选券 Modal（preview 传 couponCode 聚合 discount） */}
+              {isMockMode ? (
+                <View style={styles.summaryRow}>
+                  <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>{t('checkout.summary.discount')}</Text>
+                  <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>-${discount.toFixed(2)}</Text>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={() => setShowCouponModal(true)}
+                  style={styles.summaryRow}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    selectedCouponCode ? t('checkout.coupon.change') : t('checkout.coupon.select')
+                  }
+                >
+                  <View style={styles.couponEntryLeft}>
+                    <Icon symbol="confirmation_number" size={16} color={colors.semantic.positive} />
+                    <Text
+                      style={[styles.discountLabel, { color: colors.semantic.positive }]}
+                      numberOfLines={1}
+                    >
+                      {selectedCouponCode ?? t('checkout.coupon.select')}
+                    </Text>
+                  </View>
+                  <View style={styles.couponEntryRight}>
+                    {discount > 0 && (
+                      <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>
+                        -${discount.toFixed(2)}
+                      </Text>
+                    )}
+                    <Icon symbol="chevron_right" size={16} color={colors['on-surface-variant']} />
+                  </View>
+                </Pressable>
+              )}
               <View style={styles.summaryRow}>
                 <Text style={[styles.summaryLabel, { color: colors['on-surface-variant'] }]}>
                   {t('checkout.summary.deliveryFee')}
@@ -450,6 +502,82 @@ export default function CheckoutPage() {
           </Text>
         </Pressable>
       </View>
+      {/* ⚠️ 无 HTML 原型：选券 Modal 参考 coupons.tsx 卡片风格推导，待设计确认 */}
+      <Modal
+        visible={showCouponModal}
+        onClose={() => setShowCouponModal(false)}
+        title={t('checkout.coupon.title')}
+      >
+        <ScrollView style={styles.couponModalList} contentContainerStyle={{ gap: spacing.sm }}>
+          {/* 不使用券 */}
+          <Pressable
+            onPress={() => {
+              setSelectedCouponCode(undefined);
+              setShowCouponModal(false);
+            }}
+            style={[
+              styles.couponItem,
+              {
+                backgroundColor: colors['surface-container-low'],
+                borderColor: !selectedCouponCode ? colors.primary : colors['outline-variant'],
+                borderWidth: !selectedCouponCode ? 2 : 1,
+              },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('checkout.coupon.none')}
+          >
+            <View style={styles.couponItemText}>
+              <Text style={[styles.couponItemName, { color: colors['on-surface'] }]}>
+                {t('checkout.coupon.none')}
+              </Text>
+            </View>
+            {!selectedCouponCode && (
+              <Icon symbol="check_circle" size={20} color={colors.primary} />
+            )}
+          </Pressable>
+          {/* 券列表 */}
+          {coupons?.map((coupon) => {
+            const active = selectedCouponCode === coupon.code;
+            return (
+              <Pressable
+                key={coupon.id}
+                onPress={() => {
+                  setSelectedCouponCode(coupon.code);
+                  setShowCouponModal(false);
+                }}
+                style={[
+                  styles.couponItem,
+                  {
+                    backgroundColor: colors['surface-container-low'],
+                    borderColor: active ? colors.primary : colors['outline-variant'],
+                    borderWidth: active ? 2 : 1,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={`${coupon.name} ${coupon.code}`}
+              >
+                <View style={styles.couponItemText}>
+                  <Text style={[styles.couponItemName, { color: colors['on-surface'] }]}>
+                    {coupon.name}
+                  </Text>
+                  <Text style={[styles.couponItemMeta, { color: colors['on-surface-variant'] }]}>
+                    {coupon.code} · {formatCouponValue(coupon)}
+                  </Text>
+                  <Text style={[styles.couponItemMeta, { color: colors['on-surface-variant'] }]}>
+                    {t('checkout.coupon.minOrder', { amount: coupon.minOrderAmount })}
+                  </Text>
+                </View>
+                {active && <Icon symbol="check_circle" size={20} color={colors.primary} />}
+              </Pressable>
+            );
+          })}
+          {(!coupons || coupons.length === 0) && (
+            <Text style={[styles.couponEmpty, { color: colors['on-surface-variant'] }]}>
+              {t('checkout.coupon.empty')}
+            </Text>
+          )}
+        </ScrollView>
+      </Modal>
     </SafeAreaWrapper>
   );
 }
@@ -565,6 +693,31 @@ const styles = StyleSheet.create({
   summaryValue: { ...typography['body-sm'] },
   summaryValueBold: { ...typography['body-sm'], fontWeight: '700' },
   discountLabel: { ...typography['body-sm'] },
+  // 选券入口（discount 行 real 模式）：左 icon+code，右 -金额+chevron
+  couponEntryLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    flex: 1,
+  },
+  couponEntryRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  // 选券 Modal 列表
+  couponModalList: { maxHeight: 420 },
+  couponItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+  },
+  couponItemText: { flex: 1, gap: 2 },
+  couponItemName: { ...typography['body-md'], fontWeight: '600' },
+  couponItemMeta: { ...typography['body-sm'] },
+  couponEmpty: { ...typography['body-md'], textAlign: 'center', paddingVertical: spacing.lg },
   // U2 商品行：缩略图 + 名称/数量 + 价格
   summaryItemRow: {
     flexDirection: 'row',

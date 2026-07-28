@@ -413,6 +413,14 @@
       "deliveryFee": "",
       "finalTotal": ""
     },
+    "coupon": {
+      "title": "[TET] Select Coupon",
+      "select": "[TET] Select Coupon",
+      "change": "[TET] Change coupon",
+      "none": "[TET] No coupon",
+      "minOrder": "[TET] Min order ${{amount}}",
+      "empty": "[TET] No coupons available"
+    },
     "secure": "",
     "confirmAndPay": "",
     "customerService": "",
