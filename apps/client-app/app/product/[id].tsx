@@ -23,6 +23,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useProduct, useProducts } from '@/services/queries/useProducts';
+import { isMockMode } from '@/services/api';
 import { useAddToCart, useCart } from '@/services/queries/useCart';
 import { useFavorites, useToggleFavorite } from '@/services/queries/useFavorites';
 import { useAddresses } from '@/services/queries/useAddress';
@@ -88,8 +89,16 @@ export default function ProductDetailPage() {
   const toggleFavoriteMutation = useToggleFavorite();
   const addToCartMutation = useAddToCart();
 
-  const pairsWellWith = (allProducts ?? []).filter((p) => PAIRS_WELL_WITH_IDS.includes(p.id));
-  const youMayLike = (allProducts ?? []).filter((p) => YOU_MAY_LIKE_IDS.includes(p.id));
+  // real 模式下商品 id 是 uuid（mock 的 p003/p006 等匹配不到），改为同类目优先 + 其他补足
+  const pairsWellWith = isMockMode
+    ? (allProducts ?? []).filter((p) => PAIRS_WELL_WITH_IDS.includes(p.id))
+    : [
+        ...(allProducts ?? []).filter((p) => p.category === product?.category && p.id !== product?.id),
+        ...(allProducts ?? []).filter((p) => p.category !== product?.category && p.id !== product?.id),
+      ].slice(0, 3);
+  const youMayLike = isMockMode
+    ? (allProducts ?? []).filter((p) => YOU_MAY_LIKE_IDS.includes(p.id))
+    : (allProducts ?? []).filter((p) => p.id !== product?.id).slice(0, 4);
   const isFavorite = Boolean(product && (favorites ?? []).some((p) => p.id === product.id));
 
   const [activeTab, setActiveTab] = useState<TabKey>('PRODUCT');
@@ -108,21 +117,21 @@ export default function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+      <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
         <TopBar activeTab={activeTab} onTabPress={() => {}} onBack={handleBack} />
         <View style={styles.center}>
-          <Text style={{ color: colors['on-surface-variant'] }}>Loading…</Text>
+          <Text style={{ color: colors['on-surface-variant'] }}>{t('common.loading')}</Text>
         </View>
       </SafeAreaWrapper>
     );
   }
   if (isError || !product) {
     return (
-      <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+      <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
         <TopBar activeTab={activeTab} onTabPress={() => {}} onBack={handleBack} />
-        <ErrorState message="Product not found or failed to load" onRetry={() => refetch()} />
+        <ErrorState message={t('product.notFound')} onRetry={() => refetch()} />
       </SafeAreaWrapper>
     );
   }
@@ -149,21 +158,23 @@ export default function ProductDetailPage() {
     return t(`common.relTime.${unit}`, { count });
   };
 
+  // 加购 toast 回调（addToCart / addRelatedToCart 共用，Q2 提取去重）
+  const onCartSuccess = () =>
+    toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' }));
+  const onCartError = (err: unknown) => {
+    const msg =
+      err instanceof Error && err.message === 'SOLD_OUT'
+        ? t('product.soldOut')
+        : err instanceof Error && err.message === 'STOCK_EXCEEDED'
+          ? t('product.stockExceeded')
+          : t('product.addToCartFailed', { defaultValue: 'Add to cart failed' });
+    toast.error(msg);
+  };
+
   const addToCart = () => {
     addToCartMutation.mutate(
       { product, quantity },
-      {
-        onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
-        onError: (err) => {
-          const msg =
-            err instanceof Error && err.message === 'SOLD_OUT'
-              ? t('product.soldOut')
-              : err instanceof Error && err.message === 'STOCK_EXCEEDED'
-                ? t('product.stockExceeded')
-                : t('product.addToCartFailed', { defaultValue: 'Add to cart failed' });
-          toast.error(msg);
-        },
-      },
+      { onSuccess: onCartSuccess, onError: onCartError },
     );
   };
 
@@ -172,18 +183,7 @@ export default function ProductDetailPage() {
     if (!full) return;
     addToCartMutation.mutate(
       { product: full, quantity: 1 },
-      {
-        onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
-        onError: (err) => {
-          const msg =
-            err instanceof Error && err.message === 'SOLD_OUT'
-              ? t('product.soldOut')
-              : err instanceof Error && err.message === 'STOCK_EXCEEDED'
-                ? t('product.stockExceeded')
-                : t('product.addToCartFailed', { defaultValue: 'Add to cart failed' });
-          toast.error(msg);
-        },
-      },
+      { onSuccess: onCartSuccess, onError: onCartError },
     );
   };
 
@@ -550,8 +550,8 @@ export default function ProductDetailPage() {
           <View style={styles.section} collapsable={false}>
             <View
               style={[
-                styles.detailHeader,
-                { backgroundColor: colors['surface-container-high'] },
+            styles.detailHeader,
+                { backgroundColor: 'transparent' },
               ]}
             >
               <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>

@@ -235,6 +235,7 @@
     "writeReview": "WRITE A REVIEW",
     "pairsWellWith": "Pairs Well With",
     "noDescription": "No description yet",
+    "notFound": "Product not found or failed to load",
     "selectAddress": "Select address",
     "tab": {
       "product": "PRODUCT",

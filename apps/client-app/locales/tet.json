@@ -192,6 +192,7 @@
     "writeReview": "[TET] WRITE A REVIEW",
     "pairsWellWith": "[TET] Pairs Well With",
     "noDescription": "[TET] No description yet",
+    "notFound": "[TET] Product not found or failed to load",
     "selectAddress": "[TET] Select address",
     "tab": {
       "product": "[TET] PRODUCT",
