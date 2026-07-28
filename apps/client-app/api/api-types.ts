@@ -41,7 +41,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                role: "super_admin" | "customer" | "rider" | "warehouse_staff" | "customer_service";
+                                role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
                                 phone: string | null;
                                 email: string | null;
                                 name: string | null;
@@ -90,7 +90,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description SMS 验证码登录（不存在自动注册 customer） */
+        /**
+         * @deprecated
+         * @description [DEPRECATED] SMS 验证码登录 — 已由统一入口 POST /sms/verify (action=LOGIN) 替代，将于消费者 App 切换后 2 周下线
+         */
         post: {
             parameters: {
                 query?: never;
@@ -118,7 +121,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                role: "super_admin" | "customer" | "rider" | "warehouse_staff" | "customer_service";
+                                role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
                                 phone: string | null;
                                 email: string | null;
                                 name: string | null;
@@ -167,7 +170,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description 发送 SMS 验证码（stub 固定 123456，标 [SMS_STUB]，W6 切东帝汶本地） */
+        /**
+         * @deprecated
+         * @description [DEPRECATED] 发送 SMS 验证码 — 已由统一入口 POST /sms/send (challengeId 模式) 替代，将于消费者 App 切换后 2 周下线
+         */
         post: {
             parameters: {
                 query?: never;
@@ -315,7 +321,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description 注册（必传 smsCode，dev stub 固定 123456；email optional 走密码+SMS 主路径） */
+        /**
+         * @deprecated
+         * @description [DEPRECATED] 密码注册 — 已由统一入口 POST /register/complete (ticket + SMS) 替代，将于消费者 App 切换后 2 周下线
+         */
         post: {
             parameters: {
                 query?: never;
@@ -347,7 +356,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                role: "super_admin" | "customer" | "rider" | "warehouse_staff" | "customer_service";
+                                role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
                                 phone: string | null;
                                 email: string | null;
                                 name: string | null;
@@ -406,7 +415,7 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        refreshToken: string;
+                        refreshToken?: string;
                     };
                 };
             };
@@ -470,7 +479,7 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        refreshToken: string;
+                        refreshToken?: string;
                     };
                 };
             };
@@ -521,9 +530,12 @@ export interface paths {
                             name: string | null;
                             avatarUrl: string | null;
                             /** @enum {string} */
-                            role: "super_admin" | "customer" | "rider" | "warehouse_staff" | "customer_service";
+                            role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
                             /** @enum {string} */
                             status: "ACTIVE" | "SUSPENDED" | "DELETED";
+                            /** @enum {string} */
+                            memberLevel?: "gold" | "silver" | "bronze";
+                            points?: number;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -570,9 +582,12 @@ export interface paths {
                             name: string | null;
                             avatarUrl: string | null;
                             /** @enum {string} */
-                            role: "super_admin" | "customer" | "rider" | "warehouse_staff" | "customer_service";
+                            role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
                             /** @enum {string} */
                             status: "ACTIVE" | "SUSPENDED" | "DELETED";
+                            /** @enum {string} */
+                            memberLevel?: "gold" | "silver" | "bronze";
+                            points?: number;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -2042,9 +2057,13 @@ export interface paths {
                                 };
                                 mainImage: string;
                                 priceMin: number;
+                                /** Format: uuid */
+                                defaultSkuId: string | null;
                                 /** @enum {string} */
                                 status: "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
                                 salesCount: number;
+                                stock?: number;
+                                rating?: number;
                             }[];
                             total: number;
                             page: number;
@@ -2092,6 +2111,9 @@ export interface paths {
                             shopId: string;
                             /** Format: uuid */
                             categoryId: string | null;
+                            categoryName: {
+                                [key: string]: string;
+                            } | null;
                             name: {
                                 [key: string]: string;
                             };
@@ -2106,12 +2128,90 @@ export interface paths {
                                 [key: string]: string;
                             };
                             priceMin: number;
+                            /** Format: uuid */
+                            defaultSkuId: string | null;
                             salesCount: number;
+                            stock?: number;
+                            rating?: number;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
                             updatedAt: string;
                         };
+                    };
+                };
+                /** @description PRODUCT_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/products/{id}/skus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 商品规格列表（B6，只返 ACTIVE SKU，供 C 端规格选择器） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description SKU 列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            productId: string;
+                            name: {
+                                [key: string]: string;
+                            };
+                            attributes: {
+                                [key: string]: unknown;
+                            };
+                            price: number;
+                            imageUrl: string | null;
+                            /** @enum {string} */
+                            status: "ACTIVE" | "INACTIVE";
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
                     };
                 };
                 /** @description PRODUCT_NOT_FOUND */
@@ -2174,9 +2274,13 @@ export interface paths {
                             };
                             mainImage: string;
                             priceMin: number;
+                            /** Format: uuid */
+                            defaultSkuId: string | null;
                             /** @enum {string} */
                             status: "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
                             salesCount: number;
+                            stock?: number;
+                            rating?: number;
                         }[];
                     };
                 };
@@ -2221,9 +2325,13 @@ export interface paths {
                             };
                             mainImage: string;
                             priceMin: number;
+                            /** Format: uuid */
+                            defaultSkuId: string | null;
                             /** @enum {string} */
                             status: "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
                             salesCount: number;
+                            stock?: number;
+                            rating?: number;
                         }[];
                     };
                 };
@@ -2265,7 +2373,7 @@ export interface paths {
                             name: {
                                 [key: string]: string;
                             };
-                            iconUrl: string;
+                            iconUrl: string | "";
                             /** Format: uuid */
                             parentId: string | null;
                             sortOrder: number;
@@ -2387,6 +2495,9 @@ export interface paths {
                             shopId: string;
                             /** Format: uuid */
                             categoryId: string | null;
+                            categoryName: {
+                                [key: string]: string;
+                            } | null;
                             name: {
                                 [key: string]: string;
                             };
@@ -2401,7 +2512,11 @@ export interface paths {
                                 [key: string]: string;
                             };
                             priceMin: number;
+                            /** Format: uuid */
+                            defaultSkuId: string | null;
                             salesCount: number;
+                            stock?: number;
+                            rating?: number;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -2490,6 +2605,9 @@ export interface paths {
                             shopId: string;
                             /** Format: uuid */
                             categoryId: string | null;
+                            categoryName: {
+                                [key: string]: string;
+                            } | null;
                             name: {
                                 [key: string]: string;
                             };
@@ -2504,7 +2622,11 @@ export interface paths {
                                 [key: string]: string;
                             };
                             priceMin: number;
+                            /** Format: uuid */
+                            defaultSkuId: string | null;
                             salesCount: number;
+                            stock?: number;
+                            rating?: number;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -2559,6 +2681,9 @@ export interface paths {
                             shopId: string;
                             /** Format: uuid */
                             categoryId: string | null;
+                            categoryName: {
+                                [key: string]: string;
+                            } | null;
                             name: {
                                 [key: string]: string;
                             };
@@ -2573,7 +2698,11 @@ export interface paths {
                                 [key: string]: string;
                             };
                             priceMin: number;
+                            /** Format: uuid */
+                            defaultSkuId: string | null;
                             salesCount: number;
+                            stock?: number;
+                            rating?: number;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -2677,7 +2806,7 @@ export interface paths {
                         name: {
                             [key: string]: string;
                         };
-                        iconUrl: string;
+                        iconUrl: string | "";
                         /** Format: uuid */
                         parentId?: string | null;
                         sortOrder?: number;
@@ -2697,7 +2826,7 @@ export interface paths {
                             name: {
                                 [key: string]: string;
                             };
-                            iconUrl: string;
+                            iconUrl: string | "";
                             /** Format: uuid */
                             parentId: string | null;
                             sortOrder: number;
@@ -3189,6 +3318,7 @@ export interface paths {
                                 unitPrice: number;
                                 quantity: number;
                                 subtotal: number;
+                                stock?: number;
                             }[];
                             totalAmount: number;
                             deliveryFee: number;
@@ -3224,6 +3354,12 @@ export interface paths {
                             /** Format: date-time */
                             cancelledAt: string | null;
                             cancelReason: string | null;
+                            promotion: {
+                                /** Format: uuid */
+                                promotionId: string;
+                                code: string;
+                                discountAmount: number;
+                            } | null;
                         }[];
                     };
                 };
@@ -3284,6 +3420,7 @@ export interface paths {
                                 unitPrice: number;
                                 quantity: number;
                                 subtotal: number;
+                                stock?: number;
                             }[];
                             totalAmount: number;
                             deliveryFee: number;
@@ -3319,6 +3456,12 @@ export interface paths {
                             /** Format: date-time */
                             cancelledAt: string | null;
                             cancelReason: string | null;
+                            promotion: {
+                                /** Format: uuid */
+                                promotionId: string;
+                                code: string;
+                                discountAmount: number;
+                            } | null;
                         };
                     };
                 };
@@ -3343,6 +3486,55 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/orders/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 订单状态计数（B3，个人中心 4 宫格 badge 数据源，per-status 计数） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 各状态订单数 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            counts: {
+                                PENDING_PAYMENT?: number;
+                                PENDING_CONFIRM?: number;
+                                CONFIRMED?: number;
+                                PICKED?: number;
+                                OUT_FOR_DELIVERY?: number;
+                                DELIVERED_PAID?: number;
+                                DELIVERED?: number;
+                                DELIVERED_UNPAID?: number;
+                                COMPLETED?: number;
+                                CANCELLED?: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3786,6 +3978,7 @@ export interface paths {
                                 unitPrice: number;
                                 quantity: number;
                                 subtotal: number;
+                                stock?: number;
                             }[];
                             totalAmount: number;
                             deliveryFee: number;
@@ -3821,6 +4014,12 @@ export interface paths {
                             /** Format: date-time */
                             cancelledAt: string | null;
                             cancelReason: string | null;
+                            promotion: {
+                                /** Format: uuid */
+                                promotionId: string;
+                                code: string;
+                                discountAmount: number;
+                            } | null;
                         };
                     };
                 };
@@ -3959,6 +4158,7 @@ export interface paths {
                                 unitPrice: number;
                                 quantity: number;
                                 isSelected: boolean;
+                                stock?: number;
                                 /** Format: date-time */
                                 addedAt: string;
                             }[];
@@ -4034,6 +4234,7 @@ export interface paths {
                                 unitPrice: number;
                                 quantity: number;
                                 isSelected: boolean;
+                                stock?: number;
                                 /** Format: date-time */
                                 addedAt: string;
                             }[];
@@ -4119,6 +4320,7 @@ export interface paths {
                                 unitPrice: number;
                                 quantity: number;
                                 isSelected: boolean;
+                                stock?: number;
                                 /** Format: date-time */
                                 addedAt: string;
                             }[];
@@ -4178,6 +4380,7 @@ export interface paths {
                                 unitPrice: number;
                                 quantity: number;
                                 isSelected: boolean;
+                                stock?: number;
                                 /** Format: date-time */
                                 addedAt: string;
                             }[];
@@ -4188,6 +4391,78 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/v1/client/cart/items/batch-delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 批量删除购物车项（B2，管理模式批量删，替代 N 次单删） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        itemIds: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description 批量删除后的购物车 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            userId: string;
+                            /** Format: uuid */
+                            warehouseId: string | null;
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                skuId: string;
+                                /** Format: uuid */
+                                productId: string;
+                                productName: {
+                                    [key: string]: string;
+                                };
+                                productImage: string;
+                                skuName: {
+                                    [key: string]: string;
+                                };
+                                unitPrice: number;
+                                quantity: number;
+                                isSelected: boolean;
+                                stock?: number;
+                                /** Format: date-time */
+                                addedAt: string;
+                            }[];
+                            selectedSubtotal: number;
+                            totalSubtotal: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/client/cart/checkout-preview": {
@@ -4240,6 +4515,7 @@ export interface paths {
                                 unitPrice: number;
                                 quantity: number;
                                 isSelected: boolean;
+                                stock?: number;
                                 /** Format: date-time */
                                 addedAt: string;
                             }[];
@@ -4253,6 +4529,8 @@ export interface paths {
                             deliveryFee: number;
                             payableAmount: number;
                             warnings: string[];
+                            /** Format: date-time */
+                            estimatedDeliveryTime: string;
                         };
                     };
                 };
@@ -4277,6 +4555,110 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 我的优惠券列表（B10，MVP 全局可用券：ACTIVE + 有效期内 + 未超额） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 可用优惠券列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            code: string;
+                            name: string;
+                            description: string | null;
+                            /** @enum {string} */
+                            type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                            value: number;
+                            minOrderAmount: number;
+                            maxDiscountAmount: number | null;
+                            /** Format: date-time */
+                            startAt: string;
+                            /** Format: date-time */
+                            endAt: string;
+                            /** @enum {string} */
+                            status: "available";
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/payments/methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 列出可用支付方式（W7 P1-1）。返回 5 种方式的多语言 name/subtitle + icon + isDefault + enabled + mockFlag。 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 支付方式列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @enum {string} */
+                                code: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+                                name: {
+                                    [key: string]: string;
+                                };
+                                subtitle: {
+                                    [key: string]: string;
+                                };
+                                icon: string;
+                                isDefault: boolean;
+                                enabled: boolean;
+                                mockFlag: boolean;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4564,7 +4946,7 @@ export interface paths {
                             authScheme: "bearer";
                             userId: string;
                             /** @enum {string} */
-                            role: "customer" | "rider" | "super_admin" | "customer_service";
+                            role: "CUSTOMER" | "RIDER" | "SUPER_ADMIN" | "CUSTOMER_SERVICE";
                             serverEvents: string[];
                             clientEvents: string[];
                             conversationFormats: {
@@ -4610,6 +4992,859 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 后台用户列表（W7 P1-2）。支持 keyword/role/status 筛选 + 分页，含 orderCount + totalSpent 聚合。 */
+        get: {
+            parameters: {
+                query?: {
+                    keyword?: string;
+                    role?: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+                    status?: "ACTIVE" | "SUSPENDED" | "DELETED";
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 用户列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                phone: string;
+                                /** Format: email */
+                                email: string | null;
+                                name: string | null;
+                                avatarUrl: string | null;
+                                /** @enum {string} */
+                                role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+                                /** @enum {string} */
+                                status: "ACTIVE" | "SUSPENDED" | "DELETED";
+                                phoneVerified: boolean;
+                                emailVerified: boolean;
+                                /** Format: date-time */
+                                lastLoginAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                orderCount: number;
+                                totalSpent: number;
+                            }[];
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            hasMore: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 后台用户详情（W7-feature 2026-07-10）。返回 AdminUserDetail，含最近 5 笔已成交订单 + 全部收货地址。 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 用户详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            phone: string;
+                            /** Format: email */
+                            email: string | null;
+                            name: string | null;
+                            avatarUrl: string | null;
+                            /** @enum {string} */
+                            role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+                            /** @enum {string} */
+                            status: "ACTIVE" | "SUSPENDED" | "DELETED";
+                            phoneVerified: boolean;
+                            emailVerified: boolean;
+                            /** Format: date-time */
+                            lastLoginAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            orderCount: number;
+                            totalSpent: number;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            recentOrders: {
+                                /** Format: uuid */
+                                id: string;
+                                orderNo: string;
+                                /** @enum {string} */
+                                status: "PENDING_PAYMENT" | "PENDING_CONFIRM" | "CONFIRMED" | "PICKED" | "OUT_FOR_DELIVERY" | "DELIVERED_PAID" | "DELIVERED" | "DELIVERED_UNPAID" | "COMPLETED" | "CANCELLED";
+                                payableAmount: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            addresses: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                userId: string;
+                                name: string;
+                                phone: string;
+                                region: {
+                                    province: string;
+                                    city: string;
+                                    district?: string;
+                                };
+                                detail: string;
+                                lat: number | null;
+                                lng: number | null;
+                                isDefault: boolean;
+                                tag: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-001 用户不存在 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description 编辑客户资料（W7-feature 2026-07-10）。支持 name/phone/email/avatarUrl/role/phoneVerified/emailVerified 字段。安全：不能降级自己 role（E-ADMIN-USER-005）；phone/email unique 冲突抛 E-ADMIN-USER-002。 */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        name?: string;
+                        phone?: string;
+                        /** Format: email */
+                        email?: string | null;
+                        /** Format: uri */
+                        avatarUrl?: string;
+                        /** @enum {string} */
+                        role?: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+                        phoneVerified?: boolean;
+                        emailVerified?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description 更新后的用户详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            phone: string;
+                            /** Format: email */
+                            email: string | null;
+                            name: string | null;
+                            avatarUrl: string | null;
+                            /** @enum {string} */
+                            role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+                            /** @enum {string} */
+                            status: "ACTIVE" | "SUSPENDED" | "DELETED";
+                            phoneVerified: boolean;
+                            emailVerified: boolean;
+                            /** Format: date-time */
+                            lastLoginAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            orderCount: number;
+                            totalSpent: number;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            recentOrders: {
+                                /** Format: uuid */
+                                id: string;
+                                orderNo: string;
+                                /** @enum {string} */
+                                status: "PENDING_PAYMENT" | "PENDING_CONFIRM" | "CONFIRMED" | "PICKED" | "OUT_FOR_DELIVERY" | "DELIVERED_PAID" | "DELIVERED" | "DELIVERED_UNPAID" | "COMPLETED" | "CANCELLED";
+                                payableAmount: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            addresses: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                userId: string;
+                                name: string;
+                                phone: string;
+                                region: {
+                                    province: string;
+                                    city: string;
+                                    district?: string;
+                                };
+                                detail: string;
+                                lat: number | null;
+                                lng: number | null;
+                                isDefault: boolean;
+                                tag: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-005 */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-001 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-002 / E-ADMIN-USER-003 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 暂停用户（W7-feature 2026-07-10）。status -> SUSPENDED。安全：不能暂停自己（E-ADMIN-USER-005）；不能暂停其他 super_admin（E-ADMIN-USER-004）。副作用：用户当前 JWT 仍有效至过期，下次 refresh 时被拒（kill session 需 Redis 黑名单，W8 收尾）。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 暂停后的用户详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            phone: string;
+                            /** Format: email */
+                            email: string | null;
+                            name: string | null;
+                            avatarUrl: string | null;
+                            /** @enum {string} */
+                            role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+                            /** @enum {string} */
+                            status: "ACTIVE" | "SUSPENDED" | "DELETED";
+                            phoneVerified: boolean;
+                            emailVerified: boolean;
+                            /** Format: date-time */
+                            lastLoginAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            orderCount: number;
+                            totalSpent: number;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            recentOrders: {
+                                /** Format: uuid */
+                                id: string;
+                                orderNo: string;
+                                /** @enum {string} */
+                                status: "PENDING_PAYMENT" | "PENDING_CONFIRM" | "CONFIRMED" | "PICKED" | "OUT_FOR_DELIVERY" | "DELIVERED_PAID" | "DELIVERED" | "DELIVERED_UNPAID" | "COMPLETED" | "CANCELLED";
+                                payableAmount: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            addresses: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                userId: string;
+                                name: string;
+                                phone: string;
+                                region: {
+                                    province: string;
+                                    city: string;
+                                    district?: string;
+                                };
+                                detail: string;
+                                lat: number | null;
+                                lng: number | null;
+                                isDefault: boolean;
+                                tag: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-004 / E-ADMIN-USER-005 */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-001 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-003 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 激活用户（W7-feature 2026-07-10）。status -> ACTIVE，仅允许从 SUSPENDED 转。DELETED 是终态，不可激活。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 激活后的用户详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            phone: string;
+                            /** Format: email */
+                            email: string | null;
+                            name: string | null;
+                            avatarUrl: string | null;
+                            /** @enum {string} */
+                            role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+                            /** @enum {string} */
+                            status: "ACTIVE" | "SUSPENDED" | "DELETED";
+                            phoneVerified: boolean;
+                            emailVerified: boolean;
+                            /** Format: date-time */
+                            lastLoginAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            orderCount: number;
+                            totalSpent: number;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            recentOrders: {
+                                /** Format: uuid */
+                                id: string;
+                                orderNo: string;
+                                /** @enum {string} */
+                                status: "PENDING_PAYMENT" | "PENDING_CONFIRM" | "CONFIRMED" | "PICKED" | "OUT_FOR_DELIVERY" | "DELIVERED_PAID" | "DELIVERED" | "DELIVERED_UNPAID" | "COMPLETED" | "CANCELLED";
+                                payableAmount: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            addresses: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                userId: string;
+                                name: string;
+                                phone: string;
+                                region: {
+                                    province: string;
+                                    city: string;
+                                    district?: string;
+                                };
+                                detail: string;
+                                lat: number | null;
+                                lng: number | null;
+                                isDefault: boolean;
+                                tag: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-001 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-003 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 软删除用户（W7-ext-B 2026-07-10）。status -> DELETED（终态）。约束：不能删除自己（E-ADMIN-USER-005）；不能删除其他 super_admin（E-ADMIN-USER-004）；DELETED 是终态，不可恢复（再删抛 E-ADMIN-USER-003）。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 删除后的用户详情（status=DELETED） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            phone: string;
+                            /** Format: email */
+                            email: string | null;
+                            name: string | null;
+                            avatarUrl: string | null;
+                            /** @enum {string} */
+                            role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+                            /** @enum {string} */
+                            status: "ACTIVE" | "SUSPENDED" | "DELETED";
+                            phoneVerified: boolean;
+                            emailVerified: boolean;
+                            /** Format: date-time */
+                            lastLoginAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            orderCount: number;
+                            totalSpent: number;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            recentOrders: {
+                                /** Format: uuid */
+                                id: string;
+                                orderNo: string;
+                                /** @enum {string} */
+                                status: "PENDING_PAYMENT" | "PENDING_CONFIRM" | "CONFIRMED" | "PICKED" | "OUT_FOR_DELIVERY" | "DELIVERED_PAID" | "DELIVERED" | "DELIVERED_UNPAID" | "COMPLETED" | "CANCELLED";
+                                payableAmount: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            addresses: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                userId: string;
+                                name: string;
+                                phone: string;
+                                region: {
+                                    province: string;
+                                    city: string;
+                                    district?: string;
+                                };
+                                detail: string;
+                                lat: number | null;
+                                lng: number | null;
+                                isDefault: boolean;
+                                tag: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-004/005 */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-001 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-003 已删除 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 重置密码（W7-feature 2026-07-10）。生成 12 字符 base64url 临时密码，bcrypt 哈希存库，明文一次性返回。安全：明文不落库；audit maskFields 不记 temporaryPassword；不强制首登改密（MVP）。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 临时密码（明文，仅本次返回） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            temporaryPassword: string;
+                            /** Format: date-time */
+                            generatedAt: string;
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-001 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-ADMIN-USER-003 status=DELETED */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -4673,6 +5908,7 @@ export interface paths {
                                         unitPrice: number;
                                         quantity: number;
                                         subtotal: number;
+                                        stock?: number;
                                     }[];
                                     totalAmount: number;
                                     deliveryFee: number;
@@ -4708,6 +5944,12 @@ export interface paths {
                                     /** Format: date-time */
                                     cancelledAt: string | null;
                                     cancelReason: string | null;
+                                    promotion: {
+                                        /** Format: uuid */
+                                        promotionId: string;
+                                        code: string;
+                                        discountAmount: number;
+                                    } | null;
                                 }[];
                                 /** Format: uuid */
                                 nextCursor: string | null;
@@ -4815,6 +6057,7 @@ export interface paths {
                                     unitPrice: number;
                                     quantity: number;
                                     subtotal: number;
+                                    stock?: number;
                                 }[];
                                 totalAmount: number;
                                 deliveryFee: number;
@@ -4850,6 +6093,12 @@ export interface paths {
                                 /** Format: date-time */
                                 cancelledAt: string | null;
                                 cancelReason: string | null;
+                                promotion: {
+                                    /** Format: uuid */
+                                    promotionId: string;
+                                    code: string;
+                                    discountAmount: number;
+                                } | null;
                             };
                         };
                     };
@@ -4880,7 +6129,142 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** @description Admin 编辑订单（W7-ext-C）。MVP 仅允许改 remark（备注）。warehouseId 改动会破坏 orderNo，deliveryAddress 是快照，均不可改。已 CANCELLED / COMPLETED 的订单不可编辑（409）。 */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        remark?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description 编辑成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                orderNo: string;
+                                /** Format: uuid */
+                                userId: string;
+                                /** Format: uuid */
+                                warehouseId: string;
+                                /** @enum {string} */
+                                status: "PENDING_PAYMENT" | "PENDING_CONFIRM" | "CONFIRMED" | "PICKED" | "OUT_FOR_DELIVERY" | "DELIVERED_PAID" | "DELIVERED" | "DELIVERED_UNPAID" | "COMPLETED" | "CANCELLED";
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    productId: string;
+                                    /** Format: uuid */
+                                    skuId: string;
+                                    productName: string;
+                                    productImage: string;
+                                    skuName: string;
+                                    unitPrice: number;
+                                    quantity: number;
+                                    subtotal: number;
+                                    stock?: number;
+                                }[];
+                                totalAmount: number;
+                                deliveryFee: number;
+                                /** @default 0 */
+                                discountAmount: number;
+                                payableAmount: number;
+                                deliveryAddress: {
+                                    name: string;
+                                    phone: string;
+                                    detail: string;
+                                    lat: number | null;
+                                    lng: number | null;
+                                };
+                                remark: string | null;
+                                /** Format: uuid */
+                                riderId: string | null;
+                                /** @enum {string} */
+                                paymentMethod: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+                                /** @enum {string} */
+                                paymentStatus: "UNPAID" | "PAID" | "REFUNDED";
+                                /** Format: date-time */
+                                paidAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                confirmedAt: string | null;
+                                /** Format: date-time */
+                                pickedAt: string | null;
+                                /** Format: date-time */
+                                deliveringAt: string | null;
+                                /** Format: date-time */
+                                deliveredAt: string | null;
+                                /** Format: date-time */
+                                cancelledAt: string | null;
+                                cancelReason: string | null;
+                                promotion: {
+                                    /** Format: uuid */
+                                    promotionId: string;
+                                    code: string;
+                                    discountAmount: number;
+                                } | null;
+                            };
+                        };
+                    };
+                };
+                /** @description ORDER_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description ORDER_NOT_EDITABLE */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/v1/admin/orders/{id}/cancel": {
@@ -5156,6 +6540,1600 @@ export interface paths {
                 };
                 /** @description APPLICATION_ALREADY_PROCESSED */
                 409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/riders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Admin 已审核骑手列表（W7-ext-D）。Role: super_admin。返回 applicationStatus=APPROVED 的骑手。 */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "OFFLINE" | "ONLINE" | "BUSY";
+                    userStatus?: "ACTIVE" | "SUSPENDED" | "DELETED";
+                    keyword?: string;
+                    warehouseId?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 骑手列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                userId: string;
+                                riderName: string;
+                                phone: string;
+                                /** @enum {string} */
+                                vehicleType: "MOTORCYCLE" | "BICYCLE" | "CAR";
+                                vehiclePlate: string | null;
+                                /** @enum {string} */
+                                status: "OFFLINE" | "ONLINE" | "BUSY";
+                                totalDeliveries: number;
+                                rating: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description UNAUTHORIZED */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description FORBIDDEN */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/riders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Admin 骑手详情（W7-ext-D）。含 User 状态 + 最近 10 订单 + 评分统计。 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                userId: string;
+                                riderName: string;
+                                phone: string;
+                                /** @enum {string} */
+                                vehicleType: "MOTORCYCLE" | "BICYCLE" | "CAR";
+                                vehiclePlate: string | null;
+                                /** @enum {string} */
+                                status: "OFFLINE" | "ONLINE" | "BUSY";
+                                totalDeliveries: number;
+                                rating: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description RIDER_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Admin 编辑骑手（W7-ext-D）。仅允许改 vehicleType/vehiclePlate/preferredWarehouseIds。 */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        vehicleType?: "MOTORCYCLE" | "BICYCLE" | "CAR";
+                        vehiclePlate?: string | null;
+                        preferredWarehouseIds?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description 编辑成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                userId: string;
+                                riderName: string;
+                                phone: string;
+                                /** @enum {string} */
+                                vehicleType: "MOTORCYCLE" | "BICYCLE" | "CAR";
+                                vehiclePlate: string | null;
+                                /** @enum {string} */
+                                status: "OFFLINE" | "ONLINE" | "BUSY";
+                                totalDeliveries: number;
+                                rating: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description RIDER_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/admin/riders/{id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Admin 停用骑手（W7-ext-D）。User.status=SUSPENDED + RiderProfile.status=OFFLINE + 清 Redis 在线状态。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 停用成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                userStatus: string;
+                                riderStatus: string;
+                            };
+                        };
+                    };
+                };
+                /** @description RIDER_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description RIDER_ALREADY_SUSPENDED */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/riders/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Admin 恢复骑手（W7-ext-D）。User.status=ACTIVE。骑手自行 PATCH /duty 上班。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 恢复成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                userStatus: string;
+                            };
+                        };
+                    };
+                };
+                /** @description RIDER_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description ALREADY_ACTIVE / CANNOT_ACTIVATE_DELETED */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/riders/{id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Admin 软删骑手（W7-ext-D）。User.status=DELETED + RiderProfile.status=OFFLINE。不能删自己。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 删除成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                userStatus: string;
+                            };
+                        };
+                    };
+                };
+                /** @description RIDER_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description CANNOT_DELETE_SELF / ALREADY_DELETED */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/promotions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Admin 促销列表（W7-ext-G）。Role: super_admin。按 status/type/keyword 筛选。 */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "ACTIVE" | "PAUSED" | "DELETED";
+                    type?: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                    keyword?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                code: string;
+                                name: string;
+                                description: string | null;
+                                /** @enum {string} */
+                                type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                                value: number;
+                                minOrderAmount: number;
+                                maxDiscountAmount: number | null;
+                                totalQuota: number | null;
+                                usedCount: number;
+                                perUserLimit: number;
+                                /** Format: date-time */
+                                startAt: string;
+                                /** Format: date-time */
+                                endAt: string;
+                                /** @enum {string} */
+                                status: "ACTIVE" | "PAUSED" | "DELETED";
+                                createdBy: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description UNAUTHORIZED */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description FORBIDDEN */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description 创建促销（W7-ext-G）。code 唯一（3-20 字母数字），type 决定 value 含义。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        code: string;
+                        name: string;
+                        description?: string;
+                        /** @enum {string} */
+                        type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                        value: number;
+                        minOrderAmount?: number;
+                        maxDiscountAmount?: number | null;
+                        totalQuota?: number | null;
+                        perUserLimit?: number;
+                        /** Format: date-time */
+                        startAt: string;
+                        /** Format: date-time */
+                        endAt: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 创建成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                code: string;
+                                name: string;
+                                description: string | null;
+                                /** @enum {string} */
+                                type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                                value: number;
+                                minOrderAmount: number;
+                                maxDiscountAmount: number | null;
+                                totalQuota: number | null;
+                                usedCount: number;
+                                perUserLimit: number;
+                                /** Format: date-time */
+                                startAt: string;
+                                /** Format: date-time */
+                                endAt: string;
+                                /** @enum {string} */
+                                status: "ACTIVE" | "PAUSED" | "DELETED";
+                                createdBy: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description INVALID_INPUT */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description CODE_ALREADY_EXISTS */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/promotions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Admin 促销详情（W7-ext-G）。 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                code: string;
+                                name: string;
+                                description: string | null;
+                                /** @enum {string} */
+                                type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                                value: number;
+                                minOrderAmount: number;
+                                maxDiscountAmount: number | null;
+                                totalQuota: number | null;
+                                usedCount: number;
+                                perUserLimit: number;
+                                /** Format: date-time */
+                                startAt: string;
+                                /** Format: date-time */
+                                endAt: string;
+                                /** @enum {string} */
+                                status: "ACTIVE" | "PAUSED" | "DELETED";
+                                createdBy: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description PROMO_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description 编辑促销（W7-ext-G）。status 用专门端点切换。DELETED 不可编辑。 */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        name?: string;
+                        description?: string | null;
+                        value?: number;
+                        minOrderAmount?: number;
+                        maxDiscountAmount?: number | null;
+                        totalQuota?: number | null;
+                        perUserLimit?: number;
+                        /** Format: date-time */
+                        startAt?: string;
+                        /** Format: date-time */
+                        endAt?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 编辑成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                code: string;
+                                name: string;
+                                description: string | null;
+                                /** @enum {string} */
+                                type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                                value: number;
+                                minOrderAmount: number;
+                                maxDiscountAmount: number | null;
+                                totalQuota: number | null;
+                                usedCount: number;
+                                perUserLimit: number;
+                                /** Format: date-time */
+                                startAt: string;
+                                /** Format: date-time */
+                                endAt: string;
+                                /** @enum {string} */
+                                status: "ACTIVE" | "PAUSED" | "DELETED";
+                                createdBy: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description PROMO_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description CANNOT_EDIT_DELETED */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/admin/promotions/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 激活促销（W7-ext-G）。PAUSED -> ACTIVE。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 激活成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                code: string;
+                                name: string;
+                                description: string | null;
+                                /** @enum {string} */
+                                type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                                value: number;
+                                minOrderAmount: number;
+                                maxDiscountAmount: number | null;
+                                totalQuota: number | null;
+                                usedCount: number;
+                                perUserLimit: number;
+                                /** Format: date-time */
+                                startAt: string;
+                                /** Format: date-time */
+                                endAt: string;
+                                /** @enum {string} */
+                                status: "ACTIVE" | "PAUSED" | "DELETED";
+                                createdBy: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description PROMO_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description ALREADY_ACTIVE / CANNOT_ACTIVATE_DELETED */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/promotions/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 暂停促销（W7-ext-G）。ACTIVE -> PAUSED。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 暂停成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                code: string;
+                                name: string;
+                                description: string | null;
+                                /** @enum {string} */
+                                type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                                value: number;
+                                minOrderAmount: number;
+                                maxDiscountAmount: number | null;
+                                totalQuota: number | null;
+                                usedCount: number;
+                                perUserLimit: number;
+                                /** Format: date-time */
+                                startAt: string;
+                                /** Format: date-time */
+                                endAt: string;
+                                /** @enum {string} */
+                                status: "ACTIVE" | "PAUSED" | "DELETED";
+                                createdBy: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description PROMO_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description ONLY_ACTIVE_CAN_PAUSE */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/promotions/{id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 软删促销（W7-ext-G）。status=DELETED，保留数据。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 删除成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                status: string;
+                            };
+                        };
+                    };
+                };
+                /** @description PROMO_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description ALREADY_DELETED */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/promotions/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 客户端校验促销码（W7-ext-G P1-3）。购物车实时预览折扣，不 increment usedCount。Role: customer。返回 { valid, discount, reason?, type? }，reason 仅 valid=false 时有值。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        code: string;
+                        orderAmount: number;
+                        deliveryFee?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description 校验结果 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                valid: boolean;
+                                discount: number;
+                                reason?: string;
+                                /** @enum {string} */
+                                type?: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                            };
+                        };
+                    };
+                };
+                /** @description UNAUTHORIZED */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description FORBIDDEN */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/common/auth/sms/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 统一手机号入口：发送验证码。202 + challengeId（无论是否注册统一响应，防枚举）。仅 BUYER。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        phone: string;
+                        deviceId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 验证码已发送 */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                challengeId: string;
+                                expireIn: number;
+                            };
+                        };
+                    };
+                };
+                /** @description RATE_LIMIT */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/common/auth/sms/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 统一手机号入口：验证码校验 + 分流（LOGIN/REGISTER/BLOCKED）。不暴露手机号是否已注册。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        phone: string;
+                        code: string;
+                        /** Format: uuid */
+                        challengeId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 校验结果 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** @enum {string} */
+                                action: "LOGIN" | "REGISTER" | "BLOCKED";
+                                accessToken?: string;
+                                refreshToken?: string;
+                                accessExpiresAt?: number;
+                                refreshExpiresAt?: number;
+                                user?: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    role: string;
+                                    phone: string;
+                                };
+                                registrationTicket?: string;
+                                expireIn?: number;
+                            };
+                        };
+                    };
+                };
+                /** @description SMS_CODE_INVALID */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description RATE_LIMIT */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/common/auth/register/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 统一手机号入口：完成注册（ticket GETDEL 原子消费 + DB 事务创建 BUYER）。强制 role=CUSTOMER。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        registrationTicket: string;
+                        /** @enum {boolean} */
+                        agreedToTerms: true;
+                        /** Format: uuid */
+                        challengeId: string;
+                        deviceId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 注册成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                accessToken: string;
+                                refreshToken: string;
+                                accessExpiresAt: number;
+                                refreshExpiresAt: number;
+                                user: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    role: string;
+                                    phone: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description MUST_AGREE_TERMS */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description PHONE_ALREADY_REGISTERED */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description TICKET_INVALID_OR_USED */
+                410: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -6074,6 +9052,1431 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/client/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 我的退款列表 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 退款列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** Format: uuid */
+                                userId: string;
+                                amount: number;
+                                /** @enum {string} */
+                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reasonDetail: string | null;
+                                /** @enum {string} */
+                                status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
+                                transactionId: string | null;
+                                refundMethod: string;
+                                /** Format: uuid */
+                                reviewedBy: string | null;
+                                /** Format: date-time */
+                                reviewedAt: string | null;
+                                reviewNote: string | null;
+                                /** Format: date-time */
+                                completedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description 客户申请退款（接单前自动通过，接单后待商家审核） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        orderId: string;
+                        /** @enum {string} */
+                        reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                        reasonDetail?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 退款创建成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** Format: uuid */
+                                userId: string;
+                                amount: number;
+                                /** @enum {string} */
+                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reasonDetail: string | null;
+                                /** @enum {string} */
+                                status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
+                                transactionId: string | null;
+                                refundMethod: string;
+                                /** Format: uuid */
+                                reviewedBy: string | null;
+                                /** Format: date-time */
+                                reviewedAt: string | null;
+                                reviewNote: string | null;
+                                /** Format: date-time */
+                                completedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description REFUND_IN_PROGRESS */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/refunds/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 退款详情 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 退款详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** Format: uuid */
+                                userId: string;
+                                amount: number;
+                                /** @enum {string} */
+                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reasonDetail: string | null;
+                                /** @enum {string} */
+                                status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
+                                transactionId: string | null;
+                                refundMethod: string;
+                                /** Format: uuid */
+                                reviewedBy: string | null;
+                                /** Format: date-time */
+                                reviewedAt: string | null;
+                                reviewNote: string | null;
+                                /** Format: date-time */
+                                completedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description REFUND_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/refunds/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 客户撤回退款申请（仅 PENDING 可撤） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 撤回成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** Format: uuid */
+                                userId: string;
+                                amount: number;
+                                /** @enum {string} */
+                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reasonDetail: string | null;
+                                /** @enum {string} */
+                                status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
+                                transactionId: string | null;
+                                refundMethod: string;
+                                /** Format: uuid */
+                                reviewedBy: string | null;
+                                /** Format: date-time */
+                                reviewedAt: string | null;
+                                reviewNote: string | null;
+                                /** Format: date-time */
+                                completedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 退款列表（admin 可按 status 筛选） */
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 退款列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** Format: uuid */
+                                userId: string;
+                                amount: number;
+                                /** @enum {string} */
+                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reasonDetail: string | null;
+                                /** @enum {string} */
+                                status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
+                                transactionId: string | null;
+                                refundMethod: string;
+                                /** Format: uuid */
+                                reviewedBy: string | null;
+                                /** Format: date-time */
+                                reviewedAt: string | null;
+                                reviewNote: string | null;
+                                /** Format: date-time */
+                                completedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 退款详情（admin） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 退款详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** Format: uuid */
+                                userId: string;
+                                amount: number;
+                                /** @enum {string} */
+                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reasonDetail: string | null;
+                                /** @enum {string} */
+                                status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
+                                transactionId: string | null;
+                                refundMethod: string;
+                                /** Format: uuid */
+                                reviewedBy: string | null;
+                                /** Format: date-time */
+                                reviewedAt: string | null;
+                                reviewNote: string | null;
+                                /** Format: date-time */
+                                completedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description REFUND_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 审核退款（APPROVE → mock 退款 COMPLETED / REJECT） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        refundId: string;
+                        /** @enum {string} */
+                        action: "APPROVE" | "REJECT";
+                        reviewNote?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 审核成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** Format: uuid */
+                                userId: string;
+                                amount: number;
+                                /** @enum {string} */
+                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reasonDetail: string | null;
+                                /** @enum {string} */
+                                status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
+                                transactionId: string | null;
+                                refundMethod: string;
+                                /** Format: uuid */
+                                reviewedBy: string | null;
+                                /** Format: date-time */
+                                reviewedAt: string | null;
+                                reviewNote: string | null;
+                                /** Format: date-time */
+                                completedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description REFUND_NOT_REVIEWABLE */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Admin 确认订单（COD 订单 PENDING_CONFIRM → CONFIRMED + 自动创建 dispatch 任务） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 确认成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                status: "PENDING_PAYMENT" | "PENDING_CONFIRM" | "CONFIRMED" | "PICKED" | "OUT_FOR_DELIVERY" | "DELIVERED_PAID" | "DELIVERED" | "DELIVERED_UNPAID" | "COMPLETED" | "CANCELLED";
+                            };
+                        };
+                    };
+                };
+                /** @description ORDER_STATUS_INVALID */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/pick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Admin 拣货完成（CONFIRMED → PICKED，骑手可取货出发） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 拣货成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                status: "PENDING_PAYMENT" | "PENDING_CONFIRM" | "CONFIRMED" | "PICKED" | "OUT_FOR_DELIVERY" | "DELIVERED_PAID" | "DELIVERED" | "DELIVERED_UNPAID" | "COMPLETED" | "CANCELLED";
+                            };
+                        };
+                    };
+                };
+                /** @description ORDER_STATUS_INVALID */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/common/geo/geocode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 地址 → 经纬度 geocoding（W7 P0-3）。后端调 Nominatim OpenStreetMap，失败/无结果 fallback Dili 中心坐标。前端保存地址时调一次，避免依赖 Google Maps SDK。 */
+        get: {
+            parameters: {
+                query: {
+                    address: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Geocoding 结果 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            lat: number;
+                            lng: number;
+                            /** @enum {string} */
+                            source: "nominatim" | "fallback";
+                            formattedAddress: string | null;
+                        };
+                    };
+                };
+                /** @description E-COMMON-001 校验失败（address 长度 2-500），details 含 zod 具体 message */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/uploads/product-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 商品图片上传（W7-feature）。multipart/form-data，field name="file"。支持 jpg/png/webp，size ≤ 5MB，服务端校验 magic bytes（防 mime 伪造）。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 上传成功，返回公开 URL + key + size */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uri */
+                            url: string;
+                            key: string;
+                            size: number;
+                        };
+                    };
+                };
+                /** @description E-UPLOAD-001 不支持的 mime / 空文件 / magic bytes 不匹配 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-AUTH-003 未授权 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description 文件超过 5MB 上限 */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-UPLOAD-002 存储失败（MinIO 故障） */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/orders/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 客户提交订单/商品评论。校验：订单已送达（DELIVERED/DELIVERED_PAID/DELIVERED_UNPAID/COMPLETED）+ 一订单一条（F2/F5） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        rating: number;
+                        content: {
+                            [key: string]: string;
+                        };
+                        /** @default [] */
+                        images?: string[];
+                        /** @enum {string} */
+                        category: "PRODUCT" | "DELIVERY";
+                        /** Format: uuid */
+                        productId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 评论创建成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            orderId: string;
+                            /** Format: uuid */
+                            userId: string;
+                            userName: string;
+                            avatarUrl: string | null;
+                            rating: number;
+                            content: {
+                                [key: string]: string;
+                            };
+                            images: string[];
+                            /** @enum {string} */
+                            status: "PENDING" | "APPROVED" | "REJECTED";
+                            /** @enum {string} */
+                            category: "PRODUCT" | "DELIVERY";
+                            reply: {
+                                [key: string]: string;
+                            } | null;
+                            /** Format: date-time */
+                            repliedAt: string | null;
+                            /** Format: uuid */
+                            productId: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+                /** @description E-REVIEW-005 无权 */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-REVIEW-002 未送达 / E-REVIEW-003 已评论 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/orders/{id}/rider-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 订单的骑手评价（无则 data=null） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 骑手评价 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            orderId: string;
+                            /** Format: uuid */
+                            riderId: string;
+                            /** Format: uuid */
+                            userId: string;
+                            userName: string;
+                            rating: number;
+                            tags: ("on_time" | "polite" | "professional" | "careful")[];
+                            comment: {
+                                [key: string]: string;
+                            } | null;
+                            /** @enum {string} */
+                            status: "PENDING" | "APPROVED" | "REJECTED";
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description 客户提交骑手评价。校验：订单已送达 + 有骑手 + 一订单一条。写入后全量重算 RiderProfile.rating（F4/F6） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        rating: number;
+                        /** @default [] */
+                        tags?: ("on_time" | "polite" | "professional" | "careful")[];
+                        comment?: {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description 骑手评价创建成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            orderId: string;
+                            /** Format: uuid */
+                            riderId: string;
+                            /** Format: uuid */
+                            userId: string;
+                            userName: string;
+                            rating: number;
+                            tags: ("on_time" | "polite" | "professional" | "careful")[];
+                            comment: {
+                                [key: string]: string;
+                            } | null;
+                            /** @enum {string} */
+                            status: "PENDING" | "APPROVED" | "REJECTED";
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+                /** @description E-REVIEW-002/003/004 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/products/{id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 商品评论列表（仅 APPROVED，游标分页） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 评论列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            orderId: string;
+                            /** Format: uuid */
+                            userId: string;
+                            userName: string;
+                            avatarUrl: string | null;
+                            rating: number;
+                            content: {
+                                [key: string]: string;
+                            };
+                            images: string[];
+                            /** @enum {string} */
+                            status: "PENDING" | "APPROVED" | "REJECTED";
+                            /** @enum {string} */
+                            category: "PRODUCT" | "DELIVERY";
+                            reply: {
+                                [key: string]: string;
+                            } | null;
+                            /** Format: date-time */
+                            repliedAt: string | null;
+                            /** Format: uuid */
+                            productId: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Admin 评论列表。query: type(customer|rider) / category(PRODUCT|DELIVERY) / status(PENDING|APPROVED|REJECTED) / rating(1-5) / keyword / cursor / limit */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 列表（items 按 type 是客户评论或骑手评价） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            orderId: string;
+                            /** Format: uuid */
+                            userId: string;
+                            userName: string;
+                            avatarUrl: string | null;
+                            rating: number;
+                            content: {
+                                [key: string]: string;
+                            };
+                            images: string[];
+                            /** @enum {string} */
+                            status: "PENDING" | "APPROVED" | "REJECTED";
+                            /** @enum {string} */
+                            category: "PRODUCT" | "DELIVERY";
+                            reply: {
+                                [key: string]: string;
+                            } | null;
+                            /** Format: date-time */
+                            repliedAt: string | null;
+                            /** Format: uuid */
+                            productId: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reviews/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Admin 评论详情（?type=customer|rider 区分表） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            orderId: string;
+                            /** Format: uuid */
+                            userId: string;
+                            userName: string;
+                            avatarUrl: string | null;
+                            rating: number;
+                            content: {
+                                [key: string]: string;
+                            };
+                            images: string[];
+                            /** @enum {string} */
+                            status: "PENDING" | "APPROVED" | "REJECTED";
+                            /** @enum {string} */
+                            category: "PRODUCT" | "DELIVERY";
+                            reply: {
+                                [key: string]: string;
+                            } | null;
+                            /** Format: date-time */
+                            repliedAt: string | null;
+                            /** Format: uuid */
+                            productId: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+                /** @description E-REVIEW-001 不存在 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** @description Admin 硬删评论（?type 区分表；删骑手评价后重算 rating） */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 删除成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description E-REVIEW-001 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** @description Admin 审核 status + 商家回复 reply（?type 区分表；骑手评价仅 status） */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status?: "PENDING" | "APPROVED" | "REJECTED";
+                        reply?: {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description 更新成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            orderId: string;
+                            /** Format: uuid */
+                            userId: string;
+                            userName: string;
+                            avatarUrl: string | null;
+                            rating: number;
+                            content: {
+                                [key: string]: string;
+                            };
+                            images: string[];
+                            /** @enum {string} */
+                            status: "PENDING" | "APPROVED" | "REJECTED";
+                            /** @enum {string} */
+                            category: "PRODUCT" | "DELIVERY";
+                            reply: {
+                                [key: string]: string;
+                            } | null;
+                            /** Format: date-time */
+                            repliedAt: string | null;
+                            /** Format: uuid */
+                            productId: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+                /** @description E-REVIEW-001 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6082,7 +10485,7 @@ export interface components {
             /** Format: uuid */
             sub: string;
             /** @enum {string} */
-            role: "super_admin" | "customer" | "rider" | "warehouse_staff" | "customer_service";
+            role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
             /** @enum {string} */
             deviceType: "client_app" | "rider_app" | "admin_web" | "system";
             iat: number;
@@ -6118,7 +10521,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                role: "super_admin" | "customer" | "rider" | "warehouse_staff" | "customer_service";
+                role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
                 phone: string | null;
                 email: string | null;
                 name: string | null;
@@ -6138,14 +10541,14 @@ export interface components {
             smsCode?: string;
         };
         RefreshRequest: {
-            refreshToken: string;
+            refreshToken?: string;
         };
         RefreshResponseData: {
             accessToken: string;
             refreshToken: string;
         };
         LogoutRequest: {
-            refreshToken: string;
+            refreshToken?: string;
         };
         SendSmsRequest: {
             phone: string;
@@ -6183,9 +10586,12 @@ export interface components {
             name: string | null;
             avatarUrl: string | null;
             /** @enum {string} */
-            role: "super_admin" | "customer" | "rider" | "warehouse_staff" | "customer_service";
+            role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
             /** @enum {string} */
             status: "ACTIVE" | "SUSPENDED" | "DELETED";
+            /** @enum {string} */
+            memberLevel?: "gold" | "silver" | "bronze";
+            points?: number;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -6279,6 +10685,154 @@ export interface components {
         };
         MarkNotificationReadResponse: {
             success: boolean;
+        };
+        AdminUserListItem: {
+            /** Format: uuid */
+            id: string;
+            phone: string;
+            /** Format: email */
+            email: string | null;
+            name: string | null;
+            avatarUrl: string | null;
+            /** @enum {string} */
+            role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+            /** @enum {string} */
+            status: "ACTIVE" | "SUSPENDED" | "DELETED";
+            phoneVerified: boolean;
+            emailVerified: boolean;
+            /** Format: date-time */
+            lastLoginAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            orderCount: number;
+            totalSpent: number;
+        };
+        AdminUserListResponseData: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                phone: string;
+                /** Format: email */
+                email: string | null;
+                name: string | null;
+                avatarUrl: string | null;
+                /** @enum {string} */
+                role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+                /** @enum {string} */
+                status: "ACTIVE" | "SUSPENDED" | "DELETED";
+                phoneVerified: boolean;
+                emailVerified: boolean;
+                /** Format: date-time */
+                lastLoginAt: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                orderCount: number;
+                totalSpent: number;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            hasMore: boolean;
+        };
+        ListUsersQuery: {
+            keyword?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+            /** @enum {string} */
+            status?: "ACTIVE" | "SUSPENDED" | "DELETED";
+            page?: number;
+            pageSize?: number;
+        };
+        AdminUserDetail: {
+            /** Format: uuid */
+            id: string;
+            phone: string;
+            /** Format: email */
+            email: string | null;
+            name: string | null;
+            avatarUrl: string | null;
+            /** @enum {string} */
+            role: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+            /** @enum {string} */
+            status: "ACTIVE" | "SUSPENDED" | "DELETED";
+            phoneVerified: boolean;
+            emailVerified: boolean;
+            /** Format: date-time */
+            lastLoginAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            orderCount: number;
+            totalSpent: number;
+            /** Format: date-time */
+            updatedAt: string;
+            recentOrders: {
+                /** Format: uuid */
+                id: string;
+                orderNo: string;
+                /** @enum {string} */
+                status: "PENDING_PAYMENT" | "PENDING_CONFIRM" | "CONFIRMED" | "PICKED" | "OUT_FOR_DELIVERY" | "DELIVERED_PAID" | "DELIVERED" | "DELIVERED_UNPAID" | "COMPLETED" | "CANCELLED";
+                payableAmount: number;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            addresses: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                userId: string;
+                name: string;
+                phone: string;
+                region: {
+                    province: string;
+                    city: string;
+                    district?: string;
+                };
+                detail: string;
+                lat: number | null;
+                lng: number | null;
+                isDefault: boolean;
+                tag: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+        };
+        UpdateAdminUserRequest: {
+            name?: string;
+            phone?: string;
+            /** Format: email */
+            email?: string | null;
+            /** Format: uri */
+            avatarUrl?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "CUSTOMER" | "RIDER" | "WAREHOUSE_STAFF" | "CUSTOMER_SERVICE";
+            phoneVerified?: boolean;
+            emailVerified?: boolean;
+        };
+        SuspendUserRequest: {
+            reason?: string;
+        };
+        ActivateUserRequest: {
+            reason?: string;
+        };
+        DeleteUserRequest: {
+            reason?: string;
+        };
+        ResetPasswordResponseData: {
+            temporaryPassword: string;
+            /** Format: date-time */
+            generatedAt: string;
+        };
+        OrderSummary: {
+            /** Format: uuid */
+            id: string;
+            orderNo: string;
+            /** @enum {string} */
+            status: "PENDING_PAYMENT" | "PENDING_CONFIRM" | "CONFIRMED" | "PICKED" | "OUT_FOR_DELIVERY" | "DELIVERED_PAID" | "DELIVERED" | "DELIVERED_UNPAID" | "COMPLETED" | "CANCELLED";
+            payableAmount: number;
+            /** Format: date-time */
+            createdAt: string;
         };
         Shop: {
             /** Format: uuid */
@@ -6432,6 +10986,9 @@ export interface components {
             shopId: string;
             /** Format: uuid */
             categoryId: string | null;
+            categoryName: {
+                [key: string]: string;
+            } | null;
             name: {
                 [key: string]: string;
             };
@@ -6446,7 +11003,11 @@ export interface components {
                 [key: string]: string;
             };
             priceMin: number;
+            /** Format: uuid */
+            defaultSkuId: string | null;
             salesCount: number;
+            stock?: number;
+            rating?: number;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -6460,9 +11021,13 @@ export interface components {
             };
             mainImage: string;
             priceMin: number;
+            /** Format: uuid */
+            defaultSkuId: string | null;
             /** @enum {string} */
             status: "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
             salesCount: number;
+            stock?: number;
+            rating?: number;
         };
         CreateProductRequest: {
             /** Format: uuid */
@@ -6554,7 +11119,7 @@ export interface components {
             name: {
                 [key: string]: string;
             };
-            iconUrl: string;
+            iconUrl: string | "";
             /** Format: uuid */
             parentId: string | null;
             sortOrder: number;
@@ -6563,7 +11128,7 @@ export interface components {
             name: {
                 [key: string]: string;
             };
-            iconUrl: string;
+            iconUrl: string | "";
             /** Format: uuid */
             parentId?: string | null;
             sortOrder?: number;
@@ -6572,7 +11137,7 @@ export interface components {
             name?: {
                 [key: string]: string;
             };
-            iconUrl?: string;
+            iconUrl?: string | "";
             /** Format: uuid */
             parentId?: string | null;
             sortOrder?: number;
@@ -6642,6 +11207,7 @@ export interface components {
                 unitPrice: number;
                 quantity: number;
                 subtotal: number;
+                stock?: number;
             }[];
             totalAmount: number;
             deliveryFee: number;
@@ -6677,6 +11243,12 @@ export interface components {
             /** Format: date-time */
             cancelledAt: string | null;
             cancelReason: string | null;
+            promotion: {
+                /** Format: uuid */
+                promotionId: string;
+                code: string;
+                discountAmount: number;
+            } | null;
         };
         OrderItem: {
             /** Format: uuid */
@@ -6691,6 +11263,7 @@ export interface components {
             unitPrice: number;
             quantity: number;
             subtotal: number;
+            stock?: number;
         };
         CreateOrderRequest: {
             /** Format: uuid */
@@ -6707,11 +11280,28 @@ export interface components {
         CancelOrderRequest: {
             reason: string;
         };
+        UpdateOrderRequest: {
+            remark?: string | null;
+        };
         OrderNo: string;
         /** @enum {string} */
         PaymentMethod: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
         /** @enum {string} */
         OrderStatus: "PENDING_PAYMENT" | "PENDING_CONFIRM" | "CONFIRMED" | "PICKED" | "OUT_FOR_DELIVERY" | "DELIVERED_PAID" | "DELIVERED" | "DELIVERED_UNPAID" | "COMPLETED" | "CANCELLED";
+        OrderCounts: {
+            counts: {
+                PENDING_PAYMENT?: number;
+                PENDING_CONFIRM?: number;
+                CONFIRMED?: number;
+                PICKED?: number;
+                OUT_FOR_DELIVERY?: number;
+                DELIVERED_PAID?: number;
+                DELIVERED?: number;
+                DELIVERED_UNPAID?: number;
+                COMPLETED?: number;
+                CANCELLED?: number;
+            };
+        };
         Cart: {
             /** Format: uuid */
             id: string;
@@ -6736,6 +11326,7 @@ export interface components {
                 unitPrice: number;
                 quantity: number;
                 isSelected: boolean;
+                stock?: number;
                 /** Format: date-time */
                 addedAt: string;
             }[];
@@ -6759,6 +11350,7 @@ export interface components {
             unitPrice: number;
             quantity: number;
             isSelected: boolean;
+            stock?: number;
             /** Format: date-time */
             addedAt: string;
         };
@@ -6770,6 +11362,9 @@ export interface components {
         UpdateCartItemRequest: {
             quantity?: number;
             isSelected?: boolean;
+        };
+        BatchDeleteCartItemsRequest: {
+            itemIds: string[];
         };
         CheckoutPreviewRequest: {
             /** Format: uuid */
@@ -6793,6 +11388,7 @@ export interface components {
                 unitPrice: number;
                 quantity: number;
                 isSelected: boolean;
+                stock?: number;
                 /** Format: date-time */
                 addedAt: string;
             }[];
@@ -6806,6 +11402,26 @@ export interface components {
             deliveryFee: number;
             payableAmount: number;
             warnings: string[];
+            /** Format: date-time */
+            estimatedDeliveryTime: string;
+        };
+        ClientCoupon: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            description: string | null;
+            /** @enum {string} */
+            type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+            value: number;
+            minOrderAmount: number;
+            maxDiscountAmount: number | null;
+            /** Format: date-time */
+            startAt: string;
+            /** Format: date-time */
+            endAt: string;
+            /** @enum {string} */
+            status: "available";
         };
         PaymentIntent: {
             /** Format: uuid */
@@ -6832,6 +11448,36 @@ export interface components {
         UploadReceiptRequest: {
             /** Format: uri */
             receiptUrl: string;
+        };
+        PaymentMethodItem: {
+            /** @enum {string} */
+            code: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+            name: {
+                [key: string]: string;
+            };
+            subtitle: {
+                [key: string]: string;
+            };
+            icon: string;
+            isDefault: boolean;
+            enabled: boolean;
+            mockFlag: boolean;
+        };
+        PaymentMethodListResponseData: {
+            items: {
+                /** @enum {string} */
+                code: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+                name: {
+                    [key: string]: string;
+                };
+                subtitle: {
+                    [key: string]: string;
+                };
+                icon: string;
+                isDefault: boolean;
+                enabled: boolean;
+                mockFlag: boolean;
+            }[];
         };
         DashboardSummary: {
             /** @enum {string} */
@@ -6941,7 +11587,7 @@ export interface components {
             authScheme: "bearer";
             userId: string;
             /** @enum {string} */
-            role: "customer" | "rider" | "super_admin" | "customer_service";
+            role: "CUSTOMER" | "RIDER" | "SUPER_ADMIN" | "CUSTOMER_SERVICE";
             serverEvents: string[];
             clientEvents: string[];
             conversationFormats: {
@@ -6969,12 +11615,187 @@ export interface components {
             conversationType: "customer_merchant" | "customer_rider" | "customer_service";
             senderId: string;
             /** @enum {string} */
-            senderRole: "customer" | "rider" | "super_admin" | "customer_service";
+            senderRole: "CUSTOMER" | "RIDER" | "SUPER_ADMIN" | "CUSTOMER_SERVICE";
             content: string;
             timestamp: number;
         };
         /** @enum {string} */
         ConversationType: "customer_merchant" | "customer_rider" | "customer_service";
+        UpdateAdminRiderRequest: {
+            /** @enum {string} */
+            vehicleType?: "MOTORCYCLE" | "BICYCLE" | "CAR";
+            vehiclePlate?: string | null;
+            preferredWarehouseIds?: string[];
+        };
+        DeleteAdminRiderRequest: {
+            reason?: string;
+        };
+        Promotion: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            description: string | null;
+            /** @enum {string} */
+            type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+            value: number;
+            minOrderAmount: number;
+            maxDiscountAmount: number | null;
+            totalQuota: number | null;
+            usedCount: number;
+            perUserLimit: number;
+            /** Format: date-time */
+            startAt: string;
+            /** Format: date-time */
+            endAt: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "PAUSED" | "DELETED";
+            createdBy: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CreatePromotionRequest: {
+            code: string;
+            name: string;
+            description?: string;
+            /** @enum {string} */
+            type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+            value: number;
+            minOrderAmount?: number;
+            maxDiscountAmount?: number | null;
+            totalQuota?: number | null;
+            perUserLimit?: number;
+            /** Format: date-time */
+            startAt: string;
+            /** Format: date-time */
+            endAt: string;
+        };
+        UpdatePromotionRequest: {
+            name?: string;
+            description?: string | null;
+            value?: number;
+            minOrderAmount?: number;
+            maxDiscountAmount?: number | null;
+            totalQuota?: number | null;
+            perUserLimit?: number;
+            /** Format: date-time */
+            startAt?: string;
+            /** Format: date-time */
+            endAt?: string;
+        };
+        SendSmsResponse: {
+            /** Format: uuid */
+            challengeId: string;
+            expireIn: number;
+        };
+        VerifySmsRequest: {
+            phone: string;
+            code: string;
+            /** Format: uuid */
+            challengeId: string;
+        };
+        VerifySmsResponse: {
+            /** @enum {string} */
+            action: "LOGIN" | "REGISTER" | "BLOCKED";
+            accessToken?: string;
+            refreshToken?: string;
+            accessExpiresAt?: number;
+            refreshExpiresAt?: number;
+            user?: {
+                /** Format: uuid */
+                id: string;
+                role: string;
+                phone: string;
+            };
+            registrationTicket?: string;
+            expireIn?: number;
+        };
+        CompleteRegisterRequest: {
+            registrationTicket: string;
+            /** @enum {boolean} */
+            agreedToTerms: true;
+            /** Format: uuid */
+            challengeId: string;
+            deviceId?: string;
+        };
+        CompleteRegisterResponse: {
+            accessToken: string;
+            refreshToken: string;
+            accessExpiresAt: number;
+            refreshExpiresAt: number;
+            user: {
+                /** Format: uuid */
+                id: string;
+                role: string;
+                phone: string;
+            };
+        };
+        GeocodeRequest: {
+            address: string;
+        };
+        GeocodeResponseData: {
+            lat: number;
+            lng: number;
+            /** @enum {string} */
+            source: "nominatim" | "fallback";
+            formattedAddress: string | null;
+        };
+        UploadResponseData: {
+            /** Format: uri */
+            url: string;
+            key: string;
+            size: number;
+        };
+        Review: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** Format: uuid */
+            userId: string;
+            userName: string;
+            avatarUrl: string | null;
+            rating: number;
+            content: {
+                [key: string]: string;
+            };
+            images: string[];
+            /** @enum {string} */
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            /** @enum {string} */
+            category: "PRODUCT" | "DELIVERY";
+            reply: {
+                [key: string]: string;
+            } | null;
+            /** Format: date-time */
+            repliedAt: string | null;
+            /** Format: uuid */
+            productId: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        RiderReview: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** Format: uuid */
+            riderId: string;
+            /** Format: uuid */
+            userId: string;
+            userName: string;
+            rating: number;
+            tags: ("on_time" | "polite" | "professional" | "careful")[];
+            comment: {
+                [key: string]: string;
+            } | null;
+            /** @enum {string} */
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            /** Format: date-time */
+            createdAt: string;
+        };
     };
     responses: never;
     parameters: never;
