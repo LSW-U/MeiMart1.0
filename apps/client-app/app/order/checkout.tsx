@@ -162,7 +162,8 @@ export default function CheckoutPage() {
           </Pressable>
         }
       />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <View style={styles.contentWrap}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>
         {/* DELIVERY ADDRESS 卡 */}
         <View
           style={[
@@ -370,6 +371,23 @@ export default function CheckoutPage() {
         </View>
         </View>
       </ScrollView>
+      {/* U5 submitting overlay：覆盖内容区，不挡底部栏（底部栏在 overlay 之后渲染，置顶可见） */}
+      {submitting && (
+        <View style={styles.submitOverlay}>
+          <View
+            style={[
+              styles.submitOverlayCard,
+              { backgroundColor: colors['surface-container-lowest'] },
+            ]}
+          >
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.submitOverlayText, { color: colors['on-surface-variant'] }]}>
+              {t('checkout.placingOrder')}
+            </Text>
+          </View>
+        </View>
+      )}
+      </View>
 
       {/* 底部 bar：Secure Checkout + Final Total + 分隔线 + CONFIRM & PAY */}
       <View
@@ -423,6 +441,30 @@ const styles = StyleSheet.create({
   scroll: { padding: spacing.md, gap: spacing.lg, paddingBottom: 140 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   headerBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  // U5 内容区包裹层（承载 submitting overlay 绝对定位）
+  contentWrap: { flex: 1, position: 'relative' },
+  submitOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)', // 原因：submitting 半透明遮罩，light/dark 通用
+  },
+  submitOverlayCard: {
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.xl,
+    alignItems: 'center',
+    gap: spacing.sm,
+    ...shadowPresets.md,
+  },
+  submitOverlayText: {
+    ...typography['body-md'],
+    fontWeight: '600',
+  },
 
   // Card 通用
   card: {
