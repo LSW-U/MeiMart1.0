@@ -13,7 +13,6 @@ import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
 import { HorizontalProductCard } from '@/components/business/HorizontalProductCard/HorizontalProductCard';
 import { resolveBadges } from '@/utils/resolveBadges';
@@ -71,7 +70,6 @@ export default function CategoriesPage() {
     activeId && categories?.some((c) => c.id === activeId)
       ? activeId
       : categories?.[0]?.id ?? '';
-  const activeCategory = categories?.find((c) => c.id === validActiveId);
 
   // Why: "为你推荐"取所有商品的前 4 个（排除当前分类），丰富页面内容
   const recommended = (allProducts ?? [])
@@ -118,7 +116,7 @@ export default function CategoriesPage() {
 
       <View style={styles.body}>
         {/* 侧栏 */}
-        <View style={[styles.sidebar, { backgroundColor: colors['surface-container-low'] }]}>
+        <View style={[styles.sidebar, { backgroundColor: colors['surface-container-low'], borderRightColor: colors['outline-variant'] }]}>
           <ScrollView showsVerticalScrollIndicator={false}>
             {categories.map((cat) => (
               <SidebarItem
@@ -141,49 +139,6 @@ export default function CategoriesPage() {
               contentContainerStyle={styles.contentInner}
               showsVerticalScrollIndicator={false}
             >
-              {/* Daily Deals 横幅（HTML 第 222-238 行） */}
-              <Pressable
-                onPress={() => router.push('/product/list')}
-                style={({ pressed }) => [
-                  styles.dealsBanner,
-                  {
-                    backgroundColor: colors['surface-container-high'],
-                    borderColor: 'rgba(141,112,108,0.3)',
-                  },
-                  pressed && { transform: [{ scale: 0.98 }] },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t('category.dealsA11y')}
-              >
-                <View style={styles.dealsLeft}>
-                  <View style={[styles.dealsIcon, { backgroundColor: 'rgba(150,24,19,0.1)' }]}>
-                    <Icon symbol="sell" size={24} color={colors.primary} />
-                  </View>
-                  <View>
-                    <Text style={[styles.dealsTitle, { color: colors['on-surface'] }]}>
-                      {t('category.dealsTitle')}
-                    </Text>
-                    <Text style={[styles.dealsSub, { color: colors['on-surface-variant'] }]}>
-                      {t('category.dealsSub')}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.dealsRight}>
-                  <Text style={[styles.dealsView, { color: colors.primary }]}>
-                    {t('common.view')}
-                  </Text>
-                  <Icon symbol="chevron_right" size={18} color={colors.primary} />
-                </View>
-              </Pressable>
-
-              {/* 分类标题 + TaisDivider */}
-              <View style={styles.titleWrap}>
-                <Text style={[styles.catTitle, { color: colors['on-surface'] }]}>
-                  {activeCategory?.name ?? ''}
-                </Text>
-                <TaisDivider width={64} />
-              </View>
-
               {/* 子分类圆形图标 */}
               <View style={styles.subGrid}>
                 {SUB_CATEGORIES.map((sub) => (
@@ -199,7 +154,7 @@ export default function CategoriesPage() {
                         styles.subIcon,
                         {
                           backgroundColor: colors['surface-container-high'],
-                          borderColor: 'rgba(141,112,108,0.1)',
+                          borderColor: colors['outline-variant'],
                         },
                       ]}
                     >
@@ -220,7 +175,7 @@ export default function CategoriesPage() {
                 <Text style={[styles.hotTitle, { color: colors['on-surface-variant'] }]}>
                   {t('category.hotProducts')}
                 </Text>
-                <View style={[styles.hotLine, { backgroundColor: 'rgba(141,112,108,0.2)' }]} />
+                <View style={[styles.hotLine, { backgroundColor: colors['outline-variant'] }]} />
               </View>
 
               {prodError ? (
@@ -254,7 +209,7 @@ export default function CategoriesPage() {
                     <Text style={[styles.hotTitle, { color: colors['on-surface-variant'] }]}>
                       {t('category.recommendForYou', { defaultValue: 'Recommended For You' })}
                     </Text>
-                    <View style={[styles.hotLine, { backgroundColor: 'rgba(141,112,108,0.2)' }]} />
+                    <View style={[styles.hotLine, { backgroundColor: colors['outline-variant'] }]} />
                   </View>
                   <View style={styles.hotListColumn}>
                     {recommended.map((p) => (
@@ -278,7 +233,7 @@ export default function CategoriesPage() {
                 style={({ pressed }) => [
                   styles.viewAllBtn,
                   { borderColor: colors.primary },
-                  pressed && { backgroundColor: 'rgba(150,24,19,0.05)' },
+                  pressed && { backgroundColor: colors.primary + '0D' /* 原因：pressed 5% tint（8位 hex '0D'≈5%）*/ },
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel={t('category.viewAllProductsA11y')}
@@ -314,7 +269,7 @@ function SidebarItem({
       style={[
         styles.sidebarItem,
         active && {
-          backgroundColor: 'rgba(150,24,19,0.1)',
+          backgroundColor: colors.primary + '1F' /* 原因：active 12% tint 背景 */,
           borderLeftColor: colors.primary,
         },
       ]}
@@ -388,15 +343,6 @@ const headerActionStyles = StyleSheet.create({
 function ContentSkeleton() {
   return (
     <View style={{ flex: 1, paddingHorizontal: spacing.md, paddingTop: spacing.lg }}>
-      {/* Daily Deals skeleton */}
-      <Skeleton width="100%" height={72} radius={borderRadius.xl} />
-      {/* Title skeleton */}
-      <View style={{ marginTop: spacing.xl }}>
-        <Skeleton width={160} height={32} />
-        <View style={{ marginTop: spacing.xs }}>
-          <Skeleton width={64} height={4} />
-        </View>
-      </View>
       {/* Sub-category circles */}
       <View style={styles.skelSubGrid}>
         {[0, 1].map((i) => (
@@ -436,7 +382,6 @@ const styles = StyleSheet.create({
   sidebar: {
     width: '25%',
     borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: 'rgba(141,112,108,0.1)',
   },
   sidebarItem: {
     alignItems: 'center',
@@ -465,53 +410,6 @@ const styles = StyleSheet.create({
   contentInner: {
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.xxl * 2,
-  },
-  dealsBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing.md,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    marginTop: spacing.lg,
-    marginBottom: spacing.xl,
-  },
-  dealsLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  dealsIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dealsTitle: {
-    ...typography['label-caps'],
-    fontWeight: '700',
-  },
-  dealsSub: {
-    ...typography['body-sm'],
-    fontSize: 10,
-  },
-  dealsRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  dealsView: {
-    ...typography['label-caps'],
-    fontSize: 10,
-  },
-  titleWrap: {
-    gap: spacing.xs,
-    marginBottom: spacing.lg,
-  },
-  catTitle: {
-    ...typography.h3,
-    fontWeight: '600',
   },
   subGrid: {
     flexDirection: 'row',
