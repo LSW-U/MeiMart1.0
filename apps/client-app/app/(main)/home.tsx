@@ -30,7 +30,7 @@ import { CategoryGrid } from '@/components/business/CategoryGrid';
 import { PromoShortcut } from '@/components/business/PromoShortcut';
 import { SmallProductCard } from '@/components/business/SmallProductCard/SmallProductCard';
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
-import type { ProductBadge } from '@/components/business/ProductCard/ProductCard.types';
+import { resolveBadges } from '@/utils/resolveBadges';
 import type { Product } from '@/types';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
@@ -88,13 +88,6 @@ const SHORTCUTS: ShortcutConfig[] = [
 
 // Buy Again 区块改用 useBuyAgain 从 mockDb 拉 p007-p010，避免与详情页数据脱节
 
-// 推荐商品角标轮转：第 1 张 Fresh / 第 2 张 Best Seller / 后续无角标
-function getRecommendBadge(index: number, t: (key: string) => string): ProductBadge | undefined {
-  if (index === 0) return { label: t('product.badgeFresh'), variant: 'fresh' };
-  if (index === 1) return { label: t('product.badgeBestSeller'), variant: 'best-seller' };
-  return undefined;
-}
-
 export default function HomePage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -103,13 +96,9 @@ export default function HomePage() {
   const { data: categories } = useCategories();
   const { data: products, isLoading, isError, refetch } = useRecommendations();
   const recommendList = products ?? [];
-  // Why: §9-4 瀑布流两列分发（保留原 index 给 getRecommendBadge）
-  const masonryCol1 = recommendList
-    .map((item, index) => ({ item, index }))
-    .filter(({ index }) => index % 2 === 0);
-  const masonryCol2 = recommendList
-    .map((item, index) => ({ item, index }))
-    .filter(({ index }) => index % 2 === 1);
+  // Why: §9-4 瀑布流两列分发（奇偶分列）；§9-5 badge 改 resolveBadges 派生（不按位置）
+  const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
+  const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
   const { data: buyAgainProducts } = useBuyAgain();
   const buyAgainList = buyAgainProducts ?? [];
   const addToCartMutation = useAddToCart();
@@ -287,22 +276,22 @@ export default function HomePage() {
             //      ⚠️ 无 HTML 原型（推荐横滑改瀑布流是方案改版），高度档位错落
             <View style={styles.masonryRow}>
               <View style={styles.masonryCol}>
-                {masonryCol1.map(({ item, index }) => (
+                {masonryCol1.map((item) => (
                   <MasonryProductCard
                     key={item.id}
                     product={item}
-                    badge={getRecommendBadge(index, t)}
+                    badge={resolveBadges(item, t)[0]}
                     onPress={() => router.push(`/product/${item.id}`)}
                     onAddToCart={() => handleBuyAgainAddToCart(item)}
                   />
                 ))}
               </View>
               <View style={styles.masonryCol}>
-                {masonryCol2.map(({ item, index }) => (
+                {masonryCol2.map((item) => (
                   <MasonryProductCard
                     key={item.id}
                     product={item}
-                    badge={getRecommendBadge(index, t)}
+                    badge={resolveBadges(item, t)[0]}
                     onPress={() => router.push(`/product/${item.id}`)}
                     onAddToCart={() => handleBuyAgainAddToCart(item)}
                   />

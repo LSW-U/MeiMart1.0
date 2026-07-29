@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
 import { HorizontalProductCard } from '@/components/business/HorizontalProductCard/HorizontalProductCard';
+import { resolveBadges } from '@/utils/resolveBadges';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCategories } from '@/services/queries/useCatalog';
 import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
@@ -239,11 +240,7 @@ export default function CategoriesPage() {
                       product={p}
                       onPress={() => router.push(`/product/${p.id}`)}
                       onAddToCart={() => handleAddToCart(p)}
-                      badge={
-                        p.salesCount && p.salesCount > 100
-                          ? { label: t('common.badgeNew'), variant: 'new' }
-                          : undefined
-                      }
+                      badge={resolveBadges(p, t)[0]}
                       showRating
                     />
                   ))}

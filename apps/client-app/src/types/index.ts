@@ -30,6 +30,9 @@ export interface Product {
   stock?: number;
   // Why: B11 商品分类名（多语言，后端 DTO 补充），UI 消费待第二梯队分类页/商品列表
   categoryName?: LocalizableText | null;
+  // Why: §9-5 badge 系统（模式 B 前端规则派生，resolveBadges 用）
+  createdAt?: string;
+  isLocal?: boolean;
 }
 
 export interface CartItem {

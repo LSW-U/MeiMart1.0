@@ -17,7 +17,9 @@
       "zh": "山东烟台直供新鲜红富士苹果，个大脆甜",
       "en": "Fresh Red Fuji apples sourced directly from Yantai — crisp and sweet",
       "tet": "Maçã Fuji vermella fresku, moruk no meten"
-    }
+    },
+    "createdAt": "2026-07-25T00:00:00Z",
+    "isLocal": true
   },
   {
     "id": "p002",
@@ -37,7 +39,8 @@
       "zh": "农家散养土鸡蛋，新鲜直达",
       "en": "Free-range farm eggs delivered fresh",
       "tet": "Tolun manu sirku livre, simu fresku"
-    }
+    },
+    "createdAt": "2026-07-26T00:00:00Z"
   },
   {
     "id": "p003",
@@ -51,7 +54,8 @@
     "category": "grain",
     "rating": 4.7,
     "salesCount": 890,
-    "stock": 0
+    "stock": 0,
+    "isLocal": true
   },
   {
     "id": "p004",
@@ -80,7 +84,8 @@
     "category": "dairy",
     "rating": 4.8,
     "salesCount": 3200,
-    "stock": 3
+    "stock": 3,
+    "createdAt": "2026-07-24T00:00:00Z"
   },
   {
     "id": "p006",

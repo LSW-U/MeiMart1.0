@@ -223,6 +223,8 @@
     "stock": "Stock",
     "badgeFresh": "Fresh",
     "badgeBestSeller": "Best Seller",
+    "badgeTopRated": "TOP RATED",
+    "badgeLocal": "LOCAL SPECIALTY",
     "addToCartLabel": "Add {{name}} to cart",
     "tagLocal": "LOCAL PRODUCT",
     "inStock": "In Stock",

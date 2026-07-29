@@ -223,6 +223,8 @@
     "stock": "库存",
     "badgeFresh": "新鲜",
     "badgeBestSeller": "热销",
+    "badgeTopRated": "高分好评",
+    "badgeLocal": "本地特产",
     "addToCartLabel": "将 {{name}} 加入购物车",
     "tagLocal": "本地产品",
     "inStock": "有货",
