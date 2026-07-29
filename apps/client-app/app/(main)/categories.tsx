@@ -290,7 +290,7 @@ export default function CategoriesPage() {
                             name: localize(p.name),
                           })}
                         >
-                          <Icon symbol="add_shopping_cart" size={18} color="#ffffff" />
+                          <Icon symbol="add" size={18} color="#ffffff" />
                         </Pressable>
                       </View>
                     </View>
@@ -361,7 +361,7 @@ export default function CategoriesPage() {
                               name: localize(p.name),
                             })}
                           >
-                            <Icon symbol="add_shopping_cart" size={18} color="#ffffff" />
+                            <Icon symbol="add" size={18} color="#ffffff" />
                           </Pressable>
                         </View>
                       </View>
@@ -721,7 +721,7 @@ const styles = StyleSheet.create({
   hotAddBtn: {
     width: 32,
     height: 32,
-    borderRadius: borderRadius.md,
+    borderRadius: 999, // Why: P2 统一 - 圆角方(md) -> 圆形(999)，方案 §2.2
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -445,9 +445,9 @@ const styles = StyleSheet.create({
     ...typography['price-display'],
   },
   topAddBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.lg,
+    width: 32, // Why: P2 统一 - 40² 方(lg) -> 32² 圆(999)，方案 §2.2
+    height: 32,
+    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
   },
