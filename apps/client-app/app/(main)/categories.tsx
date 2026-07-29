@@ -100,7 +100,7 @@ export default function CategoriesPage() {
 
   if (catLoading) {
     return (
-      <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+      <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
         <CategoriesHeader />
         <ContentSkeleton />
@@ -109,7 +109,7 @@ export default function CategoriesPage() {
   }
   if (catError || !categories) {
     return (
-      <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
+      <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
         <CategoriesHeader />
         <ErrorState message={t('errors.categories')} onRetry={() => catRefetch()} />
@@ -419,6 +419,7 @@ function CategoriesHeader() {
           accessibilityRole="button"
           accessibilityLabel={t('common.search')}
         >
+          {/* 原因：红底搜索图标白字，dark 不变（ON_PRIMARY 模式，审查 Q1）*/}
           <Icon symbol="search" size={24} color="#ffffff" />
         </Pressable>
       }
