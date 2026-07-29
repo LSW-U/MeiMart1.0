@@ -8,7 +8,6 @@ import { StyleSheet, View, Text, Pressable, ScrollView, Image } from 'react-nati
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
-import { useLocalizer } from '@/i18n';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -16,7 +15,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
-import { PriceText } from '@/components/ui/PriceText';
+import { HorizontalProductCard } from '@/components/business/HorizontalProductCard/HorizontalProductCard';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCategories } from '@/services/queries/useCatalog';
 import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
@@ -48,7 +47,6 @@ const SUB_CATEGORIES = [
 export default function CategoriesPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const localize = useLocalizer();
   const { categoryId: urlCategoryId } = useLocalSearchParams<{ categoryId?: string }>();
   const {
     data: categories,
@@ -233,66 +231,21 @@ export default function CategoriesPage() {
                   </Text>
                 </View>
               ) : (
-                <View style={styles.hotGrid}>
+                <View style={styles.hotListColumn}>
+                  {/* §9-2 横向化 - 竖版双列 → 纵向列表 HorizontalProductCard */}
                   {products.slice(0, 8).map((p) => (
-                    <View
+                    <HorizontalProductCard
                       key={p.id}
-                      style={[
-                        styles.hotCard,
-                        {
-                          backgroundColor: colors['surface-container-lowest'],
-                          borderColor: 'rgba(141,112,108,0.1)',
-                        },
-                      ]}
-                    >
-                      {/* Why: 图片+名称+价格可点击跳转详情；+ 按钮独立加购，避免 Pressable 嵌套 */}
-                      <Pressable
-                        onPress={() => router.push(`/product/${p.id}`)}
-                        style={styles.hotClickable}
-                        accessibilityRole="button"
-                        accessibilityLabel={`View ${localize(p.name)}`}
-                      >
-                        <View style={[styles.hotImageWrap, { backgroundColor: colors['surface-container'] }]}>
-                          <SafeImage source={{ uri: p.image }} style={styles.hotImage} />
-                          {p.salesCount && p.salesCount > 100 && (
-                            <View style={[styles.hotBadge, { backgroundColor: colors.primary }]}>
-                              <Text style={styles.hotBadgeText}>{t('common.badgeNew')}</Text>
-                            </View>
-                          )}
-                        </View>
-                        <Text
-                          style={[styles.hotName, { color: colors['on-surface'] }]}
-                          numberOfLines={2}
-                        >
-                          {localize(p.name)}
-                        </Text>
-                        <PriceText value={p.price} originalPrice={p.originalPrice} size="lg" />
-                      </Pressable>
-                      <View style={styles.hotBottomRow}>
-                        {typeof p.rating === 'number' && (
-                          <View style={styles.ratingRow}>
-                            <Icon symbol="star" size={12} color={colors.tertiary} />
-                            <Text style={[styles.ratingText, { color: colors['on-surface-variant'] }]}>
-                              {p.rating.toFixed(1)}
-                            </Text>
-                          </View>
-                        )}
-                        <Pressable
-                          onPress={() => handleAddToCart(p)}
-                          style={({ pressed }) => [
-                            styles.hotAddBtn,
-                            { backgroundColor: colors.primary },
-                            pressed && { transform: [{ scale: 0.9 }] },
-                          ]}
-                          accessibilityRole="button"
-                          accessibilityLabel={t('product.addToCartLabel', {
-                            name: localize(p.name),
-                          })}
-                        >
-                          <Icon symbol="add" size={18} color="#ffffff" />
-                        </Pressable>
-                      </View>
-                    </View>
+                      product={p}
+                      onPress={() => router.push(`/product/${p.id}`)}
+                      onAddToCart={() => handleAddToCart(p)}
+                      badge={
+                        p.salesCount && p.salesCount > 100
+                          ? { label: t('common.badgeNew'), variant: 'new' }
+                          : undefined
+                      }
+                      showRating
+                    />
                   ))}
                 </View>
               )}
@@ -306,62 +259,15 @@ export default function CategoriesPage() {
                     </Text>
                     <View style={[styles.hotLine, { backgroundColor: 'rgba(141,112,108,0.2)' }]} />
                   </View>
-                  <View style={styles.hotGrid}>
+                  <View style={styles.hotListColumn}>
                     {recommended.map((p) => (
-                      <View
+                      <HorizontalProductCard
                         key={p.id}
-                        style={[
-                          styles.hotCard,
-                          {
-                            backgroundColor: colors['surface-container-lowest'],
-                            borderColor: 'rgba(141,112,108,0.1)',
-                          },
-                        ]}
-                      >
-                        <Pressable
-                          onPress={() => router.push(`/product/${p.id}`)}
-                          style={styles.hotClickable}
-                          accessibilityRole="button"
-                          accessibilityLabel={`View ${localize(p.name)}`}
-                        >
-                          <View style={[styles.hotImageWrap, { backgroundColor: colors['surface-container'] }]}>
-                            <SafeImage source={{ uri: p.image }} style={styles.hotImage} />
-                          </View>
-                          <Text
-                            style={[styles.hotName, { color: colors['on-surface'] }]}
-                            numberOfLines={2}
-                          >
-                            {localize(p.name)}
-                          </Text>
-                          <PriceText value={p.price} originalPrice={p.originalPrice} size="lg" />
-                        </Pressable>
-                        <View style={styles.hotBottomRow}>
-                          {typeof p.rating === 'number' && (
-                            <View style={styles.ratingRow}>
-                              <Icon symbol="star" size={12} color={colors.tertiary} />
-                              <Text
-                                style={[styles.ratingText, { color: colors['on-surface-variant'] }]}
-                              >
-                                {p.rating.toFixed(1)}
-                              </Text>
-                            </View>
-                          )}
-                          <Pressable
-                            onPress={() => handleAddToCart(p)}
-                            style={({ pressed }) => [
-                              styles.hotAddBtn,
-                              { backgroundColor: colors.primary },
-                              pressed && { transform: [{ scale: 0.9 }] },
-                            ]}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('product.addToCartLabel', {
-                              name: localize(p.name),
-                            })}
-                          >
-                            <Icon symbol="add" size={18} color="#ffffff" />
-                          </Pressable>
-                        </View>
-                      </View>
+                        product={p}
+                        onPress={() => router.push(`/product/${p.id}`)}
+                        onAddToCart={() => handleAddToCart(p)}
+                        showRating
+                      />
                     ))}
                   </View>
                 </>
@@ -656,6 +562,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginHorizontal: -spacing.md / 2,
+  },
+  // Why: §9-2 横向化 - 纵向列表（替 hotGrid 双列）
+  hotListColumn: {
+    gap: spacing.md,
   },
   hotCard: {
     width: '50%',
