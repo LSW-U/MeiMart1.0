@@ -18,11 +18,22 @@ import type {
   Order,
   Address,
   User,
-  Coupon,
   Notification,
   PaymentMethod,
   Review,
 } from '@/types';
+
+// Why: mock coupons 数据是旧结构（mocks/data/coupons.json），promotion.ts adaptMockCoupon 桥接到 ClientCoupon。
+//      不用 types/index.ts 的 Coupon（P4 删除），单独定义 mock 数据 schema。
+export interface MockCouponRaw {
+  id: string;
+  name: string;
+  discount: number;
+  type: string; // 'fixed' | 'percentage'
+  minPurchase: number;
+  validUntil: string;
+  used: boolean;
+}
 
 export const mockDb = {
   products: productsData as Product[],
@@ -32,7 +43,7 @@ export const mockDb = {
   orders: ordersData as Order[],
   addresses: addressesData as Address[],
   user: userData as User,
-  coupons: couponsData as Coupon[],
+  coupons: couponsData as MockCouponRaw[],
   notifications: notificationsData as Notification[],
   payments: paymentsData as PaymentMethod[],
   favorites: [productsData[0] as Product, productsData[3] as Product, productsData[7] as Product],

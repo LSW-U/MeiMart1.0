@@ -1,5 +1,5 @@
 import { api, isMockMode } from './api';
-import { mockDb, mockResponse } from './mockDb';
+import { mockDb, mockResponse, type MockCouponRaw } from './mockDb';
 
 // Why: 优惠券/促销 API 层。后端 first-tier-fix B10 已通：
 //   GET  /api/v1/client/coupons       我的优惠券列表（available + 有效期内）
@@ -43,16 +43,9 @@ export interface ValidateCouponResult {
   type?: string;
 }
 
-// Why: mock 模式把旧 Coupon（mockDb.coupons，cp001 等）适配到 ClientCoupon 结构。
+// Why: mock 模式把旧 mock 数据（MockCouponRaw，cp001 等）适配到 ClientCoupon 结构。
 //      旧 mock 的 type 是 'fixed'/'percentage'，映射到后端枚举；code 用 id 大写作可读券码。
-function adaptMockCoupon(c: {
-  id: string;
-  name: string;
-  discount: number;
-  type: string;
-  minPurchase: number;
-  validUntil: string;
-}): ClientCoupon {
+function adaptMockCoupon(c: MockCouponRaw): ClientCoupon {
   const typeMap: Record<string, ClientCoupon['type']> = {
     fixed: 'FIXED_AMOUNT',
     percentage: 'PERCENTAGE',

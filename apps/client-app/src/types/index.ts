@@ -107,18 +107,6 @@ export interface User {
   points?: number;
 }
 
-export type CouponType = 'percentage' | 'fixed';
-
-export interface Coupon {
-  id: string;
-  name: string;
-  discount: number;
-  type: CouponType;
-  minPurchase: number;
-  validUntil: string;
-  used: boolean;
-}
-
 export interface Category {
   id: string;
   name: string;

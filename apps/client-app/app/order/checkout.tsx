@@ -22,13 +22,12 @@ import { isMockMode } from '@/services/api';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
-import { Modal } from '@/components/ui/Modal/Modal';
+import { CouponPicker } from '@/components/business/CouponPicker/CouponPicker';
 import { useCart, useCheckoutPreview } from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
 import { usePaymentMethods } from '@/services/queries/usePayment';
 import { useCreateOrder } from '@/services/queries/useOrders';
 import { useCoupons } from '@/services/queries/usePromotion';
-import { formatCouponValue } from '@/utils/coupon';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { formatEta } from '@/utils/format';
 import { useState } from 'react';
@@ -514,81 +513,13 @@ export default function CheckoutPage() {
         </Pressable>
       </View>
       {/* ⚠️ 无 HTML 原型：选券 Modal 参考 coupons.tsx 卡片风格推导，待设计确认 */}
-      <Modal
+      <CouponPicker
         visible={showCouponModal}
         onClose={() => setShowCouponModal(false)}
-        title={t('checkout.coupon.title')}
-      >
-        <ScrollView style={styles.couponModalList} contentContainerStyle={{ gap: spacing.sm }}>
-          {/* 不使用券 */}
-          <Pressable
-            onPress={() => {
-              setSelectedCouponCode(undefined);
-              setShowCouponModal(false);
-            }}
-            style={[
-              styles.couponItem,
-              {
-                backgroundColor: colors['surface-container-low'],
-                borderColor: !selectedCouponCode ? colors.primary : colors['outline-variant'],
-                borderWidth: !selectedCouponCode ? 2 : 1,
-              },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t('checkout.coupon.none')}
-          >
-            <View style={styles.couponItemText}>
-              <Text style={[styles.couponItemName, { color: colors['on-surface'] }]}>
-                {t('checkout.coupon.none')}
-              </Text>
-            </View>
-            {!selectedCouponCode && (
-              <Icon symbol="check_circle" size={20} color={colors.primary} />
-            )}
-          </Pressable>
-          {/* 券列表 */}
-          {coupons?.map((coupon) => {
-            const active = selectedCouponCode === coupon.code;
-            return (
-              <Pressable
-                key={coupon.id}
-                onPress={() => {
-                  setSelectedCouponCode(coupon.code);
-                  setShowCouponModal(false);
-                }}
-                style={[
-                  styles.couponItem,
-                  {
-                    backgroundColor: colors['surface-container-low'],
-                    borderColor: active ? colors.primary : colors['outline-variant'],
-                    borderWidth: active ? 2 : 1,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={`${coupon.name} ${coupon.code}`}
-              >
-                <View style={styles.couponItemText}>
-                  <Text style={[styles.couponItemName, { color: colors['on-surface'] }]}>
-                    {coupon.name}
-                  </Text>
-                  <Text style={[styles.couponItemMeta, { color: colors['on-surface-variant'] }]}>
-                    {coupon.code} · {formatCouponValue(coupon)}
-                  </Text>
-                  <Text style={[styles.couponItemMeta, { color: colors['on-surface-variant'] }]}>
-                    {t('checkout.coupon.minOrder', { amount: coupon.minOrderAmount })}
-                  </Text>
-                </View>
-                {active && <Icon symbol="check_circle" size={20} color={colors.primary} />}
-              </Pressable>
-            );
-          })}
-          {(!coupons || coupons.length === 0) && (
-            <Text style={[styles.couponEmpty, { color: colors['on-surface-variant'] }]}>
-              {t('checkout.coupon.empty')}
-            </Text>
-          )}
-        </ScrollView>
-      </Modal>
+        coupons={coupons ?? []}
+        selectedCode={selectedCouponCode}
+        onSelect={setSelectedCouponCode}
+      />
     </SafeAreaWrapper>
   );
 }
@@ -716,19 +647,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
   },
-  // 选券 Modal 列表
-  couponModalList: { maxHeight: 420 },
-  couponItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-  },
-  couponItemText: { flex: 1, gap: 2 },
-  couponItemName: { ...typography['body-md'], fontWeight: '600' },
-  couponItemMeta: { ...typography['body-sm'] },
-  couponEmpty: { ...typography['body-md'], textAlign: 'center', paddingVertical: spacing.lg },
   // B9 ETA 行（地址卡底部）：icon + 预估送达
   etaRow: {
     flexDirection: 'row',
