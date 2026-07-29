@@ -279,7 +279,7 @@ export default function CategoriesPage() {
               ) : !products || products.length === 0 ? (
                 <View style={styles.emptyWrap}>
                   <Text style={[styles.emptyText, { color: colors['on-surface-variant'] }]}>
-                    {t('common.empty')}
+                    {t('category.empty')}
                   </Text>
                 </View>
               ) : (
@@ -543,7 +543,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: spacing.md,
-    marginBottom: spacing.md,
+    marginTop: 10,
+    marginBottom: 5,
   },
   filterChip: {},
   filterPrice: {
