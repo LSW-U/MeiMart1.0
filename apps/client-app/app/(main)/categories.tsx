@@ -82,14 +82,9 @@ export default function CategoriesPage() {
   // Why: P5 U3 - 子分类 hook 驱动，后端 children 未就绪时返空数组，整块隐藏
   const subCategories = useSubCategories(validActiveId);
   // TODO(临时调试) 子分类墙可见性排查，确认后删除
-  console.log('[P5 sub-wall]', {
-    validActiveId,
-    subCount: subCategories.length,
-    sub0: subCategories[0]?.name,
-    catCount: categories?.length,
-    firstCatId: categories?.[0]?.id,
-    firstCatChildren: categories?.[0]?.children?.length,
-  });
+  console.log(
+    `[P5 sub-wall] validActiveId=${validActiveId} | subCount=${subCategories.length} | sub0Name=${subCategories[0]?.name ?? 'none'} | catCount=${categories?.length} | firstCatId=${categories?.[0]?.id} | firstCatChildren=${categories?.[0]?.children?.length}`,
+  );
 
   // Why: "为你推荐"取所有商品的前 4 个（排除当前分类），丰富页面内容
   const recommended = (allProducts ?? [])
