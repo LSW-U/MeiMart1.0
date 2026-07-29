@@ -555,79 +555,9 @@ const styles = StyleSheet.create({
     flex: 1,
     height: StyleSheet.hairlineWidth,
   },
-  hotGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -spacing.md / 2,
-  },
-  // Why: §9-2 横向化 - 纵向列表（替 hotGrid 双列）
+  // Why: §9-2 横向化 - 纵向列表
   hotListColumn: {
     gap: spacing.md,
-  },
-  hotCard: {
-    width: '50%',
-    paddingHorizontal: spacing.md / 2,
-    marginBottom: spacing.md,
-  },
-  hotImageWrap: {
-    position: 'relative',
-    aspectRatio: 1,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-  },
-  hotImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  hotClickable: {
-    gap: spacing.xs,
-  },
-  hotBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-  },
-  hotBadgeText: {
-    color: '#ffffff',
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  hotName: {
-    ...typography['body-sm'],
-    fontWeight: '600',
-    marginTop: spacing.xs,
-    minHeight: 36,
-  },
-  hotPrice: {
-    ...typography['price-display'],
-    fontSize: 16,
-  },
-  hotBottomRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.xs,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  ratingText: {
-    ...typography['body-sm'],
-    fontSize: 11,
-  },
-  hotAddBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 999, // Why: P2 统一 - 圆角方(md) -> 圆形(999)，方案 §2.2
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyWrap: {
     paddingVertical: spacing.xxl,

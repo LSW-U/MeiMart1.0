@@ -1,5 +1,6 @@
 import { Pressable, View, Text, StyleSheet } from 'react-native';
 import { useTheme, spacing, borderRadius, typography, shadowPresets } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { PriceText } from '@/components/ui/PriceText';
@@ -14,6 +15,7 @@ const ON_PRIMARY = '#ffffff';
 
 export function SmallProductCard({ product, onPress, onAddToCart, testID }: SmallProductCardProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const localize = useLocalizer();
   const name = localize(product.name);
 
@@ -33,7 +35,7 @@ export function SmallProductCard({ product, onPress, onAddToCart, testID }: Smal
         onPress={onPress}
         style={({ pressed }) => [styles.main, pressed && { opacity: 0.7 }]}
         accessibilityRole="button"
-        accessibilityLabel={`View ${name}`}
+        accessibilityLabel={t('product.viewItem', { name })}
       >
         <View style={[styles.imageWrap, { backgroundColor: colors['surface-container'] }]}>
           <SafeImage source={{ uri: product.image }} style={styles.image} />
@@ -53,7 +55,7 @@ export function SmallProductCard({ product, onPress, onAddToCart, testID }: Smal
             pressed && { opacity: 0.85 },
           ]}
           accessibilityRole="button"
-          accessibilityLabel={`Add ${name} to cart`}
+          accessibilityLabel={t('product.addToCartLabel', { name })}
         >
           <Icon symbol="add" size={18} color={ON_PRIMARY} />
         </Pressable>

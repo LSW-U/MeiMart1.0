@@ -10,7 +10,7 @@ import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
-import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
+import { useTheme, spacing, layout, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { EmptyState } from '@/components/feedback/EmptyState';
@@ -292,117 +292,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
-  },
-  topThreeWrap: {
-    gap: spacing.md,
-  },
-  topCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    padding: spacing.lg,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-  },
-  topRank: {
-    ...typography.h2,
-    fontWeight: '700',
-    width: 32,
-  },
-  topImage: {
-    width: 80,
-    height: 80,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(225, 191, 186, 0.2)',
-  },
-  topInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  localSpecialtyTag: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: 999,
-    marginBottom: 4,
-  },
-  localSpecialtyText: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  topName: {
-    ...typography.h3,
-    fontWeight: '600',
-  },
-  topSold: {
-    ...typography['body-sm'],
-  },
-  topPriceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  topPrice: {
-    ...typography['price-display'],
-  },
-  topAddBtn: {
-    width: 32, // Why: P2 统一 - 40² 方(lg) -> 32² 圆(999)，方案 §2.2
-    height: 32,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  restWrap: {
-    gap: spacing.lg,
-    paddingTop: spacing.lg,
-    marginTop: spacing.lg,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  restRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  restRank: {
-    ...typography.h2,
-    fontSize: 18,
-    width: 32,
-  },
-  restImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(225, 191, 186, 0.2)',
-  },
-  restInfo: {
-    flex: 1,
-  },
-  restName: {
-    ...typography['body-md'],
-    fontWeight: '700',
-  },
-  restPrice: {
-    ...typography['body-sm'],
-  },
-  // Why: P3 - restRow 价格行：PriceText（现价+原价划线） + 销量横排
-  restPriceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: spacing.xs,
-    marginTop: 2,
-  },
-  restAddBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   center: {
     flex: 1,

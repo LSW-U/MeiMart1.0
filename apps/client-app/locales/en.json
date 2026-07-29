@@ -226,6 +226,7 @@
     "badgeTopRated": "TOP RATED",
     "badgeLocal": "LOCAL SPECIALTY",
     "addToCartLabel": "Add {{name}} to cart",
+    "viewItem": "View {{name}}",
     "tagLocal": "LOCAL PRODUCT",
     "inStock": "In Stock",
     "deliverTo": "DELIVER TO",

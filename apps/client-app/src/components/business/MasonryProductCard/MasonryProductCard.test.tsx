@@ -4,6 +4,17 @@ import { ThemeProvider } from '@/theme';
 import { MasonryProductCard } from './MasonryProductCard';
 import type { Product } from '@/types';
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, options?: Record<string, unknown>) => {
+      const name = options?.name as string | undefined;
+      if (key === 'product.viewItem') return `View ${name}`;
+      if (key === 'product.addToCartLabel') return `Add ${name} to cart`;
+      return key;
+    },
+  }),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );

@@ -226,6 +226,7 @@
     "badgeTopRated": "高分好评",
     "badgeLocal": "本地特产",
     "addToCartLabel": "将 {{name}} 加入购物车",
+    "viewItem": "查看 {{name}}",
     "tagLocal": "本地产品",
     "inStock": "有货",
     "deliverTo": "配送至",

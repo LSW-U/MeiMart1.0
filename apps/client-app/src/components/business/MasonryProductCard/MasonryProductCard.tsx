@@ -1,5 +1,6 @@
 import { Pressable, View, Text, StyleSheet } from 'react-native';
 import { useTheme, spacing, borderRadius, typography, shadowPresets } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { PriceText } from '@/components/ui/PriceText';
@@ -23,6 +24,7 @@ export function MasonryProductCard({
   testID,
 }: MasonryProductCardProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const localize = useLocalizer();
   const name = localize(product.name);
   // Why: 按 id charCode 选高度档位（稳定，同商品总同高度，避免切换重排）
@@ -45,7 +47,7 @@ export function MasonryProductCard({
         onPress={onPress}
         style={({ pressed }) => [pressed && { opacity: 0.85 }]}
         accessibilityRole="button"
-        accessibilityLabel={`View ${name}`}
+        accessibilityLabel={t('product.viewItem', { name })}
       >
         <View style={[styles.imageWrap, { height: imageHeight, backgroundColor: colors['surface-container'] }]}>
           <SafeImage source={{ uri: product.image }} style={styles.image} />
@@ -72,7 +74,7 @@ export function MasonryProductCard({
               pressed && { opacity: 0.85 },
             ]}
             accessibilityRole="button"
-            accessibilityLabel={`Add ${name} to cart`}
+            accessibilityLabel={t('product.addToCartLabel', { name })}
           >
             <Icon symbol="add" size={18} color={ON_PRIMARY} />
           </Pressable>

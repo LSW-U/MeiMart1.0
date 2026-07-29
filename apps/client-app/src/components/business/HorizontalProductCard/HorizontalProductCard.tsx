@@ -1,5 +1,6 @@
 import { Pressable, View, Text, StyleSheet } from 'react-native';
 import { useTheme, spacing, borderRadius, typography, shadowPresets } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { PriceText } from '@/components/ui/PriceText';
@@ -21,6 +22,7 @@ export function HorizontalProductCard({
   testID,
 }: HorizontalProductCardProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const localize = useLocalizer();
   const name = localize(product.name);
 
@@ -40,7 +42,7 @@ export function HorizontalProductCard({
         onPress={onPress}
         style={({ pressed }) => [pressed && { opacity: 0.85 }]}
         accessibilityRole="button"
-        accessibilityLabel={`View ${name}`}
+        accessibilityLabel={t('product.viewItem', { name })}
       >
         <View style={styles.imageWrap}>
           <SafeImage source={{ uri: product.image }} style={styles.image} />
@@ -49,7 +51,7 @@ export function HorizontalProductCard({
       <View style={styles.info}>
         {/* Why: badge inline 渲染（§9-5 统一为 resolveBadges 派生），primary tint 背景 */}
         {badge && (
-          <View style={[styles.badge, { backgroundColor: colors.primary + '1F' }]}>
+          <View style={[styles.badge, { backgroundColor: colors.primary + '1F' /* 原因：primary 12% tint 背景（8位 hex #RRGGBBAA，'1F'≈12% alpha，审查 Q3） */ }]}>
             <Text style={[styles.badgeText, { color: colors.primary }]}>{badge.label}</Text>
           </View>
         )}
@@ -81,7 +83,7 @@ export function HorizontalProductCard({
           pressed && { opacity: 0.85 },
         ]}
         accessibilityRole="button"
-        accessibilityLabel={`Add ${name} to cart`}
+        accessibilityLabel={t('product.addToCartLabel', { name })}
       >
         <Icon symbol="add" size={18} color={ON_PRIMARY} />
       </Pressable>
