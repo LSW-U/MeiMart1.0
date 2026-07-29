@@ -10,7 +10,7 @@ import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { EmptyState } from '@/components/feedback/EmptyState';
@@ -18,14 +18,12 @@ import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
-import { PriceText } from '@/components/ui/PriceText';
+import { HorizontalProductCard } from '@/components/business/HorizontalProductCard/HorizontalProductCard';
 import { useCategories } from '@/services/queries/useCatalog';
 import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
 import { useAddToCart } from '@/services/queries/useCart';
 import { toast } from '@/store/toastStore';
 import type { Product } from '@/types';
-import { useLocalizer } from '@/i18n';
-import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 // "All" 分类标签（点击去掉 URL category 参数，显示全部商品）
 const ALL_CATEGORY = 'All';
@@ -33,7 +31,6 @@ const ALL_CATEGORY = 'All';
 export default function ProductListPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const localize = useLocalizer();
   const { category } = useLocalSearchParams<{ category?: string }>();
   const { data: categories } = useCategories();
   const currentCategory = categories?.find((c) => c.id === category);
@@ -113,8 +110,7 @@ export default function ProductListPage() {
     );
   }
 
-  const topThree = products.slice(0, 3);
-  const restList = products.slice(3);
+
 
   return (
     <SafeAreaWrapper
@@ -172,112 +168,15 @@ export default function ProductListPage() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Top 3 大卡片 */}
-        <View style={styles.topThreeWrap}>
-          {topThree.map((product, idx) => (
-            <View
+        {/* §9-3 去排名 + 统一 HorizontalProductCard（原 Top3 + Top4+ 两段合并） */}
+        <View style={styles.listColumn}>
+          {products.map((product) => (
+            <HorizontalProductCard
               key={product.id}
-              style={[
-                styles.topCard,
-                {
-                  backgroundColor: colors['surface-container-lowest'],
-                  borderColor: 'rgba(225, 191, 186, 0.1)',
-                },
-                shadowPresets.umaLulik,
-              ]}
-            >
-              <Text style={[styles.topRank, { color: colors.primary }]}>{idx + 1}</Text>
-              {/* Why: P0 修复 - 外层改 View，image/name 各自 Pressable 跳详情，add 独立 Pressable（避免 Pressable 嵌套） */}
-              <Pressable
-                onPress={() => router.push(`/product/${product.id}`)}
-                style={({ pressed }) => [pressed && { opacity: 0.85 }]}
-                accessibilityRole="button"
-                accessibilityLabel={`Rank ${idx + 1}: ${localize(product.name)}`}
-              >
-                <SafeImage source={{ uri: product.image }} style={styles.topImage} />
-              </Pressable>
-              <View style={styles.topInfo}>
-                <View
-                  style={[styles.localSpecialtyTag, { backgroundColor: 'rgba(150,24,19,0.1)' }]}
-                >
-                  <Text style={[styles.localSpecialtyText, { color: colors.primary }]}>
-                    LOCAL SPECIALTY
-                  </Text>
-                </View>
-                <Pressable
-                  onPress={() => router.push(`/product/${product.id}`)}
-                  style={({ pressed }) => [pressed && { opacity: 0.7 }]}
-                >
-                  <Text style={[styles.topName, { color: colors['on-surface'] }]} numberOfLines={1}>
-                    {localize(product.name)}
-                  </Text>
-                </Pressable>
-                <Text style={[styles.topSold, { color: colors['on-surface-variant'] }]}>
-                  {product.salesCount}+ sold
-                </Text>
-                <View style={styles.topPriceRow}>
-                  <PriceText value={product.price} originalPrice={product.originalPrice} size="lg" />
-                  <Pressable
-                    onPress={() => handleAdd(product)}
-                    style={({ pressed }) => [
-                      styles.topAddBtn,
-                      { backgroundColor: colors.primary },
-                      pressed && { opacity: 0.85 },
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Add ${localize(product.name)} to cart`}
-                  >
-                    <Icon symbol="add" size={20} color="#ffffff" />
-                  </Pressable>
-                </View>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Top 4+ 紧凑列表 */}
-        <View style={[styles.restWrap, { borderTopColor: 'rgba(225, 191, 186, 0.2)' }]}>
-          {restList.map((product, idx) => (
-            <View key={product.id} style={styles.restRow}>
-              <Text style={[styles.restRank, { color: colors.secondary }]}>{idx + 4}</Text>
-              {/* Why: P0 修复 - image/name 各自 Pressable 跳详情，add 独立 Pressable（避免嵌套） */}
-              <Pressable
-                onPress={() => router.push(`/product/${product.id}`)}
-                style={({ pressed }) => [pressed && { opacity: 0.85 }]}
-                accessibilityRole="button"
-                accessibilityLabel={`Rank ${idx + 4}: ${localize(product.name)}`}
-              >
-                <SafeImage source={{ uri: product.image }} style={styles.restImage} />
-              </Pressable>
-              <View style={styles.restInfo}>
-                <Pressable
-                  onPress={() => router.push(`/product/${product.id}`)}
-                  style={({ pressed }) => [pressed && { opacity: 0.7 }]}
-                >
-                  <Text style={[styles.restName, { color: colors['on-surface'] }]} numberOfLines={1}>
-                    {localize(product.name)}
-                  </Text>
-                </Pressable>
-                <View style={styles.restPriceRow}>
-                  <PriceText value={product.price} originalPrice={product.originalPrice} size="sm" />
-                  <Text style={[styles.restPrice, { color: colors['on-surface-variant'] }]}>
-                    • {product.salesCount} sold
-                  </Text>
-                </View>
-              </View>
-              <Pressable
-                onPress={() => handleAdd(product)}
-                style={({ pressed }) => [
-                  styles.restAddBtn,
-                  { backgroundColor: colors.primary },
-                  pressed && { opacity: 0.85 },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={`Add ${localize(product.name)} to cart`}
-              >
-                <Icon symbol="add" size={18} color="#ffffff" />
-              </Pressable>
-            </View>
+              product={product}
+              onPress={() => router.push(`/product/${product.id}`)}
+              onAddToCart={() => handleAdd(product)}
+            />
           ))}
         </View>
       </ScrollView>
@@ -385,6 +284,10 @@ const styles = StyleSheet.create({
   categoryText: {
     ...typography['label-caps'],
     fontSize: 12,
+  },
+  // Why: §9-3 - 商品列表纵向列（替 topThreeWrap + restWrap 分段）
+  listColumn: {
+    gap: spacing.md,
   },
   scrollContent: {
     padding: layout['container-margin'],
