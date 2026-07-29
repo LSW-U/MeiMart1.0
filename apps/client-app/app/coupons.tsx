@@ -22,8 +22,8 @@ import { CouponCard } from '@/components/business/CouponCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
-import { useCoupons } from '@/services/queries/useUser';
-import type { Coupon } from '@/types';
+import { useCoupons } from '@/services/queries/usePromotion';
+import type { ClientCoupon } from '@/services/promotion';
 
 type TabKey = 'available' | 'used' | 'expired';
 
@@ -35,24 +35,20 @@ export default function CouponsPage() {
   const { data: coupons, isLoading, isError, refetch } = useCoupons();
 
   const counts = useMemo(() => {
-    const now = new Date();
+    // Why: ClientCoupon 后端只返 available（B10，ACTIVE + 有效期内 + 未超额）；
+    //      used/expired 待后端补 ?status= 端点（见《优惠券 used/expired 端点-后端需求说明》）。
     return {
-      available: coupons?.filter((c) => !c.used && new Date(c.validUntil) > now).length ?? 0,
-      used: coupons?.filter((c) => c.used).length ?? 0,
-      expired: coupons?.filter((c) => !c.used && new Date(c.validUntil) <= now).length ?? 0,
+      available: coupons?.length ?? 0,
+      used: 0,
+      expired: 0,
     };
   }, [coupons]);
 
   const filtered = useMemo(() => {
     if (!coupons) return [];
-    const now = new Date();
-    if (tab === 'available') {
-      return coupons.filter((c) => !c.used && new Date(c.validUntil) > now);
-    }
-    if (tab === 'used') {
-      return coupons.filter((c) => c.used);
-    }
-    return coupons.filter((c) => !c.used && new Date(c.validUntil) <= now);
+    // Why: P2 后端就绪后三 tab 各调 useCoupons(tab)；当前 used/expired 无数据源，返空
+    if (tab === 'available') return coupons;
+    return [];
   }, [coupons, tab]);
 
   const TABS: { key: TabKey; label: string; count: number }[] = [
@@ -186,7 +182,7 @@ export default function CouponsPage() {
           windowSize={5}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-          renderItem={({ item }: { item: Coupon }) => (
+          renderItem={({ item }: { item: ClientCoupon }) => (
             <View style={shadowPresets.sm}>
               <CouponCard coupon={item} onUse={() => router.push('/(main)/home')} />
             </View>

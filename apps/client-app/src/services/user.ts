@@ -1,6 +1,6 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
-import type { User, Coupon } from '@/types';
+import type { User } from '@/types';
 
 // Why: 后端 user 字段名/类型与前端 User 有差异，service 层做转换避免改组件代码。
 interface ProfileRaw {
@@ -48,11 +48,5 @@ export const userApi = {
     if (updates.avatar !== undefined) body.avatarUrl = updates.avatar;
     const res = await api.patch<ProfileRaw>('/client/user/profile', body);
     return transformProfile(res.data);
-  },
-
-  // Why: 后端无 /client/coupons 端点（W6+ 才实现），暂保留 mock
-  async getCoupons(): Promise<Coupon[]> {
-    if (isMockMode) return mockResponse(mockDb.coupons);
-    return mockResponse(mockDb.coupons);
   },
 };

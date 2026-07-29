@@ -28,7 +28,7 @@ import { useAddresses } from '@/services/queries/useAddress';
 import { usePaymentMethods } from '@/services/queries/usePayment';
 import { useCreateOrder } from '@/services/queries/useOrders';
 import { useCoupons } from '@/services/queries/usePromotion';
-import type { ClientCoupon } from '@/services/promotion';
+import { formatCouponValue } from '@/utils/coupon';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { formatEta } from '@/utils/format';
 import { useState } from 'react';
@@ -38,20 +38,6 @@ import { useState } from 'react';
 //      ⚠️ checkout 券选择 Modal 无 HTML 原型（CheckoutPage.html 无券 UI），按 coupons.tsx 卡片风格推导实现，待设计确认。
 const MOCK_DISCOUNT = 5.0;
 const MOCK_DELIVERY_FEE = 0.0;
-
-// Why: ClientCoupon.type -> 展示文本。后端 type 是大写枚举，UI 需要可读折扣描述。
-function formatCouponValue(coupon: ClientCoupon): string {
-  switch (coupon.type) {
-    case 'PERCENTAGE':
-      return `${coupon.value}% OFF`;
-    case 'FIXED_AMOUNT':
-      return `-$${coupon.value}`;
-    case 'FREE_DELIVERY':
-      return 'FREE DELIVERY';
-    default:
-      return '';
-  }
-}
 
 // 原因：客服 / CONFIRM&PAY 按钮上的固定白字（primary 红底），两种模式不变。
 // 不可用 colors['on-primary']：dark 模式翻为 #690005（暗红）叠红底会裂色（同 P2/P3）。

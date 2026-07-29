@@ -36,7 +36,7 @@ import {
   useUpdateCartItem,
 } from '@/services/queries/useCart';
 import { useProducts } from '@/services/queries/useProducts';
-import { useCoupons } from '@/services/queries/useUser';
+import { useCoupons } from '@/services/queries/usePromotion';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { useLocalizer } from '@/i18n';
 import type { CartItem } from '@/types';
@@ -67,7 +67,7 @@ export default function CartPage() {
   const allSelected = !isEmpty && cart.items.every((i) => i.selected);
   const totalPrice = cart?.totalPrice ?? 0;
   const totalItems = cart?.totalItems ?? 0;
-  const couponCount = (coupons ?? []).filter((c) => !c.used).length; // §5.1 可用优惠券计数
+  const couponCount = (coupons ?? []).length; // §5.1 可用优惠券计数（ClientCoupon 全 available）
 
   // §4 管理模式 state（批量删除替代单个 trash 按钮）
   const [manageMode, setManageMode] = useState(false);

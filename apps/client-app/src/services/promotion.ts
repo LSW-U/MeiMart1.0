@@ -21,7 +21,9 @@ export interface ClientCoupon {
   maxDiscountAmount: number | null;
   startAt: string;
   endAt: string;
-  status: 'available';
+  // Why: 后端目前只返 'available'（B10，ACTIVE + 有效期内 + 未超额）；
+  //      P2 后端补 ?status=used|expired 端点后扩联合，前端类型已就绪（见《优惠券 used/expired 端点-后端需求说明》）
+  status: 'available' | 'used' | 'expired';
 }
 
 export interface ValidateCouponInput {

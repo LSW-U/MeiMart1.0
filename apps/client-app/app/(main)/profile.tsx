@@ -19,7 +19,8 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
-import { useProfile, useCoupons } from '@/services/queries/useUser';
+import { useProfile } from '@/services/queries/useUser';
+import { useCoupons } from '@/services/queries/usePromotion';
 import { useFavorites } from '@/services/queries/useFavorites';
 import { useOrderCounts } from '@/services/queries/useOrders';
 import { useAuthStore } from '@/store/authStore';
@@ -144,7 +145,7 @@ export default function ProfilePage() {
   const hasMember = Boolean(memberLevel);
   const memberBadgeText = (memberLevel ?? 'gold').toUpperCase(); // 非会员时显灰度 GOLD（"待解锁"语义）
   const points = user.points ?? 0;
-  const couponCount = (coupons ?? []).filter((c) => !c.used).length;
+  const couponCount = (coupons ?? []).length;
   const favoriteCount = (favorites ?? []).length;
 
   const onItemPress = (item: FunctionItem) => {
