@@ -18,6 +18,7 @@ import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { PriceText } from '@/components/ui/PriceText';
 import { useCategories } from '@/services/queries/useCatalog';
 import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
 import { useAddToCart } from '@/services/queries/useCart';
@@ -215,9 +216,7 @@ export default function ProductListPage() {
                   {product.salesCount}+ sold
                 </Text>
                 <View style={styles.topPriceRow}>
-                  <Text style={[styles.topPrice, { color: colors.primary }]}>
-                    ${product.price.toFixed(2)}
-                  </Text>
+                  <PriceText value={product.price} originalPrice={product.originalPrice} size="lg" />
                   <Pressable
                     onPress={() => handleAdd(product)}
                     style={({ pressed }) => [
@@ -259,9 +258,12 @@ export default function ProductListPage() {
                     {localize(product.name)}
                   </Text>
                 </Pressable>
-                <Text style={[styles.restPrice, { color: colors['on-surface-variant'] }]}>
-                  ${product.price.toFixed(2)} • {product.salesCount} sold
-                </Text>
+                <View style={styles.restPriceRow}>
+                  <PriceText value={product.price} originalPrice={product.originalPrice} size="sm" />
+                  <Text style={[styles.restPrice, { color: colors['on-surface-variant'] }]}>
+                    • {product.salesCount} sold
+                  </Text>
+                </View>
               </View>
               <Pressable
                 onPress={() => handleAdd(product)}
@@ -484,6 +486,13 @@ const styles = StyleSheet.create({
   },
   restPrice: {
     ...typography['body-sm'],
+  },
+  // Why: P3 - restRow 价格行：PriceText（现价+原价划线） + 销量横排
+  restPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: spacing.xs,
+    marginTop: 2,
   },
   restAddBtn: {
     width: 32,

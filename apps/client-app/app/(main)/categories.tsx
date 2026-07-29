@@ -16,6 +16,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
+import { PriceText } from '@/components/ui/PriceText';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCategories } from '@/services/queries/useCatalog';
 import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
@@ -265,9 +266,7 @@ export default function CategoriesPage() {
                         >
                           {localize(p.name)}
                         </Text>
-                        <Text style={[styles.hotPrice, { color: colors.primary }]}>
-                          ${p.price.toFixed(2)}
-                        </Text>
+                        <PriceText value={p.price} originalPrice={p.originalPrice} size="lg" />
                       </Pressable>
                       <View style={styles.hotBottomRow}>
                         {typeof p.rating === 'number' && (
@@ -334,9 +333,7 @@ export default function CategoriesPage() {
                           >
                             {localize(p.name)}
                           </Text>
-                          <Text style={[styles.hotPrice, { color: colors.primary }]}>
-                            ${p.price.toFixed(2)}
-                          </Text>
+                          <PriceText value={p.price} originalPrice={p.originalPrice} size="lg" />
                         </Pressable>
                         <View style={styles.hotBottomRow}>
                           {typeof p.rating === 'number' && (
