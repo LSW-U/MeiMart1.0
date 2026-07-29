@@ -156,7 +156,13 @@ export default function CategoriesPage() {
             >
               {/* 子分类圆形图标（hook 驱动，无数据隐藏） */}
               {subCategories.length > 0 && (
-                <View style={styles.subGrid}>
+                <View
+                  style={[
+                    styles.subGrid,
+                    { borderWidth: 2, borderColor: 'red', padding: 8 }, // TODO(临时调试) 红框确认位置，删除
+                  ]}
+                >
+                  <Text style={{ color: 'red', fontSize: 10 }}>DEBUG 子分类墙 subCount={subCategories.length}</Text>
                   {subCategories.map((sub) => (
                     <Pressable
                       key={sub.id}
