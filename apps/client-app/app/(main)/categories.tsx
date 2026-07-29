@@ -81,10 +81,6 @@ export default function CategoriesPage() {
 
   // Why: P5 U3 - 子分类 hook 驱动，后端 children 未就绪时返空数组，整块隐藏
   const subCategories = useSubCategories(validActiveId);
-  // TODO(临时调试) 子分类墙可见性排查，确认后删除
-  console.log(
-    `[P5 sub-wall] validActiveId=${validActiveId} | subCount=${subCategories.length} | sub0Name=${subCategories[0]?.name ?? 'none'} | catCount=${categories?.length} | firstCatId=${categories?.[0]?.id} | firstCatChildren=${categories?.[0]?.children?.length}`,
-  );
 
   // Why: "为你推荐"取所有商品的前 4 个（排除当前分类），丰富页面内容
   const recommended = (allProducts ?? [])
@@ -154,15 +150,14 @@ export default function CategoriesPage() {
               contentContainerStyle={styles.contentInner}
               showsVerticalScrollIndicator={false}
             >
-              {/* 子分类圆形图标（hook 驱动，无数据隐藏） */}
+              {/* 子分类圆形图标（hook 驱动，无数据隐藏；横向滚动） */}
               {subCategories.length > 0 && (
-                <View
-                  style={[
-                    styles.subGrid,
-                    { borderWidth: 2, borderColor: 'red', padding: 8 }, // TODO(临时调试) 红框确认位置，删除
-                  ]}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  nestedScrollEnabled
+                  contentContainerStyle={styles.subGrid}
                 >
-                  <Text style={{ color: 'red', fontSize: 10 }}>DEBUG 子分类墙 subCount={subCategories.length}</Text>
                   {subCategories.map((sub) => (
                     <Pressable
                       key={sub.id}
@@ -190,7 +185,7 @@ export default function CategoriesPage() {
                       </Text>
                     </Pressable>
                   ))}
-                </View>
+                </ScrollView>
               )}
 
               {/* P5 U4 筛选栏 - 右对齐纯文字，3 chip（Popular/Discount/Price↕） */}
@@ -514,9 +509,10 @@ const styles = StyleSheet.create({
   },
   subGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.md,
-    marginBottom: spacing.xl,
+    marginTop: 5,
+    marginBottom: 0,
+    paddingVertical: spacing.sm,
   },
   subItem: {
     alignItems: 'center',
@@ -539,6 +535,7 @@ const styles = StyleSheet.create({
   },
   subLabel: {
     ...typography['label-caps'],
+    fontSize: 10,
     textAlign: 'center',
   },
   // P5 U4 筛选栏 - 右对齐纯文字（无按钮形态），3 chip
@@ -546,7 +543,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: spacing.md,
-    marginVertical: spacing.md,
+    marginBottom: spacing.md,
   },
   filterChip: {},
   filterPrice: {
