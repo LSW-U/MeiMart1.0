@@ -250,7 +250,7 @@ export default function CategoriesPage() {
                     {t('category.sortPrice')}
                   </Text>
                   <Icon
-                    symbol={sortMode === 'price-desc' ? 'unfold_less' : 'unfold_more'}
+                    symbol="swap_vert"
                     size={16}
                     color={
                       sortMode === 'price-asc' || sortMode === 'price-desc'
@@ -402,7 +402,7 @@ function CategoriesHeader() {
   const { t } = useTranslation();
   return (
     <PrimaryHeader
-      title=""
+      title={t('tabs.categories')}
       showLocation
       locationLabel={t('home.locationLabel')}
       onLocationPress={() => router.push('/address/map')}

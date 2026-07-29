@@ -35,6 +35,7 @@ const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = {
   delete: 'trash-can',
   edit: 'pencil',
   expand_more: 'chevron-down',
+  swap_vert: 'swap-vertical',
   favorite: 'heart',
   help: 'help-circle',
   help_outline: 'help-circle-outline',
@@ -103,6 +104,11 @@ const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = {
 
   // 学习
   auto_stories: 'book-open-page-variant',
+
+  // 社交 / 商业 / 工具（P2 Discover 宫格）
+  group_add: 'account-group',
+  storefront: 'storefront',
+  qr_code_scanner: 'scan-helper',
 };
 
 const FALLBACK_NAME = 'circle-outline' as IconName;

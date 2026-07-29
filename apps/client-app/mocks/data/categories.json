@@ -5,7 +5,21 @@
     "icon": "fruit-watermelon",
     "color": "#ecfdf5",
     "borderColor": "#d1fae5",
-    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuC9cFseHD3YT35VuyN8YKHdQ-IYgbNmkEHrFq22ulH5ehj2T4MfNdl0IpqJdILh8fPOln8umWSACtVPvi24W3UvKv3FSXA4kLz5S0SKIMfQOeojCBNkwdAfvvyC1JTOxlqD6wfS22FViqg0uBR_Gvfi0cyBex70Bshbzty4X7-dU3MhkxOUANrJ3QmenP9ZCdfzzexILg6r6LO2zDA4-A77u2e3BKmrYB6ls016JFwMzrx4g_5oPGnMNwDaE-yuOKzZ8n06iHBi"
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuC9cFseHD3YT35VuyN8YKHdQ-IYgbNmkEHrFq22ulH5ehj2T4MfNdl0IpqJdILh8fPOln8umWSACtVPvi24W3UvKv3FSXA4kLz5S0SKIMfQOeojCBNkwdAfvvyC1JTOxlqD6wfS22FViqg0uBR_Gvfi0cyBex70Bshbzty4X7-dU3MhkxOUANrJ3QmenP9ZCdfzzexILg6r6LO2zDA4-A77u2e3BKmrYB6ls016JFwMzrx4g_5oPGnMNwDaE-yuOKzZ8n06iHBi",
+    "children": [
+      {
+        "id": "c001-1",
+        "name": "Fresh Produce",
+        "icon": "leaf",
+        "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuCJ0mwdZ91JDNcZtgNG8LJuMuPzyGWgEgHF4amLQGyleEaAM2_vN9e8_yls81vcJGObZjolSY46cXtxg98jkaCCa_wYo02uTJ0adxQ4hNa6sKR7DErGKW2_hsOKcpgaRadH6Wdi_ez1vl8UgO8tf3wvaRR6hspIg7UoDHuatdMxH4vg_i4l1eOUgZT0Sbk1rHN0VxWk5owwBS57Fw1a8KARRMaDR1dy4S9OtMZ0Q2wAC3zKlZz1-v-koYDCq3nDIiwQLDYmWArl"
+      },
+      {
+        "id": "c001-2",
+        "name": "Local Snacks",
+        "icon": "food",
+        "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuCn4WB3SlllgqEzE_KkwUjxrwtlMifp6Oxlya4BBGGF2ZQfddW-OMGFSI6mnkOMgplrcsTJNSokWowv0LL19-2nW4vBrHvzirlIzck5i24evPL0U4i-lPJbb0jTKgToz4yV8qwqSpRkKxUvVTOrwRTDJk7bbir9BUqn0drMJgdCCe-zYuLrqSMMOcCRvNXpFKwEpWMn1xU_K9dCRRLd-zI-hTP0BE6MPtmk63q-ROOFzRRkjKF0FzRzNFjAwfRON_Ib39xutCmA"
+      }
+    ]
   },
   {
     "id": "c002",
@@ -13,7 +27,21 @@
     "icon": "carrot",
     "color": "#fff7ed",
     "borderColor": "#fed7aa",
-    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuCGs_iH0aNMKLHBWXBJSuBnW18tUDJexPY_F2W97bL_ZGm1lFyt4aKFXb7nBsJa3_5ufyQ2agwMPqJviDbV-xTuiBoec9ZR7U3mGAr5ysosDJjrK2S9N4Bmy1vAgo2jClVhHdsIi6QVfIUBHDA4i_po6OlU73O74J2QGdBIwPQPiIxpIITPt96SbpQQr4PPIB7ljHBoGk8SCHjYJ9awjel_b2eP26xGlRku2yMGa_tbbBt41IwpIlYUfhjXQcIMOKXZ6pr3d13y"
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuCGs_iH0aNMKLHBWXBJSuBnW18tUDJexPY_F2W97bL_ZGm1lFyt4aKFXb7nBsJa3_5ufyQ2agwMPqJviDbV-xTuiBoec9ZR7U3mGAr5ysosDJjrK2S9N4Bmy1vAgo2jClVhHdsIi6QVfIUBHDA4i_po6OlU73O74J2QGdBIwPQPiIxpIITPt96SbpQQr4PPIB7ljHBoGk8SCHjYJ9awjel_b2eP26xGlRku2yMGa_tbbBt41IwpIlYUfhjXQcIMOKXZ6pr3d13y",
+    "children": [
+      {
+        "id": "c002-1",
+        "name": "Citrus",
+        "icon": "fruit-citrus",
+        "image": "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=200"
+      },
+      {
+        "id": "c002-2",
+        "name": "Tropical",
+        "icon": "fruit-pineapple",
+        "image": "https://images.unsplash.com/photo-1571844120584-39b0e3eb3dc1?w=200"
+      }
+    ]
   },
   {
     "id": "c003",
