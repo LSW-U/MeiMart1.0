@@ -72,7 +72,7 @@ export function CouponPicker({
                   {coupon.name}
                 </Text>
                 <Text style={[styles.itemMeta, { color: colors['on-surface-variant'] }]}>
-                  {coupon.code} · {formatCouponValue(coupon)}
+                  {coupon.code} · {formatCouponValue(coupon, t)}
                 </Text>
                 <Text style={[styles.itemMeta, { color: colors['on-surface-variant'] }]}>
                   {t('checkout.coupon.minOrder', { amount: coupon.minOrderAmount })}

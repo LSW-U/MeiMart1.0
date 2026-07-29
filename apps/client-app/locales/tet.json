@@ -421,7 +421,8 @@
       "change": "[TET] Change coupon",
       "none": "[TET] No coupon",
       "minOrder": "[TET] Min order ${{amount}}",
-      "empty": "[TET] No coupons available"
+      "empty": "[TET] No coupons available",
+      "freeDelivery": "[TET] FREE DELIVERY"
     },
     "estimatedDelivery": "[TET] Est. delivery {{time}}",
     "stockLow": "[TET] Only {{stock}} left",

@@ -469,7 +469,8 @@
       "change": "Change coupon",
       "none": "No coupon",
       "minOrder": "Min order ${{amount}}",
-      "empty": "No coupons available"
+      "empty": "No coupons available",
+      "freeDelivery": "FREE DELIVERY"
     },
     "estimatedDelivery": "Est. delivery {{time}}",
     "stockLow": "Only {{stock}} left",

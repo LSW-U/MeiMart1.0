@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { formatCouponValue } from '@/utils/coupon';
@@ -6,7 +7,8 @@ import type { CouponCardProps } from './CouponCard.types';
 
 export function CouponCard({ coupon, onPress, onUse, testID }: CouponCardProps) {
   const { colors } = useTheme();
-  const discountLabel = formatCouponValue(coupon);
+  const { t } = useTranslation();
+  const discountLabel = formatCouponValue(coupon, t);
   // Why: ClientCoupon.status 后端目前只返 'available'（B10，ACTIVE + 有效期内 + 未超额）；
   //      P2 后端扩 used/expired 后 isUsed/isExpired 自动生效（status 联合类型已对齐）。
   const isValid = coupon.status === 'available';
