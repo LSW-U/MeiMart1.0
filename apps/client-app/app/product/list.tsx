@@ -20,6 +20,9 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useCategories } from '@/services/queries/useCatalog';
 import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
+import { useAddToCart } from '@/services/queries/useCart';
+import { toast } from '@/store/toastStore';
+import type { Product } from '@/types';
 import { useLocalizer } from '@/i18n';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
@@ -41,6 +44,12 @@ export default function ProductListPage() {
   const products = category ? byCategoryQuery.data : allQuery.data;
   const isLoading = category ? byCategoryQuery.isLoading : allQuery.isLoading;
   const isError = category ? byCategoryQuery.isError : allQuery.isError;
+  // Why: P0 修复 - 排行榜加购按钮之前是 View 不可点击，接 useAddToCart 让加购可用
+  const addMutation = useAddToCart();
+  const handleAdd = (product: Product) => {
+    addMutation.mutate({ product, quantity: 1 });
+    toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' }));
+  };
 
   // Category Bar: "All" + 真实分类名
   const categoryBar = [ALL_CATEGORY, ...(categories?.map((c) => c.name) ?? [])];
@@ -165,23 +174,27 @@ export default function ProductListPage() {
         {/* Top 3 大卡片 */}
         <View style={styles.topThreeWrap}>
           {topThree.map((product, idx) => (
-            <Pressable
+            <View
               key={product.id}
-              onPress={() => router.push(`/product/${product.id}`)}
-              style={({ pressed }) => [
+              style={[
                 styles.topCard,
                 {
                   backgroundColor: colors['surface-container-lowest'],
                   borderColor: 'rgba(225, 191, 186, 0.1)',
                 },
                 shadowPresets.umaLulik,
-                pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
               ]}
-              accessibilityRole="button"
-              accessibilityLabel={`Rank ${idx + 1}: ${localize(product.name)}`}
             >
               <Text style={[styles.topRank, { color: colors.primary }]}>{idx + 1}</Text>
-              <SafeImage source={{ uri: product.image }} style={styles.topImage} />
+              {/* Why: P0 修复 - 外层改 View，image/name 各自 Pressable 跳详情，add 独立 Pressable（避免 Pressable 嵌套） */}
+              <Pressable
+                onPress={() => router.push(`/product/${product.id}`)}
+                style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+                accessibilityRole="button"
+                accessibilityLabel={`Rank ${idx + 1}: ${localize(product.name)}`}
+              >
+                <SafeImage source={{ uri: product.image }} style={styles.topImage} />
+              </Pressable>
               <View style={styles.topInfo}>
                 <View
                   style={[styles.localSpecialtyTag, { backgroundColor: 'rgba(150,24,19,0.1)' }]}
@@ -190,9 +203,14 @@ export default function ProductListPage() {
                     LOCAL SPECIALTY
                   </Text>
                 </View>
-                <Text style={[styles.topName, { color: colors['on-surface'] }]} numberOfLines={1}>
-                  {localize(product.name)}
-                </Text>
+                <Pressable
+                  onPress={() => router.push(`/product/${product.id}`)}
+                  style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+                >
+                  <Text style={[styles.topName, { color: colors['on-surface'] }]} numberOfLines={1}>
+                    {localize(product.name)}
+                  </Text>
+                </Pressable>
                 <Text style={[styles.topSold, { color: colors['on-surface-variant'] }]}>
                   {product.salesCount}+ sold
                 </Text>
@@ -200,47 +218,64 @@ export default function ProductListPage() {
                   <Text style={[styles.topPrice, { color: colors.primary }]}>
                     ${product.price.toFixed(2)}
                   </Text>
-                  {/* Why: 内层 View 不嵌 Pressable（Web 端 <button> 不能嵌套） */}
-                  <View
-                    style={[styles.topAddBtn, { backgroundColor: colors.primary }]}
+                  <Pressable
+                    onPress={() => handleAdd(product)}
+                    style={({ pressed }) => [
+                      styles.topAddBtn,
+                      { backgroundColor: colors.primary },
+                      pressed && { opacity: 0.85 },
+                    ]}
+                    accessibilityRole="button"
                     accessibilityLabel={`Add ${localize(product.name)} to cart`}
                   >
                     <Icon symbol="add" size={20} color="#ffffff" />
-                  </View>
+                  </Pressable>
                 </View>
               </View>
-            </Pressable>
+            </View>
           ))}
         </View>
 
         {/* Top 4+ 紧凑列表 */}
         <View style={[styles.restWrap, { borderTopColor: 'rgba(225, 191, 186, 0.2)' }]}>
           {restList.map((product, idx) => (
-            <Pressable
-              key={product.id}
-              onPress={() => router.push(`/product/${product.id}`)}
-              style={({ pressed }) => [styles.restRow, pressed && { transform: [{ scale: 0.95 }] }]}
-              accessibilityRole="button"
-              accessibilityLabel={`Rank ${idx + 4}: ${localize(product.name)}`}
-            >
+            <View key={product.id} style={styles.restRow}>
               <Text style={[styles.restRank, { color: colors.secondary }]}>{idx + 4}</Text>
-              <SafeImage source={{ uri: product.image }} style={styles.restImage} />
+              {/* Why: P0 修复 - image/name 各自 Pressable 跳详情，add 独立 Pressable（避免嵌套） */}
+              <Pressable
+                onPress={() => router.push(`/product/${product.id}`)}
+                style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+                accessibilityRole="button"
+                accessibilityLabel={`Rank ${idx + 4}: ${localize(product.name)}`}
+              >
+                <SafeImage source={{ uri: product.image }} style={styles.restImage} />
+              </Pressable>
               <View style={styles.restInfo}>
-                <Text style={[styles.restName, { color: colors['on-surface'] }]} numberOfLines={1}>
-                  {localize(product.name)}
-                </Text>
+                <Pressable
+                  onPress={() => router.push(`/product/${product.id}`)}
+                  style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+                >
+                  <Text style={[styles.restName, { color: colors['on-surface'] }]} numberOfLines={1}>
+                    {localize(product.name)}
+                  </Text>
+                </Pressable>
                 <Text style={[styles.restPrice, { color: colors['on-surface-variant'] }]}>
                   ${product.price.toFixed(2)} • {product.salesCount} sold
                 </Text>
               </View>
-              {/* Why: 内层 View 不嵌 Pressable（Web 端 <button> 不能嵌套） */}
-              <View
-                style={[styles.restAddBtn, { backgroundColor: colors.primary }]}
+              <Pressable
+                onPress={() => handleAdd(product)}
+                style={({ pressed }) => [
+                  styles.restAddBtn,
+                  { backgroundColor: colors.primary },
+                  pressed && { opacity: 0.85 },
+                ]}
+                accessibilityRole="button"
                 accessibilityLabel={`Add ${localize(product.name)} to cart`}
               >
                 <Icon symbol="add" size={18} color="#ffffff" />
-              </View>
-            </Pressable>
+              </Pressable>
+            </View>
           ))}
         </View>
       </ScrollView>
