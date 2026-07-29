@@ -1,4 +1,4 @@
-import { formatPrice, formatCompactNumber, formatDate, maskPhone } from '../format';
+import { formatPrice, formatCompactNumber, formatDate, formatEta, maskPhone } from '../format';
 
 describe('formatPrice', () => {
   it('formats USD with $ symbol', () => {
@@ -39,6 +39,18 @@ describe('formatDate', () => {
   });
   it('passes through invalid input', () => {
     expect(formatDate('not-a-date')).toBe('not-a-date');
+  });
+});
+
+describe('formatEta', () => {
+  it('formats ETA without year', () => {
+    const result = formatEta('2026-07-30T15:00:00Z', 'en-US');
+    // Why: ETA 只展示月日+时分，不应含年份
+    expect(result).toMatch(/30/);
+    expect(result).not.toMatch(/2026/);
+  });
+  it('passes through invalid input', () => {
+    expect(formatEta('not-a-date')).toBe('not-a-date');
   });
 });
 

@@ -30,6 +30,7 @@ import { useCreateOrder } from '@/services/queries/useOrders';
 import { useCoupons } from '@/services/queries/usePromotion';
 import type { ClientCoupon } from '@/services/promotion';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
+import { formatEta } from '@/utils/format';
 import { useState } from 'react';
 
 // Why: mock demo 金额（与 cart 页一致）。real 模式由 useCheckoutPreview 一次拿全金额
@@ -59,7 +60,7 @@ const ON_PRIMARY = '#ffffff';
 export default function CheckoutPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n: i18nInstance } = useTranslation();
   const localize = useLocalizer();
   const { isOffline } = useWeakNetworkUI();
   const { data: cart, isLoading, isError, refetch } = useCart();
@@ -88,6 +89,13 @@ export default function CheckoutPage() {
   const deliveryFee = preview?.deliveryFee ?? (isMockMode ? MOCK_DELIVERY_FEE : 0);
   const discount = preview?.discount ?? (isMockMode ? MOCK_DISCOUNT : 0);
   const finalTotal = preview?.payableAmount ?? Math.max(0, subtotal - discount + deliveryFee);
+
+  // Why: B9 ETA —— 后端 CheckoutPreview.estimatedDeliveryTime（按仓库+地址 PostGIS 算的预估送达）。
+  //      real 模式才有（mock 不调 preview），按当前 locale 格式化「M月D日 HH:mm」。
+  const etaLocale = i18nInstance.language === 'zh' ? 'zh-CN' : 'en-US';
+  const etaText = preview?.estimatedDeliveryTime
+    ? formatEta(preview.estimatedDeliveryTime, etaLocale)
+    : null;
 
   if (isLoading) {
     return (
@@ -264,6 +272,15 @@ export default function CheckoutPage() {
               </View>
             )}
           </Pressable>
+          {/* B9 配送时效 ETA：real 模式 preview 返回的预估送达时间（mock 不展示） */}
+          {etaText && (
+            <View style={styles.etaRow}>
+              <Icon symbol="schedule" size={14} color={colors.semantic.positive} />
+              <Text style={[styles.etaText, { color: colors.semantic.positive }]}>
+                {t('checkout.estimatedDelivery', { time: etaText })}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* U6 支付 + 摘要紧凑分组（gap md），地址卡独立留 lg 间距 */}
@@ -372,6 +389,14 @@ export default function CheckoutPage() {
                       <Text style={[styles.summaryItemQty, { color: colors['on-surface-variant'] }]}>
                         × {item.quantity}
                       </Text>
+                      {/* B1 库存提示：库存 ≤ 购买量时警告「仅剩 X 件」（避免下单后才报 STOCK_EXCEEDED） */}
+                      {item.product.stock != null &&
+                        item.product.stock > 0 &&
+                        item.product.stock <= item.quantity && (
+                          <Text style={[styles.stockWarn, { color: colors.semantic.warning }]}>
+                            {t('checkout.stockLow', { stock: item.product.stock })}
+                          </Text>
+                        )}
                     </View>
                     <Text style={[styles.summaryValueBold, { color: colors['on-surface'] }]}>
                       ${(item.product.price * item.quantity).toFixed(2)}
@@ -718,6 +743,17 @@ const styles = StyleSheet.create({
   couponItemName: { ...typography['body-md'], fontWeight: '600' },
   couponItemMeta: { ...typography['body-sm'] },
   couponEmpty: { ...typography['body-md'], textAlign: 'center', paddingVertical: spacing.lg },
+  // B9 ETA 行（地址卡底部）：icon + 预估送达
+  etaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    paddingLeft: spacing.md,
+  },
+  etaText: { ...typography['label-caps'], fontSize: 11 },
+  // B1 库存警告（商品行 quantity 下方，仅库存紧张时显示）
+  stockWarn: { ...typography['label-caps'], fontSize: 10 },
   // U2 商品行：缩略图 + 名称/数量 + 价格
   summaryItemRow: {
     flexDirection: 'row',

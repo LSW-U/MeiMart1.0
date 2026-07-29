@@ -469,6 +469,8 @@
       "minOrder": "Min order ${{amount}}",
       "empty": "No coupons available"
     },
+    "estimatedDelivery": "Est. delivery {{time}}",
+    "stockLow": "Only {{stock}} left",
     "secure": "Secure Checkout",
     "confirmAndPay": "CONFIRM & PAY ${{amount}}",
     "customerService": "Customer Service",

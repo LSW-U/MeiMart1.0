@@ -34,6 +34,25 @@ export function formatDate(iso: string, locale = 'zh-CN'): string {
   }
 }
 
+/**
+ * 预估送达时间（B9 ETA）：月日 + 时分，无年份（用户只关心哪天到，不关心年）。
+ * Why: 结算页 CheckoutPreview.estimatedDeliveryTime 展示用，formatDate 带年份太长。
+ */
+export function formatEta(iso: string, locale = 'en-US'): string {
+  try {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    return new Intl.DateTimeFormat(locale, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  } catch {
+    return iso;
+  }
+}
+
 export function maskPhone(phone: string): string {
   if (!phone || phone.length < 7) return phone;
   const head = phone.slice(0, 3);
