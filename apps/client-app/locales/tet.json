@@ -125,7 +125,10 @@
     "dealsA11y": "",
     "hotProducts": "",
     "viewAllProducts": "",
-    "viewAllProductsA11y": ""
+    "viewAllProductsA11y": "",
+    "sortPopular": "",
+    "sortDiscount": "",
+    "sortPrice": ""
   },
   "tabs": {
     "home": "",

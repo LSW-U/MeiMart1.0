@@ -168,7 +168,10 @@
     "dealsA11y": "Daily Deals — Up to 30% off",
     "hotProducts": "HOT PRODUCTS",
     "viewAllProducts": "VIEW ALL PRODUCTS",
-    "viewAllProductsA11y": "View all products"
+    "viewAllProductsA11y": "View all products",
+    "sortPopular": "Popular",
+    "sortDiscount": "Discount",
+    "sortPrice": "Price"
   },
   "tabs": {
     "home": "Home",

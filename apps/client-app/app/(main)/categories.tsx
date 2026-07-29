@@ -3,7 +3,7 @@
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 128%）
 // Fix-15: Primary tais-pattern Header + 侧栏图标 + Daily Deals + 分类标题 + TaisDivider + HOT PRODUCTS + VIEW ALL + Skeleton
 // 优化: 商品卡片整体可点击跳转 + 加购按钮真正加购 + 真实商品替换 mock + 商品网格 2 列 8 个
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView, Image } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +17,7 @@ import { Icon } from '@/components/ui/Icon';
 import { HorizontalProductCard } from '@/components/business/HorizontalProductCard/HorizontalProductCard';
 import { resolveBadges } from '@/utils/resolveBadges';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useCategories } from '@/services/queries/useCatalog';
+import { useCategories, useSubCategories } from '@/services/queries/useCatalog';
 import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
 import { useAddToCart } from '@/services/queries/useCart';
 import { toast } from '@/store/toastStore';
@@ -25,22 +25,6 @@ import type { Product, Category } from '@/types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 // Why: 侧栏分类改用后端 useCategories() 真实数据（含图片），移除硬编码 SIDEBAR_CATEGORIES
-
-// 子分类（圆形图标 + 文字）（HTML 第 244-256 行）
-const SUB_CATEGORIES = [
-  {
-    id: 'fresh-produce',
-    labelKey: 'category.freshProduce',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCJ0mwdZ91JDNcZtgNG8LJuMuPzyGWgEgHF4amLQGyleEaAM2_vN9e8_yls81vcJGObZjolSY46cXtxg98jkaCCa_wYo02uTJ0adxQ4hNa6sKR7DErGKW2_hsOKcpgaRadH6Wdi_ez1vl8UgO8tf3wvaRR6hspIg7UoDHuatdMxH4vg_i4l1eOUgZT0Sbk1rHN0VxWk5owwBS57Fw1a8KARRMaDR1dy4S9OtMZ0Q2wAC3zKlZz1-v-koYDCq3nDIiwQLDYmWArl',
-  },
-  {
-    id: 'local-snacks',
-    labelKey: 'category.localSnacks',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCn4WB3SlllgqEzE_KkwUjxrwtlMifp6Oxlya4BBGGF2ZQfddW-OMGFSI6mnkOMgplrcsTJNSokWowv0LL19-2nW4vBrHvzirlIzck5i24evPL0U4i-lPJbb0jTKgToz4yV8qwqSpRkKxUvVTOrwRTDJk7bbir9BUqn0drMJgdCCe-zYuLrqSMMOcCRvNXpFKwEpWMn1xU_K9dCRRLd-zI-hTP0BE6MPtmk63q-ROOFzRRkjKF0FzRzNFjAwfRON_Ib39xutCmA',
-  },
-];
 
 // Why: HOT_PRODUCTS mock 已删除，改用 useProductsByCategory 获取真实商品
 
@@ -64,12 +48,39 @@ export default function CategoriesPage() {
   } = useProductsByCategory(activeId || undefined);
   const { data: allProducts } = useProducts();
   const addToCartMutation = useAddToCart();
+  // Why: P5 U4 筛选栏 - sortMode 驱动 sortedProducts（前端排序，HOT PRODUCTS 消费）
+  const [sortMode, setSortMode] = useState<
+    'popular' | 'discount' | 'price-asc' | 'price-desc'
+  >('popular');
+  const sortedProducts = useMemo(() => {
+    if (!products) return [];
+    const sorted = [...products];
+    switch (sortMode) {
+      case 'discount':
+        return sorted.sort((a, b) => {
+          const da =
+            a.originalPrice && a.originalPrice > a.price ? a.originalPrice - a.price : 0;
+          const db =
+            b.originalPrice && b.originalPrice > b.price ? b.originalPrice - b.price : 0;
+          return db - da;
+        });
+      case 'price-asc':
+        return sorted.sort((a, b) => a.price - b.price);
+      case 'price-desc':
+        return sorted.sort((a, b) => b.price - a.price);
+      default: // popular
+        return sorted.sort((a, b) => (b.salesCount ?? 0) - (a.salesCount ?? 0));
+    }
+  }, [products, sortMode]);
 
   // Why: categories 加载后，如果 activeId 为空或无效，设为第一个分类
   const validActiveId =
     activeId && categories?.some((c) => c.id === activeId)
       ? activeId
       : categories?.[0]?.id ?? '';
+
+  // Why: P5 U3 - 子分类 hook 驱动，后端 children 未就绪时返空数组，整块隐藏
+  const subCategories = useSubCategories(validActiveId);
 
   // Why: "为你推荐"取所有商品的前 4 个（排除当前分类），丰富页面内容
   const recommended = (allProducts ?? [])
@@ -139,35 +150,115 @@ export default function CategoriesPage() {
               contentContainerStyle={styles.contentInner}
               showsVerticalScrollIndicator={false}
             >
-              {/* 子分类圆形图标 */}
-              <View style={styles.subGrid}>
-                {SUB_CATEGORIES.map((sub) => (
-                  <Pressable
-                    key={sub.id}
-                    onPress={() => router.push('/search')}
-                    style={styles.subItem}
-                    accessibilityRole="button"
-                    accessibilityLabel={t(sub.labelKey)}
+              {/* 子分类圆形图标（hook 驱动，无数据隐藏） */}
+              {subCategories.length > 0 && (
+                <View style={styles.subGrid}>
+                  {subCategories.map((sub) => (
+                    <Pressable
+                      key={sub.id}
+                      onPress={() => router.push('/search')}
+                      style={styles.subItem}
+                      accessibilityRole="button"
+                      accessibilityLabel={sub.name}
+                    >
+                      <View
+                        style={[
+                          styles.subIcon,
+                          {
+                            backgroundColor: colors['surface-container-high'],
+                            borderColor: colors['outline-variant'],
+                          },
+                        ]}
+                      >
+                        <SafeImage source={{ uri: sub.image ?? '' }} style={styles.subImage} />
+                      </View>
+                      <Text
+                        style={[styles.subLabel, { color: colors['on-surface'] }]}
+                        numberOfLines={1}
+                      >
+                        {sub.name}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+
+              {/* P5 U4 筛选栏 - 右对齐纯文字，3 chip（Popular/Discount/Price↕） */}
+              <View style={styles.filterBar}>
+                <Pressable
+                  onPress={() => setSortMode('popular')}
+                  style={styles.filterChip}
+                  hitSlop={4}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('category.sortPopular')}
+                >
+                  <Text
+                    style={[
+                      styles.filterText,
+                      {
+                        color:
+                          sortMode === 'popular'
+                            ? colors.primary
+                            : colors['on-surface-variant'],
+                      },
+                    ]}
                   >
-                    <View
-                      style={[
-                        styles.subIcon,
-                        {
-                          backgroundColor: colors['surface-container-high'],
-                          borderColor: colors['outline-variant'],
-                        },
-                      ]}
-                    >
-                      <SafeImage source={{ uri: sub.image }} style={styles.subImage} />
-                    </View>
-                    <Text
-                      style={[styles.subLabel, { color: colors['on-surface'] }]}
-                      numberOfLines={1}
-                    >
-                      {t(sub.labelKey)}
-                    </Text>
-                  </Pressable>
-                ))}
+                    {t('category.sortPopular')}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setSortMode('discount')}
+                  style={styles.filterChip}
+                  hitSlop={4}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('category.sortDiscount')}
+                >
+                  <Text
+                    style={[
+                      styles.filterText,
+                      {
+                        color:
+                          sortMode === 'discount'
+                            ? colors.primary
+                            : colors['on-surface-variant'],
+                      },
+                    ]}
+                  >
+                    {t('category.sortDiscount')}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    setSortMode(sortMode === 'price-asc' ? 'price-desc' : 'price-asc')
+                  }
+                  style={[styles.filterChip, styles.filterPrice]}
+                  hitSlop={4}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('category.sortPrice')}
+                >
+                  <Text
+                    style={[
+                      styles.filterText,
+                      {
+                        color:
+                          sortMode === 'price-asc' || sortMode === 'price-desc'
+                            ? colors.primary
+                            : colors['on-surface-variant'],
+                      },
+                    ]}
+                  >
+                    {t('category.sortPrice')}
+                  </Text>
+                  <Icon
+                    symbol={sortMode === 'price-desc' ? 'unfold_less' : 'unfold_more'}
+                    size={16}
+                    color={
+                      sortMode === 'price-asc' || sortMode === 'price-desc'
+                        ? colors.primary
+                        : colors['on-surface-variant']
+                    }
+                  />
+                </Pressable>
               </View>
 
               {/* HOT PRODUCTS */}
@@ -189,7 +280,7 @@ export default function CategoriesPage() {
               ) : (
                 <View style={styles.hotListColumn}>
                   {/* §9-2 横向化 - 竖版双列 → 纵向列表 HorizontalProductCard */}
-                  {products.slice(0, 8).map((p) => (
+                  {sortedProducts.slice(0, 8).map((p) => (
                     <HorizontalProductCard
                       key={p.id}
                       product={p}
@@ -439,6 +530,23 @@ const styles = StyleSheet.create({
   subLabel: {
     ...typography['label-caps'],
     textAlign: 'center',
+  },
+  // P5 U4 筛选栏 - 右对齐纯文字（无按钮形态），3 chip
+  filterBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: spacing.md,
+    marginVertical: spacing.md,
+  },
+  filterChip: {},
+  filterPrice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  filterText: {
+    ...typography['label-caps'],
+    fontSize: 12,
   },
   hotHeader: {
     flexDirection: 'row',

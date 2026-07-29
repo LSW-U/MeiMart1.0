@@ -121,6 +121,8 @@ export interface Category {
   /** 缩略图 URL（若提供则渲染圆形图片替代图标） */
   image?: string;
   parentId?: string;
+  /** 子分类（后端 children 就绪前为 undefined，前端隐藏子分类块，方案 P5 U3） */
+  children?: Category[];
 }
 
 export type BannerTheme = 'primary' | 'emerald' | 'blue';
