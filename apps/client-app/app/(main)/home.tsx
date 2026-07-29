@@ -28,8 +28,8 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { BannerCarousel } from '@/components/business/BannerCarousel';
 import { CategoryGrid } from '@/components/business/CategoryGrid';
 import { PromoShortcut } from '@/components/business/PromoShortcut';
-import { ProductCard } from '@/components/business/ProductCard';
 import { SmallProductCard } from '@/components/business/SmallProductCard/SmallProductCard';
+import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
 import type { ProductBadge } from '@/components/business/ProductCard/ProductCard.types';
 import type { Product } from '@/types';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -103,6 +103,13 @@ export default function HomePage() {
   const { data: categories } = useCategories();
   const { data: products, isLoading, isError, refetch } = useRecommendations();
   const recommendList = products ?? [];
+  // Why: §9-4 瀑布流两列分发（保留原 index 给 getRecommendBadge）
+  const masonryCol1 = recommendList
+    .map((item, index) => ({ item, index }))
+    .filter(({ index }) => index % 2 === 0);
+  const masonryCol2 = recommendList
+    .map((item, index) => ({ item, index }))
+    .filter(({ index }) => index % 2 === 1);
   const { data: buyAgainProducts } = useBuyAgain();
   const buyAgainList = buyAgainProducts ?? [];
   const addToCartMutation = useAddToCart();
@@ -276,24 +283,32 @@ export default function HomePage() {
           {isLoading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
           {isError && <ErrorState message={t('errors.products')} onRetry={() => refetch()} />}
           {!isLoading && !isError && recommendList.length > 0 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              decelerationRate="fast"
-              snapToInterval={180 + spacing.md}
-              snapToAlignment="start"
-              contentContainerStyle={styles.hScroll}
-            >
-              {recommendList.map((item, index) => (
-                <View key={item.id} style={styles.recommendCard}>
-                  <ProductCard
+            // Why: §9-4 - 横滑 ProductCard -> 两列瀑布流 MasonryProductCard（手动分发，方案 §9.4-B）
+            //      ⚠️ 无 HTML 原型（推荐横滑改瀑布流是方案改版），高度档位错落
+            <View style={styles.masonryRow}>
+              <View style={styles.masonryCol}>
+                {masonryCol1.map(({ item, index }) => (
+                  <MasonryProductCard
+                    key={item.id}
                     product={item}
                     badge={getRecommendBadge(index, t)}
                     onPress={() => router.push(`/product/${item.id}`)}
+                    onAddToCart={() => handleBuyAgainAddToCart(item)}
                   />
-                </View>
-              ))}
-            </ScrollView>
+                ))}
+              </View>
+              <View style={styles.masonryCol}>
+                {masonryCol2.map(({ item, index }) => (
+                  <MasonryProductCard
+                    key={item.id}
+                    product={item}
+                    badge={getRecommendBadge(index, t)}
+                    onPress={() => router.push(`/product/${item.id}`)}
+                    onAddToCart={() => handleBuyAgainAddToCart(item)}
+                  />
+                ))}
+              </View>
+            </View>
           )}
         </View>
 
@@ -495,6 +510,16 @@ const styles = StyleSheet.create({
   },
   recommendCard: {
     width: RECOMMEND_CARD_WIDTH,
+  },
+  // Why: §9-4 瀑布流两列容器（替 recommendCard 横滑）
+  masonryRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    paddingHorizontal: layout['container-margin'],
+  },
+  masonryCol: {
+    flex: 1,
+    gap: spacing.md,
   },
   buyAgainSection: {
     marginTop: spacing.xl,
