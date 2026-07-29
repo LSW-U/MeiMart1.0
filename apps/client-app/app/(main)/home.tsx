@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useLocalizer } from '@/i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   useTheme,
@@ -30,6 +29,7 @@ import { BannerCarousel } from '@/components/business/BannerCarousel';
 import { CategoryGrid } from '@/components/business/CategoryGrid';
 import { PromoShortcut } from '@/components/business/PromoShortcut';
 import { ProductCard } from '@/components/business/ProductCard';
+import { SmallProductCard } from '@/components/business/SmallProductCard/SmallProductCard';
 import type { ProductBadge } from '@/components/business/ProductCard/ProductCard.types';
 import type { Product } from '@/types';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -43,7 +43,6 @@ import { useRecommendations, useBuyAgain } from '@/services/queries/useProducts'
 import { useAddToCart } from '@/services/queries/useCart';
 import { toast } from '@/store/toastStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
-import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 
 type ShortcutConfig = {
@@ -99,7 +98,6 @@ function getRecommendBadge(index: number, t: (key: string) => string): ProductBa
 export default function HomePage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const localize = useLocalizer();
   const { shouldSkipNonEssential } = useWeakNetworkUI();
   const { data: banners } = useBanners();
   const { data: categories } = useCategories();
@@ -313,53 +311,13 @@ export default function HomePage() {
             contentContainerStyle={styles.hScroll}
           >
             {buyAgainList.map((item) => (
-              <View
+              // Why: P1 - 替换内联 buyAgainCard 为统一 SmallProductCard（方案 §4）
+              <SmallProductCard
                 key={item.id}
-                style={[
-                  styles.buyAgainCard,
-                  {
-                    backgroundColor: colors['surface-container-lowest'],
-                    borderColor: colors['outline-variant'],
-                  },
-                ]}
-              >
-                {/* Why: 图片+名称+价格可点击跳转详情；加购按钮独立，避免 Pressable 嵌套 */}
-                <Pressable
-                  onPress={() => router.push(`/product/${item.id}`)}
-                  style={({ pressed }) => [styles.buyAgainMain, pressed && { opacity: 0.7 }]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`View ${localize(item.name)}`}
-                >
-                  <View
-                    style={[
-                      styles.buyAgainImageWrap,
-                      { backgroundColor: colors['surface-container'] },
-                    ]}
-                  >
-                    <SafeImage source={{ uri: item.image }} style={styles.buyAgainImage} />
-                  </View>
-                  <Text
-                    style={[styles.buyAgainName, { color: colors['on-surface-variant'] }]}
-                    numberOfLines={1}
-                  >
-                    {localize(item.name)}
-                  </Text>
-                  <Text style={[styles.buyAgainPrice, { color: colors.primary }]}>
-                    ${item.price.toFixed(2)}
-                  </Text>
-                </Pressable>
-                <View style={styles.buyAgainRow}>
-                  <Pressable
-                    onPress={() => handleBuyAgainAddToCart(item)}
-                    hitSlop={8}
-                    style={styles.buyAgainAddBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('product.addToCartLabel', { name: localize(item.name) })}
-                  >
-                    <Icon symbol="add_shopping_cart" size={18} color={colors.primary} />
-                  </Pressable>
-                </View>
-              </View>
+                product={item}
+                onPress={() => router.push(`/product/${item.id}`)}
+                onAddToCart={() => handleBuyAgainAddToCart(item)}
+              />
             ))}
           </ScrollView>
         </View>

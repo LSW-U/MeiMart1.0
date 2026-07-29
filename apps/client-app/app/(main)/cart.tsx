@@ -27,6 +27,7 @@ import { OfflineBanner } from '@/components/feedback/OfflineBanner';
 import { PriceText } from '@/components/ui/PriceText';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
+import { SmallProductCard } from '@/components/business/SmallProductCard/SmallProductCard';
 import { Checkbox } from '@/components/ui/Checkbox';
 import {
   useCart,
@@ -38,9 +39,7 @@ import {
 import { useProducts } from '@/services/queries/useProducts';
 import { useCoupons } from '@/services/queries/usePromotion';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
-import { useLocalizer } from '@/i18n';
 import type { CartItem } from '@/types';
-import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 
 // Why: "PEOPLE ALSO BOUGHT" 推荐改用真实商品（避免 mock id 'p003' 跳转详情 404）
@@ -55,7 +54,6 @@ export default function CartPage() {
   const { data: realProducts } = useProducts();
   const recommended = (realProducts ?? []).slice(0, 6);
   const addToCartMutation = useAddToCart();
-  const localize = useLocalizer();
   const { isOffline } = useWeakNetworkUI();
   const { data: cart, isLoading, isError, refetch } = useCart();
   const { data: coupons } = useCoupons();
@@ -291,71 +289,27 @@ export default function CartPage() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.recommendRow}>
                 {recommended.map((rec) => (
-                  <View
+                  // Why: P1 - 替换内联 recommendCard 为统一 SmallProductCard（方案 §4）
+                  <SmallProductCard
                     key={rec.id}
-                    style={[
-                      styles.recommendCard,
-                      {
-                        backgroundColor: colors['surface-container-lowest'],
-                        borderColor: colors['outline-variant'],
-                      },
-                    ]}
-                  >
-                    {/* Why: 图片+名称可点击跳转详情；+ 按钮独立加购，避免 Pressable 嵌套 */}
-                    <Pressable
-                      onPress={() => router.push(`/product/${rec.id}`)}
-                      style={styles.recommendClickable}
-                      accessibilityRole="button"
-                      accessibilityLabel={`View ${localize(rec.name)}`}
-                    >
-                      <View
-                        style={[
-                          styles.recommendImageWrap,
-                          { backgroundColor: colors['surface-container'] },
-                        ]}
-                      >
-                        <SafeImage source={{ uri: rec.image }} style={styles.recommendImage} />
-                      </View>
-                      <Text
-                        style={[styles.recommendName, { color: colors['on-surface-variant'] }]}
-                        numberOfLines={1}
-                      >
-                        {localize(rec.name)}
-                      </Text>
-                      <Text style={[styles.recommendPrice, { color: colors.primary }]}>
-                        ${rec.price.toFixed(2)}
-                      </Text>
-                    </Pressable>
-                    <View style={styles.recommendBottom}>
-                      <Pressable
-                        onPress={() =>
-                          addToCartMutation.mutate(
-                            { product: rec, quantity: 1 },
-                            {
-                              onSuccess: () =>
-                                toast.success(
-                                  t('product.addedToCart', { defaultValue: 'Added to cart' }),
-                                ),
-                              onError: () =>
-                                toast.error(
-                                  t('product.addToCartFailed', { defaultValue: 'Add to cart failed' }),
-                                ),
-                            },
-                          )
-                        }
-                        hitSlop={8}
-                        style={({ pressed }) => [
-                          styles.recommendAddBtn,
-                          { backgroundColor: colors.primary },
-                          pressed && { opacity: 0.85 },
-                        ]}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Add ${localize(rec.name)} to cart`}
-                      >
-                        <Icon symbol="add" size={18} color={ON_PRIMARY} />
-                      </Pressable>
-                    </View>
-                  </View>
+                    product={rec}
+                    onPress={() => router.push(`/product/${rec.id}`)}
+                    onAddToCart={() =>
+                      addToCartMutation.mutate(
+                        { product: rec, quantity: 1 },
+                        {
+                          onSuccess: () =>
+                            toast.success(
+                              t('product.addedToCart', { defaultValue: 'Added to cart' }),
+                            ),
+                          onError: () =>
+                            toast.error(
+                              t('product.addToCartFailed', { defaultValue: 'Add to cart failed' }),
+                            ),
+                        },
+                      )
+                    }
+                  />
                 ))}
               </View>
             </ScrollView>
