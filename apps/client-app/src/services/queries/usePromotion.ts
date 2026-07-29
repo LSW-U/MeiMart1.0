@@ -7,13 +7,14 @@ import { useAuthStore } from '@/store/authStore';
 //   useValidateCoupon    —— 选中券后实时算折扣（checkout 选券触发，UI 拆后续）
 // 券选择 UI 未落地前，这俩 hook 是数据层就绪状态，供后续 checkout 直接消费。
 
-export const COUPONS_QUERY_KEY = ['coupons'] as const;
+// Why: 按 status 分 key（available/used/expired 各自缓存独立，tab 切换不互相覆盖）
+export const COUPONS_QUERY_KEY = (status: string) => ['coupons', status] as const;
 
-export function useCoupons() {
+export function useCoupons(status: 'available' | 'used' | 'expired' = 'available') {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
-    queryKey: COUPONS_QUERY_KEY,
-    queryFn: () => promotionApi.listCoupons(),
+    queryKey: COUPONS_QUERY_KEY(status),
+    queryFn: () => promotionApi.listCoupons(status),
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated, // 未登录不请求，避免 401

@@ -73,12 +73,23 @@ function adaptMockCoupon(c: {
 }
 
 export const promotionApi = {
-  /** 我的优惠券列表（GET /client/coupons，B10） */
-  async listCoupons(): Promise<ClientCoupon[]> {
+  /**
+   * 我的优惠券列表（GET /client/coupons?status=，B10 + used/expired 扩展 6dc4c81）
+   * - available（默认）：ACTIVE + 有效期内 + 未超额
+   * - used：当前用户用过的（OrderPromotion JOIN Order.userId，去重 + 最近使用 desc）
+   * - expired：我用过且已过期（E2 语义，endAt < now）
+   */
+  async listCoupons(
+    status: 'available' | 'used' | 'expired' = 'available',
+  ): Promise<ClientCoupon[]> {
     if (isMockMode) {
-      return mockResponse(mockDb.coupons.map(adaptMockCoupon));
+      // Why: mock 无 used/expired 真实数据（mockDb.coupons 都是 available）；available 返全部，其余返空
+      if (status === 'available') {
+        return mockResponse(mockDb.coupons.map(adaptMockCoupon));
+      }
+      return mockResponse([]);
     }
-    const res = await api.get<ClientCoupon[]>('/client/coupons');
+    const res = await api.get<ClientCoupon[]>('/client/coupons', { params: { status } });
     return res.data;
   },
 

@@ -32,24 +32,32 @@ export default function CouponsPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [tab, setTab] = useState<TabKey>('available');
-  const { data: coupons, isLoading, isError, refetch } = useCoupons();
+  // Why: 三 tab 并行各调 useCoupons(status) —— 后端 ?status= 端点已就绪（6dc4c81），
+  //      各 status 独立缓存（COUPONS_QUERY_KEY 含 status），tab 切换瞬时（数据已拉）
+  const availableQ = useCoupons('available');
+  const usedQ = useCoupons('used');
+  const expiredQ = useCoupons('expired');
 
-  const counts = useMemo(() => {
-    // Why: ClientCoupon 后端只返 available（B10，ACTIVE + 有效期内 + 未超额）；
-    //      used/expired 待后端补 ?status= 端点（见《优惠券 used/expired 端点-后端需求说明》）。
-    return {
-      available: coupons?.length ?? 0,
-      used: 0,
-      expired: 0,
-    };
-  }, [coupons]);
+  const counts = {
+    available: availableQ.data?.length ?? 0,
+    used: usedQ.data?.length ?? 0,
+    expired: expiredQ.data?.length ?? 0,
+  };
 
   const filtered = useMemo(() => {
-    if (!coupons) return [];
-    // Why: P2 后端就绪后三 tab 各调 useCoupons(tab)；当前 used/expired 无数据源，返空
-    if (tab === 'available') return coupons;
-    return [];
-  }, [coupons, tab]);
+    const data =
+      tab === 'available' ? availableQ.data : tab === 'used' ? usedQ.data : expiredQ.data;
+    return data ?? [];
+  }, [tab, availableQ.data, usedQ.data, expiredQ.data]);
+
+  // Why: 任一 loading/error 即整体态（首次进页面三请求并行，切 tab 走缓存）
+  const isLoading = availableQ.isLoading || usedQ.isLoading || expiredQ.isLoading;
+  const isError = availableQ.isError || usedQ.isError || expiredQ.isError;
+  const refetch = () => {
+    availableQ.refetch();
+    usedQ.refetch();
+    expiredQ.refetch();
+  };
 
   const TABS: { key: TabKey; label: string; count: number }[] = [
     {
