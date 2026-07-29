@@ -16,6 +16,7 @@ interface ProductRaw {
   id: string;
   shopId: string;
   categoryId: string | null;
+  categoryName: Record<string, string> | null;
   name: Record<string, string>;
   description: Record<string, string> | null;
   mainImage: string;
@@ -50,6 +51,7 @@ function transformProduct(raw: ProductRaw): Product {
     price: (raw.priceMin ?? 0) / 100,
     image: raw.mainImage ?? '',
     category: raw.categoryId ?? '',
+    categoryName: (raw.categoryName ?? null) as Product['categoryName'],
     salesCount: raw.salesCount ?? 0,
     description: (raw.description ?? undefined) as Product['description'],
     defaultSkuId: activeSku?.id,

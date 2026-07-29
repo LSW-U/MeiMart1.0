@@ -28,6 +28,8 @@ export interface Product {
   defaultSkuId?: string;
   // Why: §7 库存接入 — 可选，后端不返回时 undefined，UI 按无库存信息降级（绿点「有货」）
   stock?: number;
+  // Why: B11 商品分类名（多语言，后端 DTO 补充），UI 消费待第二梯队分类页/商品列表
+  categoryName?: LocalizableText | null;
 }
 
 export interface CartItem {
