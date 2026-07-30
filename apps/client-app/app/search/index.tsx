@@ -246,19 +246,22 @@ export default function SearchIndexPage() {
           </View>
           <View style={styles.recentChips}>
             {recentSearches.map((item) => (
-              <Pressable
-                key={item}
-                onPress={() => onSubmitSearch(item)}
-                style={({ pressed }) => [styles.recentChip, pressed && styles.chipPressed]}
-                accessibilityRole="button"
-                accessibilityLabel={`Search ${item}`}
-              >
-                <Text
-                  style={[styles.recentChipText, { color: colors['on-surface-variant'] }]}
-                  numberOfLines={1}
+              // Why: Web 端 Pressable 渲染 <button>，HTML 禁止 button 嵌套 button（hydration error）。
+              //   改平级 Pressable（文字点击搜索 + close 点击删除），外层 View 容器不点击
+              <View key={item} style={styles.recentChip}>
+                <Pressable
+                  onPress={() => onSubmitSearch(item)}
+                  style={({ pressed }) => [styles.recentChipTextWrap, pressed && styles.chipPressed]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Search ${item}`}
                 >
-                  {item}
-                </Text>
+                  <Text
+                    style={[styles.recentChipText, { color: colors['on-surface-variant'] }]}
+                    numberOfLines={1}
+                  >
+                    {item}
+                  </Text>
+                </Pressable>
                 <Pressable
                   onPress={() => removeRecent(item)}
                   hitSlop={8}
@@ -268,7 +271,7 @@ export default function SearchIndexPage() {
                   {/* 原因：on-sv 暖灰 close 图标，dark 不变（方案 §2.3 F1 流式 chip） */}
                   <Icon symbol="close" size={12} color={colors['on-surface-variant']} />
                 </Pressable>
-              </Pressable>
+              </View>
             ))}
           </View>
         </View>
@@ -454,6 +457,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingVertical: 6,
     paddingHorizontal: 4,
+  },
+  // Why: 文字 Pressable（点击搜索），Web 端渲染 <button> 不可嵌套，故与 close 平级
+  recentChipTextWrap: {
+    paddingVertical: 2,
   },
   // Why: 流式 chip 按压 scale(.92) 触觉反馈（对齐原型 .recent-chip:active）
   chipPressed: { transform: [{ scale: 0.92 }] },
