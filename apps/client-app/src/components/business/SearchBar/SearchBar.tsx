@@ -120,6 +120,8 @@ const styles = StyleSheet.create({
   trailingBtn: {
     minWidth: 32,
     minHeight: 32,
+    // Why: flexShrink 0 - 窄屏下 TextInput(flex:1) 吸收空间，麦克风/清除按钮不被挤出
+    flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },

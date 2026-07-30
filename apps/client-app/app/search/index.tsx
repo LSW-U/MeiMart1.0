@@ -31,11 +31,13 @@ const ON_PRIMARY = '#ffffff';
 const ON_AMBER = '#000000';
 
 // Why: P7 决策 3-B - 热搜榜（rank = 数组顺序 1-4，heat 写死，后端就绪切真实热度数据）
+// Why: 热搜词选 mock 商品实际能搜到的（apple/milk/salmon/oil 匹配 p001/p005/p010/p004，
+//      前端写死词需跟 mock 数据匹配，否则点击跳搜索结果页显示空）
 const POPULAR_SEARCHES = [
-  { id: 'organic-rice', titleKey: 'search.term.organicRice', heat: '120k' },
-  { id: 'fresh-meat', titleKey: 'search.term.freshMeat', heat: '98k' },
-  { id: 'ermera-coffee', titleKey: 'search.term.ermeraCoffee', heat: '76k' },
-  { id: 'cooking-oil', titleKey: 'search.term.cookingOil', heat: '54k' },
+  { id: 'apple', titleKey: 'search.term.apple', heat: '120k' },
+  { id: 'milk', titleKey: 'search.term.milk', heat: '98k' },
+  { id: 'salmon', titleKey: 'search.term.salmon', heat: '76k' },
+  { id: 'oil', titleKey: 'search.term.oil', heat: '54k' },
 ];
 
 // Why: RECENT_SEARCHES 删 - Commit 3 接 useRecentSearches hook（AsyncStorage 持久化）

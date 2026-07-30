@@ -687,10 +687,10 @@
     "popular": "Popular Searches",
     "recommended": "Recommended for You",
     "term": {
-      "organicRice": "Organic Rice",
-      "freshMeat": "Fresh Meat",
-      "ermeraCoffee": "Ermera Coffee",
-      "cookingOil": "Cooking Oil"
+      "apple": "Apple",
+      "milk": "Milk",
+      "salmon": "Salmon",
+      "oil": "Oil"
     }
   }
 }
