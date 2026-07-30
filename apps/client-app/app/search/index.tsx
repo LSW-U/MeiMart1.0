@@ -142,20 +142,27 @@ export default function SearchIndexPage() {
             <UmaLulikCurve color={colors.primary} />
           </View>
           <View style={styles.headerContent}>
+            {/* Why: P7 用户要求 - 同其他页面顶部样式：arrow + SearchBar + 右图标同行（去标题） */}
             <View style={styles.toolbar}>
-              <View style={styles.toolbarLeft}>
-                <Pressable
-                  onPress={handleBack}
-                  hitSlop={8}
-                  style={styles.toolbarBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel="Go back"
-                >
-                  <Icon symbol="arrow_back" size={24} color={ON_PRIMARY} />
-                </Pressable>
-                <Text style={styles.toolbarTitle} accessibilityRole="header">
-                  {t('common.search')}
-                </Text>
+              <Pressable
+                onPress={handleBack}
+                hitSlop={8}
+                style={styles.toolbarBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Go back"
+              >
+                <Icon symbol="arrow_back" size={24} color={ON_PRIMARY} />
+              </Pressable>
+              <View style={styles.searchBarInline}>
+                <SearchBar
+                  value={query}
+                  onChange={setQuery}
+                  autoFocus
+                  variant="card"
+                  showMic
+                  placeholder={t('home.searchPlaceholder')}
+                  onSubmit={onSubmitSearch}
+                />
               </View>
               <View style={styles.toolbarRight}>
                 <Pressable
@@ -177,18 +184,6 @@ export default function SearchIndexPage() {
                   <Icon symbol="shopping_cart" size={24} color={ON_PRIMARY} />
                 </Pressable>
               </View>
-            </View>
-            {/* Search Bar（嵌入 primary header 内） */}
-            <View style={styles.searchBarWrap}>
-              <SearchBar
-                value={query}
-                onChange={setQuery}
-                autoFocus
-                variant="card"
-                showMic
-                placeholder={t('home.searchPlaceholder')}
-                onSubmit={onSubmitSearch}
-              />
             </View>
           </View>
         </View>
@@ -347,7 +342,7 @@ const styles = StyleSheet.create({
   },
   headerWrap: {
     position: 'relative',
-    height: 176,
+    height: 110,
     overflow: 'hidden',
   },
   headerBg: {
@@ -355,7 +350,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 176,
+    height: 110,
     overflow: 'hidden',
   },
   headerPattern: {
@@ -381,13 +376,13 @@ const styles = StyleSheet.create({
   toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    // Why: P7 - arrow + SearchBar(flex:1) + 右图标同行（去标题，同 PrimaryHeader 风格）
+    gap: spacing.sm,
     height: 56,
   },
-  toolbarLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+  // Why: SearchBar 占满中间（arrow 与右图标之间）
+  searchBarInline: {
+    flex: 1,
   },
   toolbarRight: {
     flexDirection: 'row',
@@ -399,14 +394,6 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  toolbarTitle: {
-    ...typography.h2,
-    color: ON_PRIMARY,
-    fontWeight: '700',
-  },
-  searchBarWrap: {
-    marginTop: spacing.md,
   },
   filterTagsWrap: {
     paddingTop: spacing.lg,
