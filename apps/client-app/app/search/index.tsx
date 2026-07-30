@@ -33,11 +33,13 @@ const ON_AMBER = '#000000';
 // Why: P7 决策 3-B - 热搜榜（rank = 数组顺序 1-4，heat 从对应商品 salesCount 派生，后端就绪切真实热度）
 // Why: 热搜词选 mock 商品实际能搜到的（apple/milk/salmon/oil 匹配 p001/p005/p010/p004，
 //      前端写死词需跟 mock 数据匹配，否则点击跳搜索结果页显示空）
+// Why: fallbackSales - real 模式下后端商品 id 是 uuid，find(p001) 失败时降级用 mock 销量占位
+//      （后端 /client/search/hot 就绪后删 fallback + popularWithHeat 派生，直接消费后端 heat）
 const POPULAR_SEARCHES = [
-  { id: 'apple', titleKey: 'search.term.apple', productId: 'p001' },
-  { id: 'milk', titleKey: 'search.term.milk', productId: 'p005' },
-  { id: 'salmon', titleKey: 'search.term.salmon', productId: 'p010' },
-  { id: 'oil', titleKey: 'search.term.oil', productId: 'p004' },
+  { id: 'apple', titleKey: 'search.term.apple', productId: 'p001', fallbackSales: 1280 },
+  { id: 'milk', titleKey: 'search.term.milk', productId: 'p005', fallbackSales: 3200 },
+  { id: 'salmon', titleKey: 'search.term.salmon', productId: 'p010', fallbackSales: 670 },
+  { id: 'oil', titleKey: 'search.term.oil', productId: 'p004', fallbackSales: 1560 },
 ];
 
 // Why: RECENT_SEARCHES 删 - Commit 3 接 useRecentSearches hook（AsyncStorage 持久化）
@@ -110,10 +112,12 @@ export default function SearchIndexPage() {
   const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
   const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
   // Why: P7 - heat 从对应商品 salesCount 派生（不写死），按销量降序排（rank=idx+1）
-  //   后端 /client/search/hot 就绪后删此派生，直接消费后端 heat
+  //   mock 模式：useProducts 返 mock 商品（id=p001），find 成功 -> 用 salesCount
+  //   real 模式：useProducts 返后端商品（uuid），find 失败 -> 用 fallbackSales 降级
+  //   后端 /client/search/hot 就绪后删此派生 + fallback，直接消费后端 heat
   const popularWithHeat = POPULAR_SEARCHES.map((item) => {
     const product = recommendList.find((p) => p.id === item.productId);
-    const sales = product?.salesCount ?? 0;
+    const sales = product?.salesCount ?? item.fallbackSales;
     return {
       ...item,
       sales,
