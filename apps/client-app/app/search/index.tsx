@@ -11,13 +11,17 @@ import { useTheme, spacing, layout, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { SearchBar } from '@/components/business/SearchBar';
-import { ProductCard } from '@/components/business/ProductCard';
-import type { ProductBadge } from '@/components/business/ProductCard/ProductCard.types';
+// Why: P7 §2.4 R1 - Recommended 统一用 MasonryProductCard（与首页同一组件），删旧 ProductCard
+import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
+import { resolveBadges } from '@/utils/resolveBadges';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useProducts } from '@/services/queries/useProducts';
 import { useCategories } from '@/services/queries/useCatalog';
+import { useAddToCart } from '@/services/queries/useCart';
+import { toast } from '@/store/toastStore';
 import { useRecentSearches } from '@/hooks/useRecentSearches';
+import type { Product } from '@/types';
 import { useTranslation } from 'react-i18next';
 
 // Why: 红底白字固定（header primary 底 + Filter Tag active 底 + 热搜榜 rank 1/2），dark 不变
@@ -38,14 +42,7 @@ const POPULAR_SEARCHES = [
 // Why: FILTER_TAGS 删 - 改 useCategories() 动态分类（P7 I7）
 
 // Why: 推荐商品改用 useProducts 真实数据（避免 mock id 'rec-*' 跳转详情 404）
-
-// 推荐商品角标轮转：FRESH / BEST SELLER / 无 / FRESH
-function getRecommendBadge(idx: number): ProductBadge | undefined {
-  if (idx === 0) return { label: 'FRESH', variant: 'fresh' };
-  if (idx === 1) return { label: 'BEST SELLER', variant: 'best-seller' };
-  if (idx === 3) return { label: 'FRESH', variant: 'fresh' };
-  return undefined;
-}
+// Why: P7 §2.4 R4 - badge 改 resolveBadges 派生（删 getRecommendBadge 轮转）
 
 // Uma Lulik curve 锯齿底边（HTML clip-path polygon，22 个点 zigzag）
 function UmaLulikCurve({ color }: { color: string }) {
@@ -101,9 +98,15 @@ export default function SearchIndexPage() {
   const [activeTag, setActiveTag] = useState(t('common.all'));
   // Why: P7 F1 - Recent Searches AsyncStorage 持久化（useRecentSearches hook，最多 10 条去重最新在前）
   const { recentSearches, addRecent, removeRecent, clearRecent } = useRecentSearches();
+  // Why: P7 §2.4 - Recommended 加购（MasonryProductCard onAddToCart，同 home.tsx 模式）
+  const addToCartMutation = useAddToCart();
   // Why: 用真实商品替换 mock rec-* id，避免 router.push('/product/rec-1') 跳转后 404
   const { data: realProducts } = useProducts();
-  const recommended = (realProducts ?? []).slice(0, 4);
+  // Why: P7 §2.4 R3 - 取全部（原 slice(0,4) 只 4 条不够瀑布流错落）
+  const recommendList = realProducts ?? [];
+  // Why: P7 §2.4 R2 - 两列瀑布流分发（奇偶分列），同 home.tsx masonry 模式
+  const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
+  const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
   // Why: P7 决策 3-B - 热搜榜排名配色（1 红 / 2 中红 / 3 金 / 4+ 灰，对齐 HTML 原型 .hot-num.n1-n5）
   const rankColors = [
     { bg: colors.primary, fg: ON_PRIMARY },
@@ -119,6 +122,17 @@ export default function SearchIndexPage() {
     // Why: P7 F1 - 搜索提交时记录到 Recent（AsyncStorage 持久化）
     addRecent(trimmed);
     router.push({ pathname: '/search/results', params: { q: trimmed } });
+  };
+
+  // Why: P7 §2.4 - Recommended 加购（同 home.tsx handleBuyAgainAddToCart）
+  const handleAddToCart = (item: Product) => {
+    addToCartMutation.mutate(
+      { product: item, quantity: 1 },
+      {
+        onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
+        onError: () => toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+      },
+    );
   };
 
   return (
@@ -313,23 +327,37 @@ export default function SearchIndexPage() {
           </View>
         </View>
 
-        {/* Recommended for You 商品网格 */}
+        {/* Recommended for You（P7 §2.4: MasonryProductCard 两列瀑布流，与首页统一） */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
             {t('search.recommended')}
           </Text>
-          <View style={styles.recommendGrid}>
-            {recommended.map((product, idx) => (
-              <View key={product.id} style={styles.recommendCell}>
-                <ProductCard
-                  product={product}
-                  badge={getRecommendBadge(idx)}
-                  showFavorite
-                  onPress={() => router.push(`/product/${product.id}`)}
-                />
+          {recommendList.length > 0 && (
+            <View style={styles.masonryRow}>
+              <View style={styles.masonryCol}>
+                {masonryCol1.map((product) => (
+                  <MasonryProductCard
+                    key={product.id}
+                    product={product}
+                    badge={resolveBadges(product, t)[0]}
+                    onPress={() => router.push(`/product/${product.id}`)}
+                    onAddToCart={() => handleAddToCart(product)}
+                  />
+                ))}
               </View>
-            ))}
-          </View>
+              <View style={styles.masonryCol}>
+                {masonryCol2.map((product) => (
+                  <MasonryProductCard
+                    key={product.id}
+                    product={product}
+                    badge={resolveBadges(product, t)[0]}
+                    onPress={() => router.push(`/product/${product.id}`)}
+                    onAddToCart={() => handleAddToCart(product)}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaWrapper>
@@ -501,13 +529,13 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '600',
   },
-  recommendGrid: {
+  // Why: P7 §2.4 R2 - 两列瀑布流（同 home.tsx masonryRow/masonryCol）
+  masonryRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.md,
   },
-  recommendCell: {
-    width: '48%',
-    flexGrow: 1,
+  masonryCol: {
+    flex: 1,
+    gap: spacing.md,
   },
 });
