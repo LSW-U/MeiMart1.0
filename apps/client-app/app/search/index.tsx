@@ -371,8 +371,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     flex: 1,
     paddingHorizontal: layout['container-margin'],
-    // Why: headerWrap 90 矮化，paddingTop sm 让 toolbar 离顶近 + 底部留锯齿区域
-    paddingTop: spacing.sm,
+    // Why: toolbar 垂直居中（替代 paddingTop，避免内容偏上）
+    justifyContent: 'center',
   },
   toolbar: {
     flexDirection: 'row',
