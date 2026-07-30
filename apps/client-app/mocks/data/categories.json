@@ -41,7 +41,8 @@
         "icon": "fruit-pineapple",
         "image": "https://images.unsplash.com/photo-1571844120584-39b0e3eb3dc1?w=200"
       }
-    ]
+    ],
+    "badge": "hot"
   },
   {
     "id": "c003",
@@ -89,6 +90,7 @@
     "icon": "baby-bottle-outline",
     "color": "#fdf4ff",
     "borderColor": "#fae8ff",
-    "image": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=200"
+    "image": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=200",
+    "badge": "new"
   }
 ]

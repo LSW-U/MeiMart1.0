@@ -45,6 +45,13 @@ import { toast } from '@/store/toastStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 
+// Why: 红底白字固定（header primary 渐变底 + 红色 badge 底），dark 不变
+//   同 MasonryProductCard/SmallProductCard/HorizontalProductCard 的 ON_PRIMARY 模式
+//   不用 colors['on-primary']（dark 翻 #690005 裂色）—— 审查 Q1
+const ON_PRIMARY = '#ffffff';
+// Why: 黄底黑字固定（delivery tip amber 底），dark 不变 —— 审查 Q1
+const ON_AMBER = '#000000';
+
 // Buy Again 区块改用 useBuyAgain 从 mockDb 拉 p007-p010，避免与详情页数据脱节
 
 export default function HomePage() {
@@ -76,6 +83,9 @@ export default function HomePage() {
   };
   return (
     <PageErrorBoundary pageName="home">
+    {/* Why: edges 仅 top —— header 红底需避状态栏。bottom 不需 edges：
+        ScrollView 的 scrollContent.paddingBottom(xxl*2=96px) 兜底浮动 BottomNav + 底部手势条
+        （主 tab 是自定义 BottomNav 浮层非系统 TabBar，故 home 走 paddingBottom 而非 edges bottom，审查 Q3）*/}
     <SafeAreaWrapper edges={['top']} style={{ backgroundColor: colors.primary, flex: 1 }}>
       <LinearGradient
         {...gradientPresets.brand}
@@ -101,11 +111,11 @@ export default function HomePage() {
             accessibilityRole="button"
             accessibilityLabel={t('home.locationLabel')}
           >
-            <Icon symbol="location_on" size={13} color="#ffffff" />
+            <Icon symbol="location_on" size={13} color={ON_PRIMARY} />
             <Text style={styles.locationText} numberOfLines={1}>
               {t('home.locationLabel')}
             </Text>
-            <Icon symbol="expand_more" size={13} color="#ffffff" />
+            <Icon symbol="expand_more" size={13} color={ON_PRIMARY} />
           </Pressable>
           <Pressable
             testID="home-messages"
@@ -114,7 +124,7 @@ export default function HomePage() {
             accessibilityRole="button"
             accessibilityLabel={t('home.messagesLabel')}
           >
-            <Icon symbol="mail" size={24} color="#ffffff" />
+            <Icon symbol="mail" size={24} color={ON_PRIMARY} />
             <View style={[styles.msgBadge, { borderColor: colors.primary }]}>
               <Text style={[styles.msgBadgeText, { color: colors.primary }]}>2</Text>
             </View>
@@ -128,7 +138,7 @@ export default function HomePage() {
 
       {/* Delivery Tip — 黄色横条 */}
       <View style={[styles.deliveryTip, { backgroundColor: colors.cultural.amber }]}>
-        <Icon symbol="local_shipping" size={18} color="#000000" />
+        <Icon symbol="local_shipping" size={18} color={ON_AMBER} />
         <Text style={styles.deliveryTipText}>{t('home.deliveryTip')}</Text>
       </View>
 
@@ -334,7 +344,7 @@ const styles = StyleSheet.create({
   },
   brandName: {
     ...typography.h2,
-    color: '#ffffff',
+    color: ON_PRIMARY,
     fontWeight: '700',
   },
   // Why: 位置胶囊 - 和 PrimaryHeader 统一样式，半透明白底圆角
@@ -350,7 +360,7 @@ const styles = StyleSheet.create({
   },
   locationText: {
     ...typography['body-sm'],
-    color: '#ffffff',
+    color: ON_PRIMARY,
     fontSize: 12,
     flexShrink: 1,
   },
@@ -362,7 +372,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -2,
     right: -2,
-    backgroundColor: '#ffffff',
+    backgroundColor: ON_PRIMARY,
     borderRadius: 999,
     width: 16,
     height: 16,
@@ -387,7 +397,7 @@ const styles = StyleSheet.create({
   },
   deliveryTipText: {
     ...typography['label-caps'],
-    color: '#000000',
+    color: ON_AMBER,
     fontSize: 10,
   },
   searchSection: {
