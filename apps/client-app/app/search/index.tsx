@@ -346,10 +346,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   headerBg: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+    // Why: 改 relative（原 absolute）-- TaisPattern 的 absolute container 在 absolute parent 内 right:0 解析异常（左半边塌缩）。
+    //   对齐 PrimaryHeader 的 relative header，让 TaisPattern 全宽撑满
+    position: 'relative',
     height: 90,
     overflow: 'hidden',
   },
@@ -368,8 +367,12 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   headerContent: {
-    position: 'relative',
-    flex: 1,
+    // Why: 改 absoluteFill（原 flex 1）-- headerBg relative 占满 headerWrap 后 flex 1 无空间，改 absolute 覆盖上层
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     paddingHorizontal: layout['container-margin'],
     // Why: toolbar 垂直居中（替代 paddingTop，避免内容偏上）
     justifyContent: 'center',
