@@ -7,7 +7,7 @@ import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import Svg, { Polygon } from 'react-native-svg';
-import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
+import { useTheme, spacing, layout, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { SearchBar } from '@/components/business/SearchBar';
@@ -20,16 +20,18 @@ import { useCategories } from '@/services/queries/useCatalog';
 import { useRecentSearches } from '@/hooks/useRecentSearches';
 import { useTranslation } from 'react-i18next';
 
-// Why: 红底白字固定（header primary 底 + Filter Tag active 底），dark 不变
+// Why: 红底白字固定（header primary 底 + Filter Tag active 底 + 热搜榜 rank 1/2），dark 不变
 //   同 home.tsx ON_PRIMARY 模式（P6 审查 Q1），不用 colors['on-primary']（dark 翻 #690005 裂色）
 const ON_PRIMARY = '#ffffff';
+// Why: 金底黑字固定（热搜榜 rank 3 amber 底），dark 不变（同 home.tsx ON_AMBER 模式）
+const ON_AMBER = '#000000';
 
-// Why: P7 决策 1-C - Popular Searches 前端 i18n 写死（两步走，后端 /client/search/hot 就绪后切 API）
+// Why: P7 决策 3-B - 热搜榜（rank = 数组顺序 1-4，heat 写死，后端就绪切真实热度数据）
 const POPULAR_SEARCHES = [
-  { id: 'organic-rice', titleKey: 'search.term.organicRice' },
-  { id: 'fresh-meat', titleKey: 'search.term.freshMeat' },
-  { id: 'ermera-coffee', titleKey: 'search.term.ermeraCoffee' },
-  { id: 'cooking-oil', titleKey: 'search.term.cookingOil' },
+  { id: 'organic-rice', titleKey: 'search.term.organicRice', heat: '120k' },
+  { id: 'fresh-meat', titleKey: 'search.term.freshMeat', heat: '98k' },
+  { id: 'ermera-coffee', titleKey: 'search.term.ermeraCoffee', heat: '76k' },
+  { id: 'cooking-oil', titleKey: 'search.term.cookingOil', heat: '54k' },
 ];
 
 // Why: RECENT_SEARCHES 删 - Commit 3 接 useRecentSearches hook（AsyncStorage 持久化）
@@ -102,6 +104,14 @@ export default function SearchIndexPage() {
   // Why: 用真实商品替换 mock rec-* id，避免 router.push('/product/rec-1') 跳转后 404
   const { data: realProducts } = useProducts();
   const recommended = (realProducts ?? []).slice(0, 4);
+  // Why: P7 决策 3-B - 热搜榜排名配色（1 红 / 2 中红 / 3 金 / 4+ 灰，对齐 HTML 原型 .hot-num.n1-n5）
+  const rankColors = [
+    { bg: colors.primary, fg: ON_PRIMARY },
+    { bg: colors['primary-container'], fg: ON_PRIMARY },
+    { bg: colors.cultural.amber, fg: ON_AMBER },
+    { bg: colors['secondary-container'], fg: colors['on-secondary-container'] },
+  ];
+  const getRankColor = (rank: number) => rankColors[Math.min(rank - 1, rankColors.length - 1)];
 
   const onSubmitSearch = (q: string) => {
     const trimmed = q.trim();
@@ -264,37 +274,41 @@ export default function SearchIndexPage() {
         </View>
         )}
 
-        {/* Popular Searches 2×2 网格 */}
+        {/* Popular Searches 热搜榜（P7 决策 3-B：排名序号 + 热搜词 + 热度标签） */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
             {t('search.popular')}
           </Text>
-          <View style={styles.popularGrid}>
-            {POPULAR_SEARCHES.map((item) => {
+          <View style={styles.hotList}>
+            {POPULAR_SEARCHES.map((item, idx) => {
+              const rank = idx + 1;
               const label = t(item.titleKey);
+              const rankColor = getRankColor(rank);
               return (
               <Pressable
                 key={item.id}
                 onPress={() => onSubmitSearch(label)}
                 style={({ pressed }) => [
-                  styles.popularCard,
-                  {
-                    backgroundColor: colors['surface-container-lowest'],
-                    borderColor: colors['outline-variant'],
-                  },
+                  styles.hotRank,
+                  { backgroundColor: colors['surface-container-low'] },
                   pressed && { opacity: 0.7 },
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel={`Search ${label}`}
               >
-                <View
-                  style={[styles.popularIconWrap, { backgroundColor: colors['surface-container'] }]}
-                >
-                  <Icon symbol="trending_up" size={18} color={colors.primary} />
+                <View style={[styles.hotNum, { backgroundColor: rankColor.bg }]}>
+                  <Text style={[styles.hotNumText, { color: rankColor.fg }]}>{rank}</Text>
                 </View>
-                <Text style={[styles.popularLabel, { color: colors['on-surface'] }]}>
+                <Text
+                  style={[styles.hotWord, { color: colors['on-surface'] }]}
+                  numberOfLines={1}
+                >
                   {label}
                 </Text>
+                <View style={[styles.hotTag, { backgroundColor: colors['surface-container-high'] }]}>
+                  <Icon symbol="trending_up" size={10} color={colors.primary} />
+                  <Text style={[styles.hotTagText, { color: colors.primary }]}>{item.heat}</Text>
+                </View>
               </Pressable>
               );
             })}
@@ -448,32 +462,46 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 13,
   },
-  popularGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  // Why: P7 决策 3-B - 热搜榜样式（每行 rank + word + heat tag，对齐 HTML 原型 .hot-rank/.hot-num/.hot-tag）
+  hotList: {
     gap: spacing.sm,
   },
-  popularCard: {
-    width: '48%',
-    flexGrow: 1,
-    padding: spacing.md,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
+  hotRank: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
   },
-  popularIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.lg,
+  hotNum: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  popularLabel: {
+  hotNumText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  hotWord: {
     ...typography['body-sm'],
-    fontWeight: '500',
-    flexShrink: 1,
+    fontWeight: '600',
+    fontSize: 13,
+    flex: 1,
+  },
+  hotTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  hotTagText: {
+    fontSize: 9,
+    fontWeight: '600',
   },
   recommendGrid: {
     flexDirection: 'row',
