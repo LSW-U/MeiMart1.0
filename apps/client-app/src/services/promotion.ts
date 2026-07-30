@@ -136,11 +136,9 @@ export const promotionApi = {
    * 后端控制数量/排序/时效。过渡期 mock = 4 项常驻入口。
    */
   async getPromotions(): Promise<Promotion[]> {
-    if (isMockMode) {
-      // Why: 过渡期 mock — 后端 /client/promotions 就绪后此分支删，走真实接口
-      return mockResponse(promotionsData as Promotion[]);
-    }
-    const res = await api.get<Promotion[]>('/client/promotions');
-    return res.data;
+    // Why: 后端 /client/promotions 端点未就绪（real 模式 404），过渡期无视 isMockMode 总返 mock。
+    //      后端建端点后恢复：`if (isMockMode) return mock; const res = await api.get(...); return res.data;`
+    //      后端需求见 04-后端记录/流程清单/MeiMart-活动入口接口-后端需求说明（待建）
+    return mockResponse(promotionsData as Promotion[]);
   },
 };
