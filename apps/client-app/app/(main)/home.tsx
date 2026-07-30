@@ -228,10 +228,12 @@ export default function HomePage() {
               </Pressable>
             </View>
             <CategoryGrid
-              categories={categories.slice(0, 8)}
+              categories={categories}
               onCategoryPress={(c) =>
                 router.push({ pathname: '/(main)/categories', params: { categoryId: c.id } })
               }
+              // Why: P6 V1f - 超 7 分类时第 8 格 More 跳全量分类页
+              onMorePress={() => router.push('/(main)/categories')}
             />
           </View>
         )}

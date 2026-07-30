@@ -24,4 +24,28 @@ describe('CategoryItem', () => {
     fireEvent.press(getByLabelText('Category Beverages'));
     expect(onPress).toHaveBeenCalledWith(category);
   });
+
+  // Why: P6 §2.3 角标 - badge 驱动，无值不渲染
+  it('renders NEW badge when category.badge = new', () => {
+    const { getByText, queryByText } = render(
+      <CategoryItem category={{ ...category, badge: 'new' }} />,
+      { wrapper },
+    );
+    expect(getByText('NEW')).toBeTruthy();
+    expect(queryByText('HOT')).toBeNull();
+  });
+
+  it('renders HOT badge when category.badge = hot', () => {
+    const { getByText } = render(
+      <CategoryItem category={{ ...category, badge: 'hot' }} />,
+      { wrapper },
+    );
+    expect(getByText('HOT')).toBeTruthy();
+  });
+
+  it('does not render badge when category.badge undefined', () => {
+    const { queryByText } = render(<CategoryItem category={category} />, { wrapper });
+    expect(queryByText('NEW')).toBeNull();
+    expect(queryByText('HOT')).toBeNull();
+  });
 });

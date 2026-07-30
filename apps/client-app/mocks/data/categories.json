@@ -85,9 +85,10 @@
   },
   {
     "id": "c008",
-    "name": "More",
-    "icon": "shower",
-    "color": "#fafaf9",
-    "borderColor": "#e7e5e4"
+    "name": "Baby",
+    "icon": "baby-bottle-outline",
+    "color": "#fdf4ff",
+    "borderColor": "#fae8ff",
+    "image": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=200"
   }
 ]

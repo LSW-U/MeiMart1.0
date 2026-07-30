@@ -123,6 +123,8 @@ export interface Category {
   parentId?: string;
   /** 子分类（后端 children 就绪前为 undefined，前端隐藏子分类块，方案 P5 U3） */
   children?: Category[];
+  /** Why: P6 §2.3 角标 - 'new'=绿色 NEW / 'hot'=红色 HOT，可选（无值不渲染） */
+  badge?: 'new' | 'hot';
 }
 
 export type BannerTheme = 'primary' | 'emerald' | 'blue';

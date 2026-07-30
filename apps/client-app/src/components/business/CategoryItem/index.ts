@@ -1,2 +1,2 @@
-export { CategoryItem } from './CategoryItem';
-export type { CategoryItemProps } from './CategoryItem.types';
+export { CategoryItem, MoreItem } from './CategoryItem';
+export type { CategoryItemProps, CategoryItemSize } from './CategoryItem.types';
