@@ -22,7 +22,11 @@ export {
   type StatusBannerTheme,
   type StatusBannerPaletteKey,
 } from './statusBannerThemes';
-export { shortcutThemes, type ShortcutTheme, type ShortcutThemeKey } from './shortcutThemes';
+export {
+  promotionThemes,
+  type PromotionTheme,
+  type PromotionThemeColors,
+} from './promotionThemes';
 export {
   serviceEntryThemes,
   type ServiceEntryTheme,

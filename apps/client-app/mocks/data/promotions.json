@@ -1,0 +1,34 @@
+[
+  {
+    "id": "flash",
+    "titleKey": "promotion.flashDeals",
+    "icon": "bolt",
+    "theme": "deals",
+    "link": "/product/list?promotion=flash",
+    "sortOrder": 1
+  },
+  {
+    "id": "coupons",
+    "titleKey": "promotion.coupons",
+    "icon": "confirmation_number",
+    "theme": "coupons",
+    "link": "/coupons",
+    "sortOrder": 2
+  },
+  {
+    "id": "delivery",
+    "titleKey": "promotion.freeShip",
+    "icon": "moped",
+    "theme": "delivery",
+    "link": "/product/list",
+    "sortOrder": 3
+  },
+  {
+    "id": "points",
+    "titleKey": "promotion.points",
+    "icon": "stars",
+    "theme": "points",
+    "link": "/profile",
+    "sortOrder": 4
+  }
+]

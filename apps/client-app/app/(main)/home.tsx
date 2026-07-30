@@ -1,7 +1,7 @@
-// 本页通过 BannerCarousel / CategoryGrid / PromoShortcut / ProductCard / BuyAgainCard 复用
+// 本页通过 BannerCarousel / CategoryGrid / PromoDock / MasonryProductCard / SmallProductCard 复用
 // 还原自 HomePage.html（511 行）。HTML → RN 行数比：511 → ~480（含样式），
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 94%）。
-// Fix-9: 推荐改横滑卡片 + Buy Again 横滑 + ProductCard 角标 + Header TaisPattern 叠加
+// P6: 间距微调 + 分类网格 C2/角标/溢出 + PromoShortcut→PromoDock（方案二色条）
 import {
   StyleSheet,
   View,
@@ -21,13 +21,12 @@ import {
   shadowPresets,
   gradientPresets,
   borderRadius,
-  type ShortcutThemeKey,
 } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { BannerCarousel } from '@/components/business/BannerCarousel';
 import { CategoryGrid } from '@/components/business/CategoryGrid';
-import { PromoShortcut } from '@/components/business/PromoShortcut';
+import { PromoDock } from '@/components/business/PromoDock';
 import { SmallProductCard } from '@/components/business/SmallProductCard/SmallProductCard';
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
 import { resolveBadges } from '@/utils/resolveBadges';
@@ -40,51 +39,11 @@ import { UmaLulikSkyline } from '@/components/cultural/UmaLulikSkyline';
 import { Icon } from '@/components/ui/Icon';
 import { useCategories, useBanners } from '@/services/queries/useCatalog';
 import { useRecommendations, useBuyAgain } from '@/services/queries/useProducts';
+import { usePromotions } from '@/services/queries/usePromotions';
 import { useAddToCart } from '@/services/queries/useCart';
 import { toast } from '@/store/toastStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
-
-type ShortcutConfig = {
-  id: ShortcutThemeKey;
-  labelKey: string;
-  titleKey: string;
-  icon: string;
-  withCorner?: boolean;
-  link: string;
-};
-
-const SHORTCUTS: ShortcutConfig[] = [
-  {
-    id: 'deals',
-    labelKey: 'shortcut.dealsLabel',
-    titleKey: 'shortcut.deals',
-    icon: 'local_offer',
-    withCorner: true,
-    link: '/product/list?promotion=flash',
-  },
-  {
-    id: 'new',
-    labelKey: 'shortcut.newLabel',
-    titleKey: 'shortcut.newUser',
-    icon: 'person_add',
-    link: '/coupons',
-  },
-  {
-    id: 'coupons',
-    labelKey: 'shortcut.couponsLabel',
-    titleKey: 'profile.coupons',
-    icon: 'confirmation_number',
-    link: '/coupons',
-  },
-  {
-    id: 'delivery',
-    labelKey: 'shortcut.deliveryLabel',
-    titleKey: 'shortcut.freeDelivery',
-    icon: 'moped',
-    link: '/product/list',
-  },
-];
 
 // Buy Again 区块改用 useBuyAgain 从 mockDb 拉 p007-p010，避免与详情页数据脱节
 
@@ -101,6 +60,8 @@ export default function HomePage() {
   const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
   const { data: buyAgainProducts } = useBuyAgain();
   const buyAgainList = buyAgainProducts ?? [];
+  // Why: P6 V3e - PromoDock 数据源由 usePromotions hook 驱动（后端控制数量/排序/时效）
+  const { data: promotions } = usePromotions();
   const addToCartMutation = useAddToCart();
 
   // Why: Buy again 加购
@@ -245,11 +206,11 @@ export default function HomePage() {
           <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
         </View>
 
-        {/* Promo Shortcuts */}
+        {/* PromoDock - 横排功能停靠栏（V3c 无标题，接 TaisDivider 下方） */}
         <View style={styles.section}>
-          <PromoShortcut
-            items={SHORTCUTS.map((s) => ({ ...s, label: t(s.labelKey), title: t(s.titleKey) }))}
-            onPress={(item) => router.push('/search')}
+          <PromoDock
+            promotions={promotions ?? []}
+            onPress={(p) => router.push(p.link)}
           />
         </View>
 

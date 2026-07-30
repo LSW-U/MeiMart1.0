@@ -139,14 +139,12 @@
     "messagesLabel": "Messages",
     "reorderLabel": "Reorder {{name}}"
   },
-  "shortcut": {
-    "dealsLabel": "SAVE BIG",
-    "deals": "Deals",
-    "newLabel": "WELCOME",
-    "newUser": "New User",
-    "couponsLabel": "REDEEM",
-    "deliveryLabel": "LIMITED",
-    "freeDelivery": "Free Delivery"
+  "promotion": {
+    "flashDeals": "Flash Deals",
+    "coupons": "Coupons",
+    "freeShip": "Free Ship",
+    "points": "Points",
+    "empty": "No active promotions right now."
   },
   "category": {
     "food": "Food",

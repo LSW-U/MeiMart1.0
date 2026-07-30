@@ -1,5 +1,7 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse, type MockCouponRaw } from './mockDb';
+import type { PromotionTheme } from '@/theme';
+import promotionsData from '../../mocks/data/promotions.json';
 
 // Why: 优惠券/促销 API 层。后端 first-tier-fix B10 已通：
 //   GET  /api/v1/client/coupons       我的优惠券列表（available + 有效期内）
@@ -41,6 +43,22 @@ export interface ValidateCouponResult {
   discount: number;
   reason?: string;
   type?: string;
+}
+
+// Why: PromoDock 活动入口数据契约 — 后端 /client/promotions 返回 Promotion[]，
+//      前端按 theme 查 promotionThemes 取色（不让后端传 hex）。方案 §2.3 + §6.2。
+export interface Promotion {
+  id: string;
+  /** 标题 i18n key（如 'promotion.flashDeals'），PromoDock 用 t(titleKey) 渲染 */
+  titleKey: string;
+  /** Material Symbols 图标名（自动映射） */
+  icon: string;
+  /** 主题枚举 — 决定图标盒底色 + 色条色（查 promotionThemes） */
+  theme: PromotionTheme;
+  /** 跳转路径 */
+  link: string;
+  /** 排序（后端控制） */
+  sortOrder: number;
 }
 
 // Why: mock 模式把旧 mock 数据（MockCouponRaw，cp001 等）适配到 ClientCoupon 结构。
@@ -109,6 +127,20 @@ export const promotionApi = {
       return mockResponse({ valid: true, discount, type: coupon.type });
     }
     const res = await api.post<ValidateCouponResult>('/promotions/validate', input);
+    return res.data;
+  },
+
+  /**
+   * 活动入口列表（GET /client/promotions，PromoDock 消费）
+   * 横排功能停靠栏 — 常驻功能入口（Flash Deals / Coupons / Free Ship / Points），
+   * 后端控制数量/排序/时效。过渡期 mock = 4 项常驻入口。
+   */
+  async getPromotions(): Promise<Promotion[]> {
+    if (isMockMode) {
+      // Why: 过渡期 mock — 后端 /client/promotions 就绪后此分支删，走真实接口
+      return mockResponse(promotionsData as Promotion[]);
+    }
+    const res = await api.get<Promotion[]>('/client/promotions');
     return res.data;
   },
 };

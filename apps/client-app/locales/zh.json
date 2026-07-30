@@ -139,14 +139,12 @@
     "messagesLabel": "消息",
     "reorderLabel": "再次购买 {{name}}"
   },
-  "shortcut": {
-    "dealsLabel": "特惠",
-    "deals": "优惠",
-    "newLabel": "新用户",
-    "newUser": "新人福利",
-    "couponsLabel": "领券",
-    "deliveryLabel": "限时",
-    "freeDelivery": "免运费"
+  "promotion": {
+    "flashDeals": "限时特惠",
+    "coupons": "优惠券",
+    "freeShip": "免邮",
+    "points": "积分",
+    "empty": "暂无进行中的活动"
   },
   "category": {
     "food": "食品",

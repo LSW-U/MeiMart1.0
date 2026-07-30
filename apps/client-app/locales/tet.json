@@ -96,14 +96,12 @@
     "messagesLabel": "",
     "reorderLabel": ""
   },
-  "shortcut": {
-    "dealsLabel": "",
-    "deals": "",
-    "newLabel": "",
-    "newUser": "",
-    "couponsLabel": "",
-    "deliveryLabel": "",
-    "freeDelivery": ""
+  "promotion": {
+    "flashDeals": "[TET]Flash Deals",
+    "coupons": "[TET]Coupons",
+    "freeShip": "[TET]Free Ship",
+    "points": "[TET]Points",
+    "empty": "[TET]No active promotions right now."
   },
   "category": {
     "food": "",
