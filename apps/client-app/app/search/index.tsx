@@ -16,24 +16,23 @@ import type { ProductBadge } from '@/components/business/ProductCard/ProductCard
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useProducts } from '@/services/queries/useProducts';
+import { useCategories } from '@/services/queries/useCatalog';
+import { useTranslation } from 'react-i18next';
 
 // Why: 红底白字固定（header primary 底 + Filter Tag active 底），dark 不变
 //   同 home.tsx ON_PRIMARY 模式（P6 审查 Q1），不用 colors['on-primary']（dark 翻 #690005 裂色）
 const ON_PRIMARY = '#ffffff';
 
-// Filter Tags（HTML 第 158-163 行）
-const FILTER_TAGS = ['All Categories', 'Fresh', 'Pantry', 'Drinks', 'Fruit', 'Rice'];
-
-// Recent Searches（HTML 第 171-186 行）
-const RECENT_SEARCHES = ['Fos Lais', 'Sabaun fase roupa'];
-
-// Popular Searches（HTML 第 188-217 行）
+// Why: P7 决策 1-C - Popular Searches 前端 i18n 写死（两步走，后端 /client/search/hot 就绪后切 API）
 const POPULAR_SEARCHES = [
-  { id: 'organic-rice', label: 'Organic Rice' },
-  { id: 'fresh-meat', label: 'Fresh Meat' },
-  { id: 'ermera-coffee', label: 'Ermera Coffee' },
-  { id: 'cooking-oil', label: 'Cooking Oil' },
+  { id: 'organic-rice', titleKey: 'search.term.organicRice' },
+  { id: 'fresh-meat', titleKey: 'search.term.freshMeat' },
+  { id: 'ermera-coffee', titleKey: 'search.term.ermeraCoffee' },
+  { id: 'cooking-oil', titleKey: 'search.term.cookingOil' },
 ];
+
+// Why: RECENT_SEARCHES 删 - Commit 3 接 useRecentSearches hook（AsyncStorage 持久化）
+// Why: FILTER_TAGS 删 - 改 useCategories() 动态分类（P7 I7）
 
 // Why: 推荐商品改用 useProducts 真实数据（避免 mock id 'rec-*' 跳转详情 404）
 
@@ -91,8 +90,14 @@ function UmaLulikCurve({ color }: { color: string }) {
 export default function SearchIndexPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
-  const [activeTag, setActiveTag] = useState('All Categories');
+  // Why: P7 I7 - Filter Tags 改 useCategories() 动态分类，首项 "All"（t('common.all')）
+  const { data: categories } = useCategories();
+  const filterTags = [t('common.all'), ...(categories?.map((c) => c.name) ?? [])];
+  const [activeTag, setActiveTag] = useState(t('common.all'));
+  // Why: P7 F1 占位 - Commit 3 接 useRecentSearches hook（AsyncStorage 持久化）
+  const recentSearches: string[] = [];
   // Why: 用真实商品替换 mock rec-* id，避免 router.push('/product/rec-1') 跳转后 404
   const { data: realProducts } = useProducts();
   const recommended = (realProducts ?? []).slice(0, 4);
@@ -135,7 +140,7 @@ export default function SearchIndexPage() {
                   <Icon symbol="arrow_back" size={24} color={ON_PRIMARY} />
                 </Pressable>
                 <Text style={styles.toolbarTitle} accessibilityRole="header">
-                  Search
+                  {t('common.search')}
                 </Text>
               </View>
               <View style={styles.toolbarRight}>
@@ -167,7 +172,7 @@ export default function SearchIndexPage() {
                 autoFocus
                 variant="card"
                 showMic
-                placeholder="Search household essentials..."
+                placeholder={t('home.searchPlaceholder')}
                 onSubmit={onSubmitSearch}
               />
             </View>
@@ -178,7 +183,7 @@ export default function SearchIndexPage() {
         <View style={styles.filterTagsWrap}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.filterTagsRow}>
-              {FILTER_TAGS.map((tag) => {
+              {filterTags.map((tag) => {
                 const active = tag === activeTag;
                 return (
                   <Pressable
@@ -214,18 +219,18 @@ export default function SearchIndexPage() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              Recent Searches
+              {t('search.recent')}
             </Text>
             <Pressable
               onPress={() => {}}
               accessibilityRole="button"
               accessibilityLabel="Clear all recent searches"
             >
-              <Text style={[styles.clearAllText, { color: colors.primary }]}>CLEAR ALL</Text>
+              <Text style={[styles.clearAllText, { color: colors.primary }]}>{t('search.clearAll')}</Text>
             </Pressable>
           </View>
           <View style={styles.recentList}>
-            {RECENT_SEARCHES.map((item) => (
+            {recentSearches.map((item) => (
               <View
                 key={item}
                 style={[styles.recentRow, { borderBottomColor: colors['outline-variant'] }]}
@@ -256,13 +261,15 @@ export default function SearchIndexPage() {
         {/* Popular Searches 2×2 网格 */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-            Popular Searches
+            {t('search.popular')}
           </Text>
           <View style={styles.popularGrid}>
-            {POPULAR_SEARCHES.map((item) => (
+            {POPULAR_SEARCHES.map((item) => {
+              const label = t(item.titleKey);
+              return (
               <Pressable
                 key={item.id}
-                onPress={() => onSubmitSearch(item.label)}
+                onPress={() => onSubmitSearch(label)}
                 style={({ pressed }) => [
                   styles.popularCard,
                   {
@@ -272,7 +279,7 @@ export default function SearchIndexPage() {
                   pressed && { opacity: 0.7 },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={`Search ${item.label}`}
+                accessibilityLabel={`Search ${label}`}
               >
                 <View
                   style={[styles.popularIconWrap, { backgroundColor: colors['surface-container'] }]}
@@ -280,17 +287,18 @@ export default function SearchIndexPage() {
                   <Icon symbol="trending_up" size={18} color={colors.primary} />
                 </View>
                 <Text style={[styles.popularLabel, { color: colors['on-surface'] }]}>
-                  {item.label}
+                  {label}
                 </Text>
               </Pressable>
-            ))}
+              );
+            })}
           </View>
         </View>
 
         {/* Recommended for You 商品网格 */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-            Recommended for You
+            {t('search.recommended')}
           </Text>
           <View style={styles.recommendGrid}>
             {recommended.map((product, idx) => (

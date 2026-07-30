@@ -632,5 +632,17 @@
     "E-AUTH-001": "",
     "E-AUTH-002": "",
     "E-AUTH-003": ""
+  },
+  "search": {
+    "recent": "[TET]Recent Searches",
+    "clearAll": "[TET]Clear All",
+    "popular": "[TET]Popular Searches",
+    "recommended": "[TET]Recommended for You",
+    "term": {
+      "organicRice": "[TET]Organic Rice",
+      "freshMeat": "[TET]Fresh Meat",
+      "ermeraCoffee": "[TET]Ermera Coffee",
+      "cookingOil": "[TET]Cooking Oil"
+    }
   }
 }

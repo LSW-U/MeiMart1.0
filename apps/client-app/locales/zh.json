@@ -680,5 +680,17 @@
     "E-AUTH-001": "认证失败，请重新登录",
     "E-AUTH-002": "Token 已过期",
     "E-AUTH-003": "无权限访问"
+  },
+  "search": {
+    "recent": "最近搜索",
+    "clearAll": "清空",
+    "popular": "热门搜索",
+    "recommended": "为你推荐",
+    "term": {
+      "organicRice": "有机大米",
+      "freshMeat": "鲜肉",
+      "ermeraCoffee": "Ermera 咖啡",
+      "cookingOil": "食用油"
+    }
   }
 }

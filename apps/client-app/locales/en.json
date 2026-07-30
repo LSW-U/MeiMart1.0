@@ -680,5 +680,17 @@
     "E-AUTH-001": "Authentication failed, please log in again",
     "E-AUTH-002": "Token expired",
     "E-AUTH-003": "No permission to access"
+  },
+  "search": {
+    "recent": "Recent Searches",
+    "clearAll": "Clear All",
+    "popular": "Popular Searches",
+    "recommended": "Recommended for You",
+    "term": {
+      "organicRice": "Organic Rice",
+      "freshMeat": "Fresh Meat",
+      "ermeraCoffee": "Ermera Coffee",
+      "cookingOil": "Cooking Oil"
+    }
   }
 }
