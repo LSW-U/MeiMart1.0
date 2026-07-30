@@ -17,6 +17,10 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useProducts } from '@/services/queries/useProducts';
 
+// Why: 红底白字固定（header primary 底 + Filter Tag active 底），dark 不变
+//   同 home.tsx ON_PRIMARY 模式（P6 审查 Q1），不用 colors['on-primary']（dark 翻 #690005 裂色）
+const ON_PRIMARY = '#ffffff';
+
 // Filter Tags（HTML 第 158-163 行）
 const FILTER_TAGS = ['All Categories', 'Fresh', 'Pantry', 'Drinks', 'Fruit', 'Rice'];
 
@@ -128,7 +132,7 @@ export default function SearchIndexPage() {
                   accessibilityRole="button"
                   accessibilityLabel="Go back"
                 >
-                  <Icon symbol="arrow_back" size={24} color="#ffffff" />
+                  <Icon symbol="arrow_back" size={24} color={ON_PRIMARY} />
                 </Pressable>
                 <Text style={styles.toolbarTitle} accessibilityRole="header">
                   Search
@@ -142,7 +146,7 @@ export default function SearchIndexPage() {
                   accessibilityRole="button"
                   accessibilityLabel="Customer service"
                 >
-                  <Icon symbol="support_agent" size={24} color="#ffffff" />
+                  <Icon symbol="support_agent" size={24} color={ON_PRIMARY} />
                 </Pressable>
                 <Pressable
                   onPress={() => router.push('/cart')}
@@ -151,7 +155,7 @@ export default function SearchIndexPage() {
                   accessibilityRole="button"
                   accessibilityLabel="Shopping cart"
                 >
-                  <Icon symbol="shopping_cart" size={24} color="#ffffff" />
+                  <Icon symbol="shopping_cart" size={24} color={ON_PRIMARY} />
                 </Pressable>
               </View>
             </View>
@@ -185,8 +189,9 @@ export default function SearchIndexPage() {
                       active
                         ? { backgroundColor: colors.primary, borderColor: colors.primary }
                         : {
+                            // Why: C1 胶囊化 - surface-container-high 底 + transparent 描边（无 rgba）
                             backgroundColor: colors['surface-container-high'],
-                            borderColor: 'rgba(225, 191, 186, 0.4)',
+                            borderColor: 'transparent',
                           },
                     ]}
                     accessibilityRole="button"
@@ -194,7 +199,7 @@ export default function SearchIndexPage() {
                     accessibilityState={{ selected: active }}
                   >
                     <Text
-                      style={[styles.filterTagText, { color: active ? '#ffffff' : colors.primary }]}
+                      style={[styles.filterTagText, { color: active ? ON_PRIMARY : colors.primary }]}
                     >
                       {tag}
                     </Text>
@@ -223,10 +228,10 @@ export default function SearchIndexPage() {
             {RECENT_SEARCHES.map((item) => (
               <View
                 key={item}
-                style={[styles.recentRow, { borderBottomColor: 'rgba(141, 112, 108, 0.1)' }]}
+                style={[styles.recentRow, { borderBottomColor: colors['outline-variant'] }]}
               >
                 <View style={styles.recentLeft}>
-                  <Icon symbol="history" size={20} color="rgba(97, 99, 99, 0.4)" />
+                  <Icon symbol="history" size={20} color={colors['on-surface-variant']} style={{ opacity: 0.5 }} />
                   <Pressable
                     onPress={() => onSubmitSearch(item)}
                     accessibilityRole="button"
@@ -241,7 +246,7 @@ export default function SearchIndexPage() {
                   accessibilityRole="button"
                   accessibilityLabel={`Remove ${item}`}
                 >
-                  <Icon symbol="close" size={14} color="rgba(97, 99, 99, 0.4)" />
+                  <Icon symbol="close" size={14} color={colors['on-surface-variant']} style={{ opacity: 0.5 }} />
                 </Pressable>
               </View>
             ))}
@@ -262,7 +267,7 @@ export default function SearchIndexPage() {
                   styles.popularCard,
                   {
                     backgroundColor: colors['surface-container-lowest'],
-                    borderColor: 'rgba(225, 191, 186, 0.4)',
+                    borderColor: colors['outline-variant'],
                   },
                   pressed && { opacity: 0.7 },
                 ]}
@@ -366,7 +371,7 @@ const styles = StyleSheet.create({
   },
   toolbarTitle: {
     ...typography.h2,
-    color: '#ffffff',
+    color: ON_PRIMARY,
     fontWeight: '700',
   },
   searchBarWrap: {
