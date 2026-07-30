@@ -685,12 +685,6 @@
     "recent": "最近搜索",
     "clearAll": "清空",
     "popular": "热门搜索",
-    "recommended": "为你推荐",
-    "term": {
-      "apple": "苹果",
-      "milk": "牛奶",
-      "salmon": "三文鱼",
-      "oil": "食用油"
-    }
+    "recommended": "为你推荐"
   }
 }

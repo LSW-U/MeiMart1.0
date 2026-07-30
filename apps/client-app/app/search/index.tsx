@@ -290,7 +290,8 @@ export default function SearchIndexPage() {
         </View>
         )}
 
-        {/* Popular Searches 热搜榜（P7 决策 3-B：排名序号 + 热搜词 + 热度标签） */}
+        {/* Popular Searches 热搜榜（P7 决策 3-B）- 空数据时隐藏整块（跟 Recent 区一致） */}
+        {popularWithHeat.length > 0 && (
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
             {t('search.popular')}
@@ -330,6 +331,7 @@ export default function SearchIndexPage() {
             })}
           </View>
         </View>
+        )}
 
         {/* Recommended for You（P7 §2.4: MasonryProductCard 两列瀑布流，与首页统一） */}
         <View style={styles.section}>

@@ -685,12 +685,6 @@
     "recent": "Recent Searches",
     "clearAll": "Clear All",
     "popular": "Popular Searches",
-    "recommended": "Recommended for You",
-    "term": {
-      "apple": "Apple",
-      "milk": "Milk",
-      "salmon": "Salmon",
-      "oil": "Oil"
-    }
+    "recommended": "Recommended for You"
   }
 }

@@ -637,12 +637,6 @@
     "recent": "[TET]Recent Searches",
     "clearAll": "[TET]Clear All",
     "popular": "[TET]Popular Searches",
-    "recommended": "[TET]Recommended for You",
-    "term": {
-      "apple": "[TET]Apple",
-      "milk": "[TET]Milk",
-      "salmon": "[TET]Salmon",
-      "oil": "[TET]Oil"
-    }
+    "recommended": "[TET]Recommended for You"
   }
 }

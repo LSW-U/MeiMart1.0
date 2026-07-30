@@ -58,6 +58,7 @@ export function useRecentSearches() {
       setRecentSearches((prev) => {
         const filtered = prev.filter((s) => s !== trimmed);
         const next = [trimmed, ...filtered].slice(0, MAX_RECENT);
+        // fire-and-forget: persist 内部已 catch，updater 不能 async（审查 Q1）
         void persist(next);
         return next;
       });
