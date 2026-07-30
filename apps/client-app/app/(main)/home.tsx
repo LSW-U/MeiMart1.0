@@ -444,7 +444,8 @@ const styles = StyleSheet.create({
     ...typography['body-sm'],
   },
   bannerSection: {
-    marginTop: spacing.md,
+    // Why: P6 S2 - searchSection → banner 拉到统一 xl(32) 节奏
+    marginTop: spacing.xl,
   },
   section: {
     marginTop: spacing.xl,
@@ -474,7 +475,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: layout['container-margin'],
-    paddingVertical: spacing.md,
+    // Why: P6 S3 - TaisDivider 上下 padding md(16) -> lg(24)，视觉呼吸更充分
+    paddingVertical: spacing.lg,
     gap: spacing.md,
     marginTop: spacing.xl,
   },
@@ -483,7 +485,8 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
   },
   recommendSection: {
-    marginTop: spacing.xl,
+    // Why: P6 S4 - PromoDock → 推荐区 xl(32) + sm(8)，避免 dock 与推荐区贴太近
+    marginTop: spacing.xl + spacing.sm,
   },
   recommendHeader: {
     paddingHorizontal: layout['container-margin'],
@@ -511,7 +514,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   buyAgainSection: {
-    marginTop: spacing.xl,
+    // Why: P6 S5 - Buy Again marginTop xl(32) -> lg(24)，页尾区块视觉收束
+    marginTop: spacing.lg,
   },
   buyAgainHeader: {
     paddingHorizontal: layout['container-margin'],
