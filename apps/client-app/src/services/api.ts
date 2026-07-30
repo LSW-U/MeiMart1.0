@@ -9,6 +9,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
+import { getCurrentLocale } from '@/i18n';
 
 const env = Constants.expoConfig?.extra as {
   APP_ENV: 'development' | 'staging' | 'production';
@@ -88,6 +89,9 @@ api.interceptors.request.use(async (config) => {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Why: 后端按 Accept-Language 返本地化数据（热搜词 lang / 错误文案），前端按当前 locale 传
+  config.headers = config.headers ?? {};
+  config.headers['Accept-Language'] = getCurrentLocale();
   if (__DEV__ && config.data) {
     const safeBody = sanitizeLogPayload(config.data);
     console.debug('[api request]', config.method, config.url, safeBody);
