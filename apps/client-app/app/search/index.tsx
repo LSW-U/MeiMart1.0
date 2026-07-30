@@ -30,14 +30,14 @@ const ON_PRIMARY = '#ffffff';
 // Why: 金底黑字固定（热搜榜 rank 3 amber 底），dark 不变（同 home.tsx ON_AMBER 模式）
 const ON_AMBER = '#000000';
 
-// Why: P7 决策 3-B - 热搜榜（rank = 数组顺序 1-4，heat 写死，后端就绪切真实热度数据）
+// Why: P7 决策 3-B - 热搜榜（rank = 数组顺序 1-4，heat 从对应商品 salesCount 派生，后端就绪切真实热度）
 // Why: 热搜词选 mock 商品实际能搜到的（apple/milk/salmon/oil 匹配 p001/p005/p010/p004，
 //      前端写死词需跟 mock 数据匹配，否则点击跳搜索结果页显示空）
 const POPULAR_SEARCHES = [
-  { id: 'apple', titleKey: 'search.term.apple', heat: '120k' },
-  { id: 'milk', titleKey: 'search.term.milk', heat: '98k' },
-  { id: 'salmon', titleKey: 'search.term.salmon', heat: '76k' },
-  { id: 'oil', titleKey: 'search.term.oil', heat: '54k' },
+  { id: 'apple', titleKey: 'search.term.apple', productId: 'p001' },
+  { id: 'milk', titleKey: 'search.term.milk', productId: 'p005' },
+  { id: 'salmon', titleKey: 'search.term.salmon', productId: 'p010' },
+  { id: 'oil', titleKey: 'search.term.oil', productId: 'p004' },
 ];
 
 // Why: RECENT_SEARCHES 删 - Commit 3 接 useRecentSearches hook（AsyncStorage 持久化）
@@ -109,6 +109,17 @@ export default function SearchIndexPage() {
   // Why: P7 §2.4 R2 - 两列瀑布流分发（奇偶分列），同 home.tsx masonry 模式
   const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
   const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
+  // Why: P7 - heat 从对应商品 salesCount 派生（不写死），按销量降序排（rank=idx+1）
+  //   后端 /client/search/hot 就绪后删此派生，直接消费后端 heat
+  const popularWithHeat = POPULAR_SEARCHES.map((item) => {
+    const product = recommendList.find((p) => p.id === item.productId);
+    const sales = product?.salesCount ?? 0;
+    return {
+      ...item,
+      sales,
+      heat: sales >= 1000 ? `${(sales / 1000).toFixed(1)}k` : `${sales}`,
+    };
+  }).sort((a, b) => b.sales - a.sales);
   // Why: P7 决策 3-B - 热搜榜排名配色（1 红 / 2 中红 / 3 金 / 4+ 灰，对齐 HTML 原型 .hot-num.n1-n5）
   const rankColors = [
     { bg: colors.primary, fg: ON_PRIMARY },
@@ -294,7 +305,7 @@ export default function SearchIndexPage() {
             {t('search.popular')}
           </Text>
           <View style={styles.hotList}>
-            {POPULAR_SEARCHES.map((item, idx) => {
+            {popularWithHeat.map((item, idx) => {
               const rank = idx + 1;
               const label = t(item.titleKey);
               const rankColor = getRankColor(rank);
