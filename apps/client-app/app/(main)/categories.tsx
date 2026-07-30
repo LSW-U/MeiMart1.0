@@ -40,12 +40,15 @@ export default function CategoriesPage() {
   } = useCategories();
   // Why: activeId 优先用 URL 参数（从 home 跳转传入），否则用第一个分类
   const [activeId, setActiveId] = useState<string>(urlCategoryId ?? '');
+  // Why: P3 - 子分类筛选：点击子分类时设 subActiveId，useProductsByCategory 查子分类商品；
+  //      切大类时清空（侧栏 onPress），未选子分类时查大类（后端返所有子分类商品，§5）
+  const [subActiveId, setSubActiveId] = useState<string | null>(null);
   const {
     data: products,
     isLoading: prodLoading,
     isError: prodError,
     refetch: prodRefetch,
-  } = useProductsByCategory(activeId || undefined);
+  } = useProductsByCategory(subActiveId ?? (activeId || undefined));
   const { data: allProducts } = useProducts();
   const addToCartMutation = useAddToCart();
   // Why: P5 U4 筛选栏 - sortMode 驱动 sortedProducts（前端排序，HOT PRODUCTS 消费）
@@ -134,7 +137,11 @@ export default function CategoriesPage() {
                 key={cat.id}
                 category={cat}
                 active={cat.id === validActiveId}
-                onPress={() => setActiveId(cat.id)}
+                onPress={() => {
+                  setActiveId(cat.id);
+                  // Why: P3 - 切大类时清空子分类筛选（避免旧大类子分类残留）
+                  setSubActiveId(null);
+                }}
               />
             ))}
           </ScrollView>
@@ -158,33 +165,42 @@ export default function CategoriesPage() {
                   nestedScrollEnabled
                   contentContainerStyle={styles.subGrid}
                 >
-                  {subCategories.map((sub) => (
+                  {subCategories.map((sub) => {
+                    const subActive = sub.id === subActiveId;
+                    return (
                     <Pressable
                       key={sub.id}
-                      onPress={() => router.push('/search')}
+                      // Why: P3 - 点击子分类筛选商品（toggle：再点取消，返大类全部商品）
+                      onPress={() => setSubActiveId(subActive ? null : sub.id)}
                       style={styles.subItem}
                       accessibilityRole="button"
                       accessibilityLabel={sub.name}
+                      accessibilityState={{ selected: subActive }}
                     >
                       <View
                         style={[
                           styles.subIcon,
                           {
                             backgroundColor: colors['surface-container-high'],
-                            borderColor: colors['outline-variant'],
+                            // Why: P3 - 选中态边框高亮 primary
+                            borderColor: subActive ? colors.primary : colors['outline-variant'],
                           },
                         ]}
                       >
                         <SafeImage source={{ uri: sub.image ?? '' }} style={styles.subImage} />
                       </View>
                       <Text
-                        style={[styles.subLabel, { color: colors['on-surface'] }]}
+                        style={[
+                          styles.subLabel,
+                          { color: subActive ? colors.primary : colors['on-surface'] },
+                        ]}
                         numberOfLines={1}
                       >
                         {sub.name}
                       </Text>
                     </Pressable>
-                  ))}
+                    );
+                  })}
                 </ScrollView>
               )}
 

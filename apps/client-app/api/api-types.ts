@@ -2377,6 +2377,21 @@ export interface paths {
                             /** Format: uuid */
                             parentId: string | null;
                             sortOrder: number;
+                            /** @enum {string} */
+                            status?: "ACTIVE" | "INACTIVE";
+                            children?: {
+                                /** Format: uuid */
+                                id: string;
+                                name: {
+                                    [key: string]: string;
+                                };
+                                iconUrl: string | "";
+                                /** Format: uuid */
+                                parentId: string | null;
+                                sortOrder: number;
+                                /** @enum {string} */
+                                status?: "ACTIVE" | "INACTIVE";
+                            }[];
                         }[];
                     };
                 };
@@ -2830,6 +2845,21 @@ export interface paths {
                             /** Format: uuid */
                             parentId: string | null;
                             sortOrder: number;
+                            /** @enum {string} */
+                            status?: "ACTIVE" | "INACTIVE";
+                            children?: {
+                                /** Format: uuid */
+                                id: string;
+                                name: {
+                                    [key: string]: string;
+                                };
+                                iconUrl: string | "";
+                                /** Format: uuid */
+                                parentId: string | null;
+                                sortOrder: number;
+                                /** @enum {string} */
+                                status?: "ACTIVE" | "INACTIVE";
+                            }[];
                         };
                     };
                 };
@@ -4572,19 +4602,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description 我的优惠券列表（B10 + used/expired：?status=available|used|expired，默认 available） */
+        /** @description 我的优惠券列表（B10，MVP 全局可用券：ACTIVE + 有效期内 + 未超额） */
         get: {
             parameters: {
-                query?: {
-                    status?: "available" | "used" | "expired";
-                };
+                query?: never;
                 header?: never;
                 path?: never;
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description 优惠券列表（按 status 过滤） */
+                /** @description 可用优惠券列表 */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -4606,27 +4634,8 @@ export interface paths {
                             /** Format: date-time */
                             endAt: string;
                             /** @enum {string} */
-                            status: "available" | "used" | "expired";
+                            status: "available";
                         }[];
-                    };
-                };
-                /** @description INVALID_STATUS */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @enum {boolean} */
-                            success: false;
-                            error: {
-                                code: string;
-                                message: string;
-                                details?: {
-                                    [key: string]: unknown;
-                                };
-                            };
-                        };
                     };
                 };
             };
@@ -11148,6 +11157,21 @@ export interface components {
             /** Format: uuid */
             parentId: string | null;
             sortOrder: number;
+            /** @enum {string} */
+            status?: "ACTIVE" | "INACTIVE";
+            children?: {
+                /** Format: uuid */
+                id: string;
+                name: {
+                    [key: string]: string;
+                };
+                iconUrl: string | "";
+                /** Format: uuid */
+                parentId: string | null;
+                sortOrder: number;
+                /** @enum {string} */
+                status?: "ACTIVE" | "INACTIVE";
+            }[];
         };
         CreateCategoryRequest: {
             name: {
@@ -11166,6 +11190,8 @@ export interface components {
             /** Format: uuid */
             parentId?: string | null;
             sortOrder?: number;
+            /** @enum {string} */
+            status?: "ACTIVE" | "INACTIVE";
         };
         Banner: {
             /** Format: uuid */
@@ -11450,7 +11476,7 @@ export interface components {
             /** Format: date-time */
             endAt: string;
             /** @enum {string} */
-            status: "available" | "used" | "expired";
+            status: "available";
         };
         PaymentIntent: {
             /** Format: uuid */

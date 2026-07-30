@@ -10,6 +10,9 @@ interface CategoryRaw {
   iconUrl: string;
   parentId: string | null;
   sortOrder: number;
+  status?: 'ACTIVE' | 'INACTIVE';
+  // Why: P3 - 后端 listCategoryTree 返嵌套 children（子分类），平铺模式（admin）无此字段
+  children?: CategoryRaw[];
 }
 
 interface BannerRaw {
@@ -39,6 +42,8 @@ function transformCategory(raw: CategoryRaw): Category {
     icon: '',
     image: raw.iconUrl || undefined,
     parentId: raw.parentId ?? undefined,
+    // Why: P3 - 后端 listCategoryTree 返嵌套 children，递归映射（无 children 时为 undefined，前端隐藏子分类墙）
+    children: raw.children?.map(transformCategory),
   };
 }
 
