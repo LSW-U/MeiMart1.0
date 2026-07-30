@@ -134,7 +134,7 @@ export default function SearchIndexPage() {
           {/* 底色块（被锯齿底边裁掉下半部分形成 zigzag） */}
           <View style={[styles.headerBg, { backgroundColor: colors.primary }]}>
             <View style={styles.headerPattern} pointerEvents="none">
-              <TaisPattern width={390} height={176} opacity={0.1} />
+              <TaisPattern width={390} height={90} opacity={0.2} />
             </View>
           </View>
           {/* 锯齿底边覆盖（让 header 下方背景透出锯齿形状） */}
@@ -160,7 +160,7 @@ export default function SearchIndexPage() {
                   autoFocus
                   variant="card"
                   showMic
-                  placeholder={t('home.searchPlaceholder')}
+                  placeholder={t('common.search')}
                   onSubmit={onSubmitSearch}
                 />
               </View>
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   },
   headerWrap: {
     position: 'relative',
-    height: 110,
+    height: 90,
     overflow: 'hidden',
   },
   headerBg: {
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 110,
+    height: 90,
     overflow: 'hidden',
   },
   headerPattern: {
@@ -371,7 +371,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     flex: 1,
     paddingHorizontal: layout['container-margin'],
-    paddingTop: spacing.lg,
+    // Why: headerWrap 90 矮化，paddingTop sm 让 toolbar 离顶近 + 底部留锯齿区域
+    paddingTop: spacing.sm,
   },
   toolbar: {
     flexDirection: 'row',
