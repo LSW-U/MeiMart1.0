@@ -45,7 +45,7 @@ export interface ValidateCouponResult {
   type?: string;
 }
 
-// Why: PromoDock 活动入口数据契约 — 后端 /client/promotions 返回 Promotion[]，
+// Why: PromoDock 活动入口数据契约 — 后端 /client/home-entries 返回 Promotion[]，
 //      前端按 theme 查 promotionThemes 取色（不让后端传 hex）。方案 §2.3 + §6.2。
 export interface Promotion {
   id: string;
@@ -131,14 +131,15 @@ export const promotionApi = {
   },
 
   /**
-   * 活动入口列表（GET /client/promotions，PromoDock 消费）
+   * 活动入口列表（GET /client/home-entries，PromoDock 消费）
    * 横排功能停靠栏 — 常驻功能入口（Flash Deals / Coupons / Free Ship / Points），
    * 后端控制数量/排序/时效。过渡期 mock = 4 项常驻入口。
    */
   async getPromotions(): Promise<Promotion[]> {
-    // Why: 后端 /client/promotions 端点未就绪（real 模式 404），过渡期无视 isMockMode 总返 mock。
-    //      后端建端点后恢复：`if (isMockMode) return mock; const res = await api.get(...); return res.data;`
-    //      后端需求见 04-后端记录/流程清单/MeiMart-活动入口接口-后端需求说明（待建）
-    return mockResponse(promotionsData as Promotion[]);
+    // Why: 后端 /client/home-entries 端点已就绪（home 模块，路线 A 配置接口，常驻 4 入口）。
+    //      real 模式调真实端点；mock 模式返本地 promotions.json（4 项常驻入口，离线/降级用）。
+    if (isMockMode) return mockResponse(promotionsData as Promotion[]);
+    const res = await api.get<Promotion[]>('/client/home-entries');
+    return res.data;
   },
 };

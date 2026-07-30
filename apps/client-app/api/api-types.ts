@@ -4562,6 +4562,7 @@ export interface paths {
                             discount: number;
                             couponCode: string | null;
                             couponValid: boolean;
+                            couponReason?: string | null;
                             warnings: string[];
                             /** Format: date-time */
                             estimatedDeliveryTime: string;
@@ -4602,17 +4603,19 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description 我的优惠券列表（B10，MVP 全局可用券：ACTIVE + 有效期内 + 未超额） */
+        /** @description 我的优惠券列表（B10 + used/expired：?status=available|used|expired，默认 available） */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    status?: "available" | "used" | "expired";
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description 可用优惠券列表 */
+                /** @description 优惠券列表（按 status 过滤） */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -4634,8 +4637,27 @@ export interface paths {
                             /** Format: date-time */
                             endAt: string;
                             /** @enum {string} */
-                            status: "available";
+                            status: "available" | "used" | "expired";
                         }[];
+                    };
+                };
+                /** @description INVALID_STATUS */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
                     };
                 };
             };
@@ -9950,6 +9972,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/client/home-entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 首页活动入口（PromoDock 常驻 4 入口配置，@Public。按 sortOrder 升序，仅返 ACTIVE） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 活动入口列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            titleKey: string;
+                            icon: string;
+                            /** @enum {string} */
+                            theme: "deals" | "coupons" | "delivery" | "points";
+                            link: string;
+                            sortOrder: number;
+                            /** @enum {string} */
+                            status?: "ACTIVE" | "INACTIVE";
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/client/orders/{id}/review": {
         parameters: {
             query?: never;
@@ -11456,6 +11524,7 @@ export interface components {
             discount: number;
             couponCode: string | null;
             couponValid: boolean;
+            couponReason?: string | null;
             warnings: string[];
             /** Format: date-time */
             estimatedDeliveryTime: string;
@@ -11476,7 +11545,7 @@ export interface components {
             /** Format: date-time */
             endAt: string;
             /** @enum {string} */
-            status: "available";
+            status: "available" | "used" | "expired";
         };
         PaymentIntent: {
             /** Format: uuid */
@@ -11870,6 +11939,17 @@ export interface components {
             comment?: {
                 [key: string]: string;
             };
+        };
+        HomeEntry: {
+            id: string;
+            titleKey: string;
+            icon: string;
+            /** @enum {string} */
+            theme: "deals" | "coupons" | "delivery" | "points";
+            link: string;
+            sortOrder: number;
+            /** @enum {string} */
+            status?: "ACTIVE" | "INACTIVE";
         };
     };
     responses: never;
