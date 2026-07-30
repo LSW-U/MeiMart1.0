@@ -17,6 +17,7 @@ import { resolveBadges } from '@/utils/resolveBadges';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useProducts } from '@/services/queries/useProducts';
+import { useSearchHot } from '@/services/queries/useSearchHot';
 import { useCategories } from '@/services/queries/useCatalog';
 import { useAddToCart } from '@/services/queries/useCart';
 import { toast } from '@/store/toastStore';
@@ -30,17 +31,8 @@ const ON_PRIMARY = '#ffffff';
 // Why: 金底黑字固定（热搜榜 rank 3 amber 底），dark 不变（同 home.tsx ON_AMBER 模式）
 const ON_AMBER = '#000000';
 
-// Why: P7 决策 3-B - 热搜榜（rank = 数组顺序 1-4，heat 从对应商品 salesCount 派生，后端就绪切真实热度）
-// Why: 热搜词选 mock 商品实际能搜到的（apple/milk/salmon/oil 匹配 p001/p005/p010/p004，
-//      前端写死词需跟 mock 数据匹配，否则点击跳搜索结果页显示空）
-// Why: fallbackSales - real 模式下后端商品 id 是 uuid，find(p001) 失败时降级用 mock 销量占位
-//      （后端 /client/search/hot 就绪后删 fallback + popularWithHeat 派生，直接消费后端 heat）
-const POPULAR_SEARCHES = [
-  { id: 'apple', titleKey: 'search.term.apple', productId: 'p001', fallbackSales: 1280 },
-  { id: 'milk', titleKey: 'search.term.milk', productId: 'p005', fallbackSales: 3200 },
-  { id: 'salmon', titleKey: 'search.term.salmon', productId: 'p010', fallbackSales: 670 },
-  { id: 'oil', titleKey: 'search.term.oil', productId: 'p004', fallbackSales: 1560 },
-];
+// Why: P3 联调（2026-07-31）- 热搜榜接后端 GET /client/search/hot，删 POPULAR_SEARCHES 写死 + fallbackSales 派生
+//   后端返 { word, searchCount }[]，rank=idx+1，heat=searchCount 格式化，word 是实际词非 i18n key
 
 // Why: RECENT_SEARCHES 删 - Commit 3 接 useRecentSearches hook（AsyncStorage 持久化）
 // Why: FILTER_TAGS 删 - 改 useCategories() 动态分类（P7 I7）
@@ -111,19 +103,14 @@ export default function SearchIndexPage() {
   // Why: P7 §2.4 R2 - 两列瀑布流分发（奇偶分列），同 home.tsx masonry 模式
   const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
   const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
-  // Why: P7 - heat 从对应商品 salesCount 派生（不写死），按销量降序排（rank=idx+1）
-  //   mock 模式：useProducts 返 mock 商品（id=p001），find 成功 -> 用 salesCount
-  //   real 模式：useProducts 返后端商品（uuid），find 失败 -> 用 fallbackSales 降级
-  //   后端 /client/search/hot 就绪后删此派生 + fallback，直接消费后端 heat
-  const popularWithHeat = POPULAR_SEARCHES.map((item) => {
-    const product = recommendList.find((p) => p.id === item.productId);
-    const sales = product?.salesCount ?? item.fallbackSales;
-    return {
-      ...item,
-      sales,
-      heat: sales >= 1000 ? `${(sales / 1000).toFixed(1)}k` : `${sales}`,
-    };
-  }).sort((a, b) => b.sales - a.sales);
+  // Why: P3 - 热搜榜接后端 GET /client/search/hot（real 数据，rank=idx+1，heat=searchCount）
+  //   后端已按 searchCount 降序返（PINNED 前置 + BLOCKED 剔除 + MANUAL 兜底），前端不再派生
+  const { data: hotList } = useSearchHot();
+  const popularWithHeat = (hotList ?? []).map((item) => ({
+    id: item.word,
+    label: item.word,
+    heat: item.searchCount >= 1000 ? `${(item.searchCount / 1000).toFixed(1)}k` : `${item.searchCount}`,
+  }));
   // Why: P7 决策 3-B - 热搜榜排名配色（1 红 / 2 中红 / 3 金 / 4+ 灰，对齐 HTML 原型 .hot-num.n1-n5）
   const rankColors = [
     { bg: colors.primary, fg: ON_PRIMARY },
@@ -311,7 +298,7 @@ export default function SearchIndexPage() {
           <View style={styles.hotList}>
             {popularWithHeat.map((item, idx) => {
               const rank = idx + 1;
-              const label = t(item.titleKey);
+              const label = item.label;
               const rankColor = getRankColor(rank);
               return (
               <Pressable
