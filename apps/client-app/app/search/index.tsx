@@ -17,6 +17,7 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useProducts } from '@/services/queries/useProducts';
 import { useCategories } from '@/services/queries/useCatalog';
+import { useRecentSearches } from '@/hooks/useRecentSearches';
 import { useTranslation } from 'react-i18next';
 
 // Why: 红底白字固定（header primary 底 + Filter Tag active 底），dark 不变
@@ -96,15 +97,18 @@ export default function SearchIndexPage() {
   const { data: categories } = useCategories();
   const filterTags = [t('common.all'), ...(categories?.map((c) => c.name) ?? [])];
   const [activeTag, setActiveTag] = useState(t('common.all'));
-  // Why: P7 F1 占位 - Commit 3 接 useRecentSearches hook（AsyncStorage 持久化）
-  const recentSearches: string[] = [];
+  // Why: P7 F1 - Recent Searches AsyncStorage 持久化（useRecentSearches hook，最多 10 条去重最新在前）
+  const { recentSearches, addRecent, removeRecent, clearRecent } = useRecentSearches();
   // Why: 用真实商品替换 mock rec-* id，避免 router.push('/product/rec-1') 跳转后 404
   const { data: realProducts } = useProducts();
   const recommended = (realProducts ?? []).slice(0, 4);
 
   const onSubmitSearch = (q: string) => {
-    if (!q.trim()) return;
-    router.push({ pathname: '/search/results', params: { q } });
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    // Why: P7 F1 - 搜索提交时记录到 Recent（AsyncStorage 持久化）
+    addRecent(trimmed);
+    router.push({ pathname: '/search/results', params: { q: trimmed } });
   };
 
   return (
@@ -215,48 +219,50 @@ export default function SearchIndexPage() {
           </ScrollView>
         </View>
 
-        {/* Recent Searches */}
+        {/* Recent Searches（P7 F1: AsyncStorage 持久化 + 流式 chip，空时隐藏整块） */}
+        {recentSearches.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
               {t('search.recent')}
             </Text>
             <Pressable
-              onPress={() => {}}
+              onPress={clearRecent}
               accessibilityRole="button"
-              accessibilityLabel="Clear all recent searches"
+              accessibilityLabel={t('search.clearAll')}
             >
               <Text style={[styles.clearAllText, { color: colors.primary }]}>{t('search.clearAll')}</Text>
             </Pressable>
           </View>
-          <View style={styles.recentList}>
+          <View style={styles.recentChips}>
             {recentSearches.map((item) => (
-              <View
+              <Pressable
                 key={item}
-                style={[styles.recentRow, { borderBottomColor: colors['outline-variant'] }]}
+                onPress={() => onSubmitSearch(item)}
+                style={({ pressed }) => [styles.recentChip, pressed && styles.chipPressed]}
+                accessibilityRole="button"
+                accessibilityLabel={`Search ${item}`}
               >
-                <View style={styles.recentLeft}>
-                  <Icon symbol="history" size={20} color={colors['on-surface-variant']} style={{ opacity: 0.5 }} />
-                  <Pressable
-                    onPress={() => onSubmitSearch(item)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Search ${item}`}
-                  >
-                    <Text style={[styles.recentText, { color: colors['on-surface'] }]}>{item}</Text>
-                  </Pressable>
-                </View>
+                <Text
+                  style={[styles.recentChipText, { color: colors['on-surface-variant'] }]}
+                  numberOfLines={1}
+                >
+                  {item}
+                </Text>
                 <Pressable
-                  onPress={() => {}}
+                  onPress={() => removeRecent(item)}
                   hitSlop={8}
                   accessibilityRole="button"
                   accessibilityLabel={`Remove ${item}`}
                 >
-                  <Icon symbol="close" size={14} color={colors['on-surface-variant']} style={{ opacity: 0.5 }} />
+                  {/* 原因：on-sv 暖灰 close 图标，dark 不变（方案 §2.3 F1 流式 chip） */}
+                  <Icon symbol="close" size={12} color={colors['on-surface-variant']} />
                 </Pressable>
-              </View>
+              </Pressable>
             ))}
           </View>
         </View>
+        )}
 
         {/* Popular Searches 2×2 网格 */}
         <View style={styles.section}>
@@ -422,23 +428,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.5,
   },
-  recentList: {
+  // Why: P7 F1 - Recent 流式 chip（flex-wrap 自动换行，无背景无边框，纯文字 on-sv + close 12px）
+  recentChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  recentRow: {
+  recentChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: spacing.xs,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
   },
-  recentLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  recentText: {
-    ...typography['body-md'],
+  // Why: 流式 chip 按压 scale(.92) 触觉反馈（对齐原型 .recent-chip:active）
+  chipPressed: { transform: [{ scale: 0.92 }] },
+  recentChipText: {
+    ...typography['body-sm'],
+    fontWeight: '500',
+    fontSize: 13,
   },
   popularGrid: {
     flexDirection: 'row',
