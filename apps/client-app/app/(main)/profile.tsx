@@ -358,24 +358,10 @@ export default function ProfilePage() {
             >
               <View style={styles.quickIcon}>
                 <Icon symbol={entry.icon} size={22} color={colors.primary} />
-                {entry.isNew && (
-                  <View
-                    style={[
-                      styles.badgeDot,
-                      {
-                        backgroundColor: colors.semantic.positive,
-                        borderColor: colors['surface-container-lowest'],
-                      },
-                    ]}
-                  />
-                )}
               </View>
               <Text style={[styles.quickLabel, { color: colors['on-surface-variant'] }]}>
                 {t(entry.labelKey)}
               </Text>
-              {entry.isNew && (
-                <Text style={[styles.newTag, { color: colors.semantic.positive }]}>NEW</Text>
-              )}
             </Pressable>
           ))}
         </View>
@@ -747,7 +733,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Noto Serif',
   },
   pointsLabel: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '600',
     letterSpacing: 0.4,
   },
@@ -815,17 +801,17 @@ const styles = StyleSheet.create({
   },
   orderBadgeText: {
     color: ON_PRIMARY,
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
   },
   orderLabel: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
   // === section label ===
   sectionLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
@@ -863,12 +849,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   quickLabel: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
   newTag: {
-    fontSize: 7,
+    fontSize: 8,
     fontWeight: '700',
     marginTop: -2,
   },
