@@ -11,6 +11,7 @@ jest.mock('react-i18next', () => ({
       const name = options?.name as string | undefined;
       const q = options?.q as string | undefined;
       if (key === 'product.viewItem') return `View ${name}`;
+      if (key === 'search.searchTerm') return `Search ${options?.term}`;
       if (key === 'search.suggested') return 'Suggested Searches';
       if (key === 'search.suggestedProducts') return 'Popular Products';
       if (key === 'search.noSuggestion') return `No suggestions for "${q}"`;

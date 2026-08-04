@@ -112,7 +112,7 @@ export function SuggestPanel({
                       pressed && styles.pressed,
                     ]}
                     accessibilityRole="button"
-                    accessibilityLabel={`Search ${h.word}`}
+                    accessibilityLabel={t('search.searchTerm', { term: h.word })}
                   >
                     <Text style={[styles.hotChipText, { color: colors.primary }]} numberOfLines={1}>
                       {h.word}

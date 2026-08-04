@@ -701,6 +701,7 @@
     "suggested": "搜索建议",
     "suggestedProducts": "热销商品",
     "noSuggestion": "没有找到「{{q}}」的相关建议，回车查看搜索结果",
-    "emptyKeyword": "请输入搜索关键词"
+    "emptyKeyword": "请输入搜索关键词",
+    "searchTerm": "搜索 {{term}}"
   }
 }

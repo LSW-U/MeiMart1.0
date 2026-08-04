@@ -653,6 +653,7 @@
     "suggested": "[TET]Suggested Searches",
     "suggestedProducts": "[TET]Popular Products",
     "noSuggestion": "[TET]No suggestions for \"{{q}}\". Press search to see results.",
-    "emptyKeyword": "[TET]Please enter a search keyword"
+    "emptyKeyword": "[TET]Please enter a search keyword",
+    "searchTerm": "[TET]Search {{term}}"
   }
 }

@@ -1,4 +1,5 @@
 import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme, spacing, typography } from '@/theme';
 
@@ -32,6 +33,7 @@ export interface SuggestWordItemProps {
  */
 export function SuggestWordItem({ word, searchCount, onPress, testID }: SuggestWordItemProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const heat = formatHeat(searchCount);
   return (
     <Pressable
@@ -39,7 +41,7 @@ export function SuggestWordItem({ word, searchCount, onPress, testID }: SuggestW
       testID={testID}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
       accessibilityRole="button"
-      accessibilityLabel={`Search ${word}`}
+      accessibilityLabel={t('search.searchTerm', { term: word })}
     >
       <Text style={[styles.word, { color: colors['on-surface'] }]} numberOfLines={1}>
         {word}
