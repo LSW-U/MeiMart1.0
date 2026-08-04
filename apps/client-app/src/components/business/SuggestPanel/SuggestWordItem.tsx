@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme, spacing, typography } from '@/theme';
 
-// Why: 方案 §7.2 - 词项热度浅红 coral-400，不用 P7 强红（colors.primary #961813）
+// Why: 方案 §7.2 - 词项热度浅红 coral-400（colors.cultural.coral），不用 P7 强红 colors.primary
 //   suggestion 是当前输入联想（非榜单 TOP），视觉重量不应抢输入框焦点
-const HEAT_COLOR = '#D85A30';
+//   dark mode coral=#FFB4A6（比 light #D85A30 更亮，深色背景可见性好，对齐 cultural.orange dark 更亮模式）
 
 /**
  * 数字格式化（方案 §7.2）：
@@ -48,8 +48,8 @@ export function SuggestWordItem({ word, searchCount, onPress, testID }: SuggestW
       </Text>
       {heat && (
         <View style={[styles.heatTag, { backgroundColor: colors['surface-container-high'] }]}>
-          <Icon symbol="trending_up" size={10} color={HEAT_COLOR} />
-          <Text style={[styles.heatText, { color: HEAT_COLOR }]}>{heat}</Text>
+          <Icon symbol="trending_up" size={10} color={colors.cultural.coral} />
+          <Text style={[styles.heatText, { color: colors.cultural.coral }]}>{heat}</Text>
         </View>
       )}
     </Pressable>

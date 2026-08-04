@@ -10,6 +10,7 @@ type CulturalColors = {
   amber: string;
   splashBg: string;
   diamondRed: string;
+  coral: string;
 };
 
 type SemanticColors = {
@@ -140,6 +141,7 @@ export const lightColors: AppColors = {
     amber: '#F5BE4C',
     splashBg: '#FFF8F1',
     diamondRed: '#a20513',
+    coral: '#D85A30',
   },
 
   // 语义色（用于状态提示 / pill 配色；container 取自 orderStatusConfig 现有 bg，主色为通用语义角色色）
@@ -228,6 +230,7 @@ export const darkColors: AppColors = {
     amber: '#F5BE4C',
     splashBg: '#201A19',
     diamondRed: '#FF6F6F',
+    coral: '#FFB4A6',
   },
 
   // 语义色（暗色版调整亮度）
