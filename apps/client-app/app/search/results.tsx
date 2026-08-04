@@ -3,7 +3,7 @@
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 116%）
 // Fix-11: Primary tais-pattern Header + 内嵌只读搜索 + 排序栏 + 结果计数 + Load More
 import { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, ActivityIndicator, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -16,6 +16,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useProductSearch } from '@/services/queries/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Product } from '@/types';
@@ -57,9 +58,24 @@ export default function SearchResultsPage() {
       <Header keyword={params.q ?? ''} />
 
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        // P8-3 F1 骨架屏：4 卡片占位（图片+名+价），替代 spinner，视觉延续性好
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent}>
+          <View style={[styles.sortWrap, { borderColor: colors['outline-variant'] }]}>
+            <Skeleton width={80} height={32} radius={8} />
+            <Skeleton width={60} height={32} radius={8} />
+          </View>
+          <View style={styles.grid}>
+            {[0, 1, 2, 3].map((i) => (
+              <View key={i} style={styles.gridCell}>
+                <View style={styles.skeletonCard}>
+                  <Skeleton width="100%" height={140} radius={8} />
+                  <Skeleton width="80%" height={14} variant="text" />
+                  <Skeleton width="50%" height={16} variant="text" />
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       ) : isError ? (
         <ErrorState message={t('errors.products')} onRetry={() => refetch()} />
       ) : !results || results.length === 0 ? (
@@ -344,9 +360,7 @@ const styles = StyleSheet.create({
   loadMoreText: {
     ...typography['body-sm'],
   },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  skeletonCard: {
+    gap: spacing.sm,
   },
 });
