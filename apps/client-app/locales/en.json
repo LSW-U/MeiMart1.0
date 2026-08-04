@@ -690,7 +690,8 @@
     "sort": {
       "bestSelling": "Best Selling",
       "priceAsc": "Price: Low to High",
-      "newArrivals": "New Arrivals"
+      "newArrivals": "New Arrivals",
+      "a11y": "Sort by {{label}}"
     },
     "noResultTitle": "No results found",
     "noResultDesc": "No products matching \"{{q}}\"",

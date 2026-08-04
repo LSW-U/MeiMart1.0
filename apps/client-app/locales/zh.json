@@ -690,7 +690,8 @@
     "sort": {
       "bestSelling": "热销",
       "priceAsc": "价格从低到高",
-      "newArrivals": "新品上架"
+      "newArrivals": "新品上架",
+      "a11y": "按{{label}}排序"
     },
     "noResultTitle": "未找到结果",
     "noResultDesc": "没有找到「{{q}}」相关商品",

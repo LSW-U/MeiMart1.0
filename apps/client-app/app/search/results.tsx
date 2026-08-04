@@ -7,6 +7,7 @@ import { StyleSheet, View, Text, Pressable, ScrollView, type NativeScrollEvent }
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -26,6 +27,9 @@ import { useProductSearch, useProducts, type ProductSortKey } from '@/services/q
 import { useCart, useAddToCart } from '@/services/queries/useCart';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Product } from '@/types';
+
+// P8 审查 Q1: 红底白字/白图标固定（header primary 底），dark 不变（同 P6/P7 ON_PRIMARY 模式）
+const ON_PRIMARY = '#ffffff';
 
 // P8-2 i18n：排序 value(labelKey) 分离。key 传后端 sortBy，labelKey 走 t()。
 // all 复用 common.all，不新增 search.sort.all（避免重复 key）。
@@ -205,7 +209,7 @@ export default function SearchResultsPage() {
                       ]}
                       accessibilityRole="button"
                       accessibilityState={{ selected: active }}
-                      accessibilityLabel={`Sort: ${label}`}
+                      accessibilityLabel={t('search.sort.a11y', { label })}
                     >
                       <Text
                         style={[
@@ -279,12 +283,20 @@ function Header({
   const { colors } = useTheme();
   const { t } = useTranslation();
   const handleBack = useSafeBack();
+  // P8 审查 B1: Header 自治 top safe area（外层 edges=['bottom'] 排除 top，红底 Header 需自己留状态栏空间）
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState(initialKeyword);
   // P8-4 F4：购物车角标接真实数量（cart.totalItems），未登录/空购物车隐藏角标
   const { data: cart } = useCart();
   const cartCount = cart?.totalItems ?? 0;
   return (
-    <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.lg]}>
+    <View
+      style={[
+        styles.header,
+        { backgroundColor: colors.primary, paddingTop: insets.top + spacing.sm },
+        shadowPresets.lg,
+      ]}
+    >
       <View style={styles.headerPattern} pointerEvents="none">
         <TaisPattern width={390} height={80} opacity={0.2} />
       </View>
@@ -294,9 +306,9 @@ function Header({
           hitSlop={8}
           style={styles.headerBtn}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('common.back')}
         >
-          <Icon symbol="arrow_back" size={24} color="#ffffff" />
+          <Icon symbol="arrow_back" size={24} color={ON_PRIMARY} />
         </Pressable>
 
         {/* P8-7: 可编辑搜索框（SearchBar + 麦克风，同 P7），提交触发 setParams 刷新当前页 */}
@@ -319,7 +331,7 @@ function Header({
           accessibilityRole="button"
           accessibilityLabel={t('cart.a11y.itemCount', { count: cartCount })}
         >
-          <Icon symbol="shopping_cart" size={24} color="#ffffff" />
+          <Icon symbol="shopping_cart" size={24} color={ON_PRIMARY} />
           {cartCount > 0 && (
             <View
               style={[
@@ -347,7 +359,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     paddingHorizontal: layout['container-margin'],
-    paddingVertical: spacing.sm,
+    // P8 审查 B1: paddingTop 内联动态（insets.top + spacing.sm），这里只留 bottom
+    paddingBottom: spacing.sm,
   },
   headerPattern: {
     position: 'absolute',

@@ -642,7 +642,8 @@
     "sort": {
       "bestSelling": "[TET]Best Selling",
       "priceAsc": "[TET]Price: Low to High",
-      "newArrivals": "[TET]New Arrivals"
+      "newArrivals": "[TET]New Arrivals",
+      "a11y": "[TET]Sort by {{label}}"
     },
     "noResultTitle": "[TET]No results found",
     "noResultDesc": "[TET]No products matching \"{{q}}\"",
