@@ -700,6 +700,7 @@
     "placeholder": "Search products...",
     "suggested": "Suggested Searches",
     "suggestedProducts": "Popular Products",
-    "noSuggestion": "No suggestions for \"{{q}}\". Press search to see results."
+    "noSuggestion": "No suggestions for \"{{q}}\". Press search to see results.",
+    "emptyKeyword": "Please enter a search keyword"
   }
 }

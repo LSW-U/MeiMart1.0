@@ -18,6 +18,10 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useProducts } from '@/services/queries/useProducts';
 import { useSearchHot } from '@/services/queries/useSearchHot';
+// C方案（搜索预览）：联想双 hook + 面板组件 + debounce
+import { useSearchSuggest, useSearchProductsSuggest } from '@/services/queries/useSearchSuggest';
+import { SuggestPanel } from '@/components/business/SuggestPanel';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useCategories } from '@/services/queries/useCatalog';
 import { useAddToCart, useCart } from '@/services/queries/useCart';
 import { toast } from '@/store/toastStore';
@@ -88,6 +92,10 @@ export default function SearchIndexPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
+  // C方案 §4.1/§4.5 - suggestOpen 控制面板显隐（失焦收起），debounce 300ms 防抖
+  const [suggestOpen, setSuggestOpen] = useState(true);
+  const debouncedQuery = useDebounce(query, 300);
+  const showSuggest = suggestOpen && query.trim().length >= 2;
   // Why: P7 I7 - Filter Tags 改 useCategories() 动态分类，首项 "All"（t('common.all')）
   const { data: categories } = useCategories();
   const filterTags = [t('common.all'), ...(categories?.map((c) => c.name) ?? [])];
@@ -114,6 +122,23 @@ export default function SearchIndexPage() {
     label: item.word,
     heat: item.searchCount >= 1000 ? `${(item.searchCount / 1000).toFixed(1)}k` : `${item.searchCount}`,
   }));
+  // C方案 §4.2 - 联想双 hook 并行（接 debouncedQuery，非 raw query；showSuggest 控制 enabled）
+  const { data: suggestWords, isLoading: isWordsLoading } = useSearchSuggest(debouncedQuery, showSuggest);
+  const { data: suggestProducts, isLoading: isProductsLoading } = useSearchProductsSuggest(
+    debouncedQuery,
+    showSuggest,
+  );
+  // Why: 两都 loading 且无 keepPreviousData 才显加载态（方案 §4.5）
+  // Why: 长度先解构到独立变量——v5 UseQueryResult 的 data 与 isLoading 是 discriminated 字段，
+  //   在 `isWordsLoading && suggestWords?.length` 链中 tsc 会把 data narrow 到 undefined→never，
+  //   先取 length 到 const number 再进 && 链可避开 correlated narrowing
+  const wordsLen = suggestWords?.length ?? 0;
+  const productsLen = suggestProducts?.length ?? 0;
+  const isSuggestLoading = isWordsLoading && isProductsLoading && wordsLen === 0 && productsLen === 0;
+  // C方案 §7.4 - 空态 fallback 复用 hotList（slice 3 作 chips 补位）
+  const hotFallback = (hotList ?? [])
+    .slice(0, 3)
+    .map((item) => ({ word: item.word, searchCount: item.searchCount }));
   // Why: P7 决策 3-B - 热搜榜排名配色（1 红 / 2 中红 / 3 金 / 4+ 灰，对齐 HTML 原型 .hot-num.n1-n5）
   const rankColors = [
     { bg: colors.primary, fg: ON_PRIMARY },
@@ -125,7 +150,12 @@ export default function SearchIndexPage() {
 
   const onSubmitSearch = (q: string) => {
     const trimmed = q.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      // C方案 §7.5 - 空 query 提交：收起面板 + Toast 提示（不静默失败）
+      setSuggestOpen(false);
+      toast.info(t('search.emptyKeyword'));
+      return;
+    }
     // Why: P7 F1 - 搜索提交时记录到 Recent（AsyncStorage 持久化）
     addRecent(trimmed);
     router.push({ pathname: '/search/results', params: { q: trimmed } });
@@ -177,7 +207,16 @@ export default function SearchIndexPage() {
               <View style={styles.searchBarInline}>
                 <SearchBar
                   value={query}
-                  onChange={setQuery}
+                  onChange={(q) => {
+                    setQuery(q);
+                    // C方案 §4.5 - 输入时重新打开面板（onBlur 延迟收起后重新输入需重开）
+                    setSuggestOpen(true);
+                  }}
+                  onBlur={() => {
+                    // C方案 §4.5 - 失焦延迟 200ms 收起（让 SuggestPanel 项 onPress 先触发跳转，
+                    //   避免 onBlur 同步卸载面板导致 onPress 丢失；RN 无 click-outside 时序兜底）
+                    setTimeout(() => setSuggestOpen(false), 200);
+                  }}
                   autoFocus
                   variant="card"
                   showMic
@@ -213,7 +252,8 @@ export default function SearchIndexPage() {
           </View>
         </View>
 
-        {/* Filter Tags 横滑 */}
+        {/* Filter Tags 横滑 - C方案 §4.6: showSuggest 时隐藏（联想面板独占） */}
+        {!showSuggest && (
         <View style={styles.filterTagsWrap}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.filterTagsRow}>
@@ -248,9 +288,10 @@ export default function SearchIndexPage() {
             </View>
           </ScrollView>
         </View>
+        )}
 
         {/* Recent Searches（P7 F1: AsyncStorage 持久化 + 流式 chip，空时隐藏整块） */}
-        {recentSearches.length > 0 && (
+        {(!showSuggest && recentSearches.length > 0) && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
@@ -298,7 +339,7 @@ export default function SearchIndexPage() {
         )}
 
         {/* Popular Searches 热搜榜（P7 决策 3-B）- 空数据时隐藏整块（跟 Recent 区一致） */}
-        {popularWithHeat.length > 0 && (
+        {(!showSuggest && popularWithHeat.length > 0) && (
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
             {t('search.popular')}
@@ -340,7 +381,8 @@ export default function SearchIndexPage() {
         </View>
         )}
 
-        {/* Recommended for You（P7 §2.4: MasonryProductCard 两列瀑布流，与首页统一） */}
+        {/* Recommended for You（P7 §2.4: MasonryProductCard 两列瀑布流，与首页统一）- C方案 §4.6: showSuggest 时隐藏 */}
+        {!showSuggest && (
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
             {t('search.recommended')}
@@ -372,7 +414,23 @@ export default function SearchIndexPage() {
             </View>
           )}
         </View>
+        )}
       </ScrollView>
+      {/* C方案 §4.4 - SuggestPanel 挂 ScrollView 同级 absolute（top:90=headerWrap 高度），不随滚动 */}
+      {showSuggest && (
+        <View style={styles.suggestWrap} pointerEvents="box-none">
+          <SuggestPanel
+            words={suggestWords ?? []}
+            products={suggestProducts ?? []}
+            query={query}
+            isLoading={isSuggestLoading}
+            hotFallback={hotFallback}
+            onWordPress={(w) => onSubmitSearch(w)}
+            onProductPress={(p) => router.push(`/product/${p.id}`)}
+            onHotFallbackPress={(w) => onSubmitSearch(w)}
+          />
+        </View>
+      )}
     </SafeAreaWrapper>
   );
 }
@@ -568,5 +626,13 @@ const styles = StyleSheet.create({
   masonryCol: {
     flex: 1,
     gap: spacing.md,
+  },
+  // C方案 §4.4 - SuggestPanel 定位锚点：ScrollView 同级 absolute，top:90=headerWrap 高度
+  suggestWrap: {
+    position: 'absolute',
+    top: 90,
+    left: layout['container-margin'],
+    right: layout['container-margin'],
+    zIndex: 10,
   },
 });
