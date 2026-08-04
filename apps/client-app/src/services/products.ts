@@ -109,14 +109,18 @@ export const productApi = {
         const name = p.name[getCurrentLocale()] ?? p.name.en;
         return name.toLowerCase().includes(lower);
       });
-      // Why: mock 无分页语义，一次性返全部，hasMore=false 让 infinite query 不触发下一页（P8 §5.5）
-      return mockResponse({ items: filtered, hasMore: false, total: filtered.length }, 500);
+      // Why: C方案 §6 F1 - mock 分支补 pageSize 透传（联想 pageSize=3 只取前 3），不传则一次性返全部
+      //   保持 hasMore=false 让 infinite query 不触发下一页（P8 §5.5），P8 结果页 useProductSearch 不传 pageSize 行为不变
+      const paged = opts?.pageSize ? filtered.slice(0, opts.pageSize) : filtered;
+      return mockResponse({ items: paged, hasMore: false, total: filtered.length }, 500);
     }
     // Why: 保留 hasMore/total（之前丢掉导致无法真实分页），P8 决策 3-B
+    // Why: C方案 §6 F1 - 补 pageSize 透传（联想 pageSize=3），P8 useProductSearch 不传 pageSize 行为不变
     const res = await api.get<ProductListResponse>('/client/products/search', {
       params: {
         keyword,
         ...(opts?.page && { page: opts.page }),
+        ...(opts?.pageSize && { pageSize: opts.pageSize }),
         ...(opts?.sortBy && { sortBy: opts.sortBy }),
       },
     });
