@@ -685,6 +685,16 @@
     "recent": "Recent Searches",
     "clearAll": "Clear All",
     "popular": "Popular Searches",
-    "recommended": "Recommended for You"
+    "recommended": "Recommended for You",
+    "sort": {
+      "bestSelling": "Best Selling",
+      "priceAsc": "Price: Low to High",
+      "newArrivals": "New Arrivals"
+    },
+    "noResultTitle": "No results found",
+    "noResultDesc": "No products matching \"{{q}}\"",
+    "resultCount": "{{count}} results found",
+    "loadingMore": "Finding more products...",
+    "placeholder": "Search products..."
   }
 }

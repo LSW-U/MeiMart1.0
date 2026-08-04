@@ -637,6 +637,16 @@
     "recent": "[TET]Recent Searches",
     "clearAll": "[TET]Clear All",
     "popular": "[TET]Popular Searches",
-    "recommended": "[TET]Recommended for You"
+    "recommended": "[TET]Recommended for You",
+    "sort": {
+      "bestSelling": "[TET]Best Selling",
+      "priceAsc": "[TET]Price: Low to High",
+      "newArrivals": "[TET]New Arrivals"
+    },
+    "noResultTitle": "[TET]No results found",
+    "noResultDesc": "[TET]No products matching \"{{q}}\"",
+    "resultCount": "[TET]{{count}} results found",
+    "loadingMore": "[TET]Finding more products...",
+    "placeholder": "[TET]Search products..."
   }
 }

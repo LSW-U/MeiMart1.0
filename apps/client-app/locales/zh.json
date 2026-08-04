@@ -685,6 +685,16 @@
     "recent": "最近搜索",
     "clearAll": "清空",
     "popular": "热门搜索",
-    "recommended": "为你推荐"
+    "recommended": "为你推荐",
+    "sort": {
+      "bestSelling": "热销",
+      "priceAsc": "价格从低到高",
+      "newArrivals": "新品上架"
+    },
+    "noResultTitle": "未找到结果",
+    "noResultDesc": "没有找到「{{q}}」相关商品",
+    "resultCount": "找到 {{count}} 个结果",
+    "loadingMore": "正在查找更多商品...",
+    "placeholder": "搜索商品..."
   }
 }

@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -19,9 +20,15 @@ import { useProductSearch } from '@/services/queries/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Product } from '@/types';
 
-// 排序 & 过滤栏（HTML 第 170-189 行）
-const SORT_OPTIONS = ['All', 'Best Selling', 'Price: Low to High', 'New Arrivals'] as const;
-type SortOption = (typeof SORT_OPTIONS)[number];
+// P8-2 i18n：排序 value(labelKey) 分离。key 传后端 sortBy，labelKey 走 t()。
+// all 复用 common.all，不新增 search.sort.all（避免重复 key）。
+type SortKey = 'all' | 'bestSelling' | 'priceAsc' | 'newArrivals';
+const SORT_OPTIONS: { key: SortKey; labelKey: string }[] = [
+  { key: 'all', labelKey: 'common.all' },
+  { key: 'bestSelling', labelKey: 'search.sort.bestSelling' },
+  { key: 'priceAsc', labelKey: 'search.sort.priceAsc' },
+  { key: 'newArrivals', labelKey: 'search.sort.newArrivals' },
+];
 
 // 购物车角标 mock（HTML 第 165 行）
 const CART_BADGE_COUNT = 3;
@@ -39,7 +46,8 @@ export default function SearchResultsPage() {
   const params = useLocalSearchParams<{ q: string }>();
   const keyword = useDebounce(params.q ?? '', 300);
   const { data: results, isLoading, isError, refetch } = useProductSearch(keyword);
-  const [activeSort, setActiveSort] = useState<SortOption>('All');
+  const { t } = useTranslation();
+  const [activeSort, setActiveSort] = useState<SortKey>('all');
 
   const count = results?.length ?? 0;
 
@@ -53,11 +61,11 @@ export default function SearchResultsPage() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : isError ? (
-        <ErrorState message="Failed to load results. Please try again." onRetry={() => refetch()} />
+        <ErrorState message={t('errors.products')} onRetry={() => refetch()} />
       ) : !results || results.length === 0 ? (
         <EmptyState
-          title="No results found"
-          description={`No products matching "${params.q ?? ''}"`}
+          title={t('search.noResultTitle')}
+          description={t('search.noResultDesc', { q: params.q ?? '' })}
           icon="package-variant"
         />
       ) : (
@@ -79,18 +87,19 @@ export default function SearchResultsPage() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.sortRow}>
                 {SORT_OPTIONS.map((opt) => {
-                  const active = opt === activeSort;
+                  const active = opt.key === activeSort;
+                  const label = t(opt.labelKey);
                   return (
                     <Pressable
-                      key={opt}
-                      onPress={() => setActiveSort(opt)}
+                      key={opt.key}
+                      onPress={() => setActiveSort(opt.key)}
                       style={[
                         styles.sortPill,
                         active && { backgroundColor: colors['surface-container-high'] },
                       ]}
                       accessibilityRole="button"
                       accessibilityState={{ selected: active }}
-                      accessibilityLabel={`Sort: ${opt}`}
+                      accessibilityLabel={`Sort: ${label}`}
                     >
                       <Text
                         style={[
@@ -100,7 +109,7 @@ export default function SearchResultsPage() {
                           },
                         ]}
                       >
-                        {opt}
+                        {label}
                       </Text>
                     </Pressable>
                   );
@@ -111,7 +120,7 @@ export default function SearchResultsPage() {
 
           {/* Results Found 计数 */}
           <Text style={[styles.countText, { color: colors['on-surface-variant'] }]}>
-            {count} related products found
+            {t('search.resultCount', { count })}
           </Text>
 
           {/* Product Grid 2 列 */}
@@ -139,7 +148,7 @@ export default function SearchResultsPage() {
               ]}
             />
             <Text style={[styles.loadMoreText, { color: colors['on-surface-variant'] }]}>
-              Finding more products...
+              {t('search.loadingMore')}
             </Text>
           </View>
         </ScrollView>
@@ -151,6 +160,7 @@ export default function SearchResultsPage() {
 // Primary tais-pattern Header + 内嵌只读搜索框（HTML 第 151-168 行）
 function Header({ keyword }: { keyword: string }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const handleBack = useSafeBack();
   return (
     <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.lg]}>
@@ -184,7 +194,7 @@ function Header({ keyword }: { keyword: string }) {
             numberOfLines={1}
             accessibilityLabel={`Search keyword: ${keyword}`}
           >
-            {keyword || 'Search products...'}
+            {keyword || t('search.placeholder')}
           </Text>
           <Pressable
             onPress={() => router.push('/search')}
