@@ -72,7 +72,7 @@ export default function SearchResultsPage() {
               styles.sortWrap,
               {
                 backgroundColor: colors['surface-container-lowest'],
-                borderColor: 'rgba(141,112,108,0.1)',
+                borderColor: colors['outline-variant'],
               },
             ]}
           >
@@ -86,7 +86,7 @@ export default function SearchResultsPage() {
                       onPress={() => setActiveSort(opt)}
                       style={[
                         styles.sortPill,
-                        active && { backgroundColor: 'rgba(150,24,19,0.1)' },
+                        active && { backgroundColor: colors['surface-container-high'] },
                       ]}
                       accessibilityRole="button"
                       accessibilityState={{ selected: active }}
@@ -96,7 +96,7 @@ export default function SearchResultsPage() {
                         style={[
                           styles.sortText,
                           {
-                            color: active ? colors.primary : 'rgba(89,65,61,0.7)',
+                            color: active ? colors.primary : colors['on-surface-variant'],
                           },
                         ]}
                       >
@@ -133,7 +133,7 @@ export default function SearchResultsPage() {
               style={[
                 styles.spinner,
                 {
-                  borderColor: 'rgba(141,112,108,0.3)',
+                  borderColor: colors.outline,
                   borderTopColor: colors.primary,
                 },
               ]}
@@ -174,7 +174,7 @@ function Header({ keyword }: { keyword: string }) {
             styles.searchBox,
             {
               backgroundColor: colors['surface-container-lowest'],
-              borderColor: 'rgba(141,112,108,0.2)',
+              borderColor: colors['outline-variant'],
             },
           ]}
         >
