@@ -17,8 +17,12 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { useProductSearch, type ProductSortKey } from '@/services/queries/useProducts';
-import { useCart } from '@/services/queries/useCart';
+// P8-6 R3/R5：Recommended 复用 MasonryProductCard + resolveBadges（与首页/P7 统一）
+import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
+import { resolveBadges } from '@/utils/resolveBadges';
+import { toast } from '@/store/toastStore';
+import { useProductSearch, useProducts, type ProductSortKey } from '@/services/queries/useProducts';
+import { useCart, useAddToCart } from '@/services/queries/useCart';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Product } from '@/types';
 
@@ -68,6 +72,24 @@ export default function SearchResultsPage() {
     if (distanceFromBottom < 200 && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
+  };
+
+  // P8-6 R1：Recommended 数据源 useProducts（与 P7/home 一致），去重过渡期可接受（方案 §2.4）
+  const { data: realProducts } = useProducts();
+  const recommendList = realProducts ?? [];
+  const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
+  const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
+  const addToCartMutation = useAddToCart();
+  const handleAddToCart = (item: Product) => {
+    addToCartMutation.mutate(
+      { product: item, quantity: 1 },
+      {
+        onSuccess: () =>
+          toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
+        onError: () =>
+          toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+      },
+    );
   };
 
   return (
@@ -187,6 +209,39 @@ export default function SearchResultsPage() {
               <Text style={[styles.loadMoreText, { color: colors['on-surface-variant'] }]}>
                 {t('search.loadingMore')}
               </Text>
+            </View>
+          )}
+
+          {/* P8-6 R2/R4：Recommended 瀑布流，分页结束后（!hasNextPage）显示，避免穿插每页底部 */}
+          {!hasNextPage && recommendList.length > 0 && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                {t('search.recommended')}
+              </Text>
+              <View style={styles.masonryRow}>
+                <View style={styles.masonryCol}>
+                  {masonryCol1.map((product) => (
+                    <MasonryProductCard
+                      key={product.id}
+                      product={product}
+                      badge={resolveBadges(product, t)[0]}
+                      onPress={() => router.push(`/product/${product.id}`)}
+                      onAddToCart={() => handleAddToCart(product)}
+                    />
+                  ))}
+                </View>
+                <View style={styles.masonryCol}>
+                  {masonryCol2.map((product) => (
+                    <MasonryProductCard
+                      key={product.id}
+                      product={product}
+                      badge={resolveBadges(product, t)[0]}
+                      onPress={() => router.push(`/product/${product.id}`)}
+                      onAddToCart={() => handleAddToCart(product)}
+                    />
+                  ))}
+                </View>
+              </View>
             </View>
           )}
         </ScrollView>
@@ -389,5 +444,22 @@ const styles = StyleSheet.create({
   },
   skeletonCard: {
     gap: spacing.sm,
+  },
+  // P8-6 R4：Recommended 两列瀑布流（同 home.tsx / P7 search/index masonry 模式）
+  section: {
+    marginTop: spacing.xl,
+    gap: spacing.md,
+  },
+  sectionTitle: {
+    ...typography.h3,
+    fontWeight: '600',
+  },
+  masonryRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  masonryCol: {
+    flex: 1,
+    gap: spacing.md,
   },
 });
