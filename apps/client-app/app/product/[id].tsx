@@ -1090,7 +1090,9 @@ function TopBar({
         <Icon symbol="shopping_cart" size={24} color={colors['primary-container']} />
         {cartCount > 0 && (
           <View style={styles.cartBadge} accessibilityLabel={`${cartCount} items in cart`}>
-            <Text style={styles.cartBadgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
+            <Text style={[styles.cartBadgeText, { color: colors.primary }]}>
+              {cartCount > 99 ? '99+' : cartCount}
+            </Text>
           </View>
         )}
       </Pressable>
@@ -1121,14 +1123,14 @@ const styles = StyleSheet.create({
     height: 18,
     paddingHorizontal: 4,
     borderRadius: 9,
-    backgroundColor: '#dc2626', // 原因：断货 badge 红（HTML out-of-stock red-600），与 semantic.error 色阶不同
+    // Why: 白底红字（统一 results 角标，用户要求），字色渲染处动态 colors.primary
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
   },
   cartBadgeText: {
-    // 原因：购物车角标红底(#dc2626)白字，固定对比色，dark 不变
-    color: '#ffffff',
+    // color 渲染处动态 colors.primary（白底红字，统一 results）
     fontSize: 10,
     fontWeight: '700',
   },

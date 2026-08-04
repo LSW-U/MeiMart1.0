@@ -19,7 +19,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useProducts } from '@/services/queries/useProducts';
 import { useSearchHot } from '@/services/queries/useSearchHot';
 import { useCategories } from '@/services/queries/useCatalog';
-import { useAddToCart } from '@/services/queries/useCart';
+import { useAddToCart, useCart } from '@/services/queries/useCart';
 import { toast } from '@/store/toastStore';
 import { useRecentSearches } from '@/hooks/useRecentSearches';
 import type { Product } from '@/types';
@@ -96,6 +96,9 @@ export default function SearchIndexPage() {
   const { recentSearches, addRecent, removeRecent, clearRecent } = useRecentSearches();
   // Why: P7 §2.4 - Recommended 加购（MasonryProductCard onAddToCart，同 home.tsx 模式）
   const addToCartMutation = useAddToCart();
+  // P8 复刻 results 顶部：购物车角标接真实数量（白底红字，同 results）
+  const { data: cart } = useCart();
+  const cartCount = cart?.totalItems ?? 0;
   // Why: 用真实商品替换 mock rec-* id，避免 router.push('/product/rec-1') 跳转后 404
   const { data: realProducts } = useProducts();
   // Why: P7 §2.4 R3 - 取全部（原 slice(0,4) 只 4 条不够瀑布流错落）
@@ -183,23 +186,27 @@ export default function SearchIndexPage() {
                 />
               </View>
               <View style={styles.toolbarRight}>
-                <Pressable
-                  onPress={() => router.push('/service')}
-                  hitSlop={8}
-                  style={styles.toolbarBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel="Customer service"
-                >
-                  <Icon symbol="support_agent" size={24} color={ON_PRIMARY} />
-                </Pressable>
+                {/* P8 复刻 results 顶部：删客服，只留购物车 + 白底红字角标 */}
                 <Pressable
                   onPress={() => router.push('/cart')}
                   hitSlop={8}
                   style={styles.toolbarBtn}
                   accessibilityRole="button"
-                  accessibilityLabel="Shopping cart"
+                  accessibilityLabel={t('cart.a11y.itemCount', { count: cartCount })}
                 >
                   <Icon symbol="shopping_cart" size={24} color={ON_PRIMARY} />
+                  {cartCount > 0 && (
+                    <View
+                      style={[
+                        styles.cartBadge,
+                        { backgroundColor: '#ffffff', borderColor: colors.primary },
+                      ]}
+                    >
+                      <Text style={[styles.cartBadgeText, { color: colors.primary }]}>
+                        {cartCount > 99 ? '99+' : cartCount}
+                      </Text>
+                    </View>
+                  )}
                 </Pressable>
               </View>
             </View>
@@ -428,10 +435,28 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   toolbarBtn: {
+    position: 'relative',
     width: 40,
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // P8 复刻 results：购物车角标（白底红字红边，backgroundColor/color 动态内联）
+  cartBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 3,
+    borderRadius: 999,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cartBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
   },
   filterTagsWrap: {
     paddingTop: spacing.lg,
