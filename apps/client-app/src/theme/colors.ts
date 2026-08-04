@@ -116,10 +116,10 @@ export const lightColors: AppColors = {
   'on-error-container': '#93000a',
 
   // Surface Palette（暖粉白色，微调往白靠：原 #fff8f7 离白15，现 #fffafa 离白10）
- background: '#fffafa',
- surface: '#fffafa',
- 'surface-variant': '#fae8e6',
- 'surface-container': '#fff0ee',
+  background: '#fffafa',
+  surface: '#fffafa',
+  'surface-variant': '#fae8e6',
+  'surface-container': '#fff0ee',
   'surface-container-low': '#fff5f4',
   'surface-container-lowest': '#ffffff',
   'surface-container-high': '#fdecea',
