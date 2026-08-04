@@ -19,6 +19,7 @@ import { Icon } from '@/components/ui/Icon';
 import { Skeleton } from '@/components/ui/Skeleton';
 // P8-6 R3/R5：Recommended 复用 MasonryProductCard + resolveBadges（与首页/P7 统一）
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
+import { SearchBar } from '@/components/business/SearchBar';
 import { resolveBadges } from '@/utils/resolveBadges';
 import { toast } from '@/store/toastStore';
 import { useProductSearch, useProducts, type ProductSortKey } from '@/services/queries/useProducts';
@@ -92,10 +93,53 @@ export default function SearchResultsPage() {
     );
   };
 
+  // P8-7: 顶部搜索框可编辑（同 P7 SearchBar + 麦克风）
+  // Why: Header 用 key={params.q} 重挂载同步搜索词，避免 effect setState（react-hooks 规则）
+  const handleSubmitSearch = (q: string) => {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    // Why: setParams 刷新当前页（useProductSearch 自动重查），避免 push 堆路由栈
+    router.setParams({ q: trimmed });
+  };
+
+  // P8-6: Recommended 渲染抽函数（结果分支 !hasNextPage + empty 分支共用）
+  const renderRecommended = () =>
+    recommendList.length > 0 ? (
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+          {t('search.recommended')}
+        </Text>
+        <View style={styles.masonryRow}>
+          <View style={styles.masonryCol}>
+            {masonryCol1.map((product) => (
+              <MasonryProductCard
+                key={product.id}
+                product={product}
+                badge={resolveBadges(product, t)[0]}
+                onPress={() => router.push(`/product/${product.id}`)}
+                onAddToCart={() => handleAddToCart(product)}
+              />
+            ))}
+          </View>
+          <View style={styles.masonryCol}>
+            {masonryCol2.map((product) => (
+              <MasonryProductCard
+                key={product.id}
+                product={product}
+                badge={resolveBadges(product, t)[0]}
+                onPress={() => router.push(`/product/${product.id}`)}
+                onAddToCart={() => handleAddToCart(product)}
+              />
+            ))}
+          </View>
+        </View>
+      </View>
+    ) : null;
+
   return (
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
-      <Header keyword={params.q ?? ''} />
+      <Header key={params.q} initialKeyword={params.q ?? ''} onSubmitSearch={handleSubmitSearch} />
 
       {isLoading ? (
         // P8-3 F1 骨架屏：4 卡片占位（图片+名+价），替代 spinner，视觉延续性好
@@ -119,11 +163,15 @@ export default function SearchResultsPage() {
       ) : isError ? (
         <ErrorState message={t('errors.products')} onRetry={() => refetch()} />
       ) : !results || results.length === 0 ? (
-        <EmptyState
-          title={t('search.noResultTitle')}
-          description={t('search.noResultDesc', { q: params.q ?? '' })}
-          icon="package-variant"
-        />
+        // P8-6: empty 也给推荐延伸浏览（用户决策 2026-08-04）
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+          <EmptyState
+            title={t('search.noResultTitle')}
+            description={t('search.noResultDesc', { q: params.q ?? '' })}
+            icon="package-variant"
+          />
+          {renderRecommended()}
+        </ScrollView>
       ) : (
         <ScrollView
           style={{ flex: 1 }}
@@ -213,48 +261,25 @@ export default function SearchResultsPage() {
           )}
 
           {/* P8-6 R2/R4：Recommended 瀑布流，分页结束后（!hasNextPage）显示，避免穿插每页底部 */}
-          {!hasNextPage && recommendList.length > 0 && (
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                {t('search.recommended')}
-              </Text>
-              <View style={styles.masonryRow}>
-                <View style={styles.masonryCol}>
-                  {masonryCol1.map((product) => (
-                    <MasonryProductCard
-                      key={product.id}
-                      product={product}
-                      badge={resolveBadges(product, t)[0]}
-                      onPress={() => router.push(`/product/${product.id}`)}
-                      onAddToCart={() => handleAddToCart(product)}
-                    />
-                  ))}
-                </View>
-                <View style={styles.masonryCol}>
-                  {masonryCol2.map((product) => (
-                    <MasonryProductCard
-                      key={product.id}
-                      product={product}
-                      badge={resolveBadges(product, t)[0]}
-                      onPress={() => router.push(`/product/${product.id}`)}
-                      onAddToCart={() => handleAddToCart(product)}
-                    />
-                  ))}
-                </View>
-              </View>
-            </View>
-          )}
+          {!hasNextPage && renderRecommended()}
         </ScrollView>
       )}
     </SafeAreaWrapper>
   );
 }
 
-// Primary tais-pattern Header + 内嵌只读搜索框（HTML 第 151-168 行）
-function Header({ keyword }: { keyword: string }) {
+// Primary tais-pattern Header + 可编辑搜索框（P8-7 改 SearchBar，同 P7）
+function Header({
+  initialKeyword,
+  onSubmitSearch,
+}: {
+  initialKeyword: string;
+  onSubmitSearch: (q: string) => void;
+}) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const handleBack = useSafeBack();
+  const [query, setQuery] = useState(initialKeyword);
   // P8-4 F4：购物车角标接真实数量（cart.totalItems），未登录/空购物车隐藏角标
   const { data: cart } = useCart();
   const cartCount = cart?.totalItems ?? 0;
@@ -274,32 +299,16 @@ function Header({ keyword }: { keyword: string }) {
           <Icon symbol="arrow_back" size={24} color="#ffffff" />
         </Pressable>
 
-        {/* 内嵌只读搜索框 */}
-        <View
-          style={[
-            styles.searchBox,
-            {
-              backgroundColor: colors['surface-container-lowest'],
-              borderColor: colors['outline-variant'],
-            },
-          ]}
-        >
-          <Icon symbol="search" size={16} color={colors.outline} />
-          <Text
-            style={[styles.searchInput, { color: colors['on-surface'] }]}
-            numberOfLines={1}
-            accessibilityLabel={`Search keyword: ${keyword}`}
-          >
-            {keyword || t('search.placeholder')}
-          </Text>
-          <Pressable
-            onPress={() => router.push('/search')}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Clear search"
-          >
-            <Icon symbol="close" size={16} color={colors.outline} />
-          </Pressable>
+        {/* P8-7: 可编辑搜索框（SearchBar + 麦克风，同 P7），提交触发 setParams 刷新当前页 */}
+        <View style={styles.searchBarInline}>
+          <SearchBar
+            value={query}
+            onChange={setQuery}
+            onSubmit={onSubmitSearch}
+            variant="card"
+            showMic
+            placeholder={t('search.placeholder')}
+          />
         </View>
 
         {/* 购物车 + 角标 */}
@@ -357,20 +366,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  searchBox: {
+  // P8-7: SearchBar 占满中间（arrow 与购物车之间），同 P7 searchBarInline
+  searchBarInline: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 40,
-    paddingHorizontal: spacing.sm,
-    gap: spacing.xs,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-  },
-  searchInput: {
-    flex: 1,
-    ...typography['body-sm'],
-    paddingHorizontal: spacing.xs,
   },
   cartBadge: {
     position: 'absolute',
