@@ -697,6 +697,9 @@
     "noResultDesc": "No products matching \"{{q}}\"",
     "resultCount": "{{count}} results found",
     "loadingMore": "Finding more products...",
-    "placeholder": "Search products..."
+    "placeholder": "Search products...",
+    "suggested": "Suggested Searches",
+    "suggestedProducts": "Popular Products",
+    "noSuggestion": "No suggestions for \"{{q}}\". Press search to see results."
   }
 }

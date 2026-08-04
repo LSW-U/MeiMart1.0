@@ -26,6 +26,12 @@ export interface SearchBarProps {
   onSubmit?: (query: string) => void;
   /** 点击清除按钮 */
   onClear?: () => void;
+  /**
+   * 失焦回调（C方案 §4.5 - search/index.tsx 传 onBlur 收起联想面板）
+   * RN 无 document.click，纯 onBlur 在「点 SuggestPanel 项」时也会先触发，
+   * 由父页用 onPressOut 兜底或接受失焦即收起（视交互需求定）。
+   */
+  onBlur?: () => void;
   /** 自动聚焦 */
   autoFocus?: boolean;
   testID?: string;

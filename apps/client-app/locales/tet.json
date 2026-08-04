@@ -649,6 +649,9 @@
     "noResultDesc": "[TET]No products matching \"{{q}}\"",
     "resultCount": "[TET]{{count}} results found",
     "loadingMore": "[TET]Finding more products...",
-    "placeholder": "[TET]Search products..."
+    "placeholder": "[TET]Search products...",
+    "suggested": "[TET]Suggested Searches",
+    "suggestedProducts": "[TET]Popular Products",
+    "noSuggestion": "[TET]No suggestions for \"{{q}}\". Press search to see results."
   }
 }

@@ -16,6 +16,7 @@ export function SearchBar({
   onChange,
   onSubmit,
   onClear,
+  onBlur,
   autoFocus = false,
   testID,
 }: SearchBarProps) {
@@ -74,6 +75,7 @@ export function SearchBar({
         placeholderTextColor={placeholderColor}
         onChangeText={handleChange}
         onSubmitEditing={handleSubmit}
+        onBlur={onBlur}
         autoFocus={autoFocus}
         returnKeyType="search"
         style={[textStyle('body-md'), { color: textColor, flex: 1 }]}
