@@ -314,7 +314,7 @@ export default function SearchIndexPage() {
                   onPress={() => onSubmitSearch(item)}
                   style={({ pressed }) => [styles.recentChipTextWrap, pressed && styles.chipPressed]}
                   accessibilityRole="button"
-                  accessibilityLabel={`Search ${item}`}
+                  accessibilityLabel={t('search.searchTerm', { term: item })}
                 >
                   <Text
                     style={[styles.recentChipText, { color: colors['on-surface-variant'] }]}
@@ -359,7 +359,7 @@ export default function SearchIndexPage() {
                   pressed && { opacity: 0.7 },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={`Search ${label}`}
+                accessibilityLabel={t('search.searchTerm', { term: label })}
               >
                 <View style={[styles.hotNum, { backgroundColor: rankColor.bg }]}>
                   <Text style={[styles.hotNumText, { color: rankColor.fg }]}>{rank}</Text>
