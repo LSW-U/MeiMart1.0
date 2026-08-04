@@ -325,12 +325,15 @@ function Header({
               style={[
                 styles.cartBadge,
                 {
-                  backgroundColor: colors['tertiary-fixed'],
+                  // Why: 白底红字红边（用户要求），底固定白不随主题，字/边用 primary 红
+                  backgroundColor: '#ffffff',
                   borderColor: colors.primary,
                 },
               ]}
             >
-              <Text style={styles.cartBadgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
+              <Text style={[styles.cartBadgeText, { color: colors.primary }]}>
+                {cartCount > 99 ? '99+' : cartCount}
+              </Text>
             </View>
           )}
         </Pressable>
@@ -382,7 +385,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cartBadgeText: {
-    color: '#ffffff',
     fontSize: 9,
     fontWeight: '700',
   },
