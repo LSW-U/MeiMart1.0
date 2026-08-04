@@ -3,7 +3,7 @@
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 116%）
 // Fix-11: Primary tais-pattern Header + 内嵌只读搜索 + 排序栏 + 结果计数 + Load More
 import { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, Pressable, ScrollView, type NativeScrollEvent } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -17,15 +17,15 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { useProductSearch } from '@/services/queries/useProducts';
+import { useProductSearch, type ProductSortKey } from '@/services/queries/useProducts';
 import { useCart } from '@/services/queries/useCart';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Product } from '@/types';
 
 // P8-2 i18n：排序 value(labelKey) 分离。key 传后端 sortBy，labelKey 走 t()。
 // all 复用 common.all，不新增 search.sort.all（避免重复 key）。
-type SortKey = 'all' | 'bestSelling' | 'priceAsc' | 'newArrivals';
-const SORT_OPTIONS: { key: SortKey; labelKey: string }[] = [
+// P8-5: ProductSortKey 从 service 导入（与后端 ProductSortBy 一致），不本地重定义
+const SORT_OPTIONS: { key: ProductSortKey; labelKey: string }[] = [
   { key: 'all', labelKey: 'common.all' },
   { key: 'bestSelling', labelKey: 'search.sort.bestSelling' },
   { key: 'priceAsc', labelKey: 'search.sort.priceAsc' },
@@ -44,11 +44,31 @@ export default function SearchResultsPage() {
   const { colors } = useTheme();
   const params = useLocalSearchParams<{ q: string }>();
   const keyword = useDebounce(params.q ?? '', 300);
-  const { data: results, isLoading, isError, refetch } = useProductSearch(keyword);
   const { t } = useTranslation();
-  const [activeSort, setActiveSort] = useState<SortKey>('all');
+  const [activeSort, setActiveSort] = useState<ProductSortKey>('all');
+  // P8-5 F2+F3：sortBy 变重查第一页（决策 2-B），onEndReached 触发 fetchNextPage（决策 3-B）
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useProductSearch(keyword, activeSort);
+  // Why: pages.flatMap 拼接所有已加载页；total 取首页（搜索结果总数，非累计已加载数）
+  const results = data?.pages.flatMap((p) => p.items) ?? [];
+  const count = data?.pages[0]?.total ?? 0;
 
-  const count = results?.length ?? 0;
+  // P8-5 F3：ScrollView 触底加载下一页（distanceFromBottom < 200）
+  const handleScroll = ({ nativeEvent }: { nativeEvent: NativeScrollEvent }) => {
+    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+    const distanceFromBottom =
+      contentSize.height - layoutMeasurement.height - contentOffset.y;
+    if (distanceFromBottom < 200 && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
 
   return (
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
@@ -87,6 +107,8 @@ export default function SearchResultsPage() {
           style={{ flex: 1 }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
         >
           {/* Sort & Filter Bar */}
           <View
@@ -150,21 +172,23 @@ export default function SearchResultsPage() {
             ))}
           </View>
 
-          {/* Load More Section */}
-          <View style={styles.loadMore}>
-            <View
-              style={[
-                styles.spinner,
-                {
-                  borderColor: colors.outline,
-                  borderTopColor: colors.primary,
-                },
-              ]}
-            />
-            <Text style={[styles.loadMoreText, { color: colors['on-surface-variant'] }]}>
-              {t('search.loadingMore')}
-            </Text>
-          </View>
+          {/* P8-5 F3 真实分页：hasNextPage 时显示 Load More + 触底加载，无更多隐藏（替假 spinner） */}
+          {(hasNextPage || isFetchingNextPage) && (
+            <View style={styles.loadMore}>
+              <View
+                style={[
+                  styles.spinner,
+                  {
+                    borderColor: colors.outline,
+                    borderTopColor: colors.primary,
+                  },
+                ]}
+              />
+              <Text style={[styles.loadMoreText, { color: colors['on-surface-variant'] }]}>
+                {t('search.loadingMore')}
+              </Text>
+            </View>
+          )}
         </ScrollView>
       )}
     </SafeAreaWrapper>

@@ -1,6 +1,11 @@
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { productApi } from '@/services/products';
-import type { Product } from '@/types';
+
+/**
+ * 排序方式（P8 决策 2-B 后端排序，与后端 ProductSortBy enum 一致）
+ * - all 综合 / bestSelling 销量 / priceAsc 价格升 / newArrivals 上新
+ */
+export type ProductSortKey = 'all' | 'bestSelling' | 'priceAsc' | 'newArrivals';
 
 export function useProducts() {
   return useQuery({
@@ -39,11 +44,22 @@ export function useBuyAgain() {
   });
 }
 
-export function useProductSearch(keyword: string, enabled = true) {
-  return useQuery<Product[]>({
-    queryKey: ['products', 'search', keyword],
-    queryFn: () => productApi.search(keyword),
-    enabled: enabled && keyword.trim().length > 0,
+/**
+ * 搜索结果无限分页 hook（P8 决策 2-B 后端排序 + 决策 3-B 真实分页）
+ *
+ * - sortBy 变 → queryKey 变 → 自动重查第一页（切换排序触发重新搜索）
+ * - onEndReached 调 fetchNextPage 取下一页（getNextPageParam 按 hasMore 判断）
+ * - mock 模式 hasMore=false，不触发第二页（一次性返全部）
+ * - pages.flatMap(p => p.items) 拼接所有已加载页；pages[0].total 是搜索结果总数
+ */
+export function useProductSearch(keyword: string, sortBy: ProductSortKey = 'all') {
+  return useInfiniteQuery({
+    queryKey: ['products', 'search', keyword, sortBy],
+    queryFn: ({ pageParam }) => productApi.search(keyword, { page: pageParam, sortBy }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.hasMore ? allPages.length + 1 : undefined,
+    enabled: keyword.trim().length > 0,
     placeholderData: keepPreviousData,
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',

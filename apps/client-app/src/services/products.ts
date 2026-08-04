@@ -99,20 +99,32 @@ export const productApi = {
     return res.data.map(transformProduct);
   },
 
-  async search(keyword: string, page?: number): Promise<Product[]> {
+  async search(
+    keyword: string,
+    opts?: { page?: number; pageSize?: number; sortBy?: string },
+  ): Promise<{ items: Product[]; hasMore: boolean; total: number }> {
     if (isMockMode) {
       const lower = keyword.toLowerCase();
       const filtered = mockDb.products.filter((p) => {
         const name = p.name[getCurrentLocale()] ?? p.name.en;
         return name.toLowerCase().includes(lower);
       });
-      return mockResponse(filtered, 500);
+      // Why: mock 无分页语义，一次性返全部，hasMore=false 让 infinite query 不触发下一页（P8 §5.5）
+      return mockResponse({ items: filtered, hasMore: false, total: filtered.length }, 500);
     }
-    // Why: search 走 listProducts 内部实现，返回分页结构 {items, ...}，service 提取 items
+    // Why: 保留 hasMore/total（之前丢掉导致无法真实分页），P8 决策 3-B
     const res = await api.get<ProductListResponse>('/client/products/search', {
-      params: { keyword, ...(page ? { page } : {}) },
+      params: {
+        keyword,
+        ...(opts?.page && { page: opts.page }),
+        ...(opts?.sortBy && { sortBy: opts.sortBy }),
+      },
     });
-    return res.data.items.map(transformProduct);
+    return {
+      items: res.data.items.map(transformProduct),
+      hasMore: res.data.hasMore,
+      total: res.data.total,
+    };
   },
 
   async getByCategory(categoryId: string): Promise<Product[]> {
