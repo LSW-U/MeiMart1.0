@@ -209,7 +209,8 @@
       "viewItem": "View {{name}}",
       "decreaseQty": "Decrease quantity",
       "increaseQty": "Increase quantity",
-      "deleteItem": "Delete item"
+      "deleteItem": "Delete item",
+      "itemCount": "Cart with {{count}} items"
     }
   },
   "product": {

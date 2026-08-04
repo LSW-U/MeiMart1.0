@@ -166,7 +166,8 @@
       "viewItem": "",
       "decreaseQty": "",
       "increaseQty": "",
-      "deleteItem": ""
+      "deleteItem": "",
+      "itemCount": ""
     }
   },
   "product": {

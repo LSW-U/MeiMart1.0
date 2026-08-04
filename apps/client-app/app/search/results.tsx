@@ -18,6 +18,7 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useProductSearch } from '@/services/queries/useProducts';
+import { useCart } from '@/services/queries/useCart';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Product } from '@/types';
 
@@ -30,9 +31,6 @@ const SORT_OPTIONS: { key: SortKey; labelKey: string }[] = [
   { key: 'priceAsc', labelKey: 'search.sort.priceAsc' },
   { key: 'newArrivals', labelKey: 'search.sort.newArrivals' },
 ];
-
-// 购物车角标 mock（HTML 第 165 行）
-const CART_BADGE_COUNT = 3;
 
 // 4 个商品角标轮转：FRESH / TOP RATED / 无 / NEW（HTML 第 199 / 215 / 230 / 246 行）
 function getResultBadge(idx: number): ProductBadge | undefined {
@@ -178,6 +176,9 @@ function Header({ keyword }: { keyword: string }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const handleBack = useSafeBack();
+  // P8-4 F4：购物车角标接真实数量（cart.totalItems），未登录/空购物车隐藏角标
+  const { data: cart } = useCart();
+  const cartCount = cart?.totalItems ?? 0;
   return (
     <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.lg]}>
       <View style={styles.headerPattern} pointerEvents="none">
@@ -228,20 +229,22 @@ function Header({ keyword }: { keyword: string }) {
           hitSlop={8}
           style={styles.headerBtn}
           accessibilityRole="button"
-          accessibilityLabel={`Cart with ${CART_BADGE_COUNT} items`}
+          accessibilityLabel={t('cart.a11y.itemCount', { count: cartCount })}
         >
           <Icon symbol="shopping_cart" size={24} color="#ffffff" />
-          <View
-            style={[
-              styles.cartBadge,
-              {
-                backgroundColor: colors['tertiary-fixed'],
-                borderColor: colors.primary,
-              },
-            ]}
-          >
-            <Text style={styles.cartBadgeText}>{CART_BADGE_COUNT}</Text>
-          </View>
+          {cartCount > 0 && (
+            <View
+              style={[
+                styles.cartBadge,
+                {
+                  backgroundColor: colors['tertiary-fixed'],
+                  borderColor: colors.primary,
+                },
+              ]}
+            >
+              <Text style={styles.cartBadgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
+            </View>
+          )}
         </Pressable>
       </View>
     </View>

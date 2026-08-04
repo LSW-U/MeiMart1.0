@@ -209,7 +209,8 @@
       "viewItem": "查看 {{name}}",
       "decreaseQty": "减少数量",
       "increaseQty": "增加数量",
-      "deleteItem": "删除商品"
+      "deleteItem": "删除商品",
+      "itemCount": "购物车 {{count}} 件商品"
     }
   },
   "product": {
