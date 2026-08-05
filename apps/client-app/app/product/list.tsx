@@ -21,6 +21,8 @@ import type { Product } from '@/types';
 
 // "All" 分类标签（点击去掉 URL category 参数，显示全部商品）
 const ALL_CATEGORY = 'All';
+// 原因：红底白字固定，dark 不变（同 ON_PRIMARY 模式，对齐 HorizontalProductCard/P6/P7）
+const ON_PRIMARY = '#ffffff';
 
 export default function ProductListPage() {
   const { colors } = useTheme();
@@ -147,7 +149,7 @@ export default function ProductListPage() {
                   accessibilityLabel={`Category: ${cat}`}
                 >
                   <Text
-                    style={[styles.categoryText, { color: active ? '#ffffff' : colors.primary }]}
+                    style={[styles.categoryText, { color: active ? ON_PRIMARY : colors.primary }]}
                   >
                     {cat}
                   </Text>
@@ -183,6 +185,7 @@ export default function ProductListPage() {
 // Primary tais-pattern Header（HTML 第 135 行）
 function Header({ title }: { title: string }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const handleBack = useSafeBack();
   return (
     <View style={[styles.header, { backgroundColor: colors.primary }]}>
@@ -195,9 +198,9 @@ function Header({ title }: { title: string }) {
           hitSlop={8}
           style={styles.headerBtn}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('common.back')}
         >
-          <Icon symbol="arrow_back" size={24} color="#ffffff" />
+          <Icon symbol="arrow_back" size={24} color={ON_PRIMARY} />
         </Pressable>
         <Text style={styles.headerTitle} accessibilityRole="header" numberOfLines={1}>
           {title}
@@ -238,7 +241,7 @@ const styles = StyleSheet.create({
     ...typography.h3,
     flex: 1,
     textAlign: 'center',
-    color: '#ffffff',
+    color: ON_PRIMARY,
     fontWeight: '600',
   },
   headerRightPlaceholder: {
