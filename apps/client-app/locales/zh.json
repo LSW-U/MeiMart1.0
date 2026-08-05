@@ -214,6 +214,7 @@
     }
   },
   "product": {
+    "localBestsellers": "本地热销",
     "addToCart": "加入购物车",
     "buyNow": "立即购买",
     "specification": "规格",

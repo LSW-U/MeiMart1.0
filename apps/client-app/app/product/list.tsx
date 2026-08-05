@@ -1,11 +1,4 @@
-// ProductListPage — 还原自 ProductListPage.html（335 行）
-// HTML → RN 行数比：335 → ~430（含样式）
-// 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 128%）
-// Fix-13: 排行榜差异化布局
-// - Top 3 大卡片：排名 + 80×80 图 + Local Specialty 标签 + 标题 + 销量 + 价格 + add
-// - Top 4-10 紧凑列表：排名 + 16×16 小图 + 标题 + 价格 + 圆形 add
-// - Top 3 加 uma-lulik-shadow（offset 4,4 + #59413d + opacity 0.2）
-// - 横滑分类胶囊 + Primary tais-pattern Header
+// ProductListPage — 商品列表（§9-3 统一为 HorizontalProductCard 纵向列）
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +16,7 @@ import { useCategories } from '@/services/queries/useCatalog';
 import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
 import { useAddToCart } from '@/services/queries/useCart';
 import { toast } from '@/store/toastStore';
+import { resolveBadges } from '@/utils/resolveBadges';
 import type { Product } from '@/types';
 
 // "All" 分类标签（点击去掉 URL category 参数，显示全部商品）
@@ -34,7 +28,7 @@ export default function ProductListPage() {
   const { category } = useLocalSearchParams<{ category?: string }>();
   const { data: categories } = useCategories();
   const currentCategory = categories?.find((c) => c.id === category);
-  const headerTitle = currentCategory?.name ?? 'Local Bestsellers';
+  const headerTitle = currentCategory?.name ?? t('product.localBestsellers');
 
   // Why: URL 有 category -> 按 category 过滤；无 -> 拿全部
   const byCategoryQuery = useProductsByCategory(category);
@@ -126,7 +120,7 @@ export default function ProductListPage() {
           styles.categoryBar,
           {
             backgroundColor: colors.background,
-            borderBottomColor: 'rgba(225, 191, 186, 0.1)',
+            borderBottomColor: colors['outline-variant'],
           },
         ]}
       >
@@ -174,6 +168,7 @@ export default function ProductListPage() {
             <HorizontalProductCard
               key={product.id}
               product={product}
+              badge={resolveBadges(product, t)[0]}
               onPress={() => router.push(`/product/${product.id}`)}
               onAddToCart={() => handleAdd(product)}
             />
@@ -206,26 +201,7 @@ function Header({ title }: { title: string }) {
         <Text style={styles.headerTitle} accessibilityRole="header" numberOfLines={1}>
           {title}
         </Text>
-        <View style={styles.headerRight}>
-          <Pressable
-            onPress={() => {}}
-            hitSlop={8}
-            style={styles.headerBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Help"
-          >
-            <Icon symbol="help" size={24} color="#ffffff" />
-          </Pressable>
-          <Pressable
-            onPress={() => {}}
-            hitSlop={8}
-            style={styles.headerBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Share"
-          >
-            <Icon symbol="share" size={24} color="#ffffff" />
-          </Pressable>
-        </View>
+        <View style={styles.headerRightPlaceholder} />
       </View>
     </View>
   );
@@ -259,12 +235,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...typography.h3,
+    flex: 1,
+    textAlign: 'center',
     color: '#ffffff',
     fontWeight: '600',
   },
-  headerRight: {
-    flexDirection: 'row',
-    gap: spacing.md,
+  headerRightPlaceholder: {
+    width: 40,
   },
   categoryBar: {
     paddingVertical: spacing.sm,

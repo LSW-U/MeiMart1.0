@@ -214,6 +214,7 @@
     }
   },
   "product": {
+    "localBestsellers": "Local Bestsellers",
     "addToCart": "Add to cart",
     "buyNow": "Buy now",
     "specification": "Specification",
