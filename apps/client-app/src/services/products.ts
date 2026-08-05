@@ -67,7 +67,12 @@ interface ProductListQuery {
 
 export const productApi = {
   async getProducts(query?: ProductListQuery): Promise<Product[]> {
-    if (isMockMode) return mockResponse(mockDb.products);
+    if (isMockMode) {
+      // Why: P9 - mock 按销量降序，对齐 real 后端默认（salesCount desc），让 "Local Bestsellers" 名副其实
+      //   顺带让推荐类页面（search/categories/cart/[id] 的 realProducts）也按热度，更合理
+      const sorted = [...mockDb.products].sort((a, b) => (b.salesCount ?? 0) - (a.salesCount ?? 0));
+      return mockResponse(sorted);
+    }
     const res = await api.get<ProductListResponse>('/client/products', { params: query });
     return res.data.items.map(transformProduct);
   },
@@ -134,7 +139,9 @@ export const productApi = {
   async getByCategory(categoryId: string): Promise<Product[]> {
     if (isMockMode) {
       const filtered = mockDb.products.filter((p) => p.category === categoryId);
-      return mockResponse(filtered);
+      // Why: P9 - mock 按销量降序（同 getProducts），让分类列表也是热销顺序
+      const sorted = [...filtered].sort((a, b) => (b.salesCount ?? 0) - (a.salesCount ?? 0));
+      return mockResponse(sorted);
     }
     // Why: 后端无独立 by-category 端点，复用 listProducts 传 categoryId
     return this.getProducts({ categoryId });

@@ -28,7 +28,8 @@ export default function ProductListPage() {
   const { category } = useLocalSearchParams<{ category?: string }>();
   const { data: categories } = useCategories();
   const currentCategory = categories?.find((c) => c.id === category);
-  const headerTitle = currentCategory?.name ?? t('product.localBestsellers');
+  // Why: P9 - 页面定位是「Local Bestsellers 榜单页」，标题恒定；分类是子筛选（active pill 表明当前分类）
+  const headerTitle = t('product.localBestsellers');
 
   // Why: URL 有 category -> 按 category 过滤；无 -> 拿全部
   const byCategoryQuery = useProductsByCategory(category);
