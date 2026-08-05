@@ -121,7 +121,7 @@ export default function DeliveryTrackingPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
             shadowPresets.umaLulik,
           ]}
         >
@@ -170,7 +170,7 @@ export default function DeliveryTrackingPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
             shadowPresets.umaLulik,
           ]}
         >
@@ -209,9 +209,9 @@ export default function DeliveryTrackingPage() {
 
         {/* Order Items 标题（HTML 第 191-196 行 — 渐变 divider） */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionDivider, { backgroundColor: 'rgba(141,112,108,0.3)' }]} />
+          <View style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]} />
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>Order Items</Text>
-          <View style={[styles.sectionDivider, { backgroundColor: 'rgba(141,112,108,0.3)' }]} />
+          <View style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]} />
         </View>
 
         {/* 商品列表（HTML 第 198-237 行 — 3 items） */}
@@ -223,7 +223,7 @@ export default function DeliveryTrackingPage() {
                 styles.itemCard,
                 {
                   backgroundColor: colors['surface-container-lowest'],
-                  borderColor: 'rgba(141,112,108,0.2)',
+                  borderColor: colors['outline-variant'],
                 },
               ]}
             >
@@ -252,7 +252,7 @@ export default function DeliveryTrackingPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
             shadowPresets.umaLulik,
           ]}
         >
@@ -261,7 +261,7 @@ export default function DeliveryTrackingPage() {
           </Text>
           <View style={styles.summaryGap}>
             {/* TODO(长期): 后端订单返回 subtotal/deliveryFee/discount 字段后恢复分项显示 */}
-            <View style={[styles.totalRow, { borderTopColor: 'rgba(141,112,108,0.3)' }]}>
+            <View style={[styles.totalRow, { borderTopColor: colors['outline-variant'] }]}>
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>Total Amount</Text>
               <PriceText value={order.totalPrice} size="lg" />
             </View>
@@ -272,7 +272,7 @@ export default function DeliveryTrackingPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
             shadowPresets.umaLulik,
           ]}
         >
@@ -302,7 +302,7 @@ export default function DeliveryTrackingPage() {
           styles.bottomBar,
           {
             backgroundColor: colors['surface-container-lowest'],
-            borderTopColor: 'rgba(141,112,108,0.2)',
+            borderTopColor: colors['outline-variant'],
           },
         ]}
       >
@@ -396,7 +396,7 @@ function MapPlaceholder() {
         styles.mapWrap,
         {
           backgroundColor: colors['surface-container'],
-          borderColor: 'rgba(141,112,108,0.2)',
+          borderColor: colors['outline-variant'],
         },
       ]}
       accessibilityRole="image"
@@ -449,7 +449,7 @@ function CourierCard({ courier }: { courier: typeof COURIER }) {
       style={[
         styles.card,
         styles.courierRow,
-        { backgroundColor: colors['surface-container-lowest'] },
+        { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
         shadowPresets.umaLulik,
       ]}
     >
@@ -491,7 +491,7 @@ function Timeline() {
   return (
     <View style={styles.timelineWrap}>
       {/* 竖线（背景 + primary 上半段） */}
-      <View style={[styles.timelineBgLine, { backgroundColor: 'rgba(141,112,108,0.3)' }]} />
+      <View style={[styles.timelineBgLine, { backgroundColor: colors['outline-variant'] }]} />
       <View style={[styles.timelineActiveLine, { backgroundColor: colors.primary }]} />
 
       {TIMELINE.map((step) => {
@@ -503,8 +503,8 @@ function Timeline() {
           ? colors.primary
           : isCompleted
             ? colors['on-surface']
-            : 'rgba(89,65,61,0.4)';
-        const timeColor = isCompleted || isActive ? 'rgba(89,65,61,0.7)' : 'rgba(89,65,61,0.3)';
+            : colors['on-surface-variant'];
+        const timeColor = isCompleted || isActive ? colors['on-surface'] : colors['on-surface-variant'];
         return (
           <View key={step.id} style={styles.timelineStep}>
             <View
@@ -512,7 +512,7 @@ function Timeline() {
                 styles.timelineDot,
                 {
                   backgroundColor: dotColor,
-                  borderColor: isActive ? 'rgba(150,24,19,0.2)' : 'rgba(141,112,108,0.6)',
+                  borderColor: isActive ? colors.primary : colors['outline-variant'],
                 },
                 isActive && { borderWidth: 4 },
               ]}
@@ -540,7 +540,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: borderRadius.xl,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(141,112,108,0.3)',
     padding: spacing.md,
   },
   // Header
