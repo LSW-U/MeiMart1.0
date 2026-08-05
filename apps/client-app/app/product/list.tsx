@@ -20,7 +20,9 @@ import { resolveBadges } from '@/utils/resolveBadges';
 import type { Product } from '@/types';
 
 // "All" 分类标签（点击去掉 URL category 参数，显示全部商品）
-const ALL_CATEGORY = 'All';
+// sentinel 常量：内部逻辑匹配用（switchCategory/active），不直接显示
+//   显示/a11y 时走 t('common.all')；用 '__ALL__' 避免与真实分类名冲突
+const ALL_CATEGORY = '__ALL__';
 // 原因：红底白字固定，dark 不变（同 ON_PRIMARY 模式，对齐 HorizontalProductCard/P6/P7）
 const ON_PRIMARY = '#ffffff';
 
@@ -146,12 +148,12 @@ export default function ProductListPage() {
                   ]}
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
-                  accessibilityLabel={`Category: ${cat}`}
+                  accessibilityLabel={cat === ALL_CATEGORY ? t('common.all') : t('category.chipA11y', { name: cat })}
                 >
                   <Text
                     style={[styles.categoryText, { color: active ? ON_PRIMARY : colors.primary }]}
                   >
-                    {cat}
+                    {cat === ALL_CATEGORY ? t('common.all') : cat}
                   </Text>
                 </Pressable>
               );

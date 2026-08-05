@@ -127,7 +127,8 @@
     "viewAllProductsA11y": "[TET] View all products",
     "sortPopular": "[TET] Popular",
     "sortDiscount": "[TET] Discount",
-    "sortPrice": "[TET] Price"
+    "sortPrice": "[TET] Price",
+    "chipA11y": "[TET] Category: {{name}}"
   },
   "tabs": {
     "home": "[TET] Home",

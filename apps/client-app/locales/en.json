@@ -170,7 +170,8 @@
     "viewAllProductsA11y": "View all products",
     "sortPopular": "Popular",
     "sortDiscount": "Discount",
-    "sortPrice": "Price"
+    "sortPrice": "Price",
+    "chipA11y": "Category: {{name}}"
   },
   "tabs": {
     "home": "Home",

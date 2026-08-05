@@ -170,7 +170,8 @@
     "viewAllProductsA11y": "查看全部商品",
     "sortPopular": "热门",
     "sortDiscount": "优惠",
-    "sortPrice": "价格"
+    "sortPrice": "价格",
+    "chipA11y": "分类: {{name}}"
   },
   "tabs": {
     "home": "首页",
