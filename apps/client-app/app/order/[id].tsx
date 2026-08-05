@@ -267,7 +267,7 @@ export default function OrderDetailPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
             shadowPresets.umaLulik,
           ]}
         >
@@ -314,7 +314,7 @@ export default function OrderDetailPage() {
           <View
             style={[
               styles.card,
-              { backgroundColor: colors['surface-container-lowest'] },
+              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
               shadowPresets.umaLulik,
             ]}
           >
@@ -355,11 +355,11 @@ export default function OrderDetailPage() {
 
         {/* Order Items 标题（HTML 第 191-196 行 — 左右渐变 divider） */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionDivider, { backgroundColor: 'rgba(141,112,108,0.3)' }]} />
+          <View style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]} />
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
             {t('order.items', { defaultValue: 'Order Items' })}
           </Text>
-          <View style={[styles.sectionDivider, { backgroundColor: 'rgba(141,112,108,0.3)' }]} />
+          <View style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]} />
         </View>
 
         {/* 商品列表（HTML 第 198-237 行 — 每商品独立卡片） */}
@@ -378,7 +378,7 @@ export default function OrderDetailPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
             shadowPresets.umaLulik,
           ]}
         >
@@ -401,7 +401,7 @@ export default function OrderDetailPage() {
               value={`-$${discount.toFixed(2)}`}
               color={colors.semantic.success}
             />
-            <View style={[styles.totalRow, { borderTopColor: 'rgba(141,112,108,0.3)' }]}>
+            <View style={[styles.totalRow, { borderTopColor: colors['outline-variant'] }]}>
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
                 {t('order.total', { defaultValue: 'Total Amount' })}
               </Text>
@@ -416,7 +416,7 @@ export default function OrderDetailPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
             shadowPresets.umaLulik,
           ]}
         >
@@ -434,7 +434,7 @@ export default function OrderDetailPage() {
               </Text>
             </View>
             {order.trackingNo ? (
-              <View style={styles.trackingNoRow}>
+              <View style={[styles.trackingNoRow, { borderTopColor: colors['outline-variant'] }]}>
                 <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
                   {t('order.trackingNo', { defaultValue: 'Tracking No.' })}
                 </Text>
@@ -456,7 +456,7 @@ export default function OrderDetailPage() {
           styles.bottomBar,
           {
             backgroundColor: colors['surface-container-lowest'],
-            borderTopColor: 'rgba(141,112,108,0.2)',
+            borderTopColor: colors['outline-variant'],
           },
         ]}
       >
@@ -534,7 +534,7 @@ function OrderItemRow({
         styles.itemCard,
         {
           backgroundColor: colors['surface-container-lowest'],
-          borderColor: 'rgba(141,112,108,0.2)',
+          borderColor: colors['outline-variant'],
         },
         pressed && { transform: [{ scale: 0.98 }] },
       ]}
@@ -572,7 +572,7 @@ function Timeline({
   const { colors } = useTheme();
   return (
     <View style={styles.timelineWrap}>
-      <View style={[styles.timelineBgLine, { backgroundColor: 'rgba(141,112,108,0.3)' }]} />
+      <View style={[styles.timelineBgLine, { backgroundColor: colors['outline-variant'] }]} />
       <View
         style={[
           styles.timelineActiveLine,
@@ -589,8 +589,8 @@ function Timeline({
           ? colors.primary
           : isCompleted
             ? colors['on-surface']
-            : 'rgba(89,65,61,0.4)';
-        const timeColor = isCompleted || isActive ? 'rgba(89,65,61,0.7)' : 'rgba(89,65,61,0.3)';
+            : colors['on-surface-variant'];
+        const timeColor = isCompleted || isActive ? colors['on-surface'] : colors['on-surface-variant'];
         return (
           <View key={step.id} style={styles.timelineStep}>
             <View
@@ -598,7 +598,7 @@ function Timeline({
                 styles.timelineDot,
                 {
                   backgroundColor: dotColor,
-                  borderColor: isActive ? 'rgba(150,24,19,0.2)' : 'rgba(141,112,108,0.6)',
+                  borderColor: isActive ? colors.primary : colors['outline-variant'],
                 },
                 isActive && { borderWidth: 4 },
               ]}
@@ -791,7 +791,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: borderRadius.xl,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(141,112,108,0.3)',
     padding: spacing.md,
   },
   // Header
@@ -1004,7 +1003,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(141,112,108,0.2)',
   },
   // Timeline
   timelineWrap: {
