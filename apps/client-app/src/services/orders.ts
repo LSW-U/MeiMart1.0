@@ -98,6 +98,24 @@ function transformOrder(raw: OrderRaw): Order {
     items: (raw.items ?? []).map(transformOrderItem),
     totalPrice: (raw.payableAmount ?? raw.totalAmount ?? 0) / 100,
     createdAt: raw.createdAt ?? new Date().toISOString(),
+    // Why: P10 Timeline 真实时间戳（§8.1 P0）- 透传后端 7 个时间戳，null 表示订单尚未到达该状态
+    paidAt: raw.paidAt ?? null,
+    confirmedAt: raw.confirmedAt ?? null,
+    pickedAt: raw.pickedAt ?? null,
+    deliveringAt: raw.deliveringAt ?? null,
+    deliveredAt: raw.deliveredAt ?? null,
+    completedAt: raw.completedAt ?? null,
+    cancelledAt: raw.cancelledAt ?? null,
+    // Why: P10 §8.1 events[] 真实事件流，timeline 精细化备用 + P11 共享
+    events: (raw.events ?? []).map((e) => ({
+      id: e.id ?? '',
+      eventType: e.eventType ?? '',
+      fromStatus: e.fromStatus ?? null,
+      toStatus: e.toStatus ?? 'PENDING_PAYMENT',
+      operatorId: e.operatorId ?? null,
+      metadata: e.metadata,
+      createdAt: e.createdAt ?? '',
+    })),
   };
 }
 

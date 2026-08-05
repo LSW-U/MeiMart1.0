@@ -88,6 +88,16 @@ export type OrderStatus =
   | 'COMPLETED'
   | 'CANCELLED';
 
+export interface OrderEvent {
+  id: string;
+  eventType: string;
+  fromStatus: OrderStatus | null;
+  toStatus: OrderStatus;
+  operatorId: string | null;
+  metadata: unknown;
+  createdAt: string;
+}
+
 export interface Order {
   id: string;
   orderNo: string;
@@ -97,6 +107,16 @@ export interface Order {
   createdAt: string;
   address?: Address;
   trackingNo?: string;
+  // Why: P10 Timeline 真实时间戳（§8.1 P0）— transformOrder 从 OrderRaw 映射，null 表示订单尚未到达该状态
+  paidAt?: string | null;
+  confirmedAt?: string | null;
+  pickedAt?: string | null;
+  deliveringAt?: string | null;
+  deliveredAt?: string | null;
+  completedAt?: string | null;
+  cancelledAt?: string | null;
+  // Why: P10 §8.1 events[] 真实事件流，timeline 精细化的备用数据源 + P11 物流页共享
+  events?: OrderEvent[];
 }
 
 export interface User {

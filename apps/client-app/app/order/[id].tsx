@@ -130,31 +130,90 @@ const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
   },
 };
 
-// === Timeline 步骤合成（运行时根据 status 派生，无 mock timestamps 字段） ===
+// === Timeline 步骤合成（运行时根据 status 派生 + 真实时间戳） ===
 
 type StepState = 'completed' | 'active' | 'pending';
 
 type TimelineStepData = {
   id: string;
-  status: string;
+  label: string;
+  desc: string;
+  // Why: 真实时间戳（按 locale 短格式），空串 = 订单尚未到达该状态（pending 态）
   time: string;
   state: StepState;
+  // Why: active 节点用 bannerIconSymbol 渲染状态图标（done 节点用 check，pending 无 icon）
+  icon?: string;
 };
 
-function buildTimelineSteps(status: OrderStatus): TimelineStepData[] {
+// Why: buildTimelineSteps 是纯函数（无 hooks），label/desc 由组件层 t() 翻译后传入（复用 order.timeline.*）
+type TimelineLabels = {
+  confirmed: { label: string; desc: string };
+  processing: { label: string; desc: string };
+  shipped: { label: string; desc: string };
+  delivered: { label: string; desc: string };
+  cancelled: { label: string; desc: string };
+};
+
+// Why: P10 §8.1 P0 - 订单时间戳集合，null/undefined = 订单尚未到达该状态
+type TimelineTimestamps = {
+  createdAt: string;
+  paidAt?: string | null;
+  confirmedAt?: string | null;
+  pickedAt?: string | null;
+  deliveringAt?: string | null;
+  deliveredAt?: string | null;
+  completedAt?: string | null;
+  cancelledAt?: string | null;
+};
+
+// Why: 时间戳短格式显示（zh: 5月12日 · 10:30 / en·tet: May 12 · 10:30），null/非法返空串
+function formatTimelineTime(ts: string | null | undefined, locale: string): string {
+  if (!ts) return '';
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return '';
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  if (locale === 'zh') {
+    return `${d.getMonth() + 1}月${d.getDate()}日 · ${hh}:${mm}`;
+  }
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${monthNames[d.getMonth()]} ${d.getDate()} · ${hh}:${mm}`;
+}
+
+function buildTimelineSteps(
+  status: OrderStatus,
+  ts: TimelineTimestamps,
+  locale: string,
+  labels: TimelineLabels,
+  activeIcon?: string,
+): TimelineStepData[] {
   // 已取消：只显示「提交 + 终态」两步
   if (status === 'CANCELLED') {
     return [
-      { id: 's1', status: 'Order Confirmed', time: 'Order was placed', state: 'completed' },
-      { id: 's2', status: 'Cancelled', time: 'Order cancelled', state: 'active' },
+      {
+        id: 's1',
+        label: labels.confirmed.label,
+        desc: labels.confirmed.desc,
+        time: formatTimelineTime(ts.createdAt, locale),
+        state: 'completed',
+      },
+      {
+        id: 's2',
+        label: labels.cancelled.label,
+        desc: labels.cancelled.desc,
+        time: formatTimelineTime(ts.cancelledAt, locale),
+        state: 'active',
+        icon: activeIcon,
+      },
     ];
   }
 
-  const baseSteps = [
-    { id: 's1', label: 'Order Confirmed', time: 'Order was placed' },
-    { id: 's2', label: 'Processing', time: 'Payment confirmed' },
-    { id: 's3', label: 'Shipped', time: 'Package on the way' },
-    { id: 's4', label: 'Delivered', time: 'Package delivered' },
+  // Why: 每个步骤对应一个时间戳字段，优先用专用字段，回退相邻字段（paidAt 回退 confirmedAt 等）
+  const baseSteps: { id: string; key: keyof TimelineLabels; tsField: string | null | undefined }[] = [
+    { id: 's1', key: 'confirmed', tsField: ts.createdAt },
+    { id: 's2', key: 'processing', tsField: ts.paidAt ?? ts.confirmedAt },
+    { id: 's3', key: 'shipped', tsField: ts.pickedAt ?? ts.deliveringAt },
+    { id: 's4', key: 'delivered', tsField: ts.deliveredAt ?? ts.completedAt },
   ];
 
   // Why: 每个状态对应 timeline 高亮的步骤索引（0=Order Confirmed / 1=Processing / 2=Shipped / 3=Delivered）
@@ -172,12 +231,18 @@ function buildTimelineSteps(status: OrderStatus): TimelineStepData[] {
   };
   const current = activeIdx[status];
 
-  return baseSteps.map((s, idx) => ({
-    id: s.id,
-    status: s.label,
-    time: s.time,
-    state: idx < current ? 'completed' : idx === current ? 'active' : 'pending',
-  }));
+  return baseSteps.map((s, idx) => {
+    const state: StepState = idx < current ? 'completed' : idx === current ? 'active' : 'pending';
+    const stepLabel = labels[s.key];
+    return {
+      id: s.id,
+      label: stepLabel.label,
+      desc: stepLabel.desc,
+      time: formatTimelineTime(s.tsField, locale),
+      state,
+      icon: state === 'active' ? activeIcon : undefined,
+    };
+  });
 }
 
 // === Page ===
@@ -225,7 +290,19 @@ export default function OrderDetailPage() {
   const discount = 5.0;
   const subtotal = order.totalPrice + discount - shippingFee;
 
-  const timelineSteps = buildTimelineSteps(order.status);
+  const timelineSteps = buildTimelineSteps(
+    order.status,
+    order,
+    i18n.language,
+    {
+      confirmed: { label: t('order.timeline.submitted'), desc: t('order.timeline.submittedDesc') },
+      processing: { label: t('order.timeline.paid'), desc: t('order.timeline.paidDesc') },
+      shipped: { label: t('order.timeline.shipped'), desc: t('order.timeline.shippedDesc') },
+      delivered: { label: t('order.timeline.delivered'), desc: t('order.timeline.deliveredDesc') },
+      cancelled: { label: t('order.timeline.cancelled'), desc: t('order.timeline.cancelledDesc') },
+    },
+    visual.bannerIconSymbol,
+  );
   const activeIndex = timelineSteps.findIndex((s) => s.state === 'active');
   const timelineProgress = activeIndex < 0 ? 1 : (activeIndex + 1) / timelineSteps.length;
 
@@ -561,7 +638,7 @@ function OrderItemRow({
   );
 }
 
-// Custom Timeline（HTML 第 268-292 行：绝对定位 vertical line + 进度色覆盖 + 16×16 dot）
+// Custom Timeline（HTML 原型 B 方案：rail + fill 进度条 + node-head/desc + active 光晕）
 function Timeline({
   steps,
   progress,
@@ -583,30 +660,57 @@ function Timeline({
       {steps.map((step) => {
         const isCompleted = step.state === 'completed';
         const isActive = step.state === 'active';
-        const dotColor =
-          isActive || isCompleted ? colors.primary : colors['surface-container-high'];
-        const textColor = isActive
+        // Why: done = primary 实心 + check；active = 白底 + 3px primary 边 + 光晕 + bannerIcon；pending = 白底 + outline-v 边
+        const dotBg = isCompleted ? colors.primary : colors['surface-container-lowest'];
+        const dotBorder = isActive ? colors.primary : colors['outline-variant'];
+        const labelColor = isActive
           ? colors.primary
           : isCompleted
             ? colors['on-surface']
             : colors['on-surface-variant'];
-        const timeColor = isCompleted || isActive ? colors['on-surface'] : colors['on-surface-variant'];
+        const descColor = isActive ? colors['on-surface'] : colors['on-surface-variant'];
         return (
           <View key={step.id} style={styles.timelineStep}>
             <View
               style={[
                 styles.timelineDot,
                 {
-                  backgroundColor: dotColor,
-                  borderColor: isActive ? colors.primary : colors['outline-variant'],
+                  backgroundColor: dotBg,
+                  borderColor: dotBorder,
+                  borderWidth: isActive ? 3 : 2,
                 },
-                isActive && { borderWidth: 4 },
+                // Why: active 光晕（HTML 原型 box-shadow: 0 0 0 4px rgba(150,24,19,0.08)）
+                isActive && {
+                  shadowColor: colors.primary,
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowRadius: 4,
+                  shadowOpacity: 0.08,
+                  elevation: 2,
+                },
               ]}
             >
-              {isCompleted && <Icon symbol="check" size={10} color="#ffffff" />}
+              {isCompleted ? (
+                <Icon symbol="check" size={10} color="#ffffff" />
+              ) : isActive && step.icon ? (
+                <Icon symbol={step.icon} size={12} color={colors.primary} />
+              ) : null}
             </View>
-            <Text style={[styles.bodyMdBold, { color: textColor }]}>{step.status}</Text>
-            <Text style={[styles.bodySm, { color: timeColor }]}>{step.time}</Text>
+            {/* node-head：状态标题（左）+ 真实时间戳（右） */}
+            <View style={styles.timelineHead}>
+              <Text style={[styles.bodyMdBold, { color: labelColor, flex: 1 }]} numberOfLines={1}>
+                {step.label}
+              </Text>
+              {step.time ? (
+                <Text
+                  style={[styles.timelineTime, { color: colors['on-surface-variant'] }]}
+                  numberOfLines={1}
+                >
+                  {step.time}
+                </Text>
+              ) : null}
+            </View>
+            {/* desc 描述行 */}
+            <Text style={[styles.bodySm, { color: descColor }]}>{step.desc}</Text>
           </View>
         );
       })}
@@ -1004,38 +1108,51 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  // Timeline
+  // Timeline（HTML 原型 B 方案：rail + fill + node-head/desc + 20×20 dot）
   timelineWrap: {
     position: 'relative',
-    paddingLeft: 24,
+    paddingLeft: 28,
     paddingVertical: spacing.xs,
-    gap: spacing.xl,
+    gap: spacing.md,
   },
   timelineBgLine: {
     position: 'absolute',
-    left: 7,
-    top: 4,
-    bottom: 4,
+    left: 9,
+    top: 14,
+    bottom: 14,
     width: 2,
   },
   timelineActiveLine: {
     position: 'absolute',
-    left: 7,
-    top: 4,
+    left: 9,
+    top: 14,
     width: 2,
   },
   timelineStep: {
     position: 'relative',
+    minHeight: 28,
   },
   timelineDot: {
     position: 'absolute',
-    left: -24,
-    top: 4,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    left: -28,
+    top: 2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Why: node-head 标题+时间戳右对齐（HTML 原型 .node-head flex space-between）
+  timelineHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  timelineTime: {
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   // Bottom Bar
   bottomBar: {
