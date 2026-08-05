@@ -326,7 +326,25 @@
       "cancelled": "Order has been cancelled",
       "refunding": "Refund is being processed"
     },
-    "itemViewLabel": "View item"
+    "itemViewLabel": "View item",
+    "qtyLabel": "Qty",
+    "paymentMethodShort": {
+      "cod": "COD",
+      "bankTransfer": "Bank",
+      "wechat": "WeChat",
+      "paypal": "PayPal",
+      "stripe": "Card"
+    },
+    "paymentMethod": {
+      "cod": "Cash on Delivery",
+      "bankTransfer": "Bank Transfer",
+      "wechat": "WeChat Pay",
+      "paypal": "PayPal",
+      "stripe": "Credit Card"
+    },
+    "shareMessage": "MeiMart order {{orderNo}}",
+    "shareCopied": "Order link copied",
+    "shareA11y": "Share order {{orderNo}}"
   },
   "address": {
     "list": "Shipping addresses",

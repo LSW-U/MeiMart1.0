@@ -326,7 +326,25 @@
       "cancelled": "订单已取消",
       "refunding": "退款处理中"
     },
-    "itemViewLabel": "查看商品"
+    "itemViewLabel": "查看商品",
+    "qtyLabel": "数量",
+    "paymentMethodShort": {
+      "cod": "COD",
+      "bankTransfer": "银行",
+      "wechat": "微信",
+      "paypal": "PayPal",
+      "stripe": "信用卡"
+    },
+    "paymentMethod": {
+      "cod": "货到付款",
+      "bankTransfer": "银行转账",
+      "wechat": "微信支付",
+      "paypal": "PayPal",
+      "stripe": "信用卡"
+    },
+    "shareMessage": "MeiMart 订单 {{orderNo}}",
+    "shareCopied": "订单链接已复制",
+    "shareA11y": "分享订单 {{orderNo}}"
   },
   "address": {
     "list": "收货地址",

@@ -22,6 +22,9 @@
       }
     ],
     "totalPrice": 51.8,
+    "deliveryFee": 2.0,
+    "discountAmount": 5.0,
+    "paymentMethod": "COD",
     "createdAt": "2026-06-01T10:30:00Z"
   },
   {
@@ -47,6 +50,9 @@
       }
     ],
     "totalPrice": 42.9,
+    "deliveryFee": 0,
+    "discountAmount": 0,
+    "paymentMethod": "BANK_TRANSFER",
     "createdAt": "2026-06-05T14:20:00Z"
   },
   {
@@ -72,6 +78,9 @@
       }
     ],
     "totalPrice": 45.0,
+    "deliveryFee": 3.0,
+    "discountAmount": 2.0,
+    "paymentMethod": "PAYPAL",
     "createdAt": "2026-06-08T09:15:00Z",
     "trackingNo": "SF1234567890"
   },
@@ -98,6 +107,9 @@
       }
     ],
     "totalPrice": 38.5,
+    "deliveryFee": 2.0,
+    "discountAmount": 10.0,
+    "paymentMethod": "STRIPE",
     "createdAt": "2026-05-28T16:45:00Z"
   },
   {
@@ -123,6 +135,9 @@
       }
     ],
     "totalPrice": 35.9,
+    "deliveryFee": 0,
+    "discountAmount": 0,
+    "paymentMethod": "WECHAT",
     "createdAt": "2026-05-30T11:00:00Z"
   }
 ]

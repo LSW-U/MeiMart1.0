@@ -107,6 +107,10 @@ export interface Order {
   createdAt: string;
   address?: Address;
   trackingNo?: string;
+  // Why: P10 §8.1 D1/D2 - 费用字段（元单位，transformOrder 从后端分转换）+ 支付方式枚举（COD/BANK_TRANSFER/WECHAT/PAYPAL/STRIPE）
+  deliveryFee?: number;
+  discountAmount?: number;
+  paymentMethod?: string;
   // Why: P10 Timeline 真实时间戳（§8.1 P0）— transformOrder 从 OrderRaw 映射，null 表示订单尚未到达该状态
   paidAt?: string | null;
   confirmedAt?: string | null;

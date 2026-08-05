@@ -283,7 +283,25 @@
       "cancelled": "[TET] Order has been cancelled",
       "refunding": "[TET] Refund is being processed"
     },
-    "itemViewLabel": "[TET] View item"
+    "itemViewLabel": "[TET] View item",
+    "qtyLabel": "[TET] Qty",
+    "paymentMethodShort": {
+      "cod": "[TET] COD",
+      "bankTransfer": "[TET] Bank",
+      "wechat": "[TET] WeChat",
+      "paypal": "[TET] PayPal",
+      "stripe": "[TET] Card"
+    },
+    "paymentMethod": {
+      "cod": "[TET] Cash on Delivery",
+      "bankTransfer": "[TET] Bank Transfer",
+      "wechat": "[TET] WeChat Pay",
+      "paypal": "[TET] PayPal",
+      "stripe": "[TET] Credit Card"
+    },
+    "shareMessage": "[TET] MeiMart order {{orderNo}}",
+    "shareCopied": "[TET] Order link copied",
+    "shareA11y": "[TET] Share order {{orderNo}}"
   },
   "address": {
     "list": "[TET] Shipping addresses",

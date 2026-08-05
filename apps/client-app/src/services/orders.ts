@@ -98,6 +98,10 @@ function transformOrder(raw: OrderRaw): Order {
     items: (raw.items ?? []).map(transformOrderItem),
     totalPrice: (raw.payableAmount ?? raw.totalAmount ?? 0) / 100,
     createdAt: raw.createdAt ?? new Date().toISOString(),
+    // Why: P10 §8.1 D1/D2 - 费用 + 支付方式（后端分→元 / paymentMethod 透传枚举字符串）
+    deliveryFee: (raw.deliveryFee ?? 0) / 100,
+    discountAmount: (raw.discountAmount ?? 0) / 100,
+    paymentMethod: raw.paymentMethod ?? undefined,
     // Why: P10 Timeline 真实时间戳（§8.1 P0）- 透传后端 7 个时间戳，null 表示订单尚未到达该状态
     paidAt: raw.paidAt ?? null,
     confirmedAt: raw.confirmedAt ?? null,

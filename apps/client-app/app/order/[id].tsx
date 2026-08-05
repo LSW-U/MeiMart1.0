@@ -14,6 +14,7 @@ import {
   Alert,
   Pressable,
   Platform,
+  Share,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -286,8 +287,9 @@ export default function OrderDetailPage() {
 
   const visual = STATUS_VISUAL[order.status];
   const statusTheme = statusBannerPalettes[visual.palette];
-  const shippingFee = 2.0;
-  const discount = 5.0;
+  // Why: P10 §8.1 D1 - 费用从 transformOrder 映射的字段读取，消除 2.0/5.0 写死（mock 无字段时降级 0）
+  const shippingFee = order.deliveryFee ?? 0;
+  const discount = order.discountAmount ?? 0;
   const subtotal = order.totalPrice + discount - shippingFee;
 
   const timelineSteps = buildTimelineSteps(
@@ -504,10 +506,12 @@ export default function OrderDetailPage() {
             </Text>
             <View style={styles.paymentRow}>
               <View style={[styles.laisPayBadge, { backgroundColor: colors.primary }]}>
-                <Text style={styles.laisPayText}>LaisPay</Text>
+                <Text style={styles.laisPayText}>
+                  {t(`order.paymentMethodShort.${(order.paymentMethod ?? 'cod').toLowerCase()}`, { defaultValue: order.paymentMethod ?? '-' })}
+                </Text>
               </View>
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
-                LaisPay Wallet
+                {t(`order.paymentMethod.${(order.paymentMethod ?? 'cod').toLowerCase()}`, { defaultValue: order.paymentMethod ?? '-' })}
               </Text>
             </View>
             {order.trackingNo ? (
@@ -547,6 +551,7 @@ export default function OrderDetailPage() {
 
 function Header({ title, orderNo }: { title: string; orderNo?: string }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const handleBack = useSafeBack();
   return (
     <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.umaLulik]}>
@@ -578,12 +583,29 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
           </Pressable>
           <Pressable
             onPress={() => {
-              /* share — placeholder for future */
+              const message = t('order.shareMessage', {
+                orderNo: orderNo ?? '',
+                defaultValue: 'MeiMart order {{orderNo}}',
+              });
+              if (Platform.OS === 'web') {
+                // Why: Web 端 Share API 兼容性差，用 clipboard 兜底 + toast 反馈
+                if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                  navigator.clipboard.writeText(message).catch(() => {});
+                  toast.success(t('order.shareCopied', { defaultValue: 'Order link copied' }));
+                }
+              } else {
+                Share.share({ message }).catch(() => {
+                  // 用户取消分享，静默
+                });
+              }
             }}
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel={`Share order ${orderNo ?? ''}`}
+            accessibilityLabel={t('order.shareA11y', {
+              orderNo: orderNo ?? '',
+              defaultValue: 'Share order {{orderNo}}',
+            })}
           >
             <Icon symbol="share" size={22} color="#ffffff" />
           </Pressable>
@@ -627,7 +649,7 @@ function OrderItemRow({
             {localize(item.product.name)}
           </Text>
           <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
-            {t('order.items', { defaultValue: 'Qty' })}: {item.quantity}
+            {t('order.qtyLabel', { defaultValue: 'Qty' })}: {item.quantity}
           </Text>
         </View>
         <Text style={[styles.priceDisplay, { color: colors.primary }]}>
