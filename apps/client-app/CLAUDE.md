@@ -169,7 +169,7 @@ pages/
 ### 语言规则
 
 14. **核心语言：en（英语）+ zh（中文）**，所有文案提取到 i18n。面向东帝汶当地消费者，en 为 fallback / 工作语言，zh 文案同样需完整。
-15. **德顿语（tet）预留槽位但不填充**：`locales/tet.json` 创建空壳即可
+15. **德顿语（tet）用 `[TET]` 前缀占位**：`locales/tet.json` 每个 key 用 `[TET] + en value` 占位（如 `"[TET] Add to cart"`），方便识别待翻译项；母语者翻译时去掉 `[TET]` 前缀填入正式译文
 16. **默认 locale 为 en**（与 `src/i18n/index.ts` 的 `DEFAULT_LOCALE` 及 `appStore.locale` 初始值一致）
 
 ### 交互规则
