@@ -344,7 +344,12 @@
     },
     "shareMessage": "MeiMart 订单 {{orderNo}}",
     "shareCopied": "订单链接已复制",
-    "shareA11y": "分享订单 {{orderNo}}"
+    "shareA11y": "分享订单 {{orderNo}}",
+    "riderDefault": "配送员",
+    "riderOnTheWay": "配送中",
+    "riderArrived": "已送达",
+    "riderDeliveries": "{{count}} 单",
+    "callRider": "致电骑手 {{name}}"
   },
   "address": {
     "list": "收货地址",

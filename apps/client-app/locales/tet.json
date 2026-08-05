@@ -301,7 +301,12 @@
     },
     "shareMessage": "[TET] MeiMart order {{orderNo}}",
     "shareCopied": "[TET] Order link copied",
-    "shareA11y": "[TET] Share order {{orderNo}}"
+    "shareA11y": "[TET] Share order {{orderNo}}",
+    "riderDefault": "[TET] Delivery Rider",
+    "riderOnTheWay": "[TET] ON THE WAY",
+    "riderArrived": "[TET] DELIVERED",
+    "riderDeliveries": "[TET] {{count}} deliveries",
+    "callRider": "[TET] Call rider {{name}}"
   },
   "address": {
     "list": "[TET] Shipping addresses",

@@ -344,7 +344,12 @@
     },
     "shareMessage": "MeiMart order {{orderNo}}",
     "shareCopied": "Order link copied",
-    "shareA11y": "Share order {{orderNo}}"
+    "shareA11y": "Share order {{orderNo}}",
+    "riderDefault": "Delivery Rider",
+    "riderOnTheWay": "ON THE WAY",
+    "riderArrived": "DELIVERED",
+    "riderDeliveries": "{{count}} deliveries",
+    "callRider": "Call rider {{name}}"
   },
   "address": {
     "list": "Shipping addresses",

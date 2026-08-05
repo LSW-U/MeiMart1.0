@@ -7,7 +7,6 @@ import {
   Text,
   ScrollView,
   Pressable,
-  Linking,
   Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -24,21 +23,16 @@ import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useOrderTracking } from '@/services/queries/useTracking';
 import { buildTimelineSteps, type TimelineStepData } from '@/utils/timeline';
+import { RiderCard } from '@/components/business/RiderCard';
 import { useOrder } from '@/services/queries/useOrders';
 import { useLocalizer } from '@/i18n';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
-// 配送员 mock（HTML 同款）
-const COURIER = {
-  name: 'João Pereira',
-  vehicle: 'Scooter • TL-2024-DL',
-  phone: '+670 7712 3456',
-  rating: 4.9,
-};
+// P11 Commit 2b: COURIER mock 删除，骑手数据走 RiderCard 的 props（后端 rider 字段就绪后由 transformOrder 透传）
 
 // P11 Commit 2a: TIMELINE mock 删除，走 buildTimelineSteps（@/utils/timeline）消费 order 时间戳
 
-const STAR_COLOR = '#f59e0b'; // 原因：骑手评分星标金色（HTML star gold amber-500），semantic 无对应角色
+// STAR_COLOR 移到 RiderCard 内部（P11 Commit 2b，骑手卡共享件）
 
 export default function DeliveryTrackingPage() {
   const { colors } = useTheme();
@@ -161,7 +155,16 @@ export default function DeliveryTrackingPage() {
         <MapPlaceholder />
 
         {/* 配送员信息卡片（Fix-21 #3 — 头像+名字+电话按钮） */}
-        <CourierCard courier={COURIER} />
+        <RiderCard
+          rider={{
+            name: 'João Pereira',
+            phone: '+670 7712 3456',
+            rating: 4.9,
+            vehicleType: 'Scooter',
+            vehiclePlate: 'TL-2024-DL',
+          }}
+          orderStatus={order.status}
+        />
 
         {/* Delivery Address Card（HTML 第 177-189 行） */}
         <View
@@ -439,48 +442,7 @@ function MapPlaceholder() {
 }
 
 // 配送员卡片（Fix-21 #3）
-function CourierCard({ courier }: { courier: typeof COURIER }) {
-  const { colors } = useTheme();
-  return (
-    <View
-      style={[
-        styles.card,
-        styles.courierRow,
-        { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
-        shadowPresets.umaLulik,
-      ]}
-    >
-      <View style={[styles.courierAvatar, { backgroundColor: colors['primary-container'] }]}>
-        <Icon symbol="person" size={28} color={colors['on-primary']} />
-      </View>
-      <View style={styles.flex1}>
-        <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>{courier.name}</Text>
-        <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
-          {courier.vehicle}
-        </Text>
-        <View style={styles.ratingRow}>
-          <Icon symbol="star" size={12} color={STAR_COLOR} />
-          <Text style={[styles.ratingText, { color: colors['on-surface-variant'] }]}>
-            {courier.rating.toFixed(1)} • On the way
-          </Text>
-        </View>
-      </View>
-      <Pressable
-        onPress={() => Linking.openURL(`tel:${courier.phone.replace(/\s/g, '')}`)}
-        hitSlop={8}
-        style={({ pressed }) => [
-          styles.callBtn,
-          { backgroundColor: colors.primary },
-          pressed && { transform: [{ scale: 0.92 }] },
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel={`Call courier ${courier.name}`}
-      >
-        <Icon symbol="call" size={20} color="#ffffff" />
-      </Pressable>
-    </View>
-  );
-}
+// CourierCard 移到 @/components/business/RiderCard（P11 Commit 2b，P10/P11 共享）
 
 // Timeline（HTML 原型 B 方案：rail + fill + node-head/desc + active 光晕，与 P10 同源）
 function Timeline({ steps, progress }: { steps: TimelineStepData[]; progress: number }) {
@@ -714,35 +676,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   // Courier
-  courierRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  courierAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
-  },
-  ratingText: {
-    ...typography['body-sm'],
-    fontSize: 12,
-  },
-  callBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   // Address
   addressHeaderRow: {
     flexDirection: 'row',
