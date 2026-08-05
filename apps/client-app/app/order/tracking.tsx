@@ -23,6 +23,7 @@ import { Icon } from '@/components/ui/Icon';
 import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useOrderTracking } from '@/services/queries/useTracking';
+import { buildTimelineSteps, type TimelineStepData } from '@/utils/timeline';
 import { useOrder } from '@/services/queries/useOrders';
 import { useLocalizer } from '@/i18n';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -35,39 +36,19 @@ const COURIER = {
   rating: 4.9,
 };
 
-// 物流时间线 mock（HTML 第 268-292 行：3 steps，current 在 Processing）
-const TIMELINE = [
-  {
-    id: 't1',
-    status: 'Order Confirmed',
-    time: 'May 12, 2024 • 10:30 AM',
-    state: 'completed' as const,
-  },
-  {
-    id: 't2',
-    status: 'Processing',
-    time: 'May 12, 2024 • 11:45 AM',
-    state: 'active' as const,
-  },
-  {
-    id: 't3',
-    status: 'Shipped',
-    time: 'Pending',
-    state: 'pending' as const,
-  },
-];
+// P11 Commit 2a: TIMELINE mock 删除，走 buildTimelineSteps（@/utils/timeline）消费 order 时间戳
 
 const STAR_COLOR = '#f59e0b'; // 原因：骑手评分星标金色（HTML star gold amber-500），semantic 无对应角色
 
 export default function DeliveryTrackingPage() {
   const { colors } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const localize = useLocalizer();
   const params = useLocalSearchParams<{ id?: string }>();
   // Why: 接真实订单数据，OrderItems + 地址 + trackingNo 都从 order 拿
   const { data: order, isLoading, isError, refetch } = useOrder(params.id);
   // Why: Phase 6 启动 WS 配送追踪（join:order + 监听 order:location/order:status-changed + 5s 无消息降级 HTTP 轮询）。
-  // 配送员 + 物流时间线暂保留 mock，等后端 tracking.riderLocation/lastOrderStatus 就绪后接入。
+  // Why: 物流时间线已接真实时间戳（Commit 2a buildTimelineSteps），配送员 + riderLocation 待 Commit 2b/2c 接入。
   useOrderTracking(params.id);
 
   if (isLoading) {
@@ -103,6 +84,22 @@ export default function DeliveryTrackingPage() {
   // Why: 按订单状态动态取 banner 配色（与 [id].tsx 一致，不再写死 pending）
   const statusTheme = getStatusBannerTheme(order.status);
   const address = order.address;
+  // Why: P11 Commit 2a - Timeline 走共享 buildTimelineSteps，消费 order 真实时间戳 + t() labels（与 P10 同源）
+  const timelineSteps = buildTimelineSteps(
+    order.status,
+    order,
+    i18n.language,
+    {
+      confirmed: { label: t('order.timeline.submitted'), desc: t('order.timeline.submittedDesc') },
+      processing: { label: t('order.timeline.paid'), desc: t('order.timeline.paidDesc') },
+      shipped: { label: t('order.timeline.shipped'), desc: t('order.timeline.shippedDesc') },
+      delivered: { label: t('order.timeline.delivered'), desc: t('order.timeline.deliveredDesc') },
+      cancelled: { label: t('order.timeline.cancelled'), desc: t('order.timeline.cancelledDesc') },
+    },
+    'local_shipping',
+  );
+  const timelineActiveIndex = timelineSteps.findIndex((s) => s.state === 'active');
+  const timelineProgress = timelineActiveIndex < 0 ? 1 : (timelineActiveIndex + 1) / timelineSteps.length;
 
   return (
     <SafeAreaWrapper
@@ -292,7 +289,7 @@ export default function DeliveryTrackingPage() {
           </View>
 
           {/* Timeline */}
-          <Timeline />
+          <Timeline steps={timelineSteps} progress={timelineProgress} />
         </View>
       </ScrollView>
 
@@ -485,42 +482,69 @@ function CourierCard({ courier }: { courier: typeof COURIER }) {
   );
 }
 
-// 渐变进度条 / Timeline（Fix-21 #4 + HTML 第 268-292 行）
-function Timeline() {
+// Timeline（HTML 原型 B 方案：rail + fill + node-head/desc + active 光晕，与 P10 同源）
+function Timeline({ steps, progress }: { steps: TimelineStepData[]; progress: number }) {
   const { colors } = useTheme();
   return (
     <View style={styles.timelineWrap}>
-      {/* 竖线（背景 + primary 上半段） */}
       <View style={[styles.timelineBgLine, { backgroundColor: colors['outline-variant'] }]} />
-      <View style={[styles.timelineActiveLine, { backgroundColor: colors.primary }]} />
+      <View
+        style={[
+          styles.timelineActiveLine,
+          { backgroundColor: colors.primary, height: `${progress * 100}%` },
+        ]}
+      />
 
-      {TIMELINE.map((step) => {
+      {steps.map((step) => {
         const isCompleted = step.state === 'completed';
         const isActive = step.state === 'active';
-        const dotColor =
-          isActive || isCompleted ? colors.primary : colors['surface-container-high'];
-        const textColor = isActive
+        const dotBg = isCompleted ? colors.primary : colors['surface-container-lowest'];
+        const dotBorder = isActive ? colors.primary : colors['outline-variant'];
+        const labelColor = isActive
           ? colors.primary
           : isCompleted
             ? colors['on-surface']
             : colors['on-surface-variant'];
-        const timeColor = isCompleted || isActive ? colors['on-surface'] : colors['on-surface-variant'];
+        const descColor = isActive ? colors['on-surface'] : colors['on-surface-variant'];
         return (
           <View key={step.id} style={styles.timelineStep}>
             <View
               style={[
                 styles.timelineDot,
                 {
-                  backgroundColor: dotColor,
-                  borderColor: isActive ? colors.primary : colors['outline-variant'],
+                  backgroundColor: dotBg,
+                  borderColor: dotBorder,
+                  borderWidth: isActive ? 3 : 2,
                 },
-                isActive && { borderWidth: 4 },
+                isActive && {
+                  shadowColor: colors.primary,
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowRadius: 4,
+                  shadowOpacity: 0.08,
+                  elevation: 2,
+                },
               ]}
             >
-              {isCompleted && <Icon symbol="check" size={10} color="#ffffff" />}
+              {isCompleted ? (
+                <Icon symbol="check" size={10} color="#ffffff" />
+              ) : isActive && step.icon ? (
+                <Icon symbol={step.icon} size={12} color={colors.primary} />
+              ) : null}
             </View>
-            <Text style={[styles.bodyMdBold, { color: textColor }]}>{step.status}</Text>
-            <Text style={[styles.bodySm, { color: timeColor }]}>{step.time}</Text>
+            <View style={styles.timelineHead}>
+              <Text style={[styles.bodyMdBold, { color: labelColor, flex: 1 }]} numberOfLines={1}>
+                {step.label}
+              </Text>
+              {step.time ? (
+                <Text
+                  style={[styles.timelineTime, { color: colors['on-surface-variant'] }]}
+                  numberOfLines={1}
+                >
+                  {step.time}
+                </Text>
+              ) : null}
+            </View>
+            <Text style={[styles.bodySm, { color: descColor }]}>{step.desc}</Text>
           </View>
         );
       })}
@@ -833,39 +857,50 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontStyle: 'italic',
   },
-  // Timeline
+  // Timeline（HTML 原型 B 方案：rail + fill + node-head/desc + 20×20 dot，与 P10 同源）
   timelineWrap: {
     position: 'relative',
-    paddingLeft: 24,
+    paddingLeft: 28,
     paddingVertical: spacing.xs,
-    gap: spacing.xl,
+    gap: spacing.md,
   },
   timelineBgLine: {
     position: 'absolute',
-    left: 7,
-    top: 4,
-    bottom: 4,
+    left: 9,
+    top: 14,
+    bottom: 14,
     width: 2,
   },
   timelineActiveLine: {
     position: 'absolute',
-    left: 7,
-    top: 4,
+    left: 9,
+    top: 14,
     width: 2,
-    height: '40%',
   },
   timelineStep: {
     position: 'relative',
+    minHeight: 28,
   },
   timelineDot: {
     position: 'absolute',
-    left: -24,
-    top: 4,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    left: -28,
+    top: 2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  timelineHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  timelineTime: {
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   // Bottom Bar
   bottomBar: {
