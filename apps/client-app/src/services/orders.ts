@@ -30,7 +30,7 @@ interface OrderRaw {
   deliveryAddress: unknown;
   remark: string | null;
   riderId: string | null;
-  // Why: P10 §3.5 + P11 §3.2 骑手详情（后端项 1 决策方案 A：getOrderDetail include rider + nested user.avatar，real 模式未就绪时 undefined）
+  // Why: P10 §3.5 + P11 §3.2 骑手详情（后端项 1 方案 A：getOrderDetail include rider，toOrderWithRelations 平铺 avatarUrl + rating toString；real 模式 rider=null 时整个 undefined）
   rider?: {
     id: string;
     riderName: string;
@@ -38,9 +38,8 @@ interface OrderRaw {
     rating: string | null;
     totalDeliveries: number;
     vehicleType: string;
-    vehiclePlate: string;
-    user?: { avatar?: string | null };
-  };
+    avatarUrl: string | null;
+  } | null;
   paymentMethod: string;
   paymentStatus: string;
   paidAt: string | null;
@@ -118,11 +117,10 @@ function transformOrder(raw: OrderRaw): Order {
       ? {
           name: raw.rider.riderName,
           phone: raw.rider.phone,
-          avatar: raw.rider.user?.avatar ?? undefined,
+          avatar: raw.rider.avatarUrl ?? undefined,
           rating: raw.rider.rating != null ? Number(raw.rider.rating) : undefined,
           totalDeliveries: raw.rider.totalDeliveries,
           vehicleType: raw.rider.vehicleType,
-          vehiclePlate: raw.rider.vehiclePlate,
         }
       : undefined,
     // Why: P10 Timeline 真实时间戳（§8.1 P0）- 透传后端 7 个时间戳，null 表示订单尚未到达该状态

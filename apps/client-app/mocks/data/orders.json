@@ -86,8 +86,7 @@
       "phone": "+670 7712 3456",
       "rating": 4.9,
       "totalDeliveries": 128,
-      "vehicleType": "Scooter",
-      "vehiclePlate": "TL-2024-DL"
+      "vehicleType": "Scooter"
     },
     "createdAt": "2026-06-08T09:15:00Z"
   },
@@ -122,8 +121,7 @@
       "phone": "+670 7712 3456",
       "rating": 4.9,
       "totalDeliveries": 128,
-      "vehicleType": "Scooter",
-      "vehiclePlate": "TL-2024-DL"
+      "vehicleType": "Scooter"
     },
     "createdAt": "2026-05-28T16:45:00Z"
   },

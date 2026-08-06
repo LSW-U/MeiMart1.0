@@ -37,9 +37,15 @@ const ON_PRIMARY = '#ffffff';
 
 export function RiderCard({ rider, orderStatus }: { rider: RiderInfo; orderStatus: OrderStatus }) {
   const { colors } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const statusTag = getRiderStatusTag(orderStatus);
-  const vehicle = [rider.vehicleType, rider.vehiclePlate].filter(Boolean).join(' • ');
+  // Why: 后端 rider select 不含 vehiclePlate（order.service.ts:1046-1053），只显 vehicleType
+  const vehicle = rider.vehicleType;
+  // Why: rating 后端返 string（Decimal normalize 去 0），转换层 Number 后用 Intl.NumberFormat locale 感知格式化（非 toFixed 硬拼）
+  const ratingText =
+    rider.rating != null
+      ? new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rider.rating)
+      : '--';
   // Why: ON_THE_WAY 用 primary-container 配色族，ARRIVED 用 surface-variant（与 banner 配色协调）
   const tagColors =
     statusTag === 'ON_THE_WAY'
@@ -82,7 +88,7 @@ export function RiderCard({ rider, orderStatus }: { rider: RiderInfo; orderStatu
         <View style={styles.ratingRow}>
           <Icon symbol="star" size={12} color={STAR_COLOR} />
           <Text style={[styles.ratingText, { color: colors['on-surface-variant'] }]}>
-            {rider.rating != null ? rider.rating.toFixed(1) : '--'}
+            {ratingText}
             {rider.totalDeliveries != null
               ? ` · ${t('order.riderDeliveries', { count: rider.totalDeliveries, defaultValue: '{{count}} deliveries' })}`
               : ''}

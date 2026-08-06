@@ -105,7 +105,6 @@ export type RiderInfo = {
   rating?: number;
   totalDeliveries?: number;
   vehicleType?: string;
-  vehiclePlate?: string;
 };
 
 export interface Order {
