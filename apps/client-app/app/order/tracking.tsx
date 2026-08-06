@@ -22,6 +22,7 @@ import { Icon } from '@/components/ui/Icon';
 import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useOrderTracking } from '@/services/queries/useTracking';
+import type { RiderLocation } from '@/services/tracking';
 import { buildTimelineSteps, type TimelineStepData } from '@/utils/timeline';
 import { RiderCard } from '@/components/business/RiderCard';
 import { useOrder } from '@/services/queries/useOrders';
@@ -42,8 +43,8 @@ export default function DeliveryTrackingPage() {
   // Why: 接真实订单数据，OrderItems + 地址 + trackingNo 都从 order 拿
   const { data: order, isLoading, isError, refetch } = useOrder(params.id);
   // Why: Phase 6 启动 WS 配送追踪（join:order + 监听 order:location/order:status-changed + 5s 无消息降级 HTTP 轮询）。
-  // Why: 物流时间线已接真实时间戳（Commit 2a buildTimelineSteps），配送员 + riderLocation 待 Commit 2b/2c 接入。
-  useOrderTracking(params.id);
+  // Why: D5 接线 - 消费 riderLocation（地图骑手定位）；lastOrderStatus 待 Commit 3 流程收口接入。
+  const { riderLocation } = useOrderTracking(params.id);
 
   if (isLoading) {
     return (
@@ -152,7 +153,7 @@ export default function DeliveryTrackingPage() {
         </View>
 
         {/* Map 占位区（Fix-21 #2 — react-native-maps 未装时用图占位） */}
-        <MapPlaceholder />
+        <MapPlaceholder riderLocation={riderLocation} />
 
         {/* 配送员信息卡片（Fix-21 #3 — 头像+名字+电话按钮） */}
         <RiderCard
@@ -388,7 +389,7 @@ function Header({ title }: { title: string }) {
 }
 
 // 地图占位（Fix-21 #2 — react-native-maps 未装时用样式占位）
-function MapPlaceholder() {
+function MapPlaceholder({ riderLocation }: { riderLocation: RiderLocation | null }) {
   const { colors } = useTheme();
   return (
     <View
@@ -429,6 +430,13 @@ function MapPlaceholder() {
           <Icon symbol="location_on" size={16} color={colors.primary} />
         </View>
         <View style={[styles.mapPinTo, { backgroundColor: colors.primary }]} />
+        {/* Why: D5 接线 - 有骑手位置时显示骑手定位 dot + 脉冲光晕（two_wheeler，占位地图装饰性定位） */}
+        {riderLocation ? (
+          <View style={styles.riderDot} pointerEvents="none">
+            <View style={[styles.riderDotPulse, { shadowColor: colors.primary }]} />
+            <Icon symbol="two_wheeler" size={20} color={colors.primary} />
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.mapLabel}>
@@ -659,6 +667,28 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
+  },
+  // Why: 骑手定位 dot（D5 接线，占位地图装饰性，固定在路线中部）
+  riderDot: {
+    position: "absolute",
+    left: "45%",
+    top: "50%",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  riderDotPulse: {
+    position: "absolute",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 8,
+    shadowOpacity: 0.3,
+    elevation: 3,
   },
   mapLabel: {
     position: 'absolute',
