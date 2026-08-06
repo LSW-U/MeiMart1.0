@@ -1,6 +1,7 @@
 // DeliveryTrackingPage — 还原自 DeliveryTrackingPage.html（328 行）
 // HTML 行数 328 → RN ~430（含样式），满足 CLAUDE.md 规则 #28 的 30% 门槛
 // Fix-21: PrimaryHeader + tais-pattern + 地图占位 + 骑手卡 + 渐变进度条 + uma-lulik-shadow + 费用明细
+import { useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -27,6 +28,7 @@ import { buildTimelineSteps, type TimelineStepData } from '@/utils/timeline';
 import { RiderCard } from '@/components/business/RiderCard';
 import { useOrder } from '@/services/queries/useOrders';
 import { useLocalizer } from '@/i18n';
+import type { OrderStatus } from '@/types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 // P11 Commit 2b: COURIER mock 删除，骑手数据走 RiderCard 的 props（后端 rider 字段就绪后由 transformOrder 透传）
@@ -34,6 +36,23 @@ import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 // P11 Commit 2a: TIMELINE mock 删除，走 buildTimelineSteps（@/utils/timeline）消费 order 时间戳
 
 // STAR_COLOR 移到 RiderCard 内部（P11 Commit 2b，骑手卡共享件）
+
+// Why: P11 Commit 3 D4 - StatusBadge 文案按 status 动态（复用 order.status.* 既有 i18n，新 10 枚举映射到旧 key）
+function getStatusBadgeKey(status: OrderStatus): string {
+  const map: Record<OrderStatus, string> = {
+    PENDING_PAYMENT: 'order.status.pending',
+    PENDING_CONFIRM: 'order.status.paid',
+    CONFIRMED: 'order.status.paid',
+    PICKED: 'order.status.shipped',
+    OUT_FOR_DELIVERY: 'order.status.shipped',
+    DELIVERED_PAID: 'order.status.delivered',
+    DELIVERED_UNPAID: 'order.status.delivered',
+    DELIVERED: 'order.status.delivered',
+    COMPLETED: 'order.status.delivered',
+    CANCELLED: 'order.status.cancelled',
+  };
+  return map[status];
+}
 
 export default function DeliveryTrackingPage() {
   const { colors } = useTheme();
@@ -43,8 +62,22 @@ export default function DeliveryTrackingPage() {
   // Why: 接真实订单数据，OrderItems + 地址 + trackingNo 都从 order 拿
   const { data: order, isLoading, isError, refetch } = useOrder(params.id);
   // Why: Phase 6 启动 WS 配送追踪（join:order + 监听 order:location/order:status-changed + 5s 无消息降级 HTTP 轮询）。
-  // Why: D5 接线 - 消费 riderLocation（地图骑手定位）；lastOrderStatus 待 Commit 3 流程收口接入。
-  const { riderLocation } = useOrderTracking(params.id);
+  // Why: D5 接线 - riderLocation 地图骑手定位；lastOrderStatus 用于 Commit 3 流程收口（完成态判断）。
+  const { riderLocation, lastOrderStatus } = useOrderTracking(params.id);
+
+  // Why: P11 Commit 3 决策 3 - 配送结束（DELIVERED*/COMPLETED）延迟 1.5s 自动跳回 P10 订单详情（hooks 顶层，loading 态前；P10 显示完成态 + 骑手卡 + 售后入口）
+  useEffect(() => {
+    if (!order) return;
+    const s = lastOrderStatus ?? order.status;
+    const isCompleted =
+      s === 'DELIVERED_PAID' || s === 'DELIVERED_UNPAID' || s === 'DELIVERED' || s === 'COMPLETED';
+    if (isCompleted && params.id) {
+      const timer = setTimeout(() => {
+        router.replace(`/order/${params.id}`);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [order, lastOrderStatus, params.id]);
 
   if (isLoading) {
     return (
@@ -76,12 +109,14 @@ export default function DeliveryTrackingPage() {
   }
 
   const trackingNo = order.trackingNo ?? order.orderNo;
+  // Why: P11 Commit 3 - lastOrderStatus（WS 实时）优先于 order.status（初始查询），保证状态最新
+  const currentStatus = lastOrderStatus ?? order.status;
   // Why: 按订单状态动态取 banner 配色（与 [id].tsx 一致，不再写死 pending）
-  const statusTheme = getStatusBannerTheme(order.status);
+  const statusTheme = getStatusBannerTheme(currentStatus);
   const address = order.address;
   // Why: P11 Commit 2a - Timeline 走共享 buildTimelineSteps，消费 order 真实时间戳 + t() labels（与 P10 同源）
   const timelineSteps = buildTimelineSteps(
-    order.status,
+    currentStatus,
     order,
     i18n.language,
     {
@@ -129,7 +164,7 @@ export default function DeliveryTrackingPage() {
                 Placed May 12, 2024
               </Text>
             </View>
-            <StatusBadge text="PROCESSING" backgroundColor={statusTheme.badgeBg} />
+            <StatusBadge text={t(getStatusBadgeKey(currentStatus), { defaultValue: currentStatus })} backgroundColor={statusTheme.badgeBg} />
           </View>
 
           {/* ESTIMATED DELIVERY（HTML 第 168-174 行 — blue-50/50 bg；复用 pending 色板）*/}
