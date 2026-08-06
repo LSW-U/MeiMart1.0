@@ -147,6 +147,22 @@ export const cartApi = {
     return this.getCart();
   },
 
+  // Why: 下单成功后清掉「已选中（即本次下单）」的购物车项，未选中项保留。
+  // 后端无批量删除端点，real 模式并行逐个 delete + 最后一次 getCart 拉干净状态。
+  async clearSelected(): Promise<Cart> {
+    if (isMockMode) {
+      mockDb.cart.items = mockDb.cart.items.filter((i) => !i.selected);
+      recalculateCart();
+      return mockResponse(mockDb.cart);
+    }
+    const current = await this.getCart();
+    const selectedIds = current.items.filter((i) => i.selected).map((i) => i.id);
+    if (selectedIds.length > 0) {
+      await Promise.all(selectedIds.map((id) => api.delete(`/client/cart/items/${id}`)));
+    }
+    return this.getCart();
+  },
+
   // Why: checkout-preview 是结算页关键端点（B5 聚合 discount）：
   //   入参 addressId（查仓库算运费）+ couponCode?（传券码时后端聚合 discount + couponValid）。
   //   payableAmount 已减折扣 = itemsSubtotal + deliveryFee - discount，前端直接用作实付金额。

@@ -23,7 +23,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { CouponPicker } from '@/components/business/CouponPicker/CouponPicker';
-import { useCart, useCheckoutPreview } from '@/services/queries/useCart';
+import { useCart, useCheckoutPreview, useClearCart } from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
 import { usePaymentMethods } from '@/services/queries/usePayment';
 import { useCreateOrder } from '@/services/queries/useOrders';
@@ -52,6 +52,7 @@ export default function CheckoutPage() {
   const { data: addresses } = useAddresses();
   const { data: paymentMethods } = usePaymentMethods();
   const createOrder = useCreateOrder();
+  const clearCart = useClearCart();
   const selectedItems = cart?.items.filter((i) => i.selected) ?? [];
   const defaultAddress = addresses?.find((a) => a.isDefault) ?? addresses?.[0];
   // Why: real 模式选券 —— selectedCouponCode 驱动 preview 重查（key 含 couponCode），后端聚合 discount
@@ -151,6 +152,13 @@ export default function CheckoutPage() {
           // 确认失败不阻塞下单流程，订单仍已创建
           console.warn('[checkout] devAutoConfirm failed:', e);
         }
+      }
+      // Why: 清掉本次下单的选中项，防回购物车重复下单（订单已成功，清购物车失败不误报下单失败）。
+      // useClearCart 自带乐观更新（缓存瞬间清空）+ onSettled invalidate 校准。
+      try {
+        await clearCart.mutateAsync();
+      } catch (e) {
+        console.warn('[checkout] clearCart failed:', e);
       }
       toast.success(t('checkout.orderPlaced', { defaultValue: 'Order placed' }));
       router.replace('/order/result');

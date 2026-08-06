@@ -126,6 +126,29 @@ export function useRemoveCartItem() {
   });
 }
 
+// Why: 下单成功后清空「已选中」购物车项（本次下单的），防回购物车重复下单。
+// 乐观：onMutate 立即从缓存删选中项（用户回 cart 页瞬间空），失败回滚，onSettled invalidate 校准。
+export function useClearCart() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => cartApi.clearSelected(),
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: CART_QUERY_KEY });
+      const previous = qc.getQueryData(CART_QUERY_KEY);
+      qc.setQueryData(CART_QUERY_KEY, (old: Cart | undefined) => {
+        if (!old) return old;
+        const items = old.items.filter((i) => !i.selected);
+        return recomputeTotals(old, items);
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(CART_QUERY_KEY, ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: CART_QUERY_KEY }),
+  });
+}
+
 export function useToggleCartItem() {
   const qc = useQueryClient();
   return useMutation({
