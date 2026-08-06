@@ -306,7 +306,13 @@
     "riderOnTheWay": "[TET] ON THE WAY",
     "riderArrived": "[TET] DELIVERED",
     "riderDeliveries": "[TET] {{count}} deliveries",
-    "callRider": "[TET] Call rider {{name}}"
+    "callRider": "[TET] Call rider {{name}}",
+    "paymentMethodLabel": "[TET] Payment Method"
+  },
+  "tracking": {
+    "title": "[TET] Order Tracking",
+    "estimatedDelivery": "[TET] Estimated delivery",
+    "etaPlaceholder": "[TET] Arriving Today"
   },
   "address": {
     "list": "[TET] Shipping addresses",

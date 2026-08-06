@@ -349,7 +349,13 @@
     "riderOnTheWay": "配送中",
     "riderArrived": "已送达",
     "riderDeliveries": "{{count}} 单",
-    "callRider": "致电骑手 {{name}}"
+    "callRider": "致电骑手 {{name}}",
+    "paymentMethodLabel": "支付方式"
+  },
+  "tracking": {
+    "title": "订单追踪",
+    "estimatedDelivery": "预计送达",
+    "etaPlaceholder": "今天送达"
   },
   "address": {
     "list": "收货地址",

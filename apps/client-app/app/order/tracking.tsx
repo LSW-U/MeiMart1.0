@@ -1,7 +1,7 @@
 // DeliveryTrackingPage — 还原自 DeliveryTrackingPage.html（328 行）
 // HTML 行数 328 → RN ~430（含样式），满足 CLAUDE.md 规则 #28 的 30% 门槛
 // Fix-21: PrimaryHeader + tais-pattern + 地图占位 + 骑手卡 + 渐变进度条 + uma-lulik-shadow + 费用明细
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,8 +9,10 @@ import {
   ScrollView,
   Pressable,
   Platform,
+  Share,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { formatDate } from '@/utils/format';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, getStatusBannerTheme } from '@/theme';
@@ -64,6 +66,8 @@ export default function DeliveryTrackingPage() {
   // Why: Phase 6 启动 WS 配送追踪（join:order + 监听 order:location/order:status-changed + 5s 无消息降级 HTTP 轮询）。
   // Why: D5 接线 - riderLocation 地图骑手定位；lastOrderStatus 用于 Commit 3 流程收口（完成态判断）。
   const { riderLocation, lastOrderStatus } = useOrderTracking(params.id);
+  // Why: F1 Track Order 滚动到顶部地图
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Why: P11 Commit 3 决策 3 - 配送结束（DELIVERED*/COMPLETED）延迟 1.5s 自动跳回 P10 订单详情（hooks 顶层，loading 态前；P10 显示完成态 + 骑手卡 + 售后入口）
   useEffect(() => {
@@ -137,9 +141,10 @@ export default function DeliveryTrackingPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <Header title="Order Details" />
+      <Header title={t('tracking.title', { defaultValue: 'Order Tracking' })} orderNo={order.orderNo} />
 
       <ScrollView
+        ref={scrollViewRef}
         style={{ flex: 1 }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -155,13 +160,13 @@ export default function DeliveryTrackingPage() {
           <View style={styles.orderHeaderRow}>
             <View style={styles.flex1}>
               <Text style={[styles.labelCaps, { color: colors['on-surface-variant'] }]}>
-                ORDER NUMBER
+                {t('order.orderNo', { defaultValue: 'Order number' }).toUpperCase()}
               </Text>
               <Text style={[styles.priceDisplay, { color: colors['on-surface'] }]}>
                 {trackingNo}
               </Text>
               <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
-                Placed May 12, 2024
+                {formatDate(order.createdAt, i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
               </Text>
             </View>
             <StatusBadge text={t(getStatusBadgeKey(currentStatus), { defaultValue: currentStatus })} backgroundColor={statusTheme.badgeBg} />
@@ -179,9 +184,9 @@ export default function DeliveryTrackingPage() {
           >
             <Icon symbol="local_shipping" size={20} color={statusTheme.bannerIcon} />
             <View style={styles.flex1}>
-              <Text style={[styles.etaLabel, { color: statusTheme.bannerLabelColor }]}>ESTIMATED DELIVERY</Text>
+              <Text style={[styles.etaLabel, { color: statusTheme.bannerLabelColor }]}>{t('tracking.estimatedDelivery', { defaultValue: 'Estimated delivery' }).toUpperCase()}</Text>
               <Text style={[styles.etaValue, { color: statusTheme.bannerValueColor }]}>
-                Arriving Today 4:00 PM - 6:00 PM
+                {t('tracking.etaPlaceholder', { defaultValue: 'Arriving Today' })} 4:00 PM - 6:00 PM
               </Text>
             </View>
           </View>
@@ -214,7 +219,7 @@ export default function DeliveryTrackingPage() {
             <View style={styles.addressTitleRow}>
               <Icon symbol="location_on" size={20} color={colors.primary} />
               <Text style={[styles.addressTitle, { color: colors['on-surface'] }]}>
-                Delivery Address
+                {t('order.shippingInfo', { defaultValue: 'Delivery Address' })}
               </Text>
             </View>
             <Pressable
@@ -246,7 +251,7 @@ export default function DeliveryTrackingPage() {
         {/* Order Items 标题（HTML 第 191-196 行 — 渐变 divider） */}
         <View style={styles.sectionHeader}>
           <View style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]} />
-          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>Order Items</Text>
+          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>{t('order.items', { defaultValue: 'Items' })}</Text>
           <View style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]} />
         </View>
 
@@ -298,7 +303,7 @@ export default function DeliveryTrackingPage() {
           <View style={styles.summaryGap}>
             {/* TODO(长期): 后端订单返回 subtotal/deliveryFee/discount 字段后恢复分项显示 */}
             <View style={[styles.totalRow, { borderTopColor: colors['outline-variant'] }]}>
-              <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>Total Amount</Text>
+              <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>{t('order.total', { defaultValue: 'Total' })}</Text>
               <PriceText value={order.totalPrice} size="lg" />
             </View>
           </View>
@@ -315,14 +320,14 @@ export default function DeliveryTrackingPage() {
           {/* Payment Method */}
           <View style={styles.paymentSection}>
             <Text style={[styles.labelCaps, { color: colors['on-surface-variant'] }]}>
-              PAYMENT METHOD
+              {t('order.paymentMethodLabel', { defaultValue: 'Payment Method' }).toUpperCase()}
             </Text>
             <View style={styles.paymentRow}>
               <View style={[styles.laisPayBadge, { backgroundColor: colors.primary }]}>
-                <Text style={styles.laisPayText}>LaisPay</Text>
+                <Text style={styles.laisPayText}>{t(`order.paymentMethodShort.${(order.paymentMethod ?? 'cod').toLowerCase()}`, { defaultValue: order.paymentMethod ?? '-' })}</Text>
               </View>
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
-                LaisPay Wallet
+                {t(`order.paymentMethod.${(order.paymentMethod ?? 'cod').toLowerCase()}`, { defaultValue: order.paymentMethod ?? '-' })}
               </Text>
             </View>
           </View>
@@ -344,7 +349,7 @@ export default function DeliveryTrackingPage() {
       >
         <Pressable
           onPress={() => {
-            /* 滚动到顶部 map 占位 */
+            scrollViewRef.current?.scrollTo({ y: 0, animated: true });
           }}
           style={({ pressed }) => [
             styles.outlineBtn,
@@ -352,9 +357,9 @@ export default function DeliveryTrackingPage() {
             pressed && { transform: [{ scale: 0.95 }] },
           ]}
           accessibilityRole="button"
-          accessibilityLabel="Track order"
+          accessibilityLabel={t('order.actions.track', { defaultValue: 'Track shipment' })}
         >
-          <Text style={[styles.btnText, { color: colors.primary }]}>Track Order</Text>
+          <Text style={[styles.btnText, { color: colors.primary }]}>{t('order.actions.track', { defaultValue: 'Track shipment' })}</Text>
         </Pressable>
         <Pressable
           onPress={() => router.push('/service')}
@@ -375,8 +380,9 @@ export default function DeliveryTrackingPage() {
 }
 
 // PrimaryHeader（HTML 第 138-155 行 — primary + tais-pattern + arrow_back + help + share）
-function Header({ title }: { title: string }) {
+function Header({ title, orderNo }: { title: string; orderNo?: string }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const handleBack = useSafeBack();
   return (
     <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.umaLulik]}>
@@ -408,12 +414,19 @@ function Header({ title }: { title: string }) {
           </Pressable>
           <Pressable
             onPress={() => {
-              /* share */
+              const message = t('order.shareMessage', { orderNo: orderNo ?? '', defaultValue: 'MeiMart order {{orderNo}}' });
+              if (Platform.OS === 'web') {
+                if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                  navigator.clipboard.writeText(message).catch(() => {});
+                }
+              } else {
+                Share.share({ message }).catch(() => {});
+              }
             }}
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel="Share"
+            accessibilityLabel={t('order.shareA11y', { orderNo: orderNo ?? '', defaultValue: 'Share order {{orderNo}}' })}
           >
             <Icon symbol="share" size={24} color="#ffffff" />
           </Pressable>

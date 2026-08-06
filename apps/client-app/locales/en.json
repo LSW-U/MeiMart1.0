@@ -349,7 +349,13 @@
     "riderOnTheWay": "ON THE WAY",
     "riderArrived": "DELIVERED",
     "riderDeliveries": "{{count}} deliveries",
-    "callRider": "Call rider {{name}}"
+    "callRider": "Call rider {{name}}",
+    "paymentMethodLabel": "Payment Method"
+  },
+  "tracking": {
+    "title": "Order Tracking",
+    "estimatedDelivery": "Estimated delivery",
+    "etaPlaceholder": "Arriving Today"
   },
   "address": {
     "list": "Shipping addresses",
