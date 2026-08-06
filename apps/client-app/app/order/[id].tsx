@@ -704,9 +704,9 @@ function BottomActions({
       return (
         <>
           {outline(
-            t('order.actions.track', { defaultValue: 'Track Order' }),
-            () => router.push({ pathname: '/order/tracking', params: { id: order.id } }),
-            'order-track',
+            t('order.actions.cancel', { defaultValue: 'Cancel Order' }),
+            onCancel,
+            'order-cancel',
           )}
           {solid(
             t('common.contactSeller', { defaultValue: 'Contact Seller' }),

@@ -8,6 +8,7 @@ import {
   Text,
   ScrollView,
   Pressable,
+  Alert,
   Platform,
   Share,
 } from 'react-native';
@@ -25,10 +26,11 @@ import { Icon } from '@/components/ui/Icon';
 import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useOrderTracking } from '@/services/queries/useTracking';
+import { toast } from '@/store/toastStore';
 import type { RiderLocation } from '@/services/tracking';
 import { buildTimelineSteps, type TimelineStepData } from '@/utils/timeline';
 import { RiderCard, getRiderStatusTag } from '@/components/business/RiderCard';
-import { useOrder } from '@/services/queries/useOrders';
+import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
 import { useLocalizer } from '@/i18n';
 import type { OrderStatus } from '@/types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -70,6 +72,8 @@ export default function DeliveryTrackingPage() {
   // Why: Phase 6 启动 WS 配送追踪（join:order + 监听 order:location/order:status-changed + 5s 无消息降级 HTTP 轮询）。
   // Why: D5 接线 - riderLocation 地图骑手定位；lastOrderStatus 用于 Commit 3 流程收口（完成态判断）。
   const { riderLocation, lastOrderStatus } = useOrderTracking(params.id);
+  // Why: 取消订单 mutation（hooks 顶层，与 useOrder 同级；CONFIRMED 待发货状态用）
+  const cancelMutation = useCancelOrder();
   // Why: F1 Track Order 滚动到顶部地图
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -119,6 +123,25 @@ export default function DeliveryTrackingPage() {
   const trackingNo = order.trackingNo ?? order.orderNo;
   // Why: P11 Commit 3 - lastOrderStatus（WS 实时）优先于 order.status（初始查询），保证状态最新
   const currentStatus = lastOrderStatus ?? order.status;
+  // Why: P11 取消订单（CONFIRMED 待发货可取消，与 P10 BottomActions 一致；cancel 后跳回 P10 订单详情）
+  const handleCancel = () => {
+    const onCancelSuccess = () => {
+      toast.success(t('order.cancelled', { defaultValue: 'Order cancelled' }));
+      router.replace(`/order/${params.id}`);
+    };
+    if (Platform.OS === 'web') {
+      cancelMutation.mutate(order.id, { onSuccess: onCancelSuccess });
+    } else {
+      Alert.alert(
+        t('order.cancelTitle', { defaultValue: 'Confirm cancel' }),
+        t('order.cancelConfirm', { defaultValue: 'Cancel this order?' }),
+        [
+          { text: t('common.no', { defaultValue: 'No' }), style: 'cancel' },
+          { text: t('common.yes', { defaultValue: 'Yes' }), style: 'destructive', onPress: () => cancelMutation.mutate(order.id, { onSuccess: onCancelSuccess }) },
+        ],
+      );
+    }
+  };
   // Why: 按订单状态动态取 banner 配色（与 [id].tsx 一致，不再写死 pending）
   const statusTheme = getStatusBannerTheme(currentStatus);
   const address = order.address;
@@ -345,20 +368,35 @@ export default function DeliveryTrackingPage() {
           },
         ]}
       >
-        <Pressable
-          onPress={() => {
-            scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-          }}
-          style={({ pressed }) => [
-            styles.outlineBtn,
-            { backgroundColor: colors['surface-container'] },
-            pressed && { transform: [{ scale: 0.95 }] },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={t('order.actions.track', { defaultValue: 'Track shipment' })}
-        >
-          <Text style={[styles.btnText, { color: colors.primary }]}>{t('order.actions.track', { defaultValue: 'Track shipment' })}</Text>
-        </Pressable>
+        {currentStatus === 'PENDING_CONFIRM' || currentStatus === 'CONFIRMED' ? (
+          <Pressable
+            onPress={handleCancel}
+            style={({ pressed }) => [
+              styles.outlineBtn,
+              { backgroundColor: colors['surface-container'] },
+              pressed && { transform: [{ scale: 0.95 }] },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('order.actions.cancel', { defaultValue: 'Cancel Order' })}
+          >
+            <Text style={[styles.btnText, { color: colors.primary }]}>{t('order.actions.cancel', { defaultValue: 'Cancel Order' })}</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={() => {
+              scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+            }}
+            style={({ pressed }) => [
+              styles.outlineBtn,
+              { backgroundColor: colors['surface-container'] },
+              pressed && { transform: [{ scale: 0.95 }] },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('order.actions.track', { defaultValue: 'Track shipment' })}
+          >
+            <Text style={[styles.btnText, { color: colors.primary }]}>{t('order.actions.track', { defaultValue: 'Track shipment' })}</Text>
+          </Pressable>
+        )}
         <Pressable
           onPress={() => router.push('/service')}
           style={({ pressed }) => [
