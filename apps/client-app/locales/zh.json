@@ -350,7 +350,8 @@
     "riderArrived": "已送达",
     "riderDeliveries": "{{count}} 单",
     "callRider": "致电骑手 {{name}}",
-    "paymentMethodLabel": "支付方式"
+    "paymentMethodLabel": "支付方式",
+    "viewProductA11y": "查看商品: {{name}}"
   },
   "tracking": {
     "title": "订单追踪",

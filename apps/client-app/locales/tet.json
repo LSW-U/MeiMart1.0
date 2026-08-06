@@ -308,7 +308,8 @@
     "riderArrived": "[TET] DELIVERED",
     "riderDeliveries": "[TET] {{count}} deliveries",
     "callRider": "[TET] Call rider {{name}}",
-    "paymentMethodLabel": "[TET] Payment Method"
+    "paymentMethodLabel": "[TET] Payment Method",
+    "viewProductA11y": "[TET] View product: {{name}}"
   },
   "tracking": {
     "title": "[TET] Order Tracking",

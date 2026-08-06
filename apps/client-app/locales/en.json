@@ -350,7 +350,8 @@
     "riderArrived": "DELIVERED",
     "riderDeliveries": "{{count}} deliveries",
     "callRider": "Call rider {{name}}",
-    "paymentMethodLabel": "Payment Method"
+    "paymentMethodLabel": "Payment Method",
+    "viewProductA11y": "View product: {{name}}"
   },
   "tracking": {
     "title": "Order Tracking",

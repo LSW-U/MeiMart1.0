@@ -32,6 +32,8 @@ export function getRiderStatusTag(status: OrderStatus): RiderStatusTag | null {
 
 // Why: 骑手评分星标金色（HTML star gold amber-500），semantic 无对应角色，已豁免
 const STAR_COLOR = '#f59e0b';
+// 原因：callBtn 红底白字 dark 不变（colors.primary callBtn），与 STAR_COLOR 同模式抽 const
+const ON_PRIMARY = '#ffffff';
 
 export function RiderCard({ rider, orderStatus }: { rider: RiderInfo; orderStatus: OrderStatus }) {
   const { colors } = useTheme();
@@ -102,7 +104,7 @@ export function RiderCard({ rider, orderStatus }: { rider: RiderInfo; orderStatu
             defaultValue: 'Call rider {{name}}',
           })}
         >
-          <Icon symbol="call" size={20} color="#ffffff" />
+          <Icon symbol="call" size={20} color={ON_PRIMARY} />
         </Pressable>
       ) : null}
     </View>

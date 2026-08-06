@@ -3,8 +3,8 @@
 // ADR-0004：推翻 ADR-0002 的 Section 组件方案，参照 tracking.tsx 重写为单文件。
 //
 // HTML 行数（取最长）：DeliveryTrackingPage.html 328 行
-// RN 行数：~750 行（含 SVG status badge + custom timeline + gradient divider）
-// 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 ~230%）
+// RN 行数：~1086 行（Commit 4 抽 timeline 共享件去重后；含 SVG status badge + custom timeline + RiderCard）
+// 满足 CLAUDE.md 规则 #28 的 30% 门槛（1086 / 610 = 178%）
 import {
   StyleSheet,
   View,
@@ -34,6 +34,9 @@ import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
 import { toast } from '@/store/toastStore';
 import type { OrderStatus, Order, CartItem } from '@/types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
+
+// 原因：红底白字 dark 不变（Header/done dot/solidBtn/laisPayBadge 都是 colors.primary 红底白字，与 P2-P7 ON_PRIMARY const 模式一致）
+const ON_PRIMARY = '#ffffff';
 
 // === 状态视觉映射 ===
 
@@ -450,7 +453,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
           accessibilityRole="button"
           accessibilityLabel={t('common.back', { defaultValue: 'Back' })}
         >
-          <Icon symbol="arrow_back" size={24} color="#ffffff" />
+          <Icon symbol="arrow_back" size={24} color={ON_PRIMARY} />
         </Pressable>
         <Text style={styles.headerTitle} accessibilityRole="header" numberOfLines={1}>
           {title}
@@ -463,7 +466,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
             accessibilityRole="button"
             accessibilityLabel={t('common.help', { defaultValue: 'Help' })}
           >
-            <Icon symbol="help_outline" size={22} color="#ffffff" />
+            <Icon symbol="help_outline" size={22} color={ON_PRIMARY} />
           </Pressable>
           <Pressable
             onPress={() => {
@@ -491,7 +494,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
               defaultValue: 'Share order {{orderNo}}',
             })}
           >
-            <Icon symbol="share" size={22} color="#ffffff" />
+            <Icon symbol="share" size={22} color={ON_PRIMARY} />
           </Pressable>
         </View>
       </View>
@@ -522,7 +525,7 @@ function OrderItemRow({
         pressed && { transform: [{ scale: 0.98 }] },
       ]}
       accessibilityRole="button"
-      accessibilityLabel={`View product: ${localize(item.product.name)}`}
+      accessibilityLabel={t('order.viewProductA11y', { name: localize(item.product.name), defaultValue: 'View product: {{name}}' })}
     >
       <View style={[styles.itemImageWrap, { backgroundColor: colors['surface-variant'] }]}>
         <SafeImage source={{ uri: item.product.image }} style={styles.itemImage} />
@@ -596,7 +599,7 @@ function Timeline({
               ]}
             >
               {isCompleted ? (
-                <Icon symbol="check" size={10} color="#ffffff" />
+                <Icon symbol="check" size={10} color={ON_PRIMARY} />
               ) : isActive && step.icon ? (
                 <Icon symbol={step.icon} size={12} color={colors.primary} />
               ) : null}
@@ -676,7 +679,7 @@ function BottomActions({
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Text style={[styles.btnText, { color: '#ffffff' }]}>{label}</Text>
+      <Text style={[styles.btnText, { color: ON_PRIMARY }]}>{label}</Text>
     </Pressable>
   );
 
@@ -831,7 +834,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...typography.h2,
-    color: '#ffffff',
+    color: ON_PRIMARY,
     fontSize: 22,
     flex: 1,
     textAlign: 'center',
@@ -1001,7 +1004,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   laisPayText: {
-    color: '#ffffff',
+    color: ON_PRIMARY,
     fontSize: 8,
     fontWeight: '700',
     fontStyle: 'italic',
