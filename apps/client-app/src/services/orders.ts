@@ -30,6 +30,17 @@ interface OrderRaw {
   deliveryAddress: unknown;
   remark: string | null;
   riderId: string | null;
+  // Why: P10 §3.5 + P11 §3.2 骑手详情（后端项 1 决策方案 A：getOrderDetail include rider + nested user.avatar，real 模式未就绪时 undefined）
+  rider?: {
+    id: string;
+    riderName: string;
+    phone: string;
+    rating: string | null;
+    totalDeliveries: number;
+    vehicleType: string;
+    vehiclePlate: string;
+    user?: { avatar?: string | null };
+  };
   paymentMethod: string;
   paymentStatus: string;
   paidAt: string | null;
@@ -102,6 +113,18 @@ function transformOrder(raw: OrderRaw): Order {
     deliveryFee: (raw.deliveryFee ?? 0) / 100,
     discountAmount: (raw.discountAmount ?? 0) / 100,
     paymentMethod: raw.paymentMethod ?? undefined,
+    // Why: P10 §3.5 + P11 §3.2 骑手详情映射（OrderRaw.rider → Order.rider: RiderInfo，后端项 1 就绪后透传；rating Decimal→number）
+    rider: raw.rider
+      ? {
+          name: raw.rider.riderName,
+          phone: raw.rider.phone,
+          avatar: raw.rider.user?.avatar ?? undefined,
+          rating: raw.rider.rating != null ? Number(raw.rider.rating) : undefined,
+          totalDeliveries: raw.rider.totalDeliveries,
+          vehicleType: raw.rider.vehicleType,
+          vehiclePlate: raw.rider.vehiclePlate,
+        }
+      : undefined,
     // Why: P10 Timeline 真实时间戳（§8.1 P0）- 透传后端 7 个时间戳，null 表示订单尚未到达该状态
     paidAt: raw.paidAt ?? null,
     confirmedAt: raw.confirmedAt ?? null,

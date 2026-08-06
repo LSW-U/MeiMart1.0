@@ -14,17 +14,10 @@ import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, borderRadius } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
-import type { OrderStatus } from '@/types';
+import type { RiderInfo, OrderStatus } from '@/types';
 
-export type RiderInfo = {
-  name?: string;
-  phone?: string;
-  avatar?: string;
-  rating?: number;
-  totalDeliveries?: number;
-  vehicleType?: string;
-  vehiclePlate?: string;
-};
+// Why: RiderInfo 类型抽到 @/types（Order.rider 共用 + 避免循环依赖），此处 re-export 保持调用方 import 兼容
+export type { RiderInfo };
 
 type RiderStatusTag = 'ON_THE_WAY' | 'ARRIVED';
 

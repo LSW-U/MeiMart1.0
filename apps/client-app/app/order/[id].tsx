@@ -21,6 +21,7 @@ import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/format';
 import { buildTimelineSteps, type TimelineStepData } from '@/utils/timeline';
+import { RiderCard, getRiderStatusTag } from '@/components/business/RiderCard';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, statusBannerPalettes, type StatusBannerPaletteKey } from '@/theme';
 import { useLocalizer } from '@/i18n';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -320,6 +321,11 @@ export default function OrderDetailPage() {
           </View>
         ) : null}
 
+        {/* P10 §3.5 骑手联系卡（rider 字段存在 + 配送中/已完成状态显示，无 rider 字段时隐藏整个模块 - 后端项 1 就绪后透传） */}
+        {order.rider && getRiderStatusTag(order.status) ? (
+          <RiderCard rider={order.rider} orderStatus={order.status} />
+        ) : null}
+
         {/* Order Items 标题（HTML 第 191-196 行 — 左右渐变 divider） */}
         <View style={styles.sectionHeader}>
           <View style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]} />
@@ -402,16 +408,15 @@ export default function OrderDetailPage() {
                 {t(`order.paymentMethod.${(order.paymentMethod ?? 'cod').toLowerCase()}`, { defaultValue: order.paymentMethod ?? '-' })}
               </Text>
             </View>
-            {order.trackingNo ? (
-              <View style={[styles.trackingNoRow, { borderTopColor: colors['outline-variant'] }]}>
-                <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
-                  {t('order.trackingNo', { defaultValue: 'Tracking No.' })}
-                </Text>
-                <Text style={[styles.bodySmBold, { color: colors.primary }]}>
-                  {order.trackingNo}
-                </Text>
-              </View>
-            ) : null}
+            {/* Why: 项 2 决策 - 东帝汶骑手直送无物流单号，用 orderNo 作追踪号（删 trackingNo 兜底，UI 标签 Order No.） */}
+            <View style={[styles.trackingNoRow, { borderTopColor: colors['outline-variant'] }]}>
+              <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
+                {t('order.orderNo', { defaultValue: 'Order No.' })}
+              </Text>
+              <Text style={[styles.bodySmBold, { color: colors.primary }]}>
+                {order.orderNo}
+              </Text>
+            </View>
           </View>
 
           {/* Timeline */}

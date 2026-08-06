@@ -81,6 +81,14 @@
     "deliveryFee": 3.0,
     "discountAmount": 2.0,
     "paymentMethod": "PAYPAL",
+    "rider": {
+      "name": "João Pereira",
+      "phone": "+670 7712 3456",
+      "rating": 4.9,
+      "totalDeliveries": 128,
+      "vehicleType": "Scooter",
+      "vehiclePlate": "TL-2024-DL"
+    },
     "createdAt": "2026-06-08T09:15:00Z",
     "trackingNo": "SF1234567890"
   },
@@ -110,6 +118,14 @@
     "deliveryFee": 2.0,
     "discountAmount": 10.0,
     "paymentMethod": "STRIPE",
+    "rider": {
+      "name": "João Pereira",
+      "phone": "+670 7712 3456",
+      "rating": 4.9,
+      "totalDeliveries": 128,
+      "vehicleType": "Scooter",
+      "vehiclePlate": "TL-2024-DL"
+    },
     "createdAt": "2026-05-28T16:45:00Z"
   },
   {

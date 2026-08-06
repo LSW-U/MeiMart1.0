@@ -98,6 +98,16 @@ export interface OrderEvent {
   createdAt: string;
 }
 
+export type RiderInfo = {
+  name?: string;
+  phone?: string;
+  avatar?: string;
+  rating?: number;
+  totalDeliveries?: number;
+  vehicleType?: string;
+  vehiclePlate?: string;
+};
+
 export interface Order {
   id: string;
   orderNo: string;
@@ -111,6 +121,8 @@ export interface Order {
   deliveryFee?: number;
   discountAmount?: number;
   paymentMethod?: string;
+  // Why: P10 §3.5 + P11 §3.2 骑手卡（RiderCard 共享件，后端项 1 就绪后 transformOrder 透传）
+  rider?: RiderInfo;
   // Why: P10 Timeline 真实时间戳（§8.1 P0）— transformOrder 从 OrderRaw 映射，null 表示订单尚未到达该状态
   paidAt?: string | null;
   confirmedAt?: string | null;
