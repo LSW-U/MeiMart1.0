@@ -8,7 +8,6 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { isValidPhone } from '../../src/services/auth';
 import { riderApi } from '../../src/services/user';
-import { tokenStorage } from '../../src/services/token-storage';
 
 type UploadKey = 'license' | 'biFront' | 'biBack' | 'vehicle';
 

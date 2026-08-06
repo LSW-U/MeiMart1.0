@@ -2,6 +2,11 @@ import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useAuthStore } from '../../src/store/useAuthStore';
+import { useRiderSocket } from '../../src/hooks/useRiderSocket';
+import { useCurrentTask } from '../../src/hooks/useCurrentTask';
+import { useLocation } from '../../src/hooks/useLocation';
+import { useHeartbeat } from '../../src/hooks/useHeartbeat';
+import { useRiderSettings } from '../../src/services/queries/useSettings';
 
 export default function MainLayout() {
   const hydrated = useAuthStore((s) => s.hydrated);
@@ -20,6 +25,21 @@ export default function MainLayout() {
   if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;
   }
+
+  // Why: 拆内层组件，让 hook 只在已登录时挂载（遵守 hooks 规则：不能在条件 return 后调 hook）
+  return <MainContent />;
+}
+
+function MainContent() {
+  // P11 项 4：WS 连接 + 定位上报 + 心跳续期，三者配套
+  // useRiderSocket 内部按 isAuthenticated 自动连/断；useLocation 靠 socket+orderId 守卫过滤 emit
+  const { socket } = useRiderSocket();
+  const { currentOrderId } = useCurrentTask();
+  useLocation({ socket, currentOrderId });
+
+  const { data: settings } = useRiderSettings();
+  const online = settings?.dutyStatus !== 'offDuty';
+  useHeartbeat(online);
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }

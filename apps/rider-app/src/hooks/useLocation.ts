@@ -41,10 +41,10 @@ export function useLocation(options: UseLocationOptions = {}) {
         useLocationStore.getState().setCoordinates(coords);
       }
 
-      // CLAUDE.md 规则 18：骑手在线 15s/次，配送中 10s/次
-      // 这里取 10s（配送场景为主），离线场景由 isOnline 控制是否启动 hook
+      // P11 物流追踪要求 ~5s 上报（对齐客户端 useTracking 5s 轮询兜底）
+      // distanceInterval 5m 过滤 GPS 漂移；静止时不触发上报，位置未变合理
       subRef.current = await Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.High, distanceInterval: 10, timeInterval: 10_000 },
+        { accuracy: Location.Accuracy.High, distanceInterval: 5, timeInterval: 5_000 },
         (loc) => {
           const coords: Coordinates = {
             latitude: loc.coords.latitude,
@@ -57,11 +57,21 @@ export function useLocation(options: UseLocationOptions = {}) {
           // socket 或 orderId 缺一时跳过推送，本地 store 仍更新
           const oid = orderIdRef.current;
           if (socket && socket.connected && oid) {
+            // expo-location speed 是 m/s，后端要 km/h；iOS 静止时为 -1 视为无效
+            const rawSpeed = loc.coords.speed;
+            const speed =
+              typeof rawSpeed === 'number' && rawSpeed >= 0
+                ? Math.round(rawSpeed * 3.6 * 10) / 10
+                : undefined;
+            const rawHeading = loc.coords.heading;
+            const heading = typeof rawHeading === 'number' ? rawHeading : undefined;
             socket.emit('location:update', {
               orderId: oid,
               lat: coords.latitude,
               lng: coords.longitude,
               timestamp: Date.now(),
+              ...(speed !== undefined ? { speed } : {}),
+              ...(heading !== undefined ? { heading } : {}),
             });
           }
         },
