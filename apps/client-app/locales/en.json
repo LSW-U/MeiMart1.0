@@ -295,7 +295,8 @@
       "repurchase": "Buy again",
       "refund": "Request refund",
       "confirm": "Confirm Received",
-      "afterSales": "After-Sales"
+      "afterSales": "After-Sales",
+      "contactSeller": "Contact seller"
     },
     "empty": "No orders",
     "emptyTitle": "No orders yet",
@@ -356,7 +357,9 @@
   "tracking": {
     "title": "Order Tracking",
     "estimatedDelivery": "Estimated delivery",
-    "etaPlaceholder": "Arriving Today"
+    "etaPlaceholder": "Arriving Today",
+    "mapA11y": "Map showing delivery route",
+    "liveTracking": "Live tracking"
   },
   "address": {
     "list": "Shipping addresses",

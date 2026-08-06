@@ -27,11 +27,15 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { useOrderTracking } from '@/services/queries/useTracking';
 import type { RiderLocation } from '@/services/tracking';
 import { buildTimelineSteps, type TimelineStepData } from '@/utils/timeline';
-import { RiderCard } from '@/components/business/RiderCard';
+import { RiderCard, getRiderStatusTag } from '@/components/business/RiderCard';
 import { useOrder } from '@/services/queries/useOrders';
 import { useLocalizer } from '@/i18n';
 import type { OrderStatus } from '@/types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
+
+// 原因：红底白字 dark 不变（Header 3 icon/done dot/Contact Seller btn 都是 colors.primary 红底白字，与 P10 ON_PRIMARY const 模式一致）
+// 豁免：mapPinFrom/riderDot/mapLabel 白底（叠地图保可见性，与 mapLabel rgba(255,255,255,0.9) 同性质，不走 ON_PRIMARY）
+const ON_PRIMARY = '#ffffff';
 
 // P11 Commit 2b: COURIER mock 删除，骑手数据走 RiderCard 的 props（后端 rider 字段就绪后由 transformOrder 透传）
 
@@ -196,16 +200,10 @@ export default function DeliveryTrackingPage() {
         <MapPlaceholder riderLocation={riderLocation} />
 
         {/* 配送员信息卡片（Fix-21 #3 — 头像+名字+电话按钮） */}
-        <RiderCard
-          rider={{
-            name: 'João Pereira',
-            phone: '+670 7712 3456',
-            rating: 4.9,
-            vehicleType: 'Scooter',
-            vehiclePlate: 'TL-2024-DL',
-          }}
-          orderStatus={order.status}
-        />
+        {/* B1 修复：接 order.rider（与 P10 一致），real 模式字段缺失时隐藏（降级正确，避免假骑手误导） */}
+        {order.rider && getRiderStatusTag(order.status) ? (
+          <RiderCard rider={order.rider} orderStatus={order.status} />
+        ) : null}
 
         {/* Delivery Address Card（HTML 第 177-189 行） */}
         <View
@@ -226,9 +224,9 @@ export default function DeliveryTrackingPage() {
               onPress={() => router.push('/address/list')}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel="Edit address"
+              accessibilityLabel={t('checkout.address.change', { defaultValue: 'Change' })}
             >
-              <Text style={[styles.editText, { color: colors.primary }]}>EDIT</Text>
+              <Text style={[styles.editText, { color: colors.primary }]}>{t('checkout.address.change', { defaultValue: 'Change' }).toUpperCase()}</Text>
             </Pressable>
           </View>
           <View style={styles.addressBody}>
@@ -370,9 +368,9 @@ export default function DeliveryTrackingPage() {
             pressed && { transform: [{ scale: 0.95 }] },
           ]}
           accessibilityRole="button"
-          accessibilityLabel="Contact seller"
+          accessibilityLabel={t('order.actions.contactSeller', { defaultValue: 'Contact seller' })}
         >
-          <Text style={[styles.btnText, { color: '#ffffff' }]}>Contact Seller</Text>
+          <Text style={[styles.btnText, { color: ON_PRIMARY }]}>{t('order.actions.contactSeller', { defaultValue: 'Contact seller' })}</Text>
         </Pressable>
       </View>
     </SafeAreaWrapper>
@@ -397,7 +395,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
           accessibilityRole="button"
           accessibilityLabel={t('common.back', { defaultValue: 'Back' })}
         >
-          <Icon symbol="arrow_back" size={24} color="#ffffff" />
+          <Icon symbol="arrow_back" size={24} color={ON_PRIMARY} />
         </Pressable>
         <Text style={styles.headerTitle} accessibilityRole="header">
           {title}
@@ -410,7 +408,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
             accessibilityRole="button"
             accessibilityLabel={t('common.help', { defaultValue: 'Help' })}
           >
-            <Icon symbol="help_outline" size={24} color="#ffffff" />
+            <Icon symbol="help_outline" size={24} color={ON_PRIMARY} />
           </Pressable>
           <Pressable
             onPress={() => {
@@ -428,7 +426,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
             accessibilityRole="button"
             accessibilityLabel={t('order.shareA11y', { orderNo: orderNo ?? '', defaultValue: 'Share order {{orderNo}}' })}
           >
-            <Icon symbol="share" size={24} color="#ffffff" />
+            <Icon symbol="share" size={24} color={ON_PRIMARY} />
           </Pressable>
         </View>
       </View>
@@ -439,6 +437,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
 // 地图占位（Fix-21 #2 — react-native-maps 未装时用样式占位）
 function MapPlaceholder({ riderLocation }: { riderLocation: RiderLocation | null }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   return (
     <View
       style={[
@@ -449,7 +448,7 @@ function MapPlaceholder({ riderLocation }: { riderLocation: RiderLocation | null
         },
       ]}
       accessibilityRole="image"
-      accessibilityLabel="Map showing delivery route"
+      accessibilityLabel={t('tracking.mapA11y', { defaultValue: 'Map showing delivery route' })}
     >
       {/* 模拟地图街道网 */}
       <View style={styles.mapGrid} pointerEvents="none">
@@ -490,7 +489,7 @@ function MapPlaceholder({ riderLocation }: { riderLocation: RiderLocation | null
       <View style={styles.mapLabel}>
         <Icon symbol="location_on" size={12} color={colors.primary} />
         <Text style={[styles.mapLabelText, { color: colors['on-surface-variant'] }]}>
-          Live tracking • Dili
+          {t('tracking.liveTracking', { defaultValue: 'Live tracking' })} • Dili
         </Text>
       </View>
     </View>
@@ -544,7 +543,7 @@ function Timeline({ steps, progress }: { steps: TimelineStepData[]; progress: nu
               ]}
             >
               {isCompleted ? (
-                <Icon symbol="check" size={10} color="#ffffff" />
+                <Icon symbol="check" size={10} color={ON_PRIMARY} />
               ) : isActive && step.icon ? (
                 <Icon symbol={step.icon} size={12} color={colors.primary} />
               ) : null}
@@ -612,7 +611,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...typography.h2,
-    color: '#ffffff',
+    color: ON_PRIMARY,
     fontSize: 22,
   },
   headerActions: {
@@ -864,7 +863,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   laisPayText: {
-    color: '#ffffff',
+    color: ON_PRIMARY,
     fontSize: 8,
     fontWeight: '700',
     fontStyle: 'italic',

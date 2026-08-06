@@ -253,7 +253,8 @@
       "repurchase": "[TET] Buy again",
       "refund": "[TET] Request refund",
       "confirm": "[TET] Confirm Received",
-      "afterSales": "[TET] After-Sales"
+      "afterSales": "[TET] After-Sales",
+      "contactSeller": "[TET] Contact seller"
     },
     "empty": "[TET] No orders",
     "emptyTitle": "[TET] No orders yet",
@@ -314,7 +315,9 @@
   "tracking": {
     "title": "[TET] Order Tracking",
     "estimatedDelivery": "[TET] Estimated delivery",
-    "etaPlaceholder": "[TET] Arriving Today"
+    "etaPlaceholder": "[TET] Arriving Today",
+    "mapA11y": "[TET] Map showing delivery route",
+    "liveTracking": "[TET] Live tracking"
   },
   "address": {
     "list": "[TET] Shipping addresses",

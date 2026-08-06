@@ -295,7 +295,8 @@
       "repurchase": "再次购买",
       "refund": "申请退款",
       "confirm": "确认收货",
-      "afterSales": "申请售后"
+      "afterSales": "申请售后",
+      "contactSeller": "联系卖家"
     },
     "empty": "暂无订单",
     "emptyTitle": "暂无订单",
@@ -356,7 +357,9 @@
   "tracking": {
     "title": "订单追踪",
     "estimatedDelivery": "预计送达",
-    "etaPlaceholder": "今天送达"
+    "etaPlaceholder": "今天送达",
+    "mapA11y": "显示配送路线的地图",
+    "liveTracking": "实时追踪"
   },
   "address": {
     "list": "收货地址",
