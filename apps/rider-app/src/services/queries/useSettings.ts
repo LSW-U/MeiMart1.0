@@ -1,14 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { useAuthStore } from '../../store/useAuthStore';
 import type { RiderSettings } from '../settings';
 import { riderSettingsApi } from '../settings';
 
 export const riderSettingsKey = ['rider', 'settings'] as const;
 
 export function useRiderSettings() {
+  // Why: 未登录时（login/register/terms/privacy 等页经 useTranslation 间接调用）
+  // 不应触发 getProfile，否则无 token 必然 401。与 useRiderProfile 保持一致的守卫。
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: riderSettingsKey,
     queryFn: () => riderSettingsApi.get(),
+    enabled: isAuthenticated,
   });
 }
 

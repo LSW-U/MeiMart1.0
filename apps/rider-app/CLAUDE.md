@@ -120,7 +120,7 @@ export const colors = {
 15. **前台定位**：`expo-location` `watchPositionAsync`，`accuracy: High`，`distanceInterval: 10m`
 16. **后台定位**（⚠️ 待实现）：使用 `expo-task-manager` + `Location.startLocationUpdatesAsync`，确保 App 切后台仍持续上报
 17. **定位精度优化**：过滤 GPS 漂移（速度判断 + 距离阈值 + 卡尔曼滤波可选）
-18. **定位频率**：骑手在线时 15s/次，配送中 10s/次，离线时停止上报
+18. **定位频率**：骑手在线时 15s/次，配送中 5s/次（P11 物流追踪实时性，对齐客户端 order:location 消费），离线时停止上报（停止 watchPositionAsync，不只是停 emit）
 
 ### 语言规则
 

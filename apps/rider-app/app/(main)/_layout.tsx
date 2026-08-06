@@ -32,13 +32,13 @@ export default function MainLayout() {
 
 function MainContent() {
   // P11 项 4：WS 连接 + 定位上报 + 心跳续期，三者配套
-  // useRiderSocket 内部按 isAuthenticated 自动连/断；useLocation 靠 socket+orderId 守卫过滤 emit
-  const { socket } = useRiderSocket();
-  const { currentOrderId } = useCurrentTask();
-  useLocation({ socket, currentOrderId });
-
+  // online 派生提前：useLocation 和 useHeartbeat 共用同一守卫（B1：offline 停 watch + 停心跳）
   const { data: settings } = useRiderSettings();
   const online = settings?.dutyStatus !== 'offDuty';
+
+  const { socket } = useRiderSocket();
+  const { currentOrderId } = useCurrentTask();
+  useLocation({ socket, currentOrderId, enabled: online });
   useHeartbeat(online);
 
   return <Stack screenOptions={{ headerShown: false }} />;

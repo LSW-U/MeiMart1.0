@@ -58,15 +58,16 @@ export function useRiderSocket() {
 
       // 其他骑手抢走任务 / 系统派单 → 失效抢单大厅缓存
       const invalidateTasks = (data: { taskId?: string }) => {
-        console.log('[ws] task event', data);
+        if (__DEV__) console.log('[ws] task event', data);
         void queryClient.invalidateQueries({ queryKey: taskListsKey });
       };
       sock.on('dispatch:task-accepted', invalidateTasks);
       sock.on('dispatch:task-removed', invalidateTasks);
       sock.on('dispatch:new-task', invalidateTasks);
       sock.on('order:status-changed', (data: { orderId?: string }) => {
-        console.log('[ws] order status changed', data);
-        void queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        // M2: 高频事件，log 仅 dev；S1: 与 dispatch 系列统一用 taskListsKey（detail 由 staleTime/refetch 兜底）
+        if (__DEV__) console.log('[ws] order status changed', data);
+        void queryClient.invalidateQueries({ queryKey: taskListsKey });
       });
     })();
 
