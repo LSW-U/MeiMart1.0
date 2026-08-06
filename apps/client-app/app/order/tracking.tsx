@@ -395,7 +395,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
           hitSlop={8}
           style={styles.headerBtn}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('common.back', { defaultValue: 'Back' })}
         >
           <Icon symbol="arrow_back" size={24} color="#ffffff" />
         </Pressable>
@@ -408,7 +408,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel="Help"
+            accessibilityLabel={t('common.help', { defaultValue: 'Help' })}
           >
             <Icon symbol="help_outline" size={24} color="#ffffff" />
           </Pressable>

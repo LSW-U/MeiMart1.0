@@ -408,15 +408,6 @@ export default function OrderDetailPage() {
                 {t(`order.paymentMethod.${(order.paymentMethod ?? 'cod').toLowerCase()}`, { defaultValue: order.paymentMethod ?? '-' })}
               </Text>
             </View>
-            {/* Why: 项 2 决策 - 东帝汶骑手直送无物流单号，用 orderNo 作追踪号（删 trackingNo 兜底，UI 标签 Order No.） */}
-            <View style={[styles.trackingNoRow, { borderTopColor: colors['outline-variant'] }]}>
-              <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
-                {t('order.orderNo', { defaultValue: 'Order No.' })}
-              </Text>
-              <Text style={[styles.bodySmBold, { color: colors.primary }]}>
-                {order.orderNo}
-              </Text>
-            </View>
           </View>
 
           {/* Timeline */}
@@ -457,7 +448,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
           hitSlop={8}
           style={styles.headerBtn}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('common.back', { defaultValue: 'Back' })}
         >
           <Icon symbol="arrow_back" size={24} color="#ffffff" />
         </Pressable>
@@ -470,7 +461,7 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel="Help"
+            accessibilityLabel={t('common.help', { defaultValue: 'Help' })}
           >
             <Icon symbol="help_outline" size={22} color="#ffffff" />
           </Pressable>
@@ -1014,14 +1005,6 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: '700',
     fontStyle: 'italic',
-  },
-  trackingNoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
   // Timeline（HTML 原型 B 方案：rail + fill + node-head/desc + 20×20 dot）
   timelineWrap: {
