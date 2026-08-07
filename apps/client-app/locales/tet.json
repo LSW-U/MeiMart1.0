@@ -310,7 +310,28 @@
     "riderDeliveries": "[TET] {{count}} deliveries",
     "callRider": "[TET] Call rider {{name}}",
     "paymentMethodLabel": "[TET] Payment Method",
-    "viewProductA11y": "[TET] View product: {{name}}"
+    "viewProductA11y": "[TET] View product: {{name}}",
+    "bannerLabel": {
+      "paymentDeadline": "[TET] Payment deadline",
+      "orderStatus": "[TET] Order status",
+      "estimatedDelivery": "[TET] Estimated delivery",
+      "deliveryStatus": "[TET] Delivery status",
+      "paymentOnDelivery": "[TET] Payment on delivery",
+      "orderCompleted": "[TET] Order completed",
+      "orderCancelled": "[TET] Order cancelled"
+    },
+    "bannerValue": {
+      "completePaymentSoon": "[TET] Please complete payment soon",
+      "beingConfirmed": "[TET] Order is being confirmed",
+      "arrivingInDays": "[TET] Arriving in 2-3 days",
+      "packagePicked": "[TET] Package picked, on the way soon",
+      "outForDelivery": "[TET] Out for delivery",
+      "deliveredEnjoyed": "[TET] Delivered - hope you enjoyed your order",
+      "deliveredPayRider": "[TET] Delivered - please pay the rider",
+      "orderCompletedThanks": "[TET] Order completed - thank you",
+      "orderCancelled": "[TET] Order was cancelled"
+    },
+    "statusBadgeA11y": "[TET] Status: {{status}}"
   },
   "tracking": {
     "title": "[TET] Order Tracking",

@@ -43,95 +43,100 @@ const ON_PRIMARY = '#ffffff';
 type StatusVisual = {
   /** 状态色板 key（颜色统一从 statusBannerPalettes 取，不再内联 hex） */
   palette: StatusBannerPaletteKey;
-  /** 状态徽章文案（label-caps 大写） */
-  badgeText: string;
-  /** Banner 顶部小标签（ESTIMATED DELIVERY / DELIVERY STATUS 等） */
-  bannerLabel: string;
-  /** Banner 主文案 */
-  bannerValue: string;
+  /** 状态徽章 i18n key（复用 order.status.*，渲染时 toUpperCase 保持大写视觉） */
+  badgeTextKey: string;
+  /** Banner 顶部小标签 i18n key（order.bannerLabel.*，渲染时 toUpperCase） */
+  bannerLabelKey: string;
+  /** Banner 主文案 i18n key（order.bannerValue.*） */
+  bannerValueKey: string;
   /** Banner 图标名（Material Symbols） */
   bannerIconSymbol: string;
 };
 
+// Why: STATUS_VISUAL 存 i18n key（纯数据，不依赖 t），渲染处 t() + toUpperCase。
+// badgeTextKey 复用 order.status.*（与 P11 getStatusBadgeKey 映射一致：PENDING_CONFIRM/CONFIRMED→paid、
+// PICKED/OUT_FOR_DELIVERY→shipped、DELIVERED_*/COMPLETED→delivered、CANCELLED→cancelled），零新增。
+// bannerLabelKey/bannerValueKey 用 order.bannerLabel.*/order.bannerValue.* 子命名空间（新增）。
 const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
   // 待付款（PROCESSING 等价的橙色）
   PENDING_PAYMENT: {
     palette: 'pending',
-    badgeText: 'TO PAY',
-    bannerLabel: 'PAYMENT DEADLINE',
-    bannerValue: 'Please complete payment soon',
+    badgeTextKey: 'order.status.pending',
+    bannerLabelKey: 'order.bannerLabel.paymentDeadline',
+    bannerValueKey: 'order.bannerValue.completePaymentSoon',
     bannerIconSymbol: 'schedule',
   },
   // 待确认（已付款等审核，颜色同 PENDING_PAYMENT）
   PENDING_CONFIRM: {
     palette: 'pending',
-    badgeText: 'PROCESSING',
-    bannerLabel: 'ORDER STATUS',
-    bannerValue: 'Order is being confirmed',
+    badgeTextKey: 'order.status.paid',
+    bannerLabelKey: 'order.bannerLabel.orderStatus',
+    bannerValueKey: 'order.bannerValue.beingConfirmed',
     bannerIconSymbol: 'hourglass_empty',
   },
   // 已确认（PROCESSING 配色）
   CONFIRMED: {
     palette: 'pending',
-    badgeText: 'PROCESSING',
-    bannerLabel: 'ESTIMATED DELIVERY',
-    bannerValue: 'Arriving in 2-3 days',
+    badgeTextKey: 'order.status.paid',
+    bannerLabelKey: 'order.bannerLabel.estimatedDelivery',
+    bannerValueKey: 'order.bannerValue.arrivingInDays',
     bannerIconSymbol: 'local_shipping',
   },
   // 已拣货（同 SHIPPED 配色）
   PICKED: {
     palette: 'pending',
-    badgeText: 'PICKED',
-    bannerLabel: 'ESTIMATED DELIVERY',
-    bannerValue: 'Package picked, on the way soon',
+    badgeTextKey: 'order.status.shipped',
+    bannerLabelKey: 'order.bannerLabel.estimatedDelivery',
+    bannerValueKey: 'order.bannerValue.packagePicked',
     bannerIconSymbol: 'inventory_2',
   },
   // 配送中 — HTML DeliveryTrackingPage2
   OUT_FOR_DELIVERY: {
     palette: 'pending',
-    badgeText: 'SHIPPED',
-    bannerLabel: 'ESTIMATED DELIVERY',
-    bannerValue: 'Out for delivery - Expected by 5:30 PM',
+    badgeTextKey: 'order.status.shipped',
+    bannerLabelKey: 'order.bannerLabel.estimatedDelivery',
+    // Why: 用户决策 A — 泛化文案去掉写死的「5:30 PM」（mock 占位 real 模式失真，ETA 已在地址卡 B9 展示）
+    bannerValueKey: 'order.bannerValue.outForDelivery',
     bannerIconSymbol: 'local_shipping',
   },
   // 已送达（已付款） — HTML DeliveryTrackingPage3
   DELIVERED_PAID: {
     palette: 'delivered',
-    badgeText: 'DELIVERED',
-    bannerLabel: 'DELIVERY STATUS',
-    bannerValue: 'Delivered - hope you enjoyed your order',
+    badgeTextKey: 'order.status.delivered',
+    bannerLabelKey: 'order.bannerLabel.deliveryStatus',
+    bannerValueKey: 'order.bannerValue.deliveredEnjoyed',
     bannerIconSymbol: 'check_circle',
   },
   // 已送达（货到付款）
   DELIVERED_UNPAID: {
     palette: 'delivered',
-    badgeText: 'DELIVERED',
-    bannerLabel: 'PAYMENT ON DELIVERY',
-    bannerValue: 'Delivered - please pay the rider',
+    badgeTextKey: 'order.status.delivered',
+    bannerLabelKey: 'order.bannerLabel.paymentOnDelivery',
+    bannerValueKey: 'order.bannerValue.deliveredPayRider',
     bannerIconSymbol: 'payments',
   },
   // 已送达（通用）
   DELIVERED: {
     palette: 'delivered',
-    badgeText: 'DELIVERED',
-    bannerLabel: 'DELIVERY STATUS',
-    bannerValue: 'Delivered - hope you enjoyed your order',
+    badgeTextKey: 'order.status.delivered',
+    bannerLabelKey: 'order.bannerLabel.deliveryStatus',
+    bannerValueKey: 'order.bannerValue.deliveredEnjoyed',
     bannerIconSymbol: 'check_circle',
   },
   // 已完成
   COMPLETED: {
     palette: 'delivered',
-    badgeText: 'COMPLETED',
-    bannerLabel: 'ORDER COMPLETED',
-    bannerValue: 'Order completed - thank you',
+    badgeTextKey: 'order.status.delivered',
+    bannerLabelKey: 'order.bannerLabel.orderCompleted',
+    bannerValueKey: 'order.bannerValue.orderCompletedThanks',
     bannerIconSymbol: 'task_alt',
   },
   // 已取消
   CANCELLED: {
     palette: 'cancelled',
-    badgeText: 'CANCELLED',
-    bannerLabel: 'ORDER CANCELLED',
-    bannerValue: 'Order was cancelled',
+    badgeTextKey: 'order.status.cancelled',
+    bannerLabelKey: 'order.bannerLabel.orderCancelled',
+    bannerValueKey: 'order.bannerValue.orderCancelled',
     bannerIconSymbol: 'cancel',
   },
 };
@@ -255,7 +260,7 @@ export default function OrderDetailPage() {
                 {formatDate(order.createdAt, i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
               </Text>
             </View>
-            <StatusBadge text={visual.badgeText} backgroundColor={statusTheme.badgeBg} />
+            <StatusBadge text={t(visual.badgeTextKey).toUpperCase()} backgroundColor={statusTheme.badgeBg} />
           </View>
 
           {/* Delivery banner（HTML 第 168-174 行：状态色边浅底 + icon + 标签 + 描述） */}
@@ -271,10 +276,10 @@ export default function OrderDetailPage() {
             <Icon symbol={visual.bannerIconSymbol} size={20} color={statusTheme.bannerIcon} />
             <View style={styles.flex1}>
               <Text style={[styles.etaLabel, { color: statusTheme.bannerLabelColor }]}>
-                {visual.bannerLabel}
+                {t(visual.bannerLabelKey).toUpperCase()}
               </Text>
               <Text style={[styles.etaValue, { color: statusTheme.bannerValueColor }]}>
-                {visual.bannerValue}
+                {t(visual.bannerValueKey)}
               </Text>
             </View>
           </View>

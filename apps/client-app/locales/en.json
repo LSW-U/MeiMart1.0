@@ -352,7 +352,28 @@
     "riderDeliveries": "{{count}} deliveries",
     "callRider": "Call rider {{name}}",
     "paymentMethodLabel": "Payment Method",
-    "viewProductA11y": "View product: {{name}}"
+    "viewProductA11y": "View product: {{name}}",
+    "bannerLabel": {
+      "paymentDeadline": "Payment deadline",
+      "orderStatus": "Order status",
+      "estimatedDelivery": "Estimated delivery",
+      "deliveryStatus": "Delivery status",
+      "paymentOnDelivery": "Payment on delivery",
+      "orderCompleted": "Order completed",
+      "orderCancelled": "Order cancelled"
+    },
+    "bannerValue": {
+      "completePaymentSoon": "Please complete payment soon",
+      "beingConfirmed": "Order is being confirmed",
+      "arrivingInDays": "Arriving in 2-3 days",
+      "packagePicked": "Package picked, on the way soon",
+      "outForDelivery": "Out for delivery",
+      "deliveredEnjoyed": "Delivered - hope you enjoyed your order",
+      "deliveredPayRider": "Delivered - please pay the rider",
+      "orderCompletedThanks": "Order completed - thank you",
+      "orderCancelled": "Order was cancelled"
+    },
+    "statusBadgeA11y": "Status: {{status}}"
   },
   "tracking": {
     "title": "Order Tracking",

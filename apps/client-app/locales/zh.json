@@ -352,7 +352,28 @@
     "riderDeliveries": "{{count}} 单",
     "callRider": "致电骑手 {{name}}",
     "paymentMethodLabel": "支付方式",
-    "viewProductA11y": "查看商品: {{name}}"
+    "viewProductA11y": "查看商品: {{name}}",
+    "bannerLabel": {
+      "paymentDeadline": "付款截止",
+      "orderStatus": "订单状态",
+      "estimatedDelivery": "预计送达",
+      "deliveryStatus": "配送状态",
+      "paymentOnDelivery": "货到付款",
+      "orderCompleted": "订单已完成",
+      "orderCancelled": "订单已取消"
+    },
+    "bannerValue": {
+      "completePaymentSoon": "请尽快完成付款",
+      "beingConfirmed": "订单正在确认中",
+      "arrivingInDays": "预计 2-3 天送达",
+      "packagePicked": "商品已打包,即将送达",
+      "outForDelivery": "正在配送",
+      "deliveredEnjoyed": "已送达,希望您喜欢本次订单",
+      "deliveredPayRider": "已送达,请向骑手付款",
+      "orderCompletedThanks": "订单已完成,感谢您的惠顾",
+      "orderCancelled": "订单已取消"
+    },
+    "statusBadgeA11y": "状态: {{status}}"
   },
   "tracking": {
     "title": "订单追踪",
