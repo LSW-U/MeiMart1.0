@@ -374,7 +374,10 @@
       "orderCompletedThanks": "Order completed - thank you",
       "orderCancelled": "Order was cancelled"
     },
-    "statusBadgeA11y": "Status: {{status}}"
+    "statusBadgeA11y": "Status: {{status}}",
+    "cardHeaderA11y": "Order {{orderNo}}, status {{status}}",
+    "viewOrderA11y": "View order {{orderNo}} details",
+    "tabWithCount": "{{label}}, {{count}}"
   },
   "tracking": {
     "title": "Order Tracking",

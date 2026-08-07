@@ -374,7 +374,10 @@
       "orderCompletedThanks": "订单已完成,感谢您的惠顾",
       "orderCancelled": "订单已取消"
     },
-    "statusBadgeA11y": "状态: {{status}}"
+    "statusBadgeA11y": "状态: {{status}}",
+    "cardHeaderA11y": "订单 {{orderNo}},状态 {{status}}",
+    "viewOrderA11y": "查看订单 {{orderNo}} 详情",
+    "tabWithCount": "{{label}},{{count}}"
   },
   "tracking": {
     "title": "订单追踪",

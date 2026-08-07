@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { toast } from '@/store/toastStore';
 import { useTheme, spacing, layout, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -89,7 +90,11 @@ export default function OrdersPage() {
           {
             text: t('common.confirm'),
             style: 'destructive',
-            onPress: () => cancelMutation.mutate(order.id),
+            onPress: () =>
+              cancelMutation.mutate(order.id, {
+                onSuccess: () =>
+                  toast.success(t('order.cancelled', { defaultValue: 'Order cancelled' })),
+              }),
           },
         ]);
         break;
@@ -113,7 +118,7 @@ export default function OrdersPage() {
             accessibilityRole="button"
             accessibilityLabel={t('profile.help')}
           >
-            <Icon symbol="help" size={24} color="#ffffff" />
+            <Icon symbol="help" size={24} color={ON_PRIMARY} />
           </Pressable>
         }
       />
@@ -141,7 +146,15 @@ export default function OrdersPage() {
                   style={styles.tabBtn}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: isActive }}
-                  accessibilityLabel={t(tab.labelKey)}
+                  accessibilityLabel={
+                    count > 0
+                      ? t('order.tabWithCount', {
+                          label: t(tab.labelKey),
+                          count,
+                          defaultValue: '{{label}}, {{count}}',
+                        })
+                      : t(tab.labelKey)
+                  }
                 >
                   <View style={styles.tabContent}>
                     <Text
@@ -155,8 +168,13 @@ export default function OrdersPage() {
                       {t(tab.labelKey)}
                     </Text>
                     {count > 0 && (
-                      <View style={[styles.tabBadge, { backgroundColor: colors.error }]}>
-                        <Text style={styles.tabBadgeText}>{count}</Text>
+                      <View
+                        style={[styles.tabBadge, { backgroundColor: colors.error }]}
+                        accessible={false}
+                      >
+                        <Text style={styles.tabBadgeText} accessible={false}>
+                          {count}
+                        </Text>
                       </View>
                     )}
                   </View>

@@ -46,7 +46,7 @@ function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
           onPress={onPress ? () => onPress(order) : undefined}
           style={({ pressed }) => [styles.headerLeft, pressed && styles.pressed]}
           accessibilityRole="button"
-          accessibilityLabel={`Order ${order.orderNo}, status ${statusLabel}`}
+          accessibilityLabel={t('order.cardHeaderA11y', { orderNo: order.orderNo, status: statusLabel, defaultValue: 'Order {{orderNo}}, status {{status}}' })}
           disabled={!onPress}
         >
           <Text style={[textStyle('label-caps'), { color: colors.primary, fontSize: 12 }]}>
@@ -71,7 +71,7 @@ function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
           onPress={onPress ? () => onPress(order) : undefined}
           style={({ pressed }) => [styles.thumbRowWrap, pressed && styles.pressed]}
           accessibilityRole={onPress ? 'button' : undefined}
-          accessibilityLabel={onPress ? `View order ${order.orderNo} details` : undefined}
+          accessibilityLabel={onPress ? t('order.viewOrderA11y', { orderNo: order.orderNo, defaultValue: 'View order {{orderNo}} details' }) : undefined}
           disabled={!onPress}
         >
           <View style={styles.thumbRow}>

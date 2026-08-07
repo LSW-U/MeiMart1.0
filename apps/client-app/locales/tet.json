@@ -332,7 +332,10 @@
       "orderCompletedThanks": "[TET] Order completed - thank you",
       "orderCancelled": "[TET] Order was cancelled"
     },
-    "statusBadgeA11y": "[TET] Status: {{status}}"
+    "statusBadgeA11y": "[TET] Status: {{status}}",
+    "cardHeaderA11y": "[TET] Order {{orderNo}}, status {{status}}",
+    "viewOrderA11y": "[TET] View order {{orderNo}} details",
+    "tabWithCount": "[TET] {{label}}, {{count}}"
   },
   "tracking": {
     "title": "[TET] Order Tracking",
