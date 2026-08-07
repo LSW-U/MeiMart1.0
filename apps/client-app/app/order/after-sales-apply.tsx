@@ -6,6 +6,7 @@
 // 1. 凭证照片上传接 OSS / 本地文件上传（B2 待后端）
 // 注：决策 7 已删电话字段（联系方式独立卡片砍掉，不接 useUser —— 售后页放用户自己电话语义错）
 // 注：POST /client/refunds 已就绪（reason 8 值 + items[] 部分退款），Commit 7 接 useCreateRefund
+import { useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -52,6 +53,13 @@ const REFUND_TYPES = [
   { id: 'return-refund', labelKey: 'afterSales.types.returnRefund', descKey: 'afterSales.types.returnRefundDesc', icon: 'local_shipping' },
 ] as const;
 
+// F5 多商品选择 state（每商品 selected + refundQty，order 加载后初始化全选全数量）
+interface ItemState {
+  orderItemId: string;
+  refundQty: number;
+  selected: boolean;
+}
+
 export default function AfterSalesApplyPage() {
   const handleBack = useSafeBack();
   const { t } = useTranslation();
@@ -70,6 +78,32 @@ export default function AfterSalesApplyPage() {
   const typeValue = useWatch({ control, name: 'type' }) as AfterSalesApplyValues['type'];
   const reasonValue = useWatch({ control, name: 'reason' }) as string;
   const createRefund = useCreateRefund();
+
+  // F5 多商品：itemStates 管理每商品勾选 + 退款数量，order 加载后初始化全选全数量
+  const [itemStates, setItemStates] = useState<ItemState[]>([]);
+  useEffect(() => {
+    if (!order) return;
+    // 原因：order 是 react-query 缓存（引用稳定），加载完成时初始化 items 全选全数量；非 derived（用户可改勾选/数量）
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setItemStates(
+      order.items.map((it) => ({
+        orderItemId: it.id,
+        refundQty: it.quantity,
+        selected: true,
+      })),
+    );
+  }, [order]);
+  const refundAmount = useMemo(
+    () =>
+      itemStates.reduce((sum, st) => {
+        if (!st.selected) return sum;
+        const it = order?.items.find((oi) => oi.id === st.orderItemId);
+        return sum + (it ? it.product.price * st.refundQty : 0);
+      }, 0),
+    [itemStates, order],
+  );
+  const updateItemState = (idx: number, patch: Partial<ItemState>) =>
+    setItemStates((prev) => prev.map((st, i) => (i === idx ? { ...st, ...patch } : st)));
 
   if (isLoading) {
     return (
@@ -108,20 +142,22 @@ export default function AfterSalesApplyPage() {
     );
   }
 
-  const item = order.items[0];
-  const product = item?.product;
-  const quantity = item?.quantity ?? 1;
-  const refundAmount = order.totalPrice;
-
-  // Commit 7：接真实 POST /client/refunds（整单退款，不传 items）
+  // Commit 7+8：接真实 POST /client/refunds（Commit 7 整单 / Commit 8 部分退款 items[]）
   // reason i18n key -> enum 映射（service 层 REASON_KEY_TO_ENUM）；onSuccess 跳 detail 传 refund.id
   const submit = handleSubmit(async (values) => {
+    const selected = itemStates.filter((st) => st.selected);
+    if (selected.length === 0) {
+      toast.error(t('afterSales.selectItemPrompt', { defaultValue: 'Please select at least one item' }));
+      return;
+    }
     const reason = REASON_KEY_TO_ENUM[values.reason] ?? 'OTHER';
     try {
       const refund = await createRefund.mutateAsync({
         orderId,
         reason,
         reasonDetail: values.description,
+        // F5 部分退款：items[] 用 orderItemId（OrderItem.id 非 skuId，transformOrderItem 已映射 raw.id）
+        items: selected.map(({ orderItemId, refundQty }) => ({ orderItemId, refundQty })),
       });
       toast.success(t('afterSales.submittedDesc'));
       router.replace({
@@ -151,7 +187,7 @@ export default function AfterSalesApplyPage() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* 商品卡片 - 真实订单商品 */}
+        {/* 商品卡片 - F5 多商品选择（保留纹样主卡） */}
         <View
           style={[
             styles.card,
@@ -167,28 +203,74 @@ export default function AfterSalesApplyPage() {
               {t('afterSales.productLabel', { defaultValue: 'Product' })}
             </Text>
           </View>
-          <View style={styles.productRow}>
-            <View style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}>
-              {product?.image && (
-                <Image
-                  source={{ uri: product.image }}
-                  style={styles.productImg}
-                  resizeMode="cover"
-                />
-              )}
-            </View>
-            <View style={styles.productTextBox}>
-              <Text style={[styles.productName, { color: colors['on-surface'] }]} numberOfLines={2}>
-                {product ? localize(product.name) : t('afterSales.mockProduct')}
-              </Text>
-              <View style={styles.productMetaRow}>
-                <Text style={[styles.productMeta, { color: colors['on-surface-variant'] }]}>
-                  × {quantity}
-                </Text>
-                <PriceText value={product?.price ?? 0} size="md" />
+          {order.items.map((it, idx) => {
+            const state = itemStates[idx];
+            const selected = state?.selected ?? true;
+            const refundQty = state?.refundQty ?? it.quantity;
+            return (
+              <View
+                key={it.id}
+                style={[
+                  styles.itemRow,
+                  idx > 0 && {
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderTopColor: colors['outline-variant'],
+                  },
+                ]}
+              >
+                <Pressable
+                  onPress={() => updateItemState(idx, { selected: !selected })}
+                  style={[
+                    styles.checkBox,
+                    {
+                      backgroundColor: selected ? colors.primary : 'transparent',
+                      borderColor: selected ? colors.primary : colors.outline,
+                    },
+                  ]}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: selected }}
+                  accessibilityLabel={`${t('afterSales.productLabel', { defaultValue: 'Product' })}: ${localize(it.product.name)}`}
+                  testID={`item-check-${it.id}`}
+                >
+                  {selected ? <Icon symbol="check" size={15} color={ON_PRIMARY} /> : null}
+                </Pressable>
+                <View style={[styles.itemThumb, { backgroundColor: colors['surface-container'] }]}>
+                  {it.product.image ? (
+                    <Image
+                      source={{ uri: it.product.image }}
+                      style={styles.productImg}
+                      resizeMode="cover"
+                    />
+                  ) : null}
+                </View>
+                <View style={styles.itemText}>
+                  <Text style={[styles.itemName, { color: colors['on-surface'] }]} numberOfLines={2}>
+                    {localize(it.product.name)}
+                  </Text>
+                  <PriceText value={it.product.price} size="sm" />
+                </View>
+                <View style={[styles.qtyStepper, { borderColor: colors['outline-variant'] }]}>
+                  <Pressable
+                    onPress={() => updateItemState(idx, { refundQty: Math.max(1, refundQty - 1) })}
+                    style={styles.qtyBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('afterSales.decreaseQty', { defaultValue: 'Decrease quantity' })}
+                  >
+                    <Text style={[styles.qtyBtnText, { color: colors['on-surface-variant'] }]}>−</Text>
+                  </Pressable>
+                  <Text style={[styles.qtyVal, { color: colors['on-surface'] }]}>{refundQty}</Text>
+                  <Pressable
+                    onPress={() => updateItemState(idx, { refundQty: Math.min(it.quantity, refundQty + 1) })}
+                    style={styles.qtyBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('afterSales.increaseQty', { defaultValue: 'Increase quantity' })}
+                  >
+                    <Text style={[styles.qtyBtnText, { color: colors['on-surface-variant'] }]}>+</Text>
+                  </Pressable>
+                </View>
               </View>
-            </View>
-          </View>
+            );
+          })}
         </View>
 
         {/* 申请类型卡片 */}
@@ -464,15 +546,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 11,
   },
-  productRow: {
+  // F5 多商品列表项（替换旧单商品 product 系列，productImg 保留复用）
+  itemRow: {
     flexDirection: 'row',
-    gap: spacing.md,
     alignItems: 'center',
-    zIndex: 2,
+    gap: 12,
+    paddingVertical: 12,
   },
-  productImgWrap: {
-    width: 64,
-    height: 64,
+  checkBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemThumb: {
+    width: 48,
+    height: 48,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
   },
@@ -480,22 +571,36 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  productTextBox: {
+  itemText: {
     flex: 1,
-    gap: 4,
+    gap: 2,
   },
-  productName: {
-    ...typography['body-md'],
-    fontWeight: '600',
-    lineHeight: 18,
+  itemName: {
+    ...typography['body-sm'],
+    fontWeight: '700',
   },
-  productMetaRow: {
+  qtyStepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
   },
-  productMeta: {
+  qtyBtn: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qtyBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  qtyVal: {
+    minWidth: 28,
+    textAlign: 'center',
     ...typography['body-sm'],
+    fontWeight: '600',
   },
   label: {
     ...typography['body-md'],

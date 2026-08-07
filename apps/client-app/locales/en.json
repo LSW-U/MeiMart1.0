@@ -579,6 +579,7 @@
     "reasonLabel": "Refund reason",
     "descLabel": "Issue description",
     "refundAmount": "Refund amount",
+    "selectItemPrompt": "Please select at least one item",
     "progressLabel": "Processing progress",
     "applyInfo": "Request info",
     "processing": "Processing",

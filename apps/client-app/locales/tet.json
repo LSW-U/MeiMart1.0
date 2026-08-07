@@ -532,6 +532,7 @@
     "reasonLabel": "[TET] Refund reason",
     "descLabel": "[TET] Issue description",
     "refundAmount": "[TET] Refund amount",
+    "selectItemPrompt": "[TET] Please select at least one item",
     "progressLabel": "[TET] Processing progress",
     "applyInfo": "[TET] Request info",
     "processing": "[TET] Processing",

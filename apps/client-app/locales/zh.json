@@ -579,6 +579,7 @@
     "reasonLabel": "退款原因",
     "descLabel": "问题描述",
     "refundAmount": "退款金额",
+    "selectItemPrompt": "请至少选择一件商品",
     "progressLabel": "处理进度",
     "applyInfo": "申请信息",
     "processing": "处理中",
