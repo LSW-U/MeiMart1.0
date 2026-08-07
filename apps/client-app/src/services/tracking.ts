@@ -36,13 +36,17 @@ export interface OrderStatusChange {
 export type WsConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
 
 /**
- * 连接订单配送追踪 WS。
- * 客户端用 accessToken 鉴权（role=customer 自动加入对应 room），订阅 order room 后接收：
- *   - 'order:location' 骑手位置推送（rider emit 'location:update' 触发）
- *   - 'order:status-changed' 订单状态变更
+ * 连接订单配送追踪 WS（只建连，不 join room）。
+ * 客户端用 accessToken 鉴权（role=customer 自动加入对应 room）。
+ *
+ * ⚠️ 本函数只负责建连，**不 emit join:order**。
+ * 调用方必须在 `socket.on('connect', ...)` 回调里 emit `join:order { orderId }`，
+ * 否则重连后 socket.io 发件箱缓冲不重放，客户端会永久掉出 order room，
+ * 收不到 order:location / order:status-changed。
+ *
  * 调用方在 useEffect 内调用，return 时 socket.disconnect() 释放。
  */
-export function connectOrderTracking(orderId: string, accessToken: string): Socket {
+export function connectOrderTracking(accessToken: string): Socket {
   const socket = io(buildWsUrl(), {
     auth: { token: `Bearer ${accessToken}` },
     transports: ['websocket'],
@@ -50,8 +54,6 @@ export function connectOrderTracking(orderId: string, accessToken: string): Sock
     reconnectionDelay: 3000,
     reconnectionAttempts: 5,
   });
-
-  socket.emit('join:order', { orderId });
 
   return socket;
 }

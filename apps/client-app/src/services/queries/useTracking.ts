@@ -38,13 +38,17 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
 
     // Why: 不在 effect body 直接 setState('connecting')（react-hooks/set-state-in-effect 规则），
     // socket 自身事件（connect / connect_error / disconnect）会驱动 wsState 更新
-    const socket = connectOrderTracking(orderId, accessToken);
+    const socket = connectOrderTracking(accessToken);
     socketRef.current = socket;
     lastMsgRef.current = Date.now();
 
     const handleConnect = () => {
       lastMsgRef.current = Date.now();
       setState((s) => ({ ...s, wsState: 'connected' }));
+      // 关键：每次 connect（含重连）都要 re-join order room。
+      // socket.io 发件箱缓冲只在首次 connect 时 flush，重连不重放，
+      // 不在这里 re-join 会永久掉出 order:{orderId} room，收不到 order:location。
+      socket.emit('join:order', { orderId });
     };
     const handleDisconnect = () => {
       setState((s) => ({ ...s, wsState: 'disconnected' }));
