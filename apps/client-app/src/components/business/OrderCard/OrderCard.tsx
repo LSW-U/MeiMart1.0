@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
 import { useLocalizer, getCurrentLocale } from '@/i18n';
@@ -50,7 +49,7 @@ function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
           accessibilityLabel={`Order ${order.orderNo}, status ${statusLabel}`}
           disabled={!onPress}
         >
-          <Text style={[textStyle('label-caps'), { color: colors.primary, fontSize: 10 }]}>
+          <Text style={[textStyle('label-caps'), { color: colors.primary, fontSize: 12 }]}>
             #{order.orderNo}
           </Text>
           <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
@@ -64,17 +63,6 @@ function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
               {statusLabel}
             </Text>
           </View>
-          {onAction && (
-            <Pressable
-              onPress={() => onAction('cancel', order)}
-              hitSlop={8}
-              style={[styles.deleteBtn, { backgroundColor: colors['error-container'] }]}
-              accessibilityRole="button"
-              accessibilityLabel={t('common.delete')}
-            >
-              <MaterialCommunityIcons name="delete-outline" size={18} color={colors.error} />
-            </Pressable>
-          )}
         </View>
       </View>
 
@@ -191,13 +179,6 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 999,
-  },
-  deleteBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   body: {
     padding: spacing.md,
