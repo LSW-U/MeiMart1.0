@@ -384,7 +384,10 @@
     "estimatedDelivery": "预计送达",
     "etaPlaceholder": "今天送达",
     "mapA11y": "显示配送路线的地图",
-    "liveTracking": "实时追踪"
+    "liveTracking": "实时追踪",
+    "minAway": "{{count}} 分钟后到达",
+    "arrivingNow": "即将到达",
+    "scaleBar": "500 米"
   },
   "address": {
     "list": "收货地址",

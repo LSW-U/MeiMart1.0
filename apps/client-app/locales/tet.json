@@ -342,7 +342,10 @@
     "estimatedDelivery": "[TET] Estimated delivery",
     "etaPlaceholder": "[TET] Arriving Today",
     "mapA11y": "[TET] Map showing delivery route",
-    "liveTracking": "[TET] Live tracking"
+    "liveTracking": "[TET] Live tracking",
+    "minAway": "[TET] {{count}} min away",
+    "arrivingNow": "[TET] Arriving now",
+    "scaleBar": "[TET] 500 m"
   },
   "address": {
     "list": "[TET] Shipping addresses",

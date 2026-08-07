@@ -384,7 +384,10 @@
     "estimatedDelivery": "Estimated delivery",
     "etaPlaceholder": "Arriving Today",
     "mapA11y": "Map showing delivery route",
-    "liveTracking": "Live tracking"
+    "liveTracking": "Live tracking",
+    "minAway": "{{count}} min away",
+    "arrivingNow": "Arriving now",
+    "scaleBar": "500 m"
   },
   "address": {
     "list": "Shipping addresses",
