@@ -1,13 +1,11 @@
-// ⚠️ 无 HTML 原型，参考 CheckoutPage 推导实现，待设计确认
-// AfterSalesApplyPage - 售后申请（参考 CheckoutPage.html 的地址卡片 + 商品卡片样式）
-// D.5: PrimaryHeader + 商品卡片 + 类型 Chip + 原因 Chip + 描述 + 照片凭证 + 联系方式 + 提交
+// HTML 原型：第三梯队HTML原型设计/P13-售后申请页-优化原型.html（2026-08-07 出）
+// AfterSalesApplyPage - 售后申请页
+// 结构：商品卡片 + 申请类型 + 退款原因 + 问题描述 + 凭证照片 + 底部提交栏
 //
-// TODO(长期): 后端售后接口就绪后改造
-// 1. src/services/afterSales.ts: createAfterSales(orderId, payload) -> POST /after-sales
-// 2. src/services/queries/useAfterSales.ts: useCreateAfterSales()
-// 3. submit 改用 useCreateAfterSales，提交后用返回的 afterSalesId 跳 detail
-// 4. 凭证照片上传接 OSS / 本地文件上传
-// 5. 联系方式从硬编码改 user.phone（接 useUser）
+// TODO(长期):
+// 1. 凭证照片上传接 OSS / 本地文件上传（B2 待后端）
+// 注：决策 7 已删电话字段（联系方式独立卡片砍掉，不接 useUser —— 售后页放用户自己电话语义错）
+// 注：POST /client/refunds 已就绪（reason 8 值 + items[] 部分退款），Commit 7 接 useCreateRefund
 import {
   StyleSheet,
   View,
@@ -36,6 +34,9 @@ import { toast } from '@/store/toastStore';
 import { useOrder } from '@/services/queries/useOrders';
 import { useLocalizer } from '@/i18n';
 import { afterSalesApplySchema, type AfterSalesApplyValues } from '@/forms/schemas/service';
+
+// Why: styles 在模块级无法访问 useTheme 的 colors，per-file const 模式（同 P10/P11/P12 跨梯队 E6）
+const ON_PRIMARY = '#ffffff';
 
 const REFUND_REASON_KEYS = [
   'afterSales.reasons.damaged',
@@ -209,10 +210,10 @@ export default function AfterSalesApplyPage() {
                   <Icon
                     symbol={rt.icon}
                     size={20}
-                    color={active ? '#ffffff' : colors['on-surface-variant']}
+                    color={active ? colors['on-primary'] : colors['on-surface-variant']}
                   />
                   <Text
-                    style={[styles.typeLabel, { color: active ? '#ffffff' : colors['on-surface'] }]}
+                    style={[styles.typeLabel, { color: active ? colors['on-primary'] : colors['on-surface'] }]}
                   >
                     {t(rt.labelKey)}
                   </Text>
@@ -537,7 +538,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   submitText: {
-    color: '#ffffff',
+    color: ON_PRIMARY,
     ...typography['label-caps'],
     fontWeight: '700',
     fontSize: 14,
