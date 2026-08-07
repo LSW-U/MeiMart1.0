@@ -368,29 +368,9 @@ export default function AfterSalesApplyPage() {
           </Text>
         </View>
 
-        {/* 联系方式卡片 */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
-          ]}
-        >
-          <View style={styles.cardHeader}>
-            <Icon symbol="call" size={16} color={colors.primary} />
-            <Text style={[styles.cardHeaderText, { color: colors.primary }]}>
-              {t('afterSales.contactLabel', { defaultValue: 'Contact' })}
-            </Text>
-          </View>
-          <View style={styles.contactRow}>
-            <Icon symbol="call" size={18} color={colors['on-surface-variant']} />
-            <Text style={[styles.contactValue, { color: colors['on-surface'] }]}>
-              +670 7700 0000
-            </Text>
-          </View>
-        </View>
       </ScrollView>
 
-      {/* 底部提交按钮栏 - 真实订单总价 */}
+      {/* 底部提交按钮栏（R1 加退款说明行；D1 删联系卡） */}
       <View
         style={[
           styles.bottomBar,
@@ -401,25 +381,33 @@ export default function AfterSalesApplyPage() {
           shadowPresets.md,
         ]}
       >
-        <View style={styles.refundAmountBox}>
-          <Text style={[styles.refundLabel, { color: colors['on-surface-variant'] }]}>
-            {t('afterSales.refundAmount', { defaultValue: 'Refund amount' })}
-          </Text>
-          <PriceText value={refundAmount} size="lg" />
+        <View style={styles.bottomRow}>
+          <View style={styles.refundAmountBox}>
+            <Text style={[styles.refundLabel, { color: colors['on-surface-variant'] }]}>
+              {t('afterSales.refundAmount', { defaultValue: 'Refund amount' })}
+            </Text>
+            <PriceText value={refundAmount} size="lg" />
+          </View>
+          <Pressable
+            onPress={submit}
+            style={({ pressed }) => [
+              styles.submitBtn,
+              { backgroundColor: colors.primary },
+              pressed && { transform: [{ scale: 0.98 }] },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('afterSales.applySubmit')}
+            testID="aftersales-submit"
+          >
+            <Text style={styles.submitText}>{t('afterSales.applySubmit')}</Text>
+          </Pressable>
         </View>
-        <Pressable
-          onPress={submit}
-          style={({ pressed }) => [
-            styles.submitBtn,
-            { backgroundColor: colors.primary },
-            pressed && { transform: [{ scale: 0.98 }] },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={t('afterSales.applySubmit')}
-          testID="aftersales-submit"
-        >
-          <Text style={styles.submitText}>{t('afterSales.applySubmit')}</Text>
-        </Pressable>
+        <View style={styles.refundNoteRow}>
+          <Icon symbol="info" size={13} color={colors['on-surface-variant']} />
+          <Text style={[styles.refundNoteText, { color: colors['on-surface-variant'] }]}>
+            {t('afterSales.refundNote')}
+          </Text>
+        </View>
       </View>
     </SafeAreaWrapper>
   );
@@ -606,30 +594,35 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginTop: spacing.xs,
   },
-  contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  contactValue: {
-    ...typography['body-md'],
-    fontWeight: '500',
-  },
   bottomBar: {
+    // R1：底部栏 column（金额行 + 退款说明行）；position absolute 保留（KeyboardAvoidingView 改造单独 commit）
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    flexDirection: 'column',
+    padding: spacing.md,
+    gap: 6,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: spacing.md,
     gap: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
   refundAmountBox: {
     gap: 2,
+  },
+  refundNoteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  refundNoteText: {
+    ...typography['body-sm'],
+    fontSize: 11,
+    flex: 1,
   },
   refundLabel: {
     ...typography['label-caps'],
