@@ -140,8 +140,7 @@ export default function AfterSalesApplyPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
           ]}
         >
           <View style={styles.cardPattern} pointerEvents="none">
@@ -181,8 +180,7 @@ export default function AfterSalesApplyPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
           ]}
         >
           <Text style={[styles.label, { color: colors['on-surface'] }]}>
@@ -227,8 +225,7 @@ export default function AfterSalesApplyPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
           ]}
         >
           <Text style={[styles.label, { color: colors['on-surface'] }]}>
@@ -250,8 +247,7 @@ export default function AfterSalesApplyPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
           ]}
         >
           <Text style={[styles.label, { color: colors['on-surface'] }]}>
@@ -290,9 +286,16 @@ export default function AfterSalesApplyPage() {
               </>
             )}
           />
+        </View>
 
-          {/* 凭证照片占位 */}
-          <Text style={[styles.subLabel, { color: colors['on-surface-variant'] }]}>
+        {/* V2 凭证照片卡片（从描述卡拆出，独立卡片） */}
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+          ]}
+        >
+          <Text style={[styles.label, { color: colors['on-surface'] }]}>
             {t('afterSales.evidenceLabel', { defaultValue: 'Upload evidence (optional)' })}
           </Text>
           <View style={styles.photosRow}>
@@ -320,8 +323,7 @@ export default function AfterSalesApplyPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
+            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
           ]}
         >
           <View style={styles.cardHeader}>
@@ -385,6 +387,8 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     position: 'relative',
     overflow: 'hidden',
+    // V1（去 shadow 改 border）：商品主卡保留 TaisPattern 纹样突出，其余卡 border 分区（对齐 HTML 优化栏 opt-card）
+    borderWidth: StyleSheet.hairlineWidth,
   },
   cardPattern: {
     position: 'absolute',
