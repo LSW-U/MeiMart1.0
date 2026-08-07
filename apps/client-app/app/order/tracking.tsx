@@ -1,7 +1,7 @@
 // DeliveryTrackingPage — 还原自 DeliveryTrackingPage.html（328 行）
 // HTML 行数 328 → RN ~430（含样式），满足 CLAUDE.md 规则 #28 的 30% 门槛
 // Fix-21: PrimaryHeader + tais-pattern + 地图占位 + 骑手卡 + 渐变进度条 + uma-lulik-shadow + 费用明细
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -74,8 +74,6 @@ export default function DeliveryTrackingPage() {
   const { riderLocation, lastOrderStatus } = useOrderTracking(params.id);
   // Why: 取消订单 mutation（hooks 顶层，与 useOrder 同级；CONFIRMED 待发货状态用）
   const cancelMutation = useCancelOrder();
-  // Why: F1 Track Order 滚动到顶部地图
-  const scrollViewRef = useRef<ScrollView>(null);
 
   // Why: P11 Commit 3 决策 3 - 配送结束（DELIVERED*/COMPLETED）延迟 1.5s 自动跳回 P10 订单详情（hooks 顶层，loading 态前；P10 显示完成态 + 骑手卡 + 售后入口）
   useEffect(() => {
@@ -171,7 +169,6 @@ export default function DeliveryTrackingPage() {
       <Header title={t('tracking.title', { defaultValue: 'Order Tracking' })} orderNo={order.orderNo} />
 
       <ScrollView
-        ref={scrollViewRef}
         style={{ flex: 1 }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -368,7 +365,7 @@ export default function DeliveryTrackingPage() {
           },
         ]}
       >
-        {currentStatus === 'PENDING_CONFIRM' || currentStatus === 'CONFIRMED' ? (
+        {(currentStatus === 'PENDING_CONFIRM' || currentStatus === 'CONFIRMED') && (
           <Pressable
             onPress={handleCancel}
             style={({ pressed }) => [
@@ -380,21 +377,6 @@ export default function DeliveryTrackingPage() {
             accessibilityLabel={t('order.actions.cancel', { defaultValue: 'Cancel Order' })}
           >
             <Text style={[styles.btnText, { color: colors.primary }]}>{t('order.actions.cancel', { defaultValue: 'Cancel Order' })}</Text>
-          </Pressable>
-        ) : (
-          <Pressable
-            onPress={() => {
-              scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-            }}
-            style={({ pressed }) => [
-              styles.outlineBtn,
-              { backgroundColor: colors['surface-container'] },
-              pressed && { transform: [{ scale: 0.95 }] },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t('order.actions.track', { defaultValue: 'Track shipment' })}
-          >
-            <Text style={[styles.btnText, { color: colors.primary }]}>{t('order.actions.track', { defaultValue: 'Track shipment' })}</Text>
           </Pressable>
         )}
         <Pressable
