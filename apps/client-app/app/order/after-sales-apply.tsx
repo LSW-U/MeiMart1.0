@@ -31,6 +31,8 @@ import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { toast } from '@/store/toastStore';
 import { useOrder } from '@/services/queries/useOrders';
+import { useCreateRefund } from '@/services/queries/useRefunds';
+import { REASON_KEY_TO_ENUM } from '@/services/refunds';
 import { useLocalizer } from '@/i18n';
 import { afterSalesApplySchema, type AfterSalesApplyValues } from '@/forms/schemas/service';
 
@@ -62,10 +64,12 @@ export default function AfterSalesApplyPage() {
   const { control, handleSubmit, setValue } = useForm<AfterSalesApplyValues>({
     resolver: zodResolver(afterSalesApplySchema),
     defaultValues: { type: 'refund-only', reason: '', description: '' },
-    mode: 'onBlur',
+    // F3：onBlur -> onChange（typeCard/reason 点击后即时校验反馈）
+    mode: 'onChange',
   });
   const typeValue = useWatch({ control, name: 'type' }) as AfterSalesApplyValues['type'];
   const reasonValue = useWatch({ control, name: 'reason' }) as string;
+  const createRefund = useCreateRefund();
 
   if (isLoading) {
     return (
@@ -109,13 +113,25 @@ export default function AfterSalesApplyPage() {
   const quantity = item?.quantity ?? 1;
   const refundAmount = order.totalPrice;
 
-  // TODO(长期): 接 useCreateAfterSales mutation（onMutate 乐观更新 + onSuccess 跳 detail）
-  const submit = handleSubmit(() => {
-    toast.success(t('afterSales.submittedDesc'));
-    router.replace({
-      pathname: '/order/after-sales-detail',
-      params: { id: orderId },
-    });
+  // Commit 7：接真实 POST /client/refunds（整单退款，不传 items）
+  // reason i18n key -> enum 映射（service 层 REASON_KEY_TO_ENUM）；onSuccess 跳 detail 传 refund.id
+  const submit = handleSubmit(async (values) => {
+    const reason = REASON_KEY_TO_ENUM[values.reason] ?? 'OTHER';
+    try {
+      const refund = await createRefund.mutateAsync({
+        orderId,
+        reason,
+        reasonDetail: values.description,
+      });
+      toast.success(t('afterSales.submittedDesc'));
+      router.replace({
+        pathname: '/order/after-sales-detail',
+        params: { id: refund.id },
+      });
+    } catch (err) {
+      // 后端 E-REFUND-001（order 状态不允许）/ E-REFUND-002（重复退款）等，message 英文够用
+      toast.error(err instanceof Error ? err.message : t('errors.generic'));
+    }
   });
 
   return (
@@ -390,12 +406,15 @@ export default function AfterSalesApplyPage() {
           </View>
           <Pressable
             onPress={submit}
+            disabled={createRefund.isPending}
             style={({ pressed }) => [
               styles.submitBtn,
               { backgroundColor: colors.primary },
               pressed && { transform: [{ scale: 0.98 }] },
+              createRefund.isPending && { opacity: 0.6 },
             ]}
             accessibilityRole="button"
+            accessibilityState={{ disabled: createRefund.isPending }}
             accessibilityLabel={t('afterSales.applySubmit')}
             testID="aftersales-submit"
           >

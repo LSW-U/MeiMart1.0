@@ -9,6 +9,8 @@
  *     real 模式提交 EXPIRED/SHORTAGE 不会 400（用户 2026-08-08 拍板核实）
  */
 
+import { api, isMockMode } from './api';
+
 // 后端 RefundReason enum（8 值，refund.controller.ts:41-50 同步）
 export const REFUND_REASONS = [
   'OUT_OF_STOCK',
@@ -47,3 +49,40 @@ export interface CreateRefundPayload {
   reasonDetail?: string;
   items?: RefundItemInput[];
 }
+
+// 后端 Refund 视图（POST /client/refunds 返回 data，P13 用 id 跳 detail + status 展示）
+export interface RefundRaw {
+  id: string;
+  orderId: string;
+  amount: number; // 分（后端返回分；P13 不展示金额，detail 页查回算）
+  reason: string;
+  reasonDetail: string | null;
+  status: string;
+  refundMethod: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const refundApi = {
+  /** 创建退款（整单不传 items / 部分退款传 items[]，向后兼容） */
+  async createRefund(payload: CreateRefundPayload): Promise<RefundRaw> {
+    if (isMockMode) {
+      // mock：返回伪造 refund（P13 用 id 跳 detail + status 展示，amount 不展示故 0）
+      const mock: RefundRaw = {
+        id: `refund-${Date.now()}`,
+        orderId: payload.orderId,
+        amount: 0,
+        reason: payload.reason,
+        reasonDetail: payload.reasonDetail ?? null,
+        status: 'PENDING',
+        refundMethod: 'COD',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      // mock 延迟模拟网络（让 isPending 生效，提交按钮 disable 防 repeated submit）
+      return new Promise((resolve) => setTimeout(() => resolve(mock), 300));
+    }
+    const res = await api.post<{ success: boolean; data: RefundRaw }>('/client/refunds', payload);
+    return res.data.data;
+  },
+};
