@@ -545,7 +545,9 @@
     "refundNote": "[TET] Refund will be processed within 1-3 business days",
     "types": {
       "refundOnly": "[TET] Refund only",
-      "returnRefund": "[TET] Return & refund"
+      "returnRefund": "[TET] Return & refund",
+      "refundOnlyDesc": "[TET] No return needed, refund after approval",
+      "returnRefundDesc": "[TET] Rider picks up item, refund after confirmation"
     },
     "reasons": {
       "damaged": "[TET] Item damaged",

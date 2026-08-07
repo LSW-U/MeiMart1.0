@@ -47,8 +47,8 @@ const REFUND_REASON_KEYS = [
 ];
 
 const REFUND_TYPES = [
-  { id: 'refund-only', labelKey: 'afterSales.types.refundOnly', icon: 'payments' },
-  { id: 'return-refund', labelKey: 'afterSales.types.returnRefund', icon: 'local_shipping' },
+  { id: 'refund-only', labelKey: 'afterSales.types.refundOnly', descKey: 'afterSales.types.refundOnlyDesc', icon: 'payments' },
+  { id: 'return-refund', labelKey: 'afterSales.types.returnRefund', descKey: 'afterSales.types.returnRefundDesc', icon: 'local_shipping' },
 ] as const;
 
 export default function AfterSalesApplyPage() {
@@ -196,8 +196,9 @@ export default function AfterSalesApplyPage() {
                   style={[
                     styles.typeCard,
                     {
-                      backgroundColor: active ? colors.primary : colors['surface-container-low'],
+                      backgroundColor: active ? colors['surface-container-high'] : colors['surface-container-low'],
                       borderColor: active ? colors.primary : colors['outline-variant'],
+                      borderWidth: active ? 2 : StyleSheet.hairlineWidth,
                     },
                   ]}
                   accessibilityRole="radio"
@@ -205,16 +206,26 @@ export default function AfterSalesApplyPage() {
                   accessibilityLabel={t(rt.labelKey)}
                   testID={`type-${rt.id}`}
                 >
-                  <Icon
-                    symbol={rt.icon}
-                    size={20}
-                    color={active ? colors['on-primary'] : colors['on-surface-variant']}
-                  />
-                  <Text
-                    style={[styles.typeLabel, { color: active ? colors['on-primary'] : colors['on-surface'] }]}
+                  <View
+                    style={[
+                      styles.typeIconBox,
+                      { backgroundColor: active ? colors.primary : colors['surface-container'] },
+                    ]}
                   >
-                    {t(rt.labelKey)}
-                  </Text>
+                    <Icon
+                      symbol={rt.icon}
+                      size={20}
+                      color={active ? colors['on-primary'] : colors['on-surface-variant']}
+                    />
+                  </View>
+                  <View style={styles.typeBody}>
+                    <Text style={[styles.typeName, { color: colors['on-surface'] }]}>
+                      {t(rt.labelKey)}
+                    </Text>
+                    <Text style={[styles.typeDesc, { color: colors['on-surface-variant'] }]}>
+                      {t(rt.descKey)}
+                    </Text>
+                  </View>
                 </Pressable>
               );
             })}
@@ -453,22 +464,38 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   typesRow: {
-    flexDirection: 'row',
+    // F1 横排改纵向（激活态视觉太重 + 无说明文案）
+    flexDirection: 'column',
     gap: spacing.sm,
   },
   typeCard: {
-    flex: 1,
+    // F1 横排实底 → 纵向列表（icon 盒 + 标题 + 描述），激活态 primary 描边 + 浅底（对齐 HTML opt-type）
     flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  typeIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
   },
-  typeLabel: {
+  typeBody: {
+    flex: 1,
+  },
+  typeName: {
     ...typography['body-sm'],
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  typeDesc: {
+    ...typography['body-sm'],
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 16,
   },
   tagsRow: {
     flexDirection: 'row',

@@ -592,7 +592,9 @@
     "refundNote": "退款将在 1-3 个工作日内原路返回",
     "types": {
       "refundOnly": "仅退款",
-      "returnRefund": "退货退款"
+      "returnRefund": "退货退款",
+      "refundOnlyDesc": "无需退货，商家审核通过后直接退款",
+      "returnRefundDesc": "骑手上门收回商品，确认后退款"
     },
     "reasons": {
       "damaged": "商品损坏",
