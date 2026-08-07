@@ -586,6 +586,7 @@
     "productLabel": "商品",
     "evidenceLabel": "上传凭证（可选）",
     "addPhoto": "添加",
+    "evidenceLimit": "最多上传 3 张照片，支持 JPG / PNG",
     "contactLabel": "联系方式",
     "refundMethod": "原支付方式",
     "cancelApply": "取消申请",

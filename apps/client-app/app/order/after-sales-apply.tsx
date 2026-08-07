@@ -318,6 +318,9 @@ export default function AfterSalesApplyPage() {
                   ]}
                   testID="aftersales-content"
                 />
+                <Text style={[styles.counter, { color: colors['on-surface-variant'] }]}>
+                  {`${(value ?? '').length} / 500`}
+                </Text>
                 {error?.message && (
                   <Text
                     style={[styles.errorText, { color: colors.error }]}
@@ -360,6 +363,9 @@ export default function AfterSalesApplyPage() {
               </Text>
             </Pressable>
           </View>
+          <Text style={[styles.photoHint, { color: colors['on-surface-variant'] }]}>
+            {t('afterSales.evidenceLimit', { defaultValue: 'Up to 3 photos, JPG / PNG' })}
+          </Text>
         </View>
 
         {/* 联系方式卡片 */}
@@ -586,6 +592,19 @@ const styles = StyleSheet.create({
   photoAddText: {
     ...typography['label-caps'],
     fontSize: 10,
+  },
+  photoHint: {
+    // F4 照片上传提示
+    ...typography['body-sm'],
+    fontSize: 11,
+    marginTop: spacing.sm,
+  },
+  counter: {
+    // F2 描述框字数统计
+    ...typography['body-sm'],
+    fontSize: 11,
+    textAlign: 'right',
+    marginTop: spacing.xs,
   },
   contactRow: {
     flexDirection: 'row',

@@ -539,6 +539,7 @@
     "productLabel": "[TET] Product",
     "evidenceLabel": "[TET] Upload evidence (optional)",
     "addPhoto": "[TET] Add",
+    "evidenceLimit": "[TET] Up to 3 photos, JPG / PNG",
     "contactLabel": "[TET] Contact",
     "refundMethod": "[TET] Original payment",
     "cancelApply": "[TET] Cancel Apply",
