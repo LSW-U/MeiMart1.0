@@ -550,11 +550,11 @@
       "returnRefundDesc": "[TET] Rider picks up item, refund after confirmation"
     },
     "reasons": {
+      "expired": "[TET] Expired / Spoiled",
       "damaged": "[TET] Item damaged",
-      "notAsDescribed": "[TET] Not as described",
-      "quality": "[TET] Quality issue",
-      "wrongOrMissing": "[TET] Wrong or missing item",
-      "noReason": "[TET] 7-day no-reason"
+      "wrongItem": "[TET] Wrong item",
+      "shortage": "[TET] Short / Missing items",
+      "quality": "[TET] Quality issue (odor / foreign object)"
     },
     "timeline": {
       "submitted": "[TET] Request submitted",

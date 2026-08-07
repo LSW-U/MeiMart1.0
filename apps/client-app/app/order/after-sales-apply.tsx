@@ -24,7 +24,6 @@ import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } fr
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { Chip } from '@/components/ui/Chip';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { PriceText } from '@/components/ui/PriceText';
@@ -39,11 +38,11 @@ import { afterSalesApplySchema, type AfterSalesApplyValues } from '@/forms/schem
 const ON_PRIMARY = '#ffffff';
 
 const REFUND_REASON_KEYS = [
+  'afterSales.reasons.expired',
   'afterSales.reasons.damaged',
-  'afterSales.reasons.notAsDescribed',
+  'afterSales.reasons.wrongItem',
+  'afterSales.reasons.shortage',
   'afterSales.reasons.quality',
-  'afterSales.reasons.wrongOrMissing',
-  'afterSales.reasons.noReason',
 ];
 
 const REFUND_TYPES = [
@@ -232,7 +231,7 @@ export default function AfterSalesApplyPage() {
           </View>
         </View>
 
-        {/* 退款原因卡片 */}
+        {/* 退款原因卡片（RC1：Chip 横排 → 纵向 radio 列表） */}
         <View
           style={[
             styles.card,
@@ -242,15 +241,48 @@ export default function AfterSalesApplyPage() {
           <Text style={[styles.label, { color: colors['on-surface'] }]}>
             {t('afterSales.reasonLabel')}
           </Text>
-          <View style={styles.tagsRow}>
-            {REFUND_REASON_KEYS.map((key) => (
-              <Chip
-                key={key}
-                label={t(key)}
-                selected={reasonValue === key}
-                onSelect={() => setValue('reason', reasonValue === key ? '' : key)}
-              />
-            ))}
+          <View style={styles.reasonList}>
+            {REFUND_REASON_KEYS.map((key, idx) => {
+              const active = reasonValue === key;
+              const isLast = idx === REFUND_REASON_KEYS.length - 1;
+              return (
+                <Pressable
+                  key={key}
+                  onPress={() => setValue('reason', key)}
+                  style={[
+                    styles.reasonItem,
+                    { borderBottomColor: colors['outline-variant'] },
+                    isLast && { borderBottomWidth: 0 },
+                  ]}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={t(key)}
+                  testID={`reason-${key}`}
+                >
+                  <View
+                    style={[
+                      styles.radio,
+                      { borderColor: active ? colors.primary : colors.outline },
+                    ]}
+                  >
+                    {active ? (
+                      <View style={[styles.radioDot, { backgroundColor: colors.primary }]} />
+                    ) : null}
+                  </View>
+                  <Text
+                    style={[
+                      styles.reasonText,
+                      {
+                        color: active ? colors.primary : colors['on-surface'],
+                        fontWeight: active ? '600' : '400',
+                      },
+                    ]}
+                  >
+                    {t(key)}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
@@ -497,10 +529,33 @@ const styles = StyleSheet.create({
     marginTop: 2,
     lineHeight: 16,
   },
-  tagsRow: {
+  reasonList: {
+    // RC1 Chip 横排 → 纵向 radio 列表（对齐 HTML opt-reason）
+    flexDirection: 'column',
+  },
+  reasonItem: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 11,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  radio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  reasonText: {
+    flex: 1,
+    ...typography['body-md'],
   },
   textarea: {
     minHeight: 100,

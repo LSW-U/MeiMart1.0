@@ -597,11 +597,11 @@
       "returnRefundDesc": "骑手上门收回商品，确认后退款"
     },
     "reasons": {
+      "expired": "商品变质 / 过期",
       "damaged": "商品损坏",
-      "notAsDescribed": "与描述不符",
-      "quality": "质量问题",
-      "wrongOrMissing": "发错/漏发",
-      "noReason": "7 天无理由"
+      "wrongItem": "发错商品",
+      "shortage": "少件 / 缺件",
+      "quality": "质量问题（异味 / 异物）"
     },
     "timeline": {
       "submitted": "申请已提交",

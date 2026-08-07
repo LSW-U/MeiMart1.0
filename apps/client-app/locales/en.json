@@ -597,11 +597,11 @@
       "returnRefundDesc": "Rider picks up item, refund after confirmation"
     },
     "reasons": {
+      "expired": "Expired / Spoiled",
       "damaged": "Item damaged",
-      "notAsDescribed": "Not as described",
-      "quality": "Quality issue",
-      "wrongOrMissing": "Wrong or missing item",
-      "noReason": "7-day no-reason"
+      "wrongItem": "Wrong item",
+      "shortage": "Short / Missing items",
+      "quality": "Quality issue (odor / foreign object)"
     },
     "timeline": {
       "submitted": "Request submitted",
