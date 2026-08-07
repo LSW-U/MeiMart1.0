@@ -3,6 +3,12 @@ import { mockDb, mockResponse } from './mockDb';
 import type { CartItem, Order, OrderStatus } from '@/types';
 import { getCurrentLocale } from '@/i18n';
 
+// Why: 后端 CancelOrderRequest 契约 reason 必填（z.string().min(1).max(200)），
+// 不传 body 触发 ZodValidationPipe 400。当前 UI 无取消原因选择（HTML 原型无 cancel UI），
+// service 层兜底默认值保留后端审计能力；未来组件传 reason 覆盖即可。
+// Why: reason 是审计字段（非 UI 文案），固定英文常量供运营/admin 日志可读，不走 i18n。
+const DEFAULT_CANCEL_REASON = 'User cancelled';
+
 // Why: 后端 Order 字段名/单位/结构差异大（金额分/元、status 大写枚举、items 扁平化、events 数组），
 // service 层做转换避免改组件代码。后端金额单位是分（整数），前端用元。
 interface OrderItemRaw {
@@ -209,7 +215,7 @@ export const orderApi = {
       if (order) order.status = 'CANCELLED';
       return mockResponse(order as Order);
     }
-    await api.post(`/client/orders/${id}/cancel`, { ...(reason ? { reason } : {}) });
+    await api.post(`/client/orders/${id}/cancel`, { reason: reason ?? DEFAULT_CANCEL_REASON });
     // Why: cancel 接口返回 {id, status}，没有完整 Order，重新拉详情避免类型不匹配
     return this.getOrder(id) as Promise<Order>;
   },
