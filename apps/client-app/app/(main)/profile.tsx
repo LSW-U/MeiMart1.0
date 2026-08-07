@@ -23,6 +23,7 @@ import { useProfile } from '@/services/queries/useUser';
 import { useCoupons } from '@/services/queries/usePromotion';
 import { useFavorites } from '@/services/queries/useFavorites';
 import { useOrderCounts } from '@/services/queries/useOrders';
+import type { OrderGroupKey } from '@/lib/orderStatusConfig';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -38,7 +39,7 @@ const DEFAULT_AVATAR =
 const ON_PRIMARY = '#ffffff';
 
 interface OrderEntry {
-  id: string;
+  id: OrderGroupKey;
   labelKey:
     | 'order.statusToPay'
     | 'order.statusToShip'

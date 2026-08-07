@@ -304,6 +304,7 @@
     "statusToPay": "To Pay",
     "statusToShip": "To Ship",
     "statusToReceive": "To Receive",
+    "tabDelivered": "Delivered",
     "cancelTitle": "Confirm cancel",
     "cancelConfirm": "Cancel this order?",
     "notFoundError": "Order not found or failed to load",

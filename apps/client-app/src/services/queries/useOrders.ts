@@ -1,14 +1,21 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderApi } from '@/services/orders';
 import { useAuthStore } from '@/store/authStore';
+import {
+  ORDER_STATUS_GROUPS,
+  tabStatuses,
+  type OrderGroupKey,
+  type OrderTabKey,
+} from '@/lib/orderStatusConfig';
 import type { OrderStatus, Order } from '@/types';
 
 export const ORDERS_QUERY_KEY = ['orders'] as const;
 
 const ORDERS_PAGE_SIZE = 20;
 
-// Why: 兼容不依赖分页的旧组件（如 checkout.tsx），返回 Order[]，单页 limit=20
-export function useOrders(status?: OrderStatus | 'all') {
+// Why: 兼容不依赖分页的旧组件（如 useOrderCounts 派生计数），返回 Order[]，单页 limit=20。
+// P12 Commit 2: status 改成 OrderStatus[]（支持多状态过滤），'all' 表示不过滤。
+export function useOrders(status?: OrderStatus[] | 'all') {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: [...ORDERS_QUERY_KEY, status ?? 'all'],
@@ -22,37 +29,30 @@ export function useOrders(status?: OrderStatus | 'all') {
   });
 }
 
-// P2 §4.1: 个人中心 4 宫格订单计数 - 从 useOrders('all') 派生（auth 自动 gating）
-// Why: 方案 §4.1 称「useOrders 不存在」有误，实际已存在；这里薄封装按状态集归并 4 个宫格
-// 业务映射（基于 legacyStatusMap 后的新 enum；mock 5 单覆盖 4 态各 1）：
-//   to-pay 待付款 = PENDING_PAYMENT
-//   to-ship 待发货 = PENDING_CONFIRM + CONFIRMED（已付款待发货）
-//   to-receive 待收货 = PICKED + OUT_FOR_DELIVERY（已发货在途）
-//   review 待评价 = DELIVERED + COMPLETED（已收货可评价）
-// Caveat: real 模式 useOrders 单页 limit=20，订单超 20 时计数会偏低；后端订单计数接口就绪后替换。
-const ORDER_COUNT_MAP: Record<string, OrderStatus[]> = {
-  'to-pay': ['PENDING_PAYMENT'],
-  'to-ship': ['PENDING_CONFIRM', 'CONFIRMED'],
-  'to-receive': ['PICKED', 'OUT_FOR_DELIVERY'],
-  review: ['DELIVERED', 'COMPLETED'],
-};
-
-export function useOrderCounts(): Record<string, number> {
+// P2 §4.1 + P12 Commit 2: 个人中心 4 宫格计数 + 列表 Tab 角标共用 ORDER_STATUS_GROUPS 单一来源
+// Why: 原 ORDER_COUNT_MAP 与 orderStatusConfig.ORDER_TABS 各定义一份状态集，易漂移；
+//      改成引用 ORDER_STATUS_GROUPS 后，Tab 过滤/角标/4 宫格计数三处一致。
+//      review 组补全 DELIVERED_PAID/DELIVERED_UNPAID（货到付款送达也是已送达可评价，原漏）。
+// Caveat: real 模式 useOrders 单页 limit=20，订单超 20 时计数会偏低；后端订单计数接口就绪后替换（TODO(backend): order-count-by-status）。
+export function useOrderCounts(): Record<OrderGroupKey, number> {
   const { data } = useOrders('all');
   const orders = data ?? [];
-  const counts: Record<string, number> = {};
-  for (const [cell, statuses] of Object.entries(ORDER_COUNT_MAP)) {
-    counts[cell] = orders.filter((o) => statuses.includes(o.status)).length;
+  const counts = {} as Record<OrderGroupKey, number>;
+  for (const key of Object.keys(ORDER_STATUS_GROUPS) as OrderGroupKey[]) {
+    counts[key] = orders.filter((o) => ORDER_STATUS_GROUPS[key].includes(o.status)).length;
   }
   return counts;
 }
 
 // Why: 游标分页无限加载 hook，订单列表页用。消费 service 的 nextCursor + hasMore。
-export function useOrdersInfinite(status?: OrderStatus | 'all') {
+// P12 Commit 2: 入参从单 status 改成 OrderTabKey（'all' | group key），内部 tabStatuses 转 OrderStatus[]。
+//      修复 B2：原单 status 漏 5 状态（待发货漏 PENDING_CONFIRM 等），现按 group 查状态集。
+export function useOrdersInfinite(tab: OrderTabKey = 'all') {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const statuses = tabStatuses(tab);
   return useInfiniteQuery({
-    queryKey: [...ORDERS_QUERY_KEY, 'infinite', status ?? 'all'],
-    queryFn: ({ pageParam }) => orderApi.getOrders(status, pageParam, ORDERS_PAGE_SIZE),
+    queryKey: [...ORDERS_QUERY_KEY, 'infinite', tab],
+    queryFn: ({ pageParam }) => orderApi.getOrders(statuses, pageParam, ORDERS_PAGE_SIZE),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextCursor : undefined),
     staleTime: 60 * 1000,

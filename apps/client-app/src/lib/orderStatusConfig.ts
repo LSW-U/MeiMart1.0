@@ -138,13 +138,40 @@ export function getOrderActions(status: OrderStatus): OrderActionDescriptor[] {
   }
 }
 
-// Why: 前端 tab 是 UI 概念，1 tab 对应 1 后端 status（all 表示不过滤）
-export type OrderTabKey = 'all' | OrderStatus;
+// P12 Commit 2: Tab key 改成 group key（1 tab 对应多 status），修复 B2 漏 5 状态
+// Why: 原 1 tab = 1 status 漏状态（待发货只查 CONFIRMED 漏 PENDING_CONFIRM；待收货漏 PICKED；
+//      已送达漏 DELIVERED_PAID/UNPAID/COMPLETED），改成 group 后与 useOrderCounts 共用
+//      ORDER_STATUS_GROUPS 单一来源，避免两处定义漂移
+// Why: 显式 OrderGroupKey 而非 keyof typeof，避免 satisfies/字面量推断导致 .includes() 参数 never
+export type OrderGroupKey = 'to-pay' | 'to-ship' | 'to-receive' | 'review';
 
-export const ORDER_TABS: { key: OrderTabKey; labelKey: string }[] = [
-  { key: 'all', labelKey: 'common.all' },
-  { key: 'PENDING_PAYMENT', labelKey: 'order.statusToPay' },
-  { key: 'CONFIRMED', labelKey: 'order.statusToShip' },
-  { key: 'OUT_FOR_DELIVERY', labelKey: 'order.statusToReceive' },
-  { key: 'DELIVERED', labelKey: 'order.status.delivered' },
+export const ORDER_STATUS_GROUPS: Record<OrderGroupKey, OrderStatus[]> = {
+  'to-pay': ['PENDING_PAYMENT'],
+  'to-ship': ['PENDING_CONFIRM', 'CONFIRMED'],
+  'to-receive': ['PICKED', 'OUT_FOR_DELIVERY'],
+  review: ['DELIVERED', 'DELIVERED_PAID', 'DELIVERED_UNPAID', 'COMPLETED'],
+};
+
+export type OrderTabKey = 'all' | OrderGroupKey;
+
+export interface OrderTab {
+  key: OrderTabKey;
+  labelKey: string;
+  /** 业务 Tab 显示角标计数，all 不显示 */
+  countable: boolean;
+}
+
+export const ORDER_TABS: OrderTab[] = [
+  { key: 'all', labelKey: 'common.all', countable: false },
+  { key: 'to-pay', labelKey: 'order.statusToPay', countable: true },
+  { key: 'to-ship', labelKey: 'order.statusToShip', countable: true },
+  { key: 'to-receive', labelKey: 'order.statusToReceive', countable: true },
+  // Why: key 复用 review（与 useOrderCounts/profile 4 宫格一致，状态集相同），
+  //      labelKey 用 tabDelivered（Tab 场景显示「已送达」比 status.delivered「已完成」语义更准）
+  { key: 'review', labelKey: 'order.tabDelivered', countable: true },
 ];
+
+// Why: tab key → statuses，供 useOrdersInfinite 查询用（all 表示不过滤）
+export function tabStatuses(key: OrderTabKey): OrderStatus[] | 'all' {
+  return key === 'all' ? 'all' : ORDER_STATUS_GROUPS[key];
+}

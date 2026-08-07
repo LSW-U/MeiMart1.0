@@ -304,6 +304,7 @@
     "statusToPay": "待付款",
     "statusToShip": "待发货",
     "statusToReceive": "待收货",
+    "tabDelivered": "已送达",
     "cancelTitle": "确认取消",
     "cancelConfirm": "确定取消此订单？",
     "notFoundError": "订单不存在或加载失败",

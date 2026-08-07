@@ -9,6 +9,7 @@ import {
   Text,
   Pressable,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -21,23 +22,20 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
-import { useOrdersInfinite } from '@/services/queries/useOrders';
-import type { OrderStatus, Order } from '@/types';
+import { useOrdersInfinite, useCancelOrder, useOrderCounts } from '@/services/queries/useOrders';
+import { ORDER_TABS, type OrderTabKey, type OrderAction } from '@/lib/orderStatusConfig';
+import type { Order } from '@/types';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 
-const TABS: { key: OrderStatus | 'all'; labelKey: string }[] = [
-  { key: 'all', labelKey: 'common.all' },
-  { key: 'PENDING_PAYMENT', labelKey: 'order.statusToPay' },
-  { key: 'CONFIRMED', labelKey: 'order.statusToShip' },
-  { key: 'OUT_FOR_DELIVERY', labelKey: 'order.statusToReceive' },
-  { key: 'DELIVERED', labelKey: 'order.status.delivered' },
-];
+// Why: error/primary 底白字（ON_PRIMARY 模式，dark 不变；与 P10/P11 现状一致，待统一抽到 theme）
+const ON_PRIMARY = '#ffffff';
 
 export default function OrdersPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const [active, setActive] = useState<OrderStatus | 'all'>('all');
+  const [active, setActive] = useState<OrderTabKey>('all');
+  const counts = useOrderCounts();
   const {
     data,
     isLoading,
@@ -49,6 +47,54 @@ export default function OrdersPage() {
   } = useOrdersInfinite(active);
   // Why: useInfiniteQuery 返回 InfiniteData<{items,...}[]>，拍平多页 items 为 Order[]
   const orders: Order[] = data?.pages.flatMap((p) => p.items) ?? [];
+
+  // P12 Commit 1: 修复 OrderCard action 链路（原 orders.tsx 未传 onAction，footer 按钮 + header delete 全不渲染）
+  // 按 OrderAction 6 种类型分发路由；cancel 走 Alert 确认 + useCancelOrder（复用 P10 详情页模式）
+  const cancelMutation = useCancelOrder();
+  const handleAction = (action: OrderAction, order: Order) => {
+    switch (action) {
+      case 'pay':
+        // 与 P10 详情页 [id].tsx:702 一致（checkout 页内部走 createOrder，pay 的订单支付入口待支付模块）
+        router.push('/order/checkout');
+        break;
+      case 'track':
+        // PENDING_CONFIRM/CONFIRMED 未发货 → 详情页；PICKED 及之后 → 物流追踪页
+        if (order.status === 'PENDING_CONFIRM' || order.status === 'CONFIRMED') {
+          router.push(`/order/${order.id}`);
+        } else {
+          router.push(`/order/${order.id}/tracking`);
+        }
+        break;
+      case 'review':
+        router.push({
+          pathname: '/order/review',
+          params: { id: order.id, productId: order.items[0]?.product.id ?? '' },
+        });
+        break;
+      case 'after-sales':
+        router.push({
+          pathname: '/order/after-sales-apply',
+          params: { orderId: order.id },
+        });
+        break;
+      case 'repurchase': {
+        // 取首商品 productId 跳详情页，用户在详情页重新加购（不直接下单，避免 skuId 缺失）
+        const productId = order.items[0]?.product.id;
+        if (productId) router.push(`/product/${productId}`);
+        break;
+      }
+      case 'cancel':
+        Alert.alert(t('order.cancelTitle'), t('order.cancelConfirm'), [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('common.confirm'),
+            style: 'destructive',
+            onPress: () => cancelMutation.mutate(order.id),
+          },
+        ]);
+        break;
+    }
+  };
 
   return (
     <PageErrorBoundary pageName="orders">
@@ -78,14 +124,16 @@ export default function OrdersPage() {
           styles.tabBar,
           {
             backgroundColor: colors['surface-container-lowest'],
-            borderBottomColor: 'rgba(141,112,108,0.3)',
+            borderBottomColor: colors['outline-variant'],
           },
         ]}
       >
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.tabRow}>
-            {TABS.map((tab) => {
+            {ORDER_TABS.map((tab) => {
               const isActive = tab.key === active;
+              // Why: 业务 Tab 显示角标计数（to-pay/ship/receive/review），all 不显示；count>0 才渲染避免假 0
+              const count = tab.countable && tab.key !== 'all' ? counts[tab.key] : 0;
               return (
                 <Pressable
                   key={tab.key}
@@ -95,16 +143,23 @@ export default function OrdersPage() {
                   accessibilityState={{ selected: isActive }}
                   accessibilityLabel={t(tab.labelKey)}
                 >
-                  <Text
-                    style={[
-                      styles.tabText,
-                      {
-                        color: isActive ? colors.primary : colors['on-surface-variant'],
-                      },
-                    ]}
-                  >
-                    {t(tab.labelKey)}
-                  </Text>
+                  <View style={styles.tabContent}>
+                    <Text
+                      style={[
+                        styles.tabText,
+                        {
+                          color: isActive ? colors.primary : colors['on-surface-variant'],
+                        },
+                      ]}
+                    >
+                      {t(tab.labelKey)}
+                    </Text>
+                    {count > 0 && (
+                      <View style={[styles.tabBadge, { backgroundColor: colors.error }]}>
+                        <Text style={styles.tabBadgeText}>{count}</Text>
+                      </View>
+                    )}
+                  </View>
                   {isActive && (
                     <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />
                   )}
@@ -152,7 +207,11 @@ export default function OrdersPage() {
             </View>
           )}
           renderItem={({ item }: { item: Order }) => (
-            <OrderCard order={item} onPress={() => router.push(`/order/${item.id}`)} />
+            <OrderCard
+              order={item}
+              onPress={() => router.push(`/order/${item.id}`)}
+              onAction={handleAction}
+            />
           )}
         />
       )}
@@ -178,14 +237,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: layout['container-margin'],
   },
+  tabContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   tabBtn: {
     position: 'relative',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     paddingVertical: spacing.md,
   },
   tabText: {
     ...typography['label-caps'],
     fontSize: 13,
+    textTransform: 'none',
+    letterSpacing: 0,
+  },
+  tabBadge: {
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 4,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabBadgeText: {
+    color: ON_PRIMARY,
+    fontSize: 10,
+    fontWeight: '700',
   },
   tabIndicator: {
     position: 'absolute',

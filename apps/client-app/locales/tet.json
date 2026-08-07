@@ -262,6 +262,7 @@
     "statusToPay": "[TET] To Pay",
     "statusToShip": "[TET] To Ship",
     "statusToReceive": "[TET] To Receive",
+    "tabDelivered": "[TET] Delivered",
     "cancelTitle": "[TET] Confirm cancel",
     "cancelConfirm": "[TET] Cancel this order?",
     "notFoundError": "[TET] Order not found or failed to load",

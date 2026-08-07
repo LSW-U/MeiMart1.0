@@ -152,21 +152,26 @@ function transformOrder(raw: OrderRaw): Order {
 
 export const orderApi = {
   async getOrders(
-    status?: OrderStatus | 'all',
+    status?: OrderStatus[] | 'all',
     cursor?: string,
     limit = 20,
   ): Promise<{ items: Order[]; nextCursor: string | null; hasMore: boolean }> {
     if (isMockMode) {
+      // Why: mock 数据存旧字面量（pending/paid/...），filter 用 legacyStatusMap 映射后的新值匹配 status[]
+      //      （原 o.status === status 用旧值匹配新值，非 'all' 时漏单；本次 B2 顺手修）
       const list =
         status && status !== 'all'
-          ? mockDb.orders.filter((o) => o.status === status)
+          ? mockDb.orders.filter((o) => status.includes(legacyStatusMap(o.status)))
           : mockDb.orders;
-      // Why: mock 数据按 5 个旧 status 排布，给旧 mock 数据做新枚举值的兜底映射
       const mapped = list.map((o) => ({ ...o, status: legacyStatusMap(o.status) }));
       return mockResponse({ items: mapped, nextCursor: null, hasMore: false });
     }
     const params: Record<string, unknown> = { limit };
-    if (status && status !== 'all') params.status = status;
+    if (status && status !== 'all') {
+      // Why: 后端 /client/orders 暂不支持多状态过滤，降级取首个状态
+      //      （待后端支持 status[] 后改 status.join(',')，TODO(backend): order-status-multi-filter）
+      params.status = status[0];
+    }
     if (cursor) params.cursor = cursor;
     const res = await api.get<OrderListResponse>('/client/orders', { params });
     return {
