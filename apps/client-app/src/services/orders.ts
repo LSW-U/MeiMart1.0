@@ -168,9 +168,8 @@ export const orderApi = {
     }
     const params: Record<string, unknown> = { limit };
     if (status && status !== 'all') {
-      // Why: 后端 /client/orders 暂不支持多状态过滤，降级取首个状态
-      //      （待后端支持 status[] 后改 status.join(',')，TODO(backend): order-status-multi-filter）
-      params.status = status[0];
+      // P12 B2:后端 /client/orders 已支持多状态过滤（逗号分隔），传 join(',')
+      params.status = status.join(',');
     }
     if (cursor) params.cursor = cursor;
     const res = await api.get<OrderListResponse>('/client/orders', { params });
@@ -268,6 +267,34 @@ export const orderApi = {
       task: unknown;
     }>(`/client/orders/${id}/tracking`);
     return res.data as Awaited<ReturnType<typeof orderApi.getTracking>>;
+  },
+
+  // P12 B1:订单状态计数（后端 getOrderCounts groupBy 全状态 0 填充，解决列表派生 limit=20 偏低）
+  async getOrderCounts(): Promise<{ counts: Record<string, number> }> {
+    if (isMockMode) {
+      // mock:从 mockDb.orders 按 status 聚合（legacyStatusMap 后），10 枚举 0 填充对齐后端
+      const ALL_STATUSES: OrderStatus[] = [
+        'PENDING_PAYMENT',
+        'PENDING_CONFIRM',
+        'CONFIRMED',
+        'PICKED',
+        'OUT_FOR_DELIVERY',
+        'DELIVERED_PAID',
+        'DELIVERED_UNPAID',
+        'DELIVERED',
+        'COMPLETED',
+        'CANCELLED',
+      ];
+      const counts: Record<string, number> = {};
+      for (const s of ALL_STATUSES) counts[s] = 0;
+      for (const o of mockDb.orders) {
+        const s = legacyStatusMap(o.status);
+        counts[s] = (counts[s] ?? 0) + 1;
+      }
+      return mockResponse({ counts });
+    }
+    const res = await api.get<{ counts: Record<string, number> }>('/client/orders/counts');
+    return { counts: res.data.counts };
   },
 };
 

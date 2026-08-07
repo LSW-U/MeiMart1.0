@@ -29,17 +29,25 @@ export function useOrders(status?: OrderStatus[] | 'all') {
   });
 }
 
-// P2 §4.1 + P12 Commit 2: 个人中心 4 宫格计数 + 列表 Tab 角标共用 ORDER_STATUS_GROUPS 单一来源
-// Why: 原 ORDER_COUNT_MAP 与 orderStatusConfig.ORDER_TABS 各定义一份状态集，易漂移；
-//      改成引用 ORDER_STATUS_GROUPS 后，Tab 过滤/角标/4 宫格计数三处一致。
-//      review 组补全 DELIVERED_PAID/DELIVERED_UNPAID（货到付款送达也是已送达可评价，原漏）。
-// Caveat: real 模式 useOrders 单页 limit=20，订单超 20 时计数会偏低；后端订单计数接口就绪后替换（TODO(backend): order-count-by-status）。
+// P2 §4.1 + P12: 个人中心 4 宫格计数 + 列表 Tab 角标共用 ORDER_STATUS_GROUPS 单一来源。
+// P12 B1: 改用后端 GET /client/orders/counts（groupBy 全状态 0 填充，不限分页），
+//         替代原从 useOrders('all') 派生（消除 real 单页 limit=20 超 20 单计数偏低的 caveat）。
 export function useOrderCounts(): Record<OrderGroupKey, number> {
-  const { data } = useOrders('all');
-  const orders = data ?? [];
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { data } = useQuery({
+    queryKey: [...ORDERS_QUERY_KEY, 'counts'],
+    queryFn: () => orderApi.getOrderCounts(),
+    staleTime: 60 * 1000,
+    networkMode: 'offlineFirst',
+    enabled: isAuthenticated,
+  });
+  const rawCounts = data?.counts ?? {};
   const counts = {} as Record<OrderGroupKey, number>;
   for (const key of Object.keys(ORDER_STATUS_GROUPS) as OrderGroupKey[]) {
-    counts[key] = orders.filter((o) => ORDER_STATUS_GROUPS[key].includes(o.status)).length;
+    counts[key] = ORDER_STATUS_GROUPS[key].reduce(
+      (sum, s) => sum + (rawCounts[s] ?? 0),
+      0,
+    );
   }
   return counts;
 }
