@@ -28,7 +28,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { useOrderTracking } from '@/services/queries/useTracking';
 import { toast } from '@/store/toastStore';
 import type { RiderLocation } from '@/services/tracking';
-import { buildTimelineSteps, type TimelineStepData } from '@/utils/timeline';
+import { buildTimelineSteps, formatTimelineTime, type TimelineStepData } from '@/utils/timeline';
 import { RiderCard, getRiderStatusTag } from '@/components/business/RiderCard';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
 import { useLocalizer } from '@/i18n';
@@ -71,7 +71,8 @@ export default function DeliveryTrackingPage() {
   const { data: order, isLoading, isError, refetch } = useOrder(params.id);
   // Why: Phase 6 启动 WS 配送追踪（join:order + 监听 order:location/order:status-changed + 5s 无消息降级 HTTP 轮询）。
   // Why: D5 接线 - riderLocation 地图骑手定位；lastOrderStatus 用于 Commit 3 流程收口（完成态判断）。
-  const { riderLocation, lastOrderStatus } = useOrderTracking(params.id);
+  // P11 ETA: estimatedArrival 接 task.estimatedArrival（后端 02d2a02 真实 ISO），banner 格式化展示
+  const { riderLocation, lastOrderStatus, estimatedArrival } = useOrderTracking(params.id);
   // Why: 取消订单 mutation（hooks 顶层，与 useOrder 同级；CONFIRMED 待发货状态用）
   const cancelMutation = useCancelOrder();
 
@@ -210,7 +211,9 @@ export default function DeliveryTrackingPage() {
             <View style={styles.flex1}>
               <Text style={[styles.etaLabel, { color: statusTheme.bannerLabelColor }]}>{t('tracking.estimatedDelivery', { defaultValue: 'Estimated delivery' }).toUpperCase()}</Text>
               <Text style={[styles.etaValue, { color: statusTheme.bannerValueColor }]}>
-                {t('tracking.etaPlaceholder', { defaultValue: 'Arriving Today' })} 4:00 PM - 6:00 PM
+                {estimatedArrival
+                  ? formatTimelineTime(estimatedArrival, i18n.language)
+                  : t('tracking.etaPlaceholder', { defaultValue: 'Arriving Today' })}
               </Text>
             </View>
           </View>

@@ -12,6 +12,8 @@ export interface OrderTrackingState {
   wsState: WsConnectionState;
   riderLocation: RiderLocation | null;
   lastOrderStatus: OrderStatus | null;
+  // P11 ETA:任务创建时算的预估送达（now+45min），WS 不推，从 getTracking 拿
+  estimatedArrival: string | null;
 }
 
 /**
@@ -27,6 +29,7 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
     wsState: 'disconnected',
     riderLocation: null,
     lastOrderStatus: null,
+    estimatedArrival: null,
   });
 
   // Why: 用 lazy ref 避免 useRef(Date.now()) 触发 react-hooks/purity 规则（render 期不允许 impure 调用）
@@ -71,6 +74,16 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
     socket.on('order:location', handleLocation);
     socket.on('order:status-changed', handleStatusChanged);
 
+    // P11 ETA:初始拿一次 eta（task.estimatedArrival 是静态值，WS 不推，只在 getTracking 返回）
+    orderApi
+      .getTracking(orderId)
+      .then((tracking) => {
+        setState((s) => ({ ...s, estimatedArrival: tracking.task?.estimatedArrival ?? null }));
+      })
+      .catch(() => {
+        // Why: 初始拿 eta 失败静默，banner 降级 etaPlaceholder
+      });
+
     // Why: 5s 心跳检查 WS 是否活跃，不活跃时启动 HTTP 轮询
     let pollTimer: ReturnType<typeof setInterval> | null = null;
     const checkTimer = setInterval(() => {
@@ -82,6 +95,7 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
             setState((s) => ({
               ...s,
               lastOrderStatus: tracking.orderStatus,
+              estimatedArrival: tracking.task?.estimatedArrival ?? null,
               wsState: 'disconnected',
             }));
           } catch {

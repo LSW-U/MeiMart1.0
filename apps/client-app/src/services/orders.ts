@@ -239,16 +239,25 @@ export const orderApi = {
       pickedUpAt: string | null;
       deliveredAt: string | null;
       riderLocation: null;
-      estimatedArrival: null;
+      estimatedArrival: string | null;
     } | null;
   }> {
     if (isMockMode) {
+      // P11 ETA 联调：mock task 含 estimatedArrival（now + 45min，对齐后端 DEFAULT_ETA_MINUTES）
       return mockResponse({
         orderId: id,
         orderNo: 'mock',
         orderStatus: 'OUT_FOR_DELIVERY' as OrderStatus,
         paymentStatus: 'PAID',
-        task: null,
+        task: {
+          taskId: 'mock-task',
+          taskStatus: 'OUT_FOR_DELIVERY',
+          riderId: null,
+          pickedUpAt: null,
+          deliveredAt: null,
+          riderLocation: null,
+          estimatedArrival: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
+        },
       });
     }
     const res = await api.get<{
