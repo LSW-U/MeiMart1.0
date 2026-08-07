@@ -1,12 +1,15 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ClipPath, Defs, Polygon, Rect, Svg } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 
 import { typography } from '@/theme';
 
 import type { StatusBadgeProps } from './StatusBadge.types';
 
 export function StatusBadge({ text, backgroundColor, testID }: StatusBadgeProps) {
+  // Why: a11y 标签前缀 i18n（Status: XXX），避免读屏对 zh/tet 用户读英文
+  const { t } = useTranslation();
   const w = 92;
   const h = 22;
   const offset = 8;
@@ -15,7 +18,7 @@ export function StatusBadge({ text, backgroundColor, testID }: StatusBadgeProps)
       testID={testID}
       style={styles.wrap}
       accessibilityRole="text"
-      accessibilityLabel={`Status: ${text}`}
+      accessibilityLabel={t('order.statusBadgeA11y', { status: text, defaultValue: 'Status: {{status}}' })}
     >
       <Svg width={w} height={h}>
         <Defs>
