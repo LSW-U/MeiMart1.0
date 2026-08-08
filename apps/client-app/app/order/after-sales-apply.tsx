@@ -8,13 +8,15 @@
 // 注：POST /client/refunds 已就绪（reason 8 值 + items[] 部分退款），Commit 7 接 useCreateRefund
 import { useEffect, useMemo, useState } from 'react';
 import {
+  KeyboardAvoidingView,
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
   StyleSheet,
-  View,
   Text,
   TextInput,
-  ScrollView,
-  Image,
-  Pressable,
+  View,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -182,334 +184,339 @@ export default function AfterSalesApplyPage() {
         onBackPress={handleBack}
       />
 
-      <ScrollView
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* 商品卡片 - F5 多商品选择（保留纹样主卡） */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
-          ]}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.cardPattern} pointerEvents="none">
-            <TaisPattern width={400} height={60} opacity={0.15} />
-          </View>
-          <View style={styles.cardHeader}>
-            <Icon symbol="shopping_cart" size={16} color={colors.primary} />
-            <Text style={[styles.cardHeaderText, { color: colors.primary }]}>
-              {t('afterSales.productLabel', { defaultValue: 'Product' })}
-            </Text>
-          </View>
-          {order.items.map((it, idx) => {
-            const state = itemStates[idx];
-            const selected = state?.selected ?? true;
-            const refundQty = state?.refundQty ?? it.quantity;
-            return (
-              <View
-                key={it.id}
-                style={[
-                  styles.itemRow,
-                  idx > 0 && {
-                    borderTopWidth: StyleSheet.hairlineWidth,
-                    borderTopColor: colors['outline-variant'],
-                  },
-                ]}
-              >
-                <Pressable
-                  onPress={() => updateItemState(idx, { selected: !selected })}
+          {/* 商品卡片 - F5 多商品选择（保留纹样主卡） */}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            ]}
+          >
+            <View style={styles.cardPattern} pointerEvents="none">
+              <TaisPattern width={400} height={60} opacity={0.15} />
+            </View>
+            <View style={styles.cardHeader}>
+              <Icon symbol="shopping_cart" size={16} color={colors.primary} />
+              <Text style={[styles.cardHeaderText, { color: colors.primary }]}>
+                {t('afterSales.productLabel', { defaultValue: 'Product' })}
+              </Text>
+            </View>
+            {order.items.map((it, idx) => {
+              const state = itemStates[idx];
+              const selected = state?.selected ?? true;
+              const refundQty = state?.refundQty ?? it.quantity;
+              return (
+                <View
+                  key={it.id}
                   style={[
-                    styles.checkBox,
-                    {
-                      backgroundColor: selected ? colors.primary : 'transparent',
-                      borderColor: selected ? colors.primary : colors.outline,
+                    styles.itemRow,
+                    idx > 0 && {
+                      borderTopWidth: StyleSheet.hairlineWidth,
+                      borderTopColor: colors['outline-variant'],
                     },
                   ]}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: selected }}
-                  accessibilityLabel={`${t('afterSales.productLabel', { defaultValue: 'Product' })}: ${localize(it.product.name)}`}
-                  testID={`item-check-${it.id}`}
                 >
-                  {selected ? <Icon symbol="check" size={15} color={ON_PRIMARY} /> : null}
-                </Pressable>
-                <View style={[styles.itemThumb, { backgroundColor: colors['surface-container'] }]}>
-                  {it.product.image ? (
-                    <Image
-                      source={{ uri: it.product.image }}
-                      style={styles.productImg}
-                      resizeMode="cover"
-                    />
-                  ) : null}
-                </View>
-                <View style={styles.itemText}>
-                  <Text style={[styles.itemName, { color: colors['on-surface'] }]} numberOfLines={2}>
-                    {localize(it.product.name)}
-                  </Text>
-                  <PriceText value={it.product.price} size="sm" />
-                </View>
-                <View style={[styles.qtyStepper, { borderColor: colors['outline-variant'] }]}>
                   <Pressable
-                    onPress={() => updateItemState(idx, { refundQty: Math.max(1, refundQty - 1) })}
-                    style={styles.qtyBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('afterSales.decreaseQty', { defaultValue: 'Decrease quantity' })}
-                  >
-                    <Text style={[styles.qtyBtnText, { color: colors['on-surface-variant'] }]}>−</Text>
-                  </Pressable>
-                  <Text style={[styles.qtyVal, { color: colors['on-surface'] }]}>{refundQty}</Text>
-                  <Pressable
-                    onPress={() => updateItemState(idx, { refundQty: Math.min(it.quantity, refundQty + 1) })}
-                    style={styles.qtyBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('afterSales.increaseQty', { defaultValue: 'Increase quantity' })}
-                  >
-                    <Text style={[styles.qtyBtnText, { color: colors['on-surface-variant'] }]}>+</Text>
-                  </Pressable>
-                </View>
-              </View>
-            );
-          })}
-        </View>
-
-        {/* 申请类型卡片 */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
-          ]}
-        >
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>
-            {t('afterSales.typeLabel')}
-          </Text>
-          <View style={styles.typesRow}>
-            {REFUND_TYPES.map((rt) => {
-              const active = typeValue === rt.id;
-              return (
-                <Pressable
-                  key={rt.id}
-                  onPress={() => setValue('type', rt.id)}
-                  style={[
-                    styles.typeCard,
-                    {
-                      backgroundColor: active ? colors['surface-container-high'] : colors['surface-container-low'],
-                      borderColor: active ? colors.primary : colors['outline-variant'],
-                      borderWidth: active ? 2 : StyleSheet.hairlineWidth,
-                    },
-                  ]}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={t(rt.labelKey)}
-                  testID={`type-${rt.id}`}
-                >
-                  <View
+                    onPress={() => updateItemState(idx, { selected: !selected })}
                     style={[
-                      styles.typeIconBox,
-                      { backgroundColor: active ? colors.primary : colors['surface-container'] },
-                    ]}
-                  >
-                    <Icon
-                      symbol={rt.icon}
-                      size={20}
-                      color={active ? colors['on-primary'] : colors['on-surface-variant']}
-                    />
-                  </View>
-                  <View style={styles.typeBody}>
-                    <Text style={[styles.typeName, { color: colors['on-surface'] }]}>
-                      {t(rt.labelKey)}
-                    </Text>
-                    <Text style={[styles.typeDesc, { color: colors['on-surface-variant'] }]}>
-                      {t(rt.descKey)}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* 退款原因卡片（RC1：Chip 横排 → 纵向 radio 列表） */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
-          ]}
-        >
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>
-            {t('afterSales.reasonLabel')}
-          </Text>
-          <View style={styles.reasonList}>
-            {REFUND_REASON_KEYS.map((key, idx) => {
-              const active = reasonValue === key;
-              const isLast = idx === REFUND_REASON_KEYS.length - 1;
-              return (
-                <Pressable
-                  key={key}
-                  onPress={() => setValue('reason', key)}
-                  style={[
-                    styles.reasonItem,
-                    { borderBottomColor: colors['outline-variant'] },
-                    isLast && { borderBottomWidth: 0 },
-                  ]}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={t(key)}
-                  testID={`reason-${key}`}
-                >
-                  <View
-                    style={[
-                      styles.radio,
-                      { borderColor: active ? colors.primary : colors.outline },
-                    ]}
-                  >
-                    {active ? (
-                      <View style={[styles.radioDot, { backgroundColor: colors.primary }]} />
-                    ) : null}
-                  </View>
-                  <Text
-                    style={[
-                      styles.reasonText,
+                      styles.checkBox,
                       {
-                        color: active ? colors.primary : colors['on-surface'],
-                        fontWeight: active ? '600' : '400',
+                        backgroundColor: selected ? colors.primary : 'transparent',
+                        borderColor: selected ? colors.primary : colors.outline,
                       },
                     ]}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: selected }}
+                    accessibilityLabel={`${t('afterSales.productLabel', { defaultValue: 'Product' })}: ${localize(it.product.name)}`}
+                    testID={`item-check-${it.id}`}
                   >
-                    {t(key)}
-                  </Text>
-                </Pressable>
+                    {selected ? <Icon symbol="check" size={15} color={ON_PRIMARY} /> : null}
+                  </Pressable>
+                  <View style={[styles.itemThumb, { backgroundColor: colors['surface-container'] }]}>
+                    {it.product.image ? (
+                      <Image
+                        source={{ uri: it.product.image }}
+                        style={styles.productImg}
+                        resizeMode="cover"
+                      />
+                    ) : null}
+                  </View>
+                  <View style={styles.itemText}>
+                    <Text style={[styles.itemName, { color: colors['on-surface'] }]} numberOfLines={2}>
+                      {localize(it.product.name)}
+                    </Text>
+                    <PriceText value={it.product.price} size="sm" />
+                  </View>
+                  <View style={[styles.qtyStepper, { borderColor: colors['outline-variant'] }]}>
+                    <Pressable
+                      onPress={() => updateItemState(idx, { refundQty: Math.max(1, refundQty - 1) })}
+                      style={styles.qtyBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('afterSales.decreaseQty', { defaultValue: 'Decrease quantity' })}
+                    >
+                      <Text style={[styles.qtyBtnText, { color: colors['on-surface-variant'] }]}>−</Text>
+                    </Pressable>
+                    <Text style={[styles.qtyVal, { color: colors['on-surface'] }]}>{refundQty}</Text>
+                    <Pressable
+                      onPress={() => updateItemState(idx, { refundQty: Math.min(it.quantity, refundQty + 1) })}
+                      style={styles.qtyBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('afterSales.increaseQty', { defaultValue: 'Increase quantity' })}
+                    >
+                      <Text style={[styles.qtyBtnText, { color: colors['on-surface-variant'] }]}>+</Text>
+                    </Pressable>
+                  </View>
+                </View>
               );
             })}
           </View>
-        </View>
 
-        {/* 描述卡片 */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
-          ]}
-        >
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>
-            {t('afterSales.descLabel')}
-          </Text>
-          <Controller
-            control={control}
-            name="description"
-            render={({ field: { value, onChange }, fieldState: { error } }) => (
-              <>
-                <TextInput
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder={t('afterSales.applyPlaceholder')}
-                  placeholderTextColor={colors['on-surface-variant']}
-                  multiline
-                  numberOfLines={4}
-                  style={[
-                    styles.textarea,
-                    {
-                      color: colors['on-surface'],
-                      backgroundColor: colors['surface-container-low'],
-                      borderColor: error ? colors.error : colors['outline-variant'],
-                    },
-                  ]}
-                  testID="aftersales-content"
-                />
-                <Text style={[styles.counter, { color: colors['on-surface-variant'] }]}>
-                  {`${(value ?? '').length} / 500`}
-                </Text>
-                {error?.message && (
-                  <Text
-                    style={[styles.errorText, { color: colors.error }]}
-                    accessibilityRole="alert"
+          {/* 申请类型卡片 */}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            ]}
+          >
+            <Text style={[styles.label, { color: colors['on-surface'] }]}>
+              {t('afterSales.typeLabel')}
+            </Text>
+            <View style={styles.typesRow}>
+              {REFUND_TYPES.map((rt) => {
+                const active = typeValue === rt.id;
+                return (
+                  <Pressable
+                    key={rt.id}
+                    onPress={() => setValue('type', rt.id)}
+                    style={[
+                      styles.typeCard,
+                      {
+                        backgroundColor: active ? colors['surface-container-high'] : colors['surface-container-low'],
+                        borderColor: active ? colors.primary : colors['outline-variant'],
+                        borderWidth: active ? 2 : StyleSheet.hairlineWidth,
+                      },
+                    ]}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={t(rt.labelKey)}
+                    testID={`type-${rt.id}`}
                   >
-                    {error.message}
-                  </Text>
-                )}
-              </>
-            )}
-          />
-        </View>
+                    <View
+                      style={[
+                        styles.typeIconBox,
+                        { backgroundColor: active ? colors.primary : colors['surface-container'] },
+                      ]}
+                    >
+                      <Icon
+                        symbol={rt.icon}
+                        size={20}
+                        color={active ? colors['on-primary'] : colors['on-surface-variant']}
+                      />
+                    </View>
+                    <View style={styles.typeBody}>
+                      <Text style={[styles.typeName, { color: colors['on-surface'] }]}>
+                        {t(rt.labelKey)}
+                      </Text>
+                      <Text style={[styles.typeDesc, { color: colors['on-surface-variant'] }]}>
+                        {t(rt.descKey)}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
 
-        {/* V2 凭证照片卡片（从描述卡拆出，独立卡片） */}
+          {/* 退款原因卡片（RC1：Chip 横排 → 纵向 radio 列表） */}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            ]}
+          >
+            <Text style={[styles.label, { color: colors['on-surface'] }]}>
+              {t('afterSales.reasonLabel')}
+            </Text>
+            <View style={styles.reasonList}>
+              {REFUND_REASON_KEYS.map((key, idx) => {
+                const active = reasonValue === key;
+                const isLast = idx === REFUND_REASON_KEYS.length - 1;
+                return (
+                  <Pressable
+                    key={key}
+                    onPress={() => setValue('reason', key)}
+                    style={[
+                      styles.reasonItem,
+                      { borderBottomColor: colors['outline-variant'] },
+                      isLast && { borderBottomWidth: 0 },
+                    ]}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={t(key)}
+                    testID={`reason-${key}`}
+                  >
+                    <View
+                      style={[
+                        styles.radio,
+                        { borderColor: active ? colors.primary : colors.outline },
+                      ]}
+                    >
+                      {active ? (
+                        <View style={[styles.radioDot, { backgroundColor: colors.primary }]} />
+                      ) : null}
+                    </View>
+                    <Text
+                      style={[
+                        styles.reasonText,
+                        {
+                          color: active ? colors.primary : colors['on-surface'],
+                          fontWeight: active ? '600' : '400',
+                        },
+                      ]}
+                    >
+                      {t(key)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* 描述卡片 */}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            ]}
+          >
+            <Text style={[styles.label, { color: colors['on-surface'] }]}>
+              {t('afterSales.descLabel')}
+            </Text>
+            <Controller
+              control={control}
+              name="description"
+              render={({ field: { value, onChange }, fieldState: { error } }) => (
+                <>
+                  <TextInput
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder={t('afterSales.applyPlaceholder')}
+                    placeholderTextColor={colors['on-surface-variant']}
+                    multiline
+                    numberOfLines={4}
+                    style={[
+                      styles.textarea,
+                      {
+                        color: colors['on-surface'],
+                        backgroundColor: colors['surface-container-low'],
+                        borderColor: error ? colors.error : colors['outline-variant'],
+                      },
+                    ]}
+                    testID="aftersales-content"
+                  />
+                  <Text style={[styles.counter, { color: colors['on-surface-variant'] }]}>
+                    {`${(value ?? '').length} / 500`}
+                  </Text>
+                  {error?.message && (
+                    <Text
+                      style={[styles.errorText, { color: colors.error }]}
+                      accessibilityRole="alert"
+                    >
+                      {error.message}
+                    </Text>
+                  )}
+                </>
+              )}
+            />
+          </View>
+
+          {/* V2 凭证照片卡片（从描述卡拆出，独立卡片） */}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            ]}
+          >
+            <Text style={[styles.label, { color: colors['on-surface'] }]}>
+              {t('afterSales.evidenceLabel', { defaultValue: 'Upload evidence (optional)' })}
+            </Text>
+            <View style={styles.photosRow}>
+              <Pressable
+                style={[
+                  styles.photoAddBtn,
+                  {
+                    backgroundColor: colors['surface-container-low'],
+                    borderColor: colors['outline-variant'],
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Add evidence photo"
+                testID="aftersales-add-photo"
+              >
+                <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />
+                <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
+                  {t('afterSales.addPhoto', { defaultValue: 'Add' })}
+                </Text>
+              </Pressable>
+            </View>
+            <Text style={[styles.photoHint, { color: colors['on-surface-variant'] }]}>
+              {t('afterSales.evidenceLimit', { defaultValue: 'Up to 3 photos, JPG / PNG' })}
+            </Text>
+          </View>
+
+        </ScrollView>
+
+        {/* 底部提交按钮栏（R1 加退款说明行；D1 删联系卡） */}
         <View
           style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            styles.bottomBar,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderTopColor: colors['outline-variant'],
+            },
+            shadowPresets.md,
           ]}
         >
-          <Text style={[styles.label, { color: colors['on-surface'] }]}>
-            {t('afterSales.evidenceLabel', { defaultValue: 'Upload evidence (optional)' })}
-          </Text>
-          <View style={styles.photosRow}>
+          <View style={styles.bottomRow}>
+            <View style={styles.refundAmountBox}>
+              <Text style={[styles.refundLabel, { color: colors['on-surface-variant'] }]}>
+                {t('afterSales.refundAmount', { defaultValue: 'Refund amount' })}
+              </Text>
+              <PriceText value={refundAmount} size="lg" />
+            </View>
             <Pressable
-              style={[
-                styles.photoAddBtn,
-                {
-                  backgroundColor: colors['surface-container-low'],
-                  borderColor: colors['outline-variant'],
-                },
+              onPress={submit}
+              disabled={createRefund.isPending}
+              style={({ pressed }) => [
+                styles.submitBtn,
+                { backgroundColor: colors.primary },
+                pressed && { transform: [{ scale: 0.98 }] },
+                createRefund.isPending && { opacity: 0.6 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Add evidence photo"
-              testID="aftersales-add-photo"
+              accessibilityState={{ disabled: createRefund.isPending }}
+              accessibilityLabel={t('afterSales.applySubmit')}
+              testID="aftersales-submit"
             >
-              <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />
-              <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
-                {t('afterSales.addPhoto', { defaultValue: 'Add' })}
-              </Text>
+              <Text style={styles.submitText}>{t('afterSales.applySubmit')}</Text>
             </Pressable>
           </View>
-          <Text style={[styles.photoHint, { color: colors['on-surface-variant'] }]}>
-            {t('afterSales.evidenceLimit', { defaultValue: 'Up to 3 photos, JPG / PNG' })}
-          </Text>
-        </View>
-
-      </ScrollView>
-
-      {/* 底部提交按钮栏（R1 加退款说明行；D1 删联系卡） */}
-      <View
-        style={[
-          styles.bottomBar,
-          {
-            backgroundColor: colors['surface-container-lowest'],
-            borderTopColor: colors['outline-variant'],
-          },
-          shadowPresets.md,
-        ]}
-      >
-        <View style={styles.bottomRow}>
-          <View style={styles.refundAmountBox}>
-            <Text style={[styles.refundLabel, { color: colors['on-surface-variant'] }]}>
-              {t('afterSales.refundAmount', { defaultValue: 'Refund amount' })}
+          <View style={styles.refundNoteRow}>
+            <Icon symbol="info" size={13} color={colors['on-surface-variant']} />
+            <Text style={[styles.refundNoteText, { color: colors['on-surface-variant'] }]}>
+              {t('afterSales.refundNote')}
             </Text>
-            <PriceText value={refundAmount} size="lg" />
           </View>
-          <Pressable
-            onPress={submit}
-            disabled={createRefund.isPending}
-            style={({ pressed }) => [
-              styles.submitBtn,
-              { backgroundColor: colors.primary },
-              pressed && { transform: [{ scale: 0.98 }] },
-              createRefund.isPending && { opacity: 0.6 },
-            ]}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: createRefund.isPending }}
-            accessibilityLabel={t('afterSales.applySubmit')}
-            testID="aftersales-submit"
-          >
-            <Text style={styles.submitText}>{t('afterSales.applySubmit')}</Text>
-          </Pressable>
         </View>
-        <View style={styles.refundNoteRow}>
-          <Icon symbol="info" size={13} color={colors['on-surface-variant']} />
-          <Text style={[styles.refundNoteText, { color: colors['on-surface-variant'] }]}>
-            {t('afterSales.refundNote')}
-          </Text>
-        </View>
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaWrapper>
   );
 }
@@ -517,7 +524,7 @@ export default function AfterSalesApplyPage() {
 const styles = StyleSheet.create({
   scroll: {
     padding: layout['container-margin'],
-    paddingBottom: 140,
+    // 删 paddingBottom: 140（KeyboardAvoidingView 改造：底部栏 normal flow 不遮挡 ScrollView 内容）
     gap: spacing.md,
   },
   card: {
@@ -719,11 +726,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   bottomBar: {
-    // R1：底部栏 column（金额行 + 退款说明行）；position absolute 保留（KeyboardAvoidingView 改造单独 commit）
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    // KeyboardAvoidingView 改造：去 position absolute，底部栏 normal flow（ScrollView 之后，KeyboardAvoidingView 内）
     flexDirection: 'column',
     padding: spacing.md,
     gap: 6,
