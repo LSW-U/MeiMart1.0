@@ -453,6 +453,7 @@
     "clearCache": "清除缓存",
     "clearCacheDone": "已清除缓存",
     "aboutSection": "关于",
+    "about": "关于",
     "version": "版本",
     "terms": "用户协议",
     "logoutTitle": "确认退出",
@@ -548,6 +549,8 @@
   },
   "result": {
     "title": "支付成功",
+    "successTitle": "支付成功",
+    "successDesc": "您的订单已成功下单",
     "viewOrder": "查看订单",
     "continueShopping": "继续购物"
   },
@@ -625,6 +628,9 @@
     "placeholder": "分享你的使用体验…",
     "submit": "提交评价",
     "fillContent": "请填写评价内容",
+    "mockProductName": "新鲜红富士苹果",
+    "productRating": "商品评分",
+    "contentLabel": "评价内容",
     "successTitle": "成功",
     "successDesc": "评价已提交",
     "tagsLabel": "快捷标签",

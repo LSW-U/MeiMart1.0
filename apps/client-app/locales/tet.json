@@ -406,6 +406,7 @@
     "clearCache": "[TET] Clear cache",
     "clearCacheDone": "[TET] Cache cleared",
     "aboutSection": "[TET] About",
+    "about": "[TET] About",
     "version": "[TET] Version",
     "terms": "[TET] Terms of service",
     "logoutTitle": "[TET] Confirm logout",
@@ -501,6 +502,8 @@
   },
   "result": {
     "title": "[TET] Payment Success",
+    "successTitle": "[TET] Payment Successful",
+    "successDesc": "[TET] Your order has been placed successfully",
     "viewOrder": "[TET] View order",
     "continueShopping": "[TET] Continue shopping"
   },
@@ -578,6 +581,9 @@
     "placeholder": "[TET] Share your experience…",
     "submit": "[TET] Submit review",
     "fillContent": "[TET] Please write your review",
+    "mockProductName": "[TET] Fresh Red Fuji Apple",
+    "productRating": "[TET] Product Rating",
+    "contentLabel": "[TET] Review Content",
     "successTitle": "[TET] Success",
     "successDesc": "[TET] Review submitted",
     "tagsLabel": "[TET] Quick tags",

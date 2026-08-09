@@ -453,6 +453,7 @@
     "clearCache": "Clear cache",
     "clearCacheDone": "Cache cleared",
     "aboutSection": "About",
+    "about": "About",
     "version": "Version",
     "terms": "Terms of service",
     "logoutTitle": "Confirm logout",
@@ -548,6 +549,8 @@
   },
   "result": {
     "title": "Payment Success",
+    "successTitle": "Payment Successful",
+    "successDesc": "Your order has been placed successfully",
     "viewOrder": "View order",
     "continueShopping": "Continue shopping"
   },
@@ -625,6 +628,9 @@
     "placeholder": "Share your experience…",
     "submit": "Submit review",
     "fillContent": "Please write your review",
+    "mockProductName": "Fresh Red Fuji Apple",
+    "productRating": "Product Rating",
+    "contentLabel": "Review Content",
     "successTitle": "Success",
     "successDesc": "Review submitted",
     "tagsLabel": "Quick tags",
