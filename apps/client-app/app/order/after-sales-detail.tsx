@@ -29,33 +29,7 @@ import { formatDate } from '@/utils/format';
 const REFUND_STATUS_ICON = '#f59e0b'; // 原因：售后处理中琥珀图标（amber-500）
 const REFUND_STATUS_TEXT = '#b45309'; // 原因：售后处理中深琥珀文字（amber-700）
 
-type StepKey =
-  | 'submitted'
-  | 'reviewing'
-  | 'approved'
-  | 'refund'
-  | 'completed'
-  | 'rejected'
-  | 'cancelled';
-
-const STEP_ICON: Record<StepKey, string> = {
-  submitted: 'edit',
-  reviewing: 'visibility',
-  approved: 'check_circle',
-  refund: 'payments',
-  completed: 'verified',
-  rejected: 'cancel',
-  cancelled: 'close',
-};
-
-// Why: 接 refund.status 推导售后单阶段（PENDING/APPROVED/COMPLETED/REJECTED/CANCELLED，后端 refund.service 状态机）
-function deriveRefundStepKey(status: string): StepKey {
-  if (status === 'COMPLETED') return 'completed';
-  if (status === 'REJECTED') return 'rejected';
-  if (status === 'CANCELLED') return 'cancelled';
-  if (status === 'APPROVED') return 'approved';
-  return 'submitted'; // PENDING
-}
+// TODO(Commit 8): 时间轴 icon 映射在此重写（statusAppearance 已接管色块多态化）
 
 /**
  * reason enum → 前端 i18n key 反向映射（后端返回 enum，详情页展示要本地化）
@@ -146,14 +120,14 @@ export default function AfterSalesDetailPage() {
   const productImage = orderItem?.product.image;
   const productPrice = refundItem?.unitPrice ?? orderItem?.product.price ?? 0;
   const refundAmount = refund.amount;
-  const stepKey = deriveRefundStepKey(refund.status);
 
   // reason 反向映射 + 申请号/申请时间（接 refund 真实字段，I2 申请信息真实数据）
   const reasonText = REFUND_REASON_TO_I18N_KEY[refund.reason]
     ? t(REFUND_REASON_TO_I18N_KEY[refund.reason])
     : refund.reason;
-  // I1 售后类型：reason 启发式推断（退货退款 vs 仅退款，TODO 后端 refundType 字段）
-  const refundTypeLabelKey = RETURNABLE_REASONS.has(refund.reason)
+  // I1 售后类型 + S1 状态色块：reason 启发式推断退货退款（TODO 后端 refundType 字段）
+  const isReturnRefund = RETURNABLE_REASONS.has(refund.reason);
+  const refundTypeLabelKey = isReturnRefund
     ? 'afterSales.types.returnRefund'
     : 'afterSales.types.refundOnly';
   const applyTimeDisplay = formatDate(
@@ -161,6 +135,78 @@ export default function AfterSalesDetailPage() {
     i18n.language === 'zh' ? 'zh-CN' : 'en-US',
   );
   const applyNoDisplay = `#${refund.id.slice(-8).toUpperCase()}`;
+
+  // S1 状态色块多态化（决策 1，6 种色态：审核中琥珀 / 骑手取件蓝 / 退款处理绿 / 退款完成绿 / 拒绝红 / 取消灰）
+  // Why: 接 refund.status + 退货退款启发式，按色态切 container/icon/text/文案
+  const statusAppearance: {
+    container: string;
+    iconColor: string;
+    textColor: string;
+    titleKey: string;
+    descKey: string;
+    stepIcon: string;
+  } = (() => {
+    switch (refund.status) {
+      case 'COMPLETED':
+        return {
+          container: colors.semantic['positive-container'],
+          iconColor: colors.semantic.positive,
+          textColor: colors.semantic.positive,
+          titleKey: 'afterSales.completedTitle',
+          descKey: 'afterSales.completedDesc',
+          stepIcon: 'verified',
+        };
+      case 'REJECTED':
+        return {
+          container: colors.semantic['error-container'],
+          iconColor: colors.semantic.error,
+          textColor: colors.semantic.error,
+          titleKey: 'afterSales.rejectedTitle',
+          descKey: 'afterSales.rejectedDesc',
+          stepIcon: 'cancel',
+        };
+      case 'CANCELLED':
+        return {
+          container: colors['surface-container-high'],
+          iconColor: colors['on-surface-variant'],
+          textColor: colors['on-surface-variant'],
+          titleKey: 'afterSales.cancelledTitle',
+          descKey: 'afterSales.cancelledDesc',
+          stepIcon: 'close',
+        };
+      case 'APPROVED':
+        // 退货退款 → 骑手取件中（蓝）；仅退款 → 退款处理中（绿，复用 processing 文案）
+        if (isReturnRefund) {
+          return {
+            container: colors.semantic['info-container'],
+            iconColor: colors.semantic.info,
+            textColor: colors.semantic.info,
+            titleKey: 'afterSales.pickupTitle',
+            descKey: 'afterSales.pickupDesc',
+            stepIcon: 'local_shipping',
+          };
+        }
+        return {
+          container: colors.semantic['positive-container'],
+          iconColor: colors.semantic.positive,
+          textColor: colors.semantic.positive,
+          titleKey: 'afterSales.processing',
+          descKey: 'afterSales.processingDesc',
+          stepIcon: 'payments',
+        };
+      case 'PENDING':
+      default:
+        // 审核中：保留琥珀色对（已豁免，#f59e0b/#b45309）
+        return {
+          container: colors.semantic['warning-container'],
+          iconColor: REFUND_STATUS_ICON,
+          textColor: REFUND_STATUS_TEXT,
+          titleKey: 'afterSales.reviewingTitle',
+          descKey: 'afterSales.reviewingDesc',
+          stepIcon: 'visibility',
+        };
+    }
+  })();
 
   // TODO(长期): 时间轴从 useAfterSalesDetail 拿真实数据
   const steps = [
@@ -204,18 +250,18 @@ export default function AfterSalesDetailPage() {
         showsVerticalScrollIndicator={false}
       >
         {/* 状态色块 */}
-        <View style={[styles.statusBlock, { backgroundColor: colors.semantic['warning-container'] }, shadowPresets.sm]}>
+        <View style={[styles.statusBlock, { backgroundColor: statusAppearance.container }, shadowPresets.sm]}>
           <View style={styles.statusIconWrap}>
-            <View style={[styles.statusIcon, { backgroundColor: REFUND_STATUS_ICON }]}>
-              <Icon symbol={STEP_ICON[stepKey]} size={22} color={colors['on-primary']} />
+            <View style={[styles.statusIcon, { backgroundColor: statusAppearance.iconColor }]}>
+              <Icon symbol={statusAppearance.stepIcon} size={22} color={colors['on-primary']} />
             </View>
           </View>
           <View style={styles.statusTextBox}>
-            <Text style={[styles.statusText, { color: REFUND_STATUS_TEXT }]} accessibilityRole="header">
-              {t('afterSales.processing')}
+            <Text style={[styles.statusText, { color: statusAppearance.textColor }]} accessibilityRole="header">
+              {t(statusAppearance.titleKey)}
             </Text>
-            <Text style={[styles.statusDesc, { color: REFUND_STATUS_TEXT, opacity: 0.7 }]}>
-              {t('afterSales.processingDesc')}
+            <Text style={[styles.statusDesc, { color: statusAppearance.textColor, opacity: 0.7 }]}>
+              {t(statusAppearance.descKey)}
             </Text>
           </View>
         </View>
