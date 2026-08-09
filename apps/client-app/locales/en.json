@@ -44,7 +44,8 @@
       "daysAgo": "{{count}} days ago",
       "weeksAgo": "{{count}} weeks ago",
       "monthsAgo": "{{count}} months ago"
-    }
+    },
+    "contactSeller": "Contact seller"
   },
   "splash": {
     "welcome": "Welcome"
@@ -171,7 +172,8 @@
     "sortPopular": "Popular",
     "sortDiscount": "Discount",
     "sortPrice": "Price",
-    "chipA11y": "Category: {{name}}"
+    "chipA11y": "Category: {{name}}",
+    "recommendForYou": "Recommended for you"
   },
   "tabs": {
     "home": "Home",
@@ -212,7 +214,9 @@
       "increaseQty": "Increase quantity",
       "deleteItem": "Delete item",
       "itemCount": "Cart with {{count}} items"
-    }
+    },
+    "quantity": "Quantity",
+    "removed": "Item removed from cart"
   },
   "product": {
     "localBestsellers": "Local Bestsellers",
@@ -261,7 +265,14 @@
     "quantity": "Quantity",
     "noReviews": "No reviews yet",
     "noReviewsDesc": "Be the first to review",
-    "viewAllReviews": "View all {{count}} reviews"
+    "viewAllReviews": "View all {{count}} reviews",
+    "addToCartFailed": "Failed to add to cart",
+    "addedToCart": "Added to cart",
+    "addedToFavorites": "Added to favorites",
+    "removedFromFavorites": "Removed from favorites",
+    "reviewAfterPurchase": "Review after purchase",
+    "noProducts": "No products",
+    "noProductsDesc": "No items match this filter"
   },
   "order": {
     "status": {
@@ -377,7 +388,8 @@
     "statusBadgeA11y": "Status: {{status}}",
     "cardHeaderA11y": "Order {{orderNo}}, status {{status}}",
     "viewOrderA11y": "View order {{orderNo}} details",
-    "tabWithCount": "{{label}}, {{count}}"
+    "tabWithCount": "{{label}}, {{count}}",
+    "cancelled": "Order cancelled"
   },
   "tracking": {
     "title": "Order Tracking",
@@ -387,7 +399,9 @@
     "liveTracking": "Live tracking",
     "minAway": "{{count}} min away",
     "arrivingNow": "Arriving now",
-    "scaleBar": "500 m"
+    "scaleBar": "500 m",
+    "unknownAddress": "Unknown address",
+    "unknownRecipient": "Unknown recipient"
   },
   "address": {
     "list": "Shipping addresses",
@@ -408,7 +422,8 @@
     "removeConfirm": "Remove \"{{name}}\" from saved addresses?",
     "removeAction": "Delete",
     "removed": "Address deleted",
-    "saved": "Address saved"
+    "saved": "Address saved",
+    "deleted": "Address deleted"
   },
   "profile": {
     "title": "My Account",
@@ -441,7 +456,8 @@
     "history": "History",
     "becomeSeller": "Seller",
     "scan": "Scan",
-    "pointsUnit": "Points"
+    "pointsUnit": "Points",
+    "featureComingSoon": "Feature coming soon"
   },
   "settings": {
     "title": "Settings",
@@ -545,7 +561,8 @@
     "secure": "Secure Checkout",
     "confirmAndPay": "CONFIRM & PAY ${{amount}}",
     "customerService": "Customer Service",
-    "orderFailed": "Failed to place order. Please try again."
+    "orderFailed": "Failed to place order. Please try again.",
+    "orderPlaced": "Order placed successfully"
   },
   "result": {
     "title": "Payment Success",
@@ -564,7 +581,8 @@
     "selectedTitle": "Selected {{count}}",
     "countHint": "{{count}} item(s) in your favorites",
     "longPressHint": "Long-press to manage",
-    "goBrowse": "Browse Products"
+    "goBrowse": "Browse Products",
+    "removed": "Removed from favorites"
   },
   "afterSales": {
     "applyTitle": "Request after-sales",
@@ -621,7 +639,8 @@
       "completedDesc": "Refund has been issued"
     },
     "mockReason": "Product quality issue",
-    "mockProduct": "Fresh Red Fuji Apple"
+    "mockProduct": "Fresh Red Fuji Apple",
+    "cancelNotSupported": "Cancellation is not supported at this stage"
   },
   "review": {
     "title": "Write a review",
@@ -646,7 +665,8 @@
       "goodValue": "Good value",
       "fresh": "Fresh",
       "repurchase": "Repurchase"
-    }
+    },
+    "submitFailed": "Failed to submit review"
   },
   "profileEdit": {
     "title": "Edit profile",

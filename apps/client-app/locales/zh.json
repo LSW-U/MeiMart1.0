@@ -44,7 +44,8 @@
       "daysAgo": "{{count}} 天前",
       "weeksAgo": "{{count}} 周前",
       "monthsAgo": "{{count}} 个月前"
-    }
+    },
+    "contactSeller": "联系商家"
   },
   "splash": {
     "welcome": "欢迎"
@@ -171,7 +172,8 @@
     "sortPopular": "热门",
     "sortDiscount": "优惠",
     "sortPrice": "价格",
-    "chipA11y": "分类: {{name}}"
+    "chipA11y": "分类: {{name}}",
+    "recommendForYou": "为你推荐"
   },
   "tabs": {
     "home": "首页",
@@ -212,7 +214,9 @@
       "increaseQty": "增加数量",
       "deleteItem": "删除商品",
       "itemCount": "购物车 {{count}} 件商品"
-    }
+    },
+    "quantity": "数量",
+    "removed": "已移除商品"
   },
   "product": {
     "localBestsellers": "本地热销",
@@ -261,7 +265,14 @@
     "quantity": "数量",
     "noReviews": "暂无评价",
     "noReviewsDesc": "购买后发表第一条评价",
-    "viewAllReviews": "查看全部 {{count}} 条评价"
+    "viewAllReviews": "查看全部 {{count}} 条评价",
+    "addToCartFailed": "加入购物车失败",
+    "addedToCart": "已加入购物车",
+    "addedToFavorites": "已添加到收藏",
+    "removedFromFavorites": "已取消收藏",
+    "reviewAfterPurchase": "购买后评价",
+    "noProducts": "暂无商品",
+    "noProductsDesc": "没有符合条件的商品"
   },
   "order": {
     "status": {
@@ -377,7 +388,8 @@
     "statusBadgeA11y": "状态: {{status}}",
     "cardHeaderA11y": "订单 {{orderNo}},状态 {{status}}",
     "viewOrderA11y": "查看订单 {{orderNo}} 详情",
-    "tabWithCount": "{{label}},{{count}}"
+    "tabWithCount": "{{label}},{{count}}",
+    "cancelled": "订单已取消"
   },
   "tracking": {
     "title": "订单追踪",
@@ -387,7 +399,9 @@
     "liveTracking": "实时追踪",
     "minAway": "{{count}} 分钟后到达",
     "arrivingNow": "即将到达",
-    "scaleBar": "500 米"
+    "scaleBar": "500 米",
+    "unknownAddress": "地址未知",
+    "unknownRecipient": "收件人未知"
   },
   "address": {
     "list": "收货地址",
@@ -408,7 +422,8 @@
     "removeConfirm": "确认从已保存地址中移除\"{{name}}\"？",
     "removeAction": "删除",
     "removed": "地址已删除",
-    "saved": "地址已保存"
+    "saved": "地址已保存",
+    "deleted": "地址已删除"
   },
   "profile": {
     "title": "我的账户",
@@ -441,7 +456,8 @@
     "history": "浏览历史",
     "becomeSeller": "成为商家",
     "scan": "扫码",
-    "pointsUnit": "积分"
+    "pointsUnit": "积分",
+    "featureComingSoon": "功能即将上线"
   },
   "settings": {
     "title": "设置",
@@ -545,7 +561,8 @@
     "secure": "安全支付",
     "confirmAndPay": "确认并支付 ${{amount}}",
     "customerService": "客服",
-    "orderFailed": "下单失败，请重试"
+    "orderFailed": "下单失败，请重试",
+    "orderPlaced": "下单成功"
   },
   "result": {
     "title": "支付成功",
@@ -564,7 +581,8 @@
     "selectedTitle": "已选 {{count}}",
     "countHint": "共 {{count}} 件收藏",
     "longPressHint": "长按管理",
-    "goBrowse": "去逛逛"
+    "goBrowse": "去逛逛",
+    "removed": "已移除收藏"
   },
   "afterSales": {
     "applyTitle": "申请售后",
@@ -621,7 +639,8 @@
       "completedDesc": "退款已原路返回"
     },
     "mockReason": "商品质量问题",
-    "mockProduct": "新鲜红富士苹果"
+    "mockProduct": "新鲜红富士苹果",
+    "cancelNotSupported": "当前阶段不支持取消"
   },
   "review": {
     "title": "发表评价",
@@ -646,7 +665,8 @@
       "goodValue": "性价比",
       "fresh": "新鲜",
       "repurchase": "会回购"
-    }
+    },
+    "submitFailed": "提交评价失败"
   },
   "profileEdit": {
     "title": "编辑资料",

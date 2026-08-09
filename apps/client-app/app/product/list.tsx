@@ -99,8 +99,8 @@ export default function ProductListPage() {
         <StatusBarConfig />
         <Header title={headerTitle} />
         <EmptyState
-          title={t('products.noProducts', { defaultValue: 'No products' })}
-          description={t('products.noProductsDesc', {
+          title={t('product.noProducts', { defaultValue: 'No products' })}
+          description={t('product.noProductsDesc', {
             defaultValue: 'No items match this filter',
           })}
           icon="package-variant"

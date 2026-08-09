@@ -44,7 +44,8 @@
       "daysAgo": "[TET] {{count}} days ago",
       "weeksAgo": "[TET] {{count}} weeks ago",
       "monthsAgo": "[TET] {{count}} months ago"
-    }
+    },
+    "contactSeller": "[TET] Contact seller"
   },
   "splash": {
     "welcome": "[TET] Welcome"
@@ -129,7 +130,8 @@
     "sortPopular": "[TET] Popular",
     "sortDiscount": "[TET] Discount",
     "sortPrice": "[TET] Price",
-    "chipA11y": "[TET] Category: {{name}}"
+    "chipA11y": "[TET] Category: {{name}}",
+    "recommendForYou": "[TET] Recommended for you"
   },
   "tabs": {
     "home": "[TET] Home",
@@ -170,7 +172,9 @@
       "increaseQty": "[TET] Increase quantity",
       "deleteItem": "[TET] Delete item",
       "itemCount": "[TET] Cart with {{count}} items"
-    }
+    },
+    "quantity": "[TET] Quantity",
+    "removed": "[TET] Item removed from cart"
   },
   "product": {
     "localBestsellers": "[TET] Local Bestsellers",
@@ -219,7 +223,14 @@
     "quantity": "[TET] Quantity",
     "noReviews": "[TET] No reviews yet",
     "noReviewsDesc": "[TET] Be the first to review",
-    "viewAllReviews": "[TET] View all {{count}} reviews"
+    "viewAllReviews": "[TET] View all {{count}} reviews",
+    "addToCartFailed": "[TET] Failed to add to cart",
+    "addedToCart": "[TET] Added to cart",
+    "addedToFavorites": "[TET] Added to favorites",
+    "removedFromFavorites": "[TET] Removed from favorites",
+    "reviewAfterPurchase": "[TET] Review after purchase",
+    "noProducts": "[TET] No products",
+    "noProductsDesc": "[TET] No items match this filter"
   },
   "order": {
     "status": {
@@ -335,7 +346,8 @@
     "statusBadgeA11y": "[TET] Status: {{status}}",
     "cardHeaderA11y": "[TET] Order {{orderNo}}, status {{status}}",
     "viewOrderA11y": "[TET] View order {{orderNo}} details",
-    "tabWithCount": "[TET] {{label}}, {{count}}"
+    "tabWithCount": "[TET] {{label}}, {{count}}",
+    "cancelled": "[TET] Order cancelled"
   },
   "tracking": {
     "title": "[TET] Order Tracking",
@@ -345,7 +357,9 @@
     "liveTracking": "[TET] Live tracking",
     "minAway": "[TET] {{count}} min away",
     "arrivingNow": "[TET] Arriving now",
-    "scaleBar": "[TET] 500 m"
+    "scaleBar": "[TET] 500 m",
+    "unknownAddress": "[TET] Unknown address",
+    "unknownRecipient": "[TET] Unknown recipient"
   },
   "address": {
     "list": "[TET] Shipping addresses",
@@ -361,7 +375,8 @@
     "setDefault": "[TET] Set as default",
     "pickOnMap": "[TET] Pick on map",
     "empty": "[TET] No addresses",
-    "delete": "[TET] Delete address"
+    "delete": "[TET] Delete address",
+    "deleted": "[TET] Address deleted"
   },
   "profile": {
     "title": "[TET] My Account",
@@ -394,7 +409,8 @@
     "history": "[TET] History",
     "becomeSeller": "[TET] Seller",
     "scan": "[TET] Scan",
-    "pointsUnit": "[TET] Points"
+    "pointsUnit": "[TET] Points",
+    "featureComingSoon": "[TET] Feature coming soon"
   },
   "settings": {
     "title": "[TET] Settings",
@@ -498,7 +514,8 @@
     "secure": "[TET] Secure Checkout",
     "confirmAndPay": "[TET] CONFIRM & PAY ${{amount}}",
     "customerService": "[TET] Customer Service",
-    "orderFailed": "La han pedidu la konsege."
+    "orderFailed": "La han pedidu la konsege.",
+    "orderPlaced": "[TET] Order placed successfully"
   },
   "result": {
     "title": "[TET] Payment Success",
@@ -517,7 +534,8 @@
     "selectedTitle": "[TET] Selected {{count}}",
     "countHint": "[TET] {{count}} item(s) in your favorites",
     "longPressHint": "[TET] Long-press to manage",
-    "goBrowse": "[TET] Browse Products"
+    "goBrowse": "[TET] Browse Products",
+    "removed": "[TET] Removed from favorites"
   },
   "afterSales": {
     "applyTitle": "[TET] Request after-sales",
@@ -574,7 +592,8 @@
       "completedDesc": "[TET] Refund has been issued"
     },
     "mockReason": "[TET] Product quality issue",
-    "mockProduct": "[TET] Fresh Red Fuji Apple"
+    "mockProduct": "[TET] Fresh Red Fuji Apple",
+    "cancelNotSupported": "[TET] Cancellation is not supported at this stage"
   },
   "review": {
     "title": "[TET] Write a review",
@@ -599,7 +618,8 @@
       "goodValue": "[TET] Good value",
       "fresh": "[TET] Fresh",
       "repurchase": "[TET] Repurchase"
-    }
+    },
+    "submitFailed": "[TET] Failed to submit review"
   },
   "profileEdit": {
     "title": "[TET] Edit profile",
