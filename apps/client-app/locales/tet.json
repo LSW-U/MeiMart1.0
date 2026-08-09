@@ -580,7 +580,11 @@
       "damaged": "[TET] Item damaged",
       "wrongItem": "[TET] Wrong item",
       "shortage": "[TET] Short / Missing items",
-      "quality": "[TET] Quality issue (odor / foreign object)"
+      "quality": "[TET] Quality issue (odor / foreign object)",
+      "outOfStock": "[TET] Out of stock",
+      "deliveryTooSlow": "[TET] Delivery too slow",
+      "changeMind": "[TET] Changed my mind",
+      "other": "[TET] Other reason"
     },
     "timeline": {
       "submitted": "[TET] Request submitted",

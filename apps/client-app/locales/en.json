@@ -627,7 +627,11 @@
       "damaged": "Item damaged",
       "wrongItem": "Wrong item",
       "shortage": "Short / Missing items",
-      "quality": "Quality issue (odor / foreign object)"
+      "quality": "Quality issue (odor / foreign object)",
+      "outOfStock": "Out of stock",
+      "deliveryTooSlow": "Delivery too slow",
+      "changeMind": "Changed my mind",
+      "other": "Other reason"
     },
     "timeline": {
       "submitted": "Request submitted",

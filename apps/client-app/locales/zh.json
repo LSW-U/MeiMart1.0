@@ -627,7 +627,11 @@
       "damaged": "商品损坏",
       "wrongItem": "发错商品",
       "shortage": "少件 / 缺件",
-      "quality": "质量问题（异味 / 异物）"
+      "quality": "质量问题（异味 / 异物）",
+      "outOfStock": "缺货",
+      "deliveryTooSlow": "配送太慢",
+      "changeMind": "不想要了",
+      "other": "其他原因"
     },
     "timeline": {
       "submitted": "申请已提交",

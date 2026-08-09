@@ -63,16 +63,26 @@ function deriveRefundStepKey(status: string): StepKey {
 
 /**
  * reason enum → 前端 i18n key 反向映射（后端返回 enum，详情页展示要本地化）
- * 5 个常见 enum 复用 P13 afterSales.reasons.* key，缺的 3 个（OUT_OF_STOCK/DELIVERY_TOO_SLOW/CUSTOMER_CHANGE_MIND/OTHER）fallback 原文 enum
- * TODO(Commit 3): 补全 4 key + 完整映射表（I2 申请信息真实数据收口）
+ * 8 enum 全映射 afterSales.reasons.* key（Commit 3 补全 4 key + 完整映射）
  */
-const REFUND_REASON_TO_I18N_KEY: Partial<Record<string, string>> = {
+const REFUND_REASON_TO_I18N_KEY: Record<string, string> = {
   EXPIRED: 'afterSales.reasons.expired',
   QUALITY_ISSUE: 'afterSales.reasons.quality',
   WRONG_ITEM: 'afterSales.reasons.wrongItem',
   SHORTAGE: 'afterSales.reasons.shortage',
   DAMAGED: 'afterSales.reasons.damaged',
+  OUT_OF_STOCK: 'afterSales.reasons.outOfStock',
+  DELIVERY_TOO_SLOW: 'afterSales.reasons.deliveryTooSlow',
+  CUSTOMER_CHANGE_MIND: 'afterSales.reasons.changeMind',
+  OTHER: 'afterSales.reasons.other',
 };
+
+/**
+ * 退货退款 reason 启发式（I1 售后类型展示）
+ * 商品类问题（发错/质量/损坏）→ 退货退款（骑手上门收回）；其余 → 仅退款
+ * TODO: 后端 Refund model 补 refundType 字段后改真实（P13 提交传 + RefundView 返回）
+ */
+const RETURNABLE_REASONS = new Set(['WRONG_ITEM', 'QUALITY_ISSUE', 'DAMAGED']);
 
 export default function AfterSalesDetailPage() {
   const handleBack = useSafeBack();
@@ -144,8 +154,12 @@ export default function AfterSalesDetailPage() {
 
   // reason 反向映射 + 申请号/申请时间（接 refund 真实字段，I2 申请信息真实数据）
   const reasonText = REFUND_REASON_TO_I18N_KEY[refund.reason]
-    ? t(REFUND_REASON_TO_I18N_KEY[refund.reason]!)
+    ? t(REFUND_REASON_TO_I18N_KEY[refund.reason])
     : refund.reason;
+  // I1 售后类型：reason 启发式推断（退货退款 vs 仅退款，TODO 后端 refundType 字段）
+  const refundTypeLabelKey = RETURNABLE_REASONS.has(refund.reason)
+    ? 'afterSales.types.returnRefund'
+    : 'afterSales.types.refundOnly';
   const applyTimeDisplay = formatDate(
     refund.createdAt,
     i18n.language === 'zh' ? 'zh-CN' : 'en-US',
@@ -321,6 +335,13 @@ export default function AfterSalesDetailPage() {
           <InfoRow
             label={t('afterSales.applyNo')}
             value={applyNoDisplay}
+            subColor={colors['on-surface-variant']}
+            textColor={colors['on-surface']}
+          />
+          <View style={[styles.rowDivider, { backgroundColor: colors['outline-variant'] }]} />
+          <InfoRow
+            label={t('afterSales.typeLabel')}
+            value={t(refundTypeLabelKey)}
             subColor={colors['on-surface-variant']}
             textColor={colors['on-surface']}
           />
