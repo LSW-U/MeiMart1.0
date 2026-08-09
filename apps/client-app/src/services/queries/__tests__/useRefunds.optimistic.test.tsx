@@ -13,13 +13,20 @@ jest.mock('@/services/refunds', () => ({
 const mockRefund: RefundRaw = {
   id: 'r1',
   orderId: 'o1',
+  userId: 'u1',
   amount: 1000,
   reason: 'EXPIRED',
   reasonDetail: 'spoiled',
   status: 'PENDING',
+  transactionId: null,
   refundMethod: 'COD',
+  reviewedBy: null,
+  reviewedAt: null,
+  reviewNote: null,
+  completedAt: null,
   createdAt: '2026-08-10T00:00:00Z',
   updatedAt: '2026-08-10T00:00:00Z',
+  items: [],
 };
 
 describe('useCreateRefund', () => {

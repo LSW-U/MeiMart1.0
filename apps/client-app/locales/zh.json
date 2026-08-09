@@ -641,7 +641,8 @@
     },
     "mockReason": "商品质量问题",
     "mockProduct": "新鲜红富士苹果",
-    "cancelNotSupported": "当前阶段不支持取消"
+    "cancelNotSupported": "当前阶段不支持取消",
+    "cancelFailed": "取消失败"
   },
   "review": {
     "title": "发表评价",
@@ -761,6 +762,7 @@
   "errors": {
     "generic": "加载失败，请稍后再试",
     "orderNotFound": "订单未找到",
+    "refundNotFound": "退款单未找到",
     "network": "网络异常，请检查连接",
     "cart": "加载购物车失败",
     "orders": "加载订单失败",

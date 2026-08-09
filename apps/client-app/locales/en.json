@@ -641,7 +641,8 @@
     },
     "mockReason": "Product quality issue",
     "mockProduct": "Fresh Red Fuji Apple",
-    "cancelNotSupported": "Cancellation is not supported at this stage"
+    "cancelNotSupported": "Cancellation is not supported at this stage",
+    "cancelFailed": "Cancel failed"
   },
   "review": {
     "title": "Write a review",
@@ -761,6 +762,7 @@
   "errors": {
     "generic": "Failed to load, please retry",
     "orderNotFound": "Order not found",
+    "refundNotFound": "Refund not found",
     "network": "Network error, check connection",
     "cart": "Failed to load cart",
     "orders": "Failed to load orders",

@@ -24,9 +24,10 @@ import { Icon } from '@/components/ui/Icon';
 import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useOrder } from '@/services/queries/useOrders';
+import { useCancelRefund, useRefundDetail } from '@/services/queries/useRefunds';
 import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
-import type { OrderStatus } from '@/types';
+import { formatDate } from '@/utils/format';
 
 // 售后处理中状态色（琥珀）：HTML 用 amber-500/700，与 semantic.warning（橙）色阶不同，
 // 单点使用不立项 token，保留 hex + 豁免尾注（见 check-hardcoded-colors.sh）。
@@ -52,21 +53,44 @@ const STEP_ICON: Record<StepKey, string> = {
   cancelled: 'close',
 };
 
-// Why: 根据 order.status 推导售后单当前阶段（短期，长期接 useAfterSalesDetail 替换）
-function deriveStepKey(status: OrderStatus): StepKey {
-  if (status === 'COMPLETED' || status === 'DELIVERED_PAID') return 'reviewing';
+// Why: 接 refund.status 推导售后单阶段（PENDING/APPROVED/COMPLETED/REJECTED/CANCELLED，后端 refund.service 状态机）
+function deriveRefundStepKey(status: string): StepKey {
+  if (status === 'COMPLETED') return 'completed';
+  if (status === 'REJECTED') return 'rejected';
   if (status === 'CANCELLED') return 'cancelled';
-  return 'submitted';
+  if (status === 'APPROVED') return 'approved';
+  return 'submitted'; // PENDING
 }
+
+/**
+ * reason enum → 前端 i18n key 反向映射（后端返回 enum，详情页展示要本地化）
+ * 5 个常见 enum 复用 P13 afterSales.reasons.* key，缺的 3 个（OUT_OF_STOCK/DELIVERY_TOO_SLOW/CUSTOMER_CHANGE_MIND/OTHER）fallback 原文 enum
+ * TODO(Commit 3): 补全 4 key + 完整映射表（I2 申请信息真实数据收口）
+ */
+const REFUND_REASON_TO_I18N_KEY: Partial<Record<string, string>> = {
+  EXPIRED: 'afterSales.reasons.expired',
+  QUALITY_ISSUE: 'afterSales.reasons.quality',
+  WRONG_ITEM: 'afterSales.reasons.wrongItem',
+  SHORTAGE: 'afterSales.reasons.shortage',
+  DAMAGED: 'afterSales.reasons.damaged',
+};
 
 export default function AfterSalesDetailPage() {
   const handleBack = useSafeBack();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const localize = useLocalizer();
-  // Why: 短期 id 语义 = orderId（apply 提交时传入），长期改为 afterSalesId
+  // Why: id 语义 = refund.id（P13 提交后传 refund.id 跳 detail，after-sales-apply.tsx:165）
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: order, isLoading, isError, refetch } = useOrder(id);
+  const {
+    data: refund,
+    isLoading,
+    isError,
+    refetch,
+  } = useRefundDetail(id);
+  // 副：拿商品图片（refund.items 无 image 字段）+ 整单退款时 fallback 商品（refund.items 整单退款为空）
+  const { data: order } = useOrder(refund?.orderId);
+  const cancelRefund = useCancelRefund();
 
   if (isLoading) {
     return (
@@ -85,7 +109,7 @@ export default function AfterSalesDetailPage() {
     );
   }
 
-  if (isError || !order) {
+  if (isError || !refund) {
     return (
       <SafeAreaWrapper
         edges={['top', 'bottom']}
@@ -98,18 +122,36 @@ export default function AfterSalesDetailPage() {
           onBackPress={handleBack}
         />
         <ErrorState
-          message={t('errors.orderNotFound', { defaultValue: 'Order not found' })}
+          message={t('errors.refundNotFound', { defaultValue: 'Refund not found' })}
           onRetry={() => refetch()}
         />
       </SafeAreaWrapper>
     );
   }
 
-  const item = order.items[0];
-  const product = item?.product;
-  const quantity = item?.quantity ?? 1;
-  const refundAmount = order.totalPrice;
-  const stepKey = deriveStepKey(order.status);
+  // 商品 fallback：refund.items[0]（部分退款，productName 多语言）→ order.items 匹配（图片）→ order.items[0]（整单退款 fallback）
+  // Why: 整单退款时 refund.items 为空数组，需 fallback order.items 拿商品；部分退款时 refund.items 无 image，从 order 匹配
+  const refundItem = refund.items[0];
+  const matchedOrderItem = refundItem
+    ? order?.items.find((oi) => oi.id === refundItem.orderItemId)
+    : undefined;
+  const orderItem = matchedOrderItem ?? order?.items[0];
+  const productNameSource = refundItem?.productName ?? orderItem?.product.name;
+  const quantity = refundItem?.refundQty ?? orderItem?.quantity ?? 1;
+  const productImage = orderItem?.product.image;
+  const productPrice = refundItem?.unitPrice ?? orderItem?.product.price ?? 0;
+  const refundAmount = refund.amount;
+  const stepKey = deriveRefundStepKey(refund.status);
+
+  // reason 反向映射 + 申请号/申请时间（接 refund 真实字段，I2 申请信息真实数据）
+  const reasonText = REFUND_REASON_TO_I18N_KEY[refund.reason]
+    ? t(REFUND_REASON_TO_I18N_KEY[refund.reason]!)
+    : refund.reason;
+  const applyTimeDisplay = formatDate(
+    refund.createdAt,
+    i18n.language === 'zh' ? 'zh-CN' : 'en-US',
+  );
+  const applyNoDisplay = `#${refund.id.slice(-8).toUpperCase()}`;
 
   // TODO(长期): 时间轴从 useAfterSalesDetail 拿真实数据
   const steps = [
@@ -188,9 +230,9 @@ export default function AfterSalesDetailPage() {
           </View>
           <View style={styles.productRow}>
             <View style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}>
-              {product?.image && (
+              {productImage && (
                 <Image
-                  source={{ uri: product.image }}
+                  source={{ uri: productImage }}
                   style={styles.productImg}
                   resizeMode="cover"
                 />
@@ -198,13 +240,13 @@ export default function AfterSalesDetailPage() {
             </View>
             <View style={styles.productTextBox}>
               <Text style={[styles.productName, { color: colors['on-surface'] }]} numberOfLines={2}>
-                {product ? localize(product.name) : t('afterSales.mockProduct')}
+                {productNameSource ? localize(productNameSource) : t('afterSales.mockProduct')}
               </Text>
               <View style={styles.productMetaRow}>
                 <Text style={[styles.productMeta, { color: colors['on-surface-variant'] }]}>
                   × {quantity}
                 </Text>
-                <PriceText value={product?.price ?? 0} size="md" />
+                <PriceText value={productPrice} size="md" />
               </View>
             </View>
           </View>
@@ -273,21 +315,21 @@ export default function AfterSalesDetailPage() {
 
           <InfoRow
             label={t('afterSales.applyNo')}
-            value="AS202606130001"
+            value={applyNoDisplay}
             subColor={colors['on-surface-variant']}
             textColor={colors['on-surface']}
           />
           <View style={[styles.rowDivider, { backgroundColor: colors['outline-variant'] }]} />
           <InfoRow
             label={t('afterSales.reason')}
-            value={t('afterSales.mockReason')}
+            value={reasonText}
             subColor={colors['on-surface-variant']}
             textColor={colors['on-surface']}
           />
           <View style={[styles.rowDivider, { backgroundColor: colors['outline-variant'] }]} />
           <InfoRow
             label={t('afterSales.applyTime')}
-            value="2026-06-13 10:00"
+            value={applyTimeDisplay}
             subColor={colors['on-surface-variant']}
             textColor={colors['on-surface']}
           />
@@ -322,15 +364,18 @@ export default function AfterSalesDetailPage() {
           </Text>
         </Pressable>
 
-        {/* TODO(长期): 后端售后接口支持取消时，onPress 改为调 cancelAfterSales(afterSalesId) */}
+        {/* 取消申请：调 useCancelRefund（后端 POST /client/refunds/:id/cancel，仅 PENDING 可取消，其他阶段 400） */}
         <Pressable
-          onPress={() =>
-            toast.info(
-              t('afterSales.cancelNotSupported', {
-                defaultValue: 'Cancel after-sales is not supported yet',
-              }),
-            )
-          }
+          onPress={() => {
+            cancelRefund.mutateAsync(refund.id).catch((err: unknown) => {
+              // 原因：onError 已 rollback 乐观，这里只展示错误（后端 400 = 当前阶段不可取消）
+              toast.error(
+                err instanceof Error
+                  ? err.message
+                  : t('afterSales.cancelFailed', { defaultValue: 'Cancel failed' }),
+              );
+            });
+          }}
           style={({ pressed }) => [
             styles.cancelBtn,
             { backgroundColor: colors.primary },
