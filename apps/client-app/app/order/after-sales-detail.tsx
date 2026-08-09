@@ -229,29 +229,42 @@ export default function AfterSalesDetailPage() {
     }
   })();
 
-  // TODO(长期): 时间轴从 useAfterSalesDetail 拿真实数据
-  const steps = [
-    {
-      status: t('afterSales.timeline.submitted'),
-      description: t('afterSales.timeline.submittedDesc'),
-      timestamp: '2026-06-13 10:00',
-    },
-    {
-      status: t('afterSales.timeline.reviewing'),
-      description: t('afterSales.timeline.reviewingDesc'),
-      timestamp: '2026-06-13 14:00',
-    },
-    {
-      status: t('afterSales.timeline.approved'),
-      description: t('afterSales.timeline.approvedDesc'),
-      timestamp: '2026-06-14 09:00',
-    },
-    {
-      status: t('afterSales.timeline.completed'),
-      description: t('afterSales.timeline.completedDesc'),
-      timestamp: '2026-06-14 11:00',
-    },
-  ];
+  // T1/T2/T3 时间轴动态化（决策 2）：按售后类型 4/6 步 + 真实时间戳 + currentIndex 推导
+  const formatTs = (iso: string | null) =>
+    iso ? formatDate(iso, i18n.language === 'zh' ? 'zh-CN' : 'en-US') : '';
+  const steps = isReturnRefund
+    ? [
+        // 退货退款 6 步：submitted → approved → pickupArranging → picked → refundProcessing → completed
+        { status: t('afterSales.timeline.submitted'), description: t('afterSales.timeline.submittedDesc'), timestamp: formatTs(refund.createdAt) },
+        { status: t('afterSales.timeline.approved'), description: t('afterSales.timeline.approvedDesc'), timestamp: formatTs(refund.reviewedAt) },
+        { status: t('afterSales.timeline.pickupArranging'), description: t('afterSales.timeline.pickupArrangingDesc'), timestamp: '' },
+        { status: t('afterSales.timeline.picked'), description: t('afterSales.timeline.pickedDesc'), timestamp: '' },
+        { status: t('afterSales.timeline.refundProcessing'), description: t('afterSales.timeline.refundProcessingDesc'), timestamp: '' },
+        { status: t('afterSales.timeline.completed'), description: t('afterSales.timeline.completedDesc'), timestamp: formatTs(refund.completedAt) },
+      ]
+    : [
+        // 仅退款 4 步：submitted → approved → refundProcessing → completed
+        { status: t('afterSales.timeline.submitted'), description: t('afterSales.timeline.submittedDesc'), timestamp: formatTs(refund.createdAt) },
+        { status: t('afterSales.timeline.approved'), description: t('afterSales.timeline.approvedDesc'), timestamp: formatTs(refund.reviewedAt) },
+        { status: t('afterSales.timeline.refundProcessing'), description: t('afterSales.timeline.refundProcessingDesc'), timestamp: '' },
+        { status: t('afterSales.timeline.completed'), description: t('afterSales.timeline.completedDesc'), timestamp: formatTs(refund.completedAt) },
+      ];
+  // T2 currentIndex 推导（当前进行中的步骤索引）
+  const currentIndex = (() => {
+    switch (refund.status) {
+      case 'CANCELLED':
+        return 0; // 停在提交
+      case 'PENDING':
+      case 'REJECTED':
+        return 1; // 审核中 / 审核未通过（停在 approved 位置，色块已多态化区分）
+      case 'APPROVED':
+        return 2; // 退货退款→pickupArranging(2); 仅退款→refundProcessing(2)
+      case 'COMPLETED':
+        return steps.length - 1; // 最后一步（全完成）
+      default:
+        return 1;
+    }
+  })();
 
   return (
     <SafeAreaWrapper
@@ -362,7 +375,7 @@ export default function AfterSalesDetailPage() {
           </Text>
         </View>
 
-        {/* 进度时间轴卡片 - V1 视觉层次化（TODO Commit 8 接真实时间轴） */}
+        {/* 进度时间轴卡片 - T1/T2/T3 动态化（按售后类型 4/6 步 + currentIndex 推导） */}
         <View
           style={[
             styles.card,
@@ -379,7 +392,7 @@ export default function AfterSalesDetailPage() {
               {t('afterSales.progressLabel')}
             </Text>
           </View>
-          <TimelineStep steps={steps} currentIndex={2} />
+          <TimelineStep steps={steps} currentIndex={currentIndex} />
         </View>
 
         {/* 申请信息卡片 - V1 视觉层次化（TODO Commit 3 补售后类型字段） */}

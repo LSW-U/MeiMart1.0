@@ -604,6 +604,12 @@
       "reviewingDesc": "[TET] Seller is reviewing the request",
       "approved": "[TET] Approved",
       "approvedDesc": "[TET] Refund approved — processing",
+      "pickupArranging": "[TET] Rider picking up",
+      "pickupArrangingDesc": "[TET] Rider is coming to collect the item",
+      "picked": "[TET] Item picked up",
+      "pickedDesc": "[TET] Item collected, under confirmation",
+      "refundProcessing": "[TET] Refund processing",
+      "refundProcessingDesc": "[TET] Refund submitted to payment channel",
       "completed": "[TET] Refund completed",
       "completedDesc": "[TET] Refund has been issued"
     },

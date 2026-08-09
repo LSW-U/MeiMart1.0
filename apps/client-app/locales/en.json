@@ -651,6 +651,12 @@
       "reviewingDesc": "Seller is reviewing the request",
       "approved": "Approved",
       "approvedDesc": "Refund approved — processing",
+      "pickupArranging": "Rider picking up",
+      "pickupArrangingDesc": "Rider is coming to collect the item",
+      "picked": "Item picked up",
+      "pickedDesc": "Item collected, under confirmation",
+      "refundProcessing": "Refund processing",
+      "refundProcessingDesc": "Refund submitted to payment channel",
       "completed": "Refund completed",
       "completedDesc": "Refund has been issued"
     },

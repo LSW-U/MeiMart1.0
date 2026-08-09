@@ -651,6 +651,12 @@
       "reviewingDesc": "商家正在审核申请",
       "approved": "审核通过",
       "approvedDesc": "同意退款，处理中",
+      "pickupArranging": "骑手取件中",
+      "pickupArrangingDesc": "骑手即将上门收回商品",
+      "picked": "骑手已取件",
+      "pickedDesc": "商品已收回，确认中",
+      "refundProcessing": "退款处理中",
+      "refundProcessingDesc": "退款已提交至支付渠道",
       "completed": "退款完成",
       "completedDesc": "退款已原路返回"
     },
