@@ -20,7 +20,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_LOCALE = 'en'
-T_CALL_RE = re.compile(r"\bt\(\s*['\"`]([a-zA-Z0-9_.]+)['\"`]")
+# 字符类含 . : -（嵌套 key 的 . + i18next namespace 冒号语法 : + 含 - 的 key），预防未来 namespace 冒号 / dash 漏报
+T_CALL_RE = re.compile(r"\bt\(\s*['\"`]([a-zA-Z0-9_.:-]+)['\"`]")
 
 
 def key_exists(obj, key):

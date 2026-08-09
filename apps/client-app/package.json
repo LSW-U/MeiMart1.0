@@ -81,7 +81,8 @@
     "prepare": "husky",
     "lint": "expo lint",
     "test": "jest",
-    "check:i18n": "python3 scripts/check-i18n-keys.py"
+    "check:i18n": "python3 scripts/check-i18n-keys.py",
+    "check:a11y": "python3 scripts/check-a11y-static.py"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

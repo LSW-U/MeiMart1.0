@@ -1,1 +1,2 @@
+npm run check:i18n
 npx lint-staged
