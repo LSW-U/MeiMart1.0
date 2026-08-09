@@ -533,6 +533,8 @@
     "descLabel": "[TET] Issue description",
     "refundAmount": "[TET] Refund amount",
     "selectItemPrompt": "[TET] Please select at least one item",
+    "decreaseQty": "[TET] Decrease quantity",
+    "increaseQty": "[TET] Increase quantity",
     "progressLabel": "[TET] Processing progress",
     "applyInfo": "[TET] Request info",
     "processing": "[TET] Processing",
@@ -684,6 +686,7 @@
   },
   "errors": {
     "generic": "[TET] Failed to load, please retry",
+    "orderNotFound": "[TET] Order not found",
     "network": "[TET] Network error, check connection",
     "cart": "[TET] Failed to load cart",
     "orders": "[TET] Failed to load orders",

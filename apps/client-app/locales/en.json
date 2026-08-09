@@ -580,6 +580,8 @@
     "descLabel": "Issue description",
     "refundAmount": "Refund amount",
     "selectItemPrompt": "Please select at least one item",
+    "decreaseQty": "Decrease quantity",
+    "increaseQty": "Increase quantity",
     "progressLabel": "Processing progress",
     "applyInfo": "Request info",
     "processing": "Processing",
@@ -731,6 +733,7 @@
   },
   "errors": {
     "generic": "Failed to load, please retry",
+    "orderNotFound": "Order not found",
     "network": "Network error, check connection",
     "cart": "Failed to load cart",
     "orders": "Failed to load orders",
