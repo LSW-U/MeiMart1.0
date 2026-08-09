@@ -578,6 +578,12 @@
     "addPhotoA11y": "[TET] Add evidence photo",
     "contactLabel": "[TET] Contact",
     "refundMethod": "[TET] Original payment",
+    "refundMethodLabel": "[TET] Refund method",
+    "refundMethodCash": "[TET] Cash refund by rider",
+    "refundMethodOriginal": "[TET] Return to original payment",
+    "cashRefundPill": "[TET] Cash by rider",
+    "cashRefundNote": "[TET] Rider will refund cash at the agreed time",
+    "cashRefundDoneNote": "[TET] Rider delivered cash to your address at {{time}}",
     "cancelApply": "[TET] Cancel Apply",
     "refundNote": "[TET] Refund will be processed within 1-3 business days",
     "types": {
@@ -611,7 +617,9 @@
       "refundProcessing": "[TET] Refund processing",
       "refundProcessingDesc": "[TET] Refund submitted to payment channel",
       "completed": "[TET] Refund completed",
-      "completedDesc": "[TET] Refund has been issued"
+      "completedDesc": "[TET] Refund has been issued",
+      "cashDelivered": "[TET] Cash delivered",
+      "cashDeliveredDesc": "[TET] Rider has delivered ${{amount}} cash"
     },
     "mockReason": "[TET] Product quality issue",
     "mockProduct": "[TET] Fresh Red Fuji Apple",

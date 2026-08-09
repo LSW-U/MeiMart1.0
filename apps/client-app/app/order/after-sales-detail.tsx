@@ -151,6 +151,9 @@ export default function AfterSalesDetailPage() {
 
   // B1 底部栏状态化（决策 7）：仅 PENDING 可取消（后端 cancelRefund 仅 PENDING 允许，其他阶段 400）
   const canCancel = refund.status === 'PENDING';
+
+  // WM1-WM4 COD 退款区分（决策 9）：refundMethod === 'COD' 时骑手上门退现金（系统无钱包/余额基础设施）
+  const isCash = refund.refundMethod === 'COD';
   const applyTimeDisplay = formatDate(
     refund.createdAt,
     i18n.language === 'zh' ? 'zh-CN' : 'en-US',
@@ -240,14 +243,14 @@ export default function AfterSalesDetailPage() {
         { status: t('afterSales.timeline.pickupArranging'), description: t('afterSales.timeline.pickupArrangingDesc'), timestamp: '' },
         { status: t('afterSales.timeline.picked'), description: t('afterSales.timeline.pickedDesc'), timestamp: '' },
         { status: t('afterSales.timeline.refundProcessing'), description: t('afterSales.timeline.refundProcessingDesc'), timestamp: '' },
-        { status: t('afterSales.timeline.completed'), description: t('afterSales.timeline.completedDesc'), timestamp: formatTs(refund.completedAt) },
+        { status: t(isCash ? 'afterSales.timeline.cashDelivered' : 'afterSales.timeline.completed'), description: isCash ? t('afterSales.timeline.cashDeliveredDesc', { amount: refund.amount / 100 }) : t('afterSales.timeline.completedDesc'), timestamp: formatTs(refund.completedAt) },
       ]
     : [
         // 仅退款 4 步：submitted → approved → refundProcessing → completed
         { status: t('afterSales.timeline.submitted'), description: t('afterSales.timeline.submittedDesc'), timestamp: formatTs(refund.createdAt) },
         { status: t('afterSales.timeline.approved'), description: t('afterSales.timeline.approvedDesc'), timestamp: formatTs(refund.reviewedAt) },
         { status: t('afterSales.timeline.refundProcessing'), description: t('afterSales.timeline.refundProcessingDesc'), timestamp: '' },
-        { status: t('afterSales.timeline.completed'), description: t('afterSales.timeline.completedDesc'), timestamp: formatTs(refund.completedAt) },
+        { status: t(isCash ? 'afterSales.timeline.cashDelivered' : 'afterSales.timeline.completed'), description: isCash ? t('afterSales.timeline.cashDeliveredDesc', { amount: refund.amount / 100 }) : t('afterSales.timeline.completedDesc'), timestamp: formatTs(refund.completedAt) },
       ];
   // T2 currentIndex 推导（当前进行中的步骤索引）
   const currentIndex = (() => {
@@ -362,16 +365,34 @@ export default function AfterSalesDetailPage() {
           </View>
           <View style={styles.refundAmountRow}>
             <PriceText value={refundAmount} size="lg" />
-            <View style={[styles.refundPill, { backgroundColor: colors.semantic['positive-container'] }]}>
-              <Text style={[styles.refundPillText, { color: colors.semantic.positive }]}>
-                {t('afterSales.refundMethod', { defaultValue: 'Original payment' })}
+            {/* WM1 pill 按 refundMethod 切换：COD → 琥珀「骑手退还现金」/ 预付 → 绿「原路返回」 */}
+            <View
+              style={[
+                styles.refundPill,
+                {
+                  backgroundColor: isCash
+                    ? colors.semantic['warning-container']
+                    : colors.semantic['positive-container'],
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.refundPillText,
+                  { color: isCash ? REFUND_STATUS_TEXT : colors.semantic.positive },
+                ]}
+              >
+                {isCash ? t('afterSales.cashRefundPill') : t('afterSales.refundMethod')}
               </Text>
             </View>
           </View>
+          {/* WM2 说明按 refundMethod + status 切换：COD 完成 → 现金已送达 / COD 处理中 → 骑手上门退现金 / 预付 → 1-3 工作日 */}
           <Text style={[styles.refundNote, { color: colors['on-surface-variant'] }]}>
-            {t('afterSales.refundNote', {
-              defaultValue: 'Refund will be processed within 1-3 business days',
-            })}
+            {isCash
+              ? refund.status === 'COMPLETED'
+                ? t('afterSales.cashRefundDoneNote', { time: formatTs(refund.completedAt) })
+                : t('afterSales.cashRefundNote')
+              : t('afterSales.refundNote')}
           </Text>
         </View>
 
@@ -423,6 +444,14 @@ export default function AfterSalesDetailPage() {
           <InfoRow
             label={t('afterSales.typeLabel')}
             value={t(refundTypeLabelKey)}
+            subColor={colors['on-surface-variant']}
+            textColor={colors['on-surface']}
+          />
+          <View style={[styles.rowDivider, { backgroundColor: colors['outline-variant'] }]} />
+          {/* WM4 退款方式字段：COD → 骑手上门退现金 / 预付 → 原路返回 */}
+          <InfoRow
+            label={t('afterSales.refundMethodLabel')}
+            value={isCash ? t('afterSales.refundMethodCash') : t('afterSales.refundMethodOriginal')}
             subColor={colors['on-surface-variant']}
             textColor={colors['on-surface']}
           />

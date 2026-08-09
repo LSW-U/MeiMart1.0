@@ -625,6 +625,12 @@
     "addPhotoA11y": "添加凭证照片",
     "contactLabel": "联系方式",
     "refundMethod": "原支付方式",
+    "refundMethodLabel": "退款方式",
+    "refundMethodCash": "骑手上门退现金",
+    "refundMethodOriginal": "原路返回",
+    "cashRefundPill": "骑手退还现金",
+    "cashRefundNote": "骑手将于约定时间上门退还现金",
+    "cashRefundDoneNote": "骑手已于 {{time}} 将现金送达您的收货地址",
     "cancelApply": "取消申请",
     "refundNote": "退款将在 1-3 个工作日内原路返回",
     "types": {
@@ -658,7 +664,9 @@
       "refundProcessing": "退款处理中",
       "refundProcessingDesc": "退款已提交至支付渠道",
       "completed": "退款完成",
-      "completedDesc": "退款已原路返回"
+      "completedDesc": "退款已原路返回",
+      "cashDelivered": "现金已送达",
+      "cashDeliveredDesc": "骑手已将 ${{amount}} 现金送达"
     },
     "mockReason": "商品质量问题",
     "mockProduct": "新鲜红富士苹果",

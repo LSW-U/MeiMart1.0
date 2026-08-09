@@ -625,6 +625,12 @@
     "addPhotoA11y": "Add evidence photo",
     "contactLabel": "Contact",
     "refundMethod": "Original payment",
+    "refundMethodLabel": "Refund method",
+    "refundMethodCash": "Cash refund by rider",
+    "refundMethodOriginal": "Return to original payment",
+    "cashRefundPill": "Cash by rider",
+    "cashRefundNote": "Rider will refund cash at the agreed time",
+    "cashRefundDoneNote": "Rider delivered cash to your address at {{time}}",
     "cancelApply": "Cancel Apply",
     "refundNote": "Refund will be processed within 1-3 business days",
     "types": {
@@ -658,7 +664,9 @@
       "refundProcessing": "Refund processing",
       "refundProcessingDesc": "Refund submitted to payment channel",
       "completed": "Refund completed",
-      "completedDesc": "Refund has been issued"
+      "completedDesc": "Refund has been issued",
+      "cashDelivered": "Cash delivered",
+      "cashDeliveredDesc": "Rider has delivered ${{amount}} cash"
     },
     "mockReason": "Product quality issue",
     "mockProduct": "Fresh Red Fuji Apple",
