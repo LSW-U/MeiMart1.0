@@ -1,14 +1,10 @@
-// ⚠️ 无 HTML 原型，参考 OrderDetailPage 推导实现，待设计确认
-// AfterSalesDetailPage - 售后详情（参考 OrderDetailPage 的状态色块 + 时间轴 + 价格汇总）
-// D.6: PrimaryHeader + 状态色块 + 商品 + 时间轴 + 退款金额 + 客服按钮
+// AfterSalesDetailPage - 售后详情页（P14）
+// HTML 原型: 第三梯队HTML原型设计/P14-售后详情页-优化原型.html（2026-08-08 已出）
+// 数据源: useRefundDetail(refund.id)（P13 提交传 refund.id，after-sales-apply.tsx:165）
+//         + 副 useOrder(refund.orderId) 拿商品图片（refund.items 无 image）/整单退款 fallback
+// 后端: GET /client/refunds/:id（refund.controller.ts:115）+ POST /client/refunds/:id/cancel（:122）
 //
-// TODO(长期): 后端售后接口就绪后改造
-// 1. src/services/afterSales.ts: getAfterSalesDetail(id), createAfterSales(orderId, payload)
-// 2. src/services/queries/useAfterSales.ts: useAfterSalesDetail(id), useCreateAfterSales()
-// 3. apply 改用 useCreateAfterSales，提交后用返回的 afterSalesId 跳 detail
-// 4. detail 改用 useAfterSalesDetail(id)，id 语义从 orderId 改成 afterSalesId
-// 5. 时间轴/申请号/申请时间从 mock 改为真实数据
-// 6. 「取消申请」按钮调 cancelAfterSales(afterSalesId)
+// TODO(后续 commit): S1 状态色块多态化 / P1 多商品列表 / T1 时间轴动态化 / WM1 COD 退款区分
 import { StyleSheet, View, Text, ScrollView, Image, Pressable } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
