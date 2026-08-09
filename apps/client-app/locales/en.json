@@ -611,6 +611,7 @@
     "evidenceLabel": "Upload evidence (optional)",
     "addPhoto": "Add",
     "evidenceLimit": "Up to 3 photos, JPG / PNG",
+    "addPhotoA11y": "Add evidence photo",
     "contactLabel": "Contact",
     "refundMethod": "Original payment",
     "cancelApply": "Cancel Apply",

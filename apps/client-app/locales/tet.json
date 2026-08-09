@@ -564,6 +564,7 @@
     "evidenceLabel": "[TET] Upload evidence (optional)",
     "addPhoto": "[TET] Add",
     "evidenceLimit": "[TET] Up to 3 photos, JPG / PNG",
+    "addPhotoA11y": "[TET] Add evidence photo",
     "contactLabel": "[TET] Contact",
     "refundMethod": "[TET] Original payment",
     "cancelApply": "[TET] Cancel Apply",

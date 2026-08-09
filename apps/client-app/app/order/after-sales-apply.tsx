@@ -458,7 +458,7 @@ export default function AfterSalesApplyPage() {
                   },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel="Add evidence photo"
+                accessibilityLabel={t('afterSales.addPhotoA11y', { defaultValue: 'Add evidence photo' })}
                 testID="aftersales-add-photo"
               >
                 <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />
