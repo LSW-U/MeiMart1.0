@@ -201,7 +201,7 @@ export default function AfterSalesDetailPage() {
           </View>
           <View style={styles.statusIconWrap}>
             <View style={[styles.statusIcon, { backgroundColor: REFUND_STATUS_ICON }]}>
-              <Icon symbol={STEP_ICON[stepKey]} size={22} color="#ffffff" />
+              <Icon symbol={STEP_ICON[stepKey]} size={22} color={colors['on-primary']} />
             </View>
           </View>
           <View style={styles.statusTextBox}>
@@ -385,7 +385,7 @@ export default function AfterSalesDetailPage() {
           accessibilityLabel={t('afterSales.cancelApply', { defaultValue: 'Cancel Apply' })}
           testID="aftersales-cancel"
         >
-          <Text style={styles.cancelText}>
+          <Text style={[styles.cancelText, { color: colors['on-primary'] }]}>
             {t('afterSales.cancelApply', { defaultValue: 'Cancel Apply' })}
           </Text>
         </Pressable>
@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
   },
   cancelText: {
-    color: '#ffffff',
+    // 原因：color 移到 inline（access colors['on-primary']），StyleSheet 静态段不能访问 theme
     ...typography['label-caps'],
     fontWeight: '700',
     fontSize: 13,
