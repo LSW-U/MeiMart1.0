@@ -19,7 +19,6 @@ import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PriceText } from '@/components/ui/PriceText';
 import { TimelineStep } from '@/components/business/TimelineStep';
-import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -196,9 +195,6 @@ export default function AfterSalesDetailPage() {
       >
         {/* 状态色块 */}
         <View style={[styles.statusBlock, { backgroundColor: colors.semantic['warning-container'] }, shadowPresets.sm]}>
-          <View style={styles.statusPattern} pointerEvents="none">
-            <TaisPattern width={400} height={100} opacity={0.2} />
-          </View>
           <View style={styles.statusIconWrap}>
             <View style={[styles.statusIcon, { backgroundColor: REFUND_STATUS_ICON }]}>
               <Icon symbol={STEP_ICON[stepKey]} size={22} color={colors['on-primary']} />
@@ -252,12 +248,15 @@ export default function AfterSalesDetailPage() {
           </View>
         </View>
 
-        {/* 退款金额卡片 - 真实订单总价 */}
+        {/* 退款金额卡片 - V1 视觉层次化：去 shadow 加 hairline border（商品主卡保留 shadow） */}
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: colors['outline-variant'],
+            },
           ]}
         >
           <View style={styles.cardHeader}>
@@ -281,12 +280,15 @@ export default function AfterSalesDetailPage() {
           </Text>
         </View>
 
-        {/* 进度时间轴卡片 - TODO(长期): 接 useAfterSalesDetail */}
+        {/* 进度时间轴卡片 - V1 视觉层次化（TODO Commit 8 接真实时间轴） */}
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: colors['outline-variant'],
+            },
           ]}
         >
           <View style={styles.cardHeader}>
@@ -298,12 +300,15 @@ export default function AfterSalesDetailPage() {
           <TimelineStep steps={steps} currentIndex={2} />
         </View>
 
-        {/* 申请信息卡片 - TODO(长期): 接 useAfterSalesDetail */}
+        {/* 申请信息卡片 - V1 视觉层次化（TODO Commit 3 补售后类型字段） */}
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: colors['outline-variant'],
+            },
           ]}
         >
           <View style={styles.cardHeader}>
@@ -427,13 +432,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
     position: 'relative',
-  },
-  statusPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
   },
   statusIconWrap: {
     zIndex: 2,
