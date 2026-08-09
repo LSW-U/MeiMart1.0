@@ -148,6 +148,9 @@ export default function AfterSalesDetailPage() {
   const refundTypeLabelKey = isReturnRefund
     ? 'afterSales.types.returnRefund'
     : 'afterSales.types.refundOnly';
+
+  // B1 底部栏状态化（决策 7）：仅 PENDING 可取消（后端 cancelRefund 仅 PENDING 允许，其他阶段 400）
+  const canCancel = refund.status === 'PENDING';
   const applyTimeDisplay = formatDate(
     refund.createdAt,
     i18n.language === 'zh' ? 'zh-CN' : 'en-US',
@@ -455,31 +458,33 @@ export default function AfterSalesDetailPage() {
           </Text>
         </Pressable>
 
-        {/* 取消申请：调 useCancelRefund（后端 POST /client/refunds/:id/cancel，仅 PENDING 可取消，其他阶段 400） */}
-        <Pressable
-          onPress={() => {
-            cancelRefund.mutateAsync(refund.id).catch((err: unknown) => {
-              // 原因：onError 已 rollback 乐观，这里只展示错误（后端 400 = 当前阶段不可取消）
-              toast.error(
-                err instanceof Error
-                  ? err.message
-                  : t('afterSales.cancelFailed', { defaultValue: 'Cancel failed' }),
-              );
-            });
-          }}
-          style={({ pressed }) => [
-            styles.cancelBtn,
-            { backgroundColor: colors.primary },
-            pressed && { transform: [{ scale: 0.98 }] },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={t('afterSales.cancelApply', { defaultValue: 'Cancel Apply' })}
-          testID="aftersales-cancel"
-        >
-          <Text style={[styles.cancelText, { color: colors['on-primary'] }]}>
-            {t('afterSales.cancelApply', { defaultValue: 'Cancel Apply' })}
-          </Text>
-        </Pressable>
+        {/* 取消申请：仅 PENDING 显示（决策 7），调 useCancelRefund（后端 POST /client/refunds/:id/cancel） */}
+        {canCancel && (
+          <Pressable
+            onPress={() => {
+              cancelRefund.mutateAsync(refund.id).catch((err: unknown) => {
+                // 原因：onError 已 rollback 乐观，这里只展示错误（后端 400 = 当前阶段不可取消）
+                toast.error(
+                  err instanceof Error
+                    ? err.message
+                    : t('afterSales.cancelFailed', { defaultValue: 'Cancel failed' }),
+                );
+              });
+            }}
+            style={({ pressed }) => [
+              styles.cancelBtn,
+              { borderColor: colors['outline-variant'] },
+              pressed && { transform: [{ scale: 0.98 }] },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('afterSales.cancelApply', { defaultValue: 'Cancel Apply' })}
+            testID="aftersales-cancel"
+          >
+            <Text style={[styles.cancelText, { color: colors['on-surface-variant'] }]}>
+              {t('afterSales.cancelApply', { defaultValue: 'Cancel Apply' })}
+            </Text>
+          </Pressable>
+        )}
       </View>
     </SafeAreaWrapper>
   );
@@ -652,16 +657,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   cancelBtn: {
-    flex: 1,
+    // 原因：次级按钮（决策 7），非等宽（不设 flex，默认内容宽度）+ hairline 描边
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   cancelText: {
-    // 原因：color 移到 inline（access colors['on-primary']），StyleSheet 静态段不能访问 theme
+    // 原因：color 移到 inline（access colors['on-surface-variant']），StyleSheet 静态段不能访问 theme
     ...typography['label-caps'],
     fontWeight: '700',
-    fontSize: 13,
+    fontSize: 12,
   },
 });
