@@ -571,6 +571,7 @@
     "cancelledTitle": "[TET] Cancelled",
     "cancelledDesc": "[TET] After-sales request has been cancelled",
     "productLabel": "[TET] Product",
+    "productCount": "[TET] Products ({{count}})",
     "evidenceLabel": "[TET] Upload evidence (optional)",
     "addPhoto": "[TET] Add",
     "evidenceLimit": "[TET] Up to 3 photos, JPG / PNG",

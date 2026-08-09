@@ -21,6 +21,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { useOrder } from '@/services/queries/useOrders';
 import { useCancelRefund, useRefundDetail } from '@/services/queries/useRefunds';
 import { useLocalizer } from '@/i18n';
+import type { LocalizableText } from '@/types';
 import { toast } from '@/store/toastStore';
 import { formatDate } from '@/utils/format';
 
@@ -108,17 +109,34 @@ export default function AfterSalesDetailPage() {
     );
   }
 
-  // 商品 fallback：refund.items[0]（部分退款，productName 多语言）→ order.items 匹配（图片）→ order.items[0]（整单退款 fallback）
-  // Why: 整单退款时 refund.items 为空数组，需 fallback order.items 拿商品；部分退款时 refund.items 无 image，从 order 匹配
-  const refundItem = refund.items[0];
-  const matchedOrderItem = refundItem
-    ? order?.items.find((oi) => oi.id === refundItem.orderItemId)
-    : undefined;
-  const orderItem = matchedOrderItem ?? order?.items[0];
-  const productNameSource = refundItem?.productName ?? orderItem?.product.name;
-  const quantity = refundItem?.refundQty ?? orderItem?.quantity ?? 1;
-  const productImage = orderItem?.product.image;
-  const productPrice = refundItem?.unitPrice ?? orderItem?.product.price ?? 0;
+  // P1/P2 多商品列表：refund.items（部分退款）→ order.items（整单退款 fallback）
+  // Why: refund.items 无 image，从 order.items 匹配 orderItemId 拿图片；整单退款 refund.items 为空
+  type DisplayItem = {
+    key: string;
+    name: LocalizableText;
+    qty: number;
+    price: number;
+    image?: string;
+  };
+  const displayItems: DisplayItem[] =
+    refund.items.length > 0
+      ? refund.items.map((ri) => {
+          const oi = order?.items.find((o) => o.id === ri.orderItemId);
+          return {
+            key: ri.id,
+            name: ri.productName,
+            qty: ri.refundQty,
+            price: ri.unitPrice,
+            image: oi?.product.image,
+          };
+        })
+      : (order?.items ?? []).map((oi) => ({
+          key: oi.id,
+          name: oi.product.name,
+          qty: oi.quantity,
+          price: oi.product.price,
+          image: oi.product.image,
+        }));
   const refundAmount = refund.amount;
 
   // reason 反向映射 + 申请号/申请时间（接 refund 真实字段，I2 申请信息真实数据）
@@ -277,31 +295,36 @@ export default function AfterSalesDetailPage() {
           <View style={styles.cardHeader}>
             <Icon symbol="shopping_cart" size={18} color={colors.primary} />
             <Text style={[styles.cardHeaderText, { color: colors.primary }]}>
-              {t('afterSales.productLabel', { defaultValue: 'Product' })}
+              {t('afterSales.productCount', {
+                count: displayItems.length,
+                defaultValue: 'Products ({{count}})',
+              })}
             </Text>
           </View>
-          <View style={styles.productRow}>
-            <View style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}>
-              {productImage && (
-                <Image
-                  source={{ uri: productImage }}
-                  style={styles.productImg}
-                  resizeMode="cover"
-                />
-              )}
-            </View>
-            <View style={styles.productTextBox}>
-              <Text style={[styles.productName, { color: colors['on-surface'] }]} numberOfLines={2}>
-                {productNameSource ? localize(productNameSource) : t('afterSales.mockProduct')}
-              </Text>
-              <View style={styles.productMetaRow}>
-                <Text style={[styles.productMeta, { color: colors['on-surface-variant'] }]}>
-                  × {quantity}
+          {displayItems.map((item) => (
+            <View style={styles.productRow} key={item.key}>
+              <View style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}>
+                {item.image && (
+                  <Image
+                    source={{ uri: item.image }}
+                    style={styles.productImg}
+                    resizeMode="cover"
+                  />
+                )}
+              </View>
+              <View style={styles.productTextBox}>
+                <Text style={[styles.productName, { color: colors['on-surface'] }]} numberOfLines={2}>
+                  {localize(item.name)}
                 </Text>
-                <PriceText value={productPrice} size="md" />
+                <View style={styles.productMetaRow}>
+                  <Text style={[styles.productMeta, { color: colors['on-surface-variant'] }]}>
+                    × {item.qty}
+                  </Text>
+                  <PriceText value={item.price} size="md" />
+                </View>
               </View>
             </View>
-          </View>
+          ))}
         </View>
 
         {/* 退款金额卡片 - V1 视觉层次化：去 shadow 加 hairline border（商品主卡保留 shadow） */}

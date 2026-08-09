@@ -618,6 +618,7 @@
     "cancelledTitle": "已取消",
     "cancelledDesc": "售后申请已取消",
     "productLabel": "商品",
+    "productCount": "售后商品 ({{count}})",
     "evidenceLabel": "上传凭证（可选）",
     "addPhoto": "添加",
     "evidenceLimit": "最多上传 3 张照片，支持 JPG / PNG",

@@ -618,6 +618,7 @@
     "cancelledTitle": "Cancelled",
     "cancelledDesc": "After-sales request has been cancelled",
     "productLabel": "Product",
+    "productCount": "Products ({{count}})",
     "evidenceLabel": "Upload evidence (optional)",
     "addPhoto": "Add",
     "evidenceLimit": "Up to 3 photos, JPG / PNG",
