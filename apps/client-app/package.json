@@ -80,7 +80,8 @@
     "web": "expo start --web",
     "prepare": "husky",
     "lint": "expo lint",
-    "test": "jest"
+    "test": "jest",
+    "check:i18n": "python3 scripts/check-i18n-keys.py"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
