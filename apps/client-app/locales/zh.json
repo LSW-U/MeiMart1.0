@@ -648,6 +648,7 @@
       "outOfStock": "缺货",
       "deliveryTooSlow": "配送太慢",
       "changeMind": "不想要了",
+      "qualityIssue": "商品质量/损坏问题",
       "other": "其他原因"
     },
     "timeline": {
@@ -663,6 +664,8 @@
       "pickedDesc": "商品已收回，确认中",
       "refundProcessing": "退款处理中",
       "refundProcessingDesc": "退款已提交至支付渠道",
+      "cashDelivering": "骑手配送现金中",
+      "cashDeliveringDesc": "骑手正在前往您的地址",
       "completed": "退款完成",
       "completedDesc": "退款已原路返回",
       "cashDelivered": "现金已送达",

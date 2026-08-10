@@ -38,7 +38,7 @@ const REFUND_STATUS_TEXT = '#b45309'; // 原因：售后处理中深琥珀文字
  */
 const REFUND_REASON_TO_I18N_KEY: Record<string, string> = {
   EXPIRED: 'afterSales.reasons.expired',
-  QUALITY_ISSUE: 'afterSales.reasons.quality',
+  QUALITY_ISSUE: 'afterSales.reasons.qualityIssue', // Q2 修复：通用文案（后端 enum 无独立 DAMAGED，P13 forward damaged/quality→QUALITY_ISSUE 合并，P14 显示通用避免跨页语义丢失）
   WRONG_ITEM: 'afterSales.reasons.wrongItem',
   SHORTAGE: 'afterSales.reasons.shortage',
   DAMAGED: 'afterSales.reasons.damaged',
@@ -242,14 +242,14 @@ export default function AfterSalesDetailPage() {
         { status: t('afterSales.timeline.approved'), description: t('afterSales.timeline.approvedDesc'), timestamp: formatTs(refund.reviewedAt) },
         { status: t('afterSales.timeline.pickupArranging'), description: t('afterSales.timeline.pickupArrangingDesc'), timestamp: '' },
         { status: t('afterSales.timeline.picked'), description: t('afterSales.timeline.pickedDesc'), timestamp: '' },
-        { status: t('afterSales.timeline.refundProcessing'), description: t('afterSales.timeline.refundProcessingDesc'), timestamp: '' },
+        { status: t(isCash ? 'afterSales.timeline.cashDelivering' : 'afterSales.timeline.refundProcessing'), description: t(isCash ? 'afterSales.timeline.cashDeliveringDesc' : 'afterSales.timeline.refundProcessingDesc'), timestamp: '' },
         { status: t(isCash ? 'afterSales.timeline.cashDelivered' : 'afterSales.timeline.completed'), description: isCash ? t('afterSales.timeline.cashDeliveredDesc', { amount: refund.amount / 100 }) : t('afterSales.timeline.completedDesc'), timestamp: formatTs(refund.completedAt) },
       ]
     : [
         // 仅退款 4 步：submitted → approved → refundProcessing → completed
         { status: t('afterSales.timeline.submitted'), description: t('afterSales.timeline.submittedDesc'), timestamp: formatTs(refund.createdAt) },
         { status: t('afterSales.timeline.approved'), description: t('afterSales.timeline.approvedDesc'), timestamp: formatTs(refund.reviewedAt) },
-        { status: t('afterSales.timeline.refundProcessing'), description: t('afterSales.timeline.refundProcessingDesc'), timestamp: '' },
+        { status: t(isCash ? 'afterSales.timeline.cashDelivering' : 'afterSales.timeline.refundProcessing'), description: t(isCash ? 'afterSales.timeline.cashDeliveringDesc' : 'afterSales.timeline.refundProcessingDesc'), timestamp: '' },
         { status: t(isCash ? 'afterSales.timeline.cashDelivered' : 'afterSales.timeline.completed'), description: isCash ? t('afterSales.timeline.cashDeliveredDesc', { amount: refund.amount / 100 }) : t('afterSales.timeline.completedDesc'), timestamp: formatTs(refund.completedAt) },
       ];
   // T2 currentIndex 推导（当前进行中的步骤索引）
@@ -268,6 +268,15 @@ export default function AfterSalesDetailPage() {
         return 1;
     }
   })();
+
+  // Q3 REJECTED 时间轴语义修正：steps[1]（approved 位置）替换为「审核未通过」（currentIndex 仍停 1，色块已显红区分）
+  if (refund.status === 'REJECTED') {
+    steps[1] = {
+      status: t('afterSales.rejectedTitle'),
+      description: t('afterSales.rejectedDesc'),
+      timestamp: formatTs(refund.reviewedAt),
+    };
+  }
 
   return (
     <SafeAreaWrapper

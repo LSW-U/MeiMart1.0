@@ -648,6 +648,7 @@
       "outOfStock": "Out of stock",
       "deliveryTooSlow": "Delivery too slow",
       "changeMind": "Changed my mind",
+      "qualityIssue": "Quality or damage issue",
       "other": "Other reason"
     },
     "timeline": {
@@ -663,6 +664,8 @@
       "pickedDesc": "Item collected, under confirmation",
       "refundProcessing": "Refund processing",
       "refundProcessingDesc": "Refund submitted to payment channel",
+      "cashDelivering": "Delivering cash",
+      "cashDeliveringDesc": "Rider is on the way to your address",
       "completed": "Refund completed",
       "completedDesc": "Refund has been issued",
       "cashDelivered": "Cash delivered",

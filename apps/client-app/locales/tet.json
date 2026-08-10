@@ -601,6 +601,7 @@
       "outOfStock": "[TET] Out of stock",
       "deliveryTooSlow": "[TET] Delivery too slow",
       "changeMind": "[TET] Changed my mind",
+      "qualityIssue": "[TET] Quality or damage issue",
       "other": "[TET] Other reason"
     },
     "timeline": {
@@ -616,6 +617,8 @@
       "pickedDesc": "[TET] Item collected, under confirmation",
       "refundProcessing": "[TET] Refund processing",
       "refundProcessingDesc": "[TET] Refund submitted to payment channel",
+      "cashDelivering": "[TET] Delivering cash",
+      "cashDeliveringDesc": "[TET] Rider is on the way to your address",
       "completed": "[TET] Refund completed",
       "completedDesc": "[TET] Refund has been issued",
       "cashDelivered": "[TET] Cash delivered",
