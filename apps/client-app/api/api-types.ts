@@ -2379,6 +2379,7 @@ export interface paths {
                             sortOrder: number;
                             /** @enum {string} */
                             status?: "ACTIVE" | "INACTIVE";
+                            productCount?: number;
                             children?: {
                                 /** Format: uuid */
                                 id: string;
@@ -2391,6 +2392,7 @@ export interface paths {
                                 sortOrder: number;
                                 /** @enum {string} */
                                 status?: "ACTIVE" | "INACTIVE";
+                                productCount?: number;
                             }[];
                         }[];
                     };
@@ -2847,6 +2849,7 @@ export interface paths {
                             sortOrder: number;
                             /** @enum {string} */
                             status?: "ACTIVE" | "INACTIVE";
+                            productCount?: number;
                             children?: {
                                 /** Format: uuid */
                                 id: string;
@@ -2859,6 +2862,7 @@ export interface paths {
                                 sortOrder: number;
                                 /** @enum {string} */
                                 status?: "ACTIVE" | "INACTIVE";
+                                productCount?: number;
                             }[];
                         };
                     };
@@ -3417,6 +3421,8 @@ export interface paths {
                         remark?: string;
                         /** @enum {string} */
                         paymentMethod: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+                        /** Format: uuid */
+                        couponId?: string;
                     };
                 };
             };
@@ -4596,26 +4602,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/client/coupons": {
+    "/api/v1/client/coupons/available": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description 我的优惠券列表（B10 + used/expired：?status=available|used|expired，默认 available） */
+        /** @description 领券中心（P1 领券体系）。返可领模板：ACTIVE + 有效期内 + 未超额 + 当前用户未领过。Role: customer。返回 ClientCoupon[]（status 固定 available）。 */
         get: {
             parameters: {
-                query?: {
-                    status?: "available" | "used" | "expired";
-                };
+                query?: never;
                 header?: never;
                 path?: never;
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description 优惠券列表（按 status 过滤） */
+                /** @description 可领模板列表 */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -4638,6 +4642,275 @@ export interface paths {
                             endAt: string;
                             /** @enum {string} */
                             status: "available" | "used" | "expired";
+                        }[];
+                    };
+                };
+                /** @description UNAUTHORIZED */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/coupons/{promotionId}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 领取优惠券（P1 领券体系）。按模板 id 领取，生成 UserCoupon(UNUSED)。同券每人限领 1 张（@@unique），重复领抛 E-COUPON-003；模板不可领抛 E-COUPON-004。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    promotionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 领取成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            promotionId: string;
+                            code: string;
+                            /** @enum {string} */
+                            status: "unused" | "used" | "expired";
+                            /** @enum {string} */
+                            type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                            value: number;
+                            minOrderAmount: number;
+                            maxDiscountAmount: number | null;
+                            name: string;
+                            description: string | null;
+                            /** Format: date-time */
+                            startAt: string;
+                            /** Format: date-time */
+                            endAt: string;
+                            /** Format: date-time */
+                            receivedAt: string;
+                            /** Format: date-time */
+                            usedAt: string | null;
+                            /** Format: uuid */
+                            orderId: string | null;
+                        };
+                    };
+                };
+                /** @description E-COUPON-003 已领过 / E-COUPON-004 模板不可领 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/coupons/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 码兑换领取（P1 领券体系）。输优惠码领到卡包（不再"即用"）。按 code 找模板后等同 claim。码不存在/不可领抛 E-COUPON-004；已领过抛 E-COUPON-003。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 兑换领取成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            promotionId: string;
+                            code: string;
+                            /** @enum {string} */
+                            status: "unused" | "used" | "expired";
+                            /** @enum {string} */
+                            type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                            value: number;
+                            minOrderAmount: number;
+                            maxDiscountAmount: number | null;
+                            name: string;
+                            description: string | null;
+                            /** Format: date-time */
+                            startAt: string;
+                            /** Format: date-time */
+                            endAt: string;
+                            /** Format: date-time */
+                            receivedAt: string;
+                            /** Format: date-time */
+                            usedAt: string | null;
+                            /** Format: uuid */
+                            orderId: string | null;
+                        };
+                    };
+                };
+                /** @description E-COUPON-004 码无效/模板不可领 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-COUPON-003 已领过 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 我的卡包（P1 领券体系，精确查 UserCoupon）。?status=unused|used|expired，默认 unused。unused=UNUSED 且未过期；used=USED；expired=EXPIRED 或 UNUSED 但模板已过期（定时任务未跑的查询兜底）。【BREAKING】P1 起响应从 ClientCoupon（模板维度）改为 MyCoupon（实例维度），status 枚举由 available 改 unused。 */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "unused" | "used" | "expired";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 我的卡包（按 status 过滤） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            promotionId: string;
+                            code: string;
+                            /** @enum {string} */
+                            status: "unused" | "used" | "expired";
+                            /** @enum {string} */
+                            type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+                            value: number;
+                            minOrderAmount: number;
+                            maxDiscountAmount: number | null;
+                            name: string;
+                            description: string | null;
+                            /** Format: date-time */
+                            startAt: string;
+                            /** Format: date-time */
+                            endAt: string;
+                            /** Format: date-time */
+                            receivedAt: string;
+                            /** Format: date-time */
+                            usedAt: string | null;
+                            /** Format: uuid */
+                            orderId: string | null;
                         }[];
                     };
                 };
@@ -4942,6 +5215,1308 @@ export interface paths {
                 };
                 /** @description PAYMENT_NOT_PAID */
                 409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 支付列表（admin，游标分页 + join order，可按 status/method/orderNo/mockFlag 筛选；批次 3） */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "UNPAID" | "PAID" | "REFUNDED";
+                    method?: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+                    orderId?: string;
+                    orderNo?: string;
+                    mockFlag?: "true" | "false";
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 支付列表（游标分页） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    orderId: string;
+                                    /** @enum {string} */
+                                    method: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+                                    /** @enum {string} */
+                                    status: "UNPAID" | "PAID" | "REFUNDED";
+                                    amount: number;
+                                    transactionId: string | null;
+                                    clientSecret: string | null;
+                                    /** Format: uri */
+                                    receiptUrl: string | null;
+                                    mockFlag: boolean;
+                                    /** Format: date-time */
+                                    paidAt: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    orderNo: string;
+                                    /** Format: uuid */
+                                    userId: string;
+                                    /** Format: uuid */
+                                    warehouseId: string;
+                                }[];
+                                nextCursor: string | null;
+                                hasMore: boolean;
+                                total?: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payments/reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 对账汇总（group by status + method，运营对账用；批次 3） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 对账汇总 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** @enum {string} */
+                                status: "UNPAID" | "PAID" | "REFUNDED";
+                                /** @enum {string} */
+                                method: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+                                count: number;
+                                totalAmount: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 支付详情（含 order + order.refunds；批次 3） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 支付详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** @enum {string} */
+                                method: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+                                /** @enum {string} */
+                                status: "UNPAID" | "PAID" | "REFUNDED";
+                                amount: number;
+                                transactionId: string | null;
+                                clientSecret: string | null;
+                                /** Format: uri */
+                                receiptUrl: string | null;
+                                mockFlag: boolean;
+                                /** Format: date-time */
+                                paidAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                                orderNo: string;
+                                /** Format: uuid */
+                                userId: string;
+                                /** Format: uuid */
+                                warehouseId: string;
+                                order: {
+                                    orderNo: string;
+                                    /** Format: uuid */
+                                    userId: string;
+                                    /** Format: uuid */
+                                    warehouseId: string;
+                                    status: string;
+                                    refunds: {
+                                        /** Format: uuid */
+                                        id: string;
+                                        amount: number;
+                                        /** @enum {string} */
+                                        status?: "UNPAID" | "PAID" | "REFUNDED";
+                                        reason: string;
+                                    }[];
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description PAYMENT_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payments/{orderId}/confirm-receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 确认收款（admin 审核银行转账凭证 → PAID + Order CONFIRMED，同事务编排；批次 3） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 确认成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** @enum {string} */
+                                method: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+                                /** @enum {string} */
+                                status: "UNPAID" | "PAID" | "REFUNDED";
+                                amount: number;
+                                transactionId: string | null;
+                                clientSecret: string | null;
+                                /** Format: uri */
+                                receiptUrl: string | null;
+                                mockFlag: boolean;
+                                /** Format: date-time */
+                                paidAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description PAYMENT_STATUS_CONFLICT / ORDER_STATUS_CONFLICT */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payments/{orderId}/mark-failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 标 PaymentIntent FAILED（手动，不自动取消订单；批次 3） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        reason: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 标失败成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** @enum {string} */
+                                method: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+                                /** @enum {string} */
+                                status: "UNPAID" | "PAID" | "REFUNDED";
+                                amount: number;
+                                transactionId: string | null;
+                                clientSecret: string | null;
+                                /** Format: uri */
+                                receiptUrl: string | null;
+                                mockFlag: boolean;
+                                /** Format: date-time */
+                                paidAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description PAYMENT_STATUS_CONFLICT */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/dispatch/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 任务监控列表（admin，游标分页 + filter status/warehouseId/riderId/orderNo；批次 4） */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
+                    warehouseId?: string;
+                    riderId?: string;
+                    orderNo?: string;
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 任务列表（游标分页） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    orderId: string;
+                                    /** Format: uuid */
+                                    riderId: string | null;
+                                    /** Format: uuid */
+                                    warehouseId: string;
+                                    /** @enum {string} */
+                                    status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
+                                    pickupAddress: string;
+                                    pickupLat: number;
+                                    pickupLng: number;
+                                    dropoffAddress: string;
+                                    dropoffLat: number;
+                                    dropoffLng: number;
+                                    /** Format: date-time */
+                                    assignedAt: string | null;
+                                    /** Format: date-time */
+                                    pickedUpAt: string | null;
+                                    /** Format: date-time */
+                                    deliveredAt: string | null;
+                                    note: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    /** Format: date-time */
+                                    estimatedArrival: string | null;
+                                    warehouseCode: string;
+                                    order: {
+                                        orderNo: string;
+                                        status: string;
+                                        payableAmount: number | null;
+                                        paymentMethod: string;
+                                    };
+                                    rider: {
+                                        /** Format: uuid */
+                                        id: string;
+                                        riderName: string;
+                                        phone: string;
+                                    } | null;
+                                }[];
+                                nextCursor: string | null;
+                                hasMore: boolean;
+                                total?: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/dispatch/tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 任务详情（含 order + rider；批次 4） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 任务详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** Format: uuid */
+                                riderId: string | null;
+                                /** Format: uuid */
+                                warehouseId: string;
+                                /** @enum {string} */
+                                status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
+                                pickupAddress: string;
+                                pickupLat: number;
+                                pickupLng: number;
+                                dropoffAddress: string;
+                                dropoffLat: number;
+                                dropoffLng: number;
+                                /** Format: date-time */
+                                assignedAt: string | null;
+                                /** Format: date-time */
+                                pickedUpAt: string | null;
+                                /** Format: date-time */
+                                deliveredAt: string | null;
+                                note: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                                /** Format: date-time */
+                                estimatedArrival: string | null;
+                                warehouseCode: string;
+                                order: {
+                                    orderNo: string;
+                                    status: string;
+                                    payableAmount: number | null;
+                                    paymentMethod: string;
+                                };
+                                rider: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    riderName: string;
+                                    phone: string;
+                                } | null;
+                            };
+                        };
+                    };
+                };
+                /** @description DISPATCH_TASK_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/dispatch/tasks/{id}/reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 改派骑手（仅 SUPER_ADMIN；第一期 ASSIGNED only；事务双写 delivery_tasks + order.riderId；批次 4） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        newRiderId: string;
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 改派成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** Format: uuid */
+                                riderId: string | null;
+                                /** Format: uuid */
+                                warehouseId: string;
+                                /** @enum {string} */
+                                status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
+                                pickupAddress: string;
+                                pickupLat: number;
+                                pickupLng: number;
+                                dropoffAddress: string;
+                                dropoffLat: number;
+                                dropoffLng: number;
+                                /** Format: date-time */
+                                assignedAt: string | null;
+                                /** Format: date-time */
+                                pickedUpAt: string | null;
+                                /** Format: date-time */
+                                deliveredAt: string | null;
+                                note: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                                /** Format: date-time */
+                                estimatedArrival: string | null;
+                                warehouseCode: string;
+                                order: {
+                                    orderNo: string;
+                                    status: string;
+                                    payableAmount: number | null;
+                                    paymentMethod: string;
+                                };
+                                rider: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    riderName: string;
+                                    phone: string;
+                                } | null;
+                            };
+                        };
+                    };
+                };
+                /** @description DISPATCH_REASSIGN_STATUS_CONFLICT / RIDER_INVALID */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/dispatch/tasks/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 取消任务（仅 SUPER_ADMIN；PENDING_ASSIGN/ASSIGNED；事务双写 task FAILED + order.riderId=null；批次 4） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 取消成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** Format: uuid */
+                                riderId: string | null;
+                                /** Format: uuid */
+                                warehouseId: string;
+                                /** @enum {string} */
+                                status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
+                                pickupAddress: string;
+                                pickupLat: number;
+                                pickupLng: number;
+                                dropoffAddress: string;
+                                dropoffLat: number;
+                                dropoffLng: number;
+                                /** Format: date-time */
+                                assignedAt: string | null;
+                                /** Format: date-time */
+                                pickedUpAt: string | null;
+                                /** Format: date-time */
+                                deliveredAt: string | null;
+                                note: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                                /** Format: date-time */
+                                estimatedArrival: string | null;
+                                warehouseCode: string;
+                                order: {
+                                    orderNo: string;
+                                    status: string;
+                                    payableAmount: number | null;
+                                    paymentMethod: string;
+                                };
+                                rider: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    riderName: string;
+                                    phone: string;
+                                } | null;
+                            };
+                        };
+                    };
+                };
+                /** @description DISPATCH_CANCEL_STATUS_CONFLICT */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/dispatch/riders/available": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 可派骑手列表（APPROVED + Redis isOnline 标记，在线优先；批次 4） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 可派骑手 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                riderName: string;
+                                phone: string;
+                                /** @enum {string} */
+                                vehicleType: "BICYCLE" | "MOTORCYCLE" | "CAR";
+                                isOnline: boolean;
+                                totalDeliveries: number;
+                                rating: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/dispatch/orders/{orderId}/recreate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 补建任务（仅 SUPER_ADMIN；复用 createTaskForOrder，幂等；批次 4） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 补建成功（已存在则返回现有 task） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                orderId: string;
+                                /** Format: uuid */
+                                riderId: string | null;
+                                /** Format: uuid */
+                                warehouseId: string;
+                                /** @enum {string} */
+                                status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
+                                pickupAddress: string;
+                                pickupLat: number;
+                                pickupLng: number;
+                                dropoffAddress: string;
+                                dropoffLat: number;
+                                dropoffLng: number;
+                                /** Format: date-time */
+                                assignedAt: string | null;
+                                /** Format: date-time */
+                                pickedUpAt: string | null;
+                                /** Format: date-time */
+                                deliveredAt: string | null;
+                                note: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                                /** Format: date-time */
+                                estimatedArrival: string | null;
+                                warehouseCode: string;
+                                order: {
+                                    orderNo: string;
+                                    status: string;
+                                    payableAmount: number | null;
+                                    paymentMethod: string;
+                                };
+                                rider: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    riderName: string;
+                                    phone: string;
+                                } | null;
+                            };
+                        };
+                    };
+                };
+                /** @description ORDER_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/stocks/batch-adjust": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 批量调整库存（全事务，上限 100，一条失败全部回滚；批次 5） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        items: {
+                            /** Format: uuid */
+                            warehouseId: string;
+                            /** Format: uuid */
+                            skuId: string;
+                            deltaQty: number;
+                            reason?: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description 批量调整成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                items: {
+                                    /** Format: uuid */
+                                    warehouseId: string;
+                                    /** Format: uuid */
+                                    skuId: string;
+                                    deltaQty: number;
+                                    afterQty: number;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description E-INVENTORY-008 超上限 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 仓库间调拨（双仓原子：源 deductStock + 目标 create/update，referenceType=TRANSFER + referenceId 串联两条 StockLog；批次 5） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        fromWarehouseId: string;
+                        /** Format: uuid */
+                        toWarehouseId: string;
+                        items: {
+                            /** Format: uuid */
+                            skuId: string;
+                            quantity: number;
+                        }[];
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 调拨成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                referenceId: string;
+                                /** Format: uuid */
+                                fromWarehouseId: string;
+                                /** Format: uuid */
+                                toWarehouseId: string;
+                                items: {
+                                    /** Format: uuid */
+                                    skuId: string;
+                                    quantity: number;
+                                    fromAfterQty: number;
+                                    toAfterQty: number;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description E-INVENTORY-001 源不足 / 005 同仓 / 006 空 / 007 超上限 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 调拨记录列表（查 StockLog referenceType=TRANSFER，按 referenceId 聚合；批次 5） */
+        get: {
+            parameters: {
+                query?: {
+                    fromWarehouseId?: string;
+                    toWarehouseId?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 调拨记录 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                referenceId: string;
+                                /** Format: uuid */
+                                fromWarehouseId: string;
+                                /** Format: uuid */
+                                toWarehouseId: string;
+                                items: {
+                                    /** Format: uuid */
+                                    skuId: string;
+                                    quantity: number;
+                                }[];
+                                reason: string | null;
+                                /** Format: uuid */
+                                operatorId: string | null;
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/stocks/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 导出库存快照 CSV（warehouseId,warehouseCode,skuId,quantity,safetyStock,status；批次 5） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV 文件（text/csv; charset=utf-8） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/stocks/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 导入批量调整 CSV（multipart field=file，逐行部分成功返 failedRows；表头 warehouseId,skuId,deltaQty,reason?；批次 5） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 导入结果 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                successCount: number;
+                                failedRows: {
+                                    row: number;
+                                    error: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description E-INVENTORY-009 CSV 格式错 */
+                400: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -8578,6 +10153,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rider/dispatch/my-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 获取当前骑手已接单/取货/配送中的任务列表（status in ASSIGNED/PICKED_UP/DELIVERING） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 我的任务列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    orderId: string;
+                                    /** Format: uuid */
+                                    riderId: string | null;
+                                    /** Format: uuid */
+                                    warehouseId: string;
+                                    /** @enum {string} */
+                                    status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
+                                    pickupAddress: string;
+                                    pickupLat: number;
+                                    pickupLng: number;
+                                    dropoffAddress: string;
+                                    dropoffLat: number;
+                                    dropoffLng: number;
+                                    /** Format: date-time */
+                                    assignedAt: string | null;
+                                    /** Format: date-time */
+                                    pickedUpAt: string | null;
+                                    /** Format: date-time */
+                                    deliveredAt: string | null;
+                                    note: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rider/dispatch/tasks/{id}/accept": {
         parameters: {
             query?: never;
@@ -8599,10 +10244,7 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": {
-                        /** Format: uuid */
-                        taskId: string;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             responses: {
@@ -8696,8 +10338,6 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        /** Format: uuid */
-                        taskId: string;
                         note?: string;
                     };
                 };
@@ -8793,8 +10433,6 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        /** Format: uuid */
-                        taskId: string;
                         collectedAmount?: number;
                         note?: string;
                     };
@@ -8891,8 +10529,6 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        /** Format: uuid */
-                        taskId: string;
                         /** @enum {string} */
                         reason: "CUSTOMER_UNREACHABLE" | "CUSTOMER_REJECTED" | "ADDRESS_NOT_FOUND" | "TRAFFIC_ACCIDENT" | "OTHER";
                         note?: string;
@@ -9143,7 +10779,7 @@ export interface paths {
                                 userId: string;
                                 amount: number;
                                 /** @enum {string} */
-                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reason: "OUT_OF_STOCK" | "EXPIRED" | "QUALITY_ISSUE" | "WRONG_ITEM" | "SHORTAGE" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
                                 reasonDetail: string | null;
                                 /** @enum {string} */
                                 status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
@@ -9160,6 +10796,23 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    refundId: string;
+                                    /** Format: uuid */
+                                    orderItemId: string;
+                                    /** Format: uuid */
+                                    skuId: string;
+                                    productName: {
+                                        [key: string]: string;
+                                    };
+                                    unitPrice: number;
+                                    refundQty: number;
+                                    subtotal: number;
+                                }[];
+                                photos: string[];
                             }[];
                         };
                     };
@@ -9181,8 +10834,15 @@ export interface paths {
                         /** Format: uuid */
                         orderId: string;
                         /** @enum {string} */
-                        reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                        reason: "OUT_OF_STOCK" | "EXPIRED" | "QUALITY_ISSUE" | "WRONG_ITEM" | "SHORTAGE" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
                         reasonDetail?: string;
+                        items?: {
+                            /** Format: uuid */
+                            orderItemId: string;
+                            refundQty: number;
+                        }[];
+                        /** @default [] */
+                        photos?: string[];
                     };
                 };
             };
@@ -9205,7 +10865,7 @@ export interface paths {
                                 userId: string;
                                 amount: number;
                                 /** @enum {string} */
-                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reason: "OUT_OF_STOCK" | "EXPIRED" | "QUALITY_ISSUE" | "WRONG_ITEM" | "SHORTAGE" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
                                 reasonDetail: string | null;
                                 /** @enum {string} */
                                 status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
@@ -9222,6 +10882,23 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    refundId: string;
+                                    /** Format: uuid */
+                                    orderItemId: string;
+                                    /** Format: uuid */
+                                    skuId: string;
+                                    productName: {
+                                        [key: string]: string;
+                                    };
+                                    unitPrice: number;
+                                    refundQty: number;
+                                    subtotal: number;
+                                }[];
+                                photos: string[];
                             };
                         };
                     };
@@ -9290,7 +10967,7 @@ export interface paths {
                                 userId: string;
                                 amount: number;
                                 /** @enum {string} */
-                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reason: "OUT_OF_STOCK" | "EXPIRED" | "QUALITY_ISSUE" | "WRONG_ITEM" | "SHORTAGE" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
                                 reasonDetail: string | null;
                                 /** @enum {string} */
                                 status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
@@ -9307,6 +10984,23 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    refundId: string;
+                                    /** Format: uuid */
+                                    orderItemId: string;
+                                    /** Format: uuid */
+                                    skuId: string;
+                                    productName: {
+                                        [key: string]: string;
+                                    };
+                                    unitPrice: number;
+                                    refundQty: number;
+                                    subtotal: number;
+                                }[];
+                                photos: string[];
                             };
                         };
                     };
@@ -9379,7 +11073,7 @@ export interface paths {
                                 userId: string;
                                 amount: number;
                                 /** @enum {string} */
-                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reason: "OUT_OF_STOCK" | "EXPIRED" | "QUALITY_ISSUE" | "WRONG_ITEM" | "SHORTAGE" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
                                 reasonDetail: string | null;
                                 /** @enum {string} */
                                 status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
@@ -9396,6 +11090,23 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    refundId: string;
+                                    /** Format: uuid */
+                                    orderItemId: string;
+                                    /** Format: uuid */
+                                    skuId: string;
+                                    productName: {
+                                        [key: string]: string;
+                                    };
+                                    unitPrice: number;
+                                    refundQty: number;
+                                    subtotal: number;
+                                }[];
+                                photos: string[];
                             };
                         };
                     };
@@ -9415,11 +11126,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description 退款列表（admin 可按 status 筛选） */
+        /** @description 退款列表（admin，游标分页，可按 status 筛选；批次 2.1 改造） */
         get: {
             parameters: {
                 query?: {
-                    status?: string;
+                    status?: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
+                    cursor?: string;
+                    limit?: number;
                 };
                 header?: never;
                 path?: never;
@@ -9427,7 +11140,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description 退款列表 */
+                /** @description 退款列表（游标分页 items + nextCursor + hasMore） */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -9437,32 +11150,54 @@ export interface paths {
                             /** @enum {boolean} */
                             success: true;
                             data: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                orderId: string;
-                                /** Format: uuid */
-                                userId: string;
-                                amount: number;
-                                /** @enum {string} */
-                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
-                                reasonDetail: string | null;
-                                /** @enum {string} */
-                                status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
-                                transactionId: string | null;
-                                refundMethod: string;
-                                /** Format: uuid */
-                                reviewedBy: string | null;
-                                /** Format: date-time */
-                                reviewedAt: string | null;
-                                reviewNote: string | null;
-                                /** Format: date-time */
-                                completedAt: string | null;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** Format: date-time */
-                                updatedAt: string;
-                            }[];
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    orderId: string;
+                                    /** Format: uuid */
+                                    userId: string;
+                                    amount: number;
+                                    /** @enum {string} */
+                                    reason: "OUT_OF_STOCK" | "EXPIRED" | "QUALITY_ISSUE" | "WRONG_ITEM" | "SHORTAGE" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                    reasonDetail: string | null;
+                                    /** @enum {string} */
+                                    status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
+                                    transactionId: string | null;
+                                    refundMethod: string;
+                                    /** Format: uuid */
+                                    reviewedBy: string | null;
+                                    /** Format: date-time */
+                                    reviewedAt: string | null;
+                                    reviewNote: string | null;
+                                    /** Format: date-time */
+                                    completedAt: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    items: {
+                                        /** Format: uuid */
+                                        id: string;
+                                        /** Format: uuid */
+                                        refundId: string;
+                                        /** Format: uuid */
+                                        orderItemId: string;
+                                        /** Format: uuid */
+                                        skuId: string;
+                                        productName: {
+                                            [key: string]: string;
+                                        };
+                                        unitPrice: number;
+                                        refundQty: number;
+                                        subtotal: number;
+                                    }[];
+                                    photos: string[];
+                                }[];
+                                nextCursor: string | null;
+                                hasMore: boolean;
+                                total?: number;
+                            };
                         };
                     };
                 };
@@ -9513,7 +11248,7 @@ export interface paths {
                                 userId: string;
                                 amount: number;
                                 /** @enum {string} */
-                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reason: "OUT_OF_STOCK" | "EXPIRED" | "QUALITY_ISSUE" | "WRONG_ITEM" | "SHORTAGE" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
                                 reasonDetail: string | null;
                                 /** @enum {string} */
                                 status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
@@ -9530,6 +11265,23 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    refundId: string;
+                                    /** Format: uuid */
+                                    orderItemId: string;
+                                    /** Format: uuid */
+                                    skuId: string;
+                                    productName: {
+                                        [key: string]: string;
+                                    };
+                                    unitPrice: number;
+                                    refundQty: number;
+                                    subtotal: number;
+                                }[];
+                                photos: string[];
                             };
                         };
                     };
@@ -9612,7 +11364,7 @@ export interface paths {
                                 userId: string;
                                 amount: number;
                                 /** @enum {string} */
-                                reason: "OUT_OF_STOCK" | "QUALITY_ISSUE" | "WRONG_ITEM" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
+                                reason: "OUT_OF_STOCK" | "EXPIRED" | "QUALITY_ISSUE" | "WRONG_ITEM" | "SHORTAGE" | "DELIVERY_TOO_SLOW" | "CUSTOMER_CHANGE_MIND" | "OTHER";
                                 reasonDetail: string | null;
                                 /** @enum {string} */
                                 status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "FAILED" | "CANCELLED";
@@ -9629,6 +11381,23 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    refundId: string;
+                                    /** Format: uuid */
+                                    orderItemId: string;
+                                    /** Format: uuid */
+                                    skuId: string;
+                                    productName: {
+                                        [key: string]: string;
+                                    };
+                                    unitPrice: number;
+                                    refundQty: number;
+                                    subtotal: number;
+                                }[];
+                                photos: string[];
                             };
                         };
                     };
@@ -9972,6 +11741,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/client/uploads/refund-evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 退款凭证上传（P13 售后图片 2026-08-10）。multipart/form-data，field name="file"。CUSTOMER 权限 + DeviceTypeGuard 自动校验 client_app deviceType。支持 jpg/png/webp，size ≤ 5MB，最小 100×100（无 1:1 约束，售后凭证任意比例），服务端校验 magic bytes（防 mime 伪造）。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 上传成功，返回公开 URL + key + size（前端拿到 URL 后提交 POST /client/refunds 的 photos[]） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uri */
+                            url: string;
+                            key: string;
+                            size: number;
+                        };
+                    };
+                };
+                /** @description 不支持的 mime / 空文件 / magic bytes 不匹配 / 尺寸过小（< 100×100） */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-AUTH-003 未授权 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-AUTH-001 跨端调用或 E-AUTH-012 非本人 */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description 文件超过 5MB 上限 */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-UPLOAD-001 存储服务错误（StorageError）/ E-UPLOAD-002 其他上传错误 */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/client/home-entries": {
         parameters: {
             query?: never;
@@ -10039,6 +11944,48 @@ export interface paths {
             requestBody?: never;
             responses: {
                 /** @description 热搜列表（PINNED 前置 + BLOCKED 剔除 + ZSET 真实 + MANUAL 兜底） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            word: string;
+                            searchCount: number;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/search/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 搜索建议 / 输入联想（C 方案词联想，@Public）。三源合并去重：HotSearchTerm 词库前缀匹配（PINNED/MANUAL）+ Redis ZSET 真实词前缀 + 商品名前缀兜底。返 HotSearchTermItem[]，word 是建议词非 i18n key。prefix < 1 字符返空数组。 */
+        get: {
+            parameters: {
+                query: {
+                    prefix: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 建议词列表（词库 > ZSET > 商品名，BLOCKED 全链路剔除） */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -10557,7 +12504,7 @@ export interface paths {
                         status?: "PENDING" | "APPROVED" | "REJECTED";
                         reply?: {
                             [key: string]: string;
-                        };
+                        } | null;
                     };
                 };
             };
@@ -10619,6 +12566,929 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/v1/admin/settle/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 结算单列表（offset 分页 page/pageSize/total）。Role: super_admin。 */
+        get: {
+            parameters: {
+                query?: {
+                    subjectType?: "MERCHANT" | "RIDER";
+                    subjectId?: string;
+                    periodFrom?: string;
+                    periodTo?: string;
+                    status?: "PENDING" | "CONFIRMED" | "PAID" | "DISPUTED";
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 结算单列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    periodDate: string;
+                                    /** @enum {string} */
+                                    subjectType: "MERCHANT" | "RIDER";
+                                    subjectId: string;
+                                    warehouseId: string | null;
+                                    orderCount: number;
+                                    grossAmount: number;
+                                    commission: number;
+                                    refundAmount: number;
+                                    netAmount: number;
+                                    /** @enum {string} */
+                                    status: "PENDING" | "CONFIRMED" | "PAID" | "DISPUTED";
+                                    /** Format: date-time */
+                                    confirmedAt: string | null;
+                                    /** Format: date-time */
+                                    paidAt: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                }[];
+                                total: number;
+                                page: number;
+                                pageSize: number;
+                            };
+                        };
+                    };
+                };
+                /** @description UNAUTHORIZED */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description FORBIDDEN */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settle/settlements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 结算单详情 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                periodDate: string;
+                                /** @enum {string} */
+                                subjectType: "MERCHANT" | "RIDER";
+                                subjectId: string;
+                                warehouseId: string | null;
+                                orderCount: number;
+                                grossAmount: number;
+                                commission: number;
+                                refundAmount: number;
+                                netAmount: number;
+                                /** @enum {string} */
+                                status: "PENDING" | "CONFIRMED" | "PAID" | "DISPUTED";
+                                /** Format: date-time */
+                                confirmedAt: string | null;
+                                /** Format: date-time */
+                                paidAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description E-SETTLE-004 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settle/settlements/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 确认结算单（PENDING → CONFIRMED，乐观锁 updateMany 防双过） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 确认成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                periodDate: string;
+                                /** @enum {string} */
+                                subjectType: "MERCHANT" | "RIDER";
+                                subjectId: string;
+                                warehouseId: string | null;
+                                orderCount: number;
+                                grossAmount: number;
+                                commission: number;
+                                refundAmount: number;
+                                netAmount: number;
+                                /** @enum {string} */
+                                status: "PENDING" | "CONFIRMED" | "PAID" | "DISPUTED";
+                                /** Format: date-time */
+                                confirmedAt: string | null;
+                                /** Format: date-time */
+                                paidAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description E-SETTLE-004 not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-SETTLE-003 状态不对/race */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settle/settlements/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 手动触发结算（T+1 兜底/调试；幂等：同 periodDate+subject 唯一，重复返已有） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        periodDate?: string;
+                        /** @enum {string} */
+                        subjectType: "MERCHANT" | "RIDER";
+                        subjectId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 触发成功（新建或返回已有） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                periodDate: string;
+                                /** @enum {string} */
+                                subjectType: "MERCHANT" | "RIDER";
+                                subjectId: string;
+                                warehouseId: string | null;
+                                orderCount: number;
+                                grossAmount: number;
+                                commission: number;
+                                refundAmount: number;
+                                netAmount: number;
+                                /** @enum {string} */
+                                status: "PENDING" | "CONFIRMED" | "PAID" | "DISPUTED";
+                                /** Format: date-time */
+                                confirmedAt: string | null;
+                                /** Format: date-time */
+                                paidAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description E-SETTLE-003 race */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settle/withdrawals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 提现申请列表（offset 分页）。super_admin 写权限；warehouse_staff/customer_service 只读。 */
+        get: {
+            parameters: {
+                query?: {
+                    requesterType?: "MERCHANT" | "RIDER";
+                    requesterId?: string;
+                    status?: "PENDING" | "APPROVED" | "REJECTED" | "PAID" | "FAILED";
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 提现列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** @enum {string} */
+                                    requesterType: "MERCHANT" | "RIDER";
+                                    requesterId: string;
+                                    amount: number;
+                                    /** @enum {string} */
+                                    status: "PENDING" | "APPROVED" | "REJECTED" | "PAID" | "FAILED";
+                                    payoutAccount: {
+                                        /** @enum {string} */
+                                        channel: "BANK_TRANSFER" | "WECHAT" | "ALIPAY" | "PAYPAL";
+                                        account: string;
+                                        holderName?: string;
+                                        bankName?: string;
+                                        branchName?: string;
+                                    };
+                                    rejectReason: string | null;
+                                    payoutReference: string | null;
+                                    reviewedBy: string | null;
+                                    /** Format: date-time */
+                                    reviewedAt: string | null;
+                                    /** Format: date-time */
+                                    paidAt: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                }[];
+                                total: number;
+                                page: number;
+                                pageSize: number;
+                            };
+                        };
+                    };
+                };
+                /** @description UNAUTHORIZED */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description FORBIDDEN */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description 创建提现申请（super_admin 代录；金额超可用余额抛 E-SETTLE-001） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        requesterType: "MERCHANT" | "RIDER";
+                        requesterId: string;
+                        amount: number;
+                        payoutAccount: {
+                            /** @enum {string} */
+                            channel: "BANK_TRANSFER" | "WECHAT" | "ALIPAY" | "PAYPAL";
+                            account: string;
+                            holderName?: string;
+                            bankName?: string;
+                            branchName?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description 创建成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                requesterType: "MERCHANT" | "RIDER";
+                                requesterId: string;
+                                amount: number;
+                                /** @enum {string} */
+                                status: "PENDING" | "APPROVED" | "REJECTED" | "PAID" | "FAILED";
+                                payoutAccount: {
+                                    /** @enum {string} */
+                                    channel: "BANK_TRANSFER" | "WECHAT" | "ALIPAY" | "PAYPAL";
+                                    account: string;
+                                    holderName?: string;
+                                    bankName?: string;
+                                    branchName?: string;
+                                };
+                                rejectReason: string | null;
+                                payoutReference: string | null;
+                                reviewedBy: string | null;
+                                /** Format: date-time */
+                                reviewedAt: string | null;
+                                /** Format: date-time */
+                                paidAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description E-SETTLE-001 余额不足 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settle/withdrawals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 提现申请详情 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 详情 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                requesterType: "MERCHANT" | "RIDER";
+                                requesterId: string;
+                                amount: number;
+                                /** @enum {string} */
+                                status: "PENDING" | "APPROVED" | "REJECTED" | "PAID" | "FAILED";
+                                payoutAccount: {
+                                    /** @enum {string} */
+                                    channel: "BANK_TRANSFER" | "WECHAT" | "ALIPAY" | "PAYPAL";
+                                    account: string;
+                                    holderName?: string;
+                                    bankName?: string;
+                                    branchName?: string;
+                                };
+                                rejectReason: string | null;
+                                payoutReference: string | null;
+                                reviewedBy: string | null;
+                                /** Format: date-time */
+                                reviewedAt: string | null;
+                                /** Format: date-time */
+                                paidAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description E-SETTLE-002 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settle/withdrawals/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 审核提现（APPROVE/REJECT，REJECT 必填 rejectReason）。仅 super_admin。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        action: "APPROVE" | "REJECT";
+                        rejectReason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 审核成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                requesterType: "MERCHANT" | "RIDER";
+                                requesterId: string;
+                                amount: number;
+                                /** @enum {string} */
+                                status: "PENDING" | "APPROVED" | "REJECTED" | "PAID" | "FAILED";
+                                payoutAccount: {
+                                    /** @enum {string} */
+                                    channel: "BANK_TRANSFER" | "WECHAT" | "ALIPAY" | "PAYPAL";
+                                    account: string;
+                                    holderName?: string;
+                                    bankName?: string;
+                                    branchName?: string;
+                                };
+                                rejectReason: string | null;
+                                payoutReference: string | null;
+                                reviewedBy: string | null;
+                                /** Format: date-time */
+                                reviewedAt: string | null;
+                                /** Format: date-time */
+                                paidAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description E-SETTLE-002 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-SETTLE-003 状态不对/race */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settle/withdrawals/{id}/mark-paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 标记线下打款完成（必填 payoutReference，APPROVED → PAID）。仅 super_admin。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        payoutReference: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 标记成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                requesterType: "MERCHANT" | "RIDER";
+                                requesterId: string;
+                                amount: number;
+                                /** @enum {string} */
+                                status: "PENDING" | "APPROVED" | "REJECTED" | "PAID" | "FAILED";
+                                payoutAccount: {
+                                    /** @enum {string} */
+                                    channel: "BANK_TRANSFER" | "WECHAT" | "ALIPAY" | "PAYPAL";
+                                    account: string;
+                                    holderName?: string;
+                                    bankName?: string;
+                                    branchName?: string;
+                                };
+                                rejectReason: string | null;
+                                payoutReference: string | null;
+                                reviewedBy: string | null;
+                                /** Format: date-time */
+                                reviewedAt: string | null;
+                                /** Format: date-time */
+                                paidAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description E-SETTLE-002 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-SETTLE-003 非 APPROVED */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
 }
@@ -11269,6 +14139,7 @@ export interface components {
             sortOrder: number;
             /** @enum {string} */
             status?: "ACTIVE" | "INACTIVE";
+            productCount?: number;
             children?: {
                 /** Format: uuid */
                 id: string;
@@ -11281,6 +14152,7 @@ export interface components {
                 sortOrder: number;
                 /** @enum {string} */
                 status?: "ACTIVE" | "INACTIVE";
+                productCount?: number;
             }[];
         };
         CreateCategoryRequest: {
@@ -11437,6 +14309,8 @@ export interface components {
             remark?: string;
             /** @enum {string} */
             paymentMethod: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+            /** Format: uuid */
+            couponId?: string;
         };
         CancelOrderRequest: {
             reason: string;
@@ -11589,6 +14463,35 @@ export interface components {
             /** @enum {string} */
             status: "available" | "used" | "expired";
         };
+        MyCoupon: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            promotionId: string;
+            code: string;
+            /** @enum {string} */
+            status: "unused" | "used" | "expired";
+            /** @enum {string} */
+            type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_DELIVERY";
+            value: number;
+            minOrderAmount: number;
+            maxDiscountAmount: number | null;
+            name: string;
+            description: string | null;
+            /** Format: date-time */
+            startAt: string;
+            /** Format: date-time */
+            endAt: string;
+            /** Format: date-time */
+            receivedAt: string;
+            /** Format: date-time */
+            usedAt: string | null;
+            /** Format: uuid */
+            orderId: string | null;
+        };
+        RedeemCouponRequest: {
+            code: string;
+        };
         PaymentIntent: {
             /** Format: uuid */
             id: string;
@@ -11643,6 +14546,341 @@ export interface components {
                 isDefault: boolean;
                 enabled: boolean;
                 mockFlag: boolean;
+            }[];
+        };
+        PaymentIntentAdminView: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** @enum {string} */
+            method: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+            /** @enum {string} */
+            status: "UNPAID" | "PAID" | "REFUNDED";
+            amount: number;
+            transactionId: string | null;
+            clientSecret: string | null;
+            /** Format: uri */
+            receiptUrl: string | null;
+            mockFlag: boolean;
+            /** Format: date-time */
+            paidAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            orderNo: string;
+            /** Format: uuid */
+            userId: string;
+            /** Format: uuid */
+            warehouseId: string;
+        };
+        PaymentIntentAdminDetail: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** @enum {string} */
+            method: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+            /** @enum {string} */
+            status: "UNPAID" | "PAID" | "REFUNDED";
+            amount: number;
+            transactionId: string | null;
+            clientSecret: string | null;
+            /** Format: uri */
+            receiptUrl: string | null;
+            mockFlag: boolean;
+            /** Format: date-time */
+            paidAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            orderNo: string;
+            /** Format: uuid */
+            userId: string;
+            /** Format: uuid */
+            warehouseId: string;
+            order: {
+                orderNo: string;
+                /** Format: uuid */
+                userId: string;
+                /** Format: uuid */
+                warehouseId: string;
+                status: string;
+                refunds: {
+                    /** Format: uuid */
+                    id: string;
+                    amount: number;
+                    /** @enum {string} */
+                    status?: "UNPAID" | "PAID" | "REFUNDED";
+                    reason: string;
+                }[];
+            };
+        };
+        ListPaymentIntentsQuery: {
+            /** @enum {string} */
+            status?: "UNPAID" | "PAID" | "REFUNDED";
+            /** @enum {string} */
+            method?: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+            /** Format: uuid */
+            orderId?: string;
+            orderNo?: string;
+            /** @enum {string} */
+            mockFlag?: "true" | "false";
+            cursor?: string;
+            limit?: number;
+        };
+        PaymentIntentListResponse: {
+            /** @enum {boolean} */
+            success: true;
+            data: {
+                items: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: uuid */
+                    orderId: string;
+                    /** @enum {string} */
+                    method: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+                    /** @enum {string} */
+                    status: "UNPAID" | "PAID" | "REFUNDED";
+                    amount: number;
+                    transactionId: string | null;
+                    clientSecret: string | null;
+                    /** Format: uri */
+                    receiptUrl: string | null;
+                    mockFlag: boolean;
+                    /** Format: date-time */
+                    paidAt: string | null;
+                    /** Format: date-time */
+                    createdAt: string;
+                    /** Format: date-time */
+                    updatedAt: string;
+                    orderNo: string;
+                    /** Format: uuid */
+                    userId: string;
+                    /** Format: uuid */
+                    warehouseId: string;
+                }[];
+                nextCursor: string | null;
+                hasMore: boolean;
+                total?: number;
+            };
+        };
+        MarkFailedRequest: {
+            reason: string;
+        };
+        ReconciliationItem: {
+            /** @enum {string} */
+            status: "UNPAID" | "PAID" | "REFUNDED";
+            /** @enum {string} */
+            method: "COD" | "BANK_TRANSFER" | "WECHAT" | "PAYPAL" | "STRIPE";
+            count: number;
+            totalAmount: number;
+        };
+        AdminDeliveryTaskView: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** Format: uuid */
+            riderId: string | null;
+            /** Format: uuid */
+            warehouseId: string;
+            /** @enum {string} */
+            status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
+            pickupAddress: string;
+            pickupLat: number;
+            pickupLng: number;
+            dropoffAddress: string;
+            dropoffLat: number;
+            dropoffLng: number;
+            /** Format: date-time */
+            assignedAt: string | null;
+            /** Format: date-time */
+            pickedUpAt: string | null;
+            /** Format: date-time */
+            deliveredAt: string | null;
+            note: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            estimatedArrival: string | null;
+            warehouseCode: string;
+            order: {
+                orderNo: string;
+                status: string;
+                payableAmount: number | null;
+                paymentMethod: string;
+            };
+            rider: {
+                /** Format: uuid */
+                id: string;
+                riderName: string;
+                phone: string;
+            } | null;
+        };
+        AdminTaskListResponse: {
+            /** @enum {boolean} */
+            success: true;
+            data: {
+                items: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: uuid */
+                    orderId: string;
+                    /** Format: uuid */
+                    riderId: string | null;
+                    /** Format: uuid */
+                    warehouseId: string;
+                    /** @enum {string} */
+                    status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
+                    pickupAddress: string;
+                    pickupLat: number;
+                    pickupLng: number;
+                    dropoffAddress: string;
+                    dropoffLat: number;
+                    dropoffLng: number;
+                    /** Format: date-time */
+                    assignedAt: string | null;
+                    /** Format: date-time */
+                    pickedUpAt: string | null;
+                    /** Format: date-time */
+                    deliveredAt: string | null;
+                    note: string | null;
+                    /** Format: date-time */
+                    createdAt: string;
+                    /** Format: date-time */
+                    updatedAt: string;
+                    /** Format: date-time */
+                    estimatedArrival: string | null;
+                    warehouseCode: string;
+                    order: {
+                        orderNo: string;
+                        status: string;
+                        payableAmount: number | null;
+                        paymentMethod: string;
+                    };
+                    rider: {
+                        /** Format: uuid */
+                        id: string;
+                        riderName: string;
+                        phone: string;
+                    } | null;
+                }[];
+                nextCursor: string | null;
+                hasMore: boolean;
+                total?: number;
+            };
+        };
+        ListAllTasksQuery: {
+            /** @enum {string} */
+            status?: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
+            /** Format: uuid */
+            warehouseId?: string;
+            /** Format: uuid */
+            riderId?: string;
+            orderNo?: string;
+            cursor?: string;
+            limit?: number;
+        };
+        ReassignTaskRequest: {
+            /** Format: uuid */
+            newRiderId: string;
+            reason?: string;
+        };
+        CancelTaskRequest: {
+            reason?: string;
+        };
+        AvailableRider: {
+            /** Format: uuid */
+            id: string;
+            riderName: string;
+            phone: string;
+            /** @enum {string} */
+            vehicleType: "BICYCLE" | "MOTORCYCLE" | "CAR";
+            isOnline: boolean;
+            totalDeliveries: number;
+            rating: number;
+        };
+        BatchAdjustRequest: {
+            items: {
+                /** Format: uuid */
+                warehouseId: string;
+                /** Format: uuid */
+                skuId: string;
+                deltaQty: number;
+                reason?: string;
+            }[];
+        };
+        BatchAdjustResult: {
+            items: {
+                /** Format: uuid */
+                warehouseId: string;
+                /** Format: uuid */
+                skuId: string;
+                deltaQty: number;
+                afterQty: number;
+            }[];
+        };
+        TransferRequest: {
+            /** Format: uuid */
+            fromWarehouseId: string;
+            /** Format: uuid */
+            toWarehouseId: string;
+            items: {
+                /** Format: uuid */
+                skuId: string;
+                quantity: number;
+            }[];
+            reason?: string;
+        };
+        TransferResult: {
+            /** Format: uuid */
+            referenceId: string;
+            /** Format: uuid */
+            fromWarehouseId: string;
+            /** Format: uuid */
+            toWarehouseId: string;
+            items: {
+                /** Format: uuid */
+                skuId: string;
+                quantity: number;
+                fromAfterQty: number;
+                toAfterQty: number;
+            }[];
+        };
+        TransferRecord: {
+            /** Format: uuid */
+            referenceId: string;
+            /** Format: uuid */
+            fromWarehouseId: string;
+            /** Format: uuid */
+            toWarehouseId: string;
+            items: {
+                /** Format: uuid */
+                skuId: string;
+                quantity: number;
+            }[];
+            reason: string | null;
+            /** Format: uuid */
+            operatorId: string | null;
+            createdAt: string;
+        };
+        ListTransfersQuery: {
+            /** Format: uuid */
+            fromWarehouseId?: string;
+            /** Format: uuid */
+            toWarehouseId?: string;
+            limit?: number;
+        };
+        ImportResult: {
+            successCount: number;
+            failedRows: {
+                row: number;
+                error: string;
             }[];
         };
         DashboardSummary: {
