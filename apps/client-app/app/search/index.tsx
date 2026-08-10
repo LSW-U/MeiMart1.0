@@ -200,7 +200,7 @@ export default function SearchIndexPage() {
                 hitSlop={8}
                 style={styles.toolbarBtn}
                 accessibilityRole="button"
-                accessibilityLabel="Go back"
+                accessibilityLabel={t('common.goBack')}
               >
                 <Icon symbol="arrow_back" size={24} color={ON_PRIMARY} />
               </Pressable>

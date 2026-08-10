@@ -388,7 +388,7 @@ export default function ProductDetailPage() {
                       disabled={quantity <= 1}
                       style={styles.stepperBtn}
                       accessibilityRole="button"
-                      accessibilityLabel="Decrease quantity"
+                      accessibilityLabel={t('cart.a11y.decreaseQty')}
                     >
                       <Text
                         style={[
@@ -407,7 +407,7 @@ export default function ProductDetailPage() {
                       disabled={quantity >= qtyMax}
                       style={styles.stepperBtn}
                       accessibilityRole="button"
-                      accessibilityLabel="Increase quantity"
+                      accessibilityLabel={t('cart.a11y.increaseQty')}
                     >
                       <Text
                         style={[
@@ -586,7 +586,7 @@ export default function ProductDetailPage() {
                   onPress={writeReview}
                   style={[styles.writeReviewBtn, { borderBottomColor: colors.primary }]}
                   accessibilityRole="button"
-                  accessibilityLabel="Write a review"
+                  accessibilityLabel={t('product.writeReview')}
                 >
                   <Text style={[styles.writeReviewText, { color: colors.primary }]}>
                     {t('product.writeReview')}
@@ -886,7 +886,7 @@ export default function ProductDetailPage() {
             pressed && !isSoldOut && { opacity: 0.85 },
           ]}
           accessibilityRole="button"
-          accessibilityLabel="Add to cart"
+          accessibilityLabel={t('product.addToCart')}
           accessibilityState={{ disabled: isSoldOut }}
         >
           <Text
@@ -1037,7 +1037,7 @@ function TopBar({
         hitSlop={8}
         style={styles.topBarBtn}
         accessibilityRole="button"
-        accessibilityLabel="Go back"
+        accessibilityLabel={translate('common.goBack')}
       >
         <Icon symbol="arrow_back" size={24} color={colors['on-surface']} />
       </Pressable>
@@ -1076,7 +1076,7 @@ function TopBar({
         hitSlop={8}
         style={styles.topBarBtn}
         accessibilityRole="button"
-        accessibilityLabel="Share"
+        accessibilityLabel={translate('common.share')}
       >
         <Icon symbol="share" size={24} color={colors['on-surface']} />
       </Pressable>
@@ -1085,7 +1085,7 @@ function TopBar({
         hitSlop={8}
         style={styles.topBarBtn}
         accessibilityRole="button"
-        accessibilityLabel="Shopping cart"
+        accessibilityLabel={translate('cart.title')}
       >
         <Icon symbol="shopping_cart" size={24} color={colors['primary-container']} />
         {cartCount > 0 && (

@@ -1,5 +1,6 @@
 import { Modal as RNModal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 
 import type { ModalProps } from './Modal.types';
@@ -14,6 +15,7 @@ export function Modal({
   testID,
 }: ModalProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <RNModal
@@ -28,7 +30,7 @@ export function Modal({
         style={styles.backdrop}
         onPress={() => dismissable && onClose?.()}
         accessibilityRole="button"
-        accessibilityLabel="Close dialog"
+        accessibilityLabel={t('common.closeDialog')}
         accessibilityHint="Tap outside to close"
       >
         <Pressable
@@ -50,7 +52,7 @@ export function Modal({
                   onPress={onClose}
                   hitSlop={8}
                   accessibilityRole="button"
-                  accessibilityLabel="Close"
+                  accessibilityLabel={t('common.close')}
                   style={styles.closeBtn}
                 >
                   <MaterialCommunityIcons

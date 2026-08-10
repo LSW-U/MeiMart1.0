@@ -151,7 +151,7 @@ export default function CouponsPage() {
             pressed && { transform: [{ scale: 0.98 }] },
           ]}
           accessibilityRole="button"
-          accessibilityLabel="Coupon center"
+          accessibilityLabel={t('coupons.centerTitle')}
           testID="coupon-center"
         >
           <View style={styles.centerIconWrap}>

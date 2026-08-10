@@ -152,7 +152,7 @@ export default function FeedbackPage() {
                 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Add screenshot"
+              accessibilityLabel={t('service.feedback.a11y.addScreenshot')}
               testID="feedback-add-photo"
             >
               <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />

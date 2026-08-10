@@ -88,7 +88,7 @@ export default function FavoritesPage() {
         onPress={exitSelectMode}
         hitSlop={8}
         accessibilityRole="button"
-        accessibilityLabel="Cancel select"
+        accessibilityLabel={t('favorites.a11y.cancelSelect')}
       >
         <Text style={styles.headerActionText}>{t('common.cancel')}</Text>
       </Pressable>
@@ -99,7 +99,7 @@ export default function FavoritesPage() {
       hitSlop={8}
       style={styles.headerBtn}
       accessibilityRole="button"
-      accessibilityLabel="Manage favorites"
+      accessibilityLabel={t('favorites.a11y.manage')}
       testID="favorites-manage"
     >
       <Icon symbol="edit" size={22} color="#ffffff" />
@@ -143,7 +143,7 @@ export default function FavoritesPage() {
             }}
             style={styles.manageBarBtn}
             accessibilityRole="button"
-            accessibilityLabel="Select all"
+            accessibilityLabel={t('common.selectAll')}
           >
             <Icon
               symbol={

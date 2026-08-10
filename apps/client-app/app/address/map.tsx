@@ -4,6 +4,7 @@
 import { StyleSheet, View, Text, Pressable, ScrollView, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -32,6 +33,7 @@ const NEARBY_PLACES: NearbyPlace[] = [
 export default function MapPickPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaWrapper
@@ -85,7 +87,7 @@ export default function MapPickPage() {
                 pressed && { transform: [{ scale: 0.95 }] },
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Use current location"
+              accessibilityLabel={t('address.a11y.useCurrentLocation')}
             >
               <Icon symbol="my_location" size={20} color={colors.secondary} />
             </Pressable>
@@ -208,7 +210,7 @@ export default function MapPickPage() {
             pressed && { transform: [{ scale: 0.98 }] },
           ]}
           accessibilityRole="button"
-          accessibilityLabel="Confirm and save address"
+          accessibilityLabel={t('address.a11y.confirmSave')}
         >
           <Text style={styles.saveBtnText}>CONFIRM LOCATION</Text>
         </Pressable>
@@ -239,6 +241,7 @@ function MotifTriangle({ size, color, opacity }: { size: number; color: string; 
 // PrimaryHeader
 function Header({ title }: { title: string }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const handleBack = useSafeBack();
   return (
     <View accessibilityRole="header">
@@ -255,7 +258,7 @@ function Header({ title }: { title: string }) {
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={t('common.goBack')}
           >
             <Icon symbol="arrow_back" size={24} color="#ffffff" />
           </Pressable>
@@ -265,7 +268,7 @@ function Header({ title }: { title: string }) {
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel="Help"
+            accessibilityLabel={t('common.help')}
           >
             <Icon symbol="help_outline" size={24} color="#ffffff" />
           </Pressable>

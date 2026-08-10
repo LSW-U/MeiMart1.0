@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 
 import type { SwitchProps } from './Switch.types';
@@ -10,6 +11,7 @@ const PADDING = (TRACK_H - KNOB) / 2;
 
 export function Switch({ value, onValueChange, label, disabled = false, testID }: SwitchProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const trackBg = value ? colors.primary : colors['outline-variant'];
   const knobBg = colors.surface;
 
@@ -59,7 +61,7 @@ export function Switch({ value, onValueChange, label, disabled = false, testID }
       testID={testID}
       onPress={() => !disabled && onValueChange?.(!value)}
       accessibilityRole="switch"
-      accessibilityLabel="Toggle"
+      accessibilityLabel={t('common.toggle')}
       accessibilityState={{ checked: value, disabled }}
     >
       {row}

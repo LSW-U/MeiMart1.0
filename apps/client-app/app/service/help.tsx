@@ -87,7 +87,7 @@ export default function HelpCenterPage() {
             placeholder={t('service.help.searchPlaceholder', { defaultValue: 'Search help' })}
             placeholderTextColor={colors['on-surface-variant']}
             style={[styles.searchInput, { color: colors['on-surface'] }]}
-            accessibilityLabel="Search help center"
+            accessibilityLabel={t('service.help.a11y.searchPlaceholder')}
             testID="help-search"
           />
           {search.length > 0 && (
@@ -95,7 +95,7 @@ export default function HelpCenterPage() {
               onPress={() => setSearch('')}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel="Clear search"
+              accessibilityLabel={t('common.clearSearch')}
             >
               <Icon symbol="close" size={18} color={colors['on-surface-variant']} />
             </Pressable>

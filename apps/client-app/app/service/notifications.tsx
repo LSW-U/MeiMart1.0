@@ -107,7 +107,7 @@ export default function NotificationsPage() {
               hitSlop={8}
               style={styles.headerBtn}
               accessibilityRole="button"
-              accessibilityLabel="Notification settings"
+              accessibilityLabel={t('service.notifications.a11y.settings')}
             >
               <Icon symbol="settings" size={22} color="#ffffff" />
             </Pressable>

@@ -228,7 +228,7 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
               hitSlop={8}
               style={styles.pinBtn}
               accessibilityRole="button"
-              accessibilityLabel="Pin on map"
+              accessibilityLabel={t('address.a11y.pinOnMap')}
             >
               <Icon symbol="location_on" size={14} color={colors.primary} />
               <Text style={[styles.pinBtnText, { color: colors.primary }]}>PIN ON MAP</Text>
@@ -351,7 +351,7 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
             submitting && { opacity: 0.6 },
           ]}
           accessibilityRole="button"
-          accessibilityLabel="Save address"
+          accessibilityLabel={t('address.a11y.save')}
         >
           <Text style={styles.saveBtnText}>SAVE ADDRESS</Text>
         </Pressable>
@@ -445,6 +445,7 @@ function MotifTriangle({ size, color, opacity }: { size: number; color: string; 
 
 function Header({ title }: { title: string }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const handleBack = useSafeBack();
   return (
     <View accessibilityRole="header">
@@ -461,7 +462,7 @@ function Header({ title }: { title: string }) {
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={t('common.goBack')}
           >
             <Icon symbol="arrow_back" size={24} color="#ffffff" />
           </Pressable>
@@ -471,7 +472,7 @@ function Header({ title }: { title: string }) {
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel="Help"
+            accessibilityLabel={t('common.help')}
           >
             <Icon symbol="help_outline" size={24} color="#ffffff" />
           </Pressable>

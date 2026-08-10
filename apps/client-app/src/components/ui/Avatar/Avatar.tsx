@@ -1,5 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 
 import type { AvatarProps, AvatarSize } from './Avatar.types';
@@ -19,6 +20,7 @@ export function Avatar({
   testID,
 }: AvatarProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const dimension = SIZE_MAP[size];
 
   const initials = fallback.slice(0, 2).toUpperCase();
@@ -39,7 +41,7 @@ export function Avatar({
         <Image
           source={{ uri }}
           style={{ width: dimension, height: dimension, borderRadius: dimension / 2 }}
-          accessibilityLabel="Avatar image"
+          accessibilityLabel={t('common.avatarImage')}
         />
       ) : (
         <Text
@@ -76,7 +78,7 @@ export function Avatar({
         testID={testID}
         onPress={onPress}
         accessibilityRole="imagebutton"
-        accessibilityLabel="Avatar"
+        accessibilityLabel={t('common.avatar')}
         accessibilityHint={editable ? 'Edit avatar' : 'View avatar'}
         style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
       >
@@ -86,7 +88,7 @@ export function Avatar({
   }
 
   return (
-    <View testID={testID} accessibilityRole="image" accessibilityLabel="Avatar">
+    <View testID={testID} accessibilityRole="image" accessibilityLabel={t('common.avatar')}>
       {inner}
     </View>
   );

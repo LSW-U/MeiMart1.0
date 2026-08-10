@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing } from '@/theme';
 import type { PageHeaderProps } from './PageHeader.types';
 
@@ -11,6 +12,7 @@ export function PageHeader({
   testID,
 }: PageHeaderProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <View
@@ -30,7 +32,7 @@ export function PageHeader({
           hitSlop={8}
           style={styles.backBtn}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('common.goBack')}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color={colors['on-surface']} />
         </Pressable>

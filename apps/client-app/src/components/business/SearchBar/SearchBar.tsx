@@ -1,6 +1,7 @@
 import { StyleSheet, TextInput, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, shadowPresets } from '@/theme';
 import type { SearchBarProps } from './SearchBar.types';
 
@@ -21,6 +22,7 @@ export function SearchBar({
   testID,
 }: SearchBarProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [internal, setInternal] = useState(defaultValue ?? '');
   const isControlled = value !== undefined;
   const current = isControlled ? value : internal;
@@ -79,7 +81,7 @@ export function SearchBar({
         autoFocus={autoFocus}
         returnKeyType="search"
         style={[textStyle('body-md'), { color: textColor, flex: 1 }]}
-        accessibilityLabel="Search input"
+        accessibilityLabel={t('common.searchInput')}
       />
       {showMic && (
         <Pressable
@@ -87,7 +89,7 @@ export function SearchBar({
           hitSlop={8}
           style={styles.trailingBtn}
           accessibilityRole="button"
-          accessibilityLabel="Voice search"
+          accessibilityLabel={t('common.voiceSearch')}
         >
           <MaterialCommunityIcons name="microphone" size={20} color={leadingIconColor} />
         </Pressable>
@@ -98,7 +100,7 @@ export function SearchBar({
           hitSlop={8}
           style={styles.trailingBtn}
           accessibilityRole="button"
-          accessibilityLabel="Clear search"
+          accessibilityLabel={t('common.clearSearch')}
         >
           <MaterialCommunityIcons
             name="close-circle"

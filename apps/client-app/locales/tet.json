@@ -45,7 +45,21 @@
       "weeksAgo": "[TET] {{count}} weeks ago",
       "monthsAgo": "[TET] {{count}} months ago"
     },
-    "contactSeller": "[TET] Contact seller"
+    "contactSeller": "[TET] Contact seller",
+    "goBack": "[TET] Go back",
+    "close": "[TET] Close",
+    "closeDialog": "[TET] Close dialog",
+    "share": "[TET] Share",
+    "toggle": "[TET] Toggle",
+    "selectAll": "[TET] Select all",
+    "clearSearch": "[TET] Clear search",
+    "searchInput": "[TET] Search input",
+    "voiceSearch": "[TET] Voice search",
+    "avatar": "[TET] Avatar",
+    "avatarImage": "[TET] Avatar image",
+    "youAreOffline": "[TET] You are offline",
+    "weakNetwork": "[TET] Weak network connection",
+    "resetApp": "[TET] Reset app state"
   },
   "splash": {
     "welcome": "[TET] Welcome"
@@ -376,7 +390,17 @@
     "pickOnMap": "[TET] Pick on map",
     "empty": "[TET] No addresses",
     "delete": "[TET] Delete address",
-    "deleted": "[TET] Address deleted"
+    "deleted": "[TET] Address deleted",
+    "a11y": {
+      "selectThis": "[TET] Select this address",
+      "edit": "[TET] Edit address",
+      "delete": "[TET] Delete address",
+      "pinOnMap": "[TET] Pin on map",
+      "save": "[TET] Save address",
+      "addNew": "[TET] Add new address",
+      "useCurrentLocation": "[TET] Use current location",
+      "confirmSave": "[TET] Confirm and save address"
+    }
   },
   "profile": {
     "title": "[TET] My Account",
@@ -535,7 +559,11 @@
     "countHint": "[TET] {{count}} item(s) in your favorites",
     "longPressHint": "[TET] Long-press to manage",
     "goBrowse": "[TET] Browse Products",
-    "removed": "[TET] Removed from favorites"
+    "removed": "[TET] Removed from favorites",
+    "a11y": {
+      "cancelSelect": "[TET] Cancel select",
+      "manage": "[TET] Manage favorites"
+    }
   },
   "afterSales": {
     "applyTitle": "[TET] Request after-sales",
@@ -657,7 +685,10 @@
       "fresh": "[TET] Fresh",
       "repurchase": "[TET] Repurchase"
     },
-    "submitFailed": "[TET] Failed to submit review"
+    "submitFailed": "[TET] Failed to submit review",
+    "a11y": {
+      "addPhoto": "[TET] Add photo"
+    }
   },
   "profileEdit": {
     "title": "[TET] Edit profile",
@@ -715,6 +746,9 @@
         "payment": "[TET] Payment issue",
         "shipping": "[TET] Shipping issue",
         "other": "[TET] Other"
+      },
+      "a11y": {
+        "addScreenshot": "[TET] Add screenshot"
       }
     },
     "help": {
@@ -724,6 +758,9 @@
       "contactLink": "[TET] Contact support",
       "searchPlaceholder": "[TET] Search help",
       "hotTitle": "[TET] Hot FAQs",
+      "a11y": {
+        "searchPlaceholder": "[TET] Search help center"
+      },
       "faq": {
         "q1": "[TET] How do I check my order status?",
         "a1": "[TET] Open \"My orders\" and tap an order to see its status and shipping details.",
@@ -745,7 +782,10 @@
       "tabAll": "[TET] All",
       "tabOrder": "[TET] Orders",
       "tabPromo": "[TET] Promotions",
-      "tabSystem": "[TET] System"
+      "tabSystem": "[TET] System",
+      "a11y": {
+        "settings": "[TET] Notification settings"
+      }
     }
   },
   "errors": {

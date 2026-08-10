@@ -1,5 +1,6 @@
 import { Animated, Easing, StyleSheet, type DimensionValue } from 'react-native';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 
 import type { SkeletonProps } from './Skeleton.types';
@@ -12,6 +13,7 @@ export function Skeleton({
   testID,
 }: SkeletonProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [opacity] = useState(() => new Animated.Value(0.3));
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export function Skeleton({
         },
       ]}
       accessibilityRole="none"
-      accessibilityLabel="Loading"
+      accessibilityLabel={t('common.loading')}
     />
   );
 }

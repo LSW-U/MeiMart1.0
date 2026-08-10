@@ -275,7 +275,7 @@ export default function OrderReviewPage() {
                 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Add photo"
+              accessibilityLabel={t('review.a11y.addPhoto')}
               testID="review-add-photo"
             >
               <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />

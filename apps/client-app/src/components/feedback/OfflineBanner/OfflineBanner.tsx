@@ -1,16 +1,18 @@
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing } from '@/theme';
 import type { OfflineBannerProps, WeakNetworkBannerProps } from './OfflineBanner.types';
 
 export function OfflineBanner({ onRetry, testID }: OfflineBannerProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   return (
     <View
       testID={testID}
       style={[styles.banner, { backgroundColor: colors.error }]}
       accessibilityRole="alert"
-      accessibilityLabel="You are offline"
+      accessibilityLabel={t('common.youAreOffline')}
     >
       <MaterialCommunityIcons name="wifi-off" size={20} color={colors['on-error']} />
       <Text style={[textStyle('body-md'), { color: colors['on-error'], flex: 1 }]}>
@@ -21,7 +23,7 @@ export function OfflineBanner({ onRetry, testID }: OfflineBannerProps) {
           onPress={onRetry}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Retry"
+          accessibilityLabel={t('common.retry')}
         >
           <Text style={[textStyle('body-md'), { color: colors['on-error'], fontWeight: '700' }]}>
             Retry
@@ -34,12 +36,13 @@ export function OfflineBanner({ onRetry, testID }: OfflineBannerProps) {
 
 export function WeakNetworkBanner({ testID }: WeakNetworkBannerProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   return (
     <View
       testID={testID}
       style={[styles.banner, { backgroundColor: colors.semantic.warning }]}
       accessibilityRole="alert"
-      accessibilityLabel="Weak network connection"
+      accessibilityLabel={t('common.weakNetwork')}
     >
       <MaterialCommunityIcons name="signal-cellular-2" size={20} color={colors['on-error']} />
       <Text style={[textStyle('body-md'), { color: colors['on-error'] }]}>

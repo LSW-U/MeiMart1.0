@@ -97,7 +97,7 @@ export default function AddressListPage() {
               pressed && { transform: [{ scale: 0.98 }] },
             ]}
             accessibilityRole="button"
-            accessibilityLabel="Add new address"
+            accessibilityLabel={t('address.a11y.addNew')}
           >
             <Icon symbol="add_location_alt" size={22} color="#ffffff" />
             <Text style={styles.addBtnText}>Add New Address</Text>
@@ -168,6 +168,7 @@ function MotifTriangle({ size, color, opacity }: { size: number; color: string; 
 // PrimaryHeader（HTML 第 141-157 行 — primary + tais-pattern + MANAGE bar + arrow_back + help）
 function Header({ title }: { title: string }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const handleBack = useSafeBack();
   return (
     <View accessibilityRole="header">
@@ -186,7 +187,7 @@ function Header({ title }: { title: string }) {
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={t('common.goBack')}
           >
             <Icon symbol="arrow_back" size={24} color="#ffffff" />
           </Pressable>
@@ -196,7 +197,7 @@ function Header({ title }: { title: string }) {
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel="Help"
+            accessibilityLabel={t('common.help')}
           >
             <Icon symbol="help_outline" size={24} color="#ffffff" />
           </Pressable>

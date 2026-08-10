@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { useAuthStore } from '@/store/authStore';
@@ -17,6 +18,7 @@ const HERO_IMAGE =
 
 export default function SplashPage() {
   const { colors } = useTheme();
+  const { t: translate } = useTranslation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const onboardingCompleted = useAppStore((s) => s.onboardingCompleted);
   const clearAuth = useAuthStore((s) => s.clearAuth);
@@ -82,7 +84,7 @@ export default function SplashPage() {
           <Pressable
             onPress={resetDevState}
             style={[styles.resetBtn, { backgroundColor: colors.error }]}
-            accessibilityLabel="Reset app state"
+            accessibilityLabel={translate('common.resetApp')}
           >
             <Text style={styles.resetText}>Reset & Go to Login</Text>
           </Pressable>

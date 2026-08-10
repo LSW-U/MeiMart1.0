@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
 import { Checkbox } from '@/components/ui/Checkbox';
 import type { AddressCardProps } from './AddressCard.types';
@@ -16,6 +17,7 @@ function AddressCardBase({
   testID,
 }: AddressCardProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const fullAddress = `${address.province}${address.city}${address.district}${address.detail}`;
 
   return (
@@ -36,7 +38,7 @@ function AddressCardBase({
           <Checkbox
             checked={selected}
             onPress={() => onSelect?.(address)}
-            accessibilityLabel="Select this address"
+            accessibilityLabel={t('address.a11y.selectThis')}
           />
         )}
         <View style={styles.body}>
@@ -77,7 +79,7 @@ function AddressCardBase({
               onPress={() => onEdit(address)}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel="Edit address"
+              accessibilityLabel={t('address.a11y.edit')}
               style={styles.actionBtn}
             >
               <MaterialCommunityIcons name="pencil" size={18} color={colors.primary} />
@@ -88,7 +90,7 @@ function AddressCardBase({
               onPress={() => onDelete(address)}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel="Delete address"
+              accessibilityLabel={t('address.a11y.delete')}
               style={styles.actionBtn}
             >
               <MaterialCommunityIcons name="trash-can-outline" size={18} color={colors.error} />

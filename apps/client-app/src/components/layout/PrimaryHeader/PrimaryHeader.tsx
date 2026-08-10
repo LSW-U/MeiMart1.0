@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, Pressable } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme, typography, spacing, layout, shadowPresets } from '@/theme';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
@@ -15,6 +16,7 @@ export function PrimaryHeader({
   testID,
 }: PrimaryHeaderProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <View
@@ -34,7 +36,7 @@ export function PrimaryHeader({
             hitSlop={8}
             style={styles.btn}
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={t('common.goBack')}
           >
             <Icon symbol="arrow_back" size={24} color={colors['on-primary']} />
           </Pressable>

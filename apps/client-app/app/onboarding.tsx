@@ -250,7 +250,7 @@ export default function OnboardingPage() {
             onPress={skip}
             style={styles.secondaryBtn}
             accessibilityRole="button"
-            accessibilityLabel="Already have an account"
+            accessibilityLabel={t('auth.alreadyHaveAccount')}
             testID="onboarding-login"
           >
             <Text style={[styles.secondaryText, { color: colors['on-surface-variant'] }]}>

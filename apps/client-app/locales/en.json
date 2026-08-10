@@ -45,7 +45,21 @@
       "weeksAgo": "{{count}} weeks ago",
       "monthsAgo": "{{count}} months ago"
     },
-    "contactSeller": "Contact seller"
+    "contactSeller": "Contact seller",
+    "goBack": "Go back",
+    "close": "Close",
+    "closeDialog": "Close dialog",
+    "share": "Share",
+    "toggle": "Toggle",
+    "selectAll": "Select all",
+    "clearSearch": "Clear search",
+    "searchInput": "Search input",
+    "voiceSearch": "Voice search",
+    "avatar": "Avatar",
+    "avatarImage": "Avatar image",
+    "youAreOffline": "You are offline",
+    "weakNetwork": "Weak network connection",
+    "resetApp": "Reset app state"
   },
   "splash": {
     "welcome": "Welcome"
@@ -423,7 +437,17 @@
     "removeAction": "Delete",
     "removed": "Address deleted",
     "saved": "Address saved",
-    "deleted": "Address deleted"
+    "deleted": "Address deleted",
+    "a11y": {
+      "selectThis": "Select this address",
+      "edit": "Edit address",
+      "delete": "Delete address",
+      "pinOnMap": "Pin on map",
+      "save": "Save address",
+      "addNew": "Add new address",
+      "useCurrentLocation": "Use current location",
+      "confirmSave": "Confirm and save address"
+    }
   },
   "profile": {
     "title": "My Account",
@@ -582,7 +606,11 @@
     "countHint": "{{count}} item(s) in your favorites",
     "longPressHint": "Long-press to manage",
     "goBrowse": "Browse Products",
-    "removed": "Removed from favorites"
+    "removed": "Removed from favorites",
+    "a11y": {
+      "cancelSelect": "Cancel select",
+      "manage": "Manage favorites"
+    }
   },
   "afterSales": {
     "applyTitle": "Request after-sales",
@@ -704,7 +732,10 @@
       "fresh": "Fresh",
       "repurchase": "Repurchase"
     },
-    "submitFailed": "Failed to submit review"
+    "submitFailed": "Failed to submit review",
+    "a11y": {
+      "addPhoto": "Add photo"
+    }
   },
   "profileEdit": {
     "title": "Edit profile",
@@ -762,6 +793,9 @@
         "payment": "Payment issue",
         "shipping": "Shipping issue",
         "other": "Other"
+      },
+      "a11y": {
+        "addScreenshot": "Add screenshot"
       }
     },
     "help": {
@@ -771,6 +805,9 @@
       "contactLink": "Contact support",
       "searchPlaceholder": "Search help",
       "hotTitle": "Hot FAQs",
+      "a11y": {
+        "searchPlaceholder": "Search help center"
+      },
       "faq": {
         "q1": "How do I check my order status?",
         "a1": "Open \"My orders\" and tap an order to see its status and shipping details.",
@@ -792,7 +829,10 @@
       "tabAll": "All",
       "tabOrder": "Orders",
       "tabPromo": "Promotions",
-      "tabSystem": "System"
+      "tabSystem": "System",
+      "a11y": {
+        "settings": "Notification settings"
+      }
     }
   },
   "errors": {
