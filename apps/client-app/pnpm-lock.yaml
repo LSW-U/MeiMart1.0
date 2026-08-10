@@ -59,6 +59,9 @@ importers:
       expo-image:
         specifier: ~56.0.11
         version: 56.0.11(expo@56.0.16)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/jest-preset@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1))(@react-native/metro-config@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
+      expo-image-picker:
+        specifier: ~56.0.23
+        version: 56.0.23(expo@56.0.16)
       expo-linear-gradient:
         specifier: ~56.0.4
         version: 56.0.4(expo@56.0.16)(react-native@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/jest-preset@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1))(@react-native/metro-config@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
@@ -3106,6 +3109,16 @@ packages:
       expo: '*'
       react: '*'
       react-native: '*'
+
+  expo-image-loader@56.0.3:
+    resolution: {integrity: sha512-JgUo4fUeU1ZC+z8iBFj8v7yoGQnZrLbOVPyNE+DWVrld55F2F6R1ck+rmdm/8TNWLz1LhNQfD7c3XYP1ZikxXA==}
+    peerDependencies:
+      expo: '*'
+
+  expo-image-picker@56.0.23:
+    resolution: {integrity: sha512-OvY1AhxBtukKqYtgL9nKtKRUFQfJqwsfZzg4rVDJQRD5rHJkSiW2HalCZB0ov7GFCmrBD5qe+tGgij2vweS2cA==}
+    peerDependencies:
+      expo: '*'
 
   expo-image@56.0.11:
     resolution: {integrity: sha512-k2xwxGk14xi6zxmEGAU4rUTb1lK5qf0y0Qb8+Jaggnul0KaJJxcq9qvyDp9iyJBW35cp9isONAUnNtIiooZ/Pw==}
@@ -9530,6 +9543,15 @@ snapshots:
       expo: 56.0.16(7968dd3eff3f89a66cae315e2f6fd4fe)
       react: 19.2.3
       react-native: 0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/jest-preset@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1))(@react-native/metro-config@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.3)(supports-color@8.1.1)
+
+  expo-image-loader@56.0.3(expo@56.0.16):
+    dependencies:
+      expo: 56.0.16(7968dd3eff3f89a66cae315e2f6fd4fe)
+
+  expo-image-picker@56.0.23(expo@56.0.16):
+    dependencies:
+      expo: 56.0.16(7968dd3eff3f89a66cae315e2f6fd4fe)
+      expo-image-loader: 56.0.3(expo@56.0.16)
 
   expo-image@56.0.11(expo@56.0.16)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/jest-preset@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1))(@react-native/metro-config@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3):
     dependencies:

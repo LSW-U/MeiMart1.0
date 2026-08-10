@@ -8,6 +8,7 @@
 // 注：POST /client/refunds 已就绪（reason 8 值 + items[] 部分退款），Commit 7 接 useCreateRefund
 import { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Image,
   Platform,
@@ -18,6 +19,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
@@ -35,6 +37,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { toast } from '@/store/toastStore';
 import { useOrder } from '@/services/queries/useOrders';
 import { useCreateRefund } from '@/services/queries/useRefunds';
+import { uploadsApi } from '@/services/uploads';
 import { REASON_KEY_TO_ENUM } from '@/services/refunds';
 import { useLocalizer } from '@/i18n';
 import { afterSalesApplySchema, type AfterSalesApplyValues } from '@/forms/schemas/service';
@@ -83,6 +86,9 @@ export default function AfterSalesApplyPage() {
 
   // F5 多商品：itemStates 管理每商品勾选 + 退款数量，order 加载后初始化全选全数量
   const [itemStates, setItemStates] = useState<ItemState[]>([]);
+  // P13 B2 售后凭证照片：URL 数组（upload 端点返回），最多 3 张；uploading 控制按钮 disable + loading
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
   useEffect(() => {
     if (!order) return;
     // 原因：order 是 react-query 缓存（引用稳定），加载完成时初始化 items 全选全数量；非 derived（用户可改勾选/数量）
@@ -144,6 +150,41 @@ export default function AfterSalesApplyPage() {
     );
   }
 
+  // P13 B2 选图 + 上传：expo-image-picker → uploadsApi.refundEvidence → push URL（最多 3 张）
+  const handleAddPhoto = async () => {
+    if (photos.length >= 3) {
+      toast.info(t('afterSales.photoLimitReached', { defaultValue: 'Up to 3 photos' }));
+      return;
+    }
+    if (uploading) return; // 防重复点
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false, // 售后凭证不裁剪，保留原始任意比例（后端最小 100×100 无上限无 1:1）
+      quality: 0.8,
+      allowsMultipleSelection: false,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    const asset = result.assets[0];
+    setUploading(true);
+    try {
+      const uploaded = await uploadsApi.refundEvidence(asset.uri, asset.mimeType ?? 'image/jpeg');
+      setPhotos((prev) => [...prev, uploaded.url]);
+    } catch (err) {
+      // 原因：后端 E-UPLOAD-001/002（magic bytes/尺寸/MinIO 故障），message 英文够用
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : t('afterSales.uploadFailed', { defaultValue: 'Upload failed' }),
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // Commit 7+8：接真实 POST /client/refunds（Commit 7 整单 / Commit 8 部分退款 items[]）
   // reason i18n key -> enum 映射（service 层 REASON_KEY_TO_ENUM）；onSuccess 跳 detail 传 refund.id
   const submit = handleSubmit(async (values) => {
@@ -160,6 +201,8 @@ export default function AfterSalesApplyPage() {
         reasonDetail: values.description,
         // F5 部分退款：items[] 用 orderItemId（OrderItem.id 非 skuId，transformOrderItem 已映射 raw.id）
         items: selected.map(({ orderItemId, refundQty }) => ({ orderItemId, refundQty })),
+        // P13 B2 凭证照片 URL 数组（空时不传，向后兼容；后端 isOwnUrl 校验 + max 9）
+        photos: photos.length > 0 ? photos : undefined,
       });
       toast.success(t('afterSales.submittedDesc'));
       router.replace({
@@ -450,22 +493,48 @@ export default function AfterSalesApplyPage() {
             </Text>
             <View style={styles.photosRow}>
               <Pressable
+                onPress={handleAddPhoto}
                 style={[
                   styles.photoAddBtn,
                   {
                     backgroundColor: colors['surface-container-low'],
                     borderColor: colors['outline-variant'],
+                    opacity: uploading || photos.length >= 3 ? 0.5 : 1,
                   },
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel={t('afterSales.addPhotoA11y', { defaultValue: 'Add evidence photo' })}
+                accessibilityState={{ disabled: uploading || photos.length >= 3 }}
                 testID="aftersales-add-photo"
+                disabled={uploading || photos.length >= 3}
               >
-                <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />
-                <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
-                  {t('afterSales.addPhoto', { defaultValue: 'Add' })}
-                </Text>
+                {uploading ? (
+                  <ActivityIndicator size="small" color={colors['on-surface-variant']} />
+                ) : (
+                  <>
+                    <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />
+                    <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
+                      {t('afterSales.addPhoto', { defaultValue: 'Add' })}
+                    </Text>
+                  </>
+                )}
               </Pressable>
+
+              {/* P13 B2 已选照片缩略图 + 删除按钮 */}
+              {photos.map((url, index) => (
+                <View key={url} style={[styles.photoThumb, { backgroundColor: colors['surface-container'] }]}>
+                  <Image source={{ uri: url }} style={styles.photoThumbImg} resizeMode="cover" />
+                  <Pressable
+                    onPress={() => handleDeletePhoto(index)}
+                    style={[styles.photoDeleteBtn, { backgroundColor: colors['error-container'] }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('afterSales.deletePhotoA11y', { defaultValue: 'Delete photo' })}
+                    testID={`aftersales-delete-photo-${index}`}
+                  >
+                    <Icon symbol="close" size={14} color={colors['on-primary']} />
+                  </Pressable>
+                </View>
+              ))}
             </View>
             <Text style={[styles.photoHint, { color: colors['on-surface-variant'] }]}>
               {t('afterSales.evidenceLimit', { defaultValue: 'Up to 3 photos, JPG / PNG' })}
@@ -711,6 +780,28 @@ const styles = StyleSheet.create({
   photoAddText: {
     ...typography['label-caps'],
     fontSize: 10,
+  },
+  // P13 B2 缩略图：72×72 圆角 + 删除按钮右上角悬浮
+  photoThumb: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  photoThumbImg: {
+    width: '100%',
+    height: '100%',
+  },
+  photoDeleteBtn: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   photoHint: {
     // F4 照片上传提示

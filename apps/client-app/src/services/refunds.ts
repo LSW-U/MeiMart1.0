@@ -44,11 +44,13 @@ export interface RefundItemInput {
 }
 
 // 创建退款 payload（items 不传 = 整单全额退款，向后兼容；Commit 7 整单 / Commit 8 部分退款共用）
+// P13 B2: photos 凭证照片 URL 数组（client upload 端点返回，后端 isOwnUrl 校验 + max 9，前端限 3）
 export interface CreateRefundPayload {
   orderId: string;
   reason: RefundReason;
   reasonDetail?: string;
   items?: RefundItemInput[];
+  photos?: string[];
 }
 
 /**
@@ -86,6 +88,8 @@ export interface RefundRaw {
   updatedAt: string;
   /** 退款商品列表（整单退款时为空数组，需 fallback 到 order.items） */
   items: RefundItemViewRaw[];
+  /** 凭证照片 URL 数组（client upload 端点返回，P13 B2；后端 isOwnUrl 校验） */
+  photos: string[];
 }
 
 export const refundApi = {
@@ -110,6 +114,7 @@ export const refundApi = {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         items: [],
+        photos: [],
       };
       // mock 延迟模拟网络（让 isPending 生效，提交按钮 disable 防 repeated submit）
       return new Promise((resolve) => setTimeout(() => resolve(mock), 300));
@@ -142,6 +147,7 @@ export const refundApi = {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         items: [],
+        photos: [],
       };
       return new Promise((resolve) => setTimeout(() => resolve(mock), 200));
     }
@@ -173,6 +179,7 @@ export const refundApi = {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         items: [],
+        photos: [],
       };
       return new Promise((resolve) => setTimeout(() => resolve(mock), 200));
     }

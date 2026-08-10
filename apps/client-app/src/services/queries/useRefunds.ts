@@ -43,6 +43,7 @@ export function useCreateRefund() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         items: [],
+        photos: [],
       };
       qc.setQueryData<RefundRaw[]>(REFUNDS_QUERY_KEY, (old) => [optimistic, ...(old ?? [])]);
       return { previous };
