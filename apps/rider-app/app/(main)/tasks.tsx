@@ -107,7 +107,7 @@ export default function TasksPage() {
   const renderPickupTask = (task: DeliveryTask) => (
     <TaskCard
       key={task.id}
-      actionLabel={t('tasks.arrivedPickup')}
+      actionLabel={task.status === 'PICKED_UP' ? t('tasks.startDelivery') : t('tasks.arrivedPickup')}
       chatLabel={t('tasks.chat')}
       contactLabel={t('tasks.contact')}
       items={task.items.length ? formatItems(task.items, t) : undefined}
@@ -119,7 +119,7 @@ export default function TasksPage() {
       ]}
       timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
       variant="active"
-      onAction={() => router.push(`/task/${task.id}/pickup`)}
+      onAction={() => router.push(task.status === 'PICKED_UP' ? `/task/${task.id}/navigate` : `/task/${task.id}/pickup`)}
     />
   );
 

@@ -22,9 +22,10 @@ export default function TaskNavigatePage() {
   const { data } = useTask(id);
   const task: DeliveryTask | null = data ?? null;
 
-  // status 不是 DELIVERING 时跳回详情页（用户直接 URL 进了 navigate 但 task 状态不对）
+  // Why: navigate 是取货后导航送货，PICKED_UP / DELIVERING 都应进入
+  //   （后端 deliver 端点接受 PICKED_UP 或 DELIVERING）。其他状态才弹回详情页。
   useEffect(() => {
-    if (task && task.status !== 'DELIVERING') {
+    if (task && task.status !== 'PICKED_UP' && task.status !== 'DELIVERING') {
       router.replace(`/task/${id}`);
     }
   }, [task, id, router]);
@@ -118,7 +119,7 @@ export default function TaskNavigatePage() {
               </View>
 
               {task.dropoff.coordinates && (
-                <NavigationLauncher destination={task.dropoff.coordinates} label={t('tasks.arrivedDelivery')} />
+                <NavigationLauncher destination={task.dropoff.coordinates} label={t('tasks.openNavigation')} />
               )}
             </View>
           </>
@@ -131,7 +132,7 @@ export default function TaskNavigatePage() {
 
       <View className="absolute bottom-0 left-0 right-0 bg-[#fff8f7] p-5 shadow-lg">
         <Button className="bg-[#463200]" onPress={() => router.push(`/task/${id}/sign`)}>
-          {t('tasks.arrivedDelivery')}
+          {t('tasks.goSignoff')}
         </Button>
       </View>
     </View>

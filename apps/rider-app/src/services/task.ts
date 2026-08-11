@@ -205,13 +205,18 @@ function fromView(view: DeliveryTask): DeliveryTask {
 export const taskApi = {
   async getLists(warehouseId?: string): Promise<TaskLists> {
     if (isMockMode) return mockDelay(buildMockLists(), 400);
+    // Why: 后端拆两个端点 - tasks(抢单大厅 PENDING_ASSIGN) + my-tasks(骑手自己的 ASSIGNED/PICKED_UP/DELIVERING)
     const query = buildQuery(warehouseId ? { warehouseId } : {});
-    const res = await api.get<{ items: DeliveryTask[] }>(`/rider/dispatch/tasks${query}`);
-    const all = res.data.items.map(fromView);
+    const [pendingRes, myRes] = await Promise.all([
+      api.get<{ items: DeliveryTask[] }>(`/rider/dispatch/tasks${query}`),
+      api.get<{ items: DeliveryTask[] }>(`/rider/dispatch/my-tasks`),
+    ]);
+    const pending = pendingRes.data.items.map(fromView);
+    const mine = myRes.data.items.map(fromView);
     return {
-      available: all.filter((t) => t.status === 'PENDING_ASSIGN'),
-      pickups: all.filter((t) => t.status === 'ASSIGNED' || t.status === 'PICKED_UP'),
-      deliveries: all.filter((t) => t.status === 'DELIVERING'),
+      available: pending.filter((t) => t.status === 'PENDING_ASSIGN'),
+      pickups: mine.filter((t) => t.status === 'ASSIGNED' || t.status === 'PICKED_UP'),
+      deliveries: mine.filter((t) => t.status === 'DELIVERING'),
     };
   },
 

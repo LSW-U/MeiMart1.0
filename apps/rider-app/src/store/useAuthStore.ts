@@ -31,15 +31,18 @@ export const useAuthStore = create<AuthState>((set) => ({
         const profile = await riderApi.getProfile();
         set({ isAuthenticated: true, rider: profile, hydrated: true });
       } catch (e) {
-        // 设备类型/角色不匹配（E-AUTH-001/E-AUTH-010）：token 不是 rider 的
-        // （如注册流程残留 customer token），清除让用户重新登录，避免卡在半登录状态
-        if (e instanceof ApiError && (e.code === 'E-AUTH-001' || e.code === 'E-AUTH-010')) {
-          console.warn('[useAuthStore] token role mismatch, clearing auth:', e.code);
+        // 认证失败（角色不匹配 E-AUTH-001/010，或 401 token 过期/失效）：
+        // 清除登录态让用户重新登录，避免卡在半登录态（token 无效却 isAuthenticated=true）
+        if (
+          e instanceof ApiError &&
+          (e.code === 'E-AUTH-001' || e.code === 'E-AUTH-010' || e.status === 401)
+        ) {
+          console.warn('[useAuthStore] auth invalid, clearing:', e.code ?? `HTTP ${e.status}`);
           await tokenStorage.clear();
           set({ isAuthenticated: false, rider: null, hydrated: true });
           return;
         }
-        // profile 拉取失败：仍设登录态，rider 留空（页面用 useRiderProfile 重试）
+        // 其他错误（网络瞬断等）：仍设登录态，rider 留空（页面用 useRiderProfile 重试）
         console.error('[useAuthStore] hydrate profile failed:', e);
         set({ isAuthenticated: true, hydrated: true });
       }
