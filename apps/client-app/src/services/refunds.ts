@@ -127,7 +127,7 @@ export const refundApi = {
         updatedAt: new Date().toISOString(),
         items: [],
         photos: [],
-        refundType: 'REFUND_ONLY',
+        refundType: payload.refundType ?? 'REFUND_ONLY',
         pickupAt: null,
         pickedAt: null,
       };
