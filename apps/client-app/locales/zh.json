@@ -742,7 +742,9 @@
     },
     "submitFailed": "提交评价失败",
     "a11y": {
-      "addPhoto": "添加照片"
+      "addPhoto": "添加照片",
+      "ratingSlider": "评分滑块，拖动选择 1 到 5 星",
+      "charCount": "已输入 {{count}} / 最大 {{max}} 字"
     }
   },
   "profileEdit": {

@@ -1,7 +1,7 @@
 // ⚠️ 无 HTML 原型，参考 ProductDetailPage 推导实现，待设计确认
 // OrderReviewPage — 订单评价（参考 ProductDetailPage.html 的商品卡片 + 星级样式）
 // D.4: PrimaryHeader + 商品卡片 + 5 星 emoji 评分 + 标签 Chip + 评价文本 + 照片占位 + 提交按钮
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,8 +10,11 @@ import {
   ScrollView,
   Image,
   Pressable,
+  PanResponder,
+  Animated,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -72,13 +75,65 @@ export default function OrderReviewPage() {
   const submitReviewMutation = useSubmitReview();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  const { control, handleSubmit } = useForm<ReviewValues>({
+  const { control, handleSubmit, setValue } = useForm<ReviewValues>({
     resolver: zodResolver(reviewSchema),
     defaultValues: { rating: 5, content: '' },
     mode: 'onBlur',
   });
   const ratingValue = useWatch({ control, name: 'rating' }) as number;
   const STAR_ACTIVE = '#f59e0b'; // 原因：评分星标金色（HTML star gold amber-500），semantic 无对应角色
+
+  // 决策 4a：星级滑动选择（PanResponder + Haptics + Animated）
+  // ratingRef 存最新值避免闭包陷阱（PanResponder 回调在 event 触发时读 ref，不依赖 render 闭包）
+  // 用 useEffect 同步 ref（react-hooks/refs 禁止 render 阶段写 ref.current）
+  const ratingRef = useRef(ratingValue);
+  useEffect(() => {
+    ratingRef.current = ratingValue;
+  }, [ratingValue]);
+  const starsLayoutRef = useRef(0); // 星级区域宽度（onLayout 回调写入）
+  // scaleAnim 用 useState 初始化函数（避免 useRef(...).current 在 render 阶段访问 ref 触发 react-hooks/refs）
+  const [scaleAnim] = useState(() => new Animated.Value(1));
+
+  // 纯函数：手指 x 坐标 → 星级 1-5（不访问 ref，可安全传入 useMemo 不触发 react-hooks/refs）
+  const computeStar = useCallback((x: number, layoutWidth: number): number => {
+    if (layoutWidth <= 0) return 0;
+    return Math.max(1, Math.min(5, Math.ceil((x / layoutWidth) * 5)));
+  }, []);
+
+  // PanResponder 用 useMemo 创建（依赖 computeStar 纯函数 + stable setValue/scaleAnim）
+  // ref.current 访问全部在 event 回调（onPanResponderGrant/Move）内，event 触发时执行非 render 阶段
+  /* eslint-disable react-hooks/refs -- 原因：onPanResponderGrant/Move 是 event 回调（手势触发时执行），其内的 ratingRef/starsLayoutRef.current 访问不在 render 阶段；react-hooks/refs 静态分析无法区分 event 回调与 render 函数体，对 RN PanResponder + ref 标准模式误报 */
+  const starsPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: (e) => {
+          const star = computeStar(e.nativeEvent.locationX, starsLayoutRef.current);
+          if (star > 0 && star !== ratingRef.current) {
+            Haptics.selectionAsync();
+            Animated.sequence([
+              Animated.timing(scaleAnim, { toValue: 1.15, duration: 80, useNativeDriver: true }),
+              Animated.timing(scaleAnim, { toValue: 1, duration: 80, useNativeDriver: true }),
+            ]).start();
+            setValue('rating', star, { shouldValidate: true });
+          }
+        },
+        onPanResponderMove: (e) => {
+          const star = computeStar(e.nativeEvent.locationX, starsLayoutRef.current);
+          if (star > 0 && star !== ratingRef.current) {
+            Haptics.selectionAsync();
+            Animated.sequence([
+              Animated.timing(scaleAnim, { toValue: 1.15, duration: 80, useNativeDriver: true }),
+              Animated.timing(scaleAnim, { toValue: 1, duration: 80, useNativeDriver: true }),
+            ]).start();
+            setValue('rating', star, { shouldValidate: true });
+          }
+        },
+      }),
+    [computeStar, setValue, scaleAnim],
+  );
+  /* eslint-enable react-hooks/refs */
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -172,28 +227,23 @@ export default function OrderReviewPage() {
 
           <View style={[styles.ratingBox, { backgroundColor: colors['surface-container-low'] }]}>
             <Text style={styles.ratingEmoji}>{RATING_EMOJI[ratingValue - 1]}</Text>
-            <View style={styles.starsRow}>
+            <View
+              style={styles.starsRow}
+              onLayout={(e) => (starsLayoutRef.current = e.nativeEvent.layout.width)}
+              {...starsPanResponder.panHandlers}
+              accessibilityRole="adjustable"
+              accessibilityLabel={t('review.a11y.ratingSlider')}
+              accessibilityValue={{ min: 1, max: 5, now: ratingValue }}
+              testID="review-rating-slider"
+            >
               {[1, 2, 3, 4, 5].map((n) => (
-                <Controller
-                  key={n}
-                  control={control}
-                  name="rating"
-                  render={({ field: { onChange } }) => (
-                    <Pressable
-                      onPress={() => onChange(n)}
-                      hitSlop={4}
-                      testID={`star-${n}`}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Rate ${n} stars`}
-                    >
-                      <Icon
-                        symbol="star_rate"
-                        size={32}
-                        color={n <= ratingValue ? STAR_ACTIVE : colors['outline-variant']}
-                      />
-                    </Pressable>
-                  )}
-                />
+                <Animated.View key={n} style={{ transform: [{ scale: scaleAnim }] }}>
+                  <Icon
+                    symbol="star_rate"
+                    size={32}
+                    color={n <= ratingValue ? STAR_ACTIVE : colors['outline-variant']}
+                  />
+                </Animated.View>
               ))}
             </View>
             <Text style={[styles.ratingLabel, { color: colors.primary }]}>
@@ -216,35 +266,54 @@ export default function OrderReviewPage() {
           <Controller
             control={control}
             name="content"
-            render={({ field: { value, onChange }, fieldState: { error } }) => (
-              <>
-                <TextInput
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder={t('review.placeholder')}
-                  placeholderTextColor={colors['on-surface-variant']}
-                  multiline
-                  numberOfLines={4}
-                  style={[
-                    styles.textarea,
-                    {
-                      color: colors['on-surface'],
-                      backgroundColor: colors['surface-container-low'],
-                      borderColor: error ? colors.error : colors['outline-variant'],
-                    },
-                  ]}
-                  testID="review-content"
-                />
-                {error?.message && (
-                  <Text
-                    style={[styles.errorText, { color: colors.error }]}
-                    accessibilityRole="alert"
-                  >
-                    {error.message}
-                  </Text>
-                )}
-              </>
-            )}
+            render={({ field: { value, onChange }, fieldState: { error } }) => {
+              // 决策 5：textarea 字数统计（schema max 500，UI 显示进度，>450 提示接近上限）
+              const len = value?.length ?? 0;
+              return (
+                <>
+                  <TextInput
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder={t('review.placeholder')}
+                    placeholderTextColor={colors['on-surface-variant']}
+                    multiline
+                    numberOfLines={4}
+                    maxLength={500}
+                    style={[
+                      styles.textarea,
+                      {
+                        color: colors['on-surface'],
+                        backgroundColor: colors['surface-container-low'],
+                        borderColor: error ? colors.error : colors['outline-variant'],
+                      },
+                    ]}
+                    testID="review-content"
+                  />
+                  {/* 字数统计行：左 error 文案（无则占位），右 N/500（>450 变 error 色） */}
+                  <View style={styles.textareaMetaRow}>
+                    {error?.message ? (
+                      <Text
+                        style={[styles.errorText, { color: colors.error }]}
+                        accessibilityRole="alert"
+                      >
+                        {error.message}
+                      </Text>
+                    ) : (
+                      <View />
+                    )}
+                    <Text
+                      style={[
+                        styles.charCount,
+                        { color: len > 450 ? colors.error : colors['on-surface-variant'] },
+                      ]}
+                      accessibilityLabel={t('review.a11y.charCount', { count: len, max: 500 })}
+                    >
+                      {len} / 500
+                    </Text>
+                  </View>
+                </>
+              );
+            }}
           />
 
           {/* 标签 Chip 区 */}
@@ -426,17 +495,20 @@ const styles = StyleSheet.create({
   },
   ratingBox: {
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs, // 决策 4：收紧（原 spacing.sm），emoji/星标/文案紧贴
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
   },
   ratingEmoji: {
-    fontSize: 40,
+    fontSize: 36, // 决策 4/R6：40→36，与星标视觉层级协调
   },
   starsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.xs,
+    paddingVertical: spacing.sm, // 决策 4a：手势区域上下扩大触摸区
+    paddingHorizontal: spacing.md,
   },
   ratingLabel: {
     ...typography['label-caps'],
@@ -451,9 +523,21 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     ...typography['body-md'],
   },
+  // 决策 5：字数统计行（左 error / 右 N/500）
+  textareaMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.xs,
+    gap: spacing.sm,
+  },
+  charCount: {
+    ...typography['label-caps'],
+    fontSize: 11,
+  },
   errorText: {
     ...typography['body-sm'],
-    marginTop: spacing.xs,
+    flex: 1,
   },
   tagsRow: {
     flexDirection: 'row',

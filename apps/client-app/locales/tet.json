@@ -695,7 +695,9 @@
     },
     "submitFailed": "[TET] Failed to submit review",
     "a11y": {
-      "addPhoto": "[TET] Add photo"
+      "addPhoto": "[TET] Add photo",
+      "ratingSlider": "[TET] Rating slider, drag to select 1 to 5 stars",
+      "charCount": "[TET] {{count}} of {{max}} characters"
     }
   },
   "profileEdit": {

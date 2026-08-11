@@ -742,7 +742,9 @@
     },
     "submitFailed": "Failed to submit review",
     "a11y": {
-      "addPhoto": "Add photo"
+      "addPhoto": "Add photo",
+      "ratingSlider": "Rating slider, drag to select 1 to 5 stars",
+      "charCount": "{{count}} of {{max}} characters"
     }
   },
   "profileEdit": {
