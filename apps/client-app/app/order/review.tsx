@@ -12,6 +12,7 @@ import {
   Pressable,
   PanResponder,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -480,30 +481,27 @@ export default function OrderReviewPage() {
           style={({ pressed }) => [
             styles.submitBtn,
             {
-              backgroundColor: submitReviewMutation.isPending
-                ? colors['surface-container-high']
-                : colors.primary,
+              // 决策 6：统一 primary 底（不再 pending 变灰），用 spinner + 文案变化反馈 loading
+              backgroundColor: colors.primary,
             },
             pressed && !submitReviewMutation.isPending && { transform: [{ scale: 0.98 }] },
           ]}
           accessibilityRole="button"
-          accessibilityLabel={t('review.submit')}
+          accessibilityLabel={
+            submitReviewMutation.isPending ? t('review.submitting') : t('review.submit')
+          }
           accessibilityState={{ disabled: submitReviewMutation.isPending }}
           testID="review-submit"
         >
-          <Text
-            style={[
-              styles.submitText,
-              {
-                // 原因：保留 isPending 条件 —— pending 态背景是 surface-container-high（灰），
-                // 用 on-surface-variant 深字保对比度；非 pending 是 primary 红底用 ON_PRIMARY 白字。
-                // Commit 6 加 spinner 统一两种态背景为 primary 后可合并单处。
-                color: submitReviewMutation.isPending ? colors['on-surface-variant'] : ON_PRIMARY,
-              },
-            ]}
-          >
-            {t('review.submit')}
-          </Text>
+          <View style={styles.submitContent}>
+            {submitReviewMutation.isPending && (
+              <ActivityIndicator size="small" color={ON_PRIMARY} />
+            )}
+            {/* 决策 8（Commit 2 TODO 实现）：两种态统一 ON_PRIMARY，不再 isPending 条件 */}
+            <Text style={[styles.submitText, { color: ON_PRIMARY }]}>
+              {submitReviewMutation.isPending ? t('review.submitting') : t('review.submit')}
+            </Text>
+          </View>
         </Pressable>
       </View>
     </SafeAreaWrapper>
@@ -698,8 +696,13 @@ const styles = StyleSheet.create({
   submitBtn: {
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
+  },
+  // 决策 6：spinner + 文案横排
+  submitContent: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.xs,
   },
   submitText: {
     // color 由 JSX inline 动态控制（ON_PRIMARY / on-surface-variant），此处不定义
