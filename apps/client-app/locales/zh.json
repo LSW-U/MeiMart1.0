@@ -721,6 +721,7 @@
     "successDesc": "评价已提交",
     "tagsLabel": "快捷标签",
     "photosLabel": "添加照片（可选）",
+    "photoOfflineTip": "断网时无法上传照片",
     "addPhoto": "添加",
     "anonymousTitle": "匿名评价",
     "anonymousDesc": "公开时隐藏你的姓名",
@@ -744,7 +745,9 @@
     "a11y": {
       "addPhoto": "添加照片",
       "ratingSlider": "评分滑块，拖动选择 1 到 5 星",
-      "charCount": "已输入 {{count}} / 最大 {{max}} 字"
+      "charCount": "已输入 {{count}} / 最大 {{max}} 字",
+      "photoThumb": "第 {{count}} 张照片",
+      "removePhoto": "删除第 {{count}} 张照片"
     }
   },
   "profileEdit": {

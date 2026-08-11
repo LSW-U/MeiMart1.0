@@ -15,7 +15,9 @@ import {
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { useSafeBack } from '@/hooks/useSafeBack';
+import { useNetwork } from '@/hooks/useNetwork';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -140,6 +142,31 @@ export default function OrderReviewPage() {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((tk) => tk !== tag) : [...prev, tag],
     );
+  };
+
+  const { isOffline } = useNetwork();
+
+  // 决策 3（B3/R3 修复）：图片上传接 expo-image-picker。
+  // 当前 RB2（review-image 端点）未做，先存本地 URI（mock 可测）；RB2 就绪后改 uploadsApi.reviewImage 上传拿 URL。
+  const handleAddPhoto = async (
+    currentImages: string[],
+    onChange: (v: string[]) => void,
+  ) => {
+    const MAX = 3;
+    if (currentImages.length >= MAX) return;
+    if (isOffline) {
+      toast.info(t('review.photoOfflineTip'));
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      selectionLimit: MAX - currentImages.length,
+      quality: 0.8,
+    });
+    if (result.canceled) return;
+    const newUris = result.assets.map((a) => a.uri);
+    onChange([...currentImages, ...newUris].slice(0, MAX));
   };
 
   // Why: §8 提交接 useSubmitReview（乐观写入 reviews 缓存 -> 详情页立即可见 + 绿色置顶）。
@@ -336,29 +363,68 @@ export default function OrderReviewPage() {
             })}
           </View>
 
-          {/* 照片上传占位 */}
+          {/* 照片上传（决策 3：接 expo-image-picker + 缩略图 + 删除 + N/3 计数） */}
           <Text style={[styles.subLabel, { color: colors['on-surface-variant'] }]}>
-            {t('review.photosLabel', { defaultValue: 'Add photos (optional)' })}
+            {t('review.photosLabel')}
           </Text>
-          <View style={styles.photosRow}>
-            <Pressable
-              style={[
-                styles.photoAddBtn,
-                {
-                  backgroundColor: colors['surface-container-low'],
-                  borderColor: colors['outline-variant'],
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t('review.a11y.addPhoto')}
-              testID="review-add-photo"
-            >
-              <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />
-              <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
-                {t('review.addPhoto', { defaultValue: 'Add' })}
-              </Text>
-            </Pressable>
-          </View>
+          <Controller
+            control={control}
+            name="images"
+            render={({ field: { value, onChange } }) => {
+              const imgs = value ?? [];
+              return (
+                <View style={styles.photosRow}>
+                  {imgs.map((uri, index) => (
+                    <View key={uri} style={styles.photoThumb}>
+                      <Image
+                        source={{ uri }}
+                        style={styles.photoThumbImg}
+                        resizeMode="cover"
+                        accessibilityLabel={t('review.a11y.photoThumb', { count: index + 1 })}
+                      />
+                      <Pressable
+                        onPress={() => onChange(imgs.filter((_, i) => i !== index))}
+                        style={[
+                          styles.photoRemoveBtn,
+                          { backgroundColor: colors['surface-container-high'] },
+                        ]}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('review.a11y.removePhoto', { count: index + 1 })}
+                        hitSlop={8}
+                        testID={`review-remove-photo-${index}`}
+                      >
+                        <Icon symbol="close" size={14} color={colors['on-surface']} />
+                      </Pressable>
+                    </View>
+                  ))}
+                  {imgs.length < 3 && (
+                    <Pressable
+                      style={[
+                        styles.photoAddBtn,
+                        {
+                          backgroundColor: colors['surface-container-low'],
+                          borderColor: colors['outline-variant'],
+                        },
+                      ]}
+                      onPress={() => handleAddPhoto(imgs, onChange)}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('review.a11y.addPhoto')}
+                      testID="review-add-photo"
+                    >
+                      <Icon
+                        symbol="photo_camera"
+                        size={22}
+                        color={colors['on-surface-variant']}
+                      />
+                      <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
+                        {imgs.length} / 3
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+              );
+            }}
+          />
         </View>
 
         {/* 匿名评价开关（决策 2：接 Controller + Switch，B2 死 UI 修复） */}
@@ -559,7 +625,30 @@ const styles = StyleSheet.create({
   },
   photosRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
+  },
+  // 决策 3：已选图片缩略图（72x72，与 photoAddBtn 等大）
+  photoThumb: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  photoThumbImg: {
+    width: '100%',
+    height: '100%',
+  },
+  photoRemoveBtn: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   photoAddBtn: {
     width: 72,

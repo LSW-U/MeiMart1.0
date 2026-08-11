@@ -674,6 +674,7 @@
     "successDesc": "[TET] Review submitted",
     "tagsLabel": "[TET] Quick tags",
     "photosLabel": "[TET] Add photos (optional)",
+    "photoOfflineTip": "[TET] Cannot upload photos offline",
     "addPhoto": "[TET] Add",
     "anonymousTitle": "[TET] Anonymous review",
     "anonymousDesc": "[TET] Hide your name publicly",
@@ -697,7 +698,9 @@
     "a11y": {
       "addPhoto": "[TET] Add photo",
       "ratingSlider": "[TET] Rating slider, drag to select 1 to 5 stars",
-      "charCount": "[TET] {{count}} of {{max}} characters"
+      "charCount": "[TET] {{count}} of {{max}} characters",
+      "photoThumb": "[TET] Photo {{count}}",
+      "removePhoto": "[TET] Remove photo {{count}}"
     }
   },
   "profileEdit": {
