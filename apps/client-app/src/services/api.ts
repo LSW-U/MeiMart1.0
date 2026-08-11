@@ -160,7 +160,11 @@ api.interceptors.response.use(
       | undefined;
     const status = error.response?.status;
 
-    if (status === 401 && original && !original._retry) {
+    // T4: 排除 /common/auth/* 端点（登录/注册/refresh/logout 等获取 token 的端点），
+    // 对它们的 401 做 refresh 毫无意义（凭据错 vs token 失效），且多余请求 + clearAuth 副作用 + 状态抖动
+    const url = original?.url ?? '';
+    const isAuthEndpoint = url.startsWith('/common/auth/');
+    if (status === 401 && original && !original._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           pendingQueue.push((token) => {

@@ -78,6 +78,7 @@
   },
   "auth": {
     "login": "[TET] Log in",
+    "relogin": "[TET] Re-login",
     "register": "[TET] Sign up",
     "phone": "[TET] Phone number",
     "password": "[TET] Password",
@@ -791,6 +792,7 @@
   "errors": {
     "generic": "[TET] Failed to load, please retry",
     "orderNotFound": "[TET] Order not found",
+    "sessionExpired": "[TET] Session expired, please log in again",
     "refundNotFound": "[TET] Refund not found",
     "network": "[TET] Network error, check connection",
     "cart": "[TET] Failed to load cart",

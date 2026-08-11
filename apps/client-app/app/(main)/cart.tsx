@@ -20,6 +20,7 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { toast } from '@/store/toastStore';
+import { isAxios401 } from '@/utils/error';
 import { CartItemRow } from '@/components/business/CartItemRow';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -55,7 +56,9 @@ export default function CartPage() {
   const recommended = (realProducts ?? []).slice(0, 6);
   const addToCartMutation = useAddToCart();
   const { isOffline } = useWeakNetworkUI();
-  const { data: cart, isLoading, isError, refetch } = useCart();
+  const { data: cart, isLoading, isError, error, refetch } = useCart();
+  // T2: 区分 401（登录态失效）vs 其他错误（500/网络），401 显示「登录已过期」+ 去登录
+  const isAuthError = isAxios401(error);
   const { data: coupons } = useCoupons();
   const removeMutation = useRemoveCartItem();
   const toggleMutation = useToggleCartItem();
@@ -173,7 +176,16 @@ export default function CartPage() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : isError ? (
-        <ErrorState message={t('errors.cart')} onRetry={() => refetch()} />
+        isAuthError ? (
+          // T2: 401 登录态失效 -> 「登录已过期」+ 去登录（T1 自动跳转延迟时的 fallback）
+          <ErrorState
+            message={t('errors.sessionExpired')}
+            onRetry={() => router.replace('/(auth)/login')}
+            retryLabel={t('auth.relogin')}
+          />
+        ) : (
+          <ErrorState message={t('errors.cart')} onRetry={() => refetch()} />
+        )
       ) : isEmpty ? (
         <View style={styles.emptyBox}>
           <EmptyState

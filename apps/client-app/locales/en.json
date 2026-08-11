@@ -78,6 +78,7 @@
   },
   "auth": {
     "login": "Log in",
+    "relogin": "Re-login",
     "register": "Sign up",
     "phone": "Phone number",
     "password": "Password",
@@ -838,6 +839,7 @@
   "errors": {
     "generic": "Failed to load, please retry",
     "orderNotFound": "Order not found",
+    "sessionExpired": "Session expired, please log in again",
     "refundNotFound": "Refund not found",
     "network": "Network error, check connection",
     "cart": "Failed to load cart",

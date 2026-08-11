@@ -4,7 +4,7 @@ import { useTheme, textStyle, spacing } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import type { ErrorStateProps } from './ErrorState.types';
 
-export function ErrorState({ message, onRetry, testID }: ErrorStateProps) {
+export function ErrorState({ message, onRetry, retryLabel, testID }: ErrorStateProps) {
   const { colors } = useTheme();
   return (
     <View
@@ -18,7 +18,7 @@ export function ErrorState({ message, onRetry, testID }: ErrorStateProps) {
         {message}
       </Text>
       {onRetry && (
-        <Button label="Retry" variant="outline" size="md" onPress={onRetry} style={styles.retry} />
+        <Button label={retryLabel ?? 'Retry'} variant="outline" size="md" onPress={onRetry} style={styles.retry} />
       )}
     </View>
   );
