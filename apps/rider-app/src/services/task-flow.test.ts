@@ -1,6 +1,7 @@
-import type { DeliveryTask, TaskStatus } from '@/src/types/task';
+import type { TaskStatus } from '@/src/types/task';
 
 import { getTaskAction } from './task-flow';
+import { makeTask } from './__fixtures__/makeTask';
 
 /**
  * getTaskAction 单测（CLAUDE.md P1 测试基建首测）
@@ -9,40 +10,6 @@ import { getTaskAction } from './task-flow';
  * 覆盖 status → {labelKey, target} 全分支 + 终态 undefined。
  * 后续若加 status，本测会强制同步加 case（防漏）。
  */
-
-// 构造完整 DeliveryTask，只暴露 status 让用例覆盖。
-// 用 helper 而非类型断言（CLAUDE.md 规则 30 禁止用断言逃逸 strict 检查），
-// 且 helper 让未来 DeliveryTask 加字段时编译器一并提醒补默认值。
-function makeTask(status: TaskStatus, overrides: Partial<DeliveryTask> = {}): DeliveryTask {
-  return {
-    id: 'test-1',
-    orderId: 'order-1',
-    riderId: null,
-    warehouseId: 'wh-1',
-    status,
-    taskType: 'delivery',
-    refundId: null,
-    pickupAddress: '',
-    pickupLat: 0,
-    pickupLng: 0,
-    dropoffAddress: '',
-    dropoffLat: 0,
-    dropoffLng: 0,
-    assignedAt: null,
-    pickedUpAt: null,
-    deliveredAt: null,
-    note: null,
-    createdAt: '',
-    updatedAt: '',
-    pickup: { title: '', address: '' },
-    dropoff: { title: '', address: '' },
-    fee: 0,
-    distanceKm: 0,
-    estimatedMinutes: 0,
-    items: [],
-    ...overrides,
-  };
-}
 
 describe('getTaskAction', () => {
   describe('每个非终态 status 映射到唯一 action', () => {
