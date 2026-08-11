@@ -24,6 +24,7 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Chip } from '@/components/ui/Chip';
+import { Switch } from '@/components/ui/Switch';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { PriceText } from '@/components/ui/PriceText';
@@ -77,7 +78,7 @@ export default function OrderReviewPage() {
 
   const { control, handleSubmit, setValue } = useForm<ReviewValues>({
     resolver: zodResolver(reviewSchema),
-    defaultValues: { rating: 5, content: '' },
+    defaultValues: { rating: 5, content: '', anonymous: false },
     mode: 'onBlur',
   });
   const ratingValue = useWatch({ control, name: 'rating' }) as number;
@@ -153,6 +154,7 @@ export default function OrderReviewPage() {
         content: values.content,
         tags: selectedTags.map((tk) => tk.replace(REVIEW_TAG_PREFIX, '')),
         images: values.images,
+        anonymous: values.anonymous ?? false,
       },
       {
         onSuccess: () => {
@@ -359,29 +361,40 @@ export default function OrderReviewPage() {
           </View>
         </View>
 
-        {/* 匿名评价开关 */}
-        <View
-          style={[
-            styles.anonCard,
-            {
-              backgroundColor: colors['surface-container-lowest'],
-              borderColor: colors['outline-variant'],
-            },
-            shadowPresets.sm,
-          ]}
-        >
-          <View style={styles.anonTextBox}>
-            <Icon symbol="visibility_off" size={18} color={colors['on-surface-variant']} />
-            <View>
-              <Text style={[styles.anonTitle, { color: colors['on-surface'] }]}>
-                {t('review.anonymousTitle', { defaultValue: 'Anonymous review' })}
-              </Text>
-              <Text style={[styles.anonDesc, { color: colors['on-surface-variant'] }]}>
-                {t('review.anonymousDesc', { defaultValue: 'Hide your name publicly' })}
-              </Text>
+        {/* 匿名评价开关（决策 2：接 Controller + Switch，B2 死 UI 修复） */}
+        <Controller
+          control={control}
+          name="anonymous"
+          render={({ field: { value, onChange } }) => (
+            <View
+              style={[
+                styles.anonCard,
+                {
+                  backgroundColor: colors['surface-container-lowest'],
+                  borderColor: colors['outline-variant'],
+                },
+                shadowPresets.sm,
+              ]}
+            >
+              <View style={styles.anonTextBox}>
+                <Icon symbol="visibility_off" size={18} color={colors['on-surface-variant']} />
+                <View>
+                  <Text style={[styles.anonTitle, { color: colors['on-surface'] }]}>
+                    {t('review.anonymousTitle')}
+                  </Text>
+                  <Text style={[styles.anonDesc, { color: colors['on-surface-variant'] }]}>
+                    {t('review.anonymousDesc')}
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={value ?? false}
+                onValueChange={onChange}
+                testID="review-anonymous"
+              />
             </View>
-          </View>
-        </View>
+          )}
+        />
       </ScrollView>
 
       {/* 底部提交按钮 */}

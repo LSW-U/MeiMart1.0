@@ -40,6 +40,8 @@ export interface ReviewSubmitInput {
   userName?: string;
   // Why: tags 是前端展示用标签（quality/fresh 等），后端 Review 无此字段，real 不传
   tags?: string[];
+  // 决策 2（B2 修复）：匿名评价标记。real 模式 POST body 传后端（RB1 就绪后存 Review.anonymous 列）
+  anonymous?: boolean;
 }
 
 // Why: 后端 ReviewView（review.service.ts toReviewView）—— real 模式 GET/POST 返回结构。
@@ -165,12 +167,14 @@ export const reviewsApi = {
     // Why: 后端 POST /client/orders/:orderId/review，body 对齐 CreateReviewRequest：
     //      content 包装为 I18nText（按当前 locale 存），category 必填，productId 可选。
     //      userId/userName/tags 后端从 JWT + order.user 派生，不传。
+    //      anonymous：决策 2，RB1 就绪后后端 DTO 加此字段透传存储；当前 RB1 未做时后端忽略。
     const locale = (i18n.language as string | undefined) ?? 'en';
     const res = await api.post<ReviewView>(`/client/orders/${input.orderId}/review`, {
       rating: input.rating,
       content: { [locale]: input.content },
       images: input.images ?? [],
       category: input.category,
+      anonymous: input.anonymous ?? false,
       ...(input.productId ? { productId: input.productId } : {}),
     });
     return mapReviewView(res.data);
