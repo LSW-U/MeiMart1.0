@@ -20,6 +20,15 @@ import { useAuthStore } from '@/store/authStore';
 import { getCurrentLocale } from '@/i18n';
 import { isMockMode } from './api';
 
+// RN FormData 类型扩展：append 接受 {uri,type,name}（RN 运行时支持，DOM lib 类型限 string|Blob）
+// 原因：RN FormData.js 的 FormDataValue = string | {name?, type?, uri}，但 TS DOM lib FormData.append 限 string|Blob，
+// 需扩展重载让 TS 接受 {uri,type,name}（规则36：用类型扩展替代类型断言）
+declare global {
+  interface FormData {
+    append(name: string, value: { uri: string; type?: string; name?: string }): void;
+  }
+}
+
 const env = Constants.expoConfig?.extra as { API_BASE_URL: string };
 const baseURL = env?.API_BASE_URL ?? 'https://api.meimart.example.com';
 const TOKEN_KEY = 'meimart.token';
@@ -58,12 +67,12 @@ export const uploadsApi = {
       return new Promise((resolve) => setTimeout(() => resolve(mock), 500));
     }
     const formData = new FormData();
-    // 原因：RN FormData 接受 {uri,type,name}（RN 扩展），TS DOM lib 类型限 string|Blob，需断言
+    // RN FormData.append 接受 {uri,type,name}（RN 扩展 FormDataValue 类型，非 TS DOM lib 的 string|Blob）
     formData.append('file', {
       uri: fileUri,
       type: mimeType,
       name: `evidence.${mimeType.split('/')[1] ?? 'jpg'}`,
-    } as unknown as Blob);
+    });
     const token = await getToken();
     const res = await fetch(`${baseURL}/api/v1/client/uploads/refund-evidence`, {
       method: 'POST',

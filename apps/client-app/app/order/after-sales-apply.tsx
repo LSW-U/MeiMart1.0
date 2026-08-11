@@ -22,6 +22,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
+import { useNetwork } from '@/hooks/useNetwork';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -68,6 +69,7 @@ interface ItemState {
 export default function AfterSalesApplyPage() {
   const handleBack = useSafeBack();
   const { t } = useTranslation();
+  const { isOffline } = useNetwork();
   const { colors } = useTheme();
   const localize = useLocalizer();
   // Why: 短期入参 = orderId（由 order/[id].tsx 跳来时传入），长期改为 afterSalesId
@@ -157,6 +159,11 @@ export default function AfterSalesApplyPage() {
       return;
     }
     if (uploading) return; // 防重复点
+    // Q3 弱网离线前置检测（规则12：凭证照片上传属关键操作，离线时阻止并明确提示，不静默失败）
+    if (isOffline) {
+      toast.error(t('common.youAreOffline'));
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false, // 售后凭证不裁剪，保留原始任意比例（后端最小 100×100 无上限无 1:1）

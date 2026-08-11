@@ -132,7 +132,7 @@ export const refundApi = {
       // mock：返回 PENDING 伪造 refund（P14 进入能渲染，时间戳全 null）
       const mock: RefundRaw = {
         id,
-        orderId: 'mock-order',
+        orderId: 'o001', // Q4 修复：真实 mock order id（orders.json），让 P14 副 useOrder 能找到 order.items + image
         userId: 'mock-user',
         amount: 0,
         reason: 'OTHER',
@@ -164,7 +164,7 @@ export const refundApi = {
     if (isMockMode) {
       const mock: RefundRaw = {
         id,
-        orderId: 'mock-order',
+        orderId: 'o001', // Q4 修复：真实 mock order id（orders.json），让 P14 副 useOrder 能找到 order.items + image
         userId: 'mock-user',
         amount: 0,
         reason: 'OTHER',
