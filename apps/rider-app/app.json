@@ -9,17 +9,38 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.meimart.delivery"
+      "bundleIdentifier": "com.meimart.delivery",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "MeiMart 需要您的位置以在配送地图上显示骑手位置，并在配送期间持续追踪以确保订单准时送达。",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "App 切到后台或锁屏时仍需持续上报您的位置，以便客户实时看到配送进度。仅在配送中生效。",
+        "UIBackgroundModes": ["location"]
+      }
     },
     "android": {
-      "package": "com.meimart.delivery"
+      "package": "com.meimart.delivery",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro"
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "允许 MeiMart 获取您的位置以显示配送地图。",
+          "locationAlwaysAndWhenInUsePermission": "允许 MeiMart 在配送期间持续获取您的位置。",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

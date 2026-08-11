@@ -5,6 +5,7 @@ import type { Socket } from 'socket.io-client';
 import { DEFAULT_COORDINATES } from '../utils/constants';
 import { useLocationStore } from '../store/useLocationStore';
 import type { Coordinates } from '../types/common';
+import { buildLocationPayload } from '../services/location';
 
 type UseLocationOptions = {
   // WS 连接：传入后 watch 回调里 emit 'location:update' 推位置到后端
@@ -69,29 +70,9 @@ export function useLocation(options: UseLocationOptions) {
             // socket 或 orderId 缺一时跳过推送，本地 store 仍更新
             const oid = orderIdRef.current;
             if (socket && socket.connected && oid) {
-              // expo-location speed 是 m/s，后端要 km/h；iOS 静止时为 -1 视为无效
-              const rawSpeed = loc.coords.speed;
-              const speed =
-                typeof rawSpeed === 'number' && rawSpeed >= 0
-                  ? Math.round(rawSpeed * 3.6 * 10) / 10
-                  : undefined;
-              // S3: heading 防 NaN（typeof NaN === 'number'）+ 范围 0-360
-              const rawHeading = loc.coords.heading;
-              const heading =
-                typeof rawHeading === 'number' &&
-                !Number.isNaN(rawHeading) &&
-                rawHeading >= 0 &&
-                rawHeading <= 360
-                  ? rawHeading
-                  : undefined;
-              socket.emit('location:update', {
-                orderId: oid,
-                lat: coords.latitude,
-                lng: coords.longitude,
-                timestamp: Date.now(),
-                ...(speed !== undefined ? { speed } : {}),
-                ...(heading !== undefined ? { heading } : {}),
-              });
+              // payload 构造（speed/heading 单位换算）抽 buildLocationPayload 共享 helper；
+              // 后台 HTTP 通道（useBackgroundTask reportLocationHttp）复用同一 helper，避免逻辑漂移
+              socket.emit('location:update', buildLocationPayload(loc.coords, oid));
             }
           },
         );
