@@ -686,6 +686,13 @@
       "fresh": "[TET] Fresh",
       "repurchase": "[TET] Repurchase"
     },
+    "rating": {
+      "terrible": "[TET] Terrible",
+      "bad": "[TET] Bad",
+      "okay": "[TET] Okay",
+      "good": "[TET] Good",
+      "great": "[TET] Great"
+    },
     "submitFailed": "[TET] Failed to submit review",
     "a11y": {
       "addPhoto": "[TET] Add photo"

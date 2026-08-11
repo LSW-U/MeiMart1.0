@@ -733,6 +733,13 @@
       "fresh": "新鲜",
       "repurchase": "会回购"
     },
+    "rating": {
+      "terrible": "极差",
+      "bad": "差评",
+      "okay": "中评",
+      "good": "好评",
+      "great": "非常满意"
+    },
     "submitFailed": "提交评价失败",
     "a11y": {
       "addPhoto": "添加照片"

@@ -733,6 +733,13 @@
       "fresh": "Fresh",
       "repurchase": "Repurchase"
     },
+    "rating": {
+      "terrible": "Terrible",
+      "bad": "Bad",
+      "okay": "Okay",
+      "good": "Good",
+      "great": "Great"
+    },
     "submitFailed": "Failed to submit review",
     "a11y": {
       "addPhoto": "Add photo"
