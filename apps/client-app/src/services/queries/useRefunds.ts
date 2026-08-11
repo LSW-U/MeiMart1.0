@@ -44,6 +44,9 @@ export function useCreateRefund() {
         updatedAt: new Date().toISOString(),
         items: [],
         photos: [],
+        refundType: 'REFUND_ONLY',
+        pickupAt: null,
+        pickedAt: null,
       };
       qc.setQueryData<RefundRaw[]>(REFUNDS_QUERY_KEY, (old) => [optimistic, ...(old ?? [])]);
       return { previous };

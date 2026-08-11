@@ -201,6 +201,8 @@ export default function AfterSalesApplyPage() {
       return;
     }
     const reason = REASON_KEY_TO_ENUM[values.reason] ?? 'OTHER';
+    // refundType: 用户选 refund-only/return-refund -> 后端 enum REFUND_ONLY/RETURN_REFUND（P14 I1/T3 读真实）
+    const refundType = values.type === 'return-refund' ? 'RETURN_REFUND' : 'REFUND_ONLY';
     try {
       const refund = await createRefund.mutateAsync({
         orderId,
@@ -210,6 +212,7 @@ export default function AfterSalesApplyPage() {
         items: selected.map(({ orderItemId, refundQty }) => ({ orderItemId, refundQty })),
         // P13 B2 凭证照片 URL 数组（空时不传，向后兼容；后端 isOwnUrl 校验 + max 9）
         photos: photos.length > 0 ? photos : undefined,
+        refundType,
       });
       toast.success(t('afterSales.submittedDesc'));
       router.replace({

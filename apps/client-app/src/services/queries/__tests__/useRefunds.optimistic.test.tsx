@@ -28,6 +28,9 @@ const mockRefund: RefundRaw = {
   updatedAt: '2026-08-10T00:00:00Z',
   items: [],
   photos: [],
+  refundType: 'REFUND_ONLY',
+  pickupAt: null,
+  pickedAt: null,
 };
 
 describe('useCreateRefund', () => {

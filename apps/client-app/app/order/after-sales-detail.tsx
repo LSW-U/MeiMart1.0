@@ -48,12 +48,8 @@ const REFUND_REASON_TO_I18N_KEY: Record<string, string> = {
   OTHER: 'afterSales.reasons.other',
 };
 
-/**
- * 退货退款 reason 启发式（I1 售后类型展示）
- * 商品类问题（发错/质量/损坏）→ 退货退款（骑手上门收回）；其余 → 仅退款
- * TODO: 后端 Refund model 补 refundType 字段后改真实（P13 提交传 + RefundView 返回）
- */
-const RETURNABLE_REASONS = new Set(['WRONG_ITEM', 'QUALITY_ISSUE', 'DAMAGED']);
+// I1 售后类型：refundType 真实字段（后端 commit 5639ff2 落地，替代 reason 启发式 RETURNABLE_REASONS）
+// P13 提交传 refundType（REFUND_ONLY/RETURN_REFUND），P14 读真实判断退货退款（骑手上门收回）
 
 export default function AfterSalesDetailPage() {
   const handleBack = useSafeBack();
@@ -144,7 +140,7 @@ export default function AfterSalesDetailPage() {
     ? t(REFUND_REASON_TO_I18N_KEY[refund.reason])
     : refund.reason;
   // I1 售后类型 + S1 状态色块：reason 启发式推断退货退款（TODO 后端 refundType 字段）
-  const isReturnRefund = RETURNABLE_REASONS.has(refund.reason);
+  const isReturnRefund = refund.refundType === 'RETURN_REFUND';
   const refundTypeLabelKey = isReturnRefund
     ? 'afterSales.types.returnRefund'
     : 'afterSales.types.refundOnly';
@@ -240,8 +236,8 @@ export default function AfterSalesDetailPage() {
         // 退货退款 6 步：submitted → approved → pickupArranging → picked → refundProcessing → completed
         { status: t('afterSales.timeline.submitted'), description: t('afterSales.timeline.submittedDesc'), timestamp: formatTs(refund.createdAt) },
         { status: t('afterSales.timeline.approved'), description: t('afterSales.timeline.approvedDesc'), timestamp: formatTs(refund.reviewedAt) },
-        { status: t('afterSales.timeline.pickupArranging'), description: t('afterSales.timeline.pickupArrangingDesc'), timestamp: '' },
-        { status: t('afterSales.timeline.picked'), description: t('afterSales.timeline.pickedDesc'), timestamp: '' },
+        { status: t('afterSales.timeline.pickupArranging'), description: t('afterSales.timeline.pickupArrangingDesc'), timestamp: formatTs(refund.pickupAt) },
+        { status: t('afterSales.timeline.picked'), description: t('afterSales.timeline.pickedDesc'), timestamp: formatTs(refund.pickedAt) },
         { status: t(isCash ? 'afterSales.timeline.cashDelivering' : 'afterSales.timeline.refundProcessing'), description: t(isCash ? 'afterSales.timeline.cashDeliveringDesc' : 'afterSales.timeline.refundProcessingDesc'), timestamp: '' },
         { status: t(isCash ? 'afterSales.timeline.cashDelivered' : 'afterSales.timeline.completed'), description: isCash ? t('afterSales.timeline.cashDeliveredDesc', { amount: refund.amount / 100 }) : t('afterSales.timeline.completedDesc'), timestamp: formatTs(refund.completedAt) },
       ]

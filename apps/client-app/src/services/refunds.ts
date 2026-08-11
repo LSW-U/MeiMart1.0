@@ -25,6 +25,10 @@ export const REFUND_REASONS = [
 ] as const;
 export type RefundReason = (typeof REFUND_REASONS)[number];
 
+// 后端 RefundType enum（refundType 字段，P14 defer ①②③ 落地，后端 commit 5639ff2）
+export const REFUND_TYPES = ['REFUND_ONLY', 'RETURN_REFUND'] as const;
+export type RefundType = (typeof REFUND_TYPES)[number];
+
 /**
  * 前端 i18n key → 后端 reason enum 映射（提交时转，参考 orders.ts legacyStatusMap 模式）
  * 后端 src 已扩展 EXPIRED/SHORTAGE（P13 新增），openapi.yaml 待后端 gen:openapi 同步
@@ -51,6 +55,8 @@ export interface CreateRefundPayload {
   reasonDetail?: string;
   items?: RefundItemInput[];
   photos?: string[];
+  /** 售后类型（仅退款/退货退款，P13 提交传，后端默认 REFUND_ONLY；P14 I1/T3 读真实替代 reason 启发式） */
+  refundType?: RefundType;
 }
 
 /**
@@ -90,6 +96,12 @@ export interface RefundRaw {
   items: RefundItemViewRaw[];
   /** 凭证照片 URL 数组（client upload 端点返回，P13 B2；后端 isOwnUrl 校验） */
   photos: string[];
+  /** 售后类型（REFUND_ONLY 仅退款 / RETURN_REFUND 退货退款，P14 I1/T3 读真实替代 reason 启发式） */
+  refundType: RefundType;
+  /** 骑手接单取件时间（dispatch ASSIGNED->PICKED_UP 写，P14 时间轴 pickupArranging 步骤；字段先加，等 ④ dispatch 集成） */
+  pickupAt: string | null;
+  /** 骑手取件完成时间（dispatch PICKED_UP->DELIVERING 写，P14 时间轴 picked 步骤；字段先加，等 ④ dispatch 集成） */
+  pickedAt: string | null;
 }
 
 export const refundApi = {
@@ -115,6 +127,9 @@ export const refundApi = {
         updatedAt: new Date().toISOString(),
         items: [],
         photos: [],
+        refundType: 'REFUND_ONLY',
+        pickupAt: null,
+        pickedAt: null,
       };
       // mock 延迟模拟网络（让 isPending 生效，提交按钮 disable 防 repeated submit）
       return new Promise((resolve) => setTimeout(() => resolve(mock), 300));
@@ -148,6 +163,9 @@ export const refundApi = {
         updatedAt: new Date().toISOString(),
         items: [],
         photos: [],
+        refundType: 'REFUND_ONLY',
+        pickupAt: null,
+        pickedAt: null,
       };
       return new Promise((resolve) => setTimeout(() => resolve(mock), 200));
     }
@@ -180,6 +198,9 @@ export const refundApi = {
         updatedAt: new Date().toISOString(),
         items: [],
         photos: [],
+        refundType: 'REFUND_ONLY',
+        pickupAt: null,
+        pickedAt: null,
       };
       return new Promise((resolve) => setTimeout(() => resolve(mock), 200));
     }
