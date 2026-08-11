@@ -51,6 +51,10 @@ const RATING_KEYS = [
 
 const RATING_EMOJI = ['😞', '😕', '😐', '🙂', '😍'];
 
+// 原因：提交按钮固定白字。两种模式都是品牌红底，白字正确不变。
+// 不可用 colors['on-primary']：dark 模式下翻为暗红，叠红底会裂色（同 cart.tsx ON_PRIMARY / P2）。
+const ON_PRIMARY = '#ffffff';
+
 export default function OrderReviewPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
@@ -342,7 +346,12 @@ export default function OrderReviewPage() {
           <Text
             style={[
               styles.submitText,
-              { color: submitReviewMutation.isPending ? colors['on-surface-variant'] : '#ffffff' },
+              {
+                // 原因：保留 isPending 条件 —— pending 态背景是 surface-container-high（灰），
+                // 用 on-surface-variant 深字保对比度；非 pending 是 primary 红底用 ON_PRIMARY 白字。
+                // Commit 6 加 spinner 统一两种态背景为 primary 后可合并单处。
+                color: submitReviewMutation.isPending ? colors['on-surface-variant'] : ON_PRIMARY,
+              },
             ]}
           >
             {t('review.submit')}
@@ -507,7 +516,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   submitText: {
-    color: '#ffffff',
+    // color 由 JSX inline 动态控制（ON_PRIMARY / on-surface-variant），此处不定义
     ...typography['label-caps'],
     fontWeight: '700',
     fontSize: 14,
