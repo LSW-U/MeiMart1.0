@@ -3,6 +3,10 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { ThemeProvider } from '@/theme';
 import { SearchBar } from './SearchBar';
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );
@@ -37,7 +41,7 @@ describe('SearchBar', () => {
 
   it('renders mic button when showMic is true', () => {
     const { getByLabelText } = render(<SearchBar showMic placeholder="Search" />, { wrapper });
-    expect(getByLabelText('Voice search')).toBeTruthy();
+    expect(getByLabelText('common.voiceSearch')).toBeTruthy();
   });
 
   it('renders embedded variant with translucent background', () => {

@@ -4,6 +4,10 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { ThemeProvider } from '@/theme';
 import { Modal } from './Modal';
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );
@@ -47,7 +51,7 @@ describe('Modal', () => {
       </Modal>,
       { wrapper },
     );
-    fireEvent.press(getByLabelText('Close'));
+    fireEvent.press(getByLabelText('common.close'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

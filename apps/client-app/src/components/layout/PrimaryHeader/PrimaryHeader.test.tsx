@@ -4,6 +4,10 @@ import { ThemeProvider } from '@/theme';
 import { PrimaryHeader } from './PrimaryHeader';
 import { Icon } from '@/components/ui/Icon';
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );
@@ -20,7 +24,7 @@ describe('PrimaryHeader', () => {
       <PrimaryHeader title="Search" showBack onBackPress={onBackPress} />,
       { wrapper },
     );
-    fireEvent.press(getByLabelText('Go back'));
+    fireEvent.press(getByLabelText('common.goBack'));
     expect(onBackPress).toHaveBeenCalled();
   });
 

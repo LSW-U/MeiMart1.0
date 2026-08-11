@@ -4,6 +4,10 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { ThemeProvider } from '@/theme';
 import { PageHeader } from './PageHeader';
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );
@@ -20,7 +24,7 @@ describe('PageHeader', () => {
       <PageHeader title="Details" showBack onBackPress={onBackPress} />,
       { wrapper },
     );
-    fireEvent.press(getByLabelText('Go back'));
+    fireEvent.press(getByLabelText('common.goBack'));
     expect(onBackPress).toHaveBeenCalledTimes(1);
   });
 

@@ -4,6 +4,10 @@ import { ThemeProvider } from '@/theme';
 import { AddressCard } from './AddressCard';
 import type { Address } from '@/types';
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );
@@ -33,7 +37,7 @@ describe('AddressCard', () => {
     const { getByLabelText } = render(<AddressCard address={address} onEdit={onEdit} />, {
       wrapper,
     });
-    fireEvent.press(getByLabelText('Edit address'));
+    fireEvent.press(getByLabelText('address.a11y.edit'));
     expect(onEdit).toHaveBeenCalledWith(address);
   });
 });
