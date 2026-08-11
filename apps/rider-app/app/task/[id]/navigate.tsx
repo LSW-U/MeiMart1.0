@@ -3,12 +3,14 @@ import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '../../../src/components/feedback/EmptyState';
+import { showToast } from '../../../src/components/feedback/Toast';
 import { MapView } from '../../../src/components/map/MapView';
 import { NavigationLauncher } from '../../../src/components/map/NavigationLauncher';
 import { Button } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
-import { useTask } from '../../../src/services/queries/useTask';
+import { ApiError } from '../../../src/services/api';
+import { useStartDelivering, useTask } from '../../../src/services/queries/useTask';
 import type { DeliveryTask } from '../../../src/types/task';
 
 const formatFee = (fee: number, currency: string) => `${currency}${fee.toFixed(2)}`;
@@ -21,14 +23,47 @@ export default function TaskNavigatePage() {
   const goBack = useGoBack('/(main)/tasks');
   const { data } = useTask(id);
   const task: DeliveryTask | null = data ?? null;
+  const startDelivering = useStartDelivering();
 
-  // Why: navigate 是取货后导航送货，PICKED_UP / DELIVERING 都应进入
-  //   （后端 deliver 端点接受 PICKED_UP 或 DELIVERING）。其他状态才弹回详情页。
+  // P14 ④ B1 + M1: 守卫按 taskType 理清
+  // - delivery: 只允许 PICKED_UP（两步跳过 DELIVERING）
+  // - return: 允许 PICKED_UP（开始配送前）+ DELIVERING（已开始配送，去签收）
+  // Why: navigate 是取货后导航送货；其他状态弹回详情页
   useEffect(() => {
-    if (task && task.status !== 'PICKED_UP' && task.status !== 'DELIVERING') {
+    if (!task) return;
+    const isReturn = task.taskType === 'return';
+    const allowed = isReturn
+      ? task.status === 'PICKED_UP' || task.status === 'DELIVERING'
+      : task.status === 'PICKED_UP';
+    if (!allowed) {
       router.replace(`/task/${id}`);
     }
   }, [task, id, router]);
+
+  // B1: return 任务 PICKED_UP 先 startDelivering 进 DELIVERING，再跳 sign
+  // delivery 任务 + return 的 DELIVERING：直接跳 sign
+  const handleNavigateAction = async () => {
+    if (!task) return;
+    // S5: 防重复点击（startDelivering in-flight 期间禁用）
+    if (startDelivering.isPending) return;
+    if (task.taskType === 'return' && task.status === 'PICKED_UP') {
+      try {
+        await startDelivering.mutateAsync(id);
+      } catch (e) {
+        // S6: 按 ApiError 差异化（return 任务 startDelivering 失败）
+        const msg = e instanceof ApiError ? t('tasks.startDeliveringFailed') : t('common.networkError');
+        showToast(msg, 'error');
+        return; // 失败不跳 sign，留在 navigate 页
+      }
+    }
+    router.push(`/task/${id}/sign`);
+  };
+
+  // return + PICKED_UP: 显示"开始配送"；其他（delivery + PICKED_UP / return + DELIVERING）: 显示"去签收"
+  const actionLabel =
+    task?.taskType === 'return' && task?.status === 'PICKED_UP'
+      ? t('tasks.startDelivery')
+      : t('tasks.goSignoff');
 
   return (
     <View className="flex-1 bg-[#fff8f7]">
@@ -131,8 +166,8 @@ export default function TaskNavigatePage() {
       </ScrollView>
 
       <View className="absolute bottom-0 left-0 right-0 bg-[#fff8f7] p-5 shadow-lg">
-        <Button className="bg-[#463200]" onPress={() => router.push(`/task/${id}/sign`)}>
-          {t('tasks.goSignoff')}
+        <Button className="bg-[#463200]" onPress={() => void handleNavigateAction()}>
+          {startDelivering.isPending ? t('flow.processing') : actionLabel}
         </Button>
       </View>
     </View>

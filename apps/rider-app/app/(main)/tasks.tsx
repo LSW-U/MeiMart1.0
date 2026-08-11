@@ -11,6 +11,7 @@ import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { AppIcon, Button } from '../../src/components/ui';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { useTaskLists } from '../../src/services/queries/useTask';
+import { getTaskAction } from '../../src/services/task-flow';
 import { useRiderSettings, useUpdateRiderSettings } from '../../src/services/queries/useSettings';
 import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
 import { useAuthStore } from '../../src/store/useAuthStore';
@@ -104,24 +105,28 @@ export default function TasksPage() {
     />
   );
 
-  const renderPickupTask = (task: DeliveryTask) => (
-    <TaskCard
-      key={task.id}
-      actionLabel={task.status === 'PICKED_UP' ? t('tasks.startDelivery') : t('tasks.arrivedPickup')}
-      chatLabel={t('tasks.chat')}
-      contactLabel={t('tasks.contact')}
-      items={task.items.length ? formatItems(task.items, t) : undefined}
-      note={task.note ?? undefined}
-      orderId={task.orderId}
-      points={[
-        { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: t('common.fromHere', { distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) }) },
-        { label: 'D', title: task.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
-      ]}
-      timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
-      variant="active"
-      onAction={() => router.push(task.status === 'PICKED_UP' ? `/task/${task.id}/navigate` : `/task/${task.id}/pickup`)}
-    />
-  );
+  const renderPickupTask = (task: DeliveryTask) => {
+    // S4: 用共享 helper（与详情页 statusAction 同源），避免两处状态机分散维护
+    const action = getTaskAction(task);
+    return (
+      <TaskCard
+        key={task.id}
+        actionLabel={action ? t(action.labelKey) : t('tasks.arrivedPickup')}
+        chatLabel={t('tasks.chat')}
+        contactLabel={t('tasks.contact')}
+        items={task.items.length ? formatItems(task.items, t) : undefined}
+        note={task.note ?? undefined}
+        orderId={task.orderId}
+        points={[
+          { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: t('common.fromHere', { distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) }) },
+          { label: 'D', title: task.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
+        ]}
+        timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
+        variant="active"
+        onAction={() => action && router.push(`/task/${task.id}/${action.target}`)}
+      />
+    );
+  };
 
   const renderDeliveryTask = (task: DeliveryTask) => (
     <TaskCard

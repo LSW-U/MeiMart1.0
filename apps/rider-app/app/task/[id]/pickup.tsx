@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { PhotoCapture } from '../../../src/components/camera/PhotoCapture';
+import { showToast } from '../../../src/components/feedback/Toast';
+import { ApiError } from '../../../src/services/api';
 import { SwipeButton } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
@@ -24,8 +26,10 @@ export default function PickupConfirmPage() {
     try {
       await confirmPickup.mutateAsync({ taskId: id, evidence: { photoUri } });
       router.replace('/(main)/tasks?tab=pickups');
-    } catch {
-      // TODO: Toast 反馈错误
+    } catch (e) {
+      // 审查报告 TODO toast：按 ApiError 差异化（业务失败 vs 网络）
+      const msg = e instanceof ApiError ? t('pickup.failed') : t('common.networkError');
+      showToast(msg, 'error');
     }
   };
 

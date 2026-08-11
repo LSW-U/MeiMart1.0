@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EvidenceExample, EvidenceUpload } from '../../../src/components/camera/SignaturePad';
+import { showToast } from '../../../src/components/feedback/Toast';
+import { ApiError } from '../../../src/services/api';
 import { Button } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
@@ -36,9 +38,11 @@ export default function SignConfirmPage() {
       });
       setStatus('success');
       setTimeout(() => router.replace('/(main)/tasks?tab=deliveries'), 500);
-    } catch {
+    } catch (e) {
       setStatus('idle');
-      // TODO: Toast 反馈错误
+      // 审查报告 TODO toast：按 ApiError 差异化（业务失败 vs 网络）
+      const msg = e instanceof ApiError ? t('sign.failed') : t('common.networkError');
+      showToast(msg, 'error');
     }
   };
 

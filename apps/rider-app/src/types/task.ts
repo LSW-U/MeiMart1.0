@@ -9,6 +9,13 @@ export type TaskStatus =
   | 'DELIVERED'
   | 'FAILED';
 
+/**
+ * P14 ④：任务类型
+ * - delivery：普通配送（两步 PICKED_UP→DELIVERED，跳过 DELIVERING）
+ * - return：退货取件（三步 PICKED_UP→DELIVERING→DELIVERED，startDelivering 写 refund.pickedAt）
+ */
+export type TaskType = 'delivery' | 'return';
+
 export type TaskStop = {
   title: string;
   address: string;
@@ -26,6 +33,10 @@ export type DeliveryTask = {
   riderId: string | null;
   warehouseId: string;
   status: TaskStatus;
+  /** P14 ④：任务类型（delivery 配送 / return 退货取件） */
+  taskType: TaskType;
+  /** P14 ④：return 任务关联的 refund（delivery 为 null） */
+  refundId: string | null;
   pickupAddress: string;
   pickupLat: number;
   pickupLng: number;

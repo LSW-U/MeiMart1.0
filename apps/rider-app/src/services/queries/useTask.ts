@@ -3,12 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { DeliveryTask, ReportIssueReason, TaskStatus } from '@/src/types/task';
 
 import { taskApi } from '../task';
-
-type TaskLists = {
-  available: DeliveryTask[];
-  pickups: DeliveryTask[];
-  deliveries: DeliveryTask[];
-};
+import type { TaskLists } from '../task';
 
 export const taskListsKey = ['tasks', 'lists'] as const;
 
@@ -24,9 +19,25 @@ export function useTaskLists() {
 }
 
 export function useTask(id: string | undefined) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: id ? taskDetailKey(id) : ['tasks', 'detail', 'none'],
-    queryFn: () => taskApi.getById(id as string),
+    queryFn: async (): Promise<DeliveryTask | null> => {
+      const taskId = id;
+      if (!taskId) return null;
+      // S3: 优先读 lists 缓存（getLists 已含所有任务），命中避免双端点全量拉取
+      const lists = queryClient.getQueryData<TaskLists>(taskListsKey);
+      if (lists) {
+        const found =
+          lists.available.find((t) => t.id === taskId) ??
+          lists.pickups.find((t) => t.id === taskId) ??
+          lists.deliveries.find((t) => t.id === taskId) ??
+          null;
+        if (found) return found;
+      }
+      // 未命中缓存才 fallback 到 getById（后端无单任务详情端点，走 getLists 派生）
+      return taskApi.getById(taskId);
+    },
     enabled: Boolean(id),
   });
 }
@@ -37,7 +48,7 @@ export function useAcceptTask() {
   return useMutation({
     mutationFn: (id: string) => taskApi.accept(id),
     onMutate: async (id) => {
-      // 乐观更新：从 available 移到 pickups（status 置为 accepted）
+      // 乐观更新：从 available 移到 pickups（status 置为 ASSIGNED）
       await queryClient.cancelQueries({ queryKey: taskListsKey });
       const previous = queryClient.getQueryData<TaskLists>(taskListsKey);
       if (previous) {
@@ -57,8 +68,53 @@ export function useAcceptTask() {
         queryClient.setQueryData(taskListsKey, ctx.previous);
       }
     },
-    onSettled: () => {
+    onSettled: (_data, _error, variables) => {
       void queryClient.invalidateQueries({ queryKey: taskListsKey });
+      // S1: 同步刷 detail（详情页 accept 后返回会短暂显示旧 PENDING_ASSIGN），与 useUpdateTaskStatus 对称
+      void queryClient.invalidateQueries({ queryKey: taskDetailKey(variables) });
+    },
+  });
+}
+
+/**
+ * P14 ④ B1：return 任务开始配送（PICKED_UP → DELIVERING）
+ * 仅 return 任务调（delivery 跳过 DELIVERING）。后端事务内同步写 refund.pickedAt。
+ * 乐观更新 lists + detail，失败 rollback，参考 useUpdateTaskStatus 模式（不跨 list 移动，onSettled invalidate 纠正）。
+ */
+export function useStartDelivering() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => taskApi.startDelivering(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: taskListsKey });
+      const previousLists = queryClient.getQueryData<TaskLists>(taskListsKey);
+      if (previousLists) {
+        const updateList = (list: DeliveryTask[]) =>
+          list.map((t) => (t.id === id ? { ...t, status: 'DELIVERING' as TaskStatus } : t));
+        queryClient.setQueryData<TaskLists>(taskListsKey, {
+          available: updateList(previousLists.available),
+          pickups: updateList(previousLists.pickups),
+          deliveries: updateList(previousLists.deliveries),
+        });
+      }
+      const detailKey = taskDetailKey(id);
+      await queryClient.cancelQueries({ queryKey: detailKey });
+      const previousDetail = queryClient.getQueryData<DeliveryTask | null>(detailKey);
+      queryClient.setQueryData<DeliveryTask | null>(detailKey, (old) =>
+        old ? { ...old, status: 'DELIVERING' as TaskStatus } : old,
+      );
+      return { previousLists, previousDetail, detailKey };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previousLists) queryClient.setQueryData(taskListsKey, ctx.previousLists);
+      if (ctx?.previousDetail !== undefined && ctx?.detailKey) {
+        queryClient.setQueryData(ctx.detailKey, ctx.previousDetail);
+      }
+    },
+    onSettled: (_data, _error, variables) => {
+      void queryClient.invalidateQueries({ queryKey: taskListsKey });
+      void queryClient.invalidateQueries({ queryKey: taskDetailKey(variables) });
     },
   });
 }

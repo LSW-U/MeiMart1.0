@@ -8,20 +8,21 @@ import { showToast } from '../../src/components/feedback/Toast';
 import { AppIcon } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
+import { ApiError } from '../../src/services/api';
 import { useAcceptTask, useTask } from '../../src/services/queries/useTask';
-import type { DeliveryTask, TaskStatus } from '../../src/types/task';
+import { getTaskAction } from '../../src/services/task-flow';
+import type { DeliveryTask } from '../../src/types/task';
 
 const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)}km`;
 const formatItems = (items: string[], t: (key: TranslationKey, vars?: Record<string, string | number>) => string) => t('common.items', { items: items.join(' · ') });
 
-// status → 按钮文案 + 跳转目标
-// Why: PICKED_UP 应进配送流程（navigate→sign），原代码无差别跳 pickup 导致已取货订单重复取货必然 409
-const statusAction: Partial<Record<TaskStatus, { labelKey: TranslationKey; target: 'pickup' | 'navigate' | 'sign' }>> = {
-  PENDING_ASSIGN: { labelKey: 'tasks.accept', target: 'pickup' },
-  ASSIGNED: { labelKey: 'tasks.arrivedPickup', target: 'pickup' },
-  PICKED_UP: { labelKey: 'tasks.startDelivery', target: 'navigate' },
-  DELIVERING: { labelKey: 'tasks.arrivedDelivery', target: 'sign' },
-};
+// S6: accept 失败按 ApiError.code 差异化提示
+// - E-DISPATCH-xxx（被抢/状态不对/类型错）/ 409 -> tasks.acceptFailed
+// - 网络/超时/非 ApiError -> common.networkError
+function resolveAcceptErrorMessage(e: unknown, t: (key: TranslationKey) => string): string {
+  const isDispatchConflict = e instanceof ApiError && (e.code.startsWith('E-DISPATCH') || e.status === 409);
+  return isDispatchConflict ? t('tasks.acceptFailed') : t('common.networkError');
+}
 
 export default function TaskDetailPage() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function TaskDetailPage() {
   const { data: task, refetch } = useTask(id);
   const acceptTask = useAcceptTask();
   const taskData: DeliveryTask | null = task ?? null;
-  const action = taskData ? statusAction[taskData.status] : undefined;
+  const action = taskData ? getTaskAction(taskData) : undefined;
 
   // Why: PENDING_ASSIGN 先 accept（接单）再跳；其他状态直接跳对应步骤页
   const handleAction = async () => {
@@ -39,18 +40,27 @@ export default function TaskDetailPage() {
       void refetch();
       return;
     }
+    // S5: 防重复点击（accept in-flight 期间禁用）
+    if (acceptTask.isPending) return;
     if (taskData.status === 'PENDING_ASSIGN') {
       try {
         await acceptTask.mutateAsync(id);
-      } catch {
-        // 接单失败（被抢/已派/网络）→ toast 提示 + 刷新看最新状态
-        showToast(t('tasks.acceptFailed'), 'error');
+      } catch (e) {
+        // S6: 按 ApiError.code 差异化提示（被抢/状态 vs 网络）
+        showToast(resolveAcceptErrorMessage(e, t), 'error');
         void refetch();
         return;
       }
     }
     router.push(`/task/${id}/${action.target}`);
   };
+
+  // S5: accept in-flight 时按钮显示"处理中"
+  const actionLabel = acceptTask.isPending
+    ? t('flow.processing')
+    : action
+      ? t(action.labelKey)
+      : t('tasks.refresh');
 
   return (
     <View className="flex-1 bg-[#fff8f7]">
@@ -67,7 +77,7 @@ export default function TaskDetailPage() {
       <ScrollView className="flex-1" contentContainerClassName="px-3 py-6 pb-28">
         {taskData ? (
           <TaskCard
-            actionLabel={action ? t(action.labelKey) : t('tasks.refresh')}
+            actionLabel={actionLabel}
             chatLabel={t('tasks.chat')}
             contactLabel={t('tasks.contact')}
             items={taskData.items.length ? formatItems(taskData.items, t) : undefined}

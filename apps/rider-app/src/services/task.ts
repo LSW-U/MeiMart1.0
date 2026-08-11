@@ -2,7 +2,7 @@ import type { DeliveryTask, ReportIssueReason, TaskStatus } from '@/src/types/ta
 
 import { api, buildQuery, isMockMode } from './api';
 
-type TaskLists = {
+export type TaskLists = {
   available: DeliveryTask[];
   pickups: DeliveryTask[];
   deliveries: DeliveryTask[];
@@ -13,6 +13,7 @@ type TaskLists = {
 const storageKey = 'mei-delivery-app:tasks:v3';
 
 // mock 数据全部使用后端真实枚举值（大写），保证 mock/real 切换时 UI 一致
+// P14 ④：每条任务带 taskType（delivery/return）+ refundId（return 关联退款，delivery 为 null）
 const initialTasks: DeliveryTask[] = [
   {
     id: '102',
@@ -20,6 +21,8 @@ const initialTasks: DeliveryTask[] = [
     riderId: null,
     warehouseId: 'wh-001',
     status: 'PENDING_ASSIGN',
+    taskType: 'delivery',
+    refundId: null,
     pickupAddress: 'Lita Store (Colmera), Rua de Colmera, Dili',
     pickupLat: -8.5569,
     pickupLng: 125.5273,
@@ -46,6 +49,8 @@ const initialTasks: DeliveryTask[] = [
     riderId: null,
     warehouseId: 'wh-001',
     status: 'PENDING_ASSIGN',
+    taskType: 'delivery',
+    refundId: null,
     pickupAddress: 'Cafe Aroma (Colmera), Rua de Colmera, Dili',
     pickupLat: -8.557,
     pickupLng: 125.5275,
@@ -71,6 +76,8 @@ const initialTasks: DeliveryTask[] = [
     riderId: 'r001',
     warehouseId: 'wh-001',
     status: 'ASSIGNED',
+    taskType: 'delivery',
+    refundId: null,
     pickupAddress: 'Heritage Bakery (Dili Center), Rua 15 de Outubro, Dili',
     pickupLat: -8.5539,
     pickupLng: 125.5373,
@@ -96,6 +103,8 @@ const initialTasks: DeliveryTask[] = [
     riderId: 'r001',
     warehouseId: 'wh-001',
     status: 'DELIVERING',
+    taskType: 'return',
+    refundId: 'rf-105',
     pickupAddress: 'Lita Store (Colmera), Rua de Colmera, Dili',
     pickupLat: -8.5569,
     pickupLng: 125.5273,
@@ -114,6 +123,35 @@ const initialTasks: DeliveryTask[] = [
     distanceKm: 2.5,
     estimatedMinutes: 30,
     items: ['Matcha Latte', 'Seasonal Fruit Platter'],
+  },
+  // P14 ④ B1：return 任务三步流转示例（PICKED_UP 状态，进 pickups tab）
+  // 用于 mock 下验证 return 流程：navigate 页点"开始配送"→startDelivering→DELIVERING→sign→deliver
+  {
+    id: '106',
+    orderId: 'TL Return #106',
+    riderId: 'r001',
+    warehouseId: 'wh-001',
+    status: 'PICKED_UP',
+    taskType: 'return',
+    refundId: 'rf-106',
+    pickupAddress: 'Customer Return Address, Avenida Bispo Medeiros, Dili',
+    pickupLat: -8.545,
+    pickupLng: 125.55,
+    dropoffAddress: 'Warehouse Return Center, Rua de Colmera, Dili',
+    dropoffLat: -8.5569,
+    dropoffLng: 125.5273,
+    assignedAt: new Date().toISOString(),
+    pickedUpAt: new Date().toISOString(),
+    deliveredAt: null,
+    note: 'Return pickup: defective item, original order #099.',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    pickup: { title: 'Customer (Return Pickup)', address: 'Avenida Bispo Medeiros, Dili', contactName: 'Customer', contactPhone: '+670 7744 1000' },
+    dropoff: { title: 'Warehouse Return Center', address: 'Rua de Colmera, Dili', contactName: 'Warehouse Desk' },
+    fee: 8,
+    distanceKm: 3,
+    estimatedMinutes: 35,
+    items: ['Return Item A', '1 unit'],
   },
 ];
 
@@ -168,6 +206,8 @@ function buildMockLists(): TaskLists {
 // 后端 DeliveryTaskView 字段精简（无 fee/distance/items/pickup.title 等），
 // 这里映射出旧 UI 期望的嵌套结构，缺失字段填默认空值避免组件 break。
 //
+// P14 ④：taskType / refundId 后端 DeliveryTaskView 已有，`...view` 直接透传，无需补默认值。
+//
 // TODO(W6-backend): 后端 W6 在 DeliveryTaskView 补 fee / distanceKm /
 //   estimatedMinutes / items 四个字段后，删除下方 ?? 0 / ?? [] 默认值，
 //   改为直接透传（fee: view.fee）。默认值是假数据，会让 UI 显示 $0/0km/0min。
@@ -207,12 +247,19 @@ export const taskApi = {
     if (isMockMode) return mockDelay(buildMockLists(), 400);
     // Why: 后端拆两个端点 - tasks(抢单大厅 PENDING_ASSIGN) + my-tasks(骑手自己的 ASSIGNED/PICKED_UP/DELIVERING)
     const query = buildQuery(warehouseId ? { warehouseId } : {});
-    const [pendingRes, myRes] = await Promise.all([
+    // S2: allSettled 防 my-tasks 失败拖垮抢单大厅（弱网：一个失败不阻塞另一个，CLAUDE.md 规则 11-14）
+    const [pendingSettled, mySettled] = await Promise.allSettled([
       api.get<{ items: DeliveryTask[] }>(`/rider/dispatch/tasks${query}`),
       api.get<{ items: DeliveryTask[] }>(`/rider/dispatch/my-tasks`),
     ]);
-    const pending = pendingRes.data.items.map(fromView);
-    const mine = myRes.data.items.map(fromView);
+    // 抢单大厅失败是硬伤（骑手没法工作），抛出让 UI 显示错误重试
+    if (pendingSettled.status === 'rejected') throw pendingSettled.reason;
+    // my-tasks 失败降级到空数组（pickups/deliveries 暂空，available 仍展示，对齐规则 11 三态）
+    if (mySettled.status === 'rejected') {
+      console.warn('[task] my-tasks failed, fallback to empty:', mySettled.reason);
+    }
+    const pending = pendingSettled.value.data.items.map(fromView);
+    const mine = mySettled.status === 'fulfilled' ? mySettled.value.data.items.map(fromView) : [];
     return {
       available: pending.filter((t) => t.status === 'PENDING_ASSIGN'),
       pickups: mine.filter((t) => t.status === 'ASSIGNED' || t.status === 'PICKED_UP'),
@@ -251,6 +298,27 @@ export const taskApi = {
     }
     const res = await api.post<DeliveryTask>(
       `/rider/dispatch/tasks/${encodeURIComponent(id)}/pickup`,
+      { note },
+    );
+    return fromView(res.data);
+  },
+
+  /**
+   * P14 ④ B1：开始配送（PICKED_UP → DELIVERING，仅 return 任务可调）
+   * 后端 dispatch.service.ts:511 startDelivering：校验 taskType==='return'（否则 E-DISPATCH-020），
+   * 事务内 deliveryTask.update(DELIVERING) + refund.update(pickedAt)。
+   * delivery 任务保持两步（跳过 DELIVERING），不调本方法。
+   */
+  async startDelivering(id: string, note?: string): Promise<DeliveryTask> {
+    if (isMockMode) {
+      const task = findMockTask(id);
+      if (!task) throw new Error(`Task not found: ${id}`);
+      // mock 校验对齐后端 E-DISPATCH-020（仅 return 可调）
+      if (task.taskType !== 'return') throw new Error('E-DISPATCH-020: startDelivering only for return task');
+      return mockDelay(await mutateMockStatus(id, 'DELIVERING'), 400);
+    }
+    const res = await api.post<DeliveryTask>(
+      `/rider/dispatch/tasks/${encodeURIComponent(id)}/start-delivering`,
       { note },
     );
     return fromView(res.data);
