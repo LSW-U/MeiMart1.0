@@ -1,6 +1,6 @@
-// ⚠️ 无 HTML 原型，参考 ProductDetailPage 推导实现，待设计确认
-// OrderReviewPage — 订单评价（参考 ProductDetailPage.html 的商品卡片 + 星级样式）
-// D.4: PrimaryHeader + 商品卡片 + 5 星 emoji 评分 + 标签 Chip + 评价文本 + 照片占位 + 提交按钮
+// HTML 原型：第三梯队HTML原型设计/P15-售后评价页-优化原型.html（2026-08-10 出）
+// OrderReviewPage — 订单评价（P15 优化：星级滑动 + 匿名开关 + 图片上传 + 字数统计）
+// D.4: PrimaryHeader + 商品卡片 + 5 星 emoji 评分 + 标签 Chip + 评价文本 + 照片上传 + 提交按钮
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   submitText: {
-    // color 由 JSX inline 动态控制（ON_PRIMARY / on-surface-variant），此处不定义
+    // color 由 JSX inline 设为 ON_PRIMARY（决策 6/8 统一两种态，不再 isPending 条件）
     ...typography['label-caps'],
     fontWeight: '700',
     fontSize: 14,
