@@ -728,12 +728,12 @@
     "anonymousDesc": "Hide your name publicly",
     "you": "You",
     "tag": {
-      "quality": "Quality",
-      "fastDelivery": "Fast delivery",
-      "goodPackaging": "Good packaging",
-      "goodValue": "Good value",
+      "good_quality": "Good quality",
+      "good_price": "Good price",
       "fresh": "Fresh",
-      "repurchase": "Repurchase"
+      "well_packaged": "Well packaged",
+      "accurate_description": "Accurate description",
+      "fast_delivery": "Fast delivery"
     },
     "rating": {
       "terrible": "Terrible",

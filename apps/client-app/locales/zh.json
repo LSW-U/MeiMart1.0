@@ -728,12 +728,12 @@
     "anonymousDesc": "公开时隐藏你的姓名",
     "you": "你",
     "tag": {
-      "quality": "品质",
-      "fastDelivery": "配送快",
-      "goodPackaging": "包装好",
-      "goodValue": "性价比",
+      "good_quality": "质量好",
+      "good_price": "价格实惠",
       "fresh": "新鲜",
-      "repurchase": "会回购"
+      "well_packaged": "包装好",
+      "accurate_description": "描述相符",
+      "fast_delivery": "物流快"
     },
     "rating": {
       "terrible": "极差",

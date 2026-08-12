@@ -39,13 +39,15 @@ import { reviewSchema, type ReviewValues } from '@/forms/schemas/service';
 
 // Why: TAGS 用 i18n key 渲染 Chip，提交时需还原为存储标识（quality/fresh 等，与 reviews.json 对齐）
 const REVIEW_TAG_PREFIX = 'review.tag.';
+// Why: 与后端 GoodsReviewTag 枚举对齐（snake_case，RB1 commit 9e33d79），
+//      real POST tags 不匹配枚举会 400。商品详情页 product/[id].tsx:992 同用 review.tag.${tag} 渲染。
 const TAGS = [
-  `${REVIEW_TAG_PREFIX}quality`,
-  `${REVIEW_TAG_PREFIX}fastDelivery`,
-  `${REVIEW_TAG_PREFIX}goodPackaging`,
-  `${REVIEW_TAG_PREFIX}goodValue`,
+  `${REVIEW_TAG_PREFIX}good_quality`,
+  `${REVIEW_TAG_PREFIX}good_price`,
   `${REVIEW_TAG_PREFIX}fresh`,
-  `${REVIEW_TAG_PREFIX}repurchase`,
+  `${REVIEW_TAG_PREFIX}well_packaged`,
+  `${REVIEW_TAG_PREFIX}accurate_description`,
+  `${REVIEW_TAG_PREFIX}fast_delivery`,
 ];
 
 const RATING_KEYS = [

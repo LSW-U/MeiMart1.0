@@ -681,12 +681,12 @@
     "anonymousDesc": "[TET] Hide your name publicly",
     "you": "[TET] You",
     "tag": {
-      "quality": "[TET] Quality",
-      "fastDelivery": "[TET] Fast delivery",
-      "goodPackaging": "[TET] Good packaging",
-      "goodValue": "[TET] Good value",
+      "good_quality": "[TET] Good quality",
+      "good_price": "[TET] Good price",
       "fresh": "[TET] Fresh",
-      "repurchase": "[TET] Repurchase"
+      "well_packaged": "[TET] Well packaged",
+      "accurate_description": "[TET] Accurate description",
+      "fast_delivery": "[TET] Fast delivery"
     },
     "rating": {
       "terrible": "[TET] Terrible",
