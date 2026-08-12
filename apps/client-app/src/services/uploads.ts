@@ -23,9 +23,11 @@ import { isMockMode } from './api';
 // RN FormData 类型扩展：append 接受 {uri,type,name}（RN 运行时支持，DOM lib 类型限 string|Blob）
 // 原因：RN FormData.js 的 FormDataValue = string | {name?, type?, uri}，但 TS DOM lib FormData.append 限 string|Blob，
 // 需扩展重载让 TS 接受 {uri,type,name}（规则36：用类型扩展替代类型断言）
+// 另：web 平台用 Blob 上传（见 appendUploadFile），DOM lib 已有 append(name, Blob, filename) 重载，此处显式声明与 RN 重载并列
 declare global {
   interface FormData {
     append(name: string, value: { uri: string; type?: string; name?: string }): void;
+    append(name: string, blobValue: Blob, filename?: string): void;
   }
 }
 
@@ -50,6 +52,30 @@ export interface UploadResult {
   size: number;
 }
 
+/**
+ * 跨平台文件 append：web 用 Blob，native 用 {uri,type,name}
+ * 原因：expo-image-picker web 上 assets[].uri 是 blob:/data: URL，
+ * FormData.append({uri,type,name}) 在 web 浏览器不识别（web 标准 FormData 接受 Blob/File），
+ * 后端收不到有效文件内容 → 400。native 上 RN FormData 支持 {uri,type,name}。
+ */
+async function appendUploadFile(
+  formData: FormData,
+  fileUri: string,
+  mimeType: string,
+  filename: string,
+): Promise<void> {
+  if (isWeb) {
+    const blob = await (await fetch(fileUri)).blob();
+    formData.append('file', blob, filename);
+  } else {
+    formData.append('file', {
+      uri: fileUri,
+      type: mimeType,
+      name: filename,
+    });
+  }
+}
+
 export const uploadsApi = {
   /**
    * 上传售后凭证照片
@@ -67,12 +93,13 @@ export const uploadsApi = {
       return new Promise((resolve) => setTimeout(() => resolve(mock), 500));
     }
     const formData = new FormData();
-    // RN FormData.append 接受 {uri,type,name}（RN 扩展 FormDataValue 类型，非 TS DOM lib 的 string|Blob）
-    formData.append('file', {
-      uri: fileUri,
-      type: mimeType,
-      name: `evidence.${mimeType.split('/')[1] ?? 'jpg'}`,
-    });
+    // 跨平台 append（web Blob / native {uri,type,name}），见 appendUploadFile
+    await appendUploadFile(
+      formData,
+      fileUri,
+      mimeType,
+      `evidence.${mimeType.split('/')[1] ?? 'jpg'}`,
+    );
     const token = await getToken();
     // Why: baseURL（.env API_BASE_URL）已含 /api/v1，fetch 不像 axios 自动管理 baseURL，路径不再带 /api/v1 前缀（避免重复 .../api/v1/api/v1/...）
     const res = await fetch(`${baseURL}/client/uploads/refund-evidence`, {
@@ -113,11 +140,12 @@ export const uploadsApi = {
       return new Promise((resolve) => setTimeout(() => resolve(mock), 500));
     }
     const formData = new FormData();
-    formData.append('file', {
-      uri: fileUri,
-      type: mimeType,
-      name: `image.${mimeType.split('/')[1] ?? 'jpg'}`,
-    });
+    await appendUploadFile(
+      formData,
+      fileUri,
+      mimeType,
+      `image.${mimeType.split('/')[1] ?? 'jpg'}`,
+    );
     const token = await getToken();
     const res = await fetch(`${baseURL}/client/uploads/review-image`, {
       method: 'POST',
