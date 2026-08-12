@@ -74,7 +74,8 @@ export const uploadsApi = {
       name: `evidence.${mimeType.split('/')[1] ?? 'jpg'}`,
     });
     const token = await getToken();
-    const res = await fetch(`${baseURL}/api/v1/client/uploads/refund-evidence`, {
+    // Why: baseURL（.env API_BASE_URL）已含 /api/v1，fetch 不像 axios 自动管理 baseURL，路径不再带 /api/v1 前缀（避免重复 .../api/v1/api/v1/...）
+    const res = await fetch(`${baseURL}/client/uploads/refund-evidence`, {
       method: 'POST',
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -118,7 +119,7 @@ export const uploadsApi = {
       name: `image.${mimeType.split('/')[1] ?? 'jpg'}`,
     });
     const token = await getToken();
-    const res = await fetch(`${baseURL}/api/v1/client/uploads/review-image`, {
+    const res = await fetch(`${baseURL}/client/uploads/review-image`, {
       method: 'POST',
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
