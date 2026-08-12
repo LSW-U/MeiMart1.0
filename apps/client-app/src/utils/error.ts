@@ -13,3 +13,26 @@ export function isAxios401(error: unknown): boolean {
   const e = error as { response?: { status?: number } };
   return e.response?.status === 401;
 }
+
+/**
+ * 提取后端 API 错误 message（axios error.response.data.message）
+ *
+ * 后端返 JSON { statusCode, code, message }，但 axios 默认 err.message 是
+ * "Request failed with status XXX"（技术性，不友好）。此 helper 提取后端业务 message
+ * （如 "Refund already in progress (status: PENDING)"），提取不到回退 err.message / fallback。
+ *
+ * @param error React Query / mutateAsync 抛的 unknown error
+ * @param fallback 提取不到时的兜底文案（建议传 i18n 通用错误文案）
+ */
+export function getApiErrorMessage(error: unknown, fallback = 'Request failed'): string {
+  if (!error || typeof error !== 'object') return fallback;
+  const e = error as {
+    response?: { data?: { message?: string | string[] } };
+    message?: string;
+  };
+  // 后端 message 可能是 string 或 string[]（NestJS class-validator 批量校验），取首个
+  const backendMsg = e.response?.data?.message;
+  if (typeof backendMsg === 'string') return backendMsg;
+  if (Array.isArray(backendMsg) && backendMsg.length > 0) return backendMsg[0];
+  return e.message ?? fallback;
+}

@@ -36,6 +36,7 @@ import { PriceText } from '@/components/ui/PriceText';
 import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { toast } from '@/store/toastStore';
+import { getApiErrorMessage } from '@/utils/error';
 import { useOrder } from '@/services/queries/useOrders';
 import { useCreateRefund } from '@/services/queries/useRefunds';
 import { uploadsApi } from '@/services/uploads';
@@ -220,8 +221,10 @@ export default function AfterSalesApplyPage() {
         params: { id: refund.id },
       });
     } catch (err) {
-      // 后端 E-REFUND-001（order 状态不允许）/ E-REFUND-002（重复退款）等，message 英文够用
-      toast.error(err instanceof Error ? err.message : t('errors.generic'));
+      // 后端 E-REFUND-001（订单状态不允许）/ E-REFUND-002（重复退款，最常见 409）等
+      // getApiErrorMessage 提取后端 message（如「Refund already in progress (status: PENDING)」），
+      // 非 axios 默认「Request failed with status 409」技术文案
+      toast.error(getApiErrorMessage(err, t('errors.generic')));
     }
   });
 
