@@ -916,7 +916,9 @@ function ReviewCard({
 }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const initial = (review.userName.trim()[0] ?? '?').toUpperCase();
+  // P15 RB1：anonymous=true 时展示「匿名用户」+ 头像「?」（后端返真实 userName + 标记，前端隐藏）
+  const displayName = review.anonymous ? t('review.anonymousDisplayName') : review.userName;
+  const initial = review.anonymous ? '?' : (review.userName.trim()[0] ?? '?').toUpperCase();
   return (
     <View
       style={[
@@ -951,7 +953,7 @@ function ReviewCard({
           </View>
           <View>
             <Text style={[styles.reviewName, { color: colors['on-surface'] }]}>
-              {review.userName}
+              {displayName}
             </Text>
             <StarsRow size={12} rating={review.rating} />
           </View>

@@ -58,6 +58,7 @@ interface ReviewView {
   images: string[];
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   anonymous: boolean;
+  tags: string[];
   category: 'PRODUCT' | 'DELIVERY';
   reply: LocaleText | null;
   repliedAt: string | null;
@@ -92,6 +93,7 @@ function mapReviewView(r: ReviewView): Review {
     images: r.images,
     isVerified: true,
     anonymous: r.anonymous,
+    tags: r.tags,
     orderId: r.orderId,
     category: r.category,
     createdAt: r.createdAt,
