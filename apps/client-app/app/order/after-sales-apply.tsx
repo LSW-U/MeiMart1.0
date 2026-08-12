@@ -178,12 +178,9 @@ export default function AfterSalesApplyPage() {
       const uploaded = await uploadsApi.refundEvidence(asset.uri, asset.mimeType ?? 'image/jpeg');
       setPhotos((prev) => [...prev, uploaded.url]);
     } catch (err) {
-      // 原因：后端 E-UPLOAD-001/002（magic bytes/尺寸/MinIO 故障），message 英文够用
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : t('afterSales.uploadFailed', { defaultValue: 'Upload failed' }),
-      );
+      // 原因：后端 E-UPLOAD-001/002（magic bytes/尺寸/MinIO 故障）
+      // getApiErrorMessage 提取后端 message（如「文件内容不是有效的图片」），非 axios 技术文案
+      toast.error(getApiErrorMessage(err, t('afterSales.uploadFailed')));
     } finally {
       setUploading(false);
     }
