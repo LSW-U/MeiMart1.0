@@ -1,16 +1,17 @@
-import { dispatchAction, type QueueAction } from './sync';
+import { dispatchAction, processQueue, type QueueAction } from './sync';
 
 import { taskApi } from '../services/task';
 
 /**
- * dispatchAction 路由单测（CLAUDE.md 规则 12 离线队列 - bug 1 修复验证）。
+ * sync 单测 —— CLAUDE.md 规则 12 离线队列消费器。
  *
- * 验证 dispatchAction 按 action type 路由到 taskApi 真实方法（端点路径 + 方法对齐
- * /rider/dispatch/tasks/{id}/{pickup|start-delivering|deliver}，POST）。
- * 旧代码端点路径错（缺 /rider/dispatch 前缀、PATCH /status 不符真实 POST /pickup 等），本测锁死对齐。
+ * 覆盖：
+ *   - dispatchAction 路由（bug 1：端点对齐 taskApi 真实方法，POST /rider/dispatch/tasks/{id}/{...}）
+ *   - processQueue 消费（bug 2：失败 attempts 必须 entry.update 持久化，直接改属性不落盘；
+ *     bug 3：FIFO 按 createdAt 升序，保证 pickup -> deliver 业务顺序）
  *
- * 不测 enqueue/processQueue：依赖 WMB database 实例，单测需 fake db + 类型搏斗（DI/Jest mock hoist 均踩坑）；
- * bug 2（attempts entry.update 持久化）+ bug 3（FIFO sort）代码层可见，由 step 2/3 hook 测试 + 手测端到端验证。
+ * fake database：mockFetch 让每个 test 动态配置 query().fetch() 返回值。
+ * mock 前缀变量由 babel-plugin-jest-hoist 自动 hoist 到 jest.mock 之前，factory 内可安全引用。
  */
 
 jest.mock('../services/task', () => ({
@@ -21,24 +22,58 @@ jest.mock('../services/task', () => ({
   },
 }));
 
-// 阻止真 WMB database（LokiJSAdapter）加载 - 在 jest node 环境 hang。
-// 自包含 fake（不引外层变量，避开 jest.mock hoist 时机坑）。dispatchAction 不碰 db，fake 只需存在。
+// fake database：mockFetch 暴露给 processQueue test 配置 entries。
+// dispatchAction 不碰 db；processQueue 通过 fetch 拿 entries 消费。
 jest.mock('./index', () => ({
   database: {
     write: async (fn: () => Promise<void>) => fn(),
     get: () => ({
       create: async () => undefined,
-      query: () => ({ fetch: async () => [], fetchCount: async () => 0 }),
+      query: () => ({ fetch: mockFetch, fetchCount: async () => 0 }),
     }),
   },
 }));
 
+// mock 前缀 -> babel-plugin-jest-hoist 自动 hoist 到 jest.mock 之前，factory 可安全引用
+const mockFetch = jest.fn();
 const mockPickup = taskApi.pickup as jest.Mock;
 const mockStartDelivering = taskApi.startDelivering as jest.Mock;
 const mockDeliver = taskApi.deliver as jest.Mock;
 
+/** fake OfflineQueueEntry：processQueue 只读 action/payload/attempts/createdAt + 调 markAsDeleted/update */
+interface FakeEntry {
+  createdAt: number;
+  attempts: number;
+  action: string;
+  payload: string;
+  lastError?: string;
+  markAsDeleted: jest.Mock;
+  update: jest.Mock;
+}
+
+function makeFakeEntry(opts: {
+  action: QueueAction['type'];
+  payload: QueueAction['payload'];
+  attempts?: number;
+  createdAt?: number;
+}): FakeEntry {
+  const entry: FakeEntry = {
+    createdAt: opts.createdAt ?? 0,
+    attempts: opts.attempts ?? 0,
+    action: opts.action,
+    payload: JSON.stringify(opts.payload),
+    markAsDeleted: jest.fn().mockResolvedValue(undefined),
+    // 模拟 WMB Model.update：执行回调，回调内改 record 属性即"落盘"
+    update: jest.fn(async (fn: (r: FakeEntry) => void) => {
+      fn(entry);
+    }),
+  };
+  return entry;
+}
+
 describe('dispatchAction 路由（bug 1：端点对齐 taskApi 真实方法）', () => {
   beforeEach(() => {
+    mockFetch.mockReset();
     mockPickup.mockReset();
     mockStartDelivering.mockReset();
     mockDeliver.mockReset();
@@ -76,5 +111,69 @@ describe('dispatchAction 路由（bug 1：端点对齐 taskApi 真实方法）',
 
     expect(mockDeliver).toHaveBeenCalledWith('T3', { collectedAmount: 100, note: 'cash' });
     expect(mockPickup).not.toHaveBeenCalled();
+  });
+});
+
+describe('processQueue 消费（bug 2 attempts 持久化 + bug 3 FIFO）', () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+    mockPickup.mockReset();
+    mockStartDelivering.mockReset();
+    mockDeliver.mockReset();
+  });
+
+  it('成功：dispatchAction 全过 -> 全 markAsDeleted，synced=N failed=0', async () => {
+    const e1 = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' } });
+    const e2 = makeFakeEntry({ action: 'startDelivering', payload: { taskId: 'B' } });
+    mockFetch.mockResolvedValue([e1, e2]);
+    mockPickup.mockResolvedValue(undefined);
+    mockStartDelivering.mockResolvedValue(undefined);
+
+    const result = await processQueue();
+
+    expect(result).toEqual({ synced: 2, failed: 0 });
+    expect(e1.markAsDeleted).toHaveBeenCalledTimes(1);
+    expect(e2.markAsDeleted).toHaveBeenCalledTimes(1);
+  });
+
+  it('bug 3 FIFO：query 返回乱序，按 createdAt 升序重放', async () => {
+    // 故意 createdAt 降序（A=3000, B=1000, C=2000），验证 sort 升序后才 for 循环
+    const eA = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' }, createdAt: 3000 });
+    const eB = makeFakeEntry({ action: 'pickup', payload: { taskId: 'B' }, createdAt: 1000 });
+    const eC = makeFakeEntry({ action: 'pickup', payload: { taskId: 'C' }, createdAt: 2000 });
+    mockFetch.mockResolvedValue([eA, eB, eC]);
+    mockPickup.mockResolvedValue(undefined);
+
+    await processQueue();
+
+    // 期望重放顺序 B(1000) -> C(2000) -> A(3000)，保证 pickup -> deliver 业务顺序不乱
+    expect(mockPickup.mock.calls.map((c) => c[0])).toEqual(['B', 'C', 'A']);
+  });
+
+  it('bug 2：失败用 entry.update 持久化 attempts+1 + lastError', async () => {
+    const e1 = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' }, attempts: 0 });
+    mockFetch.mockResolvedValue([e1]);
+    mockPickup.mockRejectedValue(new Error('network down'));
+
+    const result = await processQueue();
+
+    expect(result).toEqual({ synced: 0, failed: 1 });
+    // bug 2 核心：必须 entry.update 才落盘（旧代码直接 entry.attempts += 1 不持久化）
+    expect(e1.update).toHaveBeenCalledTimes(1);
+    expect(e1.attempts).toBe(1);
+    expect(e1.lastError).toBe('network down');
+    expect(e1.markAsDeleted).not.toHaveBeenCalled();
+  });
+
+  it('超 MAX_ATTEMPTS(5) 跳过：不调 dispatchAction，计入 failed', async () => {
+    const e1 = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' }, attempts: 5 });
+    mockFetch.mockResolvedValue([e1]);
+    mockPickup.mockResolvedValue(undefined);
+
+    const result = await processQueue();
+
+    expect(result).toEqual({ synced: 0, failed: 1 });
+    expect(mockPickup).not.toHaveBeenCalled();
+    expect(e1.markAsDeleted).not.toHaveBeenCalled();
   });
 });

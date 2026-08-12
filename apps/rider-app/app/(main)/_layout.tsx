@@ -1,6 +1,6 @@
 import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, AppState, Platform, View } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { useRiderSocket } from '../../src/hooks/useRiderSocket';
@@ -10,6 +10,8 @@ import { useHeartbeat } from '../../src/hooks/useHeartbeat';
 import { useBackgroundTask } from '../../src/hooks/useBackgroundTask';
 import { useNetwork } from '../../src/hooks/useNetwork';
 import { useRiderSettings } from '../../src/services/queries/useSettings';
+import { processQueue } from '../../src/database/sync';
+import { OfflineBanner } from '../../src/components/feedback/OfflineBanner';
 
 export default function MainLayout() {
   const hydrated = useAuthStore((s) => s.hydrated);
@@ -62,5 +64,21 @@ function MainContent() {
     online && !isOffline && Boolean(currentOrderId) && (Platform.OS === 'android' || isBackground);
   useBackgroundTask({ enabled: bgEnabled, currentOrderId });
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  // CLAUDE.md 规则 12：online 恢复 + 启动时 flush 离线队列（pickup/deliver/startDelivering 重放）
+  // 启动（prev=null）且在线，或 online 恢复（true→false）-> processQueue 补同步崩溃/被杀遗留
+  const prevOfflineRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    const prev = prevOfflineRef.current;
+    prevOfflineRef.current = isOffline;
+    if ((prev === null || prev === true) && !isOffline) {
+      void processQueue();
+    }
+  }, [isOffline]);
+
+  return (
+    <View className="flex-1">
+      <OfflineBanner />
+      <Stack screenOptions={{ headerShown: false }} />
+    </View>
+  );
 }
