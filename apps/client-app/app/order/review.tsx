@@ -33,6 +33,7 @@ import { Icon } from '@/components/ui/Icon';
 import { PriceText } from '@/components/ui/PriceText';
 import { useProduct } from '@/services/queries/useProducts';
 import { useSubmitReview } from '@/services/queries/useReviews';
+import { uploadsApi } from '@/services/uploads';
 import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import { reviewSchema, type ReviewValues } from '@/forms/schemas/service';
@@ -148,9 +149,10 @@ export default function OrderReviewPage() {
   };
 
   const { isOffline } = useNetwork();
+  const [uploading, setUploading] = useState(false);
 
-  // 决策 3（B3/R3 修复）：图片上传接 expo-image-picker。
-  // 当前 RB2（review-image 端点）未做，先存本地 URI（mock 可测）；RB2 就绪后改 uploadsApi.reviewImage 上传拿 URL。
+  // 决策 3（B3/R3）+ RB2：图片上传 expo-image-picker -> uploadsApi.reviewImage 拿 URL -> 存 URL
+  // RB2 端点（POST /client/uploads/review-image）就绪后上传拿 MinIO URL，submit 时传后端可访问
   const handleAddPhoto = async (
     currentImages: string[],
     onChange: (v: string[]) => void,
@@ -168,8 +170,21 @@ export default function OrderReviewPage() {
       quality: 0.8,
     });
     if (result.canceled) return;
-    const newUris = result.assets.map((a) => a.uri);
-    onChange([...currentImages, ...newUris].slice(0, MAX));
+    setUploading(true);
+    try {
+      // 逐张上传 review-image 端点拿 URL，存 URL（不再存本地 URI）
+      const uploaded = await Promise.all(
+        result.assets.map((a) =>
+          uploadsApi.reviewImage(a.uri, a.mimeType ?? 'image/jpeg'),
+        ),
+      );
+      const newUrls = uploaded.map((r) => r.url);
+      onChange([...currentImages, ...newUrls].slice(0, MAX));
+    } catch {
+      toast.error(t('review.photoUploadFailed'));
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Why: §8 提交接 useSubmitReview（乐观写入 reviews 缓存 -> 详情页立即可见 + 绿色置顶）。
@@ -407,18 +422,25 @@ export default function OrderReviewPage() {
                         {
                           backgroundColor: colors['surface-container-low'],
                           borderColor: colors['outline-variant'],
+                          opacity: uploading ? 0.5 : 1,
                         },
                       ]}
                       onPress={() => handleAddPhoto(imgs, onChange)}
+                      disabled={uploading}
                       accessibilityRole="button"
                       accessibilityLabel={t('review.a11y.addPhoto')}
+                      accessibilityState={{ disabled: uploading }}
                       testID="review-add-photo"
                     >
-                      <Icon
-                        symbol="photo_camera"
-                        size={22}
-                        color={colors['on-surface-variant']}
-                      />
+                      {uploading ? (
+                        <ActivityIndicator size="small" color={colors['on-surface-variant']} />
+                      ) : (
+                        <Icon
+                          symbol="photo_camera"
+                          size={22}
+                          color={colors['on-surface-variant']}
+                        />
+                      )}
                       <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
                         {imgs.length} / 3
                       </Text>

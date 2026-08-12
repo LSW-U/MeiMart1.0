@@ -723,6 +723,7 @@
     "tagsLabel": "快捷标签",
     "photosLabel": "添加照片（可选）",
     "photoOfflineTip": "断网时无法上传照片",
+    "photoUploadFailed": "照片上传失败，请重试",
     "addPhoto": "添加",
     "anonymousTitle": "匿名评价",
     "anonymousDesc": "公开时隐藏你的姓名",

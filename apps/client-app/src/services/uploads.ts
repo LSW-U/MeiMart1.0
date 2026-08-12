@@ -93,4 +93,47 @@ export const uploadsApi = {
     const json = (await res.json()) as { success: boolean; data: UploadResult };
     return json.data;
   },
+
+  /**
+   * 上传评价图片（P15 RB2，review-image 端点）
+   * 后端：POST /api/v1/client/uploads/review-image（upload-client.controller.ts:167）
+   * 同 refund-evidence 校验（CUSTOMER + magic bytes + 100×100 + 5MB），仅 MinIO 路径前缀不同 reviews/image-*
+   * @param fileUri 本地文件 URI（expo-image-picker assets[].uri）
+   * @param mimeType MIME 类型（如 image/jpeg）
+   */
+  async reviewImage(fileUri: string, mimeType: string): Promise<UploadResult> {
+    if (isMockMode) {
+      // mock：返回伪造 MinIO URL（不实际上传）。submit 时 mock createReview 不调后端
+      const mock: UploadResult = {
+        url: `https://mock-minio.local/meimart/reviews/image-mock-${Date.now()}.jpg`,
+        key: `reviews/image-mock-${Date.now()}.jpg`,
+        size: 1024,
+      };
+      return new Promise((resolve) => setTimeout(() => resolve(mock), 500));
+    }
+    const formData = new FormData();
+    formData.append('file', {
+      uri: fileUri,
+      type: mimeType,
+      name: `image.${mimeType.split('/')[1] ?? 'jpg'}`,
+    });
+    const token = await getToken();
+    const res = await fetch(`${baseURL}/api/v1/client/uploads/review-image`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'Accept-Language': getCurrentLocale(),
+      },
+      body: formData,
+    });
+    if (!res.ok) {
+      const errBody = (await res.json().catch(() => null)) as
+        | { error?: { message?: string }; message?: string }
+        | null;
+      const msg = errBody?.error?.message ?? errBody?.message ?? `Upload failed (${res.status})`;
+      throw new Error(msg);
+    }
+    const json = (await res.json()) as { success: boolean; data: UploadResult };
+    return json.data;
+  },
 };

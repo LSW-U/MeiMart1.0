@@ -676,6 +676,7 @@
     "tagsLabel": "[TET] Quick tags",
     "photosLabel": "[TET] Add photos (optional)",
     "photoOfflineTip": "[TET] Cannot upload photos offline",
+    "photoUploadFailed": "[TET] Photo upload failed, please retry",
     "addPhoto": "[TET] Add",
     "anonymousTitle": "[TET] Anonymous review",
     "anonymousDesc": "[TET] Hide your name publicly",

@@ -723,6 +723,7 @@
     "tagsLabel": "Quick tags",
     "photosLabel": "Add photos (optional)",
     "photoOfflineTip": "Cannot upload photos offline",
+    "photoUploadFailed": "Photo upload failed, please retry",
     "addPhoto": "Add",
     "anonymousTitle": "Anonymous review",
     "anonymousDesc": "Hide your name publicly",
