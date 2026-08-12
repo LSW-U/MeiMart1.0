@@ -44,11 +44,12 @@ const icons: Record<AppIconName, MaterialIconName> = {
   sms: 'cellphone-message',
 };
 
+// 适配层：检测调用方 className 的色 token/hex，映射到 theme colors（渲染色全走 theme，hex 字面仅为匹配调用方遗留 hex className）
 const colorByClass = (className = '') => {
   if (className.includes('text-white')) return colors.surface;
   if (className.includes('text-[#720003]')) return colors.primary;
   if (className.includes('text-[#961813]')) return colors.danger;
-  if (className.includes('text-white/60')) return 'rgba(255,255,255,0.6)';
+  if (className.includes('text-white/60')) return colors.surface60;
   return colors.textMuted;
 };
 

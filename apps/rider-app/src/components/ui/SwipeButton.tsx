@@ -14,7 +14,7 @@ export function SwipeButton({ children, disabled = false, onPress }: SwipeButton
     <Pressable
       disabled={disabled}
       onPress={onPress}
-      className={`h-14 w-full flex-row items-center justify-center rounded-lg ${disabled ? 'bg-[#5d5f5f] opacity-50' : 'bg-[#961813]'}`}
+      className={`h-14 w-full flex-row items-center justify-center rounded-lg ${disabled ? 'bg-primary-container opacity-50' : 'bg-primary-container'}`}
     >
       <Text className="text-base font-bold uppercase tracking-widest text-white">{children}</Text>
       <Text className="ml-2 text-xl text-white/80">→</Text>

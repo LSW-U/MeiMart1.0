@@ -13,9 +13,9 @@ export function Modal({ visible, title, children, onClose }: ModalProps) {
     <NativeModal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       <View className="flex-1 justify-center bg-black/40 px-6">
         <View className="rounded-3xl bg-white p-5">
-          {title ? <Text className="mb-4 text-lg font-bold text-[#261816]">{title}</Text> : null}
+          {title ? <Text className="mb-4 text-lg font-bold text-on-surface">{title}</Text> : null}
           {children}
-          <Pressable className="mt-5 rounded-full bg-[#720003] py-3" onPress={onClose}>
+          <Pressable className="mt-5 rounded-full bg-primary py-3" onPress={onClose}>
             <Text className="text-center font-semibold text-white">Close</Text>
           </Pressable>
         </View>

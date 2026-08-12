@@ -15,19 +15,19 @@ type UploadTileProps = {
 export function UploadTile({ title, subtitle, icon, selected, compact, onPress, t }: UploadTileProps) {
   return (
     <Pressable
-      className={`${compact ? 'h-24 flex-col justify-center gap-2' : 'min-h-14 flex-row justify-between'} items-center rounded-xl border p-4 ${selected ? 'border-[#720003] bg-[#720003]/5' : 'border-[#e1bfba] bg-white'}`}
+      className={`${compact ? 'h-24 flex-col justify-center gap-2' : 'min-h-14 flex-row justify-between'} items-center rounded-xl border p-4 ${selected ? 'border-primary bg-primary/5' : 'border-outline-variant bg-white'}`}
       onPress={onPress}
     >
       <View className={`${compact ? 'items-center' : 'flex-row items-center gap-3'}`}>
-        <View className="h-10 w-10 items-center justify-center rounded-lg bg-[#ffe9e6]">
-          <Text className="text-xl text-[#720003]">{icon}</Text>
+        <View className="h-10 w-10 items-center justify-center rounded-lg bg-surface-container">
+          <Text className="text-xl text-primary">{icon}</Text>
         </View>
         <View className={compact ? 'items-center' : ''}>
-          <Text className="text-[10px] font-bold uppercase tracking-wider text-[#59413d]">{title}</Text>
-          {subtitle ? <Text className={`text-sm font-semibold ${selected ? 'text-[#720003]' : 'text-[#261816]'}`}>{subtitle}</Text> : null}
+          <Text className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{title}</Text>
+          {subtitle ? <Text className={`text-sm font-semibold ${selected ? 'text-primary' : 'text-on-surface'}`}>{subtitle}</Text> : null}
         </View>
       </View>
-      {!compact ? <Text className={`text-xl ${selected ? 'text-[#720003]' : 'text-[#8d706c]'}`}>{selected ? '✓' : t('auth.register.cam')}</Text> : null}
+      {!compact ? <Text className={`text-xl ${selected ? 'text-primary' : 'text-outline'}`}>{selected ? '✓' : t('auth.register.cam')}</Text> : null}
     </Pressable>
   );
 }

@@ -9,8 +9,8 @@ type BadgeProps = {
 
 export function Badge({ children, className = '', textClassName = '' }: BadgeProps) {
   return (
-    <View className={`rounded-full bg-[#ffe9e6] px-3 py-1 ${className}`}>
-      <Text className={`text-xs font-semibold text-[#720003] ${textClassName}`}>{children}</Text>
+    <View className={`rounded-full bg-surface-container px-3 py-1 ${className}`}>
+      <Text className={`text-xs font-semibold text-primary ${textClassName}`}>{children}</Text>
     </View>
   );
 }

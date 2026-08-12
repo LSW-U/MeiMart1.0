@@ -27,4 +27,7 @@ export const colors = {
   // 交互辅助色
   outline: '#8d706c',
   error: '#ba1a1a',
+
+  // 半透色（图标/覆盖层用）
+  surface60: 'rgba(255,255,255,0.6)',
 };

@@ -12,7 +12,7 @@ type ButtonProps = {
 export function Button({ children, className = '', textClassName = '', icon, onPress }: ButtonProps) {
   return (
     <Pressable
-      className={`h-14 flex-row items-center justify-center gap-2 rounded-lg bg-[#720003] active:scale-[0.98] ${className}`}
+      className={`h-14 flex-row items-center justify-center gap-2 rounded-lg bg-primary active:scale-[0.98] ${className}`}
       onPress={onPress}
     >
       <Text className={`text-xs font-bold tracking-wider text-white ${textClassName}`}>{children}</Text>
