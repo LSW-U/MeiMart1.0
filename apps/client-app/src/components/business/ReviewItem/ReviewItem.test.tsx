@@ -4,6 +4,13 @@ import { ThemeProvider } from '@/theme';
 import { ReviewItem } from './ReviewItem';
 import type { Review } from '@/types';
 
+// jest hoist 到 import 前：mock useTranslation，anonymousDisplayName 返 Anonymous（其余返 key）
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => (key === 'review.anonymousDisplayName' ? 'Anonymous' : key),
+  }),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );
@@ -23,5 +30,26 @@ describe('ReviewItem', () => {
     const { getByText } = render(<ReviewItem review={review} />, { wrapper });
     expect(getByText('Alice')).toBeTruthy();
     expect(getByText('Great product, highly recommend!')).toBeTruthy();
+  });
+
+  it('anonymous=true 显示「Anonymous」+ avatar「?」，不显示真实 userName（收尾 C）', () => {
+    const { getByText, queryByText } = render(
+      <ReviewItem review={{ ...review, anonymous: true }} />,
+      { wrapper },
+    );
+    expect(getByText('Anonymous')).toBeTruthy();
+    expect(getByText('?')).toBeTruthy();
+    // 隐私：不显示真实 userName
+    expect(queryByText('Alice')).toBeNull();
+  });
+
+  it('anonymous=false（或 undefined）显示真实 userName + 首字母', () => {
+    const { getByText } = render(
+      <ReviewItem review={{ ...review, anonymous: false }} />,
+      { wrapper },
+    );
+    expect(getByText('Alice')).toBeTruthy();
+    // avatar 首字母 = Alice[0] = A
+    expect(getByText('A')).toBeTruthy();
   });
 });
