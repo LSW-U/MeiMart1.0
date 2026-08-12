@@ -680,6 +680,7 @@
     "addPhoto": "[TET] Add",
     "anonymousTitle": "[TET] Anonymous review",
     "anonymousDesc": "[TET] Hide your name publicly",
+    "anonymousDisplayName": "[TET] Anonymous",
     "you": "[TET] You",
     "tag": {
       "good_quality": "[TET] Good quality",

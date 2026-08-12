@@ -57,6 +57,7 @@ interface ReviewView {
   content: LocaleText;
   images: string[];
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  anonymous: boolean;
   category: 'PRODUCT' | 'DELIVERY';
   reply: LocaleText | null;
   repliedAt: string | null;
@@ -90,6 +91,7 @@ function mapReviewView(r: ReviewView): Review {
     content: pickLocalized(r.content),
     images: r.images,
     isVerified: true,
+    anonymous: r.anonymous,
     orderId: r.orderId,
     category: r.category,
     createdAt: r.createdAt,
@@ -159,6 +161,7 @@ export const reviewsApi = {
         images: input.images,
         // Why: 评价入口在订单详情，提交者必然购买过 -> 自动 verified（§8.6 绿色 ✓）
         isVerified: true,
+        anonymous: input.anonymous,
         createdAt: new Date().toISOString(),
       };
       mockDb.reviews.push(newReview);

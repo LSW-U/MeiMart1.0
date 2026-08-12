@@ -209,6 +209,9 @@ export interface Review {
   orderId?: string;
   category?: 'PRODUCT' | 'DELIVERY';
   avatarUrl?: string;
+  // Why: P15 RB1 — 匿名评价标记，true 时 ReviewItem 显示「匿名用户」
+  // （后端 toReviewView 返真实 userName + anonymous 标记，前端展示层隐藏）
+  anonymous?: boolean;
 }
 
 export interface TrackingStep {

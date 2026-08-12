@@ -62,6 +62,7 @@ export function useSubmitReview() {
         tags: input.tags,
         images: input.images,
         isVerified: true,
+        anonymous: input.anonymous,
         createdAt: new Date().toISOString(),
       };
       qc.setQueryData<ReviewListResult>(key, (old) => {

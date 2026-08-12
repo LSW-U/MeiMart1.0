@@ -1,10 +1,15 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
 import type { ReviewItemProps } from './ReviewItem.types';
 
 export function ReviewItem({ review, onPress, testID }: ReviewItemProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  // P15 RB1：anonymous=true 时展示「匿名用户」（后端返真实 userName + anonymous 标记，前端展示层隐藏）
+  const displayName = review.anonymous ? t('review.anonymousDisplayName') : review.userName;
+  const avatarLetter = review.anonymous ? '?' : displayName.slice(0, 1).toUpperCase();
   return (
     <Pressable
       testID={testID}
@@ -15,7 +20,7 @@ export function ReviewItem({ review, onPress, testID }: ReviewItemProps) {
       ]}
       onPress={onPress ? () => onPress(review) : undefined}
       accessibilityRole="button"
-      accessibilityLabel={`Review by ${review.userName}, rating ${review.rating}`}
+      accessibilityLabel={`Review by ${displayName}, rating ${review.rating}`}
     >
       <View style={styles.header}>
         <View style={[styles.avatar, { backgroundColor: colors['secondary-container'] }]}>
@@ -25,12 +30,12 @@ export function ReviewItem({ review, onPress, testID }: ReviewItemProps) {
               { color: colors['on-secondary-container'], fontWeight: '700' },
             ]}
           >
-            {review.userName.slice(0, 1).toUpperCase()}
+            {avatarLetter}
           </Text>
         </View>
         <View style={styles.meta}>
           <Text style={[textStyle('body-md'), { fontWeight: '700', color: colors['on-surface'] }]}>
-            {review.userName}
+            {displayName}
           </Text>
           <View style={styles.ratingRow}>
             {[1, 2, 3, 4, 5].map((star) => (
