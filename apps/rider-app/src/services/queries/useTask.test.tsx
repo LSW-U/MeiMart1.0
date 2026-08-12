@@ -39,6 +39,15 @@ jest.mock('../task', () => ({
     hasActive: jest.fn(),
   },
 }));
+// useTask.ts 顶层 import useNetwork + enqueue（useStartDelivering 离线入队用），
+// mock 掉避免真 NetInfo（ESM）+ 真 WMB database 在 jsdom 加载失败/hang。
+// useStartDelivering 在线测试默认 isOffline=false，走真 taskApi.startDelivering 分支。
+jest.mock('../../hooks/useNetwork', () => ({
+  useNetwork: () => ({ isOffline: false }),
+}));
+jest.mock('../../database/sync', () => ({
+  enqueue: jest.fn(),
+}));
 
 const mockAccept = taskApi.accept as jest.Mock;
 const mockStartDelivering = taskApi.startDelivering as jest.Mock;

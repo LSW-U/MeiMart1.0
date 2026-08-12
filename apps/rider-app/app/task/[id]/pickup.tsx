@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { PhotoCapture } from '../../../src/components/camera/PhotoCapture';
@@ -7,8 +7,10 @@ import { showToast } from '../../../src/components/feedback/Toast';
 import { ApiError } from '../../../src/services/api';
 import { SwipeButton } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
+import { useNetwork } from '../../../src/hooks/useNetwork';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { useConfirmPickup } from '../../../src/services/queries/useDelivery';
+import { useTask } from '../../../src/services/queries/useTask';
 
 export default function PickupConfirmPage() {
   const router = useRouter();
@@ -18,13 +20,28 @@ export default function PickupConfirmPage() {
   const [captured, setCaptured] = useState(false);
   const [photoUri, setPhotoUri] = useState('');
   const confirmPickup = useConfirmPickup();
+  const { isOffline } = useNetwork();
   const processing = confirmPickup.isPending;
+  const { data: task } = useTask(id);
+
+  // Why: pickup 页只允许 ASSIGNED 进入。PICKED_UP/DELIVERING 已取货应跳 navigate（去配送），
+  //   其他状态弹回 detail。防止对已取货 task 重复取货 409（2d43ec05 实证）。
+  useEffect(() => {
+    if (!task || task.status === 'ASSIGNED') return;
+    router.replace(
+      task.status === 'PICKED_UP' || task.status === 'DELIVERING'
+        ? `/task/${id}/navigate`
+        : `/task/${id}`,
+    );
+  }, [task, id, router]);
 
   const handleConfirmPickup = async () => {
     if (!captured || processing) return;
 
     try {
       await confirmPickup.mutateAsync({ taskId: id, evidence: { photoUri } });
+      // CLAUDE.md 规则 12：离线入队成功提示（mutationFn resolve 不 reject，调用方按 isOffline 区分）
+      if (isOffline) showToast(t('common.savedOffline'), 'info');
       router.replace('/(main)/tasks?tab=pickups');
     } catch (e) {
       // 审查报告 TODO toast：按 ApiError 差异化（业务失败 vs 网络）

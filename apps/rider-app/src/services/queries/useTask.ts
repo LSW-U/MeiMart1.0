@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { enqueue } from '@/src/database/sync';
+import { useNetwork } from '@/src/hooks/useNetwork';
 import type { DeliveryTask, ReportIssueReason, TaskStatus } from '@/src/types/task';
 
 import { taskApi } from '../task';
@@ -83,9 +85,19 @@ export function useAcceptTask() {
  */
 export function useStartDelivering() {
   const queryClient = useQueryClient();
+  const { isOffline } = useNetwork();
 
   return useMutation({
-    mutationFn: (id: string) => taskApi.startDelivering(id),
+    mutationFn: async (id: string) => {
+      // CLAUDE.md 规则 12：离线入队（return 任务 PICKED_UP→DELIVERING），恢复后重放真 API。
+      if (isOffline) {
+        const detail = queryClient.getQueryData<DeliveryTask | null>(taskDetailKey(id));
+        if (!detail) throw new Error('startDelivering offline: task detail missing from cache');
+        await enqueue({ type: 'startDelivering', payload: { taskId: id } });
+        return { ...detail, status: 'DELIVERING' as TaskStatus };
+      }
+      return taskApi.startDelivering(id);
+    },
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: taskListsKey });
       const previousLists = queryClient.getQueryData<TaskLists>(taskListsKey);

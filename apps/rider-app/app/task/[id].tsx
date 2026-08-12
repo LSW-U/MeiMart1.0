@@ -7,6 +7,7 @@ import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { showToast } from '../../src/components/feedback/Toast';
 import { AppIcon } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
+import { useNetwork } from '../../src/hooks/useNetwork';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { ApiError } from '../../src/services/api';
 import { useAcceptTask, useTask } from '../../src/services/queries/useTask';
@@ -31,6 +32,7 @@ export default function TaskDetailPage() {
   const goBack = useGoBack('/(main)/tasks');
   const { data: task, refetch } = useTask(id);
   const acceptTask = useAcceptTask();
+  const { isOffline } = useNetwork();
   const taskData: DeliveryTask | null = task ?? null;
   const action = taskData ? getTaskAction(taskData) : undefined;
 
@@ -43,6 +45,11 @@ export default function TaskDetailPage() {
     // S5: 防重复点击（accept in-flight 期间禁用）
     if (acceptTask.isPending) return;
     if (taskData.status === 'PENDING_ASSIGN') {
+      // CLAUDE.md 规则 14：抢单竞态敏感，离线直接阻止（不入队，避免恢复时任务已被抢）
+      if (isOffline) {
+        showToast(t('tasks.acceptBlockedOffline'), 'error');
+        return;
+      }
       try {
         await acceptTask.mutateAsync(id);
       } catch (e) {

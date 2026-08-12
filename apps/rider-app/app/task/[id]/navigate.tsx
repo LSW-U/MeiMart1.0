@@ -8,6 +8,7 @@ import { MapView } from '../../../src/components/map/MapView';
 import { NavigationLauncher } from '../../../src/components/map/NavigationLauncher';
 import { Button } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
+import { useNetwork } from '../../../src/hooks/useNetwork';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { ApiError } from '../../../src/services/api';
 import { useStartDelivering, useTask } from '../../../src/services/queries/useTask';
@@ -24,6 +25,7 @@ export default function TaskNavigatePage() {
   const { data } = useTask(id);
   const task: DeliveryTask | null = data ?? null;
   const startDelivering = useStartDelivering();
+  const { isOffline } = useNetwork();
 
   // P14 ④ B1 + M1: 守卫按 taskType 理清
   // - delivery: 只允许 PICKED_UP（两步跳过 DELIVERING）
@@ -49,6 +51,7 @@ export default function TaskNavigatePage() {
     if (task.taskType === 'return' && task.status === 'PICKED_UP') {
       try {
         await startDelivering.mutateAsync(id);
+        if (isOffline) showToast(t('common.savedOffline'), 'info');
       } catch (e) {
         // S6: 按 ApiError 差异化（return 任务 startDelivering 失败）
         const msg = e instanceof ApiError ? t('tasks.startDeliveringFailed') : t('common.networkError');
