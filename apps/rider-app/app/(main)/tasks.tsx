@@ -184,25 +184,25 @@ export default function TasksPage() {
       {!bondPaid && (
         <View className="absolute inset-0 items-center justify-center bg-black/50 px-8">
           <View className="gap-4 rounded-2xl bg-white p-8 shadow-xl">
-            <Text className="text-center text-xl font-bold text-[#261816]">{t('tasks.deposit.title')}</Text>
-            <Text className="text-center text-sm text-[#59413d]">{t('tasks.deposit.message')}</Text>
-            <Button className="bg-[#961813]" onPress={() => router.push('/settings')}>
+            <Text className="text-center text-xl font-bold text-on-surface">{t('tasks.deposit.title')}</Text>
+            <Text className="text-center text-sm text-on-surface-variant">{t('tasks.deposit.message')}</Text>
+            <Button className="bg-primary-container" onPress={() => router.push('/settings')}>
               {t('tasks.deposit.action')}
             </Button>
           </View>
         </View>
       )}
       <View
-        className="flex-row items-center gap-3 border-t border-[#f7ddd9] bg-[#fff8f7] px-4 pt-3 shadow-sm"
+        className="flex-row items-center gap-3 border-t border-surface-variant bg-surface px-4 pt-3 shadow-sm"
         style={{ paddingBottom: bottomPadding }}
       >
         <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.settings')} className="items-center px-3 py-1" onPress={() => router.push('/settings')}>
-          <AppIcon name="settings" className="text-2xl text-[#59413d]" />
-          <Text className="mt-1 text-[11px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
+          <AppIcon name="settings" className="text-2xl text-on-surface-variant" />
+          <Text className="mt-1 text-[11px] font-bold text-on-surface-variant">{t('tasks.settings')}</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.refresh')} className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-3 shadow-sm" onPress={() => void refetchTasks()}>
-          <AppIcon name="refresh" className="text-xl text-[#961813]" />
-          <Text className="text-base font-bold text-[#961813]">{t('tasks.refresh')}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.refresh')} className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-outline-variant bg-white py-3 shadow-sm" onPress={() => void refetchTasks()}>
+          <AppIcon name="refresh" className="text-xl text-primary-container" />
+          <Text className="text-base font-bold text-primary-container">{t('tasks.refresh')}</Text>
         </Pressable>
       </View>
       <DutyStatusMenu

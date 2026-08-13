@@ -16,12 +16,12 @@ export function PageHeader({ title }: PageHeaderProps) {
   };
 
   return (
-    <View className="h-16 flex-row items-center justify-between border-b border-[#ffe9e6] bg-[#fff8f7]/90 px-5">
+    <View className="h-16 flex-row items-center justify-between border-b border-surface-container bg-surface/90 px-5">
       <View className="flex-row items-center gap-3">
-        <Pressable className="rounded-full p-2 active:bg-[#ffe9e6]" onPress={goBack}>
-          <Text className="text-2xl text-[#720003]">‹</Text>
+        <Pressable className="rounded-full p-2 active:bg-surface-container" onPress={goBack}>
+          <Text className="text-2xl text-primary">‹</Text>
         </Pressable>
-        <Text className="text-xl font-semibold text-[#720003]">{title}</Text>
+        <Text className="text-xl font-semibold text-primary">{title}</Text>
       </View>
       <View className="w-10" />
     </View>

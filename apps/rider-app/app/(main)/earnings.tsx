@@ -29,12 +29,12 @@ export default function EarningsPage() {
   const formatAmount = (amount: number) => (amount >= 0 ? `+${t('common.currency')}${amount.toFixed(2)}` : `-${t('common.currency')}${Math.abs(amount).toFixed(2)}`);
 
   return (
-    <View className="flex-1 bg-[#fff8f7]">
+    <View className="flex-1 bg-surface">
       <View className="relative flex-row items-center justify-center px-5 pb-4 pt-6">
-        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="absolute left-5 h-10 w-10 items-center justify-center rounded-full active:bg-[#f7ddd9]" onPress={() => void goBack()}>
-          <Text className="text-2xl text-[#261816]">‹</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="absolute left-5 h-10 w-10 items-center justify-center rounded-full active:bg-surface-variant" onPress={() => void goBack()}>
+          <Text className="text-2xl text-on-surface">‹</Text>
         </Pressable>
-        <Text className="text-2xl font-bold text-[#261816]">{t('earnings.title')}</Text>
+        <Text className="text-2xl font-bold text-on-surface">{t('earnings.title')}</Text>
       </View>
 
       <ScrollView className="flex-1" contentContainerClassName="px-5 pb-24">
@@ -48,37 +48,37 @@ export default function EarningsPage() {
         />
 
         <View className="mt-6">
-          <Button className="h-12 bg-[#961813]" onPress={() => router.push('/earnings/withdraw')}>
+          <Button className="h-12 bg-primary-container" onPress={() => router.push('/earnings/withdraw')}>
             {t('earnings.withdraw')}
           </Button>
         </View>
 
         <View className="mt-8">
-          <View className="mb-4 flex-row border-b border-[#fde2df]">
+          <View className="mb-4 flex-row border-b border-surface-container-high">
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('earnings.todayBilling')}
               accessibilityState={{ selected: billingTab === 'today' }}
-              className={`border-b-2 px-1 pb-2 ${billingTab === 'today' ? 'border-[#720003]' : 'border-transparent'}`}
+              className={`border-b-2 px-1 pb-2 ${billingTab === 'today' ? 'border-primary' : 'border-transparent'}`}
               onPress={() => setBillingTab('today')}
             >
-              <Text className={`text-xl font-semibold ${billingTab === 'today' ? 'text-[#720003]' : 'text-[#59413d]'}`}>{t('earnings.todayBilling')}</Text>
+              <Text className={`text-xl font-semibold ${billingTab === 'today' ? 'text-primary' : 'text-on-surface-variant'}`}>{t('earnings.todayBilling')}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('earnings.allBilling')}
               accessibilityState={{ selected: billingTab === 'all' }}
-              className={`ml-6 border-b-2 px-1 pb-2 ${billingTab === 'all' ? 'border-[#720003]' : 'border-transparent'}`}
+              className={`ml-6 border-b-2 px-1 pb-2 ${billingTab === 'all' ? 'border-primary' : 'border-transparent'}`}
               onPress={() => setBillingTab('all')}
             >
-              <Text className={`text-xl font-semibold ${billingTab === 'all' ? 'text-[#720003]' : 'text-[#59413d]'}`}>{t('earnings.allBilling')}</Text>
+              <Text className={`text-xl font-semibold ${billingTab === 'all' ? 'text-primary' : 'text-on-surface-variant'}`}>{t('earnings.allBilling')}</Text>
             </Pressable>
           </View>
 
           <View className="gap-4">
-            <Text className="pt-2 text-xs font-bold uppercase tracking-wider text-[#59413d]">{t('earnings.today')}</Text>
+            <Text className="pt-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('earnings.today')}</Text>
             {visibleTransactions.length === 0 ? (
-              <Text className="py-4 text-center text-sm text-[#8d706c]">{t('earnings.noTransactions')}</Text>
+              <Text className="py-4 text-center text-sm text-outline">{t('earnings.noTransactions')}</Text>
             ) : (
               visibleTransactions.map((tx) => (
                 <HistoryItem

@@ -75,22 +75,22 @@ export default function NotificationsPage() {
   };
 
   return (
-    <View className="flex-1 bg-[#fff8f7]">
-      <View className="flex-row items-center justify-between border-b border-[#f7ddd9] bg-[#fff8f7] px-5 py-4">
+    <View className="flex-1 bg-surface">
+      <View className="flex-row items-center justify-between border-b border-surface-variant bg-surface px-5 py-4">
         <View className="flex-row items-center">
-          <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => void goBack()}>
-            <Text className="text-2xl text-[#261816]">‹</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-container" onPress={() => void goBack()}>
+            <Text className="text-2xl text-on-surface">‹</Text>
           </Pressable>
-          <Text className="ml-2 text-xl font-semibold text-[#261816]">{t('notification.title')}</Text>
+          <Text className="ml-2 text-xl font-semibold text-on-surface">{t('notification.title')}</Text>
         </View>
         {unreadCount > 0 ? (
-          <Pressable accessibilityRole="button" accessibilityLabel={t('notification.markAllRead')} className="rounded-full bg-[#fff0ee] px-3 py-1.5 active:bg-[#ffe1dc]" onPress={() => void handleMarkAllRead()}>
-            <Text className="text-xs font-bold text-[#720003]">{t('notification.markAllRead')}</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('notification.markAllRead')} className="rounded-full bg-surface-container-low px-3 py-1.5 active:bg-[#ffe1dc]" onPress={() => void handleMarkAllRead()}>
+            <Text className="text-xs font-bold text-primary">{t('notification.markAllRead')}</Text>
           </Pressable>
         ) : null}
       </View>
 
-      <View className="flex-row gap-2 border-b border-[#f7ddd9] bg-[#fff8f7] px-5 py-3">
+      <View className="flex-row gap-2 border-b border-surface-variant bg-surface px-5 py-3">
         {filters.map(({ key, labelKey }) => {
           const active = filter === key;
           return (
@@ -100,11 +100,11 @@ export default function NotificationsPage() {
               accessibilityState={{ selected: active }}
               key={key}
               className={`flex-1 items-center justify-center rounded-full border px-3 py-2 ${
-                active ? 'border-[#720003] bg-[#720003]' : 'border-[#e1bfba] bg-white'
+                active ? 'border-primary bg-primary' : 'border-outline-variant bg-white'
               }`}
               onPress={() => setFilter(key)}
             >
-              <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-[#59413d]'}`}>
+              <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-on-surface-variant'}`}>
                 {t(labelKey)}
               </Text>
             </Pressable>
@@ -123,7 +123,7 @@ export default function NotificationsPage() {
                 accessibilityRole="button"
                 accessibilityLabel={t(item.titleKey as TranslationKey)}
                 key={item.id}
-                className={`flex-row items-start gap-3 rounded-2xl border p-4 ${item.read ? 'border-[#f1d4cf] bg-white' : 'border-[#e1bfba] bg-[#fff0ee]'}`}
+                className={`flex-row items-start gap-3 rounded-2xl border p-4 ${item.read ? 'border-[#f1d4cf] bg-white' : 'border-outline-variant bg-surface-container-low'}`}
                 onPress={() => void onItemPress(item)}
               >
                 <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: style.bg }}>
@@ -131,15 +131,15 @@ export default function NotificationsPage() {
                 </View>
                 <View className="flex-1">
                   <View className="flex-row items-center justify-between">
-                    <Text className="flex-1 text-base font-bold text-[#261816]" numberOfLines={1}>
+                    <Text className="flex-1 text-base font-bold text-on-surface" numberOfLines={1}>
                       {t(item.titleKey as TranslationKey)}
                     </Text>
                     {!item.read ? <View className="ml-2 h-2.5 w-2.5 rounded-full bg-[#ff4d4f]" /> : null}
                   </View>
-                  <Text className="mt-1 text-sm leading-5 text-[#59413d]">
+                  <Text className="mt-1 text-sm leading-5 text-on-surface-variant">
                     {t(item.messageKey as TranslationKey, item.vars)}
                   </Text>
-                  <Text className="mt-2 text-xs text-[#8d706c]">{formatTime(item.createdAt)}</Text>
+                  <Text className="mt-2 text-xs text-outline">{formatTime(item.createdAt)}</Text>
                 </View>
               </Pressable>
             );

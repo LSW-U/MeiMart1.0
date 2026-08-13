@@ -39,18 +39,18 @@ export default function WithdrawalPage() {
   };
 
   return (
-    <View className="flex-1 bg-[#fff8f7]">
-      <View className="flex-row items-center border-b border-[#f7ddd9] bg-[#fff8f7] px-5 py-4">
-        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => void goBack()}>
-          <Text className="text-2xl text-[#261816]">‹</Text>
+    <View className="flex-1 bg-surface">
+      <View className="flex-row items-center border-b border-surface-variant bg-surface px-5 py-4">
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-container" onPress={() => void goBack()}>
+          <Text className="text-2xl text-on-surface">‹</Text>
         </Pressable>
-        <Text className="ml-2 text-xl font-semibold text-[#261816]">{t('withdraw.title')}</Text>
+        <Text className="ml-2 text-xl font-semibold text-on-surface">{t('withdraw.title')}</Text>
       </View>
 
       <ScrollView className="flex-1" contentContainerClassName="mx-auto w-full max-w-lg gap-6 px-5 py-6">
-        <View className="items-center justify-center rounded-xl border border-[#fde2df] bg-[#ffe9e6] p-6 shadow-sm">
-          <Text className="mb-1 text-sm text-[#59413d]">{t('withdraw.availableBalance')}</Text>
-          <Text className="text-[32px] font-bold tracking-tight text-[#261816]">
+        <View className="items-center justify-center rounded-xl border border-surface-container-high bg-surface-container p-6 shadow-sm">
+          <Text className="mb-1 text-sm text-on-surface-variant">{t('withdraw.availableBalance')}</Text>
+          <Text className="text-[32px] font-bold tracking-tight text-on-surface">
             {summary ? `${t('common.currency')}${summary.availableBalance.toFixed(2)}` : '—'}
           </Text>
         </View>

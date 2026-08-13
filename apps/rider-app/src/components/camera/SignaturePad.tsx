@@ -10,10 +10,10 @@ export function EvidenceExample({ label, uri }: EvidenceExampleProps) {
   const { Image } = require('react-native');
   return (
     <View className="gap-1">
-      <View className="aspect-square overflow-hidden rounded-lg border border-[#e1bfba] bg-[#fff0ee]">
+      <View className="aspect-square overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low">
         <Image className="h-full w-full" resizeMode="cover" source={{ uri }} />
       </View>
-      <Text className="text-center text-[10px] font-bold uppercase tracking-wider text-[#59413d]">{label}</Text>
+      <Text className="text-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{label}</Text>
     </View>
   );
 }
@@ -42,24 +42,24 @@ function EvidenceUploadNative({ title, actionLabel, capturedLabel, required = fa
   return (
     <View className="gap-2">
       <View className="flex-row items-center gap-1">
-        <Text className="text-xl font-semibold text-[#261816]">{title}</Text>
-        {required ? <Text className="font-bold text-[#720003]">*</Text> : null}
+        <Text className="text-xl font-semibold text-on-surface">{title}</Text>
+        {required ? <Text className="font-bold text-primary">*</Text> : null}
       </View>
       <Pressable
-        className={`aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed overflow-hidden ${captured ? 'border-[#634700] bg-[#ffdea3]/20' : 'border-[#8d706c] bg-white'}`}
+        className={`aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed overflow-hidden ${captured ? 'border-tertiary-container bg-[#ffdea3]/20' : 'border-outline bg-white'}`}
         onPress={() => void takePhoto()}
       >
         {captured && photoUri ? (
           <Image className="h-full w-full" resizeMode="cover" source={{ uri: photoUri }} />
         ) : (
           <>
-            <Text className="mb-1 text-4xl text-[#8d706c]">CAM</Text>
-            <Text className="text-xs font-bold uppercase tracking-wider text-[#59413d]">{actionLabel}</Text>
+            <Text className="mb-1 text-4xl text-outline">CAM</Text>
+            <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{actionLabel}</Text>
           </>
         )}
       </Pressable>
       {captured && (
-        <Text className="text-center text-xs font-bold text-[#634700]">{capturedLabel}</Text>
+        <Text className="text-center text-xs font-bold text-tertiary-container">{capturedLabel}</Text>
       )}
     </View>
   );
@@ -81,8 +81,8 @@ function EvidenceUploadWeb({ title, actionLabel, capturedLabel, required = false
   return (
     <View className="gap-2">
       <View className="flex-row items-center gap-1">
-        <Text className="text-xl font-semibold text-[#261816]">{title}</Text>
-        {required ? <Text className="font-bold text-[#720003]">*</Text> : null}
+        <Text className="text-xl font-semibold text-on-surface">{title}</Text>
+        {required ? <Text className="font-bold text-primary">*</Text> : null}
       </View>
       <input
         ref={inputRef}
@@ -93,20 +93,20 @@ function EvidenceUploadWeb({ title, actionLabel, capturedLabel, required = false
         onChange={handleFile}
       />
       <Pressable
-        className={`aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed overflow-hidden ${captured ? 'border-[#634700] bg-[#ffdea3]/20' : 'border-[#8d706c] bg-white'}`}
+        className={`aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed overflow-hidden ${captured ? 'border-tertiary-container bg-[#ffdea3]/20' : 'border-outline bg-white'}`}
         onPress={() => inputRef.current?.click()}
       >
         {captured && photoUri ? (
           <img src={photoUri} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <>
-            <Text className="mb-1 text-4xl text-[#8d706c]">CAM</Text>
-            <Text className="text-xs font-bold uppercase tracking-wider text-[#59413d]">{actionLabel}</Text>
+            <Text className="mb-1 text-4xl text-outline">CAM</Text>
+            <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{actionLabel}</Text>
           </>
         )}
       </Pressable>
       {captured && (
-        <Text className="text-center text-xs font-bold text-[#634700]">{capturedLabel}</Text>
+        <Text className="text-center text-xs font-bold text-tertiary-container">{capturedLabel}</Text>
       )}
     </View>
   );

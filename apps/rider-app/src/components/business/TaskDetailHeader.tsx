@@ -38,30 +38,30 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTa
   ] as const;
 
   return (
-    <View className="border-b border-[#f7ddd9] bg-[#ffe9e6] px-5 pb-1 pt-2">
+    <View className="border-b border-surface-variant bg-surface-container px-5 pb-1 pt-2">
       <View className="h-12 flex-row items-center justify-between">
         <Pressable accessibilityRole="button" accessibilityLabel={t('common.menu')} className="rounded-full p-1" onPress={onMenuPress}>
-          <AppIcon name="menu" className="text-2xl text-[#59413d]" />
+          <AppIcon name="menu" className="text-2xl text-on-surface-variant" />
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={dutyStatusLabel} className="flex-row items-center gap-2 rounded-full border border-[#961813] bg-[#fff8f7] px-4 py-1" onPress={onDutyPress}>
+        <Pressable accessibilityRole="button" accessibilityLabel={dutyStatusLabel} className="flex-row items-center gap-2 rounded-full border border-primary-container bg-surface px-4 py-1" onPress={onDutyPress}>
           <View className={`h-2 w-2 rounded-full ${dotColor[dutyStatus]}`} />
-          <Text className="text-xl font-bold text-[#261816]">{dutyStatusLabel}</Text>
+          <Text className="text-xl font-bold text-on-surface">{dutyStatusLabel}</Text>
           <AppIcon name="chevronDown" color="#59413d" size={18} />
         </Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel={t('notification.title')} accessibilityHint={unread > 0 ? t('notification.unreadCount', { count: unread }) : undefined} className="relative rounded-full p-1" onPress={() => router.push('/notifications')}>
-          <AppIcon name="notification" className="text-2xl text-[#59413d]" />
+          <AppIcon name="notification" className="text-2xl text-on-surface-variant" />
           {unread > 0 ? (
-            <View className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#ffe9e6] bg-[#ff4d4f]" />
+            <View className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-surface-container bg-[#ff4d4f]" />
           ) : null}
         </Pressable>
       </View>
-      <View className="mt-2 flex-row gap-6 border-b border-[#f7ddd9]">
+      <View className="mt-2 flex-row gap-6 border-b border-surface-variant">
         {tabs.map((tab) => {
           const active = activeTab === tab.key;
           return (
             <Pressable accessibilityRole="button" accessibilityLabel={tab.label} accessibilityState={{ selected: active }} className="pb-1" key={tab.key} onPress={() => onTabChange?.(tab.key)}>
-              <Text className={`text-base font-semibold ${active ? 'text-[#961813]' : 'text-[#59413d]'}`}>{tab.label}</Text>
-              {active ? <View className="mt-1 h-0.5 rounded-full bg-[#961813]" /> : <View className="mt-1 h-0.5 rounded-full bg-transparent" />}
+              <Text className={`text-base font-semibold ${active ? 'text-primary-container' : 'text-on-surface-variant'}`}>{tab.label}</Text>
+              {active ? <View className="mt-1 h-0.5 rounded-full bg-primary-container" /> : <View className="mt-1 h-0.5 rounded-full bg-transparent" />}
             </Pressable>
           );
         })}

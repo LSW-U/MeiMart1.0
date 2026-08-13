@@ -30,26 +30,26 @@ export function DutyStatusMenu({ visible, current, title, cancelLabel, options, 
     <NativeModal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
       <Pressable className="flex-1 items-stretch justify-start bg-black/40 px-4 pt-24" onPress={onClose}>
         <Pressable className="self-center w-full max-w-md rounded-3xl bg-white p-3 shadow-lg" onPress={() => null}>
-          <Text className="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wider text-[#8d706c]">{title}</Text>
+          <Text className="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wider text-outline">{title}</Text>
           {options.map((option) => {
             const active = option.value === current;
             const disabled = !!option.disabled;
-            const textTone = disabled ? 'text-[#b9aaa7]' : active ? 'text-[#961813]' : 'text-[#261816]';
+            const textTone = disabled ? 'text-[#b9aaa7]' : active ? 'text-primary-container' : 'text-on-surface';
             return (
               <Pressable
                 key={option.value}
                 disabled={disabled}
-                className={`flex-row items-center gap-3 rounded-2xl px-3 py-3 ${disabled ? '' : 'active:bg-[#fff0ee]'}`}
+                className={`flex-row items-center gap-3 rounded-2xl px-3 py-3 ${disabled ? '' : 'active:bg-surface-container-low'}`}
                 onPress={() => onPick(option.value)}
               >
-                <View className={`h-2.5 w-2.5 rounded-full ${disabled ? 'bg-[#e1bfba]' : dotColor[option.value]}`} />
+                <View className={`h-2.5 w-2.5 rounded-full ${disabled ? 'bg-outline-variant' : dotColor[option.value]}`} />
                 <Text className={`flex-1 text-base font-semibold ${textTone}`}>{option.label}</Text>
                 {active ? <AppIcon name="check" color="#961813" size={20} /> : null}
               </Pressable>
             );
           })}
-          <Pressable className="mt-2 rounded-2xl border border-[#e1bfba] py-3" onPress={onClose}>
-            <Text className="text-center text-base font-semibold text-[#59413d]">{cancelLabel}</Text>
+          <Pressable className="mt-2 rounded-2xl border border-outline-variant py-3" onPress={onClose}>
+            <Text className="text-center text-base font-semibold text-on-surface-variant">{cancelLabel}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

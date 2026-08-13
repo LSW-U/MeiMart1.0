@@ -29,7 +29,7 @@ function RouteLineNative({ pickup, delivery, strokeColor = colors.primary, strok
 function RouteLinePlaceholder({ pickup, delivery }: RouteLineProps) {
   return (
     <View className="items-center justify-center py-4">
-      <Text className="text-sm font-semibold text-[#720003]">
+      <Text className="text-sm font-semibold text-primary">
         {/* TODO: 改用 text-primary className（当前 Tailwind preset 未映射） */}
         {pickup.latitude.toFixed(2)}, {pickup.longitude.toFixed(2)} → {delivery.latitude.toFixed(2)}, {delivery.longitude.toFixed(2)}
       </Text>

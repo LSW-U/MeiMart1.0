@@ -11,8 +11,8 @@ export function EarningChart({ values }: EarningChartProps) {
     <View className="flex-row items-end gap-2 rounded-3xl bg-white p-4">
       {values.map((value, index) => (
         <View key={`${value}-${index}`} className="flex-1 items-center gap-2">
-          <View className="w-full rounded-t-xl bg-[#720003]" style={{ height: 24 + (value / maxValue) * 72 }} />
-          <Text className="text-[10px] text-[#59413d]">{index + 1}</Text>
+          <View className="w-full rounded-t-xl bg-primary" style={{ height: 24 + (value / maxValue) * 72 }} />
+          <Text className="text-[10px] text-on-surface-variant">{index + 1}</Text>
         </View>
       ))}
     </View>

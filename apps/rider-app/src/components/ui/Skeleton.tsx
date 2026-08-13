@@ -5,5 +5,5 @@ type SkeletonProps = {
 };
 
 export function Skeleton({ className = '' }: SkeletonProps) {
-  return <View className={`rounded-2xl bg-[#f7ddd9] ${className}`} />;
+  return <View className={`rounded-2xl bg-surface-variant ${className}`} />;
 }

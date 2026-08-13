@@ -20,14 +20,14 @@ function MenuItem({ icon, label, tone = 'default', onPress }: MenuItemProps) {
   const danger = tone === 'danger';
 
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} className={`flex-row items-center justify-between p-5 ${danger ? 'active:bg-[#ffdad6]/30' : 'active:bg-[#fff0ee]'}`} onPress={onPress}>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} className={`flex-row items-center justify-between p-5 ${danger ? 'active:bg-[#ffdad6]/30' : 'active:bg-surface-container-low'}`} onPress={onPress}>
       <View className="flex-row items-center gap-4">
-        <View className={`h-10 w-10 items-center justify-center rounded-full ${danger ? 'bg-[#ffdad6]/50' : 'bg-[#ffe9e6]'}`}>
+        <View className={`h-10 w-10 items-center justify-center rounded-full ${danger ? 'bg-[#ffdad6]/50' : 'bg-surface-container'}`}>
           <AppIcon color={danger ? colors.error : colors.textMuted} name={icon} />
         </View>
-        <Text className={`text-lg font-medium ${danger ? 'text-[#ba1a1a]' : 'text-[#261816]'}`}>{label}</Text>
+        <Text className={`text-lg font-medium ${danger ? 'text-error' : 'text-on-surface'}`}>{label}</Text>
       </View>
-      {!danger ? <Text className="text-[#8d706c]">›</Text> : null}
+      {!danger ? <Text className="text-outline">›</Text> : null}
     </Pressable>
   );
 }
@@ -53,82 +53,82 @@ export default function ProfilePage() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-[#fff8f7]" contentContainerClassName="pb-12">
-      <View className="sticky top-0 z-50 flex-row items-center justify-between bg-[#fff8f7]/90 px-5 py-3">
+    <ScrollView className="flex-1 bg-surface" contentContainerClassName="pb-12">
+      <View className="sticky top-0 z-50 flex-row items-center justify-between bg-surface/90 px-5 py-3">
         <View className="flex-row items-center gap-3">
-          <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => router.replace('/(main)/tasks')}>
-            <Text className="text-2xl text-[#720003]">‹</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-container" onPress={() => router.replace('/(main)/tasks')}>
+            <Text className="text-2xl text-primary">‹</Text>
           </Pressable>
-          <Text className="text-xl font-bold text-[#261816]">{t('profile.title')}</Text>
+          <Text className="text-xl font-bold text-on-surface">{t('profile.title')}</Text>
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel={t('profile.edit')} className="rounded-full p-2" onPress={() => router.push('/profile/edit')}>
-          <Text className="font-bold text-[#720003]">{t('profile.edit')}</Text>
+          <Text className="font-bold text-primary">{t('profile.edit')}</Text>
         </Pressable>
       </View>
 
       <View className="items-center gap-4 px-5 pb-2 pt-4">
         <View className="relative items-center">
-          <View className="h-24 w-24 rounded-full bg-[#634700] p-[3px]">
-            <Image className="h-full w-full rounded-full border-2 border-[#fff8f7]" resizeMode="cover" source={{ uri: rider?.avatarUrl }} />
+          <View className="h-24 w-24 rounded-full bg-tertiary-container p-[3px]">
+            <Image className="h-full w-full rounded-full border-2 border-surface" resizeMode="cover" source={{ uri: rider?.avatarUrl }} />
           </View>
-          <View className="absolute -bottom-3 rounded-full border-2 border-[#fff8f7] bg-[#634700] px-3 py-1 shadow-sm">
+          <View className="absolute -bottom-3 rounded-full border-2 border-surface bg-tertiary-container px-3 py-1 shadow-sm">
             <Text className="text-[11px] font-bold uppercase tracking-wider text-[#deb769]">{t('profile.tier')}</Text>
           </View>
         </View>
         <View className="mt-2 items-center">
-          <Text className="text-2xl font-bold text-[#261816]">{rider?.name ?? t('profile.name')}</Text>
+          <Text className="text-2xl font-bold text-on-surface">{rider?.name ?? t('profile.name')}</Text>
           <View className="mt-1 flex-row items-center gap-2">
-            <Text className="text-sm text-[#59413d]">{t('profile.riderId', { id: rider?.id ?? '—' })}</Text>
-            <View className="h-1 w-1 rounded-full bg-[#e1bfba]" />
-            <Text className="text-sm font-medium text-[#463200]">{t('profile.rating')}</Text>
+            <Text className="text-sm text-on-surface-variant">{t('profile.riderId', { id: rider?.id ?? '—' })}</Text>
+            <View className="h-1 w-1 rounded-full bg-outline-variant" />
+            <Text className="text-sm font-medium text-tertiary">{t('profile.rating')}</Text>
           </View>
         </View>
       </View>
 
-      <View className="mx-5 mb-8 mt-4 overflow-hidden rounded-[24px] border border-[#fde2df] bg-[#fde2df] px-6 py-8 shadow-sm">
+      <View className="mx-5 mb-8 mt-4 overflow-hidden rounded-[24px] border border-surface-container-high bg-surface-container-high px-6 py-8 shadow-sm">
         <View className="flex-row items-center justify-between">
           <View className="flex-1 items-center">
-            <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#59413d]">{t('profile.orders')}</Text>
-            <Text className="text-4xl font-medium text-[#720003]">{t('profile.ordersValue')}</Text>
-            <Text className="mt-1 text-[9px] font-bold uppercase text-[#8d706c]">{t('profile.today')}</Text>
+            <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{t('profile.orders')}</Text>
+            <Text className="text-4xl font-medium text-primary">{t('profile.ordersValue')}</Text>
+            <Text className="mt-1 text-[9px] font-bold uppercase text-outline">{t('profile.today')}</Text>
           </View>
-          <View className="h-12 w-px bg-[#e1bfba]" />
+          <View className="h-12 w-px bg-outline-variant" />
           <View className="flex-[1.2] items-center px-2">
-            <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#59413d]">{t('profile.earnings')}</Text>
-            <Text className="text-4xl font-bold text-[#720003]">{t('common.currency')}{t('profile.earningsValue')}</Text>
-            <Text className="mt-1 text-[9px] font-bold uppercase text-[#8d706c]">{t('profile.today')}</Text>
+            <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{t('profile.earnings')}</Text>
+            <Text className="text-4xl font-bold text-primary">{t('common.currency')}{t('profile.earningsValue')}</Text>
+            <Text className="mt-1 text-[9px] font-bold uppercase text-outline">{t('profile.today')}</Text>
           </View>
-          <View className="h-12 w-px bg-[#e1bfba]" />
+          <View className="h-12 w-px bg-outline-variant" />
           <View className="flex-1 items-center">
-            <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#59413d]">{t('profile.score')}</Text>
-            <Text className="text-4xl font-medium text-[#720003]">{t('profile.scoreValue')}</Text>
-            <Text className="mt-1 text-[9px] font-bold uppercase text-[#8d706c]">{t('profile.level')}</Text>
+            <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{t('profile.score')}</Text>
+            <Text className="text-4xl font-medium text-primary">{t('profile.scoreValue')}</Text>
+            <Text className="mt-1 text-[9px] font-bold uppercase text-outline">{t('profile.level')}</Text>
           </View>
         </View>
       </View>
 
       <View className="mx-5 mb-8 flex-row gap-4">
-        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.myOrders')} className="flex-1 flex-row items-center gap-4 rounded-2xl border border-[#ffe9e6] bg-white p-5 shadow-sm" onPress={() => router.push('/order/history')}>
-          <View className="rounded-xl bg-[#ffe9e6] p-3">
-            <AppIcon name="orders" className="text-xl text-[#720003]" />
+        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.myOrders')} className="flex-1 flex-row items-center gap-4 rounded-2xl border border-surface-container bg-white p-5 shadow-sm" onPress={() => router.push('/order/history')}>
+          <View className="rounded-xl bg-surface-container p-3">
+            <AppIcon name="orders" className="text-xl text-primary" />
           </View>
-          <Text className="text-[17px] font-semibold text-[#261816]">{t('profile.myOrders')}</Text>
+          <Text className="text-[17px] font-semibold text-on-surface">{t('profile.myOrders')}</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.myWallet')} className="flex-1 flex-row items-center gap-4 rounded-2xl border border-[#ffe9e6] bg-white p-5 shadow-sm" onPress={() => router.push('/(main)/earnings')}>
-          <View className="rounded-xl bg-[#ffe9e6] p-3">
-            <AppIcon name="wallet" className="text-xl text-[#720003]" />
+        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.myWallet')} className="flex-1 flex-row items-center gap-4 rounded-2xl border border-surface-container bg-white p-5 shadow-sm" onPress={() => router.push('/(main)/earnings')}>
+          <View className="rounded-xl bg-surface-container p-3">
+            <AppIcon name="wallet" className="text-xl text-primary" />
           </View>
-          <Text className="text-[17px] font-semibold text-[#261816]">{t('profile.myWallet')}</Text>
+          <Text className="text-[17px] font-semibold text-on-surface">{t('profile.myWallet')}</Text>
         </Pressable>
       </View>
 
-      <View className="mx-5 overflow-hidden rounded-[20px] border border-[#ffe9e6] bg-white shadow-sm">
+      <View className="mx-5 overflow-hidden rounded-[20px] border border-surface-container bg-white shadow-sm">
         <MenuItem icon="wallet" label={t('profile.earningsHistory')} onPress={() => router.push('/(main)/earnings')} />
-        <View className="mx-5 h-px bg-[#e1bfba]/40" />
+        <View className="mx-5 h-px bg-outline-variant/40" />
         <MenuItem icon="settings" label={t('profile.settings')} onPress={() => router.push('/settings')} />
-        <View className="mx-5 h-px bg-[#e1bfba]/40" />
+        <View className="mx-5 h-px bg-outline-variant/40" />
         <MenuItem icon="help" label={t('profile.helpCenter')} onPress={() => router.push('/help')} />
-        <View className="mx-5 h-px bg-[#e1bfba]/40" />
+        <View className="mx-5 h-px bg-outline-variant/40" />
         <MenuItem icon="logout" label={t('profile.logout')} tone="danger" onPress={() => setLogoutVisible(true)} />
       </View>
 

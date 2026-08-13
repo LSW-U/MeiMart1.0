@@ -31,7 +31,7 @@ export function NavigationLauncher({ destination, label = 'Open navigation', onE
   };
 
   return (
-    <Pressable className="rounded-full bg-[#720003] px-5 py-3" onPress={() => void openNavigation()}>
+    <Pressable className="rounded-full bg-primary px-5 py-3" onPress={() => void openNavigation()}>
       <Text className="text-center font-semibold text-white">{label}</Text>
     </Pressable>
   );

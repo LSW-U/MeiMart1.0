@@ -22,10 +22,10 @@ function QrScannerNative({ onScan }: QrScannerProps) {
 
   if (!permission?.granted && !requested) {
     return (
-      <View className="items-center rounded-3xl border border-dashed border-[#720003] bg-white p-6">
-        <Text className="text-lg font-bold text-[#261816]">{t('qr.title')}</Text>
-        <Text className="mt-2 text-center text-sm text-[#59413d]">{t('qr.permissionPrompt')}</Text>
-        <Text accessibilityRole="button" accessibilityLabel={t('qr.grantPermission')} className="mt-4 rounded-full bg-[#720003] px-5 py-3 font-semibold text-white" onPress={() => void handleRequest()}>
+      <View className="items-center rounded-3xl border border-dashed border-primary bg-white p-6">
+        <Text className="text-lg font-bold text-on-surface">{t('qr.title')}</Text>
+        <Text className="mt-2 text-center text-sm text-on-surface-variant">{t('qr.permissionPrompt')}</Text>
+        <Text accessibilityRole="button" accessibilityLabel={t('qr.grantPermission')} className="mt-4 rounded-full bg-primary px-5 py-3 font-semibold text-white" onPress={() => void handleRequest()}>
           {t('qr.grantPermission')}
         </Text>
       </View>
@@ -34,9 +34,9 @@ function QrScannerNative({ onScan }: QrScannerProps) {
 
   if (!permission?.granted) {
     return (
-      <View className="items-center rounded-3xl border border-dashed border-[#720003] bg-white p-6">
-        <Text className="text-lg font-bold text-[#261816]">QR Scanner</Text>
-        <Text className="mt-2 text-center text-sm text-[#59413d]">Camera permission denied. Please enable it in Settings.</Text>
+      <View className="items-center rounded-3xl border border-dashed border-primary bg-white p-6">
+        <Text className="text-lg font-bold text-on-surface">QR Scanner</Text>
+        <Text className="mt-2 text-center text-sm text-on-surface-variant">Camera permission denied. Please enable it in Settings.</Text>
       </View>
     );
   }
@@ -67,10 +67,10 @@ function QrScannerNative({ onScan }: QrScannerProps) {
 
 function QrScannerPlaceholder() {
   return (
-    <View className="items-center rounded-3xl border border-dashed border-[#720003] bg-white p-6">
-      <Text className="text-4xl text-[#720003]/40">QR</Text>
-      <Text className="mt-2 text-xs font-bold uppercase tracking-wider text-[#59413d]">QR Scanner</Text>
-      <Text className="mt-1 text-[10px] text-[#8d706c]">Available on iOS / Android</Text>
+    <View className="items-center rounded-3xl border border-dashed border-primary bg-white p-6">
+      <Text className="text-4xl text-primary/40">QR</Text>
+      <Text className="mt-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant">QR Scanner</Text>
+      <Text className="mt-1 text-[10px] text-outline">Available on iOS / Android</Text>
     </View>
   );
 }

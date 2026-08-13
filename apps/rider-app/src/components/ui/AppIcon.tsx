@@ -45,12 +45,16 @@ const icons: Record<AppIconName, MaterialIconName> = {
   sms: 'cellphone-message',
 };
 
-// 适配层：检测调用方 className 的色 token/hex，映射到 theme colors（渲染色全走 theme，hex 字面仅为匹配调用方遗留 hex className）
+// 适配层：调用方 className 用 text-primary 等 token，映射到 theme colors（颜色迁移后无遗留 #hex）
+// 顺序敏感：text-primary-container 必须在 text-primary 前检测（否则前缀误匹配返 primary）
 const colorByClass = (className = '') => {
-  if (className.includes('text-white')) return colors.surface;
-  if (className.includes('text-[#720003]')) return colors.primary;
-  if (className.includes('text-[#961813]')) return colors.danger;
   if (className.includes('text-white/60')) return colors.surface60;
+  if (className.includes('text-white')) return colors.surface;
+  if (className.includes('text-primary-container')) return colors.danger;
+  if (className.includes('text-primary')) return colors.primary;
+  if (className.includes('text-on-surface-variant')) return colors.textMuted;
+  if (className.includes('text-on-surface')) return colors.text;
+  if (className.includes('text-outline')) return colors.outline;
   return colors.textMuted;
 };
 

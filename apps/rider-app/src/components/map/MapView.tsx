@@ -67,11 +67,11 @@ function MapViewPlaceholder({ pickup, delivery }: MapViewProps) {
   return (
     <View className="w-full items-center justify-center bg-[#eed4d1]" style={{ height: 320 }}>
       <View className="items-center gap-2">
-        <Text className="text-4xl text-[#720003]/40">MAP</Text>
-        <Text className="text-xs font-bold uppercase tracking-wider text-[#59413d]">
+        <Text className="text-4xl text-primary/40">MAP</Text>
+        <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
           {pickup && delivery ? `${pickup.title ?? 'P'} → ${delivery.title ?? 'D'}` : 'Map view'}
         </Text>
-        <Text className="mt-1 text-[10px] text-[#8d706c]">Available on iOS / Android</Text>
+        <Text className="mt-1 text-[10px] text-outline">Available on iOS / Android</Text>
       </View>
     </View>
   );

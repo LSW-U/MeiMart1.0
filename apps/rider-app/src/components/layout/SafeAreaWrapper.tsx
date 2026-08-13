@@ -7,5 +7,5 @@ type SafeAreaWrapperProps = {
 };
 
 export function SafeAreaWrapper({ children, className = '' }: SafeAreaWrapperProps) {
-  return <SafeAreaView className={`flex-1 bg-[#fff8f7] ${className}`}>{children}</SafeAreaView>;
+  return <SafeAreaView className={`flex-1 bg-surface ${className}`}>{children}</SafeAreaView>;
 }

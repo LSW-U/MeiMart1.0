@@ -51,21 +51,21 @@ export default function PickupConfirmPage() {
   };
 
   return (
-    <View className="flex-1 bg-[#fff8f7]">
-      <View className="h-16 flex-row items-center justify-between bg-[#fff8f7] px-5">
+    <View className="flex-1 bg-surface">
+      <View className="h-16 flex-row items-center justify-between bg-surface px-5">
         <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="rounded-full p-2" onPress={() => void goBack()}>
-          <Text className="text-2xl text-[#720003]">‹</Text>
+          <Text className="text-2xl text-primary">‹</Text>
         </Pressable>
-        <Text className="text-xl font-bold text-[#720003]">{t('pickup.title')}</Text>
+        <Text className="text-xl font-bold text-primary">{t('pickup.title')}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel={t('help.title')} className="rounded-full p-2" onPress={() => router.push('/help')}>
-          <Text className="text-xl text-[#720003]">?</Text>
+          <Text className="text-xl text-primary">?</Text>
         </Pressable>
       </View>
 
-      <View className="bg-[#fff0ee] px-5 py-4">
-        <Text className="mb-1 text-center text-xl font-semibold text-[#261816]">{t('pickup.verifyReceipt')}</Text>
-        <Text className="text-center text-base text-[#59413d]">
-          {t('pickup.instructionPrefix')} <Text className="font-bold text-[#720003]">Order #{id}</Text>
+      <View className="bg-surface-container-low px-5 py-4">
+        <Text className="mb-1 text-center text-xl font-semibold text-on-surface">{t('pickup.verifyReceipt')}</Text>
+        <Text className="text-center text-base text-on-surface-variant">
+          {t('pickup.instructionPrefix')} <Text className="font-bold text-primary">Order #{id}</Text>
         </Text>
       </View>
 
@@ -86,11 +86,11 @@ export default function PickupConfirmPage() {
         />
       </View>
 
-      <View className="bg-[#fff8f7] px-5 py-6">
+      <View className="bg-surface px-5 py-6">
         <SwipeButton disabled={!captured || processing} onPress={() => void handleConfirmPickup()}>
           {processing ? t('flow.processing') : t('pickup.confirm')}
         </SwipeButton>
-        {processing ? <Text className="mt-3 text-center text-sm text-[#59413d]">{t('pickup.verified')}</Text> : null}
+        {processing ? <Text className="mt-3 text-center text-sm text-on-surface-variant">{t('pickup.verified')}</Text> : null}
       </View>
     </View>
   );

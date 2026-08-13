@@ -6,5 +6,5 @@ type TabBarProps = {
 };
 
 export function TabBar({ children }: TabBarProps) {
-  return <View className="flex-row rounded-full bg-[#ffe9e6] p-1">{children}</View>;
+  return <View className="flex-row rounded-full bg-surface-container p-1">{children}</View>;
 }

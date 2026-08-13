@@ -60,23 +60,23 @@ export default function SignConfirmPage() {
   };
 
   return (
-    <View className="flex-1 bg-[#fff8f7]">
-      <View className="h-16 flex-row items-center justify-between bg-[#fff8f7] px-5">
+    <View className="flex-1 bg-surface">
+      <View className="h-16 flex-row items-center justify-between bg-surface px-5">
         <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full" onPress={() => void goBack()}>
-          <Text className="text-2xl text-[#720003]">‹</Text>
+          <Text className="text-2xl text-primary">‹</Text>
         </Pressable>
-        <Text className="text-2xl font-bold tracking-tight text-[#720003]">{t('sign.title')}</Text>
+        <Text className="text-2xl font-bold tracking-tight text-primary">{t('sign.title')}</Text>
         <View className="w-10" />
       </View>
 
       <ScrollView className="flex-1" contentContainerClassName="gap-6 px-5 pb-40 pt-4">
-        <View className="flex-row items-start gap-4 rounded-lg bg-[#961813] p-4 shadow-sm">
+        <View className="flex-row items-start gap-4 rounded-lg bg-primary-container p-4 shadow-sm">
           <Text className="text-lg font-bold text-white">i</Text>
           <Text className="flex-1 font-semibold leading-5 text-white">{t('sign.alert')}</Text>
         </View>
 
         <View className="gap-3">
-          <Text className="px-1 text-xs font-bold uppercase tracking-widest text-[#59413d]">{t('sign.referenceExamples')}</Text>
+          <Text className="px-1 text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t('sign.referenceExamples')}</Text>
           <View className="flex-row gap-3">
             <View className="flex-1">
               <EvidenceExample label={t('sign.doorExample')} uri={doorExampleUri} />
@@ -110,10 +110,10 @@ export default function SignConfirmPage() {
       </ScrollView>
 
       <View className="absolute bottom-0 left-0 right-0 gap-2 bg-white px-5 py-4 shadow-lg">
-        <Button className={`${canSubmit ? 'bg-[#961813]' : 'bg-[#5d5f5f] opacity-50'}`} onPress={() => void handleConfirmDelivery()}>
+        <Button className={`${canSubmit ? 'bg-primary-container' : 'bg-[#5d5f5f] opacity-50'}`} onPress={() => void handleConfirmDelivery()}>
           {status === 'processing' ? t('flow.processing') : status === 'success' ? t('sign.success') : t('sign.confirm')}
         </Button>
-        <Text className="mx-auto max-w-[280px] text-center text-[11px] leading-5 text-[#59413d] opacity-80">
+        <Text className="mx-auto max-w-[280px] text-center text-[11px] leading-5 text-on-surface-variant opacity-80">
           {status === 'success' ? t('sign.confirmed') : t('sign.disputeProof')}
         </Text>
       </View>

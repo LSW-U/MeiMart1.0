@@ -69,17 +69,17 @@ export default function TaskNavigatePage() {
       : t('tasks.goSignoff');
 
   return (
-    <View className="flex-1 bg-[#fff8f7]">
-      <View className="h-16 flex-row items-center justify-between bg-[#ffe9e6] px-5">
+    <View className="flex-1 bg-surface">
+      <View className="h-16 flex-row items-center justify-between bg-surface-container px-5">
         <View className="flex-row items-center gap-4">
           <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full" onPress={() => void goBack()}>
-            <Text className="text-2xl text-[#720003]">‹</Text>
+            <Text className="text-2xl text-primary">‹</Text>
           </Pressable>
-          <Text className="text-xl font-bold text-[#720003]">{t('flow.orderDetails')}</Text>
+          <Text className="text-xl font-bold text-primary">{t('flow.orderDetails')}</Text>
         </View>
         <View className="flex-row items-center gap-2">
-          <Text className="text-xs font-bold uppercase tracking-wider text-[#59413d]">{t('flow.status')}</Text>
-          <View className="h-2 w-2 rounded-full bg-[#463200]" />
+          <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('flow.status')}</Text>
+          <View className="h-2 w-2 rounded-full bg-tertiary" />
         </View>
       </View>
 
@@ -91,65 +91,65 @@ export default function TaskNavigatePage() {
               delivery={task.dropoff.coordinates ? { ...task.dropoff.coordinates, title: task.dropoff.title } : undefined}
             />
             <View className="-mt-8 gap-4 px-5">
-              <View className="rounded-xl border border-[#8d706c]/10 bg-white p-4 shadow-md">
+              <View className="rounded-xl border border-outline/10 bg-white p-4 shadow-md">
                 <View className="mb-6 flex-row items-start justify-between">
                   <View>
-                    <Text className="mb-1 text-xs font-bold uppercase tracking-wider text-[#59413d]">{t('flow.remainingTime')}</Text>
+                    <Text className="mb-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('flow.remainingTime')}</Text>
                     <View className="flex-row items-end gap-2">
-                      <Text className="text-xl font-semibold text-[#720003]">{t('common.minutes', { minutes: String(task.estimatedMinutes) })}</Text>
-                      <Text className="text-sm text-[#59413d]">{t('common.deliveryRoute')}</Text>
+                      <Text className="text-xl font-semibold text-primary">{t('common.minutes', { minutes: String(task.estimatedMinutes) })}</Text>
+                      <Text className="text-sm text-on-surface-variant">{t('common.deliveryRoute')}</Text>
                     </View>
                   </View>
                   <View className="items-end">
-                    <Text className="mb-1 text-xs font-bold uppercase tracking-wider text-[#59413d]">{t('flow.totalEarnings')}</Text>
-                    <Text className="text-2xl font-bold text-[#720003]">{formatFee(task.fee, t('common.currency'))}</Text>
-                    <Text className="text-[10px] text-[#8d706c]">{task.orderId}</Text>
+                    <Text className="mb-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('flow.totalEarnings')}</Text>
+                    <Text className="text-2xl font-bold text-primary">{formatFee(task.fee, t('common.currency'))}</Text>
+                    <Text className="text-[10px] text-outline">{task.orderId}</Text>
                   </View>
                 </View>
 
                 <View className="relative gap-6">
-                  <View className="absolute bottom-8 left-[15px] top-8 w-0.5 border-l border-dotted border-[#8d706c] bg-[#e1bfba]" />
+                  <View className="absolute bottom-8 left-[15px] top-8 w-0.5 border-l border-dotted border-outline bg-outline-variant" />
                   <View className="z-10 flex-row gap-4">
-                    <View className="h-8 w-8 items-center justify-center rounded-full border border-[#e1bfba] bg-[#fde2df]">
-                      <Text className="font-bold text-[#720003]">P</Text>
+                    <View className="h-8 w-8 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high">
+                      <Text className="font-bold text-primary">P</Text>
                     </View>
                     <View className="flex-1">
-                      <Text className="font-bold leading-tight text-[#261816]">{task.pickup.title}</Text>
-                      <Text className="mt-1 text-sm text-[#59413d]">{task.pickup.address}</Text>
-                      <Text className="mt-2 self-start rounded-lg bg-[#ffe9e6] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#59413d]">{t('flow.storePickup')}</Text>
+                      <Text className="font-bold leading-tight text-on-surface">{task.pickup.title}</Text>
+                      <Text className="mt-1 text-sm text-on-surface-variant">{task.pickup.address}</Text>
+                      <Text className="mt-2 self-start rounded-lg bg-surface-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{t('flow.storePickup')}</Text>
                     </View>
-                    <Text className="text-xs font-bold uppercase tracking-wider text-[#8d706c]">{formatDistance(Math.max(task.distanceKm - 1.3, 0.5))}</Text>
+                    <Text className="text-xs font-bold uppercase tracking-wider text-outline">{formatDistance(Math.max(task.distanceKm - 1.3, 0.5))}</Text>
                   </View>
                   <View className="z-10 flex-row gap-4">
-                    <View className="h-8 w-8 items-center justify-center rounded-full border border-[#463200] bg-[#634700]">
+                    <View className="h-8 w-8 items-center justify-center rounded-full border border-tertiary bg-tertiary-container">
                       <Text className="font-bold text-white">D</Text>
                     </View>
                     <View className="flex-1">
-                      <Text className="font-bold leading-tight text-[#261816]">{task.dropoff.title}</Text>
-                      <Text className="mt-1 text-sm text-[#59413d]">{task.dropoff.address}</Text>
+                      <Text className="font-bold leading-tight text-on-surface">{task.dropoff.title}</Text>
+                      <Text className="mt-1 text-sm text-on-surface-variant">{task.dropoff.address}</Text>
                       <View className="mt-3 flex-row flex-wrap gap-2">
-                        <Text className="rounded-full border border-[#e1bfba] bg-[#ffe9e6] px-2 py-1 text-[10px] font-bold text-[#59413d]">{t('flow.verifiedReceiver')}</Text>
-                        <Text className="rounded-full border border-[#e1bfba] bg-[#ffe9e6] px-2 py-1 text-[10px] font-bold text-[#59413d]">{t('flow.leaveAtDoor')}</Text>
+                        <Text className="rounded-full border border-outline-variant bg-surface-container px-2 py-1 text-[10px] font-bold text-on-surface-variant">{t('flow.verifiedReceiver')}</Text>
+                        <Text className="rounded-full border border-outline-variant bg-surface-container px-2 py-1 text-[10px] font-bold text-on-surface-variant">{t('flow.leaveAtDoor')}</Text>
                       </View>
                     </View>
-                    <Text className="text-xs font-bold uppercase tracking-wider text-[#8d706c]">{formatDistance(task.distanceKm)}</Text>
+                    <Text className="text-xs font-bold uppercase tracking-wider text-outline">{formatDistance(task.distanceKm)}</Text>
                   </View>
                 </View>
 
-                <View className="my-6 h-px bg-[#e1bfba]/30" />
+                <View className="my-6 h-px bg-outline-variant/30" />
                 <View className="rounded-lg px-2 py-2">
-                  <Text className="font-bold text-[#261816]">{t('common.orderSummary', { count: String(task.items.length) })}</Text>
+                  <Text className="font-bold text-on-surface">{t('common.orderSummary', { count: String(task.items.length) })}</Text>
                   <View className="mt-4 gap-3 px-6">
                     {task.items.map((item) => (
                       <View className="flex-row justify-between" key={item}>
-                        <Text className="flex-1 text-sm text-[#59413d]">{item}</Text>
-                        <Text className="font-bold text-[#261816]">{t('flow.qty1')}</Text>
+                        <Text className="flex-1 text-sm text-on-surface-variant">{item}</Text>
+                        <Text className="font-bold text-on-surface">{t('flow.qty1')}</Text>
                       </View>
                     ))}
                     {task.note ? (
-                      <View className="mt-2 rounded-lg border-l-4 border-[#720003] bg-[#fff8f7] p-3">
-                        <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#720003]">{t('flow.customerNote')}</Text>
-                        <Text className="text-sm italic text-[#261816]">{task.note}</Text>
+                      <View className="mt-2 rounded-lg border-l-4 border-primary bg-surface p-3">
+                        <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary">{t('flow.customerNote')}</Text>
+                        <Text className="text-sm italic text-on-surface">{task.note}</Text>
                       </View>
                     ) : null}
                   </View>
@@ -168,8 +168,8 @@ export default function TaskNavigatePage() {
         )}
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 bg-[#fff8f7] p-5 shadow-lg">
-        <Button className="bg-[#463200]" onPress={() => void handleNavigateAction()}>
+      <View className="absolute bottom-0 left-0 right-0 bg-surface p-5 shadow-lg">
+        <Button className="bg-tertiary" onPress={() => void handleNavigateAction()}>
           {startDelivering.isPending ? t('flow.processing') : actionLabel}
         </Button>
       </View>

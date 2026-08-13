@@ -21,7 +21,7 @@ export default function TaskOngoingPage() {
   const taskData: DeliveryTask | null = task ?? null;
 
   return (
-    <View className="flex-1 bg-[#fff8f7]">
+    <View className="flex-1 bg-surface">
       <TaskDetailHeader
         activeTab="deliveries"
         deliveriesLabel={taskData ? t('tasks.tabs.deliveries1') : t('tasks.tabs.deliveries0')}
@@ -51,7 +51,7 @@ export default function TaskOngoingPage() {
               onAction={() => router.push(`/task/${id}/sign`)}
             />
             <View className="mt-3">
-              <Text className="text-sm text-[#59413d]">
+              <Text className="text-sm text-on-surface-variant">
                 {t('tasks.recipientSuffix')} <Text className="font-bold text-[#ff9800]">{taskData.dropoff.contactPhone?.slice(-4) ?? t('tasks.recipientSuffixValue')}</Text>
               </Text>
             </View>
@@ -60,14 +60,14 @@ export default function TaskOngoingPage() {
           <EmptyState title={t('common.taskNotFound')} description={t('common.deliveryCompletedDesc')} />
         )}
       </ScrollView>
-      <View className="absolute bottom-0 left-0 right-0 flex-row items-center gap-4 border-t border-[#f7ddd9] bg-[#fff8f7] px-3 py-4">
+      <View className="absolute bottom-0 left-0 right-0 flex-row items-center gap-4 border-t border-surface-variant bg-surface px-3 py-4">
         <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.settings')} className="items-center px-2" onPress={() => router.push('/settings')}>
-          <AppIcon name="settings" className="text-2xl text-[#59413d]" />
-          <Text className="mt-1 text-[10px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
+          <AppIcon name="settings" className="text-2xl text-on-surface-variant" />
+          <Text className="mt-1 text-[10px] font-bold text-on-surface-variant">{t('tasks.settings')}</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.refresh')} className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-4 shadow-sm" onPress={() => void refetch()}>
-          <AppIcon name="refresh" className="text-xl text-[#961813]" />
-          <Text className="text-base font-bold text-[#961813]">{t('tasks.refresh')}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.refresh')} className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-outline-variant bg-white py-4 shadow-sm" onPress={() => void refetch()}>
+          <AppIcon name="refresh" className="text-xl text-primary-container" />
+          <Text className="text-base font-bold text-primary-container">{t('tasks.refresh')}</Text>
         </Pressable>
       </View>
     </View>

@@ -59,11 +59,11 @@ export default function ProfileEditPage() {
   };
 
   return (
-    <View className="flex-1 bg-[#fff8f7]">
+    <View className="flex-1 bg-surface">
       <PageHeader title={t('auth.register.title')} />
       <ScrollView contentContainerClassName="items-center px-5 py-8 pb-10">
         <View className="w-full max-w-lg gap-12">
-          <View className="flex-row items-center justify-between rounded-xl bg-[#720003] px-6 py-5 shadow-md">
+          <View className="flex-row items-center justify-between rounded-xl bg-primary px-6 py-5 shadow-md">
             <View className="flex-row items-center gap-3">
               <View className="rounded-lg bg-white/10 p-2">
                 <AppIcon name="rider" className="text-2xl text-white" />
@@ -77,20 +77,20 @@ export default function ProfileEditPage() {
           </View>
 
           <View className="gap-6">
-            <View className="flex-row items-center gap-3 border-b border-[#e1bfba] pb-2">
-              <AppIcon name="profile" className="text-xl text-[#720003]" />
-              <Text className="text-xl font-semibold text-[#261816]">{t('auth.register.personalDetails')}</Text>
+            <View className="flex-row items-center gap-3 border-b border-outline-variant pb-2">
+              <AppIcon name="profile" className="text-xl text-primary" />
+              <Text className="text-xl font-semibold text-on-surface">{t('auth.register.personalDetails')}</Text>
             </View>
             <View className="gap-6">
               <Input label={t('auth.register.fullName')} placeholder={t('auth.register.fullNamePlaceholder')} value={name} onChangeText={setName} />
               <View className="gap-1.5">
-                <Text className="text-xs font-bold uppercase tracking-wider text-[#59413d]">{t('auth.register.phone')}</Text>
+                <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('auth.register.phone')}</Text>
                 <View className="h-14 flex-row gap-2">
-                  <View className="flex-1 flex-row rounded-lg border border-[#e1bfba] bg-white">
-                    <Text className="border-r border-[#e1bfba] bg-[#fff0ee] px-4 py-4 text-[#59413d]">+670</Text>
-                    <TextInput className="flex-1 px-4 text-base text-[#261816]" keyboardType="phone-pad" placeholder={t('auth.register.phonePlaceholder')} placeholderTextColor="#8d706c" value={phone} onChangeText={setPhone} />
+                  <View className="flex-1 flex-row rounded-lg border border-outline-variant bg-white">
+                    <Text className="border-r border-outline-variant bg-surface-container-low px-4 py-4 text-on-surface-variant">+670</Text>
+                    <TextInput className="flex-1 px-4 text-base text-on-surface" keyboardType="phone-pad" placeholder={t('auth.register.phonePlaceholder')} placeholderTextColor="#8d706c" value={phone} onChangeText={setPhone} />
                   </View>
-                  <Pressable accessibilityRole="button" accessibilityLabel={sendCodeLabel} className={`items-center justify-center rounded-lg px-4 ${codeState === 'sent' ? 'bg-green-700' : 'bg-[#720003]'}`} onPress={sendCode}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={sendCodeLabel} className={`items-center justify-center rounded-lg px-4 ${codeState === 'sent' ? 'bg-green-700' : 'bg-primary'}`} onPress={sendCode}>
                     <Text className="text-[11px] font-bold text-white">{sendCodeLabel}</Text>
                   </Pressable>
                 </View>
@@ -99,9 +99,9 @@ export default function ProfileEditPage() {
               <Input label={t('auth.register.vehicleType')} placeholder={t('auth.register.vehicleTypePlaceholder')} value={vehicleType} onChangeText={setVehicleType} />
               <Input label={t('auth.register.identityCard')} placeholder={t('auth.register.identityCardPlaceholder')} value={licenseNumber} onChangeText={setLicenseNumber} />
               <View className="gap-1.5">
-                <Text className="text-xs font-bold uppercase tracking-wider text-[#59413d]">{t('auth.register.homeAddress')}</Text>
+                <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('auth.register.homeAddress')}</Text>
                 <TextInput
-                  className="min-h-[100px] rounded-lg border border-[#e1bfba] bg-white p-4 text-base text-[#261816]"
+                  className="min-h-[100px] rounded-lg border border-outline-variant bg-white p-4 text-base text-on-surface"
                   multiline
                   placeholder={t('auth.register.homeAddressPlaceholder')}
                   placeholderTextColor="#8d706c"
@@ -112,11 +112,11 @@ export default function ProfileEditPage() {
           </View>
 
           <View className="gap-6">
-            <View className="flex-row items-center gap-3 border-b border-[#e1bfba] pb-2">
-              <AppIcon name="document" className="text-xl text-[#720003]" />
-              <Text className="text-xl font-semibold text-[#261816]">{t('auth.register.documents')}</Text>
+            <View className="flex-row items-center gap-3 border-b border-outline-variant pb-2">
+              <AppIcon name="document" className="text-xl text-primary" />
+              <Text className="text-xl font-semibold text-on-surface">{t('auth.register.documents')}</Text>
             </View>
-            <Text className="-mt-4 text-sm text-[#59413d]">{t('auth.register.documentsHint')}</Text>
+            <Text className="-mt-4 text-sm text-on-surface-variant">{t('auth.register.documentsHint')}</Text>
             <View className="gap-4">
               <UploadTile icon="ID" selected={uploads.license} subtitle={t('auth.register.driverLicenseLocal')} title={t('auth.register.driverLicense')} t={t} onPress={() => toggleUpload('license')} />
               <View className="flex-row gap-4">
@@ -132,9 +132,9 @@ export default function ProfileEditPage() {
           </View>
 
           <View className="gap-6">
-            <View className="flex-row items-center gap-3 border-b border-[#e1bfba] pb-2">
-              <AppIcon name="security" className="text-xl text-[#720003]" />
-              <Text className="text-xl font-semibold text-[#261816]">{t('auth.register.security')}</Text>
+            <View className="flex-row items-center gap-3 border-b border-outline-variant pb-2">
+              <AppIcon name="security" className="text-xl text-primary" />
+              <Text className="text-xl font-semibold text-on-surface">{t('auth.register.security')}</Text>
             </View>
             <View className="gap-6">
               <Input label={t('auth.register.password')} placeholder="••••••••" secureTextEntry />
@@ -142,12 +142,12 @@ export default function ProfileEditPage() {
             </View>
           </View>
 
-          <View className="rounded-xl border border-[#e1bfba]/30 bg-[#fff0ee]/50 p-4">
+          <View className="rounded-xl border border-outline-variant/30 bg-surface-container-low/50 p-4">
             <View className="flex-row items-start gap-3">
               <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={setAccepted} value={accepted} />
-              <Text className="flex-1 text-sm leading-6 text-[#59413d]">
-                {t('auth.register.termsPrefix')} <Text className="font-bold text-[#720003]">{t('auth.register.terms')}</Text>{' '}
-                {t('auth.register.privacyPrefix')} <Text className="font-bold text-[#720003]">{t('auth.register.privacy')}</Text> {t('auth.register.termsSuffix')}
+              <Text className="flex-1 text-sm leading-6 text-on-surface-variant">
+                {t('auth.register.termsPrefix')} <Text className="font-bold text-primary">{t('auth.register.terms')}</Text>{' '}
+                {t('auth.register.privacyPrefix')} <Text className="font-bold text-primary">{t('auth.register.privacy')}</Text> {t('auth.register.termsSuffix')}
               </Text>
             </View>
           </View>
