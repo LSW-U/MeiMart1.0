@@ -31,7 +31,7 @@ import { Switch } from '@/components/ui/Switch';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { PriceText } from '@/components/ui/PriceText';
-import { useProduct } from '@/services/queries/useProducts';
+import { useOrder } from '@/services/queries/useOrders';
 import { useSubmitReview } from '@/services/queries/useReviews';
 import { uploadsApi } from '@/services/uploads';
 import { useLocalizer } from '@/i18n';
@@ -70,23 +70,39 @@ export default function OrderReviewPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const localize = useLocalizer();
-  // Why: §8 评论模块 - 订单详情跳转时传 id(orderId) + productId（订单首商品）。
-  //      orderId 是后端 POST /orders/:orderId/review 的路径参数（real 必填）；productId 缺省回退 p001 便于 dev 自测。
+  // Why: §8 评论模块 - 订单详情跳转时传 id(orderId) + productId（初始选中商品，方案 C 多商品切换）。
+  //      orderId 是后端 POST /orders/:orderId/review 路径参数（real 必填，空时 submit 兜底阻止）；
+  //      productId 用于初始选中 tab，多商品订单可顶部切换逐条评价（selectProduct reset 表单不串数据）。
   const { productId: productIdParam, id: orderIdParam } = useLocalSearchParams<{
     productId?: string;
     id?: string;
   }>();
-  const productId = productIdParam ?? 'p001';
   const orderId = orderIdParam ?? '';
-  const { data: product } = useProduct(productId);
+  // 方案 C（多商品逐条评价）：useOrder 取全部商品，selectedProductId 切换当前评价商品。
+  // 单商品订单不显切换 tab；多商品订单顶部 tab 切换，每商品独立评价（切换 reset 表单不串数据）。
+  const { data: order } = useOrder(orderId);
+  const orderItems = order?.items ?? [];
+  const [selectedProductId, setSelectedProductId] = useState<string>(productIdParam ?? '');
+  const currentProductId =
+    selectedProductId || orderItems[0]?.product.id || productIdParam || 'p001';
+  const currentItem = orderItems.find((i) => i.product.id === currentProductId);
+  const product = currentItem?.product;
   const submitReviewMutation = useSubmitReview();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  const { control, handleSubmit, setValue } = useForm<ReviewValues>({
+  const { control, handleSubmit, setValue, reset } = useForm<ReviewValues>({
     resolver: zodResolver(reviewSchema),
     defaultValues: { rating: 5, content: '', anonymous: false },
     mode: 'onBlur',
   });
+
+  // 切换商品：reset 表单 + 清 tags（每商品独立评价，不串上次数据）
+  const selectProduct = (pid: string) => {
+    if (pid === currentProductId) return;
+    setSelectedProductId(pid);
+    reset({ rating: 5, content: '', anonymous: false, images: [] });
+    setSelectedTags([]);
+  };
   const ratingValue = useWatch({ control, name: 'rating' }) as number;
   const STAR_ACTIVE = '#f59e0b'; // 原因：评分星标金色（HTML star gold amber-500），semantic 无对应角色
 
@@ -198,7 +214,7 @@ export default function OrderReviewPage() {
     submitReviewMutation.mutate(
       {
         orderId,
-        productId,
+        productId: currentProductId,
         category: 'PRODUCT',
         rating: values.rating,
         content: values.content,
@@ -230,6 +246,57 @@ export default function OrderReviewPage() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
+        {/* 多商品切换 tab（方案 C：单商品订单不显，多商品订单顶部切换逐条评价，切换 reset 表单） */}
+        {orderItems.length > 1 && (
+          <View style={styles.productTabs}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.productTabsScroll}
+            >
+              {orderItems.map((it) => {
+                const active = it.product.id === currentProductId;
+                return (
+                  <Pressable
+                    key={it.product.id}
+                    onPress={() => selectProduct(it.product.id)}
+                    style={[
+                      styles.productTab,
+                      {
+                        backgroundColor: active
+                          ? colors.primary
+                          : colors['surface-container-low'],
+                        borderColor: active ? colors.primary : colors['outline-variant'],
+                      },
+                    ]}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={localize(it.product.name)}
+                  >
+                    <Image
+                      source={{
+                        uri:
+                          it.product.image ||
+                          'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=100',
+                      }}
+                      style={styles.productTabImg}
+                    />
+                    <Text
+                      style={[
+                        styles.productTabName,
+                        { color: active ? ON_PRIMARY : colors['on-surface-variant'] },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {localize(it.product.name)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
         {/* 商品卡片 */}
         <View
           style={[
@@ -542,6 +609,34 @@ const styles = StyleSheet.create({
     padding: layout['container-margin'],
     paddingBottom: 120,
     gap: spacing.md,
+  },
+  // 方案 C：多商品切换 tab（顶部横滑，缩略图 + 商品名，选中态 primary 底）
+  productTabs: {
+    marginHorizontal: -spacing.xs, // 让横滑两端对齐 container
+  },
+  productTabsScroll: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xs,
+  },
+  productTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    maxWidth: 200,
+  },
+  productTabImg: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+  },
+  productTabName: {
+    ...typography['body-sm'],
+    fontWeight: '600',
+    flexShrink: 1,
   },
   card: {
     borderRadius: borderRadius.xl,
