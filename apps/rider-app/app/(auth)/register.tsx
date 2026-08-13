@@ -1,3 +1,4 @@
+import { colors } from "../../src/theme/colors";
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
@@ -121,7 +122,7 @@ export default function RegisterPage() {
                 <View className="h-14 flex-row gap-2">
                   <View className="flex-1 flex-row rounded-lg border border-outline-variant bg-white">
                     <Text className="border-r border-outline-variant bg-surface-container-low px-4 py-4 text-on-surface-variant">+670</Text>
-                    <TextInput className="flex-1 px-4 text-base text-on-surface" keyboardType="phone-pad" placeholder={t('auth.register.phonePlaceholder')} placeholderTextColor="#8d706c" value={phone} onChangeText={setPhone} />
+                    <TextInput className="flex-1 px-4 text-base text-on-surface" keyboardType="phone-pad" placeholder={t('auth.register.phonePlaceholder')} placeholderTextColor={colors.outline} value={phone} onChangeText={setPhone} />
                   </View>
                   <Pressable accessibilityRole="button" accessibilityLabel={sendCodeLabel} className={`items-center justify-center rounded-lg px-4 ${codeState === 'sent' ? 'bg-green-700' : 'bg-primary'}`} onPress={sendCode}>
                     <Text className="text-[11px] font-bold text-white">{sendCodeLabel}</Text>
@@ -136,7 +137,7 @@ export default function RegisterPage() {
                   className="min-h-[100px] rounded-lg border border-outline-variant bg-white p-4 text-base text-on-surface"
                   multiline
                   placeholder={t('auth.register.homeAddressPlaceholder')}
-                  placeholderTextColor="#8d706c"
+                  placeholderTextColor={colors.outline}
                   textAlignVertical="top"
                 />
               </View>

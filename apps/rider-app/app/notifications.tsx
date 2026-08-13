@@ -127,7 +127,7 @@ export default function NotificationsPage() {
                 onPress={() => void onItemPress(item)}
               >
                 <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: style.bg }}>
-                  <AppIcon color="#ffffff" name={style.icon} size={20} />
+                  <AppIcon color={colors.surface} name={style.icon} size={20} />
                 </View>
                 <View className="flex-1">
                   <View className="flex-row items-center justify-between">

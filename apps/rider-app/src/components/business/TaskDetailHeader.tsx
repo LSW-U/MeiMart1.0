@@ -1,3 +1,4 @@
+import { colors } from "../../theme/colors";
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
@@ -46,7 +47,7 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTa
         <Pressable accessibilityRole="button" accessibilityLabel={dutyStatusLabel} className="flex-row items-center gap-2 rounded-full border border-primary-container bg-surface px-4 py-1" onPress={onDutyPress}>
           <View className={`h-2 w-2 rounded-full ${dotColor[dutyStatus]}`} />
           <Text className="text-xl font-bold text-on-surface">{dutyStatusLabel}</Text>
-          <AppIcon name="chevronDown" color="#59413d" size={18} />
+          <AppIcon name="chevronDown" color={colors.textMuted} size={18} />
         </Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel={t('notification.title')} accessibilityHint={unread > 0 ? t('notification.unreadCount', { count: unread }) : undefined} className="relative rounded-full p-1" onPress={() => router.push('/notifications')}>
           <AppIcon name="notification" className="text-2xl text-on-surface-variant" />

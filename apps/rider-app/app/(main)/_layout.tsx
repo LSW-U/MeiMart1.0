@@ -1,3 +1,4 @@
+import { colors } from "../../src/theme/colors";
 import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, AppState, Platform, View } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
@@ -23,7 +24,7 @@ export default function MainLayout() {
   if (!hydrated) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#720003" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }

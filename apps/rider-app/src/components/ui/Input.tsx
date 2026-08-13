@@ -1,3 +1,4 @@
+import { colors } from "../../theme/colors";
 import type { ComponentProps } from 'react';
 import { Text, TextInput, View } from 'react-native';
 
@@ -15,7 +16,7 @@ export function Input({ label, leftSlot, containerClassName = '', className = ''
         {leftSlot ? <Text className="px-4 text-base text-on-surface-variant">{leftSlot}</Text> : null}
         <TextInput
           className={`flex-1 px-4 py-3 text-base text-on-surface ${className}`}
-          placeholderTextColor="#8d706c"
+          placeholderTextColor={colors.outline}
           {...props}
         />
       </View>

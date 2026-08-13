@@ -1,3 +1,4 @@
+import { colors } from "../../theme/colors";
 import { Platform, Text, View } from 'react-native';
 
 import type { Coordinates } from '../../types/common';
@@ -41,7 +42,7 @@ function MapViewNative({ pickup, delivery, rider, region, onRegionChange, childr
         <Marker
           coordinate={{ latitude: pickup.latitude, longitude: pickup.longitude }}
           title={pickup.title ?? 'Pickup'}
-          pinColor="#720003"
+          pinColor={colors.primary}
         />
       )}
       {delivery && (

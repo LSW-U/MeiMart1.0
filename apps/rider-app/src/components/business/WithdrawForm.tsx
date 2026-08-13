@@ -1,3 +1,4 @@
+import { colors } from "../../theme/colors";
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { AppIcon, Button } from '../ui';
@@ -29,7 +30,7 @@ export function WithdrawForm({ amountLabel, amountPlaceholder, toLabel, bankCard
           className="rounded-lg border-2 border-outline-variant bg-surface px-8 py-2 text-lg text-on-surface"
           keyboardType="numeric"
           placeholder={amountPlaceholder}
-          placeholderTextColor="#8d706c"
+          placeholderTextColor={colors.outline}
           value={amount}
           onChangeText={onAmountChange}
         />

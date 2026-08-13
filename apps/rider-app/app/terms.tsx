@@ -1,3 +1,4 @@
+import { colors } from "../src/theme/colors";
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '../src/components/ui';
@@ -19,7 +20,7 @@ export default function TermsPage() {
       </View>
       <ScrollView contentContainerClassName="gap-4 px-5 py-6 pb-12">
         <View className="rounded-3xl bg-primary p-6 shadow-sm">
-          <AppIcon color="#ffffff" name="document" size={34} />
+          <AppIcon color={colors.surface} name="document" size={34} />
           <Text className="mt-4 text-2xl font-bold text-white">{t('legal.terms.title')}</Text>
         </View>
         <View className="rounded-2xl border border-surface-container bg-white p-5 shadow-sm">

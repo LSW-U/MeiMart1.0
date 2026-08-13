@@ -1,3 +1,4 @@
+import { colors } from "../../src/theme/colors";
 import { useRouter } from 'expo-router';
 import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
@@ -26,13 +27,13 @@ function SettingsItem({ icon, title, description, onPress, trailing = 'chevron',
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={title} className="flex-row items-center gap-4 px-5 py-4 active:bg-surface-container-low" onPress={onPress}>
       <View className="h-11 w-11 items-center justify-center rounded-full bg-surface-container">
-        <AppIcon color="#720003" name={icon} />
+        <AppIcon color={colors.primary} name={icon} />
       </View>
       <View className="flex-1">
         <Text className="text-base font-bold text-on-surface">{title}</Text>
         <Text className="mt-1 text-sm text-on-surface-variant">{description}</Text>
       </View>
-      {trailing === 'switch' ? <Switch accessibilityRole="switch" accessibilityLabel={title} accessibilityState={{ checked: switchValue }} onValueChange={onSwitchChange} value={switchValue} /> : <AppIcon color="#8d706c" name="chevronRight" />}
+      {trailing === 'switch' ? <Switch accessibilityRole="switch" accessibilityLabel={title} accessibilityState={{ checked: switchValue }} onValueChange={onSwitchChange} value={switchValue} /> : <AppIcon color={colors.outline} name="chevronRight" />}
     </Pressable>
   );
 }

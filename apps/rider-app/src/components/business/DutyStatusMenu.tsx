@@ -1,3 +1,4 @@
+import { colors } from "../../theme/colors";
 import { Modal as NativeModal, Pressable, Text, View } from 'react-native';
 
 import type { DutyStatus } from '../../services/settings';
@@ -44,7 +45,7 @@ export function DutyStatusMenu({ visible, current, title, cancelLabel, options, 
               >
                 <View className={`h-2.5 w-2.5 rounded-full ${disabled ? 'bg-outline-variant' : dotColor[option.value]}`} />
                 <Text className={`flex-1 text-base font-semibold ${textTone}`}>{option.label}</Text>
-                {active ? <AppIcon name="check" color="#961813" size={20} /> : null}
+                {active ? <AppIcon name="check" color={colors.danger} size={20} /> : null}
               </Pressable>
             );
           })}

@@ -1,3 +1,4 @@
+import { colors } from "../../src/theme/colors";
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
@@ -148,18 +149,18 @@ export default function LoginPage() {
             {isPassword ? (
               <View className="min-h-14 flex-row items-center rounded-lg border border-outline-variant bg-white">
                 <View className="pl-5 pr-4">
-                  <AppIcon color="#8d706c" name="lock" size={24} />
+                  <AppIcon color={colors.outline} name="lock" size={24} />
                 </View>
                 <TextInput
                   className="flex-1 px-2 py-3 text-base text-on-surface"
                   placeholder={t('auth.login.passwordPlaceholder')}
-                  placeholderTextColor="#8d706c"
+                  placeholderTextColor={colors.outline}
                   secureTextEntry={!passwordVisible}
                   value={password}
                   onChangeText={setPassword}
                 />
                 <Pressable accessibilityRole="button" accessibilityLabel={passwordVisible ? t('auth.login.hidePassword') : t('auth.login.showPassword')} className="mr-2 pl-3 pr-5 py-3" onPress={() => setPasswordVisible((value) => !value)}>
-                  <AppIcon color="#8d706c" name={passwordVisible ? 'eye' : 'eyeOff'} size={24} />
+                  <AppIcon color={colors.outline} name={passwordVisible ? 'eye' : 'eyeOff'} size={24} />
                 </Pressable>
               </View>
             ) : (
@@ -169,7 +170,7 @@ export default function LoginPage() {
                     className="flex-1 pl-5 pr-3 py-3 text-base text-on-surface"
                     keyboardType="number-pad"
                     placeholder={t('auth.login.smsPlaceholder')}
-                    placeholderTextColor="#8d706c"
+                    placeholderTextColor={colors.outline}
                     value={code}
                     onChangeText={setCode}
                   />
@@ -220,12 +221,12 @@ export default function LoginPage() {
 
       <View className="mt-8 flex-row items-center gap-6">
         <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.help')} className="flex-row items-center gap-1.5" onPress={() => router.push('/help')}>
-          <AppIcon color="#8d706c" name="help" size={14} />
+          <AppIcon color={colors.outline} name="help" size={14} />
           <Text className="text-[11px] font-bold text-outline">{t('auth.login.help')}</Text>
         </Pressable>
         <View className="h-3 w-px bg-outline-variant" />
         <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.languageSwitch', { language: nextLanguageLabel })} className="flex-row items-center gap-1.5" onPress={switchLanguage}>
-          <AppIcon color="#8d706c" name="language" size={14} />
+          <AppIcon color={colors.outline} name="language" size={14} />
           <Text className="text-[11px] font-bold text-outline">{t('auth.login.languageSwitch', { language: nextLanguageLabel })}</Text>
         </Pressable>
       </View>
