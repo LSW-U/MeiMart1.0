@@ -31,6 +31,7 @@ export default function SignConfirmPage() {
 
   // Why: sign 页只允许 PICKED_UP/DELIVERING（可送达）进入。
   //   DELIVERED 已送达 / 其他状态弹回 detail。防止重复送达 409（对称 pickup/navigate 守卫）。
+  //   基于缓存：守卫读 useTask 缓存（S3），极端竞态下仍可能 409，由提交 toast 兜底（审查 A4）
   useEffect(() => {
     if (!task) return;
     if (task.status === 'PICKED_UP' || task.status === 'DELIVERING') return;

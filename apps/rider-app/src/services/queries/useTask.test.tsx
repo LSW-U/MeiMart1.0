@@ -166,9 +166,12 @@ describe('useStartDelivering', () => {
       result.current.mutate('A');
     });
 
-    // 乐观中间态：lists + detail 同步置 DELIVERING
+    // 审查 C3/N3 方案 A：跨 list（pickups → deliveries），task 从 pickups 移到 deliveries
     const lists = readLists(qc);
-    expect(lists?.pickups[0].status).toBe('DELIVERING');
+    expect(lists?.pickups).toHaveLength(0);
+    expect(lists?.deliveries).toHaveLength(1);
+    expect(lists?.deliveries[0].id).toBe('A');
+    expect(lists?.deliveries[0].status).toBe('DELIVERING');
     const detail = qc.getQueryData<DeliveryTask>(taskDetailKey('A'));
     expect(detail?.status).toBe('DELIVERING');
 
@@ -195,7 +198,9 @@ describe('useStartDelivering', () => {
     });
 
     const lists = readLists(qc);
+    expect(lists?.pickups).toHaveLength(1);
     expect(lists?.pickups[0].status).toBe('PICKED_UP');
+    expect(lists?.deliveries).toHaveLength(0);
     const detail = qc.getQueryData<DeliveryTask>(taskDetailKey('A'));
     expect(detail?.status).toBe('PICKED_UP');
   });

@@ -24,14 +24,18 @@ export default function PickupConfirmPage() {
   const processing = confirmPickup.isPending;
   const { data: task } = useTask(id);
 
-  // Why: pickup 页只允许 ASSIGNED 进入。PICKED_UP/DELIVERING 已取货应跳 navigate（去配送），
+  // Why: pickup 页只允许 ASSIGNED 进入。已取货任务应跳走：
+  //   PICKED_UP → navigate（去配送）；DELIVERING → sign（对齐 deliveries tab 直跳签收，审查 A3）；
   //   其他状态弹回 detail。防止对已取货 task 重复取货 409（2d43ec05 实证）。
+  //   守卫基于 useTask 缓存状态（S3），极端竞态下仍可能 409，由提交 toast 兜底（审查 A4）。
   useEffect(() => {
     if (!task || task.status === 'ASSIGNED') return;
     router.replace(
-      task.status === 'PICKED_UP' || task.status === 'DELIVERING'
+      task.status === 'PICKED_UP'
         ? `/task/${id}/navigate`
-        : `/task/${id}`,
+        : task.status === 'DELIVERING'
+          ? `/task/${id}/sign`
+          : `/task/${id}`,
     );
   }, [task, id, router]);
 

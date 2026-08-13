@@ -81,7 +81,7 @@ export function useAcceptTask() {
 /**
  * P14 ④ B1：return 任务开始配送（PICKED_UP → DELIVERING）
  * 仅 return 任务调（delivery 跳过 DELIVERING）。后端事务内同步写 refund.pickedAt。
- * 乐观更新 lists + detail，失败 rollback（不跨 list 移动，onSettled invalidate 纠正）。
+ * 乐观更新 lists + detail，失败 rollback。跨 list 移动（pickups→deliveries，审查 C3/N3 方案 A）。
  */
 export function useStartDelivering() {
   const queryClient = useQueryClient();
@@ -98,16 +98,22 @@ export function useStartDelivering() {
       return taskApi.startDelivering(id);
     },
     onMutate: async (id) => {
+      // 审查 C3/N3 方案 A：DELIVERING 任务跨 list 从 pickups 移到 deliveries
+      // （状态机 DELIVERING=配送中 + 弱网即时反映，对称 useAcceptTask available→pickups）
       await queryClient.cancelQueries({ queryKey: taskListsKey });
       const previousLists = queryClient.getQueryData<TaskLists>(taskListsKey);
       if (previousLists) {
-        const updateList = (list: DeliveryTask[]) =>
-          list.map((t) => (t.id === id ? { ...t, status: 'DELIVERING' as TaskStatus } : t));
-        queryClient.setQueryData<TaskLists>(taskListsKey, {
-          available: updateList(previousLists.available),
-          pickups: updateList(previousLists.pickups),
-          deliveries: updateList(previousLists.deliveries),
-        });
+        const task =
+          previousLists.pickups.find((t) => t.id === id) ??
+          previousLists.deliveries.find((t) => t.id === id);
+        if (task) {
+          const moved = { ...task, status: 'DELIVERING' as TaskStatus };
+          queryClient.setQueryData<TaskLists>(taskListsKey, {
+            available: previousLists.available,
+            pickups: previousLists.pickups.filter((t) => t.id !== id),
+            deliveries: [...previousLists.deliveries.filter((t) => t.id !== id), moved],
+          });
+        }
       }
       const detailKey = taskDetailKey(id);
       await queryClient.cancelQueries({ queryKey: detailKey });

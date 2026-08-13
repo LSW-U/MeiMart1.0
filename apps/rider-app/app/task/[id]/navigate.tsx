@@ -31,6 +31,7 @@ export default function TaskNavigatePage() {
   // - delivery: 只允许 PICKED_UP（两步跳过 DELIVERING）
   // - return: 允许 PICKED_UP（开始配送前）+ DELIVERING（已开始配送，去签收）
   // Why: navigate 是取货后导航送货；其他状态弹回详情页
+  // 基于缓存：守卫读 useTask 缓存（S3），极端竞态下仍可能 409，由提交 toast 兜底（审查 A4）
   useEffect(() => {
     if (!task) return;
     const isReturn = task.taskType === 'return';
