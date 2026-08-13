@@ -85,9 +85,9 @@ export function Modal({
           onClick={(e) => {
             if (dismissable && e.target === e.currentTarget) onClose?.();
           }}
-          accessibilityRole="button"
+          // 不设 accessibilityRole="button"：RN Web 的 View + role=button 渲染 <button> 元素，
+          // 会与子 close Pressable(<button>) 嵌套违规。backdrop 是点击关闭遮罩，div + onClick + aria-label 即可
           accessibilityLabel={t('common.closeDialog')}
-          accessibilityHint="Tap outside to close"
         >
           <View style={dialogStyle} accessibilityRole="alert" accessibilityLabel={title ?? 'Dialog content'}>
             {inner}
