@@ -2,6 +2,8 @@
   "app.name": "骑手中心",
   "app.tagline": "东帝汶现代传承",
   "splash.status": "同步中",
+  "auth.login.hidePassword": "隐藏密码",
+  "auth.login.showPassword": "显示密码",
   "auth.login.title": "欢迎回来",
   "auth.login.subtitle": "登录工作台，开启接单之旅",
   "auth.login.passwordTab": "密码登录",

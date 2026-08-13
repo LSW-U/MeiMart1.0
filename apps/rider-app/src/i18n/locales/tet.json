@@ -2,6 +2,8 @@
   "app.name": "Sentru Rider",
   "app.tagline": "",
   "splash.status": "",
+  "auth.login.hidePassword": "",
+  "auth.login.showPassword": "",
   "auth.login.title": "",
   "auth.login.subtitle": "",
   "auth.login.passwordTab": "",

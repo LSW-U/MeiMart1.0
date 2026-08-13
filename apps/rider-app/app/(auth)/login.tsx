@@ -117,13 +117,13 @@ export default function LoginPage() {
         </View>
 
         <View className="flex-row border-b border-[#e1bfba]">
-          <Pressable className="flex-1 py-4" onPress={() => setMode('password')}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.passwordTab')} className="flex-1 py-4" onPress={() => setMode('password')}>
             <Text className={`text-center text-xs font-bold tracking-wider ${isPassword ? 'text-[#720003]' : 'text-[#59413d]'}`}>
               {t('auth.login.passwordTab')}
             </Text>
             {isPassword ? <View className="mt-3 h-[3px] rounded-full bg-[#720003]" /> : null}
           </Pressable>
-          <Pressable className="flex-1 py-4" onPress={() => setMode('sms')}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.smsTab')} className="flex-1 py-4" onPress={() => setMode('sms')}>
             <Text className={`text-center text-xs font-bold tracking-wider ${!isPassword ? 'text-[#720003]' : 'text-[#59413d]'}`}>
               {t('auth.login.smsTab')}
             </Text>
@@ -156,7 +156,7 @@ export default function LoginPage() {
                   value={password}
                   onChangeText={setPassword}
                 />
-                <Pressable className="mr-2 pl-3 pr-5 py-3" onPress={() => setPasswordVisible((value) => !value)}>
+                <Pressable accessibilityRole="button" accessibilityLabel={passwordVisible ? t('auth.login.hidePassword') : t('auth.login.showPassword')} className="mr-2 pl-3 pr-5 py-3" onPress={() => setPasswordVisible((value) => !value)}>
                   <AppIcon color="#8d706c" name={passwordVisible ? 'eye' : 'eyeOff'} size={24} />
                 </Pressable>
               </View>
@@ -173,6 +173,8 @@ export default function LoginPage() {
                   />
                 </View>
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={sendCodeLabel}
                   className={`rounded-full px-6 py-4 ${countdown > 0 ? 'bg-[#e1bfba]' : 'bg-[#720003]'}`}
                   disabled={countdown > 0}
                   onPress={() => void handleSendCode()}
@@ -183,7 +185,7 @@ export default function LoginPage() {
             )}
           </View>
 
-          <Pressable className="items-end" onPress={() => setFeatureInProgressVisible(true)}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.forgotPassword')} className="items-end" onPress={() => setFeatureInProgressVisible(true)}>
             <Text className="text-[11px] font-bold text-[#720003]">{t('auth.login.forgotPassword')}</Text>
           </Pressable>
 
@@ -201,7 +203,7 @@ export default function LoginPage() {
 
           {/* Why: 开发环境 mock-login 按钮，跳过密码验证直接登录骑手账号 */}
           {isDev && (
-            <Pressable className="mt-2 items-center" onPress={() => void mockLogin()}>
+            <Pressable accessibilityRole="button" accessibilityLabel="[DEV] 快速登录骑手账号" className="mt-2 items-center" onPress={() => void mockLogin()}>
               <Text className="text-xs text-[#8d706c]">[DEV] 快速登录骑手账号</Text>
             </Pressable>
           )}
@@ -215,12 +217,12 @@ export default function LoginPage() {
       </Card>
 
       <View className="mt-8 flex-row items-center gap-6">
-        <Pressable className="flex-row items-center gap-1.5" onPress={() => router.push('/help')}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.help')} className="flex-row items-center gap-1.5" onPress={() => router.push('/help')}>
           <AppIcon color="#8d706c" name="help" size={14} />
           <Text className="text-[11px] font-bold text-[#8d706c]">{t('auth.login.help')}</Text>
         </Pressable>
         <View className="h-3 w-px bg-[#e1bfba]" />
-        <Pressable className="flex-row items-center gap-1.5" onPress={switchLanguage}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.languageSwitch', { language: nextLanguageLabel })} className="flex-row items-center gap-1.5" onPress={switchLanguage}>
           <AppIcon color="#8d706c" name="language" size={14} />
           <Text className="text-[11px] font-bold text-[#8d706c]">{t('auth.login.languageSwitch', { language: nextLanguageLabel })}</Text>
         </Pressable>

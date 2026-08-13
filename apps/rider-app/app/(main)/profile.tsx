@@ -20,7 +20,7 @@ function MenuItem({ icon, label, tone = 'default', onPress }: MenuItemProps) {
   const danger = tone === 'danger';
 
   return (
-    <Pressable className={`flex-row items-center justify-between p-5 ${danger ? 'active:bg-[#ffdad6]/30' : 'active:bg-[#fff0ee]'}`} onPress={onPress}>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} className={`flex-row items-center justify-between p-5 ${danger ? 'active:bg-[#ffdad6]/30' : 'active:bg-[#fff0ee]'}`} onPress={onPress}>
       <View className="flex-row items-center gap-4">
         <View className={`h-10 w-10 items-center justify-center rounded-full ${danger ? 'bg-[#ffdad6]/50' : 'bg-[#ffe9e6]'}`}>
           <AppIcon color={danger ? colors.error : colors.textMuted} name={icon} />
@@ -56,12 +56,12 @@ export default function ProfilePage() {
     <ScrollView className="flex-1 bg-[#fff8f7]" contentContainerClassName="pb-12">
       <View className="sticky top-0 z-50 flex-row items-center justify-between bg-[#fff8f7]/90 px-5 py-3">
         <View className="flex-row items-center gap-3">
-          <Pressable className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => router.replace('/(main)/tasks')}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => router.replace('/(main)/tasks')}>
             <Text className="text-2xl text-[#720003]">‹</Text>
           </Pressable>
           <Text className="text-xl font-bold text-[#261816]">{t('profile.title')}</Text>
         </View>
-        <Pressable className="rounded-full p-2" onPress={() => router.push('/profile/edit')}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.edit')} className="rounded-full p-2" onPress={() => router.push('/profile/edit')}>
           <Text className="font-bold text-[#720003]">{t('profile.edit')}</Text>
         </Pressable>
       </View>
@@ -108,13 +108,13 @@ export default function ProfilePage() {
       </View>
 
       <View className="mx-5 mb-8 flex-row gap-4">
-        <Pressable className="flex-1 flex-row items-center gap-4 rounded-2xl border border-[#ffe9e6] bg-white p-5 shadow-sm" onPress={() => router.push('/order/history')}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.myOrders')} className="flex-1 flex-row items-center gap-4 rounded-2xl border border-[#ffe9e6] bg-white p-5 shadow-sm" onPress={() => router.push('/order/history')}>
           <View className="rounded-xl bg-[#ffe9e6] p-3">
             <AppIcon name="orders" className="text-xl text-[#720003]" />
           </View>
           <Text className="text-[17px] font-semibold text-[#261816]">{t('profile.myOrders')}</Text>
         </Pressable>
-        <Pressable className="flex-1 flex-row items-center gap-4 rounded-2xl border border-[#ffe9e6] bg-white p-5 shadow-sm" onPress={() => router.push('/(main)/earnings')}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.myWallet')} className="flex-1 flex-row items-center gap-4 rounded-2xl border border-[#ffe9e6] bg-white p-5 shadow-sm" onPress={() => router.push('/(main)/earnings')}>
           <View className="rounded-xl bg-[#ffe9e6] p-3">
             <AppIcon name="wallet" className="text-xl text-[#720003]" />
           </View>

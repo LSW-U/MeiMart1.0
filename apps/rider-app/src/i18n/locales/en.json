@@ -2,6 +2,8 @@
   "app.name": "Rider Hub",
   "app.tagline": "Modern Timorese Heritage",
   "splash.status": "Synchronizing",
+  "auth.login.hidePassword": "Hide password",
+  "auth.login.showPassword": "Show password",
   "auth.login.title": "Welcome Back",
   "auth.login.subtitle": "Access your dashboard and start your route",
   "auth.login.passwordTab": "PASSWORD",
