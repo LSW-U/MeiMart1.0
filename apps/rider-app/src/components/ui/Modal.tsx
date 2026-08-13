@@ -15,7 +15,7 @@ export function Modal({ visible, title, children, onClose }: ModalProps) {
         <View className="rounded-3xl bg-white p-5">
           {title ? <Text className="mb-4 text-lg font-bold text-on-surface">{title}</Text> : null}
           {children}
-          <Pressable className="mt-5 rounded-full bg-primary py-3" onPress={onClose}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Close" className="mt-5 rounded-full bg-primary py-3" onPress={onClose}>
             <Text className="text-center font-semibold text-white">Close</Text>
           </Pressable>
         </View>

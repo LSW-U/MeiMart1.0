@@ -12,6 +12,8 @@ type SwipeButtonProps = {
 export function SwipeButton({ children, disabled = false, onPress }: SwipeButtonProps) {
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={typeof children === 'string' ? children : undefined}
       disabled={disabled}
       onPress={onPress}
       className={`h-14 w-full flex-row items-center justify-center rounded-lg ${disabled ? 'bg-primary-container opacity-50' : 'bg-primary-container'}`}

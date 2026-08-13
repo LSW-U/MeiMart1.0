@@ -14,6 +14,7 @@ type AppIconProps = {
   color?: string;
   size?: number;
   style?: StyleProp<TextStyle>;
+  accessibilityLabel?: string;
 };
 
 const icons: Record<AppIconName, MaterialIconName> = {
@@ -61,6 +62,6 @@ const sizeByClass = (className = '') => {
   return 22;
 };
 
-export function AppIcon({ name, className = '', color, size, style }: AppIconProps) {
-  return <MaterialCommunityIcons color={color ?? colorByClass(className)} name={icons[name]} size={size ?? sizeByClass(className)} style={style} />;
+export function AppIcon({ name, className = '', color, size, style, accessibilityLabel }: AppIconProps) {
+  return <MaterialCommunityIcons accessibilityRole="image" accessibilityLabel={accessibilityLabel} color={color ?? colorByClass(className)} name={icons[name]} size={size ?? sizeByClass(className)} style={style} />;
 }

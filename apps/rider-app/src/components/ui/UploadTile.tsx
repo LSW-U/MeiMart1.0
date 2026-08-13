@@ -15,6 +15,8 @@ type UploadTileProps = {
 export function UploadTile({ title, subtitle, icon, selected, compact, onPress, t }: UploadTileProps) {
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={title}
       className={`${compact ? 'h-24 flex-col justify-center gap-2' : 'min-h-14 flex-row justify-between'} items-center rounded-xl border p-4 ${selected ? 'border-primary bg-primary/5' : 'border-outline-variant bg-white'}`}
       onPress={onPress}
     >

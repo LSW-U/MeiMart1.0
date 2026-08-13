@@ -12,6 +12,8 @@ type ButtonProps = {
 export function Button({ children, className = '', textClassName = '', icon, onPress }: ButtonProps) {
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={typeof children === 'string' ? children : undefined}
       className={`h-14 flex-row items-center justify-center gap-2 rounded-lg bg-primary active:scale-[0.98] ${className}`}
       onPress={onPress}
     >
