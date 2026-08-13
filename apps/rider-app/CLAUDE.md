@@ -168,13 +168,15 @@ export const colors = {
 
 ## 已知技术债务（优先修复）
 
-| 优先级 | 问题 | 说明 |
+> 更新于 2026-08-13：P0/P1 已清零，P2 颜色 + a11y 第一批完工。
+
+| 优先级 | 问题 | 状态 |
 |--------|------|------|
-| P0 | `useBackgroundTask.ts` 是空壳 | 骑手切后台丢定位，直接影响派单 |
-| P0 | TanStack Query 装了没用 | 缓存/重试/乐观更新全缺失 |
-| P0 | `QueryClientProvider` 未接入 | `_layout.tsx` 没包 Provider |
-| P1 | 零测试覆盖 | 0 个测试文件，0 个测试依赖 |
-| P1 | 无 ESLint 配置 | eslint.config.js 不存在 |
-| P2 | 6 个组件硬编码颜色 | SwipeButton/AppIcon/Badge/Button/Modal/UploadTile |
-| P2 | a11y 覆盖率极低 | 86 个可交互组件仅 2 个有标注 |
-| P2 | tRPC client 是死代码 | 创建了但没有任何实际调用 |
+| P0 | `useBackgroundTask.ts` 空壳 | ✅ 已修（`6c0123a`） |
+| P0 | TanStack Query 装了没用 | ✅ 已接入（hooks 全走 RQ） |
+| P0 | `QueryClientProvider` 未接入 | ✅ 已接入（`AppProviders`） |
+| P1 | 零测试覆盖 | ✅ 31 测试（sync/useTask/useDelivery/task/task-flow） |
+| P1 | 无 ESLint 配置 | ✅ 已配（门禁绿） |
+| P2 | 6 组件硬编码颜色 | ✅ 已修（`1b4c85e`，实际 7 组件含 OfflineBanner） |
+| P2 | a11y 覆盖率低 | 🔶 第一批完工（`9a198ea`，UI 组件库 5 个：Button/SwipeButton/Modal/UploadTile/AppIcon），剩 81 个页面级 Pressable |
+| ~~P2~~ | ~~tRPC client 死代码~~ | ❌ 条目过时已删（rider-app 无 tRPC，早已用 openapi 类型 + `api.ts` fetch） |
