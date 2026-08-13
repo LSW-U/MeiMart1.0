@@ -8,6 +8,8 @@ const TRACK_W = 52;
 const TRACK_H = 32;
 const KNOB = 24;
 const PADDING = (TRACK_H - KNOB) / 2;
+// knob 水平移动范围：从左 padding 内 -> 右 padding 内（关闭左对齐 / 开启右对齐，不超出 track）
+const KNOB_TRAVEL = TRACK_W - KNOB - 2 * PADDING; // = 20
 
 export function Switch({ value, onValueChange, label, disabled = false, testID }: SwitchProps) {
   const { colors } = useTheme();
@@ -28,7 +30,7 @@ export function Switch({ value, onValueChange, label, disabled = false, testID }
           styles.knob,
           {
             backgroundColor: knobBg,
-            transform: [{ translateX: value ? KNOB + PADDING : PADDING }],
+            transform: [{ translateX: value ? KNOB_TRAVEL : 0 }],
             shadowColor: colors['on-surface'],
             shadowOpacity: 0.1,
             shadowRadius: 4,
