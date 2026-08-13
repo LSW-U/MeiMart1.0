@@ -699,6 +699,7 @@
       "great": "[TET] Great"
     },
     "submitFailed": "[TET] Failed to submit review",
+    "missingOrder": "[TET] Order info missing, please enter from order details",
     "a11y": {
       "addPhoto": "[TET] Add photo",
       "ratingSlider": "[TET] Rating slider, drag to select 1 to 5 stars",

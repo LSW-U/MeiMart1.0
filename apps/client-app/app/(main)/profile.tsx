@@ -65,7 +65,7 @@ const ORDER_ENTRIES: OrderEntry[] = [
     icon: 'local_shipping',
     route: '/(main)/orders',
   },
-  { id: 'review', labelKey: 'order.actions.review', icon: 'star_rate', route: '/order/review' },
+  { id: 'review', labelKey: 'order.actions.review', icon: 'star_rate', route: '/(main)/orders' },
   {
     id: 'after-sales',
     labelKey: 'profile.afterSales',

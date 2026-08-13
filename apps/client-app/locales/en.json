@@ -746,6 +746,7 @@
       "great": "Great"
     },
     "submitFailed": "Failed to submit review",
+    "missingOrder": "Order info missing, please enter from order details",
     "a11y": {
       "addPhoto": "Add photo",
       "ratingSlider": "Rating slider, drag to select 1 to 5 stars",

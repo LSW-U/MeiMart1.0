@@ -188,8 +188,13 @@ export default function OrderReviewPage() {
   };
 
   // Why: §8 提交接 useSubmitReview（乐观写入 reviews 缓存 -> 详情页立即可见 + 绿色置顶）。
-  //      category='PRODUCT'（本页是商品评论入口）；orderId 缺省时 real 模式会 404，mock 不影响。
+  //      category='PRODUCT'（本页是商品评论入口）；orderId 缺省时 real 模式会 404（URL //review）。
   const submit = handleSubmit((values) => {
+    if (!orderId) {
+      // 防漏传：profile 等入口未带 orderId 时阻止提交（应跳订单列表选订单，不直接进 review 页）
+      toast.error(t('review.missingOrder'));
+      return;
+    }
     submitReviewMutation.mutate(
       {
         orderId,
