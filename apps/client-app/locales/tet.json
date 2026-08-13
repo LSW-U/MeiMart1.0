@@ -410,6 +410,7 @@
     "favorites": "[TET] Favorites",
     "coupons": "[TET] Coupons",
     "orders": "[TET] My orders",
+    "afterSales": "[TET] After-sales",
     "addresses": "[TET] Addresses",
     "customerService": "[TET] Customer service",
     "notifications": "[TET] Notifications",
@@ -704,6 +705,33 @@
       "charCount": "[TET] {{count}} of {{max}} characters",
       "photoThumb": "[TET] Photo {{count}}",
       "removePhoto": "[TET] Remove photo {{count}}"
+    }
+  },
+  "refunds": {
+    "title": "[TET] After-sales",
+    "tabAll": "[TET] All",
+    "tabInProgress": "[TET] In progress",
+    "tabDone": "[TET] Completed",
+    "empty": "[TET] No refunds yet",
+    "emptyDesc": "[TET] Track your refund requests here",
+    "goOrders": "[TET] Browse orders",
+    "orderPrefix": "[TET] Order",
+    "amountLabel": "[TET] Refund amount",
+    "methodLabel": "[TET] Method",
+    "status": {
+      "PENDING": "[TET] Pending",
+      "APPROVED": "[TET] Approved",
+      "COMPLETED": "[TET] Completed",
+      "REJECTED": "[TET] Rejected",
+      "CANCELLED": "[TET] Cancelled"
+    },
+    "method": {
+      "COD": "[TET] Cash by rider",
+      "STRIPE": "[TET] Original method",
+      "BANK": "[TET] Bank transfer"
+    },
+    "a11y": {
+      "item": "[TET] Refund #{{id}}, {{status}}"
     }
   },
   "profileEdit": {

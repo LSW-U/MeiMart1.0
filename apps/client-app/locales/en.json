@@ -457,6 +457,7 @@
     "favorites": "Favorites",
     "coupons": "Coupons",
     "orders": "My orders",
+    "afterSales": "After-sales",
     "addresses": "Addresses",
     "customerService": "Customer service",
     "notifications": "Notifications",
@@ -751,6 +752,33 @@
       "charCount": "{{count}} of {{max}} characters",
       "photoThumb": "Photo {{count}}",
       "removePhoto": "Remove photo {{count}}"
+    }
+  },
+  "refunds": {
+    "title": "After-sales",
+    "tabAll": "All",
+    "tabInProgress": "In progress",
+    "tabDone": "Completed",
+    "empty": "No refunds yet",
+    "emptyDesc": "Track your refund requests here",
+    "goOrders": "Browse orders",
+    "orderPrefix": "Order",
+    "amountLabel": "Refund amount",
+    "methodLabel": "Method",
+    "status": {
+      "PENDING": "Pending",
+      "APPROVED": "Approved",
+      "COMPLETED": "Completed",
+      "REJECTED": "Rejected",
+      "CANCELLED": "Cancelled"
+    },
+    "method": {
+      "COD": "Cash by rider",
+      "STRIPE": "Original method",
+      "BANK": "Bank transfer"
+    },
+    "a11y": {
+      "item": "Refund #{{id}}, {{status}}"
     }
   },
   "profileEdit": {

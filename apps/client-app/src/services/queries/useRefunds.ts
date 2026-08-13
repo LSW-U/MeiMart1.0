@@ -10,6 +10,21 @@ export const REFUNDS_QUERY_KEY = ['refunds'] as const;
 export const refundDetailKey = (id: string) => ['refunds', id] as const;
 
 /**
+ * 用户退款列表（profile「退款售后」入口）
+ *
+ * 复用 REFUNDS_QUERY_KEY（['refunds']）-- useCreateRefund onMutate 用此 key 前置乐观项，
+ * 创建退款后返回列表自动看到新申请（PENDING），无需手动 invalidate。
+ */
+export function useRefunds() {
+  return useQuery({
+    queryKey: REFUNDS_QUERY_KEY,
+    queryFn: () => refundApi.listUserRefunds(),
+    staleTime: 60 * 1000,
+    networkMode: 'offlineFirst',
+  });
+}
+
+/**
  * 创建退款（整单 + 部分退款共用，Commit 7 整单 / Commit 8 多商品 items[]）
  *
  * 三件套（规则 25，提交后期望立即视觉反馈）:

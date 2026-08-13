@@ -457,6 +457,7 @@
     "favorites": "我的收藏",
     "coupons": "优惠券",
     "orders": "我的订单",
+    "afterSales": "退款售后",
     "addresses": "收货地址",
     "customerService": "客服中心",
     "notifications": "消息通知",
@@ -751,6 +752,33 @@
       "charCount": "已输入 {{count}} / 最大 {{max}} 字",
       "photoThumb": "第 {{count}} 张照片",
       "removePhoto": "删除第 {{count}} 张照片"
+    }
+  },
+  "refunds": {
+    "title": "退款售后",
+    "tabAll": "全部",
+    "tabInProgress": "进行中",
+    "tabDone": "已完成",
+    "empty": "暂无退款记录",
+    "emptyDesc": "申请退款后可在此查看进度",
+    "goOrders": "去逛逛",
+    "orderPrefix": "订单",
+    "amountLabel": "退款金额",
+    "methodLabel": "退款方式",
+    "status": {
+      "PENDING": "待审核",
+      "APPROVED": "已通过",
+      "COMPLETED": "已完成",
+      "REJECTED": "已拒绝",
+      "CANCELLED": "已取消"
+    },
+    "method": {
+      "COD": "骑手退现金",
+      "STRIPE": "原路返回",
+      "BANK": "银行转账"
+    },
+    "a11y": {
+      "item": "退款 #{{id}}，{{status}}"
     }
   },
   "profileEdit": {

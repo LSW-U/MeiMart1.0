@@ -23,7 +23,6 @@ import { useProfile } from '@/services/queries/useUser';
 import { useCoupons } from '@/services/queries/usePromotion';
 import { useFavorites } from '@/services/queries/useFavorites';
 import { useOrderCounts } from '@/services/queries/useOrders';
-import type { OrderGroupKey } from '@/lib/orderStatusConfig';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -39,17 +38,20 @@ const DEFAULT_AVATAR =
 const ON_PRIMARY = '#ffffff';
 
 interface OrderEntry {
-  id: OrderGroupKey;
+  // id: OrderGroupKey | 'after-sales'（退款售后非订单状态，放宽 string 让其可加；badge 查 orderCounts 时 'after-sales' 无值不显示）
+  id: string;
   labelKey:
     | 'order.statusToPay'
     | 'order.statusToShip'
     | 'order.statusToReceive'
-    | 'order.actions.review';
+    | 'order.actions.review'
+    | 'profile.afterSales';
   icon: Parameters<typeof Icon>[0]['symbol'];
   route?: string;
 }
 
-// 4 宫格订单入口（HTML 第 170-197 行）- badge 由 useOrderCounts 派生（id 对应 ORDER_COUNT_MAP）
+// 订单入口宫格（HTML 第 170-197 行）- badge 由 useOrderCounts 派生（id 对应 ORDER_COUNT_MAP）
+// 用户要求：去掉「待发货」+ 最后加「退款售后」入口（跳 /refunds 列表页）
 const ORDER_ENTRIES: OrderEntry[] = [
   {
     id: 'to-pay',
@@ -57,7 +59,6 @@ const ORDER_ENTRIES: OrderEntry[] = [
     icon: 'account_balance_wallet',
     route: '/(main)/orders',
   },
-  { id: 'to-ship', labelKey: 'order.statusToShip', icon: 'package_', route: '/(main)/orders' },
   {
     id: 'to-receive',
     labelKey: 'order.statusToReceive',
@@ -65,6 +66,12 @@ const ORDER_ENTRIES: OrderEntry[] = [
     route: '/(main)/orders',
   },
   { id: 'review', labelKey: 'order.actions.review', icon: 'star_rate', route: '/order/review' },
+  {
+    id: 'after-sales',
+    labelKey: 'profile.afterSales',
+    icon: 'support_agent',
+    route: '/(main)/refunds',
+  },
 ];
 
 interface FunctionItem {
@@ -114,6 +121,9 @@ export default function ProfilePage() {
   const { data: coupons } = useCoupons();
   const { data: favorites } = useFavorites();
   const orderCounts = useOrderCounts();
+  // badge 计数：OrderGroupKey 有值，'after-sales' 无值 -> ?? 0 不显示 badge
+  const getCount = (id: string): number =>
+    (orderCounts as Record<string, number | undefined>)[id] ?? 0;
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
@@ -320,7 +330,7 @@ export default function ProfilePage() {
                 <View style={styles.orderTileNew}>
                   <Icon symbol={entry.icon} size={26} color={colors.primary} />
                   {/* §4.1 badge 接 useOrderCounts 派生计数，无值（0）隐藏不显示假数据 */}
-                  {orderCounts[entry.id] > 0 ? (
+                  {getCount(entry.id) > 0 ? (
                     <View
                       style={[
                         styles.orderBadge,
@@ -330,7 +340,7 @@ export default function ProfilePage() {
                         },
                       ]}
                     >
-                      <Text style={styles.orderBadgeText}>{orderCounts[entry.id]}</Text>
+                      <Text style={styles.orderBadgeText}>{getCount(entry.id)}</Text>
                     </View>
                   ) : null}
                 </View>

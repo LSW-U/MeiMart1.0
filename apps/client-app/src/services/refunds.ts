@@ -10,6 +10,7 @@
  */
 
 import { api, isMockMode } from './api';
+import { mockResponse } from './mockDb';
 import type { LocalizableText } from '@/types';
 
 // 后端 RefundReason enum（8 值，refund.controller.ts:41-50 同步）
@@ -105,6 +106,15 @@ export interface RefundRaw {
 }
 
 export const refundApi = {
+  /** 用户退款列表（profile「退款售后」入口，GET /client/refunds -> RefundRaw[]，后端 listUserRefunds 全量按 createdAt desc） */
+  async listUserRefunds(): Promise<RefundRaw[]> {
+    if (isMockMode) {
+      // mock：返空（用户无退款记录，展示空态）。real 模式 GET /client/refunds 返 RefundView[]
+      return mockResponse([]);
+    }
+    const res = await api.get<{ success: boolean; data: RefundRaw[] }>('/client/refunds');
+    return res.data.data;
+  },
   /** 创建退款（整单不传 items / 部分退款传 items[]，向后兼容） */
   async createRefund(payload: CreateRefundPayload): Promise<RefundRaw> {
     if (isMockMode) {
