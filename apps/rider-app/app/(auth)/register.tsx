@@ -179,7 +179,7 @@ export default function RegisterPage() {
 
           <View className="rounded-xl border border-[#e1bfba]/30 bg-[#fff0ee]/50 p-4">
             <View className="flex-row items-start gap-3">
-              <Switch onValueChange={setAccepted} value={accepted} />
+              <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={setAccepted} value={accepted} />
               <Text className="flex-1 text-sm leading-6 text-[#59413d]">
                 {t('auth.register.termsPrefix')} <Text className="font-bold text-[#720003]">{t('auth.register.terms')}</Text>{' '}
                 {t('auth.register.privacyPrefix')} <Text className="font-bold text-[#720003]">{t('auth.register.privacy')}</Text> {t('auth.register.termsSuffix')}
@@ -196,7 +196,7 @@ export default function RegisterPage() {
 
           <View className="gap-6">
             <Button className="h-16 rounded-2xl" textClassName="text-lg" icon={<Text className="text-lg text-white">→</Text>} onPress={() => void register()}>
-              {loading ? '提交中...' : t('auth.register.submit')}
+              {loading ? t('flow.processing') : t('auth.register.submit')}
             </Button>
             <Text className="text-center text-sm text-[#59413d]">
               {t('auth.register.alreadyHaveAccount')} <Text accessibilityRole="link" className="font-bold text-[#720003]" onPress={() => router.push('/(auth)/login')}>{t('auth.register.login')}</Text>

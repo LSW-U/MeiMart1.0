@@ -58,6 +58,7 @@ export default function EarningsPage() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('earnings.todayBilling')}
+              accessibilityState={{ selected: billingTab === 'today' }}
               className={`border-b-2 px-1 pb-2 ${billingTab === 'today' ? 'border-[#720003]' : 'border-transparent'}`}
               onPress={() => setBillingTab('today')}
             >
@@ -66,6 +67,7 @@ export default function EarningsPage() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('earnings.allBilling')}
+              accessibilityState={{ selected: billingTab === 'all' }}
               className={`ml-6 border-b-2 px-1 pb-2 ${billingTab === 'all' ? 'border-[#720003]' : 'border-transparent'}`}
               onPress={() => setBillingTab('all')}
             >

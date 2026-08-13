@@ -117,13 +117,13 @@ export default function LoginPage() {
         </View>
 
         <View className="flex-row border-b border-[#e1bfba]">
-          <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.passwordTab')} className="flex-1 py-4" onPress={() => setMode('password')}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.passwordTab')} accessibilityState={{ selected: isPassword }} className="flex-1 py-4" onPress={() => setMode('password')}>
             <Text className={`text-center text-xs font-bold tracking-wider ${isPassword ? 'text-[#720003]' : 'text-[#59413d]'}`}>
               {t('auth.login.passwordTab')}
             </Text>
             {isPassword ? <View className="mt-3 h-[3px] rounded-full bg-[#720003]" /> : null}
           </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.smsTab')} className="flex-1 py-4" onPress={() => setMode('sms')}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.smsTab')} accessibilityState={{ selected: !isPassword }} className="flex-1 py-4" onPress={() => setMode('sms')}>
             <Text className={`text-center text-xs font-bold tracking-wider ${!isPassword ? 'text-[#720003]' : 'text-[#59413d]'}`}>
               {t('auth.login.smsTab')}
             </Text>
@@ -190,7 +190,7 @@ export default function LoginPage() {
           </Pressable>
 
           <View className="flex-row items-start gap-2">
-            <Switch onValueChange={setAccepted} value={accepted} />
+            <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={setAccepted} value={accepted} />
             <Text className="flex-1 text-[13px] leading-5 text-[#59413d]">
               {t('auth.login.termsPrefix')}{' '}
               <Text accessibilityRole="link" className="font-semibold text-[#720003]" onPress={() => router.push('/terms')}>{t('auth.login.terms')}</Text>{' '}

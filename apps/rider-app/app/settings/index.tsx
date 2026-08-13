@@ -32,7 +32,7 @@ function SettingsItem({ icon, title, description, onPress, trailing = 'chevron',
         <Text className="text-base font-bold text-[#261816]">{title}</Text>
         <Text className="mt-1 text-sm text-[#59413d]">{description}</Text>
       </View>
-      {trailing === 'switch' ? <Switch onValueChange={onSwitchChange} value={switchValue} /> : <AppIcon color="#8d706c" name="chevronRight" />}
+      {trailing === 'switch' ? <Switch accessibilityRole="switch" accessibilityLabel={title} accessibilityState={{ checked: switchValue }} onValueChange={onSwitchChange} value={switchValue} /> : <AppIcon color="#8d706c" name="chevronRight" />}
     </Pressable>
   );
 }

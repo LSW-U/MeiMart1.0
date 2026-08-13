@@ -69,6 +69,7 @@ export default function OrderHistoryPage() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t(labelKey)}
+                accessibilityState={{ selected: active }}
                 key={key}
                 className={`flex-1 items-center justify-center rounded-full border px-2 py-2 ${
                   active ? 'border-[#720003] bg-[#720003]' : 'border-[#e1bfba] bg-white'

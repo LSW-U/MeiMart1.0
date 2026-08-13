@@ -5,7 +5,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { AppIcon } from '../src/components/ui';
 import { EmptyState } from '../src/components/feedback/EmptyState';
 import { useGoBack } from '../src/hooks/useGoBack';
-import { useTranslation } from '../src/i18n/useTranslation';
+import { useTranslation, type TranslationKey } from '../src/i18n/useTranslation';
 import {
   useNotifications,
   useUnreadCount,
@@ -97,6 +97,7 @@ export default function NotificationsPage() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t(labelKey)}
+              accessibilityState={{ selected: active }}
               key={key}
               className={`flex-1 items-center justify-center rounded-full border px-3 py-2 ${
                 active ? 'border-[#720003] bg-[#720003]' : 'border-[#e1bfba] bg-white'
@@ -120,7 +121,7 @@ export default function NotificationsPage() {
             return (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={t(item.titleKey as never)}
+                accessibilityLabel={t(item.titleKey as TranslationKey)}
                 key={item.id}
                 className={`flex-row items-start gap-3 rounded-2xl border p-4 ${item.read ? 'border-[#f1d4cf] bg-white' : 'border-[#e1bfba] bg-[#fff0ee]'}`}
                 onPress={() => void onItemPress(item)}
@@ -131,12 +132,12 @@ export default function NotificationsPage() {
                 <View className="flex-1">
                   <View className="flex-row items-center justify-between">
                     <Text className="flex-1 text-base font-bold text-[#261816]" numberOfLines={1}>
-                      {t(item.titleKey as never)}
+                      {t(item.titleKey as TranslationKey)}
                     </Text>
                     {!item.read ? <View className="ml-2 h-2.5 w-2.5 rounded-full bg-[#ff4d4f]" /> : null}
                   </View>
                   <Text className="mt-1 text-sm leading-5 text-[#59413d]">
-                    {t(item.messageKey as never, item.vars)}
+                    {t(item.messageKey as TranslationKey, item.vars)}
                   </Text>
                   <Text className="mt-2 text-xs text-[#8d706c]">{formatTime(item.createdAt)}</Text>
                 </View>

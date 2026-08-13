@@ -144,7 +144,7 @@ export default function ProfileEditPage() {
 
           <View className="rounded-xl border border-[#e1bfba]/30 bg-[#fff0ee]/50 p-4">
             <View className="flex-row items-start gap-3">
-              <Switch onValueChange={setAccepted} value={accepted} />
+              <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={setAccepted} value={accepted} />
               <Text className="flex-1 text-sm leading-6 text-[#59413d]">
                 {t('auth.register.termsPrefix')} <Text className="font-bold text-[#720003]">{t('auth.register.terms')}</Text>{' '}
                 {t('auth.register.privacyPrefix')} <Text className="font-bold text-[#720003]">{t('auth.register.privacy')}</Text> {t('auth.register.termsSuffix')}

@@ -1,5 +1,7 @@
 import { Platform, Text, View } from 'react-native';
 
+import { useTranslation } from '../../i18n/useTranslation';
+
 type QrScannerProps = {
   onScan?: (value: string) => void;
 };
@@ -7,6 +9,7 @@ type QrScannerProps = {
 function QrScannerNative({ onScan }: QrScannerProps) {
   const { useState } = require('react');
   const { CameraView, useCameraPermissions } = require('expo-camera');
+  const { t } = useTranslation();
 
   const [scanned, setScanned] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
@@ -20,10 +23,10 @@ function QrScannerNative({ onScan }: QrScannerProps) {
   if (!permission?.granted && !requested) {
     return (
       <View className="items-center rounded-3xl border border-dashed border-[#720003] bg-white p-6">
-        <Text className="text-lg font-bold text-[#261816]">QR Scanner</Text>
-        <Text className="mt-2 text-center text-sm text-[#59413d]">Camera permission is required to scan QR codes.</Text>
-        <Text accessibilityRole="button" className="mt-4 rounded-full bg-[#720003] px-5 py-3 font-semibold text-white" onPress={() => void handleRequest()}>
-          Grant Permission
+        <Text className="text-lg font-bold text-[#261816]">{t('qr.title')}</Text>
+        <Text className="mt-2 text-center text-sm text-[#59413d]">{t('qr.permissionPrompt')}</Text>
+        <Text accessibilityRole="button" accessibilityLabel={t('qr.grantPermission')} className="mt-4 rounded-full bg-[#720003] px-5 py-3 font-semibold text-white" onPress={() => void handleRequest()}>
+          {t('qr.grantPermission')}
         </Text>
       </View>
     );

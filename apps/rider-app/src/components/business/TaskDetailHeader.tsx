@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import type { DutyStatus } from '../../services/settings';
 import { useUnreadCount } from '../../services/queries/useNotifications';
 import { AppIcon } from '../ui';
+import { useTranslation } from '../../i18n/useTranslation';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
 
@@ -28,6 +29,7 @@ const dotColor: Record<DutyStatus, string> = {
 export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTasksLabel, pickupsLabel, deliveriesLabel, onDutyPress, onMenuPress, onTabChange }: TaskDetailHeaderProps) {
   const router = useRouter();
   const { data: unread = 0 } = useUnreadCount();
+  const { t } = useTranslation();
 
   const tabs = [
     { key: 'new', label: newTasksLabel },
@@ -38,15 +40,15 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTa
   return (
     <View className="border-b border-[#f7ddd9] bg-[#ffe9e6] px-5 pb-1 pt-2">
       <View className="h-12 flex-row items-center justify-between">
-        <Pressable className="rounded-full p-1" onPress={onMenuPress}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common.menu')} className="rounded-full p-1" onPress={onMenuPress}>
           <AppIcon name="menu" className="text-2xl text-[#59413d]" />
         </Pressable>
-        <Pressable className="flex-row items-center gap-2 rounded-full border border-[#961813] bg-[#fff8f7] px-4 py-1" onPress={onDutyPress}>
+        <Pressable accessibilityRole="button" accessibilityLabel={dutyStatusLabel} className="flex-row items-center gap-2 rounded-full border border-[#961813] bg-[#fff8f7] px-4 py-1" onPress={onDutyPress}>
           <View className={`h-2 w-2 rounded-full ${dotColor[dutyStatus]}`} />
           <Text className="text-xl font-bold text-[#261816]">{dutyStatusLabel}</Text>
           <AppIcon name="chevronDown" color="#59413d" size={18} />
         </Pressable>
-        <Pressable className="relative rounded-full p-1" onPress={() => router.push('/notifications')}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('notification.title')} accessibilityHint={unread > 0 ? t('notification.unreadCount', { count: unread }) : undefined} className="relative rounded-full p-1" onPress={() => router.push('/notifications')}>
           <AppIcon name="notification" className="text-2xl text-[#59413d]" />
           {unread > 0 ? (
             <View className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#ffe9e6] bg-[#ff4d4f]" />
@@ -57,7 +59,7 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTa
         {tabs.map((tab) => {
           const active = activeTab === tab.key;
           return (
-            <Pressable className="pb-1" key={tab.key} onPress={() => onTabChange?.(tab.key)}>
+            <Pressable accessibilityRole="button" accessibilityLabel={tab.label} accessibilityState={{ selected: active }} className="pb-1" key={tab.key} onPress={() => onTabChange?.(tab.key)}>
               <Text className={`text-base font-semibold ${active ? 'text-[#961813]' : 'text-[#59413d]'}`}>{tab.label}</Text>
               {active ? <View className="mt-1 h-0.5 rounded-full bg-[#961813]" /> : <View className="mt-1 h-0.5 rounded-full bg-transparent" />}
             </Pressable>
