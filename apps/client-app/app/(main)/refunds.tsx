@@ -154,8 +154,10 @@ export default function RefundsPage() {
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel={t('refunds.a11y.item', {
-                  id: item.id.slice(-8),
-                  status: t(`refunds.status.${item.status}`),
+                  // Q1：用 orderId（用户认知订单号）而非 refund.id（内部标识），读屏可对照
+                  id: item.orderId.slice(-8),
+                  // Q3：defaultValue 兜底，防后端加新 status 值时 a11y 读 key 路径
+                  status: t(`refunds.status.${item.status}`, { defaultValue: item.status }),
                 })}
               >
                 <View style={styles.cardHeader}>
@@ -163,7 +165,7 @@ export default function RefundsPage() {
                     {t('refunds.orderPrefix')} #{item.orderId.slice(-8)}
                   </Text>
                   <View style={[styles.statusBadge, { backgroundColor: statusColor(item.status, colors) }]}>
-                    <Text style={styles.statusText}>{t(`refunds.status.${item.status}`)}</Text>
+                    <Text style={styles.statusText}>{t(`refunds.status.${item.status}`, { defaultValue: item.status })}</Text>
                   </View>
                 </View>
                 <View style={styles.cardBody}>
@@ -179,7 +181,7 @@ export default function RefundsPage() {
                       {t('refunds.methodLabel')}
                     </Text>
                     <Text style={[styles.methodText, { color: colors['on-surface'] }]}>
-                      {t(`refunds.method.${item.refundMethod}`)}
+                      {t(`refunds.method.${item.refundMethod}`, { defaultValue: item.refundMethod })}
                     </Text>
                   </View>
                 </View>

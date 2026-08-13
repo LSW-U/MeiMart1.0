@@ -202,7 +202,30 @@ export const cartApi = {
       addressId,
       ...(couponCode ? { couponCode } : {}),
     });
-    return res.data;
+    // 后端金额字段是分，/100 转元（与 orders.ts transformOrder payableAmount/deliveryFee/discount 一致，
+    // checkout.tsx toFixed 显示元，不转则 Delivery Fee/Discount/Final Total 100 倍）
+    const raw = res.data as {
+      items: CartItemRaw[];
+      warehouseMatch: { id: string; code: string; deliveryFee: number } | null;
+      itemsSubtotal: number;
+      deliveryFee: number;
+      payableAmount: number;
+      discount: number;
+      couponCode: string | null;
+      couponValid: boolean;
+      warnings: string[];
+      estimatedDeliveryTime: string;
+    };
+    return {
+      ...raw,
+      itemsSubtotal: raw.itemsSubtotal / 100,
+      deliveryFee: raw.deliveryFee / 100,
+      payableAmount: raw.payableAmount / 100,
+      discount: raw.discount / 100,
+      warehouseMatch: raw.warehouseMatch
+        ? { ...raw.warehouseMatch, deliveryFee: raw.warehouseMatch.deliveryFee / 100 }
+        : null,
+    };
   },
 };
 

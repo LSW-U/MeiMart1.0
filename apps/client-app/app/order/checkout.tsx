@@ -575,7 +575,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography['label-caps'],
-    fontSize: 13, // U7 11→13 提升可读性（局部覆盖，不动 label-caps）
+    fontSize: 15, // U7 11→13→15 提升可读性 + 用户要求 Delivery address 字体大一点（3 section 共用统一）
+    fontWeight: '800', // 用户要求加粗（label-caps 默认 700，覆盖 800）
   },
   section: { gap: spacing.sm },
   // U6 地址卡与支付+摘要分组：detailGroup 内部紧凑
