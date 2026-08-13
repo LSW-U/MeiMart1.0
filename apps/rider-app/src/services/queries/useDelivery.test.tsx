@@ -112,7 +112,7 @@ describe('useConfirmPickup — 离线入队（CLAUDE.md 规则 12）', () => {
     expect(detail?.status).toBe('PICKED_UP');
   });
 
-  it('离线 + doorUri：note 透传 "door photo attached"（对齐 deliveryApi.confirmPickup 逻辑）', async () => {
+  it('离线 + doorUri：payload 只 taskId（后端 pickup 不收照片，审查 S5）', async () => {
     mockUseNetwork.mockReturnValue({ isOffline: true });
     mockEnqueue.mockResolvedValue(undefined);
     const taskA = makeTask('ASSIGNED', { id: 'A' });
@@ -127,7 +127,7 @@ describe('useConfirmPickup — 离线入队（CLAUDE.md 规则 12）', () => {
 
     expect(mockEnqueue).toHaveBeenCalledWith({
       type: 'pickup',
-      payload: { taskId: 'A', note: 'door photo attached' },
+      payload: { taskId: 'A' },
     });
   });
 
@@ -160,7 +160,7 @@ describe('useConfirmDelivery — 离线入队（CLAUDE.md 规则 12）', () => {
     qc.clear();
   });
 
-  it('离线：enqueue({type:deliver}) 被调 + 返回乐观 DELIVERED task + cache 保留', async () => {
+  it('离线：enqueue({type:deliver}) 被调 + cache 保留（审查 S1：不读 detail、不返回 task）', async () => {
     mockUseNetwork.mockReturnValue({ isOffline: true });
     mockEnqueue.mockResolvedValue(undefined);
     const taskA = makeTask('PICKED_UP', { id: 'A', taskType: 'return' });
@@ -169,9 +169,8 @@ describe('useConfirmDelivery — 离线入队（CLAUDE.md 规则 12）', () => {
 
     const { result } = renderHook(() => useConfirmDelivery(), { wrapper: makeWrapper(qc) });
 
-    let delivered: DeliveryTask | undefined;
     await act(async () => {
-      delivered = await result.current.mutateAsync({ taskId: 'A' });
+      await result.current.mutateAsync({ taskId: 'A' });
     });
 
     expect(mockEnqueue).toHaveBeenCalledWith({
@@ -179,10 +178,7 @@ describe('useConfirmDelivery — 离线入队（CLAUDE.md 规则 12）', () => {
       payload: { taskId: 'A' },
     });
     expect(mockConfirmDelivery).not.toHaveBeenCalled();
-    // 返回乐观 DELIVERED task（从 detail cache 读回 + 改 status）
-    expect(delivered?.status).toBe('DELIVERED');
-    expect(delivered?.id).toBe('A');
-    // 乐观 cache 保留
+    // 乐观 cache 保留（onMutate 置 DELIVERED，离线 resolve 不触发 onError rollback）
     const detail = qc.getQueryData<DeliveryTask>(taskDetailKey('A'));
     expect(detail?.status).toBe('DELIVERED');
   });

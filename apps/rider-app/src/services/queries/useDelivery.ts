@@ -59,7 +59,6 @@ export function useConfirmPickup() {
           type: 'pickup',
           payload: {
             taskId: params.taskId,
-            note: params.evidence?.doorUri ? 'door photo attached' : undefined,
           },
         });
         return;
@@ -86,11 +85,11 @@ export function useConfirmDelivery() {
     mutationFn: async (params: { taskId: string; evidence?: DeliveryEvidence }) => {
       // CLAUDE.md 规则 12：离线入队。onMutate 已置 detail cache 为 DELIVERED，这里读回构造乐观 task。
       // detail 缺失（边缘，sign 页 useTask 已加载）不入队、throw -> onError rollback，避免队列/UI 不一致。
+      // 审查 S1：离线直接 enqueue + return（对齐 pickup），不读 detail、不 throw。
+      // enqueue 只需 taskId；detail 缺失 throw 会触发 onError rollback 撤销 onMutate 乐观、丢失操作。
       if (isOffline) {
-        const detail = queryClient.getQueryData<DeliveryTask | null>(taskDetailKey(params.taskId));
-        if (!detail) throw new Error('confirmDelivery offline: task detail missing from cache');
         await enqueue({ type: 'deliver', payload: { taskId: params.taskId } });
-        return { ...detail, status: 'DELIVERED' as TaskStatus };
+        return;
       }
       return deliveryApi.confirmDelivery(params.taskId, params.evidence);
     },

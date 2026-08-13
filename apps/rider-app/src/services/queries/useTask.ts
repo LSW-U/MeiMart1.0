@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { enqueue } from '@/src/database/sync';
 import { useNetwork } from '@/src/hooks/useNetwork';
-import type { DeliveryTask, ReportIssueReason, TaskStatus } from '@/src/types/task';
+import type { DeliveryTask, TaskStatus } from '@/src/types/task';
 
 import { taskApi } from '../task';
 import type { TaskLists } from '../task';
@@ -72,7 +72,7 @@ export function useAcceptTask() {
     },
     onSettled: (_data, _error, variables) => {
       void queryClient.invalidateQueries({ queryKey: taskListsKey });
-      // S1: 同步刷 detail（详情页 accept 后返回会短暂显示旧 PENDING_ASSIGN），与 useUpdateTaskStatus 对称
+      // S1: 同步刷 detail（详情页 accept 后返回会短暂显示旧 PENDING_ASSIGN）
       void queryClient.invalidateQueries({ queryKey: taskDetailKey(variables) });
     },
   });
@@ -81,7 +81,7 @@ export function useAcceptTask() {
 /**
  * P14 ④ B1：return 任务开始配送（PICKED_UP → DELIVERING）
  * 仅 return 任务调（delivery 跳过 DELIVERING）。后端事务内同步写 refund.pickedAt。
- * 乐观更新 lists + detail，失败 rollback，参考 useUpdateTaskStatus 模式（不跨 list 移动，onSettled invalidate 纠正）。
+ * 乐观更新 lists + detail，失败 rollback（不跨 list 移动，onSettled invalidate 纠正）。
  */
 export function useStartDelivering() {
   const queryClient = useQueryClient();
@@ -90,11 +90,10 @@ export function useStartDelivering() {
   return useMutation({
     mutationFn: async (id: string) => {
       // CLAUDE.md 规则 12：离线入队（return 任务 PICKED_UP→DELIVERING），恢复后重放真 API。
+      // 审查 S1：离线直接 enqueue + return（对齐 pickup），不读 detail、不 throw。
       if (isOffline) {
-        const detail = queryClient.getQueryData<DeliveryTask | null>(taskDetailKey(id));
-        if (!detail) throw new Error('startDelivering offline: task detail missing from cache');
         await enqueue({ type: 'startDelivering', payload: { taskId: id } });
-        return { ...detail, status: 'DELIVERING' as TaskStatus };
+        return;
       }
       return taskApi.startDelivering(id);
     },
@@ -131,70 +130,3 @@ export function useStartDelivering() {
   });
 }
 
-export function useUpdateTaskStatus() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      id: string;
-      status: TaskStatus;
-      collectedAmount?: number;
-      note?: string;
-      reason?: ReportIssueReason;
-    }): Promise<DeliveryTask> => {
-      // 后端按状态拆 3 个端点：PICKED_UP → pickup, DELIVERED → deliver, FAILED → report-issue
-      // 其他状态（ASSIGNED/DELIVERING）由 accept/deliver 自动流转，前端不需要主动调用
-      if (params.status === 'PICKED_UP') {
-        return taskApi.pickup(params.id, params.note);
-      }
-      if (params.status === 'DELIVERED') {
-        return taskApi.deliver(params.id, {
-          collectedAmount: params.collectedAmount,
-          note: params.note,
-        });
-      }
-      if (params.status === 'FAILED') {
-        return taskApi.reportIssue(params.id, {
-          reason: params.reason ?? 'OTHER',
-          note: params.note,
-        });
-      }
-      // ASSIGNED / DELIVERING 等中间态：后端不接受主动切换，直接读当前任务
-      const current = await taskApi.getById(params.id);
-      if (!current) throw new Error(`Task not found: ${params.id}`);
-      return current;
-    },
-    onMutate: async ({ id, status }) => {
-      // 乐观更新 lists：在三个 list 中找到 task 并更新 status（不跨 list 移动，onSettled invalidate 自动纠正）
-      await queryClient.cancelQueries({ queryKey: taskListsKey });
-      const previousLists = queryClient.getQueryData<TaskLists>(taskListsKey);
-      if (previousLists) {
-        const updateList = (list: DeliveryTask[]) =>
-          list.map((t) => (t.id === id ? { ...t, status } : t));
-        queryClient.setQueryData<TaskLists>(taskListsKey, {
-          available: updateList(previousLists.available),
-          pickups: updateList(previousLists.pickups),
-          deliveries: updateList(previousLists.deliveries),
-        });
-      }
-      // 同时乐观更新 detail query
-      const detailKey = taskDetailKey(id);
-      await queryClient.cancelQueries({ queryKey: detailKey });
-      const previousDetail = queryClient.getQueryData<DeliveryTask | null>(detailKey);
-      queryClient.setQueryData<DeliveryTask | null>(detailKey, (old) =>
-        old ? { ...old, status } : old,
-      );
-      return { previousLists, previousDetail, detailKey };
-    },
-    onError: (_err, _params, ctx) => {
-      if (ctx?.previousLists) queryClient.setQueryData(taskListsKey, ctx.previousLists);
-      if (ctx?.previousDetail !== undefined && ctx?.detailKey) {
-        queryClient.setQueryData(ctx.detailKey, ctx.previousDetail);
-      }
-    },
-    onSettled: (_data, _error, variables) => {
-      void queryClient.invalidateQueries({ queryKey: taskListsKey });
-      void queryClient.invalidateQueries({ queryKey: taskDetailKey(variables.id) });
-    },
-  });
-}

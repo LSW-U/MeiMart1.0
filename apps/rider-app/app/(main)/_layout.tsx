@@ -12,6 +12,8 @@ import { useNetwork } from '../../src/hooks/useNetwork';
 import { useRiderSettings } from '../../src/services/queries/useSettings';
 import { processQueue } from '../../src/database/sync';
 import { OfflineBanner } from '../../src/components/feedback/OfflineBanner';
+import { showToast } from '../../src/components/feedback/Toast';
+import { useTranslation } from '../../src/i18n/useTranslation';
 
 export default function MainLayout() {
   const hydrated = useAuthStore((s) => s.hydrated);
@@ -44,6 +46,7 @@ function MainContent() {
   const { socket } = useRiderSocket();
   const { currentOrderId } = useCurrentTask();
   const { isOffline } = useNetwork();
+  const { t } = useTranslation();
   useLocation({ socket, currentOrderId, enabled: online });
   useHeartbeat(online);
 
@@ -71,9 +74,12 @@ function MainContent() {
     const prev = prevOfflineRef.current;
     prevOfflineRef.current = isOffline;
     if ((prev === null || prev === true) && !isOffline) {
-      void processQueue();
+      // 审查 S4：恢复同步结果反馈（非 fire-and-forget）。failed > 0 提示，骑手知道有 entry 待重试。
+      void processQueue().then(({ failed }) => {
+        if (failed > 0) showToast(t('common.syncPartialFailed'), 'error');
+      });
     }
-  }, [isOffline]);
+  }, [isOffline, t]);
 
   return (
     <View className="flex-1">

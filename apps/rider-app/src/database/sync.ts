@@ -36,46 +36,56 @@ export async function enqueue(action: QueueAction): Promise<void> {
  * 成功：markAsDeleted（WMB 软删除）。
  * 失败：attempts += 1 + 记 lastError（必须 entry.update 才持久化，直接改属性不落盘 -- 修旧 bug）。
  */
+// 审查 S2：模块级并发锁，防 isOffline 抖动触发多个 processQueue 并发跑（重复 dispatch + attempts 浪费）。
+let processing = false;
 export async function processQueue(): Promise<{ synced: number; failed: number }> {
-  const allEntries = await database
-    .get<OfflineQueueEntry>('offline_queue')
-    .query()
-    .fetch();
-  // FIFO：WMB query 不保证顺序，显式按 createdAt 升序
-  const entries = [...allEntries].sort((a, b) => {
-    const ta = typeof a.createdAt === 'number' ? a.createdAt : a.createdAt.getTime();
-    const tb = typeof b.createdAt === 'number' ? b.createdAt : b.createdAt.getTime();
-    return ta - tb;
-  });
+  if (processing) return { synced: 0, failed: 0 };
+  processing = true;
+  try {
+    const allEntries = await database
+      .get<OfflineQueueEntry>('offline_queue')
+      .query()
+      .fetch();
+    // FIFO：WMB query 不保证顺序，显式按 createdAt 升序
+    const entries = [...allEntries].sort((a, b) => {
+      const ta = typeof a.createdAt === 'number' ? a.createdAt : a.createdAt.getTime();
+      const tb = typeof b.createdAt === 'number' ? b.createdAt : b.createdAt.getTime();
+      return ta - tb;
+    });
+    // 审查 M4：快照语义——开头 fetch 快照后，for 循环处理期间新 enqueue 的 entry 不在本轮，
+    // 需等下次 flush。保证 FIFO + 避免处理中入队立即处理的无限循环。
 
-  let synced = 0;
-  let failed = 0;
+    let synced = 0;
+    let failed = 0;
 
-  for (const entry of entries) {
-    if (entry.attempts >= MAX_ATTEMPTS) {
-      failed++;
-      continue;
+    for (const entry of entries) {
+      if (entry.attempts >= MAX_ATTEMPTS) {
+        failed++;
+        continue;
+      }
+
+      try {
+        const action = {
+          type: entry.action,
+          payload: JSON.parse(entry.payload),
+        } as QueueAction;
+        await dispatchAction(action);
+        await entry.markAsDeleted();
+        synced++;
+      } catch (e) {
+        // 修 bug：直接 entry.attempts += 1 不持久化（WMB 要 update），改用 entry.update
+        await entry.update((record) => {
+          record.attempts += 1;
+          record.lastError = e instanceof Error ? e.message : String(e);
+        });
+        failed++;
+      }
     }
 
-    try {
-      const action = {
-        type: entry.action,
-        payload: JSON.parse(entry.payload),
-      } as QueueAction;
-      await dispatchAction(action);
-      await entry.markAsDeleted();
-      synced++;
-    } catch (e) {
-      // 修 bug：直接 entry.attempts += 1 不持久化（WMB 要 update），改用 entry.update
-      await entry.update((record) => {
-        record.attempts += 1;
-        record.lastError = e instanceof Error ? e.message : String(e);
-      });
-      failed++;
-    }
+    return { synced, failed };
+  } finally {
+    processing = false;
   }
-
-  return { synced, failed };
 }
 
 /**

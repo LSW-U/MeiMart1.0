@@ -360,6 +360,7 @@
   "common.back": "Back",
   "common.close": "Close",
   "common.menu": "Menu",
+  "common.syncPartialFailed": "Some items failed to sync, will retry automatically",
   "common.currency": "$",
   "common.items": "Items: {items}",
   "common.fromHere": "{distance} from here",

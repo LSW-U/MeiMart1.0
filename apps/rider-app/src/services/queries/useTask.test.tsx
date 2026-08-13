@@ -9,7 +9,7 @@ import type { DeliveryTask } from '@/src/types/task';
 import type { TaskLists } from '../task';
 import { taskApi } from '../task';
 import { makeTask } from '../__fixtures__/makeTask';
-import { taskDetailKey, taskListsKey, useAcceptTask, useStartDelivering, useUpdateTaskStatus } from './useTask';
+import { taskDetailKey, taskListsKey, useAcceptTask, useStartDelivering } from './useTask';
 
 /**
  * useTask hooks 单测 —— 聚焦 P14 ④ B1 乐观更新 + rollback（最易回归的逻辑）。
@@ -201,53 +201,3 @@ describe('useStartDelivering', () => {
   });
 });
 
-describe('useUpdateTaskStatus — mutationFn 按 status 路由', () => {
-  // onMutate/onError/onSettled 与 useStartDelivering 同模式（结构已覆盖），此处只测独特部分：
-  // mutationFn 按 status 分发到 pickup / deliver / report-issue 三个后端端点。
-  let qc: QueryClient;
-  beforeEach(() => {
-    qc = createQueryClient();
-    (taskApi.pickup as jest.Mock).mockReset();
-    (taskApi.deliver as jest.Mock).mockReset();
-    (taskApi.reportIssue as jest.Mock).mockReset();
-  });
-  afterEach(() => {
-    qc.clear();
-  });
-
-  it('status=PICKED_UP → 调 taskApi.pickup(id, note)', async () => {
-    (taskApi.pickup as jest.Mock).mockResolvedValue(makeTask('PICKED_UP', { id: 'A' }));
-
-    const { result } = renderHook(() => useUpdateTaskStatus(), { wrapper: makeWrapper(qc) });
-
-    await act(async () => {
-      await result.current.mutateAsync({ id: 'A', status: 'PICKED_UP', note: 'got it' });
-    });
-
-    expect(taskApi.pickup as jest.Mock).toHaveBeenCalledWith('A', 'got it');
-  });
-
-  it('status=DELIVERED → 调 taskApi.deliver(id, {collectedAmount, note})', async () => {
-    (taskApi.deliver as jest.Mock).mockResolvedValue(makeTask('DELIVERED', { id: 'A' }));
-
-    const { result } = renderHook(() => useUpdateTaskStatus(), { wrapper: makeWrapper(qc) });
-
-    await act(async () => {
-      await result.current.mutateAsync({ id: 'A', status: 'DELIVERED', collectedAmount: 100, note: 'cash' });
-    });
-
-    expect(taskApi.deliver as jest.Mock).toHaveBeenCalledWith('A', { collectedAmount: 100, note: 'cash' });
-  });
-
-  it('status=FAILED → 调 taskApi.reportIssue(id, {reason, note})，reason 缺省 OTHER', async () => {
-    (taskApi.reportIssue as jest.Mock).mockResolvedValue(makeTask('FAILED', { id: 'A' }));
-
-    const { result } = renderHook(() => useUpdateTaskStatus(), { wrapper: makeWrapper(qc) });
-
-    await act(async () => {
-      await result.current.mutateAsync({ id: 'A', status: 'FAILED' });
-    });
-
-    expect(taskApi.reportIssue as jest.Mock).toHaveBeenCalledWith('A', { reason: 'OTHER', note: undefined });
-  });
-});

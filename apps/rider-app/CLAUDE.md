@@ -175,7 +175,7 @@ export const colors = {
 | P0 | `useBackgroundTask.ts` 空壳 | ✅ 已修（`6c0123a`） |
 | P0 | TanStack Query 装了没用 | ✅ 已接入（hooks 全走 RQ） |
 | P0 | `QueryClientProvider` 未接入 | ✅ 已接入（`AppProviders`） |
-| P1 | 零测试覆盖 | ✅ 31 测试（sync/useTask/useDelivery/task/task-flow） |
+| P1 | 零测试覆盖 | ✅ 28 测试（sync/useTask/useDelivery/task/task-flow，删 useUpdateTaskStatus 死代码 3 case） |
 | P1 | 无 ESLint 配置 | ✅ 已配（门禁绿） |
 | P2 | 6 组件硬编码颜色 | ✅ 已修（`1b4c85e`，实际 7 组件含 OfflineBanner） |
 | P2 | a11y 覆盖率低 | 🔶 六批 + 审查修复完工（51 交互元素 + TaskDetailHeader 共享组件 5 Pressable + 4 Switch + 6 tab selected state + Text link）；剩 AppIcon ~86 调用方未传 label + QrScanner 死代码英文残留 |

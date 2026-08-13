@@ -360,6 +360,7 @@
   "common.back": "返回",
   "common.close": "关闭",
   "common.menu": "菜单",
+  "common.syncPartialFailed": "部分同步失败，将自动重试",
   "common.currency": "¥",
   "common.items": "商品：{items}",
   "common.fromHere": "距此 {distance}",
