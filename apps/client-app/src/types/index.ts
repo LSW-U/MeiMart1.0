@@ -212,6 +212,8 @@ export interface Review {
   // Why: P15 RB1 — 匿名评价标记，true 时 ReviewItem 显示「匿名用户」
   // （后端 toReviewView 返真实 userName + anonymous 标记，前端展示层隐藏）
   anonymous?: boolean;
+  // Why: P15 多商品评价 — 审核状态（listOrderReviews 返，判断已评：APPROVED/PENDING 算已评，REJECTED 可重评）
+  status?: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
 export interface TrackingStep {

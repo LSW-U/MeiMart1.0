@@ -747,6 +747,8 @@
     },
     "submitFailed": "Failed to submit review",
     "missingOrder": "Order info missing, please enter from order details",
+    "reviewedBadge": "Reviewed",
+    "alreadyReviewed": "This product has already been reviewed",
     "a11y": {
       "addPhoto": "Add photo",
       "ratingSlider": "Rating slider, drag to select 1 to 5 stars",

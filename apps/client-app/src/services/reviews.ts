@@ -94,6 +94,7 @@ function mapReviewView(r: ReviewView): Review {
     isVerified: true,
     anonymous: r.anonymous,
     tags: r.tags,
+    status: r.status,
     orderId: r.orderId,
     category: r.category,
     createdAt: r.createdAt,
@@ -146,6 +147,19 @@ export const reviewsApi = {
     } catch {
       return { reviews: [], summary: computeSummary([]) };
     }
+  },
+
+  /**
+   * 订单所有评价（P15 多商品评价：GET /client/orders/:id/reviews）
+   * 后端返该订单所有 review（按 createdAt 升序，含 PENDING/APPROVED/REJECTED 全状态）。
+   * 前端用于「已评标记」：APPROVED/PENDING 的 productId 算已评（灰色禁用），REJECTED 可重评。
+   */
+  async listOrderReviews(orderId: string): Promise<Review[]> {
+    if (isMockMode) {
+      return mockResponse([]);
+    }
+    const res = await api.get<ReviewView[]>(`/client/orders/${orderId}/reviews`);
+    return res.data.map(mapReviewView);
   },
 
   async submitReview(input: ReviewSubmitInput): Promise<Review> {

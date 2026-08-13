@@ -32,10 +32,11 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { PriceText } from '@/components/ui/PriceText';
 import { useOrder } from '@/services/queries/useOrders';
-import { useSubmitReview } from '@/services/queries/useReviews';
+import { useSubmitReview, useOrderReviews } from '@/services/queries/useReviews';
 import { uploadsApi } from '@/services/uploads';
 import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
+import { getApiErrorMessage } from '@/utils/error';
 import { reviewSchema, type ReviewValues } from '@/forms/schemas/service';
 
 // Why: TAGS 用 i18n key 渲染 Chip，提交时需还原为存储标识（quality/fresh 等，与 reviews.json 对齐）
@@ -82,9 +83,24 @@ export default function OrderReviewPage() {
   // 单商品订单不显切换 tab；多商品订单顶部 tab 切换，每商品独立评价（切换 reset 表单不串数据）。
   const { data: order } = useOrder(orderId);
   const orderItems = order?.items ?? [];
+  // P15 多商品：已评商品集合（APPROVED/PENDING 算已评 -> tab 灰色禁用；REJECTED 可重评）
+  // GET /orders/:id/reviews 失败时降级 orderReviews=[] -> 不显已评标记，用户仍可提交（后端 E-REVIEW-003 兜底）
+  const { data: orderReviews } = useOrderReviews(orderId);
+  const reviewedProductIds = useMemo(
+    () =>
+      new Set(
+        (orderReviews ?? [])
+          .filter((r) => r.status === 'APPROVED' || r.status === 'PENDING')
+          .map((r) => r.productId)
+          .filter(Boolean),
+      ),
+    [orderReviews],
+  );
   const [selectedProductId, setSelectedProductId] = useState<string>(productIdParam ?? '');
+  // currentProductId 优先首个未评商品（已评商品灰色禁用，自动落到下一个待评商品）
+  const firstUnreviewedId = orderItems.find((i) => !reviewedProductIds.has(i.product.id))?.product.id;
   const currentProductId =
-    selectedProductId || orderItems[0]?.product.id || productIdParam || 'p001';
+    selectedProductId || firstUnreviewedId || orderItems[0]?.product.id || productIdParam || 'p001';
   const currentItem = orderItems.find((i) => i.product.id === currentProductId);
   const product = currentItem?.product;
   const submitReviewMutation = useSubmitReview();
@@ -211,6 +227,11 @@ export default function OrderReviewPage() {
       toast.error(t('review.missingOrder'));
       return;
     }
+    if (reviewedProductIds.has(currentProductId)) {
+      // P15 多商品：已评商品（APPROVED/PENDING）前端预拦，后端 E-REVIEW-003 兜底
+      toast.error(t('review.alreadyReviewed'));
+      return;
+    }
     submitReviewMutation.mutate(
       {
         orderId,
@@ -227,8 +248,10 @@ export default function OrderReviewPage() {
           toast.success(t('review.successDesc'));
           handleBack();
         },
-        onError: () =>
-          toast.error(t('review.submitFailed', { defaultValue: 'Submit failed, please retry' })),
+        onError: (err) => {
+          // 后端 E-REVIEW-003（该商品已评价）等，getApiErrorMessage 提取后端 message
+          toast.error(getApiErrorMessage(err, t('review.submitFailed')));
+        },
       },
     );
   });
@@ -256,22 +279,32 @@ export default function OrderReviewPage() {
             >
               {orderItems.map((it) => {
                 const active = it.product.id === currentProductId;
+                // 已评商品（APPROVED/PENDING）灰色禁用 + 已评 badge；REJECTED 可重评（reviewed=false）
+                const reviewed = reviewedProductIds.has(it.product.id);
                 return (
                   <Pressable
                     key={it.product.id}
-                    onPress={() => selectProduct(it.product.id)}
+                    onPress={() => !reviewed && selectProduct(it.product.id)}
+                    disabled={reviewed}
                     style={[
                       styles.productTab,
                       {
-                        backgroundColor: active
-                          ? colors.primary
-                          : colors['surface-container-low'],
-                        borderColor: active ? colors.primary : colors['outline-variant'],
+                        backgroundColor: reviewed
+                          ? colors['surface-container']
+                          : active
+                            ? colors.primary
+                            : colors['surface-container-low'],
+                        borderColor: reviewed
+                          ? colors['outline-variant']
+                          : active
+                            ? colors.primary
+                            : colors['outline-variant'],
+                        opacity: reviewed ? 0.5 : 1,
                       },
                     ]}
                     accessibilityRole="tab"
-                    accessibilityState={{ selected: active }}
-                    accessibilityLabel={localize(it.product.name)}
+                    accessibilityState={{ selected: active, disabled: reviewed }}
+                    accessibilityLabel={`${localize(it.product.name)}${reviewed ? ` ${t('review.reviewedBadge')}` : ''}`}
                   >
                     <Image
                       source={{
@@ -284,12 +317,24 @@ export default function OrderReviewPage() {
                     <Text
                       style={[
                         styles.productTabName,
-                        { color: active ? ON_PRIMARY : colors['on-surface-variant'] },
+                        {
+                          color: reviewed
+                            ? colors['on-surface-variant']
+                            : active
+                              ? ON_PRIMARY
+                              : colors['on-surface-variant'],
+                        },
                       ]}
                       numberOfLines={1}
                     >
                       {localize(it.product.name)}
                     </Text>
+                    {reviewed && (
+                      <View style={[styles.reviewedBadge, { backgroundColor: colors.semantic.positive }]}>
+                        <Icon symbol="check" size={10} color={ON_PRIMARY} />
+                        <Text style={styles.reviewedBadgeText}>{t('review.reviewedBadge')}</Text>
+                      </View>
+                    )}
                   </Pressable>
                 );
               })}
@@ -637,6 +682,21 @@ const styles = StyleSheet.create({
     ...typography['body-sm'],
     fontWeight: '600',
     flexShrink: 1,
+  },
+  // 已评 badge（绿色底 + ✓ + 「已评」文字）
+  reviewedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  reviewedBadgeText: {
+    color: ON_PRIMARY,
+    ...typography['label-caps'],
+    fontSize: 9,
+    fontWeight: '700',
   },
   card: {
     borderRadius: borderRadius.xl,

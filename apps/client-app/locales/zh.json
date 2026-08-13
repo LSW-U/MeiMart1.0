@@ -747,6 +747,8 @@
     },
     "submitFailed": "提交评价失败",
     "missingOrder": "缺少订单信息，请从订单详情进入评价",
+    "reviewedBadge": "已评",
+    "alreadyReviewed": "该商品已评价，无法重复评价",
     "a11y": {
       "addPhoto": "添加照片",
       "ratingSlider": "评分滑块，拖动选择 1 到 5 星",

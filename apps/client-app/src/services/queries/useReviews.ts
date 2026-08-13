@@ -29,6 +29,22 @@ export function useReviews(productId: string | undefined) {
   });
 }
 
+/**
+ * 订单所有评价（P15 多商品：判断已评商品，后端 GET /client/orders/:id/reviews）
+ * staleTime 30s：评价页反复进出，短缓存减少重复请求；提交后 submit onSuccess invalidate 刷新
+ */
+export const ORDER_REVIEWS_KEY = (orderId: string) => ['order-reviews', orderId] as const;
+
+export function useOrderReviews(orderId: string) {
+  return useQuery({
+    queryKey: ORDER_REVIEWS_KEY(orderId),
+    queryFn: () => reviewsApi.listOrderReviews(orderId),
+    staleTime: 30 * 1000,
+    networkMode: 'offlineFirst',
+    enabled: Boolean(orderId),
+  });
+}
+
 export function useSubmitReview() {
   const qc = useQueryClient();
   const { t } = useTranslation();
@@ -80,6 +96,8 @@ export function useSubmitReview() {
     },
     onSettled: (_data, _err, input) => {
       qc.invalidateQueries({ queryKey: REVIEWS_QUERY_KEY(input.productId ?? '') });
+      // P15 多商品：刷新订单已评列表（review 页已评标记实时更新，防重复提交）
+      qc.invalidateQueries({ queryKey: ORDER_REVIEWS_KEY(input.orderId) });
     },
   });
 }
