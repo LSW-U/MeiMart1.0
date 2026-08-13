@@ -122,7 +122,8 @@ export default function AfterSalesDetailPage() {
             key: ri.id,
             name: ri.productName,
             qty: ri.refundQty,
-            price: ri.unitPrice,
+            // 后端 unitPrice 是分，/100 转元（与整单退款分支 oi.product.price 元一致，PriceText 显示元）
+            price: ri.unitPrice / 100,
             image: oi?.product.image,
           };
         })
@@ -133,7 +134,8 @@ export default function AfterSalesDetailPage() {
           price: oi.product.price,
           image: oi.product.image,
         }));
-  const refundAmount = refund.amount;
+  // 后端 amount 是分，/100 转元（PriceText 显示元；timeline 已各自 /100 不受影响）
+  const refundAmount = refund.amount / 100;
 
   // reason 反向映射 + 申请号/申请时间（接 refund 真实字段，I2 申请信息真实数据）
   const reasonText = REFUND_REASON_TO_I18N_KEY[refund.reason]

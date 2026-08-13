@@ -171,7 +171,8 @@ export default function RefundsPage() {
                     <Text style={[styles.amountLabel, { color: colors['on-surface-variant'] }]}>
                       {t('refunds.amountLabel')}
                     </Text>
-                    <PriceText value={Math.max(0, item.amount)} size="md" />
+                    {/* item.amount 后端是分，/100 转元（PriceText 显示元，与 orders/cart 一致） */}
+                    <PriceText value={Math.max(0, item.amount) / 100} size="md" />
                   </View>
                   <View style={styles.amountRow}>
                     <Text style={[styles.amountLabel, { color: colors['on-surface-variant'] }]}>
