@@ -53,11 +53,11 @@ export default function PickupConfirmPage() {
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <View className="h-16 flex-row items-center justify-between bg-[#fff8f7] px-5">
-        <Pressable className="rounded-full p-2" onPress={() => void goBack()}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="rounded-full p-2" onPress={() => void goBack()}>
           <Text className="text-2xl text-[#720003]">‹</Text>
         </Pressable>
         <Text className="text-xl font-bold text-[#720003]">{t('pickup.title')}</Text>
-        <Pressable className="rounded-full p-2" onPress={() => router.push('/help')}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('help.title')} className="rounded-full p-2" onPress={() => router.push('/help')}>
           <Text className="text-xl text-[#720003]">?</Text>
         </Pressable>
       </View>

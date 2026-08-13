@@ -350,6 +350,7 @@
   "notification.template.walletWithdrawSuccess.message": "你的 {amount} 提现申请已受理，正在处理中。",
   "notification.template.system.title": "版本公告",
   "notification.template.system.message": "Rider Hub 1.2 优化路径切换体验，新增钱包数据洞察。",
+  "common.back": "返回",
   "common.currency": "¥",
   "common.items": "商品：{items}",
   "common.fromHere": "距此 {distance}",

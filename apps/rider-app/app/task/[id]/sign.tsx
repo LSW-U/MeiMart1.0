@@ -62,7 +62,7 @@ export default function SignConfirmPage() {
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <View className="h-16 flex-row items-center justify-between bg-[#fff8f7] px-5">
-        <Pressable className="h-10 w-10 items-center justify-center rounded-full" onPress={() => void goBack()}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full" onPress={() => void goBack()}>
           <Text className="text-2xl text-[#720003]">‹</Text>
         </Pressable>
         <Text className="text-2xl font-bold tracking-tight text-[#720003]">{t('sign.title')}</Text>

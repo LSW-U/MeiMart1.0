@@ -196,11 +196,11 @@ export default function TasksPage() {
         className="flex-row items-center gap-3 border-t border-[#f7ddd9] bg-[#fff8f7] px-4 pt-3 shadow-sm"
         style={{ paddingBottom: bottomPadding }}
       >
-        <Pressable className="items-center px-3 py-1" onPress={() => router.push('/settings')}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.settings')} className="items-center px-3 py-1" onPress={() => router.push('/settings')}>
           <AppIcon name="settings" className="text-2xl text-[#59413d]" />
           <Text className="mt-1 text-[11px] font-bold text-[#59413d]">{t('tasks.settings')}</Text>
         </Pressable>
-        <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-3 shadow-sm" onPress={() => void refetchTasks()}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.refresh')} className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-[#e1bfba] bg-white py-3 shadow-sm" onPress={() => void refetchTasks()}>
           <AppIcon name="refresh" className="text-xl text-[#961813]" />
           <Text className="text-base font-bold text-[#961813]">{t('tasks.refresh')}</Text>
         </Pressable>

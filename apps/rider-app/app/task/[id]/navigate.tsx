@@ -72,7 +72,7 @@ export default function TaskNavigatePage() {
     <View className="flex-1 bg-[#fff8f7]">
       <View className="h-16 flex-row items-center justify-between bg-[#ffe9e6] px-5">
         <View className="flex-row items-center gap-4">
-          <Pressable className="h-10 w-10 items-center justify-center rounded-full" onPress={() => void goBack()}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full" onPress={() => void goBack()}>
             <Text className="text-2xl text-[#720003]">‹</Text>
           </Pressable>
           <Text className="text-xl font-bold text-[#720003]">{t('flow.orderDetails')}</Text>

@@ -350,6 +350,7 @@
   "notification.template.walletWithdrawSuccess.message": "",
   "notification.template.system.title": "",
   "notification.template.system.message": "",
+  "common.back": "",
   "common.currency": "$",
   "common.items": "",
   "common.fromHere": "",
