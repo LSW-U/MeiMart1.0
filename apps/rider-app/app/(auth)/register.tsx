@@ -57,7 +57,6 @@ export default function RegisterPage() {
 
     try {
       // Step 1: 用 customer 角色登录（apply API 要求 customer 角色）
-      console.log('[register] Step 1: customer login');
       if (__DEV__) {
         await mockLogin('customer');
       } else {
@@ -70,7 +69,6 @@ export default function RegisterPage() {
       }
 
       // Step 2: 骑手入驻申请
-      console.log('[register] Step 2: Rider apply');
       await riderApi.apply({
         riderName: name,
         phone: phone.startsWith('+670') ? phone : `+670 ${phone}`,
@@ -79,7 +77,6 @@ export default function RegisterPage() {
       });
 
       // Step 3: 申请成功后，开发环境自动用 rider 登录（跳过审核）
-      console.log('[register] Step 3: rider login');
       if (__DEV__) {
         await mockLogin('rider');
       }

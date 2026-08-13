@@ -19,6 +19,7 @@
   "auth.login.smsLabel": "",
   "auth.login.smsPlaceholder": "",
   "auth.login.forgotPassword": "",
+  "auth.login.failed": "",
   "auth.login.featureInProgress.title": "",
   "auth.login.featureInProgress.message": "",
   "auth.login.featureInProgress.ok": "",

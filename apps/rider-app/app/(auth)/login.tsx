@@ -3,10 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
+import { showToast } from '../../src/components/feedback/Toast';
 import { AppIcon, Button, Card, Input } from '../../src/components/ui';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { isValidPhone } from '../../src/services/auth';
+import { ApiError } from '../../src/services/api';
 import { getLanguageOptions, type AppLanguage } from '../../src/services/settings';
 import { useUpdateRiderSettings } from '../../src/services/queries/useSettings';
 
@@ -76,17 +78,17 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      console.log('[login] handleLogin start', { phone, mode, hasPassword: Boolean(password), hasCode: Boolean(code) });
       await login(
         phone,
         mode === 'password' ? password : undefined,
         mode === 'sms' ? code : undefined,
       );
-      console.log('[login] handleLogin success, router.replace should fire');
       // router.replace('/(main)/tasks') 已在 useAuth.login 内部处理
     } catch (e) {
       console.error('[login] handleLogin failed:', e);
-      // TODO: 接入 Toast 反馈错误
+      // ApiError 业务失败（密码错/账号不存在）vs 网络异常，差异化 toast
+      const msg = e instanceof ApiError ? t('auth.login.failed') : t('common.networkError');
+      showToast(msg, 'error');
     }
   };
 

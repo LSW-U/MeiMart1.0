@@ -19,6 +19,7 @@
   "auth.login.smsLabel": "SMS VERIFICATION CODE",
   "auth.login.smsPlaceholder": "Enter 6-digit code",
   "auth.login.forgotPassword": "Forgot Password?",
+  "auth.login.failed": "Login failed, please retry",
   "auth.login.featureInProgress.title": "Coming Soon",
   "auth.login.featureInProgress.message": "This feature is under development. Please stay tuned.",
   "auth.login.featureInProgress.ok": "OK",

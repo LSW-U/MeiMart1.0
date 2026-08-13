@@ -16,18 +16,8 @@ export function useAuth() {
 
   const login = useCallback(
     async (phone: string, password?: string, code?: string) => {
-      console.log('[useAuth.login] start', {
-        phone,
-        hasPassword: Boolean(password),
-        hasCode: Boolean(code),
-      });
       const result = await loginMutation.mutateAsync({ phone, password, code });
-      console.log('[useAuth.login] mutation result', {
-        hasToken: Boolean(result.accessToken),
-        role: result.role,
-      });
       await tokenStorage.set(result.accessToken, result.refreshToken);
-      console.log('[useAuth.login] tokenStorage.set done');
 
       // real 模式：login 不返回 rider 信息，按 role 单独拿
       // mock 模式：AuthResult 直接含 rider
@@ -42,7 +32,6 @@ export function useAuth() {
       }
       if (rider) {
         setRider(rider);
-        console.log('[useAuth.login] setRider done');
       } else {
         // customer 角色或 profile 失败：仅设 isAuthenticated，UI 走 apply 流程
         useAuthStore.setState({ isAuthenticated: true });
@@ -57,9 +46,7 @@ export function useAuth() {
   // role: customer → 用于骑手申请（apply 要求 customer 角色）
   // role: rider → 用于骑手功能测试
   const mockLogin = useCallback(async (role: 'customer' | 'rider' = 'rider') => {
-    console.log('[useAuth.mockLogin] start', { role });
     const result = await authApi.mockLogin(role);
-    console.log('[useAuth.mockLogin] result', { hasToken: Boolean(result.accessToken), role: result.role });
     await tokenStorage.set(result.accessToken, result.refreshToken);
 
     let rider = result.rider;
