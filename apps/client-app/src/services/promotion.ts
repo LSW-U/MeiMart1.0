@@ -100,8 +100,18 @@ export const promotionApi = {
       }
       return mockResponse([]);
     }
-    const res = await api.get<ClientCoupon[]>('/client/coupons', { params: { status } });
-    return res.data;
+    // 后端 GET /client/coupons 请求用 unused/used/expired，返回 status 大写 UNUSED/USED/EXPIRED。
+    // 前端/文档用 available/used/expired（CouponCard 判断 === 'available'），双向映射：
+    // 请求 available -> unused；返回 UNUSED -> available（USED/EXPIRED 同理小写）。
+    const backendStatus = status === 'available' ? 'unused' : status;
+    const res = await api.get('/client/coupons', { params: { status: backendStatus } });
+    const STATUS_MAP: Record<string, ClientCoupon['status']> = {
+      UNUSED: 'available',
+      USED: 'used',
+      EXPIRED: 'expired',
+    };
+    const raw = res.data as (Omit<ClientCoupon, 'status'> & { status: string })[];
+    return raw.map((c) => ({ ...c, status: STATUS_MAP[c.status] ?? 'available' }));
   },
 
   /**
