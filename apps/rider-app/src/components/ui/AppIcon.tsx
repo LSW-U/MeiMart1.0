@@ -66,6 +66,20 @@ const sizeByClass = (className = '') => {
   return 22;
 };
 
+// a11y：AppIcon 几乎总是装饰（在 labeled Pressable 内 / header·section 图标，含义由相邻 Text 说明）。
+// 无 accessibilityLabel 时隐藏（importantForAccessibility='no' + accessibilityElementsHidden），
+// 避免屏幕阅读器对无 label 的 image 发出无意义聚焦噪音；传 label 时作为带描述的 image 暴露。
 export function AppIcon({ name, className = '', color, size, style, accessibilityLabel }: AppIconProps) {
-  return <MaterialCommunityIcons accessibilityRole="image" accessibilityLabel={accessibilityLabel} color={color ?? colorByClass(className)} name={icons[name]} size={size ?? sizeByClass(className)} style={style} />;
+  return (
+    <MaterialCommunityIcons
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole={accessibilityLabel ? 'image' : undefined}
+      accessibilityElementsHidden={!accessibilityLabel}
+      importantForAccessibility={accessibilityLabel ? 'yes' : 'no'}
+      color={color ?? colorByClass(className)}
+      name={icons[name]}
+      size={size ?? sizeByClass(className)}
+      style={style}
+    />
+  );
 }
