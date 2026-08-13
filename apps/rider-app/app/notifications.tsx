@@ -78,13 +78,13 @@ export default function NotificationsPage() {
     <View className="flex-1 bg-[#fff8f7]">
       <View className="flex-row items-center justify-between border-b border-[#f7ddd9] bg-[#fff8f7] px-5 py-4">
         <View className="flex-row items-center">
-          <Pressable className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => void goBack()}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => void goBack()}>
             <Text className="text-2xl text-[#261816]">‹</Text>
           </Pressable>
           <Text className="ml-2 text-xl font-semibold text-[#261816]">{t('notification.title')}</Text>
         </View>
         {unreadCount > 0 ? (
-          <Pressable className="rounded-full bg-[#fff0ee] px-3 py-1.5 active:bg-[#ffe1dc]" onPress={() => void handleMarkAllRead()}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('notification.markAllRead')} className="rounded-full bg-[#fff0ee] px-3 py-1.5 active:bg-[#ffe1dc]" onPress={() => void handleMarkAllRead()}>
             <Text className="text-xs font-bold text-[#720003]">{t('notification.markAllRead')}</Text>
           </Pressable>
         ) : null}
@@ -95,6 +95,8 @@ export default function NotificationsPage() {
           const active = filter === key;
           return (
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t(labelKey)}
               key={key}
               className={`flex-1 items-center justify-center rounded-full border px-3 py-2 ${
                 active ? 'border-[#720003] bg-[#720003]' : 'border-[#e1bfba] bg-white'
@@ -117,6 +119,8 @@ export default function NotificationsPage() {
             const style = categoryStyle[item.category];
             return (
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t(item.titleKey as never)}
                 key={item.id}
                 className={`flex-row items-start gap-3 rounded-2xl border p-4 ${item.read ? 'border-[#f1d4cf] bg-white' : 'border-[#e1bfba] bg-[#fff0ee]'}`}
                 onPress={() => void onItemPress(item)}

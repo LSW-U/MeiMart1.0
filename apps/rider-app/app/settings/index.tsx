@@ -24,7 +24,7 @@ const languages = enabledLanguageOptions.map((option) => option.code);
 
 function SettingsItem({ icon, title, description, onPress, trailing = 'chevron', switchValue = false, onSwitchChange }: SettingsItemProps) {
   return (
-    <Pressable className="flex-row items-center gap-4 px-5 py-4 active:bg-[#fff0ee]" onPress={onPress}>
+    <Pressable accessibilityRole="button" accessibilityLabel={title} className="flex-row items-center gap-4 px-5 py-4 active:bg-[#fff0ee]" onPress={onPress}>
       <View className="h-11 w-11 items-center justify-center rounded-full bg-[#ffe9e6]">
         <AppIcon color="#720003" name={icon} />
       </View>
@@ -77,7 +77,7 @@ export default function SettingsPage() {
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <View className="flex-row items-center border-b border-[#f7ddd9] bg-[#fff8f7] px-5 py-4">
-        <Pressable className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => void goBack()}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-[#ffe9e6]" onPress={() => void goBack()}>
           <Text className="text-2xl text-[#261816]">‹</Text>
         </Pressable>
         <Text className="ml-2 text-xl font-semibold text-[#261816]">{t('settings.title')}</Text>

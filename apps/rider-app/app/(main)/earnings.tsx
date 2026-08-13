@@ -31,7 +31,7 @@ export default function EarningsPage() {
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <View className="relative flex-row items-center justify-center px-5 pb-4 pt-6">
-        <Pressable className="absolute left-5 h-10 w-10 items-center justify-center rounded-full active:bg-[#f7ddd9]" onPress={() => void goBack()}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="absolute left-5 h-10 w-10 items-center justify-center rounded-full active:bg-[#f7ddd9]" onPress={() => void goBack()}>
           <Text className="text-2xl text-[#261816]">‹</Text>
         </Pressable>
         <Text className="text-2xl font-bold text-[#261816]">{t('earnings.title')}</Text>
@@ -56,12 +56,16 @@ export default function EarningsPage() {
         <View className="mt-8">
           <View className="mb-4 flex-row border-b border-[#fde2df]">
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('earnings.todayBilling')}
               className={`border-b-2 px-1 pb-2 ${billingTab === 'today' ? 'border-[#720003]' : 'border-transparent'}`}
               onPress={() => setBillingTab('today')}
             >
               <Text className={`text-xl font-semibold ${billingTab === 'today' ? 'text-[#720003]' : 'text-[#59413d]'}`}>{t('earnings.todayBilling')}</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('earnings.allBilling')}
               className={`ml-6 border-b-2 px-1 pb-2 ${billingTab === 'all' ? 'border-[#720003]' : 'border-transparent'}`}
               onPress={() => setBillingTab('all')}
             >
