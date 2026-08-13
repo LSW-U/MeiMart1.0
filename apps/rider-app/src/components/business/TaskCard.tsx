@@ -57,13 +57,13 @@ export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags
         <View className="absolute bottom-6 left-[11px] top-6 w-0.5 bg-surface-variant" />
         {points.map((point) => (
           <View className="relative z-10 flex-row gap-2" key={`${point.label}-${point.title}`}>
-            <View className={`mt-1 h-6 w-6 items-center justify-center rounded-full ${point.label === 'P' ? 'bg-[#e2e3e2]' : 'bg-tertiary-container'}`}>
-              <Text className={`text-[10px] font-bold ${point.label === 'P' ? 'text-[#636565]' : 'text-[#deb769]'}`}>{point.label}</Text>
+            <View className={`mt-1 h-6 w-6 items-center justify-center rounded-full ${point.label === 'P' ? 'bg-neutral-bg' : 'bg-tertiary-container'}`}>
+              <Text className={`text-[10px] font-bold ${point.label === 'P' ? 'text-neutral' : 'text-tier-gold'}`}>{point.label}</Text>
             </View>
             <View className="flex-1">
               <View className="flex-row items-start justify-between gap-2">
                 <Text className="flex-1 text-base font-bold text-on-surface">{point.title}</Text>
-                {point.distance ? <Text className="text-sm text-[#5d5f5f]">{point.distance}</Text> : null}
+                {point.distance ? <Text className="text-sm text-neutral-muted">{point.distance}</Text> : null}
               </View>
               {point.subtitle ? <Text className="mt-1 text-sm text-on-surface-variant">{point.subtitle}</Text> : null}
             </View>
@@ -74,10 +74,10 @@ export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags
       {tags.length || items ? (
         <View className="flex-row flex-wrap gap-2">
           {tags.map((tag) => (
-            <Text className="rounded border border-outline-variant px-2 py-1 text-[11px] text-[#5d5f5f]" key={tag}>{tag}</Text>
+            <Text className="rounded border border-outline-variant px-2 py-1 text-[11px] text-neutral-muted" key={tag}>{tag}</Text>
           ))}
           {items ? (
-            <Pressable className="rounded-lg bg-[#f59e0b] px-2 py-1" onPress={() => showToast(items, 'info')}>
+            <Pressable className="rounded-lg bg-accent-amber px-2 py-1" onPress={() => showToast(items, 'info')}>
               <Text className="text-sm text-white">{items} ˅</Text>
             </Pressable>
           ) : null}
@@ -85,8 +85,8 @@ export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags
       ) : null}
 
       {note ? (
-        <View className="rounded border border-[#ffe0b2] bg-[#fff3e0] p-2">
-          <Text className="text-sm text-[#e65100]">{note}</Text>
+        <View className="rounded border border-warn-border bg-warn-bg p-2">
+          <Text className="text-sm text-warn-text">{note}</Text>
         </View>
       ) : null}
 

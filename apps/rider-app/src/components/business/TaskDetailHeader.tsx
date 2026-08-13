@@ -24,7 +24,7 @@ type TaskDetailHeaderProps = {
 const dotColor: Record<DutyStatus, string> = {
   onDuty: 'bg-green-500',
   busy: 'bg-orange-500',
-  offDuty: 'bg-[#b9aaa7]',
+  offDuty: 'bg-dot-off',
 };
 
 export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTasksLabel, pickupsLabel, deliveriesLabel, onDutyPress, onMenuPress, onTabChange }: TaskDetailHeaderProps) {
@@ -52,7 +52,7 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTa
         <Pressable accessibilityRole="button" accessibilityLabel={t('notification.title')} accessibilityHint={unread > 0 ? t('notification.unreadCount', { count: unread }) : undefined} className="relative rounded-full p-1" onPress={() => router.push('/notifications')}>
           <AppIcon name="notification" className="text-2xl text-on-surface-variant" />
           {unread > 0 ? (
-            <View className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-surface-container bg-[#ff4d4f]" />
+            <View className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-surface-container bg-dot-unread" />
           ) : null}
         </Pressable>
       </View>

@@ -38,7 +38,7 @@ type OrderHistoryCardProps = {
 };
 
 export function OrderHistoryCard({ status, statusTone, orderNo, time, pickupName, pickupAddress, dropoffName, dropoffAddress, incomeLabel, income, viewDetailsLabel, onPress }: OrderHistoryCardProps) {
-  const badgeClass = statusTone === 'completed' ? 'bg-[#e6f4ea] text-[#137333]' : statusTone === 'cancelled' ? 'bg-[#e2e3e2] text-[#1a1c1c]' : 'bg-[#fef7e0] text-[#b06000]';
+  const badgeClass = statusTone === 'completed' ? 'bg-status-done-bg text-status-done-text' : statusTone === 'cancelled' ? 'bg-status-cancelled-bg text-status-cancelled-text' : 'bg-status-transferred-bg text-status-transferred-text';
   const muted = statusTone === 'cancelled';
 
   return (

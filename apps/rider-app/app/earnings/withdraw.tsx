@@ -56,10 +56,10 @@ export default function WithdrawalPage() {
         </View>
 
         {exceedsBalance ? (
-          <Text className="text-center text-sm text-[#a3322a]">{t('withdraw.exceedsBalance')}</Text>
+          <Text className="text-center text-sm text-status-danger-text">{t('withdraw.exceedsBalance')}</Text>
         ) : null}
         {status === 'error' ? (
-          <Text className="text-center text-sm text-[#a3322a]">{errorMsg}</Text>
+          <Text className="text-center text-sm text-status-danger-text">{errorMsg}</Text>
         ) : null}
 
         <WithdrawForm

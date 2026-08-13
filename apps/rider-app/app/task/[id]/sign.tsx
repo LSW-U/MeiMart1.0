@@ -110,7 +110,7 @@ export default function SignConfirmPage() {
       </ScrollView>
 
       <View className="absolute bottom-0 left-0 right-0 gap-2 bg-white px-5 py-4 shadow-lg">
-        <Button className={`${canSubmit ? 'bg-primary-container' : 'bg-[#5d5f5f] opacity-50'}`} onPress={() => void handleConfirmDelivery()}>
+        <Button className={`${canSubmit ? 'bg-primary-container' : 'bg-neutral-muted opacity-50'}`} onPress={() => void handleConfirmDelivery()}>
           {status === 'processing' ? t('flow.processing') : status === 'success' ? t('sign.success') : t('sign.confirm')}
         </Button>
         <Text className="mx-auto max-w-[280px] text-center text-[11px] leading-5 text-on-surface-variant opacity-80">

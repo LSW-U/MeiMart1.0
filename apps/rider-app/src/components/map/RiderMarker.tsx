@@ -1,3 +1,4 @@
+import { colors } from "../../theme/colors";
 import { Platform } from 'react-native';
 
 import type { Coordinates } from '../../types/common';
@@ -13,7 +14,7 @@ function RiderMarkerNative({ coordinate, title = 'You' }: RiderMarkerProps) {
     <Marker
       coordinate={{ latitude: coordinate.latitude, longitude: coordinate.longitude }}
       title={title}
-      pinColor="#261816"
+      pinColor={colors.text}
     />
   );
 }

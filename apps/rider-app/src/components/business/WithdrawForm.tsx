@@ -69,7 +69,7 @@ export function WithdrawForm({ amountLabel, amountPlaceholder, toLabel, bankCard
         </Pressable>
       </View>
       <View className="min-h-8" />
-      <Button className={`h-14 ${submitDisabled ? 'bg-[#b9aaa7]' : 'bg-primary-container'}`} onPress={submitDisabled ? undefined : onSubmit}>{submitLabel}</Button>
+      <Button className={`h-14 ${submitDisabled ? 'bg-dot-off' : 'bg-primary-container'}`} onPress={submitDisabled ? undefined : onSubmit}>{submitLabel}</Button>
       <Text className="mt-1 text-center text-sm text-on-surface-variant">{note}</Text>
     </View>
   );

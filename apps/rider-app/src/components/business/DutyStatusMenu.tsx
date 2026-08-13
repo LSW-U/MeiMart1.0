@@ -23,7 +23,7 @@ type DutyStatusMenuProps = {
 const dotColor: Record<DutyStatus, string> = {
   onDuty: 'bg-green-500',
   busy: 'bg-orange-500',
-  offDuty: 'bg-[#b9aaa7]',
+  offDuty: 'bg-dot-off',
 };
 
 export function DutyStatusMenu({ visible, current, title, cancelLabel, options, onPick, onClose }: DutyStatusMenuProps) {
@@ -35,7 +35,7 @@ export function DutyStatusMenu({ visible, current, title, cancelLabel, options, 
           {options.map((option) => {
             const active = option.value === current;
             const disabled = !!option.disabled;
-            const textTone = disabled ? 'text-[#b9aaa7]' : active ? 'text-primary-container' : 'text-on-surface';
+            const textTone = disabled ? 'text-dot-off' : active ? 'text-primary-container' : 'text-on-surface';
             return (
               <Pressable
                 key={option.value}

@@ -23,7 +23,7 @@ export function EarningCard({ balanceLabel, balance, unsettledLabel, depositLabe
         <Text className="text-sm text-primary-container">{depositLabel}</Text>
         <View className="flex-row items-center gap-2">
           <Text className="text-lg font-bold text-primary-container">{depositAmount}</Text>
-          <Text className="rounded-full bg-[#ffdea3] px-2 py-0.5 text-xs font-bold text-[#5d4200]">{paidLabel}</Text>
+          <Text className="rounded-full bg-tier-gold-soft px-2 py-0.5 text-xs font-bold text-tier-gold-text">{paidLabel}</Text>
         </View>
       </View>
     </View>

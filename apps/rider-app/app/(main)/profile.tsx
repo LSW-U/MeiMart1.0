@@ -20,9 +20,9 @@ function MenuItem({ icon, label, tone = 'default', onPress }: MenuItemProps) {
   const danger = tone === 'danger';
 
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} className={`flex-row items-center justify-between p-5 ${danger ? 'active:bg-[#ffdad6]/30' : 'active:bg-surface-container-low'}`} onPress={onPress}>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} className={`flex-row items-center justify-between p-5 ${danger ? 'active:bg-danger-soft/30' : 'active:bg-surface-container-low'}`} onPress={onPress}>
       <View className="flex-row items-center gap-4">
-        <View className={`h-10 w-10 items-center justify-center rounded-full ${danger ? 'bg-[#ffdad6]/50' : 'bg-surface-container'}`}>
+        <View className={`h-10 w-10 items-center justify-center rounded-full ${danger ? 'bg-danger-soft/50' : 'bg-surface-container'}`}>
           <AppIcon color={danger ? colors.error : colors.textMuted} name={icon} />
         </View>
         <Text className={`text-lg font-medium ${danger ? 'text-error' : 'text-on-surface'}`}>{label}</Text>
@@ -72,7 +72,7 @@ export default function ProfilePage() {
             <Image className="h-full w-full rounded-full border-2 border-surface" resizeMode="cover" source={{ uri: rider?.avatarUrl }} />
           </View>
           <View className="absolute -bottom-3 rounded-full border-2 border-surface bg-tertiary-container px-3 py-1 shadow-sm">
-            <Text className="text-[11px] font-bold uppercase tracking-wider text-[#deb769]">{t('profile.tier')}</Text>
+            <Text className="text-[11px] font-bold uppercase tracking-wider text-tier-gold">{t('profile.tier')}</Text>
           </View>
         </View>
         <View className="mt-2 items-center">

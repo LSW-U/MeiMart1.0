@@ -84,7 +84,7 @@ export default function NotificationsPage() {
           <Text className="ml-2 text-xl font-semibold text-on-surface">{t('notification.title')}</Text>
         </View>
         {unreadCount > 0 ? (
-          <Pressable accessibilityRole="button" accessibilityLabel={t('notification.markAllRead')} className="rounded-full bg-surface-container-low px-3 py-1.5 active:bg-[#ffe1dc]" onPress={() => void handleMarkAllRead()}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('notification.markAllRead')} className="rounded-full bg-surface-container-low px-3 py-1.5 active:bg-surface-blush" onPress={() => void handleMarkAllRead()}>
             <Text className="text-xs font-bold text-primary">{t('notification.markAllRead')}</Text>
           </Pressable>
         ) : null}
@@ -123,7 +123,7 @@ export default function NotificationsPage() {
                 accessibilityRole="button"
                 accessibilityLabel={t(item.titleKey as TranslationKey)}
                 key={item.id}
-                className={`flex-row items-start gap-3 rounded-2xl border p-4 ${item.read ? 'border-[#f1d4cf] bg-white' : 'border-outline-variant bg-surface-container-low'}`}
+                className={`flex-row items-start gap-3 rounded-2xl border p-4 ${item.read ? 'border-blush-border bg-white' : 'border-outline-variant bg-surface-container-low'}`}
                 onPress={() => void onItemPress(item)}
               >
                 <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: style.bg }}>
@@ -134,7 +134,7 @@ export default function NotificationsPage() {
                     <Text className="flex-1 text-base font-bold text-on-surface" numberOfLines={1}>
                       {t(item.titleKey as TranslationKey)}
                     </Text>
-                    {!item.read ? <View className="ml-2 h-2.5 w-2.5 rounded-full bg-[#ff4d4f]" /> : null}
+                    {!item.read ? <View className="ml-2 h-2.5 w-2.5 rounded-full bg-dot-unread" /> : null}
                   </View>
                   <Text className="mt-1 text-sm leading-5 text-on-surface-variant">
                     {t(item.messageKey as TranslationKey, item.vars)}

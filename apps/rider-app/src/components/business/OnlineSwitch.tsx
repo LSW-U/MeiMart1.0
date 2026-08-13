@@ -8,7 +8,7 @@ type OnlineSwitchProps = {
 export function OnlineSwitch({ online, onToggle }: OnlineSwitchProps) {
   return (
     <Pressable className="flex-row items-center gap-3" onPress={onToggle}>
-      <View className={`h-7 w-12 rounded-full p-1 ${online ? 'bg-primary' : 'bg-[#d7c1bd]'}`}>
+      <View className={`h-7 w-12 rounded-full p-1 ${online ? 'bg-primary' : 'bg-surface-track'}`}>
         <View className={`h-5 w-5 rounded-full bg-white ${online ? 'ml-5' : ''}`} />
       </View>
       <Text className="font-semibold text-on-surface">{online ? 'Online' : 'Offline'}</Text>

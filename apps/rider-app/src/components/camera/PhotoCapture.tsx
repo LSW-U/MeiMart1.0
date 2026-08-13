@@ -65,7 +65,7 @@ function PhotoCaptureNative({
 
   return (
     <View className="w-full items-center gap-6">
-      <View className="aspect-[3/4] w-full max-w-sm overflow-hidden rounded-lg border border-outline-variant bg-[#eed4d1] shadow-inner">
+      <View className="aspect-[3/4] w-full max-w-sm overflow-hidden rounded-lg border border-outline-variant bg-surface-frame shadow-inner">
         {captured && photoUri ? (
           <Image className="h-full w-full" resizeMode="cover" source={{ uri: photoUri }} />
         ) : (
@@ -86,7 +86,7 @@ function PhotoCaptureNative({
         </View>
         {captured && photoUri ? (
           <View className="h-24 flex-row items-center gap-4 rounded-lg border border-dashed border-outline-variant bg-surface-variant px-4">
-            <View className="h-16 w-16 overflow-hidden rounded border border-outline bg-[#eed4d1]">
+            <View className="h-16 w-16 overflow-hidden rounded border border-outline bg-surface-frame">
               <Image className="h-full w-full" resizeMode="cover" source={{ uri: photoUri }} />
             </View>
             <View className="flex-1">
@@ -146,7 +146,7 @@ function PhotoCaptureWeb({
 
   return (
     <View className="w-full items-center gap-6">
-      <View className="aspect-[3/4] w-full max-w-sm overflow-hidden rounded-lg border border-outline-variant bg-[#eed4d1] shadow-inner">
+      <View className="aspect-[3/4] w-full max-w-sm overflow-hidden rounded-lg border border-outline-variant bg-surface-frame shadow-inner">
         {captured && photoUri ? (
           <img src={photoUri} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
@@ -178,7 +178,7 @@ function PhotoCaptureWeb({
         </View>
         {captured && photoUri ? (
           <View className="h-24 flex-row items-center gap-4 rounded-lg border border-dashed border-outline-variant bg-surface-variant px-4">
-            <View className="h-16 w-16 overflow-hidden rounded border border-outline bg-[#eed4d1]">
+            <View className="h-16 w-16 overflow-hidden rounded border border-outline bg-surface-frame">
               <img src={photoUri} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </View>
             <View className="flex-1">

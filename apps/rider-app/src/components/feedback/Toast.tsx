@@ -37,7 +37,7 @@ function ToastEntry({ item, onDone }: { item: ToastItem; onDone: () => void }) {
     return () => clearTimeout(timer);
   }, [item.duration, opacity]);
 
-  const bgColor = item.type === 'success' ? 'bg-[#2d6a2e]' : item.type === 'error' ? 'bg-primary-container' : 'bg-on-surface';
+  const bgColor = item.type === 'success' ? 'bg-success-deep' : item.type === 'error' ? 'bg-primary-container' : 'bg-on-surface';
 
   return (
     <Animated.View style={{ opacity }} className="w-full items-center px-5">

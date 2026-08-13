@@ -49,14 +49,14 @@ function MapViewNative({ pickup, delivery, rider, region, onRegionChange, childr
         <Marker
           coordinate={{ latitude: delivery.latitude, longitude: delivery.longitude }}
           title={delivery.title ?? 'Delivery'}
-          pinColor="#463200"
+          pinColor={colors.tertiary}
         />
       )}
       {rider && (
         <Marker
           coordinate={{ latitude: rider.latitude, longitude: rider.longitude }}
           title="You"
-          pinColor="#261816"
+          pinColor={colors.text}
         />
       )}
       {children}
@@ -66,7 +66,7 @@ function MapViewNative({ pickup, delivery, rider, region, onRegionChange, childr
 
 function MapViewPlaceholder({ pickup, delivery }: MapViewProps) {
   return (
-    <View className="w-full items-center justify-center bg-[#eed4d1]" style={{ height: 320 }}>
+    <View className="w-full items-center justify-center bg-surface-frame" style={{ height: 320 }}>
       <View className="items-center gap-2">
         <Text className="text-4xl text-primary/40">MAP</Text>
         <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">

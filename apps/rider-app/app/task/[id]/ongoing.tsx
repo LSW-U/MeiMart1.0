@@ -52,7 +52,7 @@ export default function TaskOngoingPage() {
             />
             <View className="mt-3">
               <Text className="text-sm text-on-surface-variant">
-                {t('tasks.recipientSuffix')} <Text className="font-bold text-[#ff9800]">{taskData.dropoff.contactPhone?.slice(-4) ?? t('tasks.recipientSuffixValue')}</Text>
+                {t('tasks.recipientSuffix')} <Text className="font-bold text-notification-task">{taskData.dropoff.contactPhone?.slice(-4) ?? t('tasks.recipientSuffixValue')}</Text>
               </Text>
             </View>
           </>
