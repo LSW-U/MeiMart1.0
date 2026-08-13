@@ -353,6 +353,7 @@
   "notification.template.system.title": "App update",
   "notification.template.system.message": "Rider Hub 1.2 brings smoother route handoffs and new wallet insights.",
   "common.back": "Back",
+  "common.close": "Close",
   "common.currency": "$",
   "common.items": "Items: {items}",
   "common.fromHere": "{distance} from here",
