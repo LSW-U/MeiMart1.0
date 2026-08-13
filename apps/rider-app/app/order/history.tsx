@@ -50,7 +50,7 @@ export default function OrderHistoryPage() {
   return (
     <View className="flex-1 bg-[#fff8f7]">
       <View className="flex-row items-center justify-between border-b border-[#f7ddd9] bg-[#fff8f7] px-4 py-4">
-        <Pressable className="rounded-full p-2" onPress={() => void goBack()}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="rounded-full p-2" onPress={() => void goBack()}>
           <Text className="text-2xl text-[#261816]">‹</Text>
         </Pressable>
         <Text className="flex-1 pr-8 text-center text-2xl font-bold tracking-tight text-[#261816]">{t('history.title')}</Text>
@@ -67,6 +67,8 @@ export default function OrderHistoryPage() {
             const active = filter === key;
             return (
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t(labelKey)}
                 key={key}
                 className={`flex-1 items-center justify-center rounded-full border px-2 py-2 ${
                   active ? 'border-[#720003] bg-[#720003]' : 'border-[#e1bfba] bg-white'

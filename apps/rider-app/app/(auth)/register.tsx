@@ -126,7 +126,7 @@ export default function RegisterPage() {
                     <Text className="border-r border-[#e1bfba] bg-[#fff0ee] px-4 py-4 text-[#59413d]">+670</Text>
                     <TextInput className="flex-1 px-4 text-base text-[#261816]" keyboardType="phone-pad" placeholder={t('auth.register.phonePlaceholder')} placeholderTextColor="#8d706c" value={phone} onChangeText={setPhone} />
                   </View>
-                  <Pressable className={`items-center justify-center rounded-lg px-4 ${codeState === 'sent' ? 'bg-green-700' : 'bg-[#720003]'}`} onPress={sendCode}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={sendCodeLabel} className={`items-center justify-center rounded-lg px-4 ${codeState === 'sent' ? 'bg-green-700' : 'bg-[#720003]'}`} onPress={sendCode}>
                     <Text className="text-[11px] font-bold text-white">{sendCodeLabel}</Text>
                   </Pressable>
                 </View>
