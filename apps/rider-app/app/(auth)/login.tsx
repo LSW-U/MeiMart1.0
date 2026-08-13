@@ -193,9 +193,9 @@ export default function LoginPage() {
             <Switch onValueChange={setAccepted} value={accepted} />
             <Text className="flex-1 text-[13px] leading-5 text-[#59413d]">
               {t('auth.login.termsPrefix')}{' '}
-              <Text className="font-semibold text-[#720003]" onPress={() => router.push('/terms')}>{t('auth.login.terms')}</Text>{' '}
+              <Text accessibilityRole="link" className="font-semibold text-[#720003]" onPress={() => router.push('/terms')}>{t('auth.login.terms')}</Text>{' '}
               {t('auth.login.privacyPrefix')}{' '}
-              <Text className="font-semibold text-[#720003]" onPress={() => router.push('/privacy')}>{t('auth.login.privacy')}</Text>.
+              <Text accessibilityRole="link" className="font-semibold text-[#720003]" onPress={() => router.push('/privacy')}>{t('auth.login.privacy')}</Text>.
             </Text>
           </View>
 
@@ -211,7 +211,7 @@ export default function LoginPage() {
 
         <View className="items-center pt-1">
           <Text className="text-sm text-[#59413d]">
-            {t('auth.login.newHere')} <Text className="font-bold text-[#720003]" onPress={() => router.push('/(auth)/register')}>{t('auth.login.register')}</Text>
+            {t('auth.login.newHere')} <Text accessibilityRole="link" className="font-bold text-[#720003]" onPress={() => router.push('/(auth)/register')}>{t('auth.login.register')}</Text>
           </Text>
         </View>
       </Card>

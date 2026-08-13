@@ -22,7 +22,7 @@ function QrScannerNative({ onScan }: QrScannerProps) {
       <View className="items-center rounded-3xl border border-dashed border-[#720003] bg-white p-6">
         <Text className="text-lg font-bold text-[#261816]">QR Scanner</Text>
         <Text className="mt-2 text-center text-sm text-[#59413d]">Camera permission is required to scan QR codes.</Text>
-        <Text className="mt-4 rounded-full bg-[#720003] px-5 py-3 font-semibold text-white" onPress={() => void handleRequest()}>
+        <Text accessibilityRole="button" className="mt-4 rounded-full bg-[#720003] px-5 py-3 font-semibold text-white" onPress={() => void handleRequest()}>
           Grant Permission
         </Text>
       </View>

@@ -178,5 +178,5 @@ export const colors = {
 | P1 | 零测试覆盖 | ✅ 31 测试（sync/useTask/useDelivery/task/task-flow） |
 | P1 | 无 ESLint 配置 | ✅ 已配（门禁绿） |
 | P2 | 6 组件硬编码颜色 | ✅ 已修（`1b4c85e`，实际 7 组件含 OfflineBanner） |
-| P2 | a11y 覆盖率低 | 🔶 页面级 Pressable 五批收尾（UI 库 5 + 核心路径 10 + login/profile 13 + notifications/earnings/settings 9 + 散落页 9 = 46 交互元素，覆盖全部 19 文件 42 Pressable）；剩 AppIcon ~86 调用方未传 label + Text onPress 链接（terms/privacy/register/login 等）|
+| P2 | a11y 覆盖率低 | 🔶 六批完工（UI 库 5 + 页面级 41 Pressable + Text onPress 5 链接 = 51 交互元素，app/ 全覆盖）；剩 AppIcon ~86 调用方未传 label + QrScanner i18n 债（硬编码英文）|
 | ~~P2~~ | ~~tRPC client 死代码~~ | ❌ 条目过时已删（rider-app 无 tRPC，早已用 openapi 类型 + `api.ts` fetch） |

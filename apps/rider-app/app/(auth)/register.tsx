@@ -199,7 +199,7 @@ export default function RegisterPage() {
               {loading ? '提交中...' : t('auth.register.submit')}
             </Button>
             <Text className="text-center text-sm text-[#59413d]">
-              {t('auth.register.alreadyHaveAccount')} <Text className="font-bold text-[#720003]" onPress={() => router.push('/(auth)/login')}>{t('auth.register.login')}</Text>
+              {t('auth.register.alreadyHaveAccount')} <Text accessibilityRole="link" className="font-bold text-[#720003]" onPress={() => router.push('/(auth)/login')}>{t('auth.register.login')}</Text>
             </Text>
           </View>
         </View>
