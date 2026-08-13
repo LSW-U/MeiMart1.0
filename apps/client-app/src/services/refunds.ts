@@ -112,8 +112,9 @@ export const refundApi = {
       // mock：返空（用户无退款记录，展示空态）。real 模式 GET /client/refunds 返 RefundView[]
       return mockResponse([]);
     }
-    const res = await api.get<{ success: boolean; data: RefundRaw[] }>('/client/refunds');
-    return res.data.data;
+    // api.ts interceptor 已剥 {success,data} 壳 -> res.data 是业务数据（RefundRaw[]）
+    const res = await api.get<RefundRaw[]>('/client/refunds');
+    return res.data;
   },
   /** 创建退款（整单不传 items / 部分退款传 items[]，向后兼容） */
   async createRefund(payload: CreateRefundPayload): Promise<RefundRaw> {
@@ -144,8 +145,9 @@ export const refundApi = {
       // mock 延迟模拟网络（让 isPending 生效，提交按钮 disable 防 repeated submit）
       return new Promise((resolve) => setTimeout(() => resolve(mock), 300));
     }
-    const res = await api.post<{ success: boolean; data: RefundRaw }>('/client/refunds', payload);
-    return res.data.data;
+    // api.ts interceptor 已剥 {success,data} 壳 -> res.data 是业务数据（RefundRaw）
+    const res = await api.post<RefundRaw>('/client/refunds', payload);
+    return res.data;
   },
 
   /**
@@ -179,8 +181,9 @@ export const refundApi = {
       };
       return new Promise((resolve) => setTimeout(() => resolve(mock), 200));
     }
-    const res = await api.get<{ success: boolean; data: RefundRaw }>(`/client/refunds/${id}`);
-    return res.data.data;
+    // api.ts interceptor 已剥 {success,data} 壳 -> res.data 是业务数据（RefundRaw）
+    const res = await api.get<RefundRaw>(`/client/refunds/${id}`);
+    return res.data;
   },
 
   /**
@@ -214,9 +217,8 @@ export const refundApi = {
       };
       return new Promise((resolve) => setTimeout(() => resolve(mock), 200));
     }
-    const res = await api.post<{ success: boolean; data: RefundRaw }>(
-      `/client/refunds/${id}/cancel`,
-    );
-    return res.data.data;
+    // api.ts interceptor 已剥 {success,data} 壳 -> res.data 是业务数据（RefundRaw）
+    const res = await api.post<RefundRaw>(`/client/refunds/${id}/cancel`);
+    return res.data;
   },
 };
