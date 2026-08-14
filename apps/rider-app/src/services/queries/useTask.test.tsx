@@ -137,6 +137,36 @@ describe('useAcceptTask', () => {
       deliveries: [],
     });
   });
+
+  it('onMutate 边界：accept 的 task 不在缓存时不崩，lists 保持原样（审查 C4）', async () => {
+    const taskA = makeTask('PENDING_ASSIGN', { id: 'A' });
+    seedLists(qc, { available: [taskA], pickups: [], deliveries: [] });
+    let resolveAccept!: (v: DeliveryTask) => void;
+    mockAccept.mockReturnValue(
+      new Promise<DeliveryTask>((r) => {
+        resolveAccept = r;
+      }),
+    );
+
+    const { result } = renderHook(() => useAcceptTask(), { wrapper: makeWrapper(qc) });
+
+    // accept('B')，B 不在 available 缓存
+    await act(async () => {
+      result.current.mutate('B');
+    });
+
+    // onMutate find available 无 B -> setQueryData 不调用，lists 不变（A 仍在 available）
+    expect(readLists(qc)).toEqual({
+      available: [taskA],
+      pickups: [],
+      deliveries: [],
+    });
+
+    await act(async () => {
+      resolveAccept({ ...taskA, id: 'B', status: 'ASSIGNED' });
+      await Promise.resolve();
+    });
+  });
 });
 
 describe('useStartDelivering', () => {
