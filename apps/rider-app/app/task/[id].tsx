@@ -85,6 +85,7 @@ export default function TaskDetailPage() {
         {taskData ? (
           <TaskCard
             actionLabel={actionLabel}
+            actionPending={acceptTask.isPending}
             chatLabel={t('tasks.chat')}
             contactLabel={t('tasks.contact')}
             items={taskData.items.length ? formatItems(taskData.items, t) : undefined}

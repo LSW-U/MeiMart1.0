@@ -395,5 +395,6 @@
   "auth.register.saveProfile": "Save Profile",
   "auth.register.cam": "CAM",
   "history.calendar": "CAL",
-  "withdraw.failed": "Withdrawal failed"
+  "withdraw.failed": "Withdrawal failed",
+  "profile.saveFailed": "Failed to save profile, please retry"
 }

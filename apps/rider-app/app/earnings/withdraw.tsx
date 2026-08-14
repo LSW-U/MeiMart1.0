@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { WithdrawForm } from '../../src/components/business/WithdrawForm';
@@ -18,6 +18,15 @@ export default function WithdrawalPage() {
   const { data: summary } = useEarningSummary();
   const createWithdrawal = useCreateWithdrawal();
 
+  // B1: 成功后 800ms 跳转的定时器，卸载时清理
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    },
+    [],
+  );
+
   const parsedAmount = Number.parseFloat(amount);
   const amountValid = Number.isFinite(parsedAmount) && parsedAmount > 0;
   const exceedsBalance = summary != null && parsedAmount > summary.availableBalance;
@@ -31,7 +40,11 @@ export default function WithdrawalPage() {
     try {
       await createWithdrawal.mutateAsync({ amount: parsedAmount, method });
       setStatus('success');
-      setTimeout(() => router.replace('/(main)/earnings'), 800);
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
+      redirectTimer.current = setTimeout(() => {
+        redirectTimer.current = null;
+        router.replace('/(main)/earnings');
+      }, 800);
     } catch (e) {
       setStatus('error');
       setErrorMsg(e instanceof Error ? e.message : t('withdraw.failed'));
@@ -74,6 +87,7 @@ export default function WithdrawalPage() {
           servicePointName={t('withdraw.servicePointName')}
           submitDisabled={submitDisabled}
           submitLabel={submitLabel}
+          submitLoading={status === 'processing'}
           toLabel={t('withdraw.toLabel')}
           onAmountChange={setAmount}
           onSelectMethod={setMethod}

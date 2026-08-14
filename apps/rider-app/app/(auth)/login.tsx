@@ -23,7 +23,7 @@ const isDev = __DEV__;
 export default function LoginPage() {
   const router = useRouter();
   const { t, language } = useTranslation();
-  const { login, mockLogin, sendSmsCode } = useAuth();
+  const { login, mockLogin, sendSmsCode, isLoginPending } = useAuth();
   const updateSettings = useUpdateRiderSettings();
   const [mode, setMode] = useState<LoginMode>('password');
   const [accepted, setAccepted] = useState(false);
@@ -202,7 +202,7 @@ export default function LoginPage() {
             </Text>
           </View>
 
-          <Button icon={<Text className="text-white">→</Text>} onPress={() => void handleLogin()}>{t('auth.login.submit')}</Button>
+          <Button loading={isLoginPending} onPress={() => void handleLogin()}>{t('auth.login.submit')}</Button>
 
           {/* Why: 开发环境 mock-login 按钮，跳过密码验证直接登录骑手账号 */}
           {isDev && (

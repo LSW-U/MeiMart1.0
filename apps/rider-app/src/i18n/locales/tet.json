@@ -395,5 +395,6 @@
   "auth.register.saveProfile": "",
   "auth.register.cam": "",
   "history.calendar": "",
-  "withdraw.failed": ""
+  "withdraw.failed": "",
+  "profile.saveFailed": ""
 }

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EvidenceExample, EvidenceUpload } from '../../../src/components/camera/SignaturePad';
@@ -31,6 +31,15 @@ export default function SignConfirmPage() {
   const { isOffline } = useNetwork();
   const { data: task } = useTask(id);
 
+  // B1: 成功后 500ms 跳转的定时器，卸载时清理（避免快速返回后跳转/状态异常）
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    },
+    [],
+  );
+
   // Why: sign 页只允许 PICKED_UP/DELIVERING（可送达）进入。
   //   DELIVERED 已送达 / 其他状态弹回 detail。防止重复送达 409（对称 pickup/navigate 守卫）。
   //   基于缓存：守卫读 useTask 缓存（S3），极端竞态下仍可能 409，由提交 toast 兜底（审查 A4）
@@ -45,6 +54,10 @@ export default function SignConfirmPage() {
   const payableDisplay = ((task?.payableAmount ?? 0) / 100).toFixed(2);
 
   const canSubmit = doorCaptured && packageCaptured && status !== 'processing';
+
+  // B1: COD 实收金额有效性（与提交时判定一致：parseFloat 非 NaN 且 ≥ 0）
+  const codAmountInvalid = isCod && !(Number.isFinite(Number.parseFloat(collectedInput)) && Number.parseFloat(collectedInput) >= 0);
+  const submitDisabled = !canSubmit || status === 'success' || codAmountInvalid;
 
   const handleConfirmDelivery = async () => {
     if (!canSubmit) return;
@@ -67,7 +80,11 @@ export default function SignConfirmPage() {
       });
       if (isOffline) showToast(t('common.savedOffline'), 'info');
       setStatus('success');
-      setTimeout(() => router.replace('/(main)/tasks?tab=deliveries'), 500);
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
+      redirectTimer.current = setTimeout(() => {
+        redirectTimer.current = null;
+        router.replace('/(main)/tasks?tab=deliveries');
+      }, 500);
     } catch (e) {
       setStatus('idle');
       // 审查报告 TODO toast：按 ApiError 差异化（业务失败 vs 网络）
@@ -144,7 +161,12 @@ export default function SignConfirmPage() {
       </ScrollView>
 
       <View className="absolute bottom-0 left-0 right-0 gap-2 bg-white px-5 py-4 shadow-lg">
-        <Button className={`${canSubmit ? 'bg-primary-container' : 'bg-neutral-muted opacity-50'}`} onPress={() => void handleConfirmDelivery()}>
+        <Button
+          className={canSubmit && !codAmountInvalid ? 'bg-primary-container' : 'bg-neutral-muted'}
+          disabled={submitDisabled}
+          loading={status === 'processing'}
+          onPress={() => void handleConfirmDelivery()}
+        >
           {status === 'processing' ? t('flow.processing') : status === 'success' ? t('sign.success') : t('sign.confirm')}
         </Button>
         <Text className="mx-auto max-w-[280px] text-center text-[11px] leading-5 text-on-surface-variant opacity-80">

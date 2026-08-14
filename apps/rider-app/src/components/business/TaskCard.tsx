@@ -21,6 +21,9 @@ type TaskCardProps = {
   items?: string;
   note?: string;
   actionLabel: string;
+  /** B1: active variant 主 action 的 pending/disabled（调用方透传 mutation 状态，如 acceptTask.isPending） */
+  actionPending?: boolean;
+  actionDisabled?: boolean;
   chatLabel?: string;
   contactLabel?: string;
   variant?: 'new' | 'active';
@@ -29,7 +32,7 @@ type TaskCardProps = {
   onContact?: () => void;
 };
 
-export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags = [], items, note, actionLabel, chatLabel = 'Chat', contactLabel = 'Contact', variant = 'new', onAction, onChat, onContact }: TaskCardProps) {
+export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags = [], items, note, actionLabel, actionPending = false, actionDisabled = false, chatLabel = 'Chat', contactLabel = 'Contact', variant = 'new', onAction, onChat, onContact }: TaskCardProps) {
   return (
     <View className="relative gap-3 rounded-lg border border-surface-variant bg-white p-4 shadow-sm">
       {badge ? (
@@ -104,7 +107,14 @@ export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags
           >
             <Text className="text-sm font-bold text-on-surface">{contactLabel}</Text>
           </Pressable>
-          <Pressable className="flex-[2] items-center justify-center rounded-lg bg-primary-container py-3" onPress={onAction}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={actionLabel}
+            accessibilityState={{ disabled: actionDisabled || actionPending, busy: actionPending }}
+            className={`flex-[2] items-center justify-center rounded-lg bg-primary-container py-3 ${actionDisabled || actionPending ? 'opacity-50' : ''}`}
+            disabled={actionDisabled || actionPending}
+            onPress={onAction}
+          >
             <Text className="text-sm font-bold text-white">{actionLabel}</Text>
           </Pressable>
         </View>

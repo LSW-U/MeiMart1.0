@@ -395,5 +395,6 @@
   "auth.register.saveProfile": "保存资料",
   "auth.register.cam": "拍照",
   "history.calendar": "日历",
-  "withdraw.failed": "提现失败"
+  "withdraw.failed": "提现失败",
+  "profile.saveFailed": "资料保存失败，请稍后重试"
 }

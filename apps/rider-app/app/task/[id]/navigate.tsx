@@ -170,7 +170,7 @@ export default function TaskNavigatePage() {
       </ScrollView>
 
       <View className="absolute bottom-0 left-0 right-0 bg-surface p-5 shadow-lg">
-        <Button className="bg-tertiary" onPress={() => void handleNavigateAction()}>
+        <Button className="bg-tertiary" disabled={!task || startDelivering.isPending} loading={startDelivering.isPending} onPress={() => void handleNavigateAction()}>
           {startDelivering.isPending ? t('flow.processing') : actionLabel}
         </Button>
       </View>

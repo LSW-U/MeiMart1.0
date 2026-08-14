@@ -193,7 +193,7 @@ export default function RegisterPage() {
           )}
 
           <View className="gap-6">
-            <Button className="h-16 rounded-2xl" textClassName="text-lg" icon={<Text className="text-lg text-white">→</Text>} onPress={() => void register()}>
+            <Button className="h-16 rounded-2xl" disabled={loading} loading={loading} textClassName="text-lg" onPress={() => void register()}>
               {loading ? t('flow.processing') : t('auth.register.submit')}
             </Button>
             <Text className="text-center text-sm text-on-surface-variant">

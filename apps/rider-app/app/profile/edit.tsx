@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
 import { PageHeader } from '../../src/components/layout/PageHeader';
+import { showToast } from '../../src/components/feedback/Toast';
 import { AppIcon, Button, Input, UploadTile } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
+import { ApiError } from '../../src/services/api';
 import { useUpdateProfile } from '../../src/services/queries/useRider';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
@@ -51,12 +53,18 @@ export default function ProfileEditPage() {
   };
 
   const saveProfile = async () => {
-    await updateProfile.mutateAsync({
-      riderName: name,
-      phone: phone.startsWith('+670') ? phone : `+670 ${phone}`,
-      vehiclePlate: licenseNumber,
-    });
-    router.replace('/(main)/profile');
+    try {
+      await updateProfile.mutateAsync({
+        riderName: name,
+        phone: phone.startsWith('+670') ? phone : `+670 ${phone}`,
+        vehiclePlate: licenseNumber,
+      });
+      router.replace('/(main)/profile');
+    } catch (e) {
+      // B1 最小配套：保存失败不再 unhandled rejection，留在本页保留输入可重试
+      console.error('[profile/edit] saveProfile failed:', e);
+      showToast(e instanceof ApiError ? t('profile.saveFailed') : t('common.networkError'), 'error');
+    }
   };
 
   return (
@@ -154,7 +162,7 @@ export default function ProfileEditPage() {
           </View>
 
           <View>
-            <Button className="h-16 rounded-2xl" textClassName="text-lg" icon={<Text className="text-lg text-white">→</Text>} onPress={() => void saveProfile()}>
+            <Button className="h-16 rounded-2xl" disabled={updateProfile.isPending} loading={updateProfile.isPending} textClassName="text-lg" onPress={() => void saveProfile()}>
               {t('auth.register.saveProfile')}
             </Button>
           </View>
