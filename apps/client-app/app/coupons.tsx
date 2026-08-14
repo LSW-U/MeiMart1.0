@@ -144,7 +144,7 @@ export default function CouponsPage() {
       {/* 领取中心入口（仅 available Tab 显示） */}
       {tab === 'available' && (
         <Pressable
-          onPress={() => router.push('/(main)/home')}
+          onPress={() => router.push('/coupons/claim')}
           style={({ pressed }) => [
             styles.centerBanner,
             { backgroundColor: colors.primary },

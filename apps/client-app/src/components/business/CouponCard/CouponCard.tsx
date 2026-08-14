@@ -5,7 +5,15 @@ import { Button } from '@/components/ui/Button';
 import { formatCouponValue } from '@/utils/coupon';
 import type { CouponCardProps } from './CouponCard.types';
 
-export function CouponCard({ coupon, onPress, onUse, testID }: CouponCardProps) {
+export function CouponCard({
+  coupon,
+  onPress,
+  onUse,
+  action,
+  onClaim,
+  claiming,
+  testID,
+}: CouponCardProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const discountLabel = formatCouponValue(coupon, t);
@@ -71,9 +79,22 @@ export function CouponCard({ coupon, onPress, onUse, testID }: CouponCardProps) 
             Expired
           </Text>
         )}
-        {/* Why: 仅 available 态显示 Use Now；used/expired 不可用 */}
-        {isValid && onUse && (
-          <Button label="Use Now" variant="text" size="sm" onPress={() => onUse(coupon)} />
+        {/* Why: action='claim'（领券中心）显示「领取」替代「Use Now」；默认 available 态显示 Use Now；used/expired 不可用 */}
+        {action === 'claim' ? (
+          onClaim && (
+            <Button
+              label={claiming ? t('claim.claiming', { defaultValue: 'Claiming…' }) : t('claim.claimBtn', { defaultValue: 'Claim' })}
+              variant="primary"
+              size="sm"
+              loading={claiming}
+              disabled={claiming}
+              onPress={() => onClaim(coupon)}
+            />
+          )
+        ) : (
+          isValid && onUse && (
+            <Button label="Use Now" variant="text" size="sm" onPress={() => onUse(coupon)} />
+          )
         )}
       </View>
     </Pressable>
