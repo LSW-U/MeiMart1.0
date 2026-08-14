@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -65,7 +65,9 @@ export default function NotificationsPage() {
   const onItemPress = useCallback(
     async (item: NotificationItem) => {
       if (!item.read) await markAsReadMutation.mutateAsync(item.id);
-      if (item.link) router.push(item.link as never);
+      // item.link 是后端/mock 返回的动态路由 string（/(main)/earnings、/order/{id}），
+      // expo-router typed routes 无法静态窄化 runtime string，断言为 Href（合法路由联合）
+      if (item.link) router.push(item.link as Href);
     },
     [router, markAsReadMutation],
   );
