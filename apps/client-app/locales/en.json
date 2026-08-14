@@ -532,6 +532,15 @@
     "centerTitle": "Coupon Center",
     "centerDesc": "Claim more exclusive coupons"
   },
+  "claim": {
+    "title": "Coupon Center",
+    "empty": "No coupons to claim",
+    "emptyDesc": "Browse my coupons",
+    "goMyCoupons": "My Coupons",
+    "claimBtn": "Claim",
+    "claiming": "Claiming…",
+    "claimed": "Claimed"
+  },
   "about": {
     "title": "About us",
     "company": "Company",

@@ -532,6 +532,15 @@
     "centerTitle": "领券中心",
     "centerDesc": "领取更多专属优惠"
   },
+  "claim": {
+    "title": "领券中心",
+    "empty": "暂无可领券",
+    "emptyDesc": "看看我的卡包",
+    "goMyCoupons": "我的卡包",
+    "claimBtn": "立即领取",
+    "claiming": "领取中…",
+    "claimed": "领取成功"
+  },
   "about": {
     "title": "关于我们",
     "company": "公司",

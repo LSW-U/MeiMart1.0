@@ -485,6 +485,15 @@
     "centerTitle": "[TET] Coupon Center",
     "centerDesc": "[TET] Claim more exclusive coupons"
   },
+  "claim": {
+    "title": "[TET] Coupon Center",
+    "empty": "[TET] No coupons to claim",
+    "emptyDesc": "[TET] Browse my coupons",
+    "goMyCoupons": "[TET] My Coupons",
+    "claimBtn": "[TET] Claim",
+    "claiming": "[TET] Claiming…",
+    "claimed": "[TET] Claimed"
+  },
   "about": {
     "title": "[TET] About us",
     "company": "[TET] Company",
