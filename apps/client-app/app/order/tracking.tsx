@@ -44,12 +44,14 @@ const ON_PRIMARY = '#ffffff';
 
 // STAR_COLOR 移到 RiderCard 内部（P11 Commit 2b，骑手卡共享件）
 
-// Why: P11 Commit 3 D4 - StatusBadge 文案按 status 动态（复用 order.status.* 既有 i18n，新 10 枚举映射到旧 key）
+// Why: P11 Commit 3 D4 - StatusBadge 文案按 status 动态（复用 order.status.* 既有 i18n）
+// P10 审查 B1：PENDING_CONFIRM/CONFIRMED 从 paid 拆到 confirming/confirmed（与详情页 STATUS_VISUAL 同步，
+// 否则同一订单详情页显 "Confirmed"、物流页显 "AWAITING SHIPMENT" 两页矛盾）
 function getStatusBadgeKey(status: OrderStatus): string {
   const map: Record<OrderStatus, string> = {
     PENDING_PAYMENT: 'order.status.pending',
-    PENDING_CONFIRM: 'order.status.paid',
-    CONFIRMED: 'order.status.paid',
+    PENDING_CONFIRM: 'order.status.confirming',
+    CONFIRMED: 'order.status.confirmed',
     PICKED: 'order.status.shipped',
     OUT_FOR_DELIVERY: 'order.status.shipped',
     DELIVERED_PAID: 'order.status.delivered',
