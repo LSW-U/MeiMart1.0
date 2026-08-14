@@ -61,7 +61,13 @@ export default function AddressEditPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <Header title={isEditing ? 'Edit Address' : 'Add New Address'} />
+      <Header
+          title={
+            isEditing
+              ? t('address.edit', { defaultValue: 'Edit Address' })
+              : t('address.add', { defaultValue: 'Add New Address' })
+          }
+        />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         // Why: position relative 让 bottomBar absolute 相对此容器定位，避免 Web 端定位错误
@@ -161,14 +167,14 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
           control={control}
           name="recipientName"
           icon="person"
-          label="FULL NAME"
-          placeholder="e.g., Maria Silva"
+          label={t('address.name', { defaultValue: 'FULL NAME' })}
+          placeholder={t('address.namePlaceholder', { defaultValue: 'e.g., Maria Silva' })}
           testID="addr-name"
         />
 
         {/* PHONE NUMBER with +670 prefix */}
         <View>
-          <FieldLabel icon="call" label="PHONE NUMBER" />
+          <FieldLabel icon="call" label={t('address.phone', { defaultValue: 'PHONE NUMBER' })} />
           <View style={styles.phoneRow}>
             <View
               style={[
@@ -195,7 +201,7 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
                         color: colors['on-surface'],
                       },
                     ]}
-                    placeholder="7712 3456"
+                    placeholder={t('address.phonePlaceholder', { defaultValue: '7712 3456' })}
                     placeholderTextColor={colors['on-surface-variant']}
                     keyboardType="phone-pad"
                     value={value}
@@ -212,9 +218,9 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
         <SelectField
           control={control}
           name="province"
-          label="DISTRICT / REGION"
+          label={t('address.province', { defaultValue: 'DISTRICT / REGION' })}
           icon="location_city"
-          placeholder="Select District"
+          placeholder={t('address.provincePlaceholder', { defaultValue: 'Select District' })}
           options={DISTRICTS}
           testID="addr-province"
         />
@@ -222,7 +228,7 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
         {/* COMPLETE ADDRESS + city/sub-district */}
         <View>
           <View style={styles.addrLabelRow}>
-            <FieldLabel icon="home" label="COMPLETE ADDRESS" />
+            <FieldLabel icon="home" label={t('address.detail', { defaultValue: 'COMPLETE ADDRESS' })} />
             <Pressable
               onPress={() => router.push('/address/map')}
               hitSlop={8}
@@ -231,7 +237,9 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
               accessibilityLabel={t('address.a11y.pinOnMap')}
             >
               <Icon symbol="location_on" size={14} color={colors.primary} />
-              <Text style={[styles.pinBtnText, { color: colors.primary }]}>PIN ON MAP</Text>
+              <Text style={[styles.pinBtnText, { color: colors.primary }]}>
+              {t('address.pickOnMap', { defaultValue: 'PIN ON MAP' })}
+            </Text>
             </Pressable>
           </View>
           <Controller
@@ -247,7 +255,7 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
                     color: colors['on-surface'],
                   },
                 ]}
-                placeholder="Village, Sub-district, street name, house number..."
+                placeholder={t('address.detailPlaceholder', { defaultValue: 'Village, Sub-district, street name, house number...' })}
                 placeholderTextColor={colors['on-surface-variant']}
                 value={value}
                 onChangeText={onChange}
@@ -259,7 +267,7 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
           />
           <View style={styles.cityRow}>
             <View style={styles.col}>
-              <FieldLabel icon="apartment" label="CITY" />
+              <FieldLabel icon="apartment" label={t('address.city', { defaultValue: 'CITY' })} />
               <Controller
                 control={control}
                 name="city"
@@ -283,27 +291,15 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
               />
             </View>
             <View style={styles.col}>
-              <FieldLabel icon="location_city" label="SUB-DISTRICT" />
-              <Controller
+              {/* P16 决策 5：district 从 TextInput 手输改 SelectField 下拉（与 province 交互一致），选项用 DISTRICTS 常量 */}
+              <SelectField
                 control={control}
                 name="district"
-                render={({ field: { value, onChange } }) => (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors['surface-container-lowest'],
-                        borderColor: colors['outline-variant'],
-                        color: colors['on-surface'],
-                      },
-                    ]}
-                    placeholder="Cristo Rei"
-                    placeholderTextColor={colors['on-surface-variant']}
-                    value={value}
-                    onChangeText={onChange}
-                    testID="addr-district"
-                  />
-                )}
+                icon="location_city"
+                label={t('address.district', { defaultValue: 'SUB-DISTRICT' })}
+                placeholder={t('address.districtPlaceholder', { defaultValue: 'Cristo Rei' })}
+                options={DISTRICTS}
+                testID="addr-district"
               />
             </View>
           </View>
@@ -311,7 +307,7 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
 
         <View style={[styles.defaultRow, { borderTopColor: colors['outline-variant'] }]}>
           <Text style={[styles.defaultLabel, { color: colors['on-surface'] }]}>
-            Set as default address
+            {t('address.setDefault', { defaultValue: 'Set as default address' })}
           </Text>
           <Controller
             control={control}
@@ -353,7 +349,9 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
           accessibilityRole="button"
           accessibilityLabel={t('address.a11y.save')}
         >
-          <Text style={[styles.saveBtnText, { color: colors['on-primary'] }]}>SAVE ADDRESS</Text>
+          <Text style={[styles.saveBtnText, { color: colors['on-primary'] }]}>
+            {t('address.save', { defaultValue: 'SAVE ADDRESS' })}
+          </Text>
         </Pressable>
       </View>
     </>

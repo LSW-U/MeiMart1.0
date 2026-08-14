@@ -417,7 +417,12 @@
     "saved": "[TET] Address saved",
     "removeTitle": "[TET] Delete Address",
     "removeConfirm": "[TET] Remove \"{{name}}\" from saved addresses?",
-    "removeAction": "[TET] Delete"
+    "removeAction": "[TET] Delete",
+    "namePlaceholder": "[TET] e.g., Maria Silva",
+    "phonePlaceholder": "7712 3456",
+    "provincePlaceholder": "[TET] Select District",
+    "detailPlaceholder": "[TET] Village, Sub-district, street name, house number...",
+    "districtPlaceholder": "Cristo Rei"
   },
   "profile": {
     "title": "[TET] My Account",

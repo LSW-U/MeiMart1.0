@@ -459,7 +459,12 @@
     "nearbyPlaces": "Nearby Places",
     "confirmLocation": "Confirm Location",
     "searchPlaceholder": "Search for location...",
-    "autoUpdateHint": "Automatically updated from map pin"
+    "autoUpdateHint": "Automatically updated from map pin",
+    "namePlaceholder": "e.g., Maria Silva",
+    "phonePlaceholder": "7712 3456",
+    "provincePlaceholder": "Select District",
+    "detailPlaceholder": "Village, Sub-district, street name, house number...",
+    "districtPlaceholder": "Cristo Rei"
   },
   "profile": {
     "title": "My Account",

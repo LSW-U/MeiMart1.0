@@ -459,7 +459,12 @@
     "nearbyPlaces": "附近位置",
     "confirmLocation": "确认位置",
     "searchPlaceholder": "搜索地点...",
-    "autoUpdateHint": "根据地图定位自动更新"
+    "autoUpdateHint": "根据地图定位自动更新",
+    "namePlaceholder": "例如：Maria Silva",
+    "phonePlaceholder": "7712 3456",
+    "provincePlaceholder": "选择地区",
+    "detailPlaceholder": "村、街道、门牌号...",
+    "districtPlaceholder": "Cristo Rei"
   },
   "profile": {
     "title": "我的账户",
