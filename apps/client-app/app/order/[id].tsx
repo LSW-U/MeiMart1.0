@@ -19,7 +19,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { formatDate } from '@/utils/format';
+import { formatDate, formatEta } from '@/utils/format';
 import { buildTimelineSteps, type TimelineStepData } from '@/utils/timeline';
 import { RiderCard, getRiderStatusTag } from '@/components/business/RiderCard';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, statusBannerPalettes, type StatusBannerPaletteKey } from '@/theme';
@@ -31,6 +31,7 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { StatusBadge } from '@/components/business/StatusBadge';
 import { Icon } from '@/components/ui/Icon';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
+import { useOrderEta } from '@/services/queries/useOrderEta';
 import { toast } from '@/store/toastStore';
 import type { OrderStatus, Order, CartItem } from '@/types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -153,6 +154,9 @@ export default function OrderDetailPage() {
   const { colors } = useTheme();
   const { data: order, isLoading, isError, refetch } = useOrder(id);
   const cancelMutation = useCancelOrder();
+  // P10：轻量 ETA（仅 PICKED/OUT_FOR_DELIVERY 发请求）。hooks 规则 —— 必须在早返回之前无条件调用，
+  // status 用 order?.status 兜底（loading 阶段 order 为 undefined）。
+  const { data: eta } = useOrderEta(id, order?.status ?? 'PENDING_PAYMENT');
 
   if (isLoading) {
     return (
@@ -184,6 +188,13 @@ export default function OrderDetailPage() {
 
   const visual = STATUS_VISUAL[order.status];
   const statusTheme = statusBannerPalettes[visual.palette];
+  // Why: OUT_FOR_DELIVERY 且拿到真实 ETA（DeliveryTask.estimatedArrival）→ 显示「Arriving <eta>」；
+  // 否则 fallback 到 STATUS_VISUAL 配置文案（formatEta 与结算页 B9 同款 locale 规则）
+  const etaLocale = i18n.language === 'zh' ? 'zh-CN' : 'en-US';
+  const bannerValue =
+    order.status === 'OUT_FOR_DELIVERY' && eta
+      ? t('order.bannerValue.arrivingEta', { eta: formatEta(eta, etaLocale) })
+      : t(visual.bannerValueKey);
   // Why: P10 §8.1 D1 - 费用从 transformOrder 映射的字段读取，消除 2.0/5.0 写死（mock 无字段时降级 0）
   const shippingFee = order.deliveryFee ?? 0;
   const discount = order.discountAmount ?? 0;
@@ -279,7 +290,7 @@ export default function OrderDetailPage() {
                 {t(visual.bannerLabelKey).toUpperCase()}
               </Text>
               <Text style={[styles.etaValue, { color: statusTheme.bannerValueColor }]}>
-                {t(visual.bannerValueKey)}
+                {bannerValue}
               </Text>
             </View>
           </View>
