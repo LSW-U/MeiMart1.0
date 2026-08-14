@@ -25,6 +25,7 @@ import { Icon } from '@/components/ui/Icon';
 import { CouponPicker } from '@/components/business/CouponPicker/CouponPicker';
 import { useCart, useCheckoutPreview, useClearCart } from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
+import { useAddressSelectionStore, resolveCheckoutAddress } from '@/store/addressSelectionStore';
 import { usePaymentMethods } from '@/services/queries/usePayment';
 import { useCreateOrder } from '@/services/queries/useOrders';
 import { useCoupons } from '@/services/queries/usePromotion';
@@ -50,11 +51,14 @@ export default function CheckoutPage() {
   const { isOffline } = useWeakNetworkUI();
   const { data: cart, isLoading, isError, refetch } = useCart();
   const { data: addresses } = useAddresses();
+  // Why: P16 决策 6 —— 地址列表（from='checkout' 选择模式）选中的地址优先于 isDefault，
+  //      只影响本次结算会话，不改用户的默认地址数据
+  const selectedAddressId = useAddressSelectionStore((s) => s.selectedId);
   const { data: paymentMethods } = usePaymentMethods();
   const createOrder = useCreateOrder();
   const clearCart = useClearCart();
   const selectedItems = cart?.items.filter((i) => i.selected) ?? [];
-  const defaultAddress = addresses?.find((a) => a.isDefault) ?? addresses?.[0];
+  const defaultAddress = resolveCheckoutAddress(addresses, selectedAddressId);
   // Why: real 模式选券 —— selectedCouponCode 驱动 preview 重查（key 含 couponCode），后端聚合 discount
   const [selectedCouponCode, setSelectedCouponCode] = useState<string | undefined>(undefined);
   const [showCouponModal, setShowCouponModal] = useState(false);
@@ -160,6 +164,8 @@ export default function CheckoutPage() {
       } catch (e) {
         console.warn('[checkout] clearCart failed:', e);
       }
+      // Why: 下单成功清除本次会话的手选地址，避免污染下次结算（P16 决策 6）
+      useAddressSelectionStore.getState().clear();
       toast.success(t('checkout.orderPlaced', { defaultValue: 'Order placed' }));
       router.replace('/order/result');
     } catch (error: unknown) {
@@ -214,7 +220,7 @@ export default function CheckoutPage() {
             </Text>
             {defaultAddress && (
               <Pressable
-                onPress={() => router.push('/address/list')}
+                onPress={() => router.push({ pathname: '/address/list', params: { from: 'checkout' } })}
                 hitSlop={8}
                 style={({ pressed }) => [
                   styles.changeBtn,
@@ -230,7 +236,7 @@ export default function CheckoutPage() {
           </View>
           <Pressable
             testID="checkout-address"
-            onPress={() => router.push('/address/list')}
+            onPress={() => router.push({ pathname: '/address/list', params: { from: 'checkout' } })}
             style={({ pressed }) => [pressed && { opacity: 0.7 }]}
             accessibilityRole="button"
             accessibilityLabel={
