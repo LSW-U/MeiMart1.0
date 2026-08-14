@@ -46,8 +46,8 @@ module.exports = {
           },
         ],
       },
-      // @tanstack/react-query 以 ESM 发布，web project 不带 jest-expo 默认 transformIgnorePatterns；
-      // react-native 同样需要 transform（Button 等组件 import react-native，jsdom 下渲染 host 组件）
+      // 防御性放行：moduleNameMapper 只映射精确包名 'react-native'，若有库 import
+      // 'react-native/Libraries/...' 子路径会走真包，这里让它可 transform（审查 M2）
       transformIgnorePatterns: ['/node_modules/(?!@tanstack/react-query|react-native)'],
       // react-native index.js 顶层读 NativeModules/TurboModuleRegistry，jsdom 无 RN runtime 会崩；
       // 换成 src/test/react-native.mock.js 的最小 host 壳（组件测试只需可渲染可透传 props）

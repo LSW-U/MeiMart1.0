@@ -111,9 +111,11 @@ export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags
             accessibilityRole="button"
             accessibilityLabel={actionLabel}
             accessibilityState={{ disabled: actionDisabled || actionPending, busy: actionPending }}
-            className={`flex-[2] items-center justify-center rounded-lg bg-primary-container py-3 ${actionDisabled || actionPending ? 'opacity-50' : ''}`}
+            className="flex-[2] items-center justify-center rounded-lg bg-primary-container py-3"
             disabled={actionDisabled || actionPending}
             onPress={onAction}
+            // B1/审查 M1: opacity 走 style 不走 className，避免 Tailwind class 优先级不稳定（同 Button §3.7）
+            style={{ opacity: actionDisabled || actionPending ? 0.5 : 1 }}
           >
             <Text className="text-sm font-bold text-white">{actionLabel}</Text>
           </Pressable>

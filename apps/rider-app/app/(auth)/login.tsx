@@ -202,7 +202,7 @@ export default function LoginPage() {
             </Text>
           </View>
 
-          <Button loading={isLoginPending} onPress={() => void handleLogin()}>{t('auth.login.submit')}</Button>
+          <Button disabled={isLoginPending} loading={isLoginPending} onPress={() => void handleLogin()}>{t('auth.login.submit')}</Button>
 
           {/* Why: 开发环境 mock-login 按钮，跳过密码验证直接登录骑手账号 */}
           {isDev && (
