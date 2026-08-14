@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
 import { Button } from '@/components/ui/Button';
@@ -7,7 +7,6 @@ import type { CouponCardProps } from './CouponCard.types';
 
 export function CouponCard({
   coupon,
-  onPress,
   onUse,
   action,
   onClaim,
@@ -23,19 +22,20 @@ export function CouponCard({
   const isUsed = coupon.status === 'used';
   const isExpired = coupon.status === 'expired';
 
+  // Why: 外层不包 Pressable —— Web 端 Pressable 渲染成 <button>，与内部动作按钮（也是
+  //      Pressable→button）嵌套即非法 DOM（hydration error，memory web-nested-pressable）。
+  //      整卡 onPress 两个消费方（coupons.tsx / claim.tsx）都没传，纯死代码；未来做
+  //      「点卡展开详情」时用平级结构（外层 View + 独立可点区域），见优惠券卡片模块盘点 Q10。
   return (
-    <Pressable
+    <View
       testID={testID}
-      style={({ pressed }) => [
+      style={[
         styles.card,
         {
           backgroundColor: isValid ? colors['primary-container'] : colors['surface-container-high'],
           borderColor: isValid ? colors.primary : colors['outline-variant'],
         },
-        pressed && styles.pressed,
       ]}
-      onPress={onPress ? () => onPress(coupon) : undefined}
-      accessibilityRole="button"
       accessibilityLabel={t('coupons.cardLabel', {
         name: coupon.name,
         discount: discountLabel,
@@ -106,7 +106,7 @@ export function CouponCard({
           )
         )}
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -117,7 +117,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
   },
-  pressed: { opacity: 0.85 },
   left: {
     width: 100,
     alignItems: 'center',

@@ -4,6 +4,12 @@ import { ThemeProvider } from '@/theme';
 import { CouponCard } from './CouponCard';
 import type { ClientCoupon } from '@/services/promotion';
 
+// Q1 修复：Min spend/Used/Use Now 改走 i18n，mock 返回 key（refunds.test 模式）
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string, opts?: { amount?: number }) =>
+    opts?.amount !== undefined ? `${key}:${opts.amount}` : key }),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );
@@ -23,17 +29,17 @@ const coupon: ClientCoupon = {
 };
 
 describe('CouponCard', () => {
-  it('renders discount label and name (ClientCoupon)', () => {
+  it('renders discount label and name (ClientCoupon, 门槛文案带金额插值)', () => {
     const { getByText } = render(<CouponCard coupon={coupon} />, { wrapper });
     expect(getByText('10% OFF')).toBeTruthy();
     expect(getByText('New User Discount')).toBeTruthy();
-    expect(getByText('Min spend $50')).toBeTruthy();
+    expect(getByText('coupons.minSpend:50')).toBeTruthy();
   });
 
   it('calls onUse when Use Now pressed (available)', () => {
     const onUse = jest.fn();
     const { getByText } = render(<CouponCard coupon={coupon} onUse={onUse} />, { wrapper });
-    fireEvent.press(getByText('Use Now'));
+    fireEvent.press(getByText('coupons.useNow'));
     expect(onUse).toHaveBeenCalledWith(coupon);
   });
 
@@ -41,7 +47,7 @@ describe('CouponCard', () => {
     const usedCoupon: ClientCoupon = { ...coupon, status: 'used' };
     const onUse = jest.fn();
     const { queryByText } = render(<CouponCard coupon={usedCoupon} onUse={onUse} />, { wrapper });
-    expect(queryByText('Use Now')).toBeNull();
-    expect(queryByText('Used')).toBeTruthy();
+    expect(queryByText('coupons.useNow')).toBeNull();
+    expect(queryByText('coupons.used')).toBeTruthy();
   });
 });
