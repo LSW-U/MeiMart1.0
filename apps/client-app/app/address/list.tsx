@@ -99,8 +99,8 @@ export default function AddressListPage() {
             accessibilityRole="button"
             accessibilityLabel={t('address.a11y.addNew')}
           >
-            <Icon symbol="add_location_alt" size={22} color="#ffffff" />
-            <Text style={styles.addBtnText}>Add New Address</Text>
+            <Icon symbol="add_location_alt" size={22} color={colors['on-primary']} />
+            <Text style={[styles.addBtnText, { color: colors['on-primary'] }]}>Add New Address</Text>
           </Pressable>
 
           {/* Saved Addresses 标题（HTML 第 164-165 行） */}
@@ -174,7 +174,7 @@ function Header({ title }: { title: string }) {
     <View accessibilityRole="header">
       {/* MANAGE YOUR ADDRESSES — h-8 primary tracker */}
       <View style={[styles.trackerBar, { backgroundColor: colors.primary }]}>
-        <Text style={styles.trackerText}>MANAGE YOUR ADDRESSES</Text>
+        <Text style={[styles.trackerText, { color: colors['on-primary'] }]}>MANAGE YOUR ADDRESSES</Text>
       </View>
       {/* 主 header */}
       <View style={[styles.header, { backgroundColor: colors.primary }]}>
@@ -189,9 +189,9 @@ function Header({ title }: { title: string }) {
             accessibilityRole="button"
             accessibilityLabel={t('common.goBack')}
           >
-            <Icon symbol="arrow_back" size={24} color="#ffffff" />
+            <Icon symbol="arrow_back" size={24} color={colors['on-primary']} />
           </Pressable>
-          <Text style={styles.headerTitle}>{title}</Text>
+          <Text style={[styles.headerTitle, { color: colors['on-primary'] }]}>{title}</Text>
           <Pressable
             onPress={() => router.push('/service/help')}
             hitSlop={8}
@@ -199,7 +199,7 @@ function Header({ title }: { title: string }) {
             accessibilityRole="button"
             accessibilityLabel={t('common.help')}
           >
-            <Icon symbol="help_outline" size={24} color="#ffffff" />
+            <Icon symbol="help_outline" size={24} color={colors['on-primary']} />
           </Pressable>
         </View>
       </View>
@@ -308,7 +308,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   trackerText: {
-    color: '#ffffff',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1.5,
@@ -341,7 +340,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...typography.h2,
-    color: '#ffffff',
     fontWeight: '700',
     fontSize: 20,
   },
@@ -368,7 +366,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
   },
   addBtnText: {
-    color: '#ffffff',
     ...typography['body-md'],
     fontWeight: '700',
   },

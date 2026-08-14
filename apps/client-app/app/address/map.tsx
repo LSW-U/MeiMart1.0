@@ -212,7 +212,7 @@ export default function MapPickPage() {
           accessibilityRole="button"
           accessibilityLabel={t('address.a11y.confirmSave')}
         >
-          <Text style={styles.saveBtnText}>CONFIRM LOCATION</Text>
+          <Text style={[styles.saveBtnText, { color: colors['on-primary'] }]}>CONFIRM LOCATION</Text>
         </Pressable>
       </View>
     </SafeAreaWrapper>
@@ -246,7 +246,7 @@ function Header({ title }: { title: string }) {
   return (
     <View accessibilityRole="header">
       <View style={[styles.trackerBar, { backgroundColor: colors.primary }]}>
-        <Text style={styles.trackerText}>MANAGE YOUR ADDRESSES</Text>
+        <Text style={[styles.trackerText, { color: colors['on-primary'] }]}>MANAGE YOUR ADDRESSES</Text>
       </View>
       <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <View style={styles.headerPattern} pointerEvents="none">
@@ -260,9 +260,9 @@ function Header({ title }: { title: string }) {
             accessibilityRole="button"
             accessibilityLabel={t('common.goBack')}
           >
-            <Icon symbol="arrow_back" size={24} color="#ffffff" />
+            <Icon symbol="arrow_back" size={24} color={colors['on-primary']} />
           </Pressable>
-          <Text style={styles.headerTitle}>{title}</Text>
+          <Text style={[styles.headerTitle, { color: colors['on-primary'] }]}>{title}</Text>
           <Pressable
             onPress={() => router.push('/service/help')}
             hitSlop={8}
@@ -270,7 +270,7 @@ function Header({ title }: { title: string }) {
             accessibilityRole="button"
             accessibilityLabel={t('common.help')}
           >
-            <Icon symbol="help_outline" size={24} color="#ffffff" />
+            <Icon symbol="help_outline" size={24} color={colors['on-primary']} />
           </Pressable>
         </View>
       </View>
@@ -286,7 +286,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   trackerText: {
-    color: '#ffffff',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1.5,
@@ -319,7 +318,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...typography.h2,
-    color: '#ffffff',
     fontWeight: '700',
     fontSize: 20,
   },
@@ -521,7 +519,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   saveBtnText: {
-    color: '#ffffff',
     ...typography['body-md'],
     fontWeight: '700',
     letterSpacing: 1,
