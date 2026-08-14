@@ -54,8 +54,8 @@ type StatusVisual = {
 };
 
 // Why: STATUS_VISUAL 存 i18n key（纯数据，不依赖 t），渲染处 t() + toUpperCase。
-// badgeTextKey 复用 order.status.*（与 P11 getStatusBadgeKey 映射一致：PENDING_CONFIRM/CONFIRMED→paid、
-// PICKED/OUT_FOR_DELIVERY→shipped、DELIVERED_*/COMPLETED→delivered、CANCELLED→cancelled），零新增。
+// badgeTextKey 复用 order.status.*（PENDING_CONFIRM→confirming、CONFIRMED→confirmed 拆开，
+// PICKED/OUT_FOR_DELIVERY→shipped、DELIVERED_*/COMPLETED→delivered、CANCELLED→cancelled）。
 // bannerLabelKey/bannerValueKey 用 order.bannerLabel.*/order.bannerValue.* 子命名空间（新增）。
 const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
   // 待付款（PROCESSING 等价的橙色）
@@ -66,20 +66,20 @@ const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
     bannerValueKey: 'order.bannerValue.completePaymentSoon',
     bannerIconSymbol: 'schedule',
   },
-  // 待确认（已付款等审核，颜色同 PENDING_PAYMENT）
+  // 待确认（已付款等审核，颜色同 PENDING_PAYMENT）— P10：badge 从 paid 拆出，避免误显"待发货"
   PENDING_CONFIRM: {
     palette: 'pending',
-    badgeTextKey: 'order.status.paid',
+    badgeTextKey: 'order.status.confirming',
     bannerLabelKey: 'order.bannerLabel.orderStatus',
     bannerValueKey: 'order.bannerValue.beingConfirmed',
     bannerIconSymbol: 'hourglass_empty',
   },
-  // 已确认（PROCESSING 配色）
+  // 已确认（PROCESSING 配色）— P10：badge 从 paid 拆出；无 DeliveryTask 无真实 ETA，banner 用泛化备货文案
   CONFIRMED: {
     palette: 'pending',
-    badgeTextKey: 'order.status.paid',
+    badgeTextKey: 'order.status.confirmed',
     bannerLabelKey: 'order.bannerLabel.estimatedDelivery',
-    bannerValueKey: 'order.bannerValue.arrivingInDays',
+    bannerValueKey: 'order.bannerValue.preparing',
     bannerIconSymbol: 'local_shipping',
   },
   // 已拣货（同 SHIPPED 配色）

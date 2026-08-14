@@ -292,6 +292,8 @@
   "order": {
     "status": {
       "pending": "Awaiting payment",
+      "confirming": "Being confirmed",
+      "confirmed": "Confirmed",
       "paid": "Awaiting shipment",
       "shipped": "Shipped",
       "delivered": "Completed",
@@ -392,7 +394,8 @@
     "bannerValue": {
       "completePaymentSoon": "Please complete payment soon",
       "beingConfirmed": "Order is being confirmed",
-      "arrivingInDays": "Arriving in 2-3 days",
+      "preparing": "Preparing your order",
+      "arrivingEta": "Arriving {{eta}}",
       "packagePicked": "Package picked, on the way soon",
       "outForDelivery": "Out for delivery",
       "deliveredEnjoyed": "Delivered - hope you enjoyed your order",

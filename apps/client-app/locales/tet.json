@@ -250,6 +250,8 @@
   "order": {
     "status": {
       "pending": "[TET] Awaiting payment",
+      "confirming": "[TET] Being confirmed",
+      "confirmed": "[TET] Confirmed",
       "paid": "[TET] Awaiting shipment",
       "shipped": "[TET] Shipped",
       "delivered": "[TET] Completed",
@@ -350,7 +352,8 @@
     "bannerValue": {
       "completePaymentSoon": "[TET] Please complete payment soon",
       "beingConfirmed": "[TET] Order is being confirmed",
-      "arrivingInDays": "[TET] Arriving in 2-3 days",
+      "preparing": "[TET] Preparing your order",
+      "arrivingEta": "[TET] Arriving {{eta}}",
       "packagePicked": "[TET] Package picked, on the way soon",
       "outForDelivery": "[TET] Out for delivery",
       "deliveredEnjoyed": "[TET] Delivered - hope you enjoyed your order",
