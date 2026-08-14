@@ -133,6 +133,35 @@ export const promotionApi = {
   },
 
   /**
+   * 领券中心（GET /client/coupons/available，后端 listAvailableTemplates）
+   * 返回当前用户可领的模板（ACTIVE + 有效期内 + 未领过 + 未超额），
+   * 返回项的 id 即 promotionId（claimCoupon 入参用）。
+   */
+  async listAvailableCoupons(): Promise<ClientCoupon[]> {
+    if (isMockMode) {
+      // Why: mock 无 UserCoupon 排除逻辑，返全部模板模拟可领池（真联动验 real 模式）
+      return mockResponse(mockDb.coupons.map(adaptMockCoupon));
+    }
+    const res = await api.get<ClientCoupon[]>('/client/coupons/available');
+    return res.data;
+  },
+
+  /**
+   * 领取券（POST /client/coupons/:promotionId/claim，后端 claimCoupon）
+   * @param promotionId 模板 id（listAvailableCoupons 返回的 ClientCoupon.id）
+   * 后端生成 UserCoupon(UNUSED) 进我的卡包；重复领抛 E-COUPON-003（@@unique）
+   */
+  async claimCoupon(promotionId: string): Promise<ClientCoupon> {
+    if (isMockMode) {
+      // Why: mock 不真正生成 UserCoupon（卡包不联动），只回模板供 UI 走成功流
+      const tpl = mockDb.coupons.find((c) => c.id === promotionId) ?? mockDb.coupons[0];
+      return mockResponse(adaptMockCoupon(tpl));
+    }
+    const res = await api.post<ClientCoupon>(`/client/coupons/${promotionId}/claim`);
+    return res.data;
+  },
+
+  /**
    * 活动入口列表（GET /client/home-entries，PromoDock 消费）
    * 横排功能停靠栏 — 常驻功能入口（Flash Deals / Coupons / Free Ship / Points），
    * 后端控制数量/排序/时效。过渡期 mock = 4 项常驻入口。
