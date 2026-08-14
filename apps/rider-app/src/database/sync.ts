@@ -21,6 +21,19 @@ const MAX_ATTEMPTS = 5;
 
 export async function enqueue(action: QueueAction): Promise<void> {
   await database.write(async () => {
+    // 审查 M2：同 taskId+action 已有未超限 entry 则去重，避免重复入队。
+    // WMB query().fetch() 默认排除软删（已 markAsDeleted），existing 都是未处理项；
+    // 只去重 attempts < MAX（超限死信允许新建，给重试机会）。UI button disabled 已防重复点击，此为双保险。
+    const existing = await database.get<OfflineQueueEntry>('offline_queue').query().fetch();
+    const taskId = action.payload.taskId;
+    const dup = existing.find(
+      (e) =>
+        e.action === action.type &&
+        e.attempts < MAX_ATTEMPTS &&
+        (JSON.parse(e.payload) as { taskId: string }).taskId === taskId,
+    );
+    if (dup) return;
+
     await database.get<OfflineQueueEntry>('offline_queue').create((entry) => {
       entry.action = action.type;
       entry.payload = JSON.stringify(action.payload);
@@ -57,6 +70,8 @@ export async function processQueue(): Promise<{ synced: number; failed: number }
 
     let synced = 0;
     let failed = 0;
+    // 审查 S6：同 taskId 前序失败则后序本轮跳过（避免 pickup 失败时 deliver 无效请求触发后端状态机报错）
+    const failedTaskIds = new Set<string>();
 
     for (const entry of entries) {
       if (entry.attempts >= MAX_ATTEMPTS) {
@@ -64,15 +79,18 @@ export async function processQueue(): Promise<{ synced: number; failed: number }
         continue;
       }
 
+      const payload = JSON.parse(entry.payload);
+      const taskId = (payload as { taskId?: string }).taskId;
+      // S6：前序同 taskId 失败 -> 后序本轮跳过（不 dispatch；下轮 failedTaskIds 重置，前序重试成功则后序再试）
+      if (taskId && failedTaskIds.has(taskId)) continue;
+
       try {
-        const action = {
-          type: entry.action,
-          payload: JSON.parse(entry.payload),
-        } as QueueAction;
+        const action = { type: entry.action, payload } as QueueAction;
         await dispatchAction(action);
         await entry.markAsDeleted();
         synced++;
       } catch (e) {
+        if (taskId) failedTaskIds.add(taskId);
         // 修 bug：直接 entry.attempts += 1 不持久化（WMB 要 update），改用 entry.update
         await entry.update((record) => {
           record.attempts += 1;
