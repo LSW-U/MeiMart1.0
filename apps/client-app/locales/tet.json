@@ -483,7 +483,12 @@
     "tabUsed": "[TET] Used",
     "tabExpired": "[TET] Expired",
     "centerTitle": "[TET] Coupon Center",
-    "centerDesc": "[TET] Claim more exclusive coupons"
+    "centerDesc": "[TET] Claim more exclusive coupons",
+    "minSpend": "[TET] Min spend {{amount}}",
+    "used": "[TET] Used",
+    "expired": "[TET] Expired",
+    "useNow": "[TET] Use Now",
+    "cardLabel": "[TET] Coupon: {{name}}, {{discount}}"
   },
   "claim": {
     "title": "[TET] Coupon Center",

@@ -530,7 +530,12 @@
     "tabUsed": "已使用",
     "tabExpired": "已过期",
     "centerTitle": "领券中心",
-    "centerDesc": "领取更多专属优惠"
+    "centerDesc": "领取更多专属优惠",
+    "minSpend": "满 {{amount}} 可用",
+    "used": "已使用",
+    "expired": "已过期",
+    "useNow": "去使用",
+    "cardLabel": "优惠券：{{name}}，{{discount}}"
   },
   "claim": {
     "title": "领券中心",

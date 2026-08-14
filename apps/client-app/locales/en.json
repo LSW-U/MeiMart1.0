@@ -530,7 +530,12 @@
     "tabUsed": "Used",
     "tabExpired": "Expired",
     "centerTitle": "Coupon Center",
-    "centerDesc": "Claim more exclusive coupons"
+    "centerDesc": "Claim more exclusive coupons",
+    "minSpend": "Min spend {{amount}}",
+    "used": "Used",
+    "expired": "Expired",
+    "useNow": "Use Now",
+    "cardLabel": "Coupon: {{name}}, {{discount}}"
   },
   "claim": {
     "title": "Coupon Center",

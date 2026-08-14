@@ -36,7 +36,11 @@ export function CouponCard({
       ]}
       onPress={onPress ? () => onPress(coupon) : undefined}
       accessibilityRole="button"
-      accessibilityLabel={`Coupon: ${coupon.name}, ${discountLabel}`}
+      accessibilityLabel={t('coupons.cardLabel', {
+        name: coupon.name,
+        discount: discountLabel,
+        defaultValue: `Coupon: ${coupon.name}, ${discountLabel}`,
+      })}
     >
       <View style={styles.left}>
         <Text
@@ -48,7 +52,7 @@ export function CouponCard({
           {discountLabel}
         </Text>
         <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-          Min spend ${coupon.minOrderAmount}
+          {t('coupons.minSpend', { amount: coupon.minOrderAmount, defaultValue: 'Min spend' })}
         </Text>
       </View>
       <View style={styles.divider}>
@@ -71,12 +75,12 @@ export function CouponCard({
         </Text>
         {isUsed && (
           <Text style={[textStyle('label-caps'), { color: colors['on-surface-variant'] }]}>
-            Used
+            {t('coupons.used', { defaultValue: 'Used' })}
           </Text>
         )}
         {isExpired && (
           <Text style={[textStyle('label-caps'), { color: colors['on-surface-variant'] }]}>
-            Expired
+            {t('coupons.expired', { defaultValue: 'Expired' })}
           </Text>
         )}
         {/* Why: action='claim'（领券中心）显示「领取」替代「Use Now」；默认 available 态显示 Use Now；used/expired 不可用 */}
@@ -93,7 +97,12 @@ export function CouponCard({
           )
         ) : (
           isValid && onUse && (
-            <Button label="Use Now" variant="text" size="sm" onPress={() => onUse(coupon)} />
+            <Button
+              label={t('coupons.useNow', { defaultValue: 'Use Now' })}
+              variant="text"
+              size="sm"
+              onPress={() => onUse(coupon)}
+            />
           )
         )}
       </View>

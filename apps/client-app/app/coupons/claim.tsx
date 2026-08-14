@@ -15,6 +15,7 @@ import { CouponCard } from '@/components/business/CouponCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { OfflineBanner } from '@/components/feedback/OfflineBanner';
+import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { useAvailableCoupons, useClaimCoupon } from '@/services/queries/usePromotion';
 import { toast } from '@/store/toastStore';
@@ -39,10 +40,11 @@ export default function CouponClaimPage() {
   const coupons = availableQ.data ?? [];
 
   return (
-    <SafeAreaWrapper
-      edges={['top', 'bottom']}
-      style={{ backgroundColor: colors.background, flex: 1 }}
-    >
+    <PageErrorBoundary pageName="coupons-claim">
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
       <StatusBarConfig />
       <PrimaryHeader title={t('claim.title', { defaultValue: 'Coupon Center' })} showBack onBackPress={handleBack} />
       {isOffline && <OfflineBanner />}
@@ -98,7 +100,8 @@ export default function CouponClaimPage() {
           )}
         />
       )}
-    </SafeAreaWrapper>
+      </SafeAreaWrapper>
+    </PageErrorBoundary>
   );
 }
 
