@@ -1,8 +1,5 @@
 {
   "app.name": "Rider Hub",
-  "qr.title": "QR Scanner",
-  "qr.permissionPrompt": "Camera permission is required to scan QR codes.",
-  "qr.grantPermission": "Grant Permission",
   "app.tagline": "Modern Timorese Heritage",
   "splash.status": "Synchronizing",
   "auth.login.hidePassword": "Hide password",

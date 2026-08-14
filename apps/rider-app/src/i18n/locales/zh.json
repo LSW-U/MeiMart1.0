@@ -1,8 +1,5 @@
 {
   "app.name": "骑手中心",
-  "qr.title": "扫码",
-  "qr.permissionPrompt": "需要相机权限才能扫码。",
-  "qr.grantPermission": "授予权限",
   "app.tagline": "东帝汶现代传承",
   "splash.status": "同步中",
   "auth.login.hidePassword": "隐藏密码",

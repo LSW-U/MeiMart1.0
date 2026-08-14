@@ -1,8 +1,5 @@
 {
   "app.name": "Central do Entregador",
-  "qr.title": "",
-  "qr.permissionPrompt": "",
-  "qr.grantPermission": "",
   "app.tagline": "",
   "splash.status": "",
   "auth.login.hidePassword": "",

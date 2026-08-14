@@ -1,8 +1,5 @@
 {
   "app.name": "Sentru Rider",
-  "qr.title": "",
-  "qr.permissionPrompt": "",
-  "qr.grantPermission": "",
   "app.tagline": "",
   "splash.status": "",
   "auth.login.hidePassword": "",
