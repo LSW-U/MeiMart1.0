@@ -82,16 +82,24 @@ export function useConfirmDelivery() {
   const queryClient = useQueryClient();
   const { isOffline } = useNetwork();
   return useMutation({
-    mutationFn: async (params: { taskId: string; evidence?: DeliveryEvidence }) => {
+    mutationFn: async (params: {
+      taskId: string;
+      evidence?: DeliveryEvidence;
+      /** COD 实收金额（分）。后端按与 payableAmount 对比记 PAID/SHORT/UNPAID，不传 COD 默认 UNPAID */
+      collectedAmount?: number;
+    }) => {
       // CLAUDE.md 规则 12：离线入队。onMutate 已置 detail cache 为 DELIVERED，这里读回构造乐观 task。
       // detail 缺失（边缘，sign 页 useTask 已加载）不入队、throw -> onError rollback，避免队列/UI 不一致。
       // 审查 S1：离线直接 enqueue + return（对齐 pickup），不读 detail、不 throw。
       // enqueue 只需 taskId；detail 缺失 throw 会触发 onError rollback 撤销 onMutate 乐观、丢失操作。
       if (isOffline) {
-        await enqueue({ type: 'deliver', payload: { taskId: params.taskId } });
+        await enqueue({
+          type: 'deliver',
+          payload: { taskId: params.taskId, collectedAmount: params.collectedAmount },
+        });
         return;
       }
-      return deliveryApi.confirmDelivery(params.taskId, params.evidence);
+      return deliveryApi.confirmDelivery(params.taskId, params.evidence, params.collectedAmount);
     },
     onMutate: async (variables) =>
       applyOptimisticStatus(queryClient, variables.taskId, 'DELIVERED'),

@@ -5,7 +5,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { EvidenceExample, EvidenceUpload } from '../../../src/components/camera/SignaturePad';
 import { showToast } from '../../../src/components/feedback/Toast';
 import { ApiError } from '../../../src/services/api';
-import { Button } from '../../../src/components/ui';
+import { Button, Input } from '../../../src/components/ui';
 import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useNetwork } from '../../../src/hooks/useNetwork';
 import { useTranslation } from '../../../src/i18n/useTranslation';
@@ -25,6 +25,8 @@ export default function SignConfirmPage() {
   const [doorUri, setDoorUri] = useState('');
   const [packageUri, setPackageUri] = useState('');
   const [status, setStatus] = useState<'idle' | 'processing' | 'success'>('idle');
+  // COD 实收金额（元，输入框字符串）；后端要分，提交时转换
+  const [collectedInput, setCollectedInput] = useState('');
   const confirmDelivery = useConfirmDelivery();
   const { isOffline } = useNetwork();
   const { data: task } = useTask(id);
@@ -38,16 +40,30 @@ export default function SignConfirmPage() {
     router.replace(`/task/${id}`);
   }, [task, id, router]);
 
+  // COD 判断 + 应收展示（后端单位分，展示转元）
+  const isCod = task?.paymentMethod === 'COD';
+  const payableDisplay = ((task?.payableAmount ?? 0) / 100).toFixed(2);
+
   const canSubmit = doorCaptured && packageCaptured && status !== 'processing';
 
   const handleConfirmDelivery = async () => {
     if (!canSubmit) return;
+
+    // COD 必填实收金额：后端不传 collectedAmount 默认记 UNPAID（a664 实证），必须显式输入
+    if (isCod) {
+      const parsed = Number.parseFloat(collectedInput);
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        showToast(t('sign.codRequired'), 'error');
+        return;
+      }
+    }
 
     setStatus('processing');
     try {
       await confirmDelivery.mutateAsync({
         taskId: id,
         evidence: { doorUri, packageUri },
+        collectedAmount: isCod ? Math.round(Number.parseFloat(collectedInput) * 100) : undefined,
       });
       if (isOffline) showToast(t('common.savedOffline'), 'info');
       setStatus('success');
@@ -75,6 +91,23 @@ export default function SignConfirmPage() {
           <Text className="text-lg font-bold text-white">i</Text>
           <Text className="flex-1 font-semibold leading-5 text-white">{t('sign.alert')}</Text>
         </View>
+
+        {isCod ? (
+          <View className="gap-3 rounded-xl border border-outline-variant bg-surface-container-low p-4">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t('sign.codPayable')}</Text>
+              <Text className="text-xl font-bold text-primary">{t('common.currency')}{payableDisplay}</Text>
+            </View>
+            <Input
+              keyboardType="decimal-pad"
+              label={t('sign.codCollected')}
+              placeholder={t('sign.codCollectedPlaceholder')}
+              value={collectedInput}
+              onChangeText={setCollectedInput}
+            />
+            <Text className="text-[11px] leading-4 text-on-surface-variant opacity-80">{t('sign.codHint')}</Text>
+          </View>
+        ) : null}
 
         <View className="gap-3">
           <Text className="px-1 text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t('sign.referenceExamples')}</Text>

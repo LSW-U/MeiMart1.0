@@ -49,6 +49,10 @@ export type DeliveryTask = {
   note: string | null;
   createdAt: string;
   updatedAt: string;
+  /** COD 判断依据（'COD' 时 sign 页要求输入实收金额，单位：分） */
+  paymentMethod?: string;
+  /** 订单应付金额（COD 实收参考，单位：分） */
+  payableAmount?: number;
   // ── 兼容字段（旧 UI 引用 task.pickup.title / task.fee 等） ──
   // service 层 fromView() 保证 real 模式也填充这些字段（缺失时填默认空值）
   pickup: TaskStop;
