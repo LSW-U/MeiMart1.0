@@ -439,7 +439,6 @@
     "removeTitle": "删除地址",
     "removeConfirm": "确认从已保存地址中移除\"{{name}}\"？",
     "removeAction": "删除",
-    "removed": "地址已删除",
     "saved": "地址已保存",
     "deleted": "地址已删除",
     "a11y": {
@@ -451,7 +450,16 @@
       "addNew": "新增地址",
       "useCurrentLocation": "使用当前位置",
       "confirmSave": "确认并保存地址"
-    }
+    },
+    "savedAddresses": "已保存地址",
+    "emptyDesc": "添加地址以加快结算",
+    "loadFailed": "地址加载失败",
+    "save": "保存地址",
+    "selectedLocation": "已选位置",
+    "nearbyPlaces": "附近位置",
+    "confirmLocation": "确认位置",
+    "searchPlaceholder": "搜索地点...",
+    "autoUpdateHint": "根据地图定位自动更新"
   },
   "profile": {
     "title": "我的账户",

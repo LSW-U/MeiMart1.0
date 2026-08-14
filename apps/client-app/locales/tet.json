@@ -404,7 +404,20 @@
       "addNew": "[TET] Add new address",
       "useCurrentLocation": "[TET] Use current location",
       "confirmSave": "[TET] Confirm and save address"
-    }
+    },
+    "savedAddresses": "[TET] Saved Addresses",
+    "emptyDesc": "[TET] Add an address to speed up checkout",
+    "loadFailed": "[TET] Failed to load addresses",
+    "save": "[TET] Save Address",
+    "selectedLocation": "[TET] Selected Location",
+    "nearbyPlaces": "[TET] Nearby Places",
+    "confirmLocation": "[TET] Confirm Location",
+    "searchPlaceholder": "[TET] Search for location...",
+    "autoUpdateHint": "[TET] Automatically updated from map pin",
+    "saved": "[TET] Address saved",
+    "removeTitle": "[TET] Delete Address",
+    "removeConfirm": "[TET] Remove \"{{name}}\" from saved addresses?",
+    "removeAction": "[TET] Delete"
   },
   "profile": {
     "title": "[TET] My Account",

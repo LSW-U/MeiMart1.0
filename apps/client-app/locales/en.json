@@ -439,7 +439,6 @@
     "removeTitle": "Delete Address",
     "removeConfirm": "Remove \"{{name}}\" from saved addresses?",
     "removeAction": "Delete",
-    "removed": "Address deleted",
     "saved": "Address saved",
     "deleted": "Address deleted",
     "a11y": {
@@ -451,7 +450,16 @@
       "addNew": "Add new address",
       "useCurrentLocation": "Use current location",
       "confirmSave": "Confirm and save address"
-    }
+    },
+    "savedAddresses": "Saved Addresses",
+    "emptyDesc": "Add an address to speed up checkout",
+    "loadFailed": "Failed to load addresses",
+    "save": "Save Address",
+    "selectedLocation": "Selected Location",
+    "nearbyPlaces": "Nearby Places",
+    "confirmLocation": "Confirm Location",
+    "searchPlaceholder": "Search for location...",
+    "autoUpdateHint": "Automatically updated from map pin"
   },
   "profile": {
     "title": "My Account",
