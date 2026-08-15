@@ -8,6 +8,7 @@ import { TaskCard } from '../../src/components/business/TaskCard';
 import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader';
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
+import { QueryBoundary } from '../../src/components/feedback/QueryBoundary';
 import { AppIcon, Button } from '../../src/components/ui';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { useTaskLists } from '../../src/services/queries/useTask';
@@ -42,7 +43,8 @@ export default function TasksPage() {
   const { data: settings } = useRiderSettings();
   const updateSettings = useUpdateRiderSettings();
   const dutyStatus = settings?.dutyStatus ?? 'offDuty';
-  const { data: taskListsData, refetch: refetchTasks } = useTaskLists();
+  // B3: 消费三态——loading 骨架替代闪空态，error 显式重试（不再误报"暂无任务"）
+  const { data: taskListsData, isLoading: taskListsLoading, isError: taskListsError, refetch: refetchTasks } = useTaskLists();
   const taskLists = taskListsData ?? { available: [] as DeliveryTask[], pickups: [] as DeliveryTask[], deliveries: [] as DeliveryTask[] };
   const rider = useAuthStore((s) => s.rider);
 
@@ -147,20 +149,41 @@ export default function TasksPage() {
     />
   );
 
+  const emptyMeta: Record<TaskTab, { title: TranslationKey; desc: TranslationKey }> = {
+    new: { title: 'common.noNewTasks', desc: 'common.noNewTasksDesc' },
+    pickups: { title: 'common.noPickups', desc: 'common.noPickupsDesc' },
+    deliveries: { title: 'common.noDeliveries', desc: 'common.noDeliveriesDesc' },
+  };
+
   const renderContent = () => {
     if (!online) {
       return <EmptyState title={t('common.offlineTitle')} description={t('common.offlineDesc')} />;
     }
 
-    if (activeTab === 'new') {
-      return taskLists.available.length ? taskLists.available.map(renderNewTask) : <EmptyState title={t('common.noNewTasks')} description={t('common.noNewTasksDesc')} />;
-    }
-
-    if (activeTab === 'pickups') {
-      return taskLists.pickups.length ? taskLists.pickups.map(renderPickupTask) : <EmptyState title={t('common.noPickups')} description={t('common.noPickupsDesc')} />;
-    }
-
-    return taskLists.deliveries.length ? taskLists.deliveries.map(renderDeliveryTask) : <EmptyState title={t('common.noDeliveries')} description={t('common.noDeliveriesDesc')} />;
+    // B3: 三态边界——loading 骨架 / error 重试 / 空态基于真实 data / 数据渲染
+    return (
+      <QueryBoundary
+        data={taskListsData}
+        emptyDescription={t(emptyMeta[activeTab].desc)}
+        emptyTitle={t(emptyMeta[activeTab].title)}
+        errorMessage={t('common.loadError.desc')}
+        errorTitle={t('common.loadError.title')}
+        isEmpty={(lists) => lists[activeTab === 'new' ? 'available' : activeTab].length === 0}
+        isLoading={taskListsLoading}
+        isError={taskListsError}
+        retryLabel={t('common.retry')}
+        skeleton="list"
+        onRetry={() => void refetchTasks()}
+      >
+        {(lists) =>
+          activeTab === 'new'
+            ? lists.available.map(renderNewTask)
+            : activeTab === 'pickups'
+              ? lists.pickups.map(renderPickupTask)
+              : lists.deliveries.map(renderDeliveryTask)
+        }
+      </QueryBoundary>
+    );
   };
 
   const bottomPadding = Math.max(insets.bottom, 12);

@@ -396,5 +396,8 @@
   "auth.register.cam": "",
   "history.calendar": "",
   "withdraw.failed": "",
-  "profile.saveFailed": ""
+  "profile.saveFailed": "",
+  "common.loadError.title": "",
+  "common.loadError.desc": "",
+  "common.retry": ""
 }

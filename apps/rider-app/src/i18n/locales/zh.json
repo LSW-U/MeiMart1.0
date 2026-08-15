@@ -396,5 +396,8 @@
   "auth.register.cam": "拍照",
   "history.calendar": "日历",
   "withdraw.failed": "提现失败",
-  "profile.saveFailed": "资料保存失败，请稍后重试"
+  "profile.saveFailed": "资料保存失败，请稍后重试",
+  "common.loadError.title": "加载失败",
+  "common.loadError.desc": "请检查网络后重试",
+  "common.retry": "重试"
 }

@@ -396,5 +396,8 @@
   "auth.register.cam": "CAM",
   "history.calendar": "CAL",
   "withdraw.failed": "Withdrawal failed",
-  "profile.saveFailed": "Failed to save profile, please retry"
+  "profile.saveFailed": "Failed to save profile, please retry",
+  "common.loadError.title": "Failed to load",
+  "common.loadError.desc": "Please check your network and retry",
+  "common.retry": "Retry"
 }

@@ -3,7 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { TaskCard } from '../../src/components/business/TaskCard';
 import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader';
-import { EmptyState } from '../../src/components/feedback/EmptyState';
+import { QueryBoundary } from '../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../src/components/feedback/Toast';
 import { AppIcon } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
@@ -30,7 +30,8 @@ export default function TaskDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const goBack = useGoBack('/(main)/tasks');
-  const { data: task, refetch } = useTask(id);
+  // B3: 三态——loading 骨架 / error 重试（弱网不再误报"任务不存在"）/ null 才是未找到
+  const { data: task, isLoading: taskLoading, isError: taskError, refetch } = useTask(id);
   const acceptTask = useAcceptTask();
   const { isOffline } = useNetwork();
   const taskData: DeliveryTask | null = task ?? null;
@@ -82,26 +83,38 @@ export default function TaskDetailPage() {
         onMenuPress={() => void goBack()}
       />
       <ScrollView className="flex-1" contentContainerClassName="px-3 py-6 pb-28">
-        {taskData ? (
-          <TaskCard
-            actionLabel={actionLabel}
-            actionPending={acceptTask.isPending}
-            chatLabel={t('tasks.chat')}
-            contactLabel={t('tasks.contact')}
-            items={taskData.items.length ? formatItems(taskData.items, t) : undefined}
-            note={taskData.note ?? undefined}
-            orderId={taskData.orderId}
-            points={[
-              { label: 'P', title: taskData.pickup.title, subtitle: taskData.pickup.address, distance: t('common.fromHere', { distance: formatDistance(Math.max(taskData.distanceKm - 1.3, 0.5)) }) },
-              { label: 'D', title: taskData.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(taskData.distanceKm) }) },
-            ]}
-            timeLabel={t('common.remaining', { minutes: String(taskData.estimatedMinutes) })}
-            variant="active"
-            onAction={() => void handleAction()}
-          />
-        ) : (
-          <EmptyState title={t('common.taskNotFound')} description={t('common.taskNotFoundDesc')} />
-        )}
+        <QueryBoundary<DeliveryTask | null>
+          data={task}
+          emptyDescription={t('common.taskNotFoundDesc')}
+          emptyTitle={t('common.taskNotFound')}
+          errorMessage={t('common.loadError.desc')}
+          errorTitle={t('common.loadError.title')}
+          isEmpty={(value) => value === null}
+          isLoading={taskLoading}
+          isError={taskError}
+          retryLabel={t('common.retry')}
+          skeleton="detail"
+          onRetry={() => void refetch()}
+          >
+            {(detail) => (
+            <TaskCard
+              actionLabel={actionLabel}
+              actionPending={acceptTask.isPending}
+              chatLabel={t('tasks.chat')}
+              contactLabel={t('tasks.contact')}
+              items={detail.items.length ? formatItems(detail.items, t) : undefined}
+              note={detail.note ?? undefined}
+              orderId={detail.orderId}
+              points={[
+                { label: 'P', title: detail.pickup.title, subtitle: detail.pickup.address, distance: t('common.fromHere', { distance: formatDistance(Math.max(detail.distanceKm - 1.3, 0.5)) }) },
+                { label: 'D', title: detail.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(detail.distanceKm) }) },
+              ]}
+              timeLabel={t('common.remaining', { minutes: String(detail.estimatedMinutes) })}
+              variant="active"
+              onAction={() => void handleAction()}
+            />
+          )}
+        </QueryBoundary>
       </ScrollView>
       <View className="absolute bottom-0 left-0 right-0 flex-row items-center gap-4 border-t border-surface-variant bg-surface px-3 py-4">
         <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.settings')} className="items-center px-2" onPress={() => router.push('/settings')}>
