@@ -559,7 +559,8 @@
     "notificationPrefs": "通知偏好",
     "cacheCalculating": "计算中…",
     "cacheCleared": "缓存已清除",
-    "cacheClearFailed": "清除缓存失败"
+    "cacheClearFailed": "清除缓存失败",
+    "legalComingSoon": "内容待补充"
   },
   "language": {
     "title": "选择语言",
@@ -965,7 +966,9 @@
     "E-USER-005": "手机号格式错误",
     "E-AUTH-001": "认证失败，请重新登录",
     "E-AUTH-002": "Token 已过期",
-    "E-AUTH-003": "无权限访问"
+    "E-AUTH-003": "无权限访问",
+    "notFoundTitle": "页面不存在",
+    "notFoundDesc": "您访问的页面不存在"
   },
   "search": {
     "recent": "最近搜索",
@@ -988,5 +991,14 @@
     "noSuggestion": "没有找到「{{q}}」的相关建议，回车查看搜索结果",
     "emptyKeyword": "请输入搜索关键词",
     "searchTerm": "搜索 {{term}}"
+  },
+  "legal": {
+    "terms": {
+      "title": "用户协议"
+    },
+    "privacy": {
+      "title": "隐私政策"
+    },
+    "comingSoon": "本内容正在准备中，正式文案将由法务提供，不影响您当前使用 App 的功能。"
   }
 }

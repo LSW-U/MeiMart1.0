@@ -259,7 +259,7 @@ export default function SettingsPage() {
             subColor={colors['on-surface-variant']}
             dividerColor={colors['outline-variant']}
             testID="settings-privacy"
-            onPress={() => {}}
+            onPress={() => router.push('/legal/privacy')}
           />
           <PressableRow
             label={t('settings.terms')}
@@ -271,7 +271,7 @@ export default function SettingsPage() {
             dividerColor={colors['outline-variant']}
             showDivider={false}
             testID="settings-tos"
-            onPress={() => {}}
+            onPress={() => router.push('/legal/terms')}
           />
         </View>
 
@@ -295,7 +295,9 @@ export default function SettingsPage() {
             dividerColor={colors['outline-variant']}
             testID="settings-version"
           >
-            <Text style={[styles.value, { color: colors['on-surface-variant'] }]}>v{APP_VERSION}</Text>
+            <Text style={[styles.value, { color: colors['on-surface-variant'] }]}>
+              v{APP_VERSION}
+            </Text>
           </RowItem>
           <PressableRow
             label={t('settings.about')}

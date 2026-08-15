@@ -559,7 +559,8 @@
     "notificationPrefs": "Notifications",
     "cacheCalculating": "Calculating…",
     "cacheCleared": "Cache cleared",
-    "cacheClearFailed": "Failed to clear cache"
+    "cacheClearFailed": "Failed to clear cache",
+    "legalComingSoon": "Content coming soon"
   },
   "language": {
     "title": "Select language",
@@ -965,7 +966,9 @@
     "E-USER-005": "Invalid phone format",
     "E-AUTH-001": "Authentication failed, please log in again",
     "E-AUTH-002": "Token expired",
-    "E-AUTH-003": "No permission to access"
+    "E-AUTH-003": "No permission to access",
+    "notFoundTitle": "Page not found",
+    "notFoundDesc": "The page does not exist"
   },
   "search": {
     "recent": "Recent Searches",
@@ -988,5 +991,14 @@
     "noSuggestion": "No suggestions for \"{{q}}\". Press search to see results.",
     "emptyKeyword": "Please enter a search keyword",
     "searchTerm": "Search {{term}}"
+  },
+  "legal": {
+    "terms": {
+      "title": "Terms of Service"
+    },
+    "privacy": {
+      "title": "Privacy Policy"
+    },
+    "comingSoon": "This content is being prepared and will be provided by our legal team. It does not affect your current use of the app."
   }
 }

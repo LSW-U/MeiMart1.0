@@ -517,7 +517,8 @@
     "notificationPrefs": "[TET] Notifications",
     "cacheCalculating": "[TET] Calculating…",
     "cacheCleared": "[TET] Cache cleared",
-    "cacheClearFailed": "[TET] Failed to clear cache"
+    "cacheClearFailed": "[TET] Failed to clear cache",
+    "legalComingSoon": "[TET] Content coming soon"
   },
   "language": {
     "title": "[TET] Select language",
@@ -923,7 +924,9 @@
     "E-USER-005": "[TET] Invalid phone format",
     "E-AUTH-001": "[TET] Authentication failed, please log in again",
     "E-AUTH-002": "[TET] Token expired",
-    "E-AUTH-003": "[TET] No permission to access"
+    "E-AUTH-003": "[TET] No permission to access",
+    "notFoundTitle": "[TET] Page not found",
+    "notFoundDesc": "[TET] The page does not exist"
   },
   "search": {
     "recent": "[TET] Recent Searches",
@@ -946,5 +949,14 @@
     "noSuggestion": "[TET] No suggestions for \"{{q}}\". Press search to see results.",
     "emptyKeyword": "[TET] Please enter a search keyword",
     "searchTerm": "[TET] Search {{term}}"
+  },
+  "legal": {
+    "terms": {
+      "title": "[TET] Terms of Service"
+    },
+    "privacy": {
+      "title": "[TET] Privacy Policy"
+    },
+    "comingSoon": "[TET] This content is being prepared and will be provided by our legal team."
   }
 }
