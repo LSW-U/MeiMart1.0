@@ -449,7 +449,8 @@
       "save": "Save address",
       "addNew": "Add new address",
       "useCurrentLocation": "Use current location",
-      "confirmSave": "Confirm and save address"
+      "confirmSave": "Confirm and save address",
+      "mapArea": "Map"
     },
     "savedAddresses": "Saved Addresses",
     "emptyDesc": "Add an address to speed up checkout",
@@ -464,7 +465,15 @@
     "phonePlaceholder": "7712 3456",
     "provincePlaceholder": "Select District",
     "detailPlaceholder": "Village, Sub-district, street name, house number...",
-    "districtPlaceholder": "Cristo Rei"
+    "districtPlaceholder": "Cristo Rei",
+    "located": "Pinned via map",
+    "locationPermissionDenied": "Location permission denied",
+    "locateFailed": "Failed to get your location",
+    "searchNoResults": "No results",
+    "searchResults": "Search Results",
+    "previewHint": "Drag the map or search to pick a location",
+    "nearbyEmpty": "No named places nearby",
+    "webMapFallback": "Interactive map is available in the app. Use search to pick a location."
   },
   "profile": {
     "title": "My Account",

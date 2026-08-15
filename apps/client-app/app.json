@@ -71,7 +71,12 @@
           "username": "your-expo-username"
         }
       ],
-      "@sentry/react-native"
+      "@sentry/react-native",
+      {
+        "expo-location": {
+          "locationWhenInUsePermission": "Show your location on the map to pick a delivery address."
+        }
+      }
     ],
     "updates": {
       "url": "https://u.expo.dev/your-eas-project-id"

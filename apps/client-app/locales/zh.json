@@ -449,7 +449,8 @@
       "save": "保存地址",
       "addNew": "新增地址",
       "useCurrentLocation": "使用当前位置",
-      "confirmSave": "确认并保存地址"
+      "confirmSave": "确认并保存地址",
+      "mapArea": "地图"
     },
     "savedAddresses": "已保存地址",
     "emptyDesc": "添加地址以加快结算",
@@ -464,7 +465,15 @@
     "phonePlaceholder": "7712 3456",
     "provincePlaceholder": "选择地区",
     "detailPlaceholder": "村、街道、门牌号...",
-    "districtPlaceholder": "Cristo Rei"
+    "districtPlaceholder": "Cristo Rei",
+    "located": "已通过地图定位",
+    "locationPermissionDenied": "未授予定位权限",
+    "locateFailed": "定位失败，请手动选择",
+    "searchNoResults": "无搜索结果",
+    "searchResults": "搜索结果",
+    "previewHint": "拖动地图或搜索以选择位置",
+    "nearbyEmpty": "附近没有命名地点",
+    "webMapFallback": "交互地图请在 App 内使用，网页端请通过搜索选择位置。"
   },
   "profile": {
     "title": "我的账户",

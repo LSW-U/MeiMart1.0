@@ -403,7 +403,8 @@
       "save": "[TET] Save address",
       "addNew": "[TET] Add new address",
       "useCurrentLocation": "[TET] Use current location",
-      "confirmSave": "[TET] Confirm and save address"
+      "confirmSave": "[TET] Confirm and save address",
+      "mapArea": "[TET] Map"
     },
     "savedAddresses": "[TET] Saved Addresses",
     "emptyDesc": "[TET] Add an address to speed up checkout",
@@ -422,7 +423,15 @@
     "phonePlaceholder": "7712 3456",
     "provincePlaceholder": "[TET] Select District",
     "detailPlaceholder": "[TET] Village, Sub-district, street name, house number...",
-    "districtPlaceholder": "Cristo Rei"
+    "districtPlaceholder": "Cristo Rei",
+    "located": "[TET] Pinned via map",
+    "locationPermissionDenied": "[TET] Location permission denied",
+    "locateFailed": "[TET] Failed to get your location",
+    "searchNoResults": "[TET] No results",
+    "searchResults": "[TET] Search Results",
+    "previewHint": "[TET] Drag the map or search to pick a location",
+    "nearbyEmpty": "[TET] No named places nearby",
+    "webMapFallback": "[TET] Interactive map is available in the app. Use search to pick a location."
   },
   "profile": {
     "title": "[TET] My Account",

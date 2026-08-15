@@ -2,6 +2,7 @@
 // HTML 行数 177 → RN ~340（含样式），满足 CLAUDE.md 规则 #28 的 30% 门槛
 // Fix-22: PrimaryHeader + tais-pattern + person/call/location_city/home/location_on + PIN ON MAP + Switch + Cultural Motif
 // CP-FIX-2.3: 表单迁移到 react-hook-form + zod（规则 9）
+import { useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -27,6 +28,7 @@ import { Switch } from '@/components/ui/Switch';
 import { SelectField } from '@/components/ui/SelectField/SelectField';
 import { toast } from '@/store/toastStore';
 import { useAddresses, useCreateAddress, useUpdateAddress } from '@/services/queries/useAddress';
+import { useMapPickStore } from '@/store/mapPickStore';
 import { addressEditSchema, type AddressEditValues } from '@/forms/schemas/user';
 import type { Address } from '@/types';
 
@@ -49,6 +51,8 @@ export default function AddressEditPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id?: string }>();
+  // Why: 提交时用地图选点坐标（B3）；表单内的状态行在 AddressForm 里另行订阅
+  const mapPick = useMapPickStore((s) => s.pick);
   const { data: addresses } = useAddresses();
   const existing = addresses?.find((a) => a.id === id);
   const createMutation = useCreateAddress();
@@ -98,9 +102,9 @@ export default function AddressEditPage() {
               district: values.district,
               detail: values.detail,
               isDefault: values.isDefault,
-              // Why: 旧地址可能没有 lat/lng，编辑时补上帝力默认坐标，避免下单 409
-              lat: existing?.lat ?? -8.5569,
-              lng: existing?.lng ?? 125.5603,
+              // Why: 地图选点坐标优先（B3 修复）；旧地址可能没有 lat/lng，兜底帝力默认坐标避免下单 409
+              lat: mapPick?.lat ?? existing?.lat ?? -8.5569,
+              lng: mapPick?.lng ?? existing?.lng ?? 125.5603,
             };
             const onError = (error: unknown) => {
               // Why: 提取后端错误码，用 i18n 翻译，找不到时回退到 generic
@@ -149,12 +153,26 @@ interface AddressFormProps {
 function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  // Why: P16 决策 4/10 —— map 页选址回传（B3 断裂修复）：pick 有值 = 已通过地图定位
+  const mapPick = useMapPickStore((s) => s.pick);
 
-  const { control, handleSubmit } = useForm<AddressEditValues>({
+  const { control, handleSubmit, setValue } = useForm<AddressEditValues>({
     resolver: zodResolver(addressEditSchema),
     defaultValues: toFormValues(existing),
     mode: 'onBlur',
   });
+
+  // Why: 地图选点回来（pickedAt 变化）自动回填 detail（用户主动去地图选点，期望带回地址；
+  //      回来后仍可手动改）。同一 pick 对象不重复触发。
+  const lastAppliedPick = useRef(0);
+  useEffect(() => {
+    if (mapPick && mapPick.pickedAt !== lastAppliedPick.current) {
+      lastAppliedPick.current = mapPick.pickedAt;
+      if (mapPick.address) {
+        setValue('detail', mapPick.address);
+      }
+    }
+  }, [mapPick, setValue]);
 
   // Why: 校验失败时 toast 提示第一个错误，避免用户点击无反应
   const submit = handleSubmit(
@@ -277,6 +295,18 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
               />
             )}
           />
+          {/* P16 决策 10 —— 地图选点回传后的定位状态反馈（未定位不显示） */}
+          {mapPick && (
+            <View style={styles.locatedRow} testID="addr-located">
+              <Icon symbol="check_circle" size={14} color={colors.primary} />
+              <Text style={[styles.locatedText, { color: colors.primary }]}>
+                {t('address.located', { defaultValue: 'Pinned via map' })}
+              </Text>
+              <Text style={[styles.locatedCoords, { color: colors['on-surface-variant'] }]}>
+                {mapPick.lat.toFixed(4)}°, {mapPick.lng.toFixed(4)}°
+              </Text>
+            </View>
+          )}
           <View style={styles.cityRow}>
             <View style={styles.col}>
               <FieldLabel icon="apartment" label={t('address.city', { defaultValue: 'CITY' })} />
@@ -532,6 +562,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 80,
     textAlignVertical: 'top',
+  },
+  locatedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  locatedText: {
+    ...typography['body-sm'],
+    fontWeight: '600',
+  },
+  locatedCoords: {
+    ...typography['label-caps'],
+    fontSize: 10,
   },
   cityRow: {
     flexDirection: 'row',
