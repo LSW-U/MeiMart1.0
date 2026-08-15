@@ -488,7 +488,6 @@
     "language": "[TET] Language",
     "push": "[TET] Push notifications",
     "clearCache": "[TET] Clear cache",
-    "clearCacheDone": "[TET] Cache cleared",
     "aboutSection": "[TET] About",
     "about": "[TET] About",
     "version": "[TET] Version",
@@ -515,7 +514,10 @@
     "shippingAddress": "[TET] Shipping Addresses",
     "customerService": "[TET] Customer Service",
     "feedback": "[TET] Feedback",
-    "notificationPrefs": "[TET] Notifications"
+    "notificationPrefs": "[TET] Notifications",
+    "cacheCalculating": "[TET] Calculating…",
+    "cacheCleared": "[TET] Cache cleared",
+    "cacheClearFailed": "[TET] Failed to clear cache"
   },
   "language": {
     "title": "[TET] Select language",

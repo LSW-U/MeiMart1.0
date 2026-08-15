@@ -530,7 +530,6 @@
     "language": "Language",
     "push": "Push notifications",
     "clearCache": "Clear cache",
-    "clearCacheDone": "Cache cleared",
     "aboutSection": "About",
     "about": "About",
     "version": "Version",
@@ -557,7 +556,10 @@
     "shippingAddress": "Shipping Addresses",
     "customerService": "Customer Service",
     "feedback": "Feedback",
-    "notificationPrefs": "Notifications"
+    "notificationPrefs": "Notifications",
+    "cacheCalculating": "Calculating…",
+    "cacheCleared": "Cache cleared",
+    "cacheClearFailed": "Failed to clear cache"
   },
   "language": {
     "title": "Select language",

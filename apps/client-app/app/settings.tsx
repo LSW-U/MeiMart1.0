@@ -15,7 +15,8 @@ import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
 import { APP_VERSION } from '@/utils/appInfo';
-import type { ReactNode } from 'react';
+import { clearAppCache, getCacheSizeLabel } from '@/services/cache';
+import { useEffect, useState, type ReactNode } from 'react';
 
 export default function SettingsPage() {
   const handleBack = useSafeBack();
@@ -30,7 +31,38 @@ export default function SettingsPage() {
 
   const setMode = (mode: 'light' | 'dark' | 'system') => setThemeMode(mode);
 
-  const clearCache = () => toast.success(t('settings.clearCacheDone'));
+  // P17 决策 3 —— 真实缓存：挂载统计大小，点击清理后重查（loading → 成功 0 KB / 失败保留）
+  const [cacheSize, setCacheSize] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCacheSizeLabel()
+      .then((label) => {
+        if (!cancelled) setCacheSize(label);
+      })
+      .catch(() => {
+        if (!cancelled) setCacheSize('');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const clearCache = () => {
+    if (clearing) return;
+    setClearing(true);
+    clearAppCache()
+      .then(() => {
+        setCacheSize('0 KB');
+        toast.success(t('settings.cacheCleared'));
+      })
+      .catch(() => {
+        // 失败保留原大小 + error toast（不静默）
+        toast.error(t('settings.cacheClearFailed'));
+      })
+      .finally(() => setClearing(false));
+  };
   const logout = () => {
     // Why: Web 端 Alert 不显示，直接退出 + toast；Native 端用 Alert 确认
     if (Platform.OS === 'web') {
@@ -192,7 +224,14 @@ export default function SettingsPage() {
             icon="delete"
             iconBg={colors.primary}
             iconFg={colors['on-primary']}
-            value="1.2 MB"
+            value={
+              clearing
+                ? t('settings.cacheCalculating')
+                : cacheSize === null
+                  ? t('settings.cacheCalculating')
+                  : cacheSize
+            }
+            disabled={clearing}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
             dividerColor={colors['outline-variant']}
@@ -372,6 +411,7 @@ function PressableRow({
   subColor,
   dividerColor,
   onPress,
+  disabled,
   testID,
   showDivider = true,
 }: {
@@ -384,6 +424,7 @@ function PressableRow({
   subColor: string;
   dividerColor: string;
   onPress?: () => void;
+  disabled?: boolean;
   testID?: string;
   showDivider?: boolean;
 }) {
@@ -391,7 +432,9 @@ function PressableRow({
     <Pressable
       testID={testID}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && { opacity: 0.6 }]}
+      disabled={disabled}
+      accessibilityState={disabled ? { disabled: true } : undefined}
+      style={({ pressed }) => [styles.row, pressed && !disabled && { opacity: 0.6 }]}
     >
       <View style={[styles.rowIconWrap, { backgroundColor: iconBg }]}>
         <Icon symbol={icon} size={18} color={iconFg} />
