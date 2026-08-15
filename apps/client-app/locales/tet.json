@@ -507,7 +507,16 @@
       "system": "[TET] System",
       "light": "[TET] Light",
       "dark": "[TET] Dark"
-    }
+    },
+    "accountSection": "[TET] Account & Services",
+    "preferencesSection": "[TET] Preferences",
+    "storageSection": "[TET] Storage",
+    "legalSection": "[TET] Privacy & Terms",
+    "profileInfo": "[TET] Personal Profile",
+    "shippingAddress": "[TET] Shipping Addresses",
+    "customerService": "[TET] Customer Service",
+    "feedback": "[TET] Feedback",
+    "notificationPrefs": "[TET] Notifications"
   },
   "language": {
     "title": "[TET] Select language",

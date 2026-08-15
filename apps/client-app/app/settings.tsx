@@ -62,8 +62,70 @@ export default function SettingsPage() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* 外观分组 */}
-        <SectionTitle title={t('settings.appearance')} color={colors['on-surface-variant']} />
+        {/* 账号与服务（P17 决策 1） */}
+        <SectionTitle
+          title={t('settings.accountSection')}
+          color={colors['on-surface-variant']}
+        />
+        <View
+          style={[
+            styles.groupCard,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.sm,
+          ]}
+        >
+          <PressableRow
+            label={t('settings.profileInfo')}
+            icon="person"
+            iconBg={colors.primary}
+            iconFg={colors['on-primary']}
+            textColor={colors['on-surface']}
+            subColor={colors['on-surface-variant']}
+            dividerColor={colors['outline-variant']}
+            testID="settings-profile"
+            onPress={() => router.push('/profile/edit')}
+          />
+          <PressableRow
+            label={t('settings.shippingAddress')}
+            icon="location_on"
+            iconBg={colors.primary}
+            iconFg={colors['on-primary']}
+            textColor={colors['on-surface']}
+            subColor={colors['on-surface-variant']}
+            dividerColor={colors['outline-variant']}
+            testID="settings-address"
+            onPress={() => router.push('/address/list')}
+          />
+          <PressableRow
+            label={t('settings.customerService')}
+            icon="headset_mic"
+            iconBg={colors.primary}
+            iconFg={colors['on-primary']}
+            textColor={colors['on-surface']}
+            subColor={colors['on-surface-variant']}
+            dividerColor={colors['outline-variant']}
+            testID="settings-service"
+            onPress={() => router.push('/service')}
+          />
+          <PressableRow
+            label={t('settings.feedback')}
+            icon="rate_review"
+            iconBg={colors.primary}
+            iconFg={colors['on-primary']}
+            textColor={colors['on-surface']}
+            subColor={colors['on-surface-variant']}
+            dividerColor={colors['outline-variant']}
+            showDivider={false}
+            testID="settings-feedback"
+            onPress={() => router.push('/service/feedback')}
+          />
+        </View>
+
+        {/* 偏好（P17 决策 1：主题/语言/通知偏好） */}
+        <SectionTitle
+          title={t('settings.preferencesSection')}
+          color={colors['on-surface-variant']}
+        />
         <View
           style={[
             styles.groupCard,
@@ -90,17 +152,6 @@ export default function SettingsPage() {
               activeColor={colors['surface-container-low']}
             />
           </RowItem>
-        </View>
-
-        {/* 通用分组 */}
-        <SectionTitle title={t('settings.general')} color={colors['on-surface-variant']} />
-        <View
-          style={[
-            styles.groupCard,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
-          ]}
-        >
           <PressableRow
             label={t('settings.language')}
             icon="language"
@@ -114,6 +165,29 @@ export default function SettingsPage() {
             onPress={() => router.push('/language')}
           />
           <PressableRow
+            label={t('settings.notificationPrefs')}
+            icon="notifications"
+            iconBg={colors.primary}
+            iconFg={colors['on-primary']}
+            textColor={colors['on-surface']}
+            subColor={colors['on-surface-variant']}
+            dividerColor={colors['outline-variant']}
+            showDivider={false}
+            testID="settings-notifications"
+            onPress={() => router.push('/service/notifications')}
+          />
+        </View>
+
+        {/* 存储（P17 决策 1/3：清除缓存真实数据 Commit 5 接） */}
+        <SectionTitle title={t('settings.storageSection')} color={colors['on-surface-variant']} />
+        <View
+          style={[
+            styles.groupCard,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.sm,
+          ]}
+        >
+          <PressableRow
             label={t('settings.clearCache')}
             icon="delete"
             iconBg={colors.primary}
@@ -122,12 +196,47 @@ export default function SettingsPage() {
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
             dividerColor={colors['outline-variant']}
+            showDivider={false}
             testID="settings-cache"
             onPress={clearCache}
           />
         </View>
 
-        {/* 关于分组 */}
+        {/* 隐私与条款（P17 决策 4：Commit 6 接 LegalPage） */}
+        <SectionTitle title={t('settings.legalSection')} color={colors['on-surface-variant']} />
+        <View
+          style={[
+            styles.groupCard,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.sm,
+          ]}
+        >
+          <PressableRow
+            label={t('settings.privacyPolicy', { defaultValue: 'Privacy Policy' })}
+            icon="security"
+            iconBg={colors.primary}
+            iconFg={colors['on-primary']}
+            textColor={colors['on-surface']}
+            subColor={colors['on-surface-variant']}
+            dividerColor={colors['outline-variant']}
+            testID="settings-privacy"
+            onPress={() => {}}
+          />
+          <PressableRow
+            label={t('settings.terms')}
+            icon="auto_stories"
+            iconBg={colors.primary}
+            iconFg={colors['on-primary']}
+            textColor={colors['on-surface']}
+            subColor={colors['on-surface-variant']}
+            dividerColor={colors['outline-variant']}
+            showDivider={false}
+            testID="settings-tos"
+            onPress={() => {}}
+          />
+        </View>
+
+        {/* 关于 */}
         <SectionTitle title={t('settings.aboutSection')} color={colors['on-surface-variant']} />
         <View
           style={[
@@ -157,6 +266,7 @@ export default function SettingsPage() {
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
             dividerColor={colors['outline-variant']}
+            showDivider={false}
             testID="settings-about"
             onPress={() => router.push('/about')}
           />

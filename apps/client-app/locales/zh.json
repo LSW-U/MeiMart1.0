@@ -549,7 +549,16 @@
       "system": "跟随系统",
       "light": "浅色",
       "dark": "深色"
-    }
+    },
+    "accountSection": "账号与服务",
+    "preferencesSection": "偏好",
+    "storageSection": "存储",
+    "legalSection": "隐私与条款",
+    "profileInfo": "个人资料",
+    "shippingAddress": "收货地址",
+    "customerService": "客服中心",
+    "feedback": "意见反馈",
+    "notificationPrefs": "通知偏好"
   },
   "language": {
     "title": "选择语言",

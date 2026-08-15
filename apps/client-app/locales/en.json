@@ -549,7 +549,16 @@
       "system": "System",
       "light": "Light",
       "dark": "Dark"
-    }
+    },
+    "accountSection": "Account & Services",
+    "preferencesSection": "Preferences",
+    "storageSection": "Storage",
+    "legalSection": "Privacy & Terms",
+    "profileInfo": "Personal Profile",
+    "shippingAddress": "Shipping Addresses",
+    "customerService": "Customer Service",
+    "feedback": "Feedback",
+    "notificationPrefs": "Notifications"
   },
   "language": {
     "title": "Select language",
