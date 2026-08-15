@@ -1,5 +1,7 @@
 import { Stack, useSegments, router } from 'expo-router';
 import { useEffect, useRef } from 'react';
+// Why: P16 决策 8 地址卡片左滑操作用 Swipeable（RNGH）——native 端手势组件必须在 GestureHandlerRootView 内
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { AppProviders } from '@/providers/AppProviders';
@@ -48,10 +50,12 @@ function RootAuthGate() {
 export default function RootLayout() {
   return (
     <ErrorBoundary>
-      <AppProviders>
-        <RootAuthGate />
-        <Stack screenOptions={{ headerShown: false }} />
-      </AppProviders>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AppProviders>
+          <RootAuthGate />
+          <Stack screenOptions={{ headerShown: false }} />
+        </AppProviders>
+      </GestureHandlerRootView>
     </ErrorBoundary>
   );
 }

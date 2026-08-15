@@ -2,6 +2,7 @@
 // HTML 行数 283 → RN ~330（含样式），满足 CLAUDE.md 规则 #28 的 30% 门槛
 // Fix-22: PrimaryHeader + tais-pattern + location_on/location_city/person/call/home/arrow_back/check_circle/radio_button_unchecked/edit/delete + uma-lulik 分隔
 // P16: 全部硬编码文案接 i18n（决策 1）+ 结算页选择回传（决策 6）+ 卡片排版收紧（决策 11）
+import { useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -32,6 +33,7 @@ import {
 } from '@/services/queries/useAddress';
 import type { Address } from '@/types';
 import { getAddressTagTheme } from '@/theme/tagThemes';
+import { Swipeable } from 'react-native-gesture-handler';
 
 export default function AddressListPage() {
   const handleBack = useSafeBack();
@@ -165,6 +167,7 @@ export default function AddressListPage() {
                 onSelect={() => handleSelect(item)}
                 onEdit={() => router.push({ pathname: '/address/edit', params: { id: item.id } })}
                 onDelete={() => handleDelete(item)}
+                onSetDefault={() => handleSetDefault(item)}
               />
             )}
           />
@@ -221,40 +224,99 @@ function MotifTriangle({ size, color, opacity }: { size: number; color: string; 
   );
 }
 
-// 地址行（HTML 第 167-256 行 — radio + name + DEFAULT badge + edit/delete + call + location_on）
-// P16 决策 11 排版收紧：name + phone 同行 → DEFAULT pill → 地址单行截断（去掉 call/location_on icon 噪音）
+// 地址行（HTML 第 167-256 行 — radio + name + DEFAULT badge + 左滑操作）
+// P16 决策 11 排版收紧：name + phone 同行 → tag/DEFAULT chip → 地址单行截断
+// P16 决策 8 左滑操作：卡片右滑露出 设默认/编辑/删除（替代原右上角 18px 小图标，避免误触）
 function AddressRow({
   address,
   onSelect,
   onEdit,
   onDelete,
+  onSetDefault,
 }: {
   address: Address;
   onSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onSetDefault: () => void;
 }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const swipeableRef = useRef<Swipeable>(null);
   const isDefault = !!address.isDefault;
+
+  // Why: 操作后收起滑出区，避免卡片停留在半开状态
+  const runAndClose = (fn: () => void) => () => {
+    swipeableRef.current?.close();
+    fn();
+  };
+
+  const renderRightActions = () => (
+    <View style={styles.swipeActions}>
+      {!isDefault && (
+        <Pressable
+          onPress={runAndClose(onSetDefault)}
+          style={[styles.swipeBtn, { backgroundColor: colors['surface-container-high'] }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('address.setDefault', { defaultValue: 'Set as default' })}
+        >
+          <Icon symbol="check_circle" size={20} color={colors['on-surface-variant']} />
+          <Text
+            style={[styles.swipeBtnText, { color: colors['on-surface-variant'] }]}
+            numberOfLines={1}
+          >
+            {t('address.setDefault', { defaultValue: 'Set as default' })}
+          </Text>
+        </Pressable>
+      )}
+      <Pressable
+        onPress={runAndClose(onEdit)}
+        style={[styles.swipeBtn, { backgroundColor: colors.primary }]}
+        accessibilityRole="button"
+        accessibilityLabel={t('address.a11y.edit', { name: address.name })}
+      >
+        <Icon symbol="edit" size={20} color={colors['on-primary']} />
+        <Text style={[styles.swipeBtnText, { color: colors['on-primary'] }]} numberOfLines={1}>
+          {t('common.edit', { defaultValue: 'Edit' })}
+        </Text>
+      </Pressable>
+      <Pressable
+        onPress={runAndClose(onDelete)}
+        style={[styles.swipeBtn, { backgroundColor: colors.error }]}
+        accessibilityRole="button"
+        accessibilityLabel={t('address.a11y.delete', { name: address.name })}
+      >
+        <Icon symbol="delete" size={20} color={colors['on-primary']} />
+        <Text style={[styles.swipeBtnText, { color: colors['on-primary'] }]} numberOfLines={1}>
+          {t('common.delete', { defaultValue: 'Delete' })}
+        </Text>
+      </Pressable>
+    </View>
+  );
+
   return (
-    <Pressable
-      onPress={onSelect}
-      style={({ pressed }) => [
-        styles.addressCard,
-        {
-          backgroundColor: isDefault
-            ? colors['surface-container-low']
-            : colors['surface-container-lowest'],
-          borderColor: isDefault ? colors.primary : colors['outline-variant'],
-        },
-        pressed && { transform: [{ scale: 0.98 }] },
-      ]}
-      accessibilityRole="radio"
-      accessibilityState={{ selected: isDefault }}
-      accessibilityLabel={t('address.a11y.selectThis', { name: address.name })}
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      overshootRight={false}
+      friction={2}
     >
-      <View style={styles.cardHeader}>
+      <Pressable
+        onPress={onSelect}
+        style={({ pressed }) => [
+          styles.addressCard,
+          {
+            backgroundColor: isDefault
+              ? colors['surface-container-low']
+              : colors['surface-container-lowest'],
+            borderColor: isDefault ? colors.primary : colors['outline-variant'],
+          },
+          pressed && { transform: [{ scale: 0.98 }] },
+        ]}
+        accessibilityRole="radio"
+        accessibilityState={{ selected: isDefault }}
+        accessibilityLabel={t('address.a11y.selectThis', { name: address.name })}
+      >
         <View style={styles.nameRow}>
           <Icon
             symbol={isDefault ? 'check_circle' : 'radio_button_unchecked'}
@@ -270,7 +332,7 @@ function AddressRow({
           >
             {address.phone}
           </Text>
-          {/* DEFAULT pill：有 tag 时挪到 chip 行（见 cardBody），无 tag 时保留在 name 行 */}
+          {/* DEFAULT pill：有 tag 时挪到 chip 行，无 tag 时保留 name 行尾 */}
           {isDefault && !address.tag && (
             <View style={[styles.defaultPill, { backgroundColor: colors['tertiary-fixed'] }]}>
               <Text style={[styles.defaultPillText, { color: colors['on-tertiary-fixed'] }]}>
@@ -279,51 +341,30 @@ function AddressRow({
             </View>
           )}
         </View>
-        <View style={styles.actionRow}>
-          <Pressable
-            onPress={onEdit}
-            hitSlop={8}
-            style={styles.actionBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('address.a11y.edit', { name: address.name })}
+        <View style={styles.cardBody}>
+          {!!address.tag && (
+            <View style={styles.chipRow}>
+              <AddressTagChip tag={address.tag} />
+              {isDefault && (
+                <View style={[styles.defaultPill, { backgroundColor: colors['tertiary-fixed'] }]}>
+                  <Text style={[styles.defaultPillText, { color: colors['on-tertiary-fixed'] }]}>
+                    {t('address.default', { defaultValue: 'Default' })}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+          {/* P16 决策 11：地址单行截断；Timor-Leste 国名硬编码移除（东帝汶-only 场景冗余，R2） */}
+          <Text
+            style={[styles.infoText, { color: colors['on-surface-variant'] }]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
-            <Icon symbol="edit" size={18} color={colors['on-surface-variant']} />
-          </Pressable>
-          <Pressable
-            onPress={onDelete}
-            hitSlop={8}
-            style={styles.actionBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('address.a11y.delete', { name: address.name })}
-          >
-            <Icon symbol="delete" size={18} color={colors.error} />
-          </Pressable>
+            {address.detail}, {address.city}, {address.province}
+          </Text>
         </View>
-      </View>
-      <View style={styles.cardBody}>
-        {/* P16 决策 7 —— 地址标签 chip（家/公司/学校/自定义），未设置不显示 */}
-        {!!address.tag && (
-          <View style={styles.chipRow}>
-            <AddressTagChip tag={address.tag} />
-            {isDefault && (
-              <View style={[styles.defaultPill, { backgroundColor: colors['tertiary-fixed'] }]}>
-                <Text style={[styles.defaultPillText, { color: colors['on-tertiary-fixed'] }]}>
-                  {t('address.default', { defaultValue: 'Default' })}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-        {/* P16 决策 11：地址单行截断；Timor-Leste 国名硬编码移除（东帝汶-only 场景冗余，R2） */}
-        <Text
-          style={[styles.infoText, { color: colors['on-surface-variant'] }]}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {address.detail}, {address.city}, {address.province}
-        </Text>
-      </View>
-    </Pressable>
+      </Pressable>
+    </Swipeable>
   );
 }
 
@@ -365,16 +406,31 @@ const styles = StyleSheet.create({
   list: {
     gap: spacing.md,
   },
+  // Swipe Actions（P16 决策 8）
+  swipeActions: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: spacing.xs,
+    paddingLeft: spacing.xs,
+  },
+  swipeBtn: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    minWidth: 68,
+  },
+  swipeBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
   // Address Card
   addressCard: {
     padding: spacing.md,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
   },
   nameRow: {
     flexDirection: 'row',
@@ -399,13 +455,6 @@ const styles = StyleSheet.create({
   defaultPillText: {
     fontSize: 10,
     fontWeight: '700',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  actionBtn: {
-    padding: spacing.xs,
   },
   chipRow: {
     flexDirection: 'row',
