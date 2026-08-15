@@ -74,7 +74,7 @@ export default function MapPickPage() {
               <Icon symbol="search" size={20} color={colors.secondary} />
               <TextInput
                 style={[styles.searchInput, { color: colors['on-surface'] }]}
-                placeholder="Search for location..."
+                placeholder={t('address.searchPlaceholder', { defaultValue: 'Search for location...' })}
                 placeholderTextColor={colors['on-surface-variant']}
                 testID="map-search"
               />
@@ -123,7 +123,7 @@ export default function MapPickPage() {
               <View style={styles.previewHeaderLeft}>
                 <Icon symbol="location_on" size={20} color={colors.primary} />
                 <Text style={[styles.previewTitle, { color: colors['on-surface'] }]}>
-                  Selected Location
+                  {t('address.selectedLocation', { defaultValue: 'Selected Location' })}
                 </Text>
               </View>
               <Text style={[styles.previewCoords, { color: colors['on-surface-variant'] }]}>
@@ -136,7 +136,7 @@ export default function MapPickPage() {
             <View style={styles.autoHintRow}>
               <Icon symbol="info" size={12} color={colors.secondary} />
               <Text style={[styles.autoHint, { color: colors['on-surface-variant'] }]}>
-                AUTOMATICALLY UPDATED FROM MAP PIN
+                {t('address.autoUpdateHint', { defaultValue: 'Automatically updated from map pin' })}
               </Text>
             </View>
           </View>
@@ -144,7 +144,7 @@ export default function MapPickPage() {
           {/* NEARBY PLACES 标题（HTML 第 165-166 行风格） */}
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              NEARBY PLACES
+              {t('address.nearbyPlaces', { defaultValue: 'Nearby Places' })}
             </Text>
             <View style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]} />
           </View>
@@ -172,7 +172,7 @@ export default function MapPickPage() {
                   { opacity: pressed ? 0.6 : 1 },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={`Select ${place.name}`}
+                accessibilityLabel={`${t('address.a11y.selectThis', { name: place.name })}`}
               >
                 <View
                   style={[
@@ -226,7 +226,9 @@ export default function MapPickPage() {
           accessibilityRole="button"
           accessibilityLabel={t('address.a11y.confirmSave')}
         >
-          <Text style={[styles.saveBtnText, { color: colors['on-primary'] }]}>CONFIRM LOCATION</Text>
+          <Text style={[styles.saveBtnText, { color: colors['on-primary'] }]}>
+            {t('address.confirmLocation', { defaultValue: 'Confirm Location' })}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaWrapper>
