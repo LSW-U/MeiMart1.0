@@ -30,6 +30,7 @@ function transformAddress(raw: AddressRaw): Address {
     isDefault: raw.isDefault ?? false,
     lat: raw.lat,
     lng: raw.lng,
+    tag: raw.tag ?? null,
   };
 }
 
@@ -49,6 +50,7 @@ function toAddressPayload(addr: Omit<Address, 'id'>): Record<string, unknown> {
     },
     detail: addr.detail,
     isDefault: addr.isDefault,
+    ...(addr.tag ? { tag: addr.tag } : {}),
     // Why: 未选地图点时用帝力默认坐标，避免下单 409
     lat: addr.lat ?? DILI_LAT,
     lng: addr.lng ?? DILI_LNG,
@@ -92,6 +94,8 @@ export const addressApi = {
     if (updates.phone !== undefined) body.phone = updates.phone;
     if (updates.detail !== undefined) body.detail = updates.detail;
     if (updates.isDefault !== undefined) body.isDefault = updates.isDefault;
+    // Why: P16 决策 7 —— tag 支持 PATCH（null 清除 / 字符串更新）
+    if (updates.tag !== undefined) body.tag = updates.tag;
     // Why: 支持更新 lat/lng（旧地址补坐标用）
     if (updates.lat !== undefined) body.lat = updates.lat;
     if (updates.lng !== undefined) body.lng = updates.lng;

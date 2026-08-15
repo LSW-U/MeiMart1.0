@@ -473,7 +473,14 @@
     "searchResults": "Search Results",
     "previewHint": "Drag the map or search to pick a location",
     "nearbyEmpty": "No named places nearby",
-    "webMapFallback": "Interactive map is available in the app. Use search to pick a location."
+    "webMapFallback": "Interactive map is available in the app. Use search to pick a location.",
+    "tagLabel": "TAG",
+    "tagHome": "Home",
+    "tagCompany": "Company",
+    "tagSchool": "School",
+    "tagCustom": "Custom",
+    "tagCustomTitle": "Custom Tag",
+    "tagCustomPlaceholder": "e.g., Grandma home"
   },
   "profile": {
     "title": "My Account",

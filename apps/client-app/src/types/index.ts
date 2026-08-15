@@ -56,6 +56,9 @@ export interface Address {
   // Why: 后端下单要求地址有经纬度（匹配仓库），地图选点后填充
   lat?: number | null;
   lng?: number | null;
+  // Why: P16 决策 7 地址标签 —— 后端 Address.tag 是 String?：'home'/'company'/'school' 三个预置值，
+  //      其余字符串视为自定义标签文本。null/undefined = 未设置（列表不显示 chip）
+  tag?: string | null;
 }
 
 export interface Cart {

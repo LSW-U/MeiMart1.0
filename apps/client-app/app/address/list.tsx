@@ -31,6 +31,7 @@ import {
   useSetDefaultAddress,
 } from '@/services/queries/useAddress';
 import type { Address } from '@/types';
+import { getAddressTagTheme } from '@/theme/tagThemes';
 
 export default function AddressListPage() {
   const handleBack = useSafeBack();
@@ -182,6 +183,25 @@ export default function AddressListPage() {
   );
 }
 
+// P16 决策 7 —— 地址标签 chip：家=蓝 / 公司=琥珀 / 学校=绿 / 自定义=灰（theme/tagThemes 场景色板）
+export function AddressTagChip({ tag }: { tag: string }) {
+  const { t } = useTranslation();
+  const presetLabel: Record<'home' | 'company' | 'school', string> = {
+    home: t('address.tagHome', { defaultValue: 'Home' }),
+    company: t('address.tagCompany', { defaultValue: 'Company' }),
+    school: t('address.tagSchool', { defaultValue: 'School' }),
+  };
+  const isPreset = tag in presetLabel;
+  const theme = getAddressTagTheme(tag);
+  return (
+    <View style={[styles.tagChip, { backgroundColor: theme.bg }]}>
+      <Text style={[styles.tagChipText, { color: theme.fg }]} numberOfLines={1}>
+        {isPreset ? presetLabel[tag as 'home' | 'company' | 'school'] : tag}
+      </Text>
+    </View>
+  );
+}
+
 // uma-lulik-silhouette triangle（HTML 第 117-119 行 — clip-path polygon 三角形）
 function MotifTriangle({ size, color, opacity }: { size: number; color: string; opacity: number }) {
   return (
@@ -250,7 +270,8 @@ function AddressRow({
           >
             {address.phone}
           </Text>
-          {isDefault && (
+          {/* DEFAULT pill：有 tag 时挪到 chip 行（见 cardBody），无 tag 时保留在 name 行 */}
+          {isDefault && !address.tag && (
             <View style={[styles.defaultPill, { backgroundColor: colors['tertiary-fixed'] }]}>
               <Text style={[styles.defaultPillText, { color: colors['on-tertiary-fixed'] }]}>
                 {t('address.default', { defaultValue: 'Default' })}
@@ -280,6 +301,19 @@ function AddressRow({
         </View>
       </View>
       <View style={styles.cardBody}>
+        {/* P16 决策 7 —— 地址标签 chip（家/公司/学校/自定义），未设置不显示 */}
+        {!!address.tag && (
+          <View style={styles.chipRow}>
+            <AddressTagChip tag={address.tag} />
+            {isDefault && (
+              <View style={[styles.defaultPill, { backgroundColor: colors['tertiary-fixed'] }]}>
+                <Text style={[styles.defaultPillText, { color: colors['on-tertiary-fixed'] }]}>
+                  {t('address.default', { defaultValue: 'Default' })}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
         {/* P16 决策 11：地址单行截断；Timor-Leste 国名硬编码移除（东帝汶-only 场景冗余，R2） */}
         <Text
           style={[styles.infoText, { color: colors['on-surface-variant'] }]}
@@ -372,6 +406,22 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     padding: spacing.xs,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  tagChip: {
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    alignSelf: 'flex-start',
+  },
+  tagChipText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
   cardBody: {
     marginTop: spacing.xs,

@@ -21,6 +21,9 @@ export const addressEditSchema = z.object({
   district: z.string().min(1, 'District is required'),
   detail: z.string().min(1, 'Address detail is required').max(120, 'Detail too long'),
   isDefault: z.boolean(),
+  // Why: P16 决策 7 —— 预置 'home'/'company'/'school' + 任意自定义文本（后端 tag 是 String?），
+  //      与方案 z.enum 相比放宽为 string 以承载自定义标签文本（记录到执行日志）
+  tag: z.string().max(20, 'Tag too long').optional(),
 });
 
 export type ProfileEditValues = z.infer<typeof profileEditSchema>;

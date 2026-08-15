@@ -431,7 +431,14 @@
     "searchResults": "[TET] Search Results",
     "previewHint": "[TET] Drag the map or search to pick a location",
     "nearbyEmpty": "[TET] No named places nearby",
-    "webMapFallback": "[TET] Interactive map is available in the app. Use search to pick a location."
+    "webMapFallback": "[TET] Interactive map is available in the app. Use search to pick a location.",
+    "tagLabel": "[TET] TAG",
+    "tagHome": "[TET] Home",
+    "tagCompany": "[TET] Company",
+    "tagSchool": "[TET] School",
+    "tagCustom": "[TET] Custom",
+    "tagCustomTitle": "[TET] Custom Tag",
+    "tagCustomPlaceholder": "[TET] e.g., Grandma home"
   },
   "profile": {
     "title": "[TET] My Account",

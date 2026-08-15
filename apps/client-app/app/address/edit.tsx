@@ -2,7 +2,7 @@
 // HTML 行数 177 → RN ~340（含样式），满足 CLAUDE.md 规则 #28 的 30% 门槛
 // Fix-22: PrimaryHeader + tais-pattern + person/call/location_city/home/location_on + PIN ON MAP + Switch + Cultural Motif
 // CP-FIX-2.3: 表单迁移到 react-hook-form + zod（规则 9）
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -25,6 +25,8 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader/PrimaryHeader';
 import { Icon } from '@/components/ui/Icon';
 import { Switch } from '@/components/ui/Switch';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
 import { SelectField } from '@/components/ui/SelectField/SelectField';
 import { toast } from '@/store/toastStore';
 import { useAddresses, useCreateAddress, useUpdateAddress } from '@/services/queries/useAddress';
@@ -43,6 +45,7 @@ function toFormValues(existing?: Address): AddressEditValues {
     district: existing?.district ?? 'Dili',
     detail: existing?.detail ?? '',
     isDefault: existing?.isDefault ?? false,
+    tag: existing?.tag ?? undefined,
   };
 }
 
@@ -347,6 +350,18 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
           </View>
         </View>
 
+        {/* P16 决策 7 —— 地址标签选择器：家/公司/学校 3 预置 chip + 自定义输入 */}
+        <View>
+          <FieldLabel icon="label" label={t('address.tagLabel', { defaultValue: 'TAG' })} />
+          <Controller
+            control={control}
+            name="tag"
+            render={({ field: { value, onChange } }) => (
+              <TagPicker value={value} onChange={onChange} />
+            )}
+          />
+        </View>
+
         <View style={[styles.defaultRow, { borderTopColor: colors['outline-variant'] }]}>
           <Text style={[styles.defaultLabel, { color: colors['on-surface'] }]}>
             {t('address.setDefault', { defaultValue: 'Set as default address' })}
@@ -461,6 +476,102 @@ function FieldLabel({ icon, label }: { icon: string; label: string }) {
     <View style={styles.labelRow}>
       <Icon symbol={icon} size={16} color={colors['on-surface-variant']} />
       <Text style={[styles.labelText, { color: colors['on-surface-variant'] }]}>{label}</Text>
+    </View>
+  );
+}
+
+// P16 决策 7：预置 chip（选中态描边高亮）+ 自定义 chip（点击弹输入）。value 为空 = 不设标签
+const PRESET_TAGS = ['home', 'company', 'school'] as const;
+
+function TagPicker({ value, onChange }: { value?: string; onChange: (v?: string) => void }) {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+  const [customVisible, setCustomVisible] = useState(false);
+  const [customText, setCustomText] = useState('');
+  const isCustom = !!value && !PRESET_TAGS.includes(value as (typeof PRESET_TAGS)[number]);
+  const label = (tag: string) =>
+    tag === 'custom'
+      ? isCustom && value
+        ? value
+        : t('address.tagCustom', { defaultValue: 'Custom' })
+      : t(`address.tag${tag[0].toUpperCase()}${tag.slice(1)}`, {
+          defaultValue: tag,
+        });
+
+  const chipStyle = (selected: boolean) => [
+    styles.tagChip,
+    {
+      backgroundColor: selected ? colors['primary-container'] : colors['surface-container-lowest'],
+      borderColor: selected ? colors.primary : colors['outline-variant'],
+    },
+  ];
+
+  return (
+    <View style={styles.tagRow}>
+      {[...PRESET_TAGS, 'custom'].map((tag) => {
+        const selected = tag === 'custom' ? isCustom : value === tag;
+        return (
+          <Pressable
+            key={tag}
+            onPress={() => {
+              if (tag === 'custom') {
+                if (isCustom) {
+                  // 再点自定义 = 清除
+                  onChange(undefined);
+                } else {
+                  setCustomText('');
+                  setCustomVisible(true);
+                }
+              } else {
+                onChange(selected ? undefined : tag);
+              }
+            }}
+            style={chipStyle(selected)}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            accessibilityLabel={label(tag)}
+          >
+            <Text
+              style={[
+                styles.tagChipText,
+                { color: selected ? colors['on-primary-container'] : colors['on-surface-variant'] },
+              ]}
+              numberOfLines={1}
+            >
+              {label(tag)}
+            </Text>
+          </Pressable>
+        );
+      })}
+
+      <Modal visible={customVisible} onClose={() => setCustomVisible(false)} title={t('address.tagCustomTitle', { defaultValue: 'Custom Tag' })}>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+              color: colors['on-surface'],
+            },
+          ]}
+          placeholder={t('address.tagCustomPlaceholder', { defaultValue: 'e.g., Grandma home' })}
+          placeholderTextColor={colors['on-surface-variant']}
+          value={customText}
+          onChangeText={setCustomText}
+          maxLength={20}
+              autoFocus
+          testID="addr-tag-custom-input"
+        />
+        <Button
+          label={t('common.confirm', { defaultValue: 'Confirm' })}
+          variant="primary"
+          onPress={() => {
+            const trimmed = customText.trim();
+            if (trimmed) onChange(trimmed);
+            setCustomVisible(false);
+          }}
+        />
+      </Modal>
     </View>
   );
 }
@@ -584,6 +695,21 @@ const styles = StyleSheet.create({
   },
   col: {
     flex: 1,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  tagChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm - 2,
+  },
+  tagChipText: {
+    ...typography['body-sm'],
+    fontWeight: '600',
   },
   defaultRow: {
     flexDirection: 'row',

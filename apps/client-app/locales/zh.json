@@ -473,7 +473,14 @@
     "searchResults": "搜索结果",
     "previewHint": "拖动地图或搜索以选择位置",
     "nearbyEmpty": "附近没有命名地点",
-    "webMapFallback": "交互地图请在 App 内使用，网页端请通过搜索选择位置。"
+    "webMapFallback": "交互地图请在 App 内使用，网页端请通过搜索选择位置。",
+    "tagLabel": "标签",
+    "tagHome": "家",
+    "tagCompany": "公司",
+    "tagSchool": "学校",
+    "tagCustom": "自定义",
+    "tagCustomTitle": "自定义标签",
+    "tagCustomPlaceholder": "例如：奶奶家"
   },
   "profile": {
     "title": "我的账户",
