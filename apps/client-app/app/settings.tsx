@@ -24,6 +24,8 @@ export default function SettingsPage() {
   const setThemeMode = useAppStore((s) => s.setThemeMode);
   const locale = useAppStore((s) => s.locale);
   const clearAuth = useAuthStore((s) => s.clearAuth);
+  // P17 决策 5 —— 登录态自适应：未登录不显示「退出登录」（语义错误），显示登录/注册入口
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const setMode = (mode: 'light' | 'dark' | 'system') => setThemeMode(mode);
 
@@ -63,10 +65,7 @@ export default function SettingsPage() {
         showsVerticalScrollIndicator={false}
       >
         {/* 账号与服务（P17 决策 1） */}
-        <SectionTitle
-          title={t('settings.accountSection')}
-          color={colors['on-surface-variant']}
-        />
+        <SectionTitle title={t('settings.accountSection')} color={colors['on-surface-variant']} />
         <View
           style={[
             styles.groupCard,
@@ -272,24 +271,44 @@ export default function SettingsPage() {
           />
         </View>
 
-        {/* 退出登录（带 TaisPattern 装饰） */}
-        <Pressable
-          testID="settings-logout"
-          onPress={logout}
-          style={({ pressed }) => [
-            styles.logout,
-            { backgroundColor: colors['surface-container-lowest'] },
-            pressed && { transform: [{ scale: 0.98 }] },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={t('profile.logout')}
-        >
-          <View style={styles.logoutPattern} pointerEvents="none">
-            <TaisPattern width={400} height={60} opacity={0.15} />
-          </View>
-          <Icon symbol="logout" size={18} color={colors.error} />
-          <Text style={[styles.logoutText, { color: colors.error }]}>{t('profile.logout')}</Text>
-        </Pressable>
+        {isAuthenticated ? (
+          /* 退出登录（带 TaisPattern 装饰） */
+          <Pressable
+            testID="settings-logout"
+            onPress={logout}
+            style={({ pressed }) => [
+              styles.logout,
+              { backgroundColor: colors['surface-container-lowest'] },
+              pressed && { transform: [{ scale: 0.98 }] },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('profile.logout')}
+          >
+            <View style={styles.logoutPattern} pointerEvents="none">
+              <TaisPattern width={400} height={60} opacity={0.15} />
+            </View>
+            <Icon symbol="logout" size={18} color={colors.error} />
+            <Text style={[styles.logoutText, { color: colors.error }]}>{t('profile.logout')}</Text>
+          </Pressable>
+        ) : (
+          // P17 决策 5 —— 未登录：登录/注册入口（复用 profile 页文案与样式语义）
+          <Pressable
+            testID="settings-login"
+            onPress={() => router.replace('/(auth)/login')}
+            style={({ pressed }) => [
+              styles.loginCard,
+              { backgroundColor: colors.primary },
+              pressed && { transform: [{ scale: 0.98 }] },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('profile.loginOrRegister')}
+          >
+            <Icon symbol="login" size={18} color={colors['on-primary']} />
+            <Text style={[styles.loginText, { color: colors['on-primary'] }]}>
+              {t('profile.loginRegister')}
+            </Text>
+          </Pressable>
+        )}
 
         <Text style={[styles.footerText, { color: colors['on-surface-variant'] }]}>
           MeiMart v1.0.0 · © 2026 MeiMart Lda.
@@ -510,6 +529,19 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  loginCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.xl,
+  },
+  loginText: {
+    ...typography['body-md'],
+    fontWeight: '700',
   },
   logoutText: {
     ...typography['body-md'],
