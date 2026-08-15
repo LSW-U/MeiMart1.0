@@ -14,6 +14,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
+import { APP_VERSION } from '@/utils/appInfo';
 import type { ReactNode } from 'react';
 
 export default function SettingsPage() {
@@ -255,7 +256,7 @@ export default function SettingsPage() {
             dividerColor={colors['outline-variant']}
             testID="settings-version"
           >
-            <Text style={[styles.value, { color: colors['on-surface-variant'] }]}>v1.0.0</Text>
+            <Text style={[styles.value, { color: colors['on-surface-variant'] }]}>v{APP_VERSION}</Text>
           </RowItem>
           <PressableRow
             label={t('settings.about')}
@@ -311,7 +312,7 @@ export default function SettingsPage() {
         )}
 
         <Text style={[styles.footerText, { color: colors['on-surface-variant'] }]}>
-          MeiMart v1.0.0 · © 2026 MeiMart Lda.
+          MeiMart v{APP_VERSION} · © 2026 MeiMart Lda.
         </Text>
       </ScrollView>
     </SafeAreaWrapper>

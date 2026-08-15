@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography, shadowPresets, borderRadius } from '@/theme';
+import { APP_VERSION } from '@/utils/appInfo';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -422,7 +423,7 @@ export default function ProfilePage() {
         <View style={styles.footerLogo}>
           <Text style={[styles.footerTitle, { color: colors.primary }]}>{t('home.appName')}</Text>
           <Text style={[styles.footerVersion, { color: colors['on-surface-variant'] }]}>
-            {t('profile.version')}
+            {`v${APP_VERSION}`}
           </Text>
         </View>
       </ScrollView>
@@ -609,7 +610,7 @@ function ProfileEmpty() {
         <View style={styles.footerLogo}>
           <Text style={[styles.footerTitle, { color: colors.primary }]}>{t('home.appName')}</Text>
           <Text style={[styles.footerVersion, { color: colors['on-surface-variant'] }]}>
-            {t('profile.version')}
+            {`v${APP_VERSION}`}
           </Text>
         </View>
       </ScrollView>
