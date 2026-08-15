@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { TaisPattern } from '@/components/cultural/TaisPattern';
+import { PrimaryHeader } from '@/components/layout/PrimaryHeader/PrimaryHeader';
 import { Icon } from '@/components/ui/Icon';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
@@ -41,7 +41,21 @@ export default function MapPickPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <Header title="Add New Address" />
+      <PrimaryHeader
+        title={t('address.add', { defaultValue: 'Add New Address' })}
+        showBack
+        onBackPress={handleBack}
+        rightActions={
+          <Pressable
+            onPress={() => router.push('/service/help')}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.help')}
+          >
+            <Icon symbol="help_outline" size={24} color={colors['on-primary']} />
+          </Pressable>
+        }
+      />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -238,89 +252,7 @@ function MotifTriangle({ size, color, opacity }: { size: number; color: string; 
   );
 }
 
-// PrimaryHeader
-function Header({ title }: { title: string }) {
-  const { colors } = useTheme();
-  const { t } = useTranslation();
-  const handleBack = useSafeBack();
-  return (
-    <View accessibilityRole="header">
-      <View style={[styles.trackerBar, { backgroundColor: colors.primary }]}>
-        <Text style={[styles.trackerText, { color: colors['on-primary'] }]}>MANAGE YOUR ADDRESSES</Text>
-      </View>
-      <View style={[styles.header, { backgroundColor: colors.primary }]}>
-        <View style={styles.headerPattern} pointerEvents="none">
-          <TaisPattern width={390} height={72} opacity={0.2} />
-        </View>
-        <View style={styles.headerRow}>
-          <Pressable
-            onPress={handleBack}
-            hitSlop={8}
-            style={styles.headerBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.goBack')}
-          >
-            <Icon symbol="arrow_back" size={24} color={colors['on-primary']} />
-          </Pressable>
-          <Text style={[styles.headerTitle, { color: colors['on-primary'] }]}>{title}</Text>
-          <Pressable
-            onPress={() => router.push('/service/help')}
-            hitSlop={8}
-            style={styles.headerBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.help')}
-          >
-            <Icon symbol="help_outline" size={24} color={colors['on-primary']} />
-          </Pressable>
-        </View>
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  // Header
-  trackerBar: {
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  trackerText: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-  },
-  header: {
-    position: 'relative',
-    height: 72,
-    overflow: 'hidden',
-    paddingHorizontal: layout['container-margin'],
-    justifyContent: 'center',
-  },
-  headerPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    ...typography.h2,
-    fontWeight: '700',
-    fontSize: 20,
-  },
   // Map
   scroll: {
     paddingBottom: 120,

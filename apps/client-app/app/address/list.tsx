@@ -21,7 +21,7 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { EmptyState } from '@/components/feedback/EmptyState';
-import { TaisPattern } from '@/components/cultural/TaisPattern';
+import { PrimaryHeader } from '@/components/layout/PrimaryHeader/PrimaryHeader';
 import { Icon } from '@/components/ui/Icon';
 import { toast } from '@/store/toastStore';
 import { useAddressSelectionStore } from '@/store/addressSelectionStore';
@@ -33,6 +33,7 @@ import {
 import type { Address } from '@/types';
 
 export default function AddressListPage() {
+  const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
   // Why: 决策 6 —— checkout 跳来带 from='checkout'，点地址=选中并返回（写中转 store）；
@@ -85,7 +86,21 @@ export default function AddressListPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <Header title={t('address.list', { defaultValue: 'Manage Address' })} />
+      <PrimaryHeader
+        title={t('address.list', { defaultValue: 'Manage Address' })}
+        showBack
+        onBackPress={handleBack}
+        rightActions={
+          <Pressable
+            onPress={() => router.push('/service/help')}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.help')}
+          >
+            <Icon symbol="help_outline" size={24} color={colors['on-primary']} />
+          </Pressable>
+        }
+      />
 
       {isLoading ? (
         <View style={styles.center}>
@@ -186,50 +201,6 @@ function MotifTriangle({ size, color, opacity }: { size: number; color: string; 
   );
 }
 
-// PrimaryHeader（HTML 第 141-157 行 — primary + tais-pattern + MANAGE bar + arrow_back + help）
-function Header({ title }: { title: string }) {
-  const { colors } = useTheme();
-  const { t } = useTranslation();
-  const handleBack = useSafeBack();
-  return (
-    <View accessibilityRole="header">
-      {/* MANAGE YOUR ADDRESSES — h-8 primary tracker */}
-      <View style={[styles.trackerBar, { backgroundColor: colors.primary }]}>
-        <Text style={[styles.trackerText, { color: colors['on-primary'] }]}>
-          MANAGE YOUR ADDRESSES
-        </Text>
-      </View>
-      {/* 主 header */}
-      <View style={[styles.header, { backgroundColor: colors.primary }]}>
-        <View style={styles.headerPattern} pointerEvents="none">
-          <TaisPattern width={390} height={72} opacity={0.2} />
-        </View>
-        <View style={styles.headerRow}>
-          <Pressable
-            onPress={handleBack}
-            hitSlop={8}
-            style={styles.headerBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.goBack')}
-          >
-            <Icon symbol="arrow_back" size={24} color={colors['on-primary']} />
-          </Pressable>
-          <Text style={[styles.headerTitle, { color: colors['on-primary'] }]}>{title}</Text>
-          <Pressable
-            onPress={() => router.push('/service/help')}
-            hitSlop={8}
-            style={styles.headerBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.help')}
-          >
-            <Icon symbol="help_outline" size={24} color={colors['on-primary']} />
-          </Pressable>
-        </View>
-      </View>
-    </View>
-  );
-}
-
 // 地址行（HTML 第 167-256 行 — radio + name + DEFAULT badge + edit/delete + call + location_on）
 // P16 决策 11 排版收紧：name + phone 同行 → DEFAULT pill → 地址单行截断（去掉 call/location_on icon 噪音）
 function AddressRow({
@@ -323,48 +294,6 @@ function AddressRow({
 }
 
 const styles = StyleSheet.create({
-  // Header
-  trackerBar: {
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  trackerText: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-  },
-  header: {
-    position: 'relative',
-    height: 72,
-    overflow: 'hidden',
-    paddingHorizontal: layout['container-margin'],
-    justifyContent: 'center',
-  },
-  headerPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    ...typography.h2,
-    fontWeight: '700',
-    fontSize: 20,
-  },
   // Body
   scroll: {
     padding: layout['container-margin'],
