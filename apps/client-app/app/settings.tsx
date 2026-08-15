@@ -9,25 +9,12 @@ import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } fr
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { Switch } from '@/components/ui/Switch';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
 import type { ReactNode } from 'react';
-
-// 设置项分类图标配色（HTML 各 category 配不同 Tailwind-500 色，纯视觉区分无语义角色，
-// 单文件保留 + 豁免尾注）。
-const ICON_BG = {
-  purple: '#a855f7', // 原因：设置分类图标（purple-500）
-  blue: '#3b82f6', // 原因：设置分类图标（blue-500）
-  amber: '#f59e0b', // 原因：设置分类图标（amber-500）
-  red: '#ef4444', // 原因：设置分类图标（red-500）
-  green: '#10b981', // 原因：设置分类图标（green-500）
-  indigo: '#6366f1', // 原因：设置分类图标（indigo-500）
-  violet: '#8b5cf6', // 原因：设置分类图标（violet-500）
-} as const;
 
 export default function SettingsPage() {
   const handleBack = useSafeBack();
@@ -87,8 +74,8 @@ export default function SettingsPage() {
           <RowItem
             label={t('settings.theme')}
             icon="palette"
-            iconBg={ICON_BG.purple}
-            color={colors.primary}
+            iconBg={colors.primary}
+            iconFg={colors['on-primary']}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
             dividerColor={colors['outline-variant']}
@@ -98,6 +85,7 @@ export default function SettingsPage() {
               value={themeMode}
               onChange={setMode}
               color={colors.primary}
+              activeTextColor={colors['on-primary']}
               subColor={colors['on-surface-variant']}
               activeColor={colors['surface-container-low']}
             />
@@ -116,73 +104,26 @@ export default function SettingsPage() {
           <PressableRow
             label={t('settings.language')}
             icon="language"
-            iconBg={ICON_BG.blue}
+            iconBg={colors.primary}
+            iconFg={colors['on-primary']}
             value={locale === 'zh' ? '中文' : locale === 'en' ? 'English' : locale.toUpperCase()}
-            color={colors.primary}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
             dividerColor={colors['outline-variant']}
             testID="settings-language"
             onPress={() => router.push('/language')}
           />
-          <RowItem
-            label={t('settings.push')}
-            icon="notifications"
-            iconBg={ICON_BG.amber}
-            color={colors.primary}
-            textColor={colors['on-surface']}
-            subColor={colors['on-surface-variant']}
-            dividerColor={colors['outline-variant']}
-          >
-            <Switch value onValueChange={() => {}} />
-          </RowItem>
           <PressableRow
             label={t('settings.clearCache')}
             icon="delete"
-            iconBg={ICON_BG.red}
+            iconBg={colors.primary}
+            iconFg={colors['on-primary']}
             value="1.2 MB"
-            color={colors.primary}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
             dividerColor={colors['outline-variant']}
             testID="settings-cache"
             onPress={clearCache}
-          />
-        </View>
-
-        {/* 隐私分组 */}
-        <SectionTitle
-          title={t('settings.privacy', { defaultValue: 'Privacy & Security' })}
-          color={colors['on-surface-variant']}
-        />
-        <View
-          style={[
-            styles.groupCard,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
-          ]}
-        >
-          <PressableRow
-            label={t('settings.accountSecurity', { defaultValue: 'Account Security' })}
-            icon="lock"
-            iconBg={ICON_BG.green}
-            color={colors.primary}
-            textColor={colors['on-surface']}
-            subColor={colors['on-surface-variant']}
-            dividerColor={colors['outline-variant']}
-            testID="settings-security"
-            onPress={() => {}}
-          />
-          <PressableRow
-            label={t('settings.privacyPolicy', { defaultValue: 'Privacy Policy' })}
-            icon="security"
-            iconBg={ICON_BG.indigo}
-            color={colors.primary}
-            textColor={colors['on-surface']}
-            subColor={colors['on-surface-variant']}
-            dividerColor={colors['outline-variant']}
-            testID="settings-privacy"
-            onPress={() => {}}
           />
         </View>
 
@@ -195,39 +136,29 @@ export default function SettingsPage() {
             shadowPresets.sm,
           ]}
         >
-          <PressableRow
+          {/* P17 决策 2：版本是信息不是操作，RowItem 无 chevron（无检查更新接口前不做假入口） */}
+          <RowItem
             label={t('settings.version')}
             icon="info"
             iconBg={colors.primary}
-            value="v1.0.0"
-            color={colors.primary}
+            iconFg={colors['on-primary']}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
             dividerColor={colors['outline-variant']}
             testID="settings-version"
-            onPress={() => {}}
-          />
+          >
+            <Text style={[styles.value, { color: colors['on-surface-variant'] }]}>v1.0.0</Text>
+          </RowItem>
           <PressableRow
             label={t('settings.about')}
             icon="info"
             iconBg={colors.primary}
-            color={colors.primary}
+            iconFg={colors['on-primary']}
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
             dividerColor={colors['outline-variant']}
             testID="settings-about"
             onPress={() => router.push('/about')}
-          />
-          <PressableRow
-            label={t('settings.terms')}
-            icon="auto_stories"
-            iconBg={ICON_BG.violet}
-            color={colors.primary}
-            textColor={colors['on-surface']}
-            subColor={colors['on-surface-variant']}
-            dividerColor={colors['outline-variant']}
-            testID="settings-tos"
-            onPress={() => {}}
           />
         </View>
 
@@ -270,7 +201,7 @@ function RowItem({
   label,
   icon,
   iconBg,
-  color,
+  iconFg,
   textColor,
   subColor,
   dividerColor,
@@ -281,7 +212,7 @@ function RowItem({
   label: string;
   icon: string;
   iconBg: string;
-  color: string;
+  iconFg: string;
   textColor: string;
   subColor: string;
   dividerColor: string;
@@ -292,7 +223,7 @@ function RowItem({
   return (
     <View testID={testID} style={styles.row}>
       <View style={[styles.rowIconWrap, { backgroundColor: iconBg }]}>
-        <Icon symbol={icon} size={18} color="#ffffff" />
+        <Icon symbol={icon} size={18} color={iconFg} />
       </View>
       <Text style={[styles.label, { color: textColor }]}>{label}</Text>
       <View style={styles.right}>{children}</View>
@@ -305,8 +236,8 @@ function PressableRow({
   label,
   icon,
   iconBg,
+  iconFg,
   value,
-  color,
   textColor,
   subColor,
   dividerColor,
@@ -317,8 +248,8 @@ function PressableRow({
   label: string;
   icon: string;
   iconBg: string;
+  iconFg: string;
   value?: string;
-  color: string;
   textColor: string;
   subColor: string;
   dividerColor: string;
@@ -333,7 +264,7 @@ function PressableRow({
       style={({ pressed }) => [styles.row, pressed && { opacity: 0.6 }]}
     >
       <View style={[styles.rowIconWrap, { backgroundColor: iconBg }]}>
-        <Icon symbol={icon} size={18} color="#ffffff" />
+        <Icon symbol={icon} size={18} color={iconFg} />
       </View>
       <Text style={[styles.label, { color: textColor }]}>{label}</Text>
       <View style={styles.right}>
@@ -349,12 +280,14 @@ function SegmentSwitch({
   value,
   onChange,
   color,
+  activeTextColor,
   subColor,
   activeColor,
 }: {
   value: 'light' | 'dark' | 'system';
   onChange: (v: 'light' | 'dark' | 'system') => void;
   color: string;
+  activeTextColor: string;
   subColor: string;
   activeColor: string;
 }) {
@@ -378,7 +311,7 @@ function SegmentSwitch({
           >
             <Text
               style={{
-                color: active ? '#ffffff' : subColor,
+                color: active ? activeTextColor : subColor,
                 ...typography['label-caps'],
                 fontSize: 11,
                 fontWeight: '700',
