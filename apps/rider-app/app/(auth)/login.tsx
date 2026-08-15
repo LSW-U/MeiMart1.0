@@ -148,7 +148,7 @@ export default function LoginPage() {
               leftSlot={<AppIcon color={colors.outline} name="lock" size={24} />}
               placeholder={t('auth.login.passwordPlaceholder')}
               rightSlot={
-                <Pressable accessibilityRole="button" accessibilityLabel={passwordVisible ? t('auth.login.hidePassword') : t('auth.login.showPassword')} onPress={() => setPasswordVisible((value) => !value)}>
+                <Pressable accessibilityRole="button" accessibilityLabel={passwordVisible ? t('auth.login.hidePassword') : t('auth.login.showPassword')} className="p-3" onPress={() => setPasswordVisible((value) => !value)}>
                   <AppIcon color={colors.outline} name={passwordVisible ? 'eye' : 'eyeOff'} size={24} />
                 </Pressable>
               }
@@ -165,7 +165,7 @@ export default function LoginPage() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={sendCodeLabel}
-                  className={`rounded-full px-4 py-2.5 ${countdown > 0 ? 'bg-outline-variant' : 'bg-primary'}`}
+                  className={`self-stretch justify-center rounded-lg px-3.5 ${countdown > 0 ? 'bg-outline-variant' : 'bg-primary'}`}
                   disabled={countdown > 0}
                   onPress={() => void handleSendCode()}
                 >

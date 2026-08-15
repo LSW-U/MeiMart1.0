@@ -95,7 +95,7 @@ export default function ProfileEditPage() {
               <Input
                 keyboardType="phone-pad"
                 label={t('auth.register.phone')}
-                leftSlot={<Text className="py-3 pr-2 text-base text-on-surface-variant">+670</Text>}
+                leftSlot={<Text className="self-stretch border-r border-outline-variant bg-surface-container-low px-4 py-3 text-base text-on-surface-variant">+670</Text>}
                 placeholder={t('auth.register.phonePlaceholder')}
                 rightSlot={
                   <Pressable accessibilityRole="button" accessibilityLabel={sendCodeLabel} className={`items-center justify-center rounded-lg px-4 ${codeState === 'sent' ? 'bg-green-700' : 'bg-primary'}`} onPress={sendCode}>
