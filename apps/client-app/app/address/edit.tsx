@@ -51,6 +51,13 @@ function toFormValues(existing?: Address): AddressEditValues {
 
 export default function AddressEditPage() {
   const handleBack = useSafeBack();
+  // Why: 审查 B2 —— 离开编辑页（含保存成功 back）时清地图选点，防止残留 pick 污染
+  //      下一次无关地址编辑的坐标/detail（幽灵地址回填）。从 map 回来是栈内返回，本页不卸载不受影响。
+  useEffect(() => {
+    return () => {
+      useMapPickStore.getState().clear();
+    };
+  }, []);
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { id, prefillName, prefillPhone, prefillDetail } = useLocalSearchParams<{
@@ -116,6 +123,9 @@ export default function AddressEditPage() {
               district: values.district,
               detail: values.detail,
               isDefault: values.isDefault,
+              // Why: 审查 B1 —— tag 必须显式进 payload（toAddressPayload 对 undefined 不传，后端存 null）；
+              //      ?? null 让「清除标签」也能通过 PATCH 落库
+              tag: values.tag ?? null,
               // Why: 地图选点坐标优先（B3 修复）；旧地址可能没有 lat/lng，兜底帝力默认坐标避免下单 409
               lat: mapPick?.lat ?? existing?.lat ?? -8.5569,
               lng: mapPick?.lng ?? existing?.lng ?? 125.5603,
@@ -347,7 +357,7 @@ function AddressForm({ existing, prefill, submitting, onSubmit }: AddressFormPro
                         color: colors['on-surface'],
                       },
                     ]}
-                    placeholder="Dili"
+                    placeholder={t('address.cityPlaceholder', { defaultValue: 'Dili' })}
                     placeholderTextColor={colors['on-surface-variant']}
                     value={value}
                     onChangeText={onChange}

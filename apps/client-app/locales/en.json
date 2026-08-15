@@ -485,7 +485,8 @@
     "smartRecognizeDesc": "Paste address text, auto-fill name & phone",
     "smartParseFailed": "Could not recognize name or phone",
     "smartPlaceholder": "Maria Silva, 7712 3456, Rua de Lecidere, Dili",
-    "parseAndFill": "Parse and Fill"
+    "parseAndFill": "Parse and Fill",
+    "cityPlaceholder": "Dili"
   },
   "profile": {
     "title": "My Account",

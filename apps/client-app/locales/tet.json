@@ -443,7 +443,8 @@
     "smartRecognizeDesc": "[TET] Paste address text, auto-fill name & phone",
     "smartParseFailed": "[TET] Could not recognize name or phone",
     "smartPlaceholder": "[TET] Maria Silva, 7712 3456, Rua de Lecidere, Dili",
-    "parseAndFill": "[TET] Parse and Fill"
+    "parseAndFill": "[TET] Parse and Fill",
+    "cityPlaceholder": "Dili"
   },
   "profile": {
     "title": "[TET] My Account",
