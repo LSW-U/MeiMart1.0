@@ -480,7 +480,12 @@
     "tagSchool": "学校",
     "tagCustom": "自定义",
     "tagCustomTitle": "自定义标签",
-    "tagCustomPlaceholder": "例如：奶奶家"
+    "tagCustomPlaceholder": "例如：奶奶家",
+    "smartRecognize": "智能识别",
+    "smartRecognizeDesc": "粘贴地址文本，自动填姓名和电话",
+    "smartParseFailed": "未能识别出姓名或电话",
+    "smartPlaceholder": "张三，13800138000，北京市朝阳区xx路1号",
+    "parseAndFill": "解析并填充"
   },
   "profile": {
     "title": "我的账户",

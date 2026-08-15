@@ -2,7 +2,7 @@
 // HTML 行数 283 → RN ~330（含样式），满足 CLAUDE.md 规则 #28 的 30% 门槛
 // Fix-22: PrimaryHeader + tais-pattern + location_on/location_city/person/call/home/arrow_back/check_circle/radio_button_unchecked/edit/delete + uma-lulik 分隔
 // P16: 全部硬编码文案接 i18n（决策 1）+ 结算页选择回传（决策 6）+ 卡片排版收紧（决策 11）
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -13,7 +13,7 @@ import {
   Pressable,
   ScrollView,
   Platform,
-} from 'react-native';
+ TextInput } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +33,9 @@ import {
 } from '@/services/queries/useAddress';
 import type { Address } from '@/types';
 import { getAddressTagTheme } from '@/theme/tagThemes';
+import { parseAddressText } from '@/utils/addressParse';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
 import { Swipeable } from 'react-native-gesture-handler';
 
 export default function AddressListPage() {
@@ -65,6 +68,28 @@ export default function AddressListPage() {
         onPress: () => deleteMutation.mutate(addr.id),
       },
     ]);
+  };
+
+  // P16 决策 9 —— 智能地址识别 Modal
+  const [smartVisible, setSmartVisible] = useState(false);
+  const [smartText, setSmartText] = useState('');
+
+  const handleSmartParse = () => {
+    const parsed = parseAddressText(smartText);
+    if (!parsed.phone && !parsed.name) {
+      toast.error(t('address.smartParseFailed', { defaultValue: 'Could not recognize name or phone' }));
+      return;
+    }
+    setSmartVisible(false);
+    setSmartText('');
+    router.push({
+      pathname: '/address/edit',
+      params: {
+        prefillName: parsed.name,
+        prefillPhone: parsed.phone,
+        prefillDetail: parsed.detail,
+      },
+    });
   };
 
   const handleSetDefault = (addr: Address) => {
@@ -128,6 +153,34 @@ export default function AddressListPage() {
         </View>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>
+          {/* P16 决策 9 —— 智能识别入口（粘贴文本自动解析填充） */}
+          <Pressable
+            onPress={() => setSmartVisible(true)}
+            style={({ pressed }) => [
+              styles.smartEntry,
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderColor: colors['outline-variant'],
+              },
+              pressed && { opacity: 0.7 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('address.smartRecognize', { defaultValue: 'Smart recognize' })}
+          >
+            <Icon symbol="content_paste" size={18} color={colors.primary} />
+            <View style={styles.smartEntryText}>
+              <Text style={[styles.smartEntryTitle, { color: colors['on-surface'] }]}>
+                {t('address.smartRecognize', { defaultValue: 'Smart Recognize' })}
+              </Text>
+              <Text style={[styles.smartEntryDesc, { color: colors['on-surface-variant'] }]}>
+                {t('address.smartRecognizeDesc', {
+                  defaultValue: 'Paste address text, auto-fill name & phone',
+                })}
+              </Text>
+            </View>
+            <Icon symbol="chevron_right" size={20} color={colors['on-surface-variant']} />
+          </Pressable>
+
           {/* Add New Address 按钮（HTML 第 160-162 行） */}
           <Pressable
             onPress={() => router.push('/address/edit')}
@@ -182,6 +235,40 @@ export default function AddressListPage() {
           </View>
         </ScrollView>
       )}
+
+      {/* P16 决策 9 —— 智能识别 Modal */}
+      <Modal
+        visible={smartVisible}
+        onClose={() => setSmartVisible(false)}
+        title={t('address.smartRecognize', { defaultValue: 'Smart Recognize' })}
+      >
+        <TextInput
+          style={[
+            styles.smartInput,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+              color: colors['on-surface'],
+            },
+          ]}
+          placeholder={t('address.smartPlaceholder', {
+            defaultValue: 'Maria Silva, 7712 3456, Rua de Lecidere, Dili',
+          })}
+          placeholderTextColor={colors['on-surface-variant']}
+          value={smartText}
+          onChangeText={setSmartText}
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+          testID="smart-parse-input"
+        />
+        <Button
+          label={t('address.parseAndFill', { defaultValue: 'Parse and Fill' })}
+          variant="primary"
+          onPress={handleSmartParse}
+          disabled={!smartText.trim()}
+        />
+      </Modal>
     </SafeAreaWrapper>
   );
 }
@@ -382,6 +469,34 @@ const styles = StyleSheet.create({
   emptyBox: {
     flex: 1,
     justifyContent: 'center',
+  },
+  smartEntry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  smartEntryText: {
+    flex: 1,
+    gap: 2,
+  },
+  smartEntryTitle: {
+    ...typography['body-md'],
+    fontWeight: '600',
+  },
+  smartEntryDesc: {
+    ...typography['body-sm'],
+  },
+  smartInput: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    minHeight: 96,
+    fontSize: 15,
   },
   addBtn: {
     flexDirection: 'row',

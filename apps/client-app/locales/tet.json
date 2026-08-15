@@ -438,7 +438,12 @@
     "tagSchool": "[TET] School",
     "tagCustom": "[TET] Custom",
     "tagCustomTitle": "[TET] Custom Tag",
-    "tagCustomPlaceholder": "[TET] e.g., Grandma home"
+    "tagCustomPlaceholder": "[TET] e.g., Grandma home",
+    "smartRecognize": "[TET] Smart Recognize",
+    "smartRecognizeDesc": "[TET] Paste address text, auto-fill name & phone",
+    "smartParseFailed": "[TET] Could not recognize name or phone",
+    "smartPlaceholder": "[TET] Maria Silva, 7712 3456, Rua de Lecidere, Dili",
+    "parseAndFill": "[TET] Parse and Fill"
   },
   "profile": {
     "title": "[TET] My Account",

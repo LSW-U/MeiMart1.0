@@ -480,7 +480,12 @@
     "tagSchool": "School",
     "tagCustom": "Custom",
     "tagCustomTitle": "Custom Tag",
-    "tagCustomPlaceholder": "e.g., Grandma home"
+    "tagCustomPlaceholder": "e.g., Grandma home",
+    "smartRecognize": "Smart Recognize",
+    "smartRecognizeDesc": "Paste address text, auto-fill name & phone",
+    "smartParseFailed": "Could not recognize name or phone",
+    "smartPlaceholder": "Maria Silva, 7712 3456, Rua de Lecidere, Dili",
+    "parseAndFill": "Parse and Fill"
   },
   "profile": {
     "title": "My Account",

@@ -53,7 +53,13 @@ export default function AddressEditPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, prefillName, prefillPhone, prefillDetail } = useLocalSearchParams<{
+    id?: string;
+    // Why: P16 决策 9 —— 智能识别解析结果跳转带入（expo-router params 均为 string）
+    prefillName?: string;
+    prefillPhone?: string;
+    prefillDetail?: string;
+  }>();
   // Why: 提交时用地图选点坐标（B3）；表单内的状态行在 AddressForm 里另行订阅
   const mapPick = useMapPickStore((s) => s.pick);
   const { data: addresses } = useAddresses();
@@ -95,6 +101,11 @@ export default function AddressEditPage() {
         <AddressForm
           key={existing?.id ?? 'new'}
           existing={existing}
+          prefill={
+            existing
+              ? undefined
+              : { name: prefillName ?? '', phone: prefillPhone ?? '', detail: prefillDetail ?? '' }
+          }
           submitting={createMutation.isPending || updateMutation.isPending}
           onSubmit={(values) => {
             const payload: Omit<Address, 'id'> = {
@@ -149,11 +160,13 @@ export default function AddressEditPage() {
 
 interface AddressFormProps {
   existing?: Address;
+  /** P16 决策 9 —— 智能识别预填（仅新增地址时生效） */
+  prefill?: { name: string; phone: string; detail: string };
   submitting: boolean;
   onSubmit: (values: AddressEditValues) => void;
 }
 
-function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
+function AddressForm({ existing, prefill, submitting, onSubmit }: AddressFormProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   // Why: P16 决策 4/10 —— map 页选址回传（B3 断裂修复）：pick 有值 = 已通过地图定位
@@ -161,7 +174,15 @@ function AddressForm({ existing, submitting, onSubmit }: AddressFormProps) {
 
   const { control, handleSubmit, setValue } = useForm<AddressEditValues>({
     resolver: zodResolver(addressEditSchema),
-    defaultValues: toFormValues(existing),
+    // Why: 编辑用已有值；新增时智能识别 prefill 优先于空串
+    defaultValues: existing
+      ? toFormValues(existing)
+      : {
+          ...toFormValues(undefined),
+          ...(prefill?.name ? { recipientName: prefill.name } : {}),
+          ...(prefill?.phone ? { phone: prefill.phone } : {}),
+          ...(prefill?.detail ? { detail: prefill.detail } : {}),
+        },
     mode: 'onBlur',
   });
 
