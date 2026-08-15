@@ -92,18 +92,20 @@ export default function ProfileEditPage() {
             </View>
             <View className="gap-6">
               <Input label={t('auth.register.fullName')} placeholder={t('auth.register.fullNamePlaceholder')} value={name} onChangeText={setName} />
-              <View className="gap-1.5">
-                <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('auth.register.phone')}</Text>
-                <View className="h-14 flex-row gap-2">
-                  <View className="flex-1 flex-row rounded-lg border border-outline-variant bg-white">
-                    <Text className="border-r border-outline-variant bg-surface-container-low px-4 py-4 text-on-surface-variant">+670</Text>
-                    <TextInput className="flex-1 px-4 text-base text-on-surface" keyboardType="phone-pad" placeholder={t('auth.register.phonePlaceholder')} placeholderTextColor={colors.outline} value={phone} onChangeText={setPhone} />
-                  </View>
+              <Input
+                keyboardType="phone-pad"
+                label={t('auth.register.phone')}
+                leftSlot={<Text className="py-3 pr-2 text-base text-on-surface-variant">+670</Text>}
+                placeholder={t('auth.register.phonePlaceholder')}
+                rightSlot={
                   <Pressable accessibilityRole="button" accessibilityLabel={sendCodeLabel} className={`items-center justify-center rounded-lg px-4 ${codeState === 'sent' ? 'bg-green-700' : 'bg-primary'}`} onPress={sendCode}>
                     <Text className="text-[11px] font-bold text-white">{sendCodeLabel}</Text>
                   </Pressable>
-                </View>
-              </View>
+                }
+                className="px-2"
+                value={phone}
+                onChangeText={setPhone}
+              />
               <Input keyboardType="number-pad" label={t('auth.register.verificationCode')} maxLength={6} placeholder={t('auth.register.smsPlaceholder')} />
               <Input label={t('auth.register.vehicleType')} placeholder={t('auth.register.vehicleTypePlaceholder')} value={vehicleType} onChangeText={setVehicleType} />
               <Input label={t('auth.register.identityCard')} placeholder={t('auth.register.identityCardPlaceholder')} value={licenseNumber} onChangeText={setLicenseNumber} />

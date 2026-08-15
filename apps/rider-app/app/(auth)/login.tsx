@@ -1,7 +1,7 @@
 import { colors } from "../../src/theme/colors";
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { showToast } from '../../src/components/feedback/Toast';
@@ -142,56 +142,47 @@ export default function LoginPage() {
             value={phone}
             onChangeText={setPhone}
           />
-          <View className="gap-1.5">
-            <Text className="ml-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-              {isPassword ? t('auth.login.passwordLabel') : t('auth.login.smsLabel')}
-            </Text>
-            {isPassword ? (
-              <View className="min-h-14 flex-row items-center rounded-lg border border-outline-variant bg-white">
-                <View className="pl-5 pr-4">
-                  <AppIcon color={colors.outline} name="lock" size={24} />
-                </View>
-                <TextInput
-                  className="flex-1 px-2 py-3 text-base text-on-surface"
-                  placeholder={t('auth.login.passwordPlaceholder')}
-                  placeholderTextColor={colors.outline}
-                  secureTextEntry={!passwordVisible}
-                  value={password}
-                  onChangeText={setPassword}
-                />
-                <Pressable accessibilityRole="button" accessibilityLabel={passwordVisible ? t('auth.login.hidePassword') : t('auth.login.showPassword')} className="mr-2 pl-3 pr-5 py-3" onPress={() => setPasswordVisible((value) => !value)}>
+          {isPassword ? (
+            <Input
+              label={t('auth.login.passwordLabel')}
+              leftSlot={<AppIcon color={colors.outline} name="lock" size={24} />}
+              placeholder={t('auth.login.passwordPlaceholder')}
+              rightSlot={
+                <Pressable accessibilityRole="button" accessibilityLabel={passwordVisible ? t('auth.login.hidePassword') : t('auth.login.showPassword')} onPress={() => setPasswordVisible((value) => !value)}>
                   <AppIcon color={colors.outline} name={passwordVisible ? 'eye' : 'eyeOff'} size={24} />
                 </Pressable>
-              </View>
-            ) : (
-              <View className="w-full flex-row items-center gap-3">
-                <View className="min-h-14 flex-1 flex-row items-center rounded-lg border border-outline-variant bg-white">
-                  <TextInput
-                    className="flex-1 pl-5 pr-3 py-3 text-base text-on-surface"
-                    keyboardType="number-pad"
-                    placeholder={t('auth.login.smsPlaceholder')}
-                    placeholderTextColor={colors.outline}
-                    value={code}
-                    onChangeText={setCode}
-                  />
-                </View>
+              }
+              secureTextEntry={!passwordVisible}
+              value={password}
+              onChangeText={setPassword}
+            />
+          ) : (
+            <Input
+              keyboardType="number-pad"
+              label={t('auth.login.smsLabel')}
+              placeholder={t('auth.login.smsPlaceholder')}
+              rightSlot={
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={sendCodeLabel}
-                  className={`rounded-full px-6 py-4 ${countdown > 0 ? 'bg-outline-variant' : 'bg-primary'}`}
+                  className={`rounded-full px-4 py-2.5 ${countdown > 0 ? 'bg-outline-variant' : 'bg-primary'}`}
                   disabled={countdown > 0}
                   onPress={() => void handleSendCode()}
                 >
-                  <Text className={`text-sm font-bold ${countdown > 0 ? 'text-outline' : 'text-white'}`}>{sendCodeLabel}</Text>
+                  <Text className={`text-xs font-bold ${countdown > 0 ? 'text-outline' : 'text-white'}`}>{sendCodeLabel}</Text>
                 </Pressable>
-              </View>
-            )}
-          </View>
+              }
+              value={code}
+              onChangeText={setCode}
+            />
+          )}
+        </View>
 
-          <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.forgotPassword')} className="items-end" onPress={() => setFeatureInProgressVisible(true)}>
-            <Text className="text-[11px] font-bold text-primary">{t('auth.login.forgotPassword')}</Text>
-          </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.forgotPassword')} className="items-end" onPress={() => setFeatureInProgressVisible(true)}>
+          <Text className="text-[11px] font-bold text-primary">{t('auth.login.forgotPassword')}</Text>
+        </Pressable>
 
+        <View className="gap-4">
           <View className="flex-row items-start gap-2">
             <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={setAccepted} value={accepted} />
             <Text className="flex-1 text-[13px] leading-5 text-on-surface-variant">
