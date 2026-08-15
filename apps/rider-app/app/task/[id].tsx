@@ -95,8 +95,8 @@ export default function TaskDetailPage() {
           retryLabel={t('common.retry')}
           skeleton="detail"
           onRetry={() => void refetch()}
-          >
-            {(detail) => (
+        >
+          {(detail) => (
             <TaskCard
               actionLabel={actionLabel}
               actionPending={acceptTask.isPending}

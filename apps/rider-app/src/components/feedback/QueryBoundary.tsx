@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { Text, View } from 'react-native';
 
-import { Button } from '../ui/Button';
 import { Skeleton } from '../ui/Skeleton';
+import { ErrorState } from './ErrorState';
 
 /**
  * QueryBoundary —— query 三态统一边界（B3）
@@ -55,13 +55,18 @@ function QuerySkeleton({ variant }: { variant: 'list' | 'detail' | 'summary' }) 
       </View>
     );
   }
+  // list：2 张带边框卡骨架，内含 62%/38% 宽度行（对照原型 .skeleton-card + .skeleton-line）
   return (
     <View testID="query-skeleton">
-      <Skeleton className="h-3.5 w-2/5" />
-      <Skeleton className="mt-2.5 h-3.5 w-3/5" />
-      <Skeleton className="mt-2.5 h-3.5 w-1/4" />
-      <Skeleton className="mt-6 h-3.5 w-2/5" />
-      <Skeleton className="mt-2.5 h-3.5 w-3/5" />
+      <View className="rounded-lg border border-surface-variant p-3.5">
+        <Skeleton className="h-3.5 w-1/2" />
+        <Skeleton className="mt-2.5 h-3.5 w-3/5" />
+        <Skeleton className="mt-2.5 h-3.5 w-2/5" />
+      </View>
+      <View className="mt-2.5 rounded-lg border border-surface-variant p-3.5">
+        <Skeleton className="h-3.5 w-1/2" />
+        <Skeleton className="mt-2.5 h-3.5 w-3/5" />
+      </View>
     </View>
   );
 }
@@ -87,15 +92,7 @@ export function QueryBoundary<T, D = Exclude<T, null>>({
 
   // 2. 错误（含 data undefined 非 loading 的兜底）：请求状态 ≠ "不存在"
   if (isError || data === undefined) {
-    return (
-      <View accessibilityRole="alert" className="rounded-2xl border border-error/40 bg-surface p-4" testID="query-error">
-        <Text className="text-sm font-extrabold text-error">{errorTitle}</Text>
-        <Text className="mt-1.5 text-xs leading-relaxed text-on-surface-variant">{errorMessage}</Text>
-        {onRetry ? (
-          <Button className="mt-3 h-9 self-start px-3.5" textClassName="text-xs" onPress={onRetry}>{retryLabel}</Button>
-        ) : null}
-      </View>
-    );
+    return <ErrorState actionLabel={onRetry ? retryLabel : undefined} message={errorMessage} onAction={onRetry} title={errorTitle} />;
   }
 
   // 3. 业务空态（基于真实 data 判断）
