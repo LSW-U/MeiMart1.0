@@ -192,16 +192,22 @@ export default function CouponsPage() {
 
       {/* P18 D3：近过期提醒条（仅 available tab 且存在 3 天内到期券） */}
       {/* P18 D3：近过期提醒条（仅 available tab 且存在 3 天内到期券）。
-          Why: warning-container/warning 是 semantic 角色色不在 AppColors 类型上
-               （P16 tagThemes 同款约束），单处使用按场景色板先例内联 hex：#fef3c7 / #F57C00 */}
+          warning 走 colors.semantic（dark 自动跟随：warning-container 深棕底 / warning 浅橙字）。
+          Q2：dashed 描边对齐原型「提醒」语义（与 D4 降级 banner 的描边语言一致） */}
       {tab === 'available' && !isLoading && !isError && expiringCount > 0 && (
         <View
-          style={[styles.expiringBanner, { backgroundColor: '#fef3c7' }]}
+          style={[
+            styles.expiringBanner,
+            {
+              backgroundColor: colors.semantic['warning-container'],
+              borderColor: colors.semantic.warning,
+            },
+          ]}
           accessibilityLabel={t('coupons.expiringSoon', { count: expiringCount })}
           testID="coupon-expiring"
         >
-          <Icon symbol="schedule" size={16} color="#F57C00" />
-          <Text style={[styles.expiringText, { color: '#F57C00' }]}>
+          <Icon symbol="schedule" size={16} color={colors.semantic.warning} />
+          <Text style={[styles.expiringText, { color: colors.semantic.warning }]}>
             {t('coupons.expiringSoon', { count: expiringCount })}
           </Text>
         </View>
@@ -314,6 +320,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderStyle: 'dashed',
   },
   expiringText: {
     ...typography['body-sm'],
