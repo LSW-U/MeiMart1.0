@@ -6,8 +6,8 @@ import type { ClientCoupon } from '@/services/promotion';
 
 /**
  * 按 ClientCoupon.type 算可读折扣描述。
- * Why: PERCENTAGE/FIXED_AMOUNT 是数字+符号（格式化，非文案，可接受硬编码）；
- *      FREE_DELIVERY 是文案，走 i18n（审查报告 Q2，德顿语/中文用户不看英文）。
+ * Why: PERCENTAGE/FIXED_AMOUNT 的数字+符号是格式化非文案；但 `OFF` 是英文单词，
+ *      属文案（模块方案 D5 拍板：OFF 走翻译）。FREE_DELIVERY 同理走 i18n。
  */
 export function formatCouponValue(
   coupon: Pick<ClientCoupon, 'type' | 'value'>,
@@ -15,7 +15,7 @@ export function formatCouponValue(
 ): string {
   switch (coupon.type) {
     case 'PERCENTAGE':
-      return `${coupon.value}% OFF`;
+      return `${coupon.value}% ${t('coupons.off', { defaultValue: 'OFF' })}`;
     case 'FIXED_AMOUNT':
       return `-$${coupon.value}`;
     case 'FREE_DELIVERY':

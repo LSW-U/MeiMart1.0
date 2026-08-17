@@ -70,9 +70,6 @@ export function CouponCard({
         >
           {coupon.name}
         </Text>
-        <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-          Exp: {new Date(coupon.endAt).toLocaleDateString()}
-        </Text>
         {isUsed && (
           <Text style={[textStyle('label-caps'), { color: colors['on-surface-variant'] }]}>
             {t('coupons.used', { defaultValue: 'Used' })}

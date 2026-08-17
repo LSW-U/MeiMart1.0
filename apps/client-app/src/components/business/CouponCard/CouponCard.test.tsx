@@ -31,7 +31,7 @@ const coupon: ClientCoupon = {
 describe('CouponCard', () => {
   it('renders discount label and name (ClientCoupon, 门槛文案带金额插值)', () => {
     const { getByText } = render(<CouponCard coupon={coupon} />, { wrapper });
-    expect(getByText('10% OFF')).toBeTruthy();
+    expect(getByText('10% coupons.off')).toBeTruthy();
     expect(getByText('New User Discount')).toBeTruthy();
     expect(getByText('coupons.minSpend:50')).toBeTruthy();
   });

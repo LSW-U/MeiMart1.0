@@ -593,7 +593,8 @@
     "emptyExpiredTitle": "暂无过期券",
     "emptyExpiredDesc": "过期券会保留一段时间供核对",
     "loginTitle": "登录后查看优惠券",
-    "loginDesc": "登录后即可查看和管理您的优惠券"
+    "loginDesc": "登录后即可查看和管理您的优惠券",
+    "off": "OFF"
   },
   "claim": {
     "title": "领券中心",

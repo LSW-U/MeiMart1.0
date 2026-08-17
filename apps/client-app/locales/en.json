@@ -593,7 +593,8 @@
     "emptyExpiredTitle": "No expired coupons",
     "emptyExpiredDesc": "Expired coupons are kept for a while for your records",
     "loginTitle": "Log in to view coupons",
-    "loginDesc": "Log in to view and manage your coupons"
+    "loginDesc": "Log in to view and manage your coupons",
+    "off": "OFF"
   },
   "claim": {
     "title": "Coupon Center",

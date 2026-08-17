@@ -551,7 +551,8 @@
     "emptyExpiredTitle": "[TET] No expired coupons",
     "emptyExpiredDesc": "[TET] Expired coupons are kept for a while for your records",
     "loginTitle": "[TET] Log in to view coupons",
-    "loginDesc": "[TET] Log in to view and manage your coupons"
+    "loginDesc": "[TET] Log in to view and manage your coupons",
+    "off": "[TET] OFF"
   },
   "claim": {
     "title": "[TET] Coupon Center",
