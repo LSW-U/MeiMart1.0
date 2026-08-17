@@ -601,7 +601,13 @@
     "maxSave": "最高省 ${{amount}}",
     "daysLeft": "剩 {{count}} 天",
     "expiresToday": "今天到期",
-    "goBrowse": "去逛逛"
+    "goBrowse": "去逛逛",
+    "minSpendShort": "满 ${{amount}}",
+    "needMore": "再买 ${{amount}} 可用",
+    "notAvailable": "本单不可用",
+    "saveThisOrder": "本单预计省 ${{amount}}",
+    "usableThisOrder": "本单可用",
+    "unusableThisOrder": "本单不可用"
   },
   "claim": {
     "title": "领券中心",

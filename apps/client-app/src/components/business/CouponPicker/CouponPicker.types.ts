@@ -5,6 +5,8 @@ export interface CouponPickerProps {
   visible: boolean;
   onClose: () => void;
   coupons: ClientCoupon[];
+  /** 当前订单金额（模块方案 D4/决策 5A）：门槛前置判断 + 本单预计节省预估 */
+  orderAmount: number;
   /** 当前选中券 code（undefined = 未选/用「不使用券」） */
   selectedCode?: string;
   /** 选券（传 code）或清券（传 undefined），调用方驱动 preview 重查 */

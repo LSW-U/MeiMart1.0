@@ -559,7 +559,13 @@
     "maxSave": "[TET] Max save ${{amount}}",
     "daysLeft": "[TET] {{count}} days left",
     "expiresToday": "[TET] Expires today",
-    "goBrowse": "[TET] Go browse"
+    "goBrowse": "[TET] Go browse",
+    "minSpendShort": "[TET] Min ${{amount}}",
+    "needMore": "[TET] Add ${{amount}} more to use",
+    "notAvailable": "[TET] Not available for this order",
+    "saveThisOrder": "[TET] Save ${{amount}} on this order",
+    "usableThisOrder": "[TET] Usable",
+    "unusableThisOrder": "[TET] Not usable"
   },
   "claim": {
     "title": "[TET] Coupon Center",

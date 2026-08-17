@@ -601,7 +601,13 @@
     "maxSave": "Max save ${{amount}}",
     "daysLeft": "{{count}} days left",
     "expiresToday": "Expires today",
-    "goBrowse": "Go browse"
+    "goBrowse": "Go browse",
+    "minSpendShort": "Min ${{amount}}",
+    "needMore": "Add ${{amount}} more to use",
+    "notAvailable": "Not available for this order",
+    "saveThisOrder": "Save ${{amount}} on this order",
+    "usableThisOrder": "Usable",
+    "unusableThisOrder": "Not usable"
   },
   "claim": {
     "title": "Coupon Center",

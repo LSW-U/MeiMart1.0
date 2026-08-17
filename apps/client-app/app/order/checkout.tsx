@@ -531,6 +531,7 @@ export default function CheckoutPage() {
         visible={showCouponModal}
         onClose={() => setShowCouponModal(false)}
         coupons={coupons ?? []}
+        orderAmount={subtotal}
         selectedCode={selectedCouponCode}
         onSelect={setSelectedCouponCode}
       />
