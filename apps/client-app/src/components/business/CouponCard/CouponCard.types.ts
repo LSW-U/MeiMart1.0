@@ -8,7 +8,7 @@ export interface CouponCardProps {
   onUse?: (coupon: ClientCoupon) => void;
   /**
    * 卡内主按钮动作（领券中心 B1 复用）：
-   * - undefined：默认行为，available 态显示「Use Now」（调 onUse）
+   * - undefined：默认行为，available 态显示「去逛逛」（调 onUse，跳首页）
    * - 'claim'：显示「领取」按钮（调 onClaim），用于领券中心可领模板
    */
   action?: 'claim';

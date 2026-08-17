@@ -540,7 +540,6 @@
     "minSpend": "[TET] Min spend {{amount}}",
     "used": "[TET] Used",
     "expired": "[TET] Expired",
-    "useNow": "[TET] Use Now",
     "cardLabel": "[TET] Coupon: {{name}}, {{discount}}",
     "expiringSoon": "[TET] {{count}} coupons expire within 3 days — use them first",
     "emptyAvailableTitle": "[TET] No available coupons",

@@ -582,7 +582,6 @@
     "minSpend": "Min spend {{amount}}",
     "used": "Used",
     "expired": "Expired",
-    "useNow": "Use Now",
     "cardLabel": "Coupon: {{name}}, {{discount}}",
     "expiringSoon": "{{count}} coupons expire within 3 days — use them first",
     "emptyAvailableTitle": "No available coupons",
