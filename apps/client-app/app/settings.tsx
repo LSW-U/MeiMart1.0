@@ -1,6 +1,7 @@
-// ⚠️ 无 HTML 原型，参考 ProfilePage 推导实现，待设计确认
-// SettingsPage — 设置页（参考 ProfilePage.html 的分组列表样式）
-// D.13: PrimaryHeader + 分组设置项（外观/通用/隐私/关于）+ 退出登录
+// SettingsPage — 设置页
+// P17 优化（第四梯队HTML原型设计/P17-设置页-优化原型.html，193 行）：
+//   5 组信息架构（账号与服务/偏好/存储/隐私与条款/关于）+ 假交互清零 + 登录态自适应
+//   + 真实缓存清理（src/services/cache.ts）+ 版本单一源（src/utils/appInfo.ts）+ LegalPage 入口
 import { StyleSheet, View, Text, ScrollView, Pressable, Alert, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';

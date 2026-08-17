@@ -517,8 +517,7 @@
     "notificationPrefs": "[TET] Notifications",
     "cacheCalculating": "[TET] Calculating…",
     "cacheCleared": "[TET] Cache cleared",
-    "cacheClearFailed": "[TET] Failed to clear cache",
-    "legalComingSoon": "[TET] Content coming soon"
+    "cacheClearFailed": "[TET] Failed to clear cache"
   },
   "language": {
     "title": "[TET] Select language",

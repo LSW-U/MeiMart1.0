@@ -559,8 +559,7 @@
     "notificationPrefs": "通知偏好",
     "cacheCalculating": "计算中…",
     "cacheCleared": "缓存已清除",
-    "cacheClearFailed": "清除缓存失败",
-    "legalComingSoon": "内容待补充"
+    "cacheClearFailed": "清除缓存失败"
   },
   "language": {
     "title": "选择语言",

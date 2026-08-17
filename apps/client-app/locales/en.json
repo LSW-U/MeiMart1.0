@@ -559,8 +559,7 @@
     "notificationPrefs": "Notifications",
     "cacheCalculating": "Calculating…",
     "cacheCleared": "Cache cleared",
-    "cacheClearFailed": "Failed to clear cache",
-    "legalComingSoon": "Content coming soon"
+    "cacheClearFailed": "Failed to clear cache"
   },
   "language": {
     "title": "Select language",
