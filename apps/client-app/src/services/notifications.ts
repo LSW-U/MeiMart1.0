@@ -39,6 +39,22 @@ function transformNotification(raw: NotificationRaw): Notification {
   };
 }
 
+// P17-B1 通知偏好（后端 b8ccfb9）：三分类开关，与后端 NotificationType 三值对应。
+// 后端 null/缺省兜底全 true；PATCH 部分更新（契约 refine 至少一键）返回更新后全量。
+export interface NotificationPreferences {
+  /** ORDER_UPDATE 类通知开关 */
+  orderUpdates: boolean;
+  /** PROMOTION 类通知开关 */
+  promotions: boolean;
+  /** SYSTEM 类通知开关 */
+  system: boolean;
+}
+
+const DEFAULT_PREFS: NotificationPreferences = { orderUpdates: true, promotions: true, system: true };
+
+// Why: mock 偏好用模块级变量模拟（决策 3）——会话级 UI 态不进 mockDb（落盘无意义且要写迁移）
+let mockPrefs: NotificationPreferences = { ...DEFAULT_PREFS };
+
 export const notificationsApi = {
   async list(onlyUnread = false): Promise<Notification[]> {
     if (isMockMode) {
@@ -78,6 +94,28 @@ export const notificationsApi = {
       return mockResponse({ success: true });
     }
     const res = await api.post<{ success: boolean }>('/client/notifications/read-all');
+    return res.data;
+  },
+
+  // P17-B1：读取通知偏好（后端 GET 全量三布尔）
+  async getPreferences(): Promise<NotificationPreferences> {
+    if (isMockMode) return mockResponse({ ...mockPrefs });
+    const res = await api.get<NotificationPreferences>('/client/user/notification-preferences');
+    return res.data;
+  },
+
+  // P17-B1：部分更新偏好（merge 未传 key 不变；mock 侧同步 merge 语义）
+  async updatePreferences(
+    patch: Partial<NotificationPreferences>,
+  ): Promise<NotificationPreferences> {
+    if (isMockMode) {
+      mockPrefs = { ...mockPrefs, ...patch };
+      return mockResponse({ ...mockPrefs });
+    }
+    const res = await api.patch<NotificationPreferences>(
+      '/client/user/notification-preferences',
+      patch,
+    );
     return res.data;
   },
 };

@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import { notificationsApi } from '@/services/notifications';
+import { useTranslation } from 'react-i18next';
+import { notificationsApi, type NotificationPreferences } from '@/services/notifications';
 import { useAuthStore } from '@/store/authStore';
+import { toast } from '@/store/toastStore';
+import { getApiErrorMessage } from '@/utils/error';
 import type { Notification } from '@/types';
 
 // Why: 从 useUser.ts 拆出来，notifications 模块自包含（service + hook 都在）
@@ -117,6 +120,57 @@ export function useMarkAllNotificationsRead() {
       restoreNotificationSnapshot(qc, ctx?.previous);
     },
     onSettled: () => {
+      qc.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
+    },
+  });
+}
+
+// ============================================================================
+// P17-B1 通知偏好（后端 b8ccfb9）：GET 全量三布尔 + PATCH 部分更新（乐观三件套）
+// ============================================================================
+
+// Why: 与 NOTIFICATIONS_QUERY_KEY（['user','notifications']）前缀不同，互不误伤
+//      （后端列表/未读数按偏好过滤是副作用，更新偏好后主动 invalidate 列表前缀）
+export const NOTIFICATION_PREFS_KEY = ['user', 'notification-preferences'] as const;
+
+export function useNotificationPreferences() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  return useQuery({
+    queryKey: NOTIFICATION_PREFS_KEY,
+    queryFn: () => notificationsApi.getPreferences(),
+    staleTime: 60 * 1000,
+    networkMode: 'offlineFirst',
+    enabled: isAuthenticated, // 未登录时不请求
+  });
+}
+
+export function useUpdateNotificationPreferences() {
+  const qc = useQueryClient();
+  const { t } = useTranslation();
+  return useMutation({
+    mutationFn: (patch: Partial<NotificationPreferences>) =>
+      notificationsApi.updatePreferences(patch),
+    // 规则 25：开关拨动必须立即视觉反馈
+    onMutate: async (patch) => {
+      await qc.cancelQueries({ queryKey: NOTIFICATION_PREFS_KEY });
+      const previous = qc.getQueryData<NotificationPreferences>(NOTIFICATION_PREFS_KEY);
+      if (previous) {
+        qc.setQueryData(NOTIFICATION_PREFS_KEY, { ...previous, ...patch });
+      }
+      return { previous };
+    },
+    onError: (error, _patch, ctx) => {
+      // 回滚开关位置 + toast 提示（页面层不重复 toast）
+      if (ctx?.previous) qc.setQueryData(NOTIFICATION_PREFS_KEY, ctx.previous);
+      toast.error(
+        getApiErrorMessage(error, t('settings.notifUpdateFailed', { defaultValue: 'Failed to update preferences' })),
+      );
+    },
+    onSuccess: (next) => {
+      // 后端返回全量，直接对齐（纠正乐观 merge 可能的偏差）
+      qc.setQueryData(NOTIFICATION_PREFS_KEY, next);
+      // ⚠️ 列表/未读数已按新偏好过滤（后端副作用），本地缓存立即失效重查。
+      // 前缀匹配同时命中 all/unread 列表 + unread-count 三个 key
       qc.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
     },
   });

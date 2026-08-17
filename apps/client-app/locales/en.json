@@ -559,7 +559,11 @@
     "notificationPrefs": "Notifications",
     "cacheCalculating": "Calculating…",
     "cacheCleared": "Cache cleared",
-    "cacheClearFailed": "Failed to clear cache"
+    "cacheClearFailed": "Failed to clear cache",
+    "notifOrderUpdates": "Order updates",
+    "notifPromotions": "Promotions",
+    "notifSystem": "System notices",
+    "notifUpdateFailed": "Failed to update preferences"
   },
   "language": {
     "title": "Select language",

@@ -517,7 +517,11 @@
     "notificationPrefs": "[TET] Notifications",
     "cacheCalculating": "[TET] Calculating…",
     "cacheCleared": "[TET] Cache cleared",
-    "cacheClearFailed": "[TET] Failed to clear cache"
+    "cacheClearFailed": "[TET] Failed to clear cache",
+    "notifOrderUpdates": "[TET] Order updates",
+    "notifPromotions": "[TET] Promotions",
+    "notifSystem": "[TET] System notices",
+    "notifUpdateFailed": "[TET] Failed to update preferences"
   },
   "language": {
     "title": "[TET] Select language",

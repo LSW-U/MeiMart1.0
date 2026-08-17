@@ -559,7 +559,11 @@
     "notificationPrefs": "通知偏好",
     "cacheCalculating": "计算中…",
     "cacheCleared": "缓存已清除",
-    "cacheClearFailed": "清除缓存失败"
+    "cacheClearFailed": "清除缓存失败",
+    "notifOrderUpdates": "订单通知",
+    "notifPromotions": "促销活动",
+    "notifSystem": "系统公告",
+    "notifUpdateFailed": "偏好设置失败，请重试"
   },
   "language": {
     "title": "选择语言",
