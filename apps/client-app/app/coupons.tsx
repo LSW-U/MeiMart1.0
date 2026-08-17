@@ -25,6 +25,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useCoupons } from '@/services/queries/usePromotion';
+import { useAuthStore } from '@/store/authStore';
 import type { ClientCoupon } from '@/services/promotion';
 
 type TabKey = 'available' | 'used' | 'expired';
@@ -34,11 +35,25 @@ export default function CouponsPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [tab, setTab] = useState<TabKey>('available');
+  // P18 D6：未登录 → 登录/注册空态（useCoupons enabled=isAuth，未登录 data 空命中空态）
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   // Why: 三 tab 并行各调 useCoupons(status) —— 后端 ?status= 端点已就绪（6dc4c81），
   //      各 status 独立缓存（COUPONS_QUERY_KEY 含 status），tab 切换瞬时（数据已拉）
   const availableQ = useCoupons('available');
   const usedQ = useCoupons('used');
   const expiredQ = useCoupons('expired');
+
+  // P18 D3：available 中 3 天内过期的券数（提醒条只在此 tab 且 count>0 显示）
+  const expiringCount = useMemo(() => {
+    // 原因：近过期判断需 Date.now() 算剩余时长，无纯函数替代；query data 变化时重算，计数稳定
+    // eslint-disable-next-line react-hooks/purity
+    const now = Date.now();
+    const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+    return (availableQ.data ?? []).filter((c) => {
+      const end = new Date(c.endAt).getTime() - now;
+      return end > 0 && end <= THREE_DAYS;
+    }).length;
+  }, [availableQ.data]);
 
   const counts = {
     available: availableQ.data?.length ?? 0,
@@ -171,6 +186,23 @@ export default function CouponsPage() {
         </Pressable>
       )}
 
+      {/* P18 D3：近过期提醒条（仅 available tab 且存在 3 天内到期券） */}
+      {/* P18 D3：近过期提醒条（仅 available tab 且存在 3 天内到期券）。
+          Why: warning-container/warning 是 semantic 角色色不在 AppColors 类型上
+               （P16 tagThemes 同款约束），单处使用按场景色板先例内联 hex：#fef3c7 / #F57C00 */}
+      {tab === 'available' && !isLoading && !isError && expiringCount > 0 && (
+        <View
+          style={[styles.expiringBanner, { backgroundColor: '#fef3c7' }]}
+          accessibilityLabel={t('coupons.expiringSoon', { count: expiringCount })}
+          testID="coupon-expiring"
+        >
+          <Icon symbol="schedule" size={16} color="#F57C00" />
+          <Text style={[styles.expiringText, { color: '#F57C00' }]}>
+            {t('coupons.expiringSoon', { count: expiringCount })}
+          </Text>
+        </View>
+      )}
+
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -178,11 +210,37 @@ export default function CouponsPage() {
       ) : isError ? (
         <ErrorState message={t('coupons.loadError')} onRetry={() => refetch()} />
       ) : filtered.length === 0 ? (
-        <EmptyState
-          title={t('coupons.empty')}
-          description={t('coupons.emptyDesc')}
-          icon="ticket-percent"
-        />
+        // P18 D6：空态分 tab —— 未登录显示登录引导；available 引导去领券中心；
+        // used/expired 是低频正常态，无 action
+        !isAuthenticated ? (
+          <EmptyState
+            title={t('coupons.loginTitle')}
+            description={t('coupons.loginDesc')}
+            icon="ticket-percent"
+            actionLabel={t('profile.loginRegister')}
+            onAction={() => router.replace('/(auth)/login')}
+          />
+        ) : tab === 'available' ? (
+          <EmptyState
+            title={t('coupons.emptyAvailableTitle')}
+            description={t('coupons.emptyAvailableDesc')}
+            icon="ticket-percent"
+            actionLabel={t('coupons.goClaim')}
+            onAction={() => router.push('/coupons/claim')}
+          />
+        ) : tab === 'used' ? (
+          <EmptyState
+            title={t('coupons.emptyUsedTitle')}
+            description={t('coupons.emptyUsedDesc')}
+            icon="ticket-percent"
+          />
+        ) : (
+          <EmptyState
+            title={t('coupons.emptyExpiredTitle')}
+            description={t('coupons.emptyExpiredDesc')}
+            icon="ticket-percent"
+          />
+        )
       ) : (
         <FlatList
           data={filtered}
@@ -242,6 +300,21 @@ const styles = StyleSheet.create({
     right: spacing.md,
     height: 2,
     borderRadius: 1,
+  },
+  expiringBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginHorizontal: layout['container-margin'],
+    marginTop: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.lg,
+  },
+  expiringText: {
+    ...typography['body-sm'],
+    fontWeight: '600',
+    flex: 1,
   },
   centerBanner: {
     flexDirection: 'row',

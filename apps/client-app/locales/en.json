@@ -583,7 +583,17 @@
     "used": "Used",
     "expired": "Expired",
     "useNow": "Use Now",
-    "cardLabel": "Coupon: {{name}}, {{discount}}"
+    "cardLabel": "Coupon: {{name}}, {{discount}}",
+    "expiringSoon": "{{count}} coupons expire within 3 days — use them first",
+    "emptyAvailableTitle": "No available coupons",
+    "emptyAvailableDesc": "Check the Coupon Center for new offers",
+    "goClaim": "Go to Coupon Center",
+    "emptyUsedTitle": "No used coupons",
+    "emptyUsedDesc": "Used coupons will appear here",
+    "emptyExpiredTitle": "No expired coupons",
+    "emptyExpiredDesc": "Expired coupons are kept for a while for your records",
+    "loginTitle": "Log in to view coupons",
+    "loginDesc": "Log in to view and manage your coupons"
   },
   "claim": {
     "title": "Coupon Center",

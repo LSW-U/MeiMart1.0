@@ -583,7 +583,17 @@
     "used": "已使用",
     "expired": "已过期",
     "useNow": "去使用",
-    "cardLabel": "优惠券：{{name}}，{{discount}}"
+    "cardLabel": "优惠券：{{name}}，{{discount}}",
+    "expiringSoon": "有 {{count}} 张券 3 天内过期，建议优先使用",
+    "emptyAvailableTitle": "暂无可用券",
+    "emptyAvailableDesc": "去领券中心看看新优惠",
+    "goClaim": "去领券中心",
+    "emptyUsedTitle": "暂无已使用券",
+    "emptyUsedDesc": "用过的券会显示在这里",
+    "emptyExpiredTitle": "暂无过期券",
+    "emptyExpiredDesc": "过期券会保留一段时间供核对",
+    "loginTitle": "登录后查看优惠券",
+    "loginDesc": "登录后即可查看和管理您的优惠券"
   },
   "claim": {
     "title": "领券中心",
