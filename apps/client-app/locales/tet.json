@@ -514,7 +514,6 @@
     "shippingAddress": "[TET] Shipping Addresses",
     "customerService": "[TET] Customer Service",
     "feedback": "[TET] Feedback",
-    "notificationPrefs": "[TET] Notifications",
     "cacheCalculating": "[TET] Calculating…",
     "cacheCleared": "[TET] Cache cleared",
     "cacheClearFailed": "[TET] Failed to clear cache",

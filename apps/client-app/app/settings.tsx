@@ -17,6 +17,11 @@ import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
 import { APP_VERSION } from '@/utils/appInfo';
 import { clearAppCache, getCacheSizeLabel } from '@/services/cache';
+import {
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+} from '@/services/queries/useNotifications';
+import { Switch } from '@/components/ui/Switch';
 import { useEffect, useState, type ReactNode } from 'react';
 
 export default function SettingsPage() {
@@ -29,6 +34,9 @@ export default function SettingsPage() {
   const clearAuth = useAuthStore((s) => s.clearAuth);
   // P17 决策 5 —— 登录态自适应：未登录不显示「退出登录」（语义错误），显示登录/注册入口
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // P17-B1 通知偏好（决策 1：未登录不渲染三行——偏好是登录态能力）
+  const { data: notifPrefs, isLoading: prefsLoading } = useNotificationPreferences();
+  const updatePrefs = useUpdateNotificationPreferences();
 
   const setMode = (mode: 'light' | 'dark' | 'system') => setThemeMode(mode);
 
@@ -197,18 +205,35 @@ export default function SettingsPage() {
             testID="settings-language"
             onPress={() => router.push('/language')}
           />
-          <PressableRow
-            label={t('settings.notificationPrefs')}
-            icon="notifications"
-            iconBg={colors.primary}
-            iconFg={colors['on-primary']}
-            textColor={colors['on-surface']}
-            subColor={colors['on-surface-variant']}
-            dividerColor={colors['outline-variant']}
-            showDivider={false}
-            testID="settings-notifications"
-            onPress={() => router.push('/service/notifications')}
-          />
+          {/* P17-B1 通知偏好三分类开关（后端 b8ccfb9）。决策 1：未登录不渲染
+              （偏好是登录态能力，GET 不发请求无初值）；跳转通知中心行随之移除，
+              与通知中心的循环跳转（设置→通知中心→设置）就此闭环 */}
+          {isAuthenticated &&
+            ([
+              { key: 'orderUpdates' as const, label: 'notifOrderUpdates', testID: 'settings-notifications' },
+              { key: 'promotions' as const, label: 'notifPromotions', testID: 'settings-notifications-promo' },
+              { key: 'system' as const, label: 'notifSystem', testID: 'settings-notifications-system' },
+            ]).map(({ key, label, testID }, idx, arr) => (
+              <RowItem
+                key={key}
+                label={t(`settings.${label}`)}
+                icon="notifications"
+                iconBg={colors.primary}
+                iconFg={colors['on-primary']}
+                textColor={colors['on-surface']}
+                subColor={colors['on-surface-variant']}
+                dividerColor={colors['outline-variant']}
+                showDivider={idx < arr.length - 1}
+                testID={testID}
+              >
+                <Switch
+                  value={notifPrefs?.[key] ?? true}
+                  onValueChange={(next) => updatePrefs.mutate({ [key]: next })}
+                  disabled={prefsLoading || (updatePrefs.isPending && updatePrefs.variables?.[key] !== undefined)}
+                  testID={`${testID}-switch`}
+                />
+              </RowItem>
+            ))}
         </View>
 
         {/* 存储（P17 决策 1/3：清除缓存真实数据 Commit 5 接） */}
