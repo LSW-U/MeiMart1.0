@@ -594,7 +594,14 @@
     "emptyExpiredDesc": "Expired coupons are kept for a while for your records",
     "loginTitle": "Log in to view coupons",
     "loginDesc": "Log in to view and manage your coupons",
-    "off": "OFF"
+    "off": "OFF",
+    "typePercentage": "PERCENTAGE",
+    "typeFixed": "VOUCHER",
+    "typeFreeDelivery": "FREE DELIVERY",
+    "maxSave": "Max save ${{amount}}",
+    "daysLeft": "{{count}} days left",
+    "expiresToday": "Expires today",
+    "goBrowse": "Go browse"
   },
   "claim": {
     "title": "Coupon Center",

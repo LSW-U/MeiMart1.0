@@ -36,10 +36,10 @@ describe('CouponCard', () => {
     expect(getByText('coupons.minSpend:50')).toBeTruthy();
   });
 
-  it('calls onUse when Use Now pressed (available)', () => {
+  it('calls onUse when Go browse pressed (available)', () => {
     const onUse = jest.fn();
     const { getByText } = render(<CouponCard coupon={coupon} onUse={onUse} />, { wrapper });
-    fireEvent.press(getByText('coupons.useNow'));
+    fireEvent.press(getByText('coupons.goBrowse'));
     expect(onUse).toHaveBeenCalledWith(coupon);
   });
 
@@ -47,7 +47,7 @@ describe('CouponCard', () => {
     const usedCoupon: ClientCoupon = { ...coupon, status: 'used' };
     const onUse = jest.fn();
     const { queryByText } = render(<CouponCard coupon={usedCoupon} onUse={onUse} />, { wrapper });
-    expect(queryByText('coupons.useNow')).toBeNull();
+    expect(queryByText('coupons.goBrowse')).toBeNull();
     expect(queryByText('coupons.used')).toBeTruthy();
   });
 });

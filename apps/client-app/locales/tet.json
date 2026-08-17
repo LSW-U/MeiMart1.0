@@ -552,7 +552,14 @@
     "emptyExpiredDesc": "[TET] Expired coupons are kept for a while for your records",
     "loginTitle": "[TET] Log in to view coupons",
     "loginDesc": "[TET] Log in to view and manage your coupons",
-    "off": "[TET] OFF"
+    "off": "[TET] OFF",
+    "typePercentage": "[TET] PERCENTAGE",
+    "typeFixed": "[TET] VOUCHER",
+    "typeFreeDelivery": "[TET] FREE DELIVERY",
+    "maxSave": "[TET] Max save ${{amount}}",
+    "daysLeft": "[TET] {{count}} days left",
+    "expiresToday": "[TET] Expires today",
+    "goBrowse": "[TET] Go browse"
   },
   "claim": {
     "title": "[TET] Coupon Center",

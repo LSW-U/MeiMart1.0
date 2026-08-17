@@ -594,7 +594,14 @@
     "emptyExpiredDesc": "过期券会保留一段时间供核对",
     "loginTitle": "登录后查看优惠券",
     "loginDesc": "登录后即可查看和管理您的优惠券",
-    "off": "OFF"
+    "off": "OFF",
+    "typePercentage": "折扣券",
+    "typeFixed": "满减券",
+    "typeFreeDelivery": "运费券",
+    "maxSave": "最高省 ${{amount}}",
+    "daysLeft": "剩 {{count}} 天",
+    "expiresToday": "今天到期",
+    "goBrowse": "去逛逛"
   },
   "claim": {
     "title": "领券中心",
