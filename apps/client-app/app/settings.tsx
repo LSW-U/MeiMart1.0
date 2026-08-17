@@ -231,6 +231,7 @@ export default function SettingsPage() {
                   onValueChange={(next) => updatePrefs.mutate({ [key]: next })}
                   disabled={prefsLoading || (updatePrefs.isPending && updatePrefs.variables?.[key] !== undefined)}
                   testID={`${testID}-switch`}
+                  accessibilityLabel={t(`settings.${label}`)}
                 />
               </RowItem>
             ))}
