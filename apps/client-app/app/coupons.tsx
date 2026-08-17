@@ -1,6 +1,8 @@
-// ⚠️ 无 HTML 原型，参考 OrderListPage 推导实现，待设计确认
-// CouponListPage — 优惠券列表（参考 OrderListPage.html 的 Tab 栏 + 卡片列表）
-// D.11: PrimaryHeader + Tab 栏（未使用/已使用/已过期）+ 优惠券卡片 + 领取中心入口
+// CouponListPage — 优惠券列表
+// P18 优化（第四梯队HTML原型设计/P18-P19-优惠券与收藏页-优化原型.html）：
+//   三 tab 状态独立（当前 tab 的 loading/error/empty，不再三 query 合并）
+//   + 近过期提醒 + 分 tab 空态（含未登录）+ 领券入口视觉降级
+//   券卡视觉字段（type/cap/desc/chips/去逛逛）归《优惠券卡片模块》方案，本页只调 props
 import { useState, useMemo } from 'react';
 import {
   StyleSheet,
@@ -50,13 +52,13 @@ export default function CouponsPage() {
     return data ?? [];
   }, [tab, availableQ.data, usedQ.data, expiredQ.data]);
 
-  // Why: 任一 loading/error 即整体态（首次进页面三请求并行，切 tab 走缓存）
-  const isLoading = availableQ.isLoading || usedQ.isLoading || expiredQ.isLoading;
-  const isError = availableQ.isError || usedQ.isError || expiredQ.isError;
+  // P18 D2：三态只看当前 tab query —— 三 query 并行预取，但 loading/error/重试
+  //      均按当前 tab 独立（原实现任一 tab error 整页报错，切到正常 tab 也被殃及）
+  const activeQ = tab === 'available' ? availableQ : tab === 'used' ? usedQ : expiredQ;
+  const isLoading = activeQ.isLoading;
+  const isError = activeQ.isError;
   const refetch = () => {
-    availableQ.refetch();
-    usedQ.refetch();
-    expiredQ.refetch();
+    activeQ.refetch();
   };
 
   const TABS: { key: TabKey; label: string; count: number }[] = [
