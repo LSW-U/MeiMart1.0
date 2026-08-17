@@ -104,7 +104,7 @@ export default function CouponsPage() {
           styles.tabBar,
           {
             backgroundColor: colors['surface-container-lowest'],
-            borderBottomColor: 'rgba(141,112,108,0.3)',
+            borderBottomColor: colors['outline-variant'],
           },
         ]}
       >
@@ -142,7 +142,7 @@ export default function CouponsPage() {
                     <Text
                       style={[
                         styles.tabBadgeText,
-                        { color: isActive ? '#ffffff' : colors['on-surface-variant'] },
+                        { color: isActive ? colors['on-primary'] : colors['on-surface-variant'] },
                       ]}
                     >
                       {tabItem.count}
@@ -158,31 +158,35 @@ export default function CouponsPage() {
         </ScrollView>
       </View>
 
-      {/* 领取中心入口（仅 available Tab 显示） */}
+      {/* P18 D4：领取中心入口视觉降级 —— 原 primary 大红 banner 视觉权重高于券卡本身，
+          改 surface-container 浅底 + primary 描边（icon 色仍 primary 保持引导性），文字转 on-surface */}
       {tab === 'available' && (
         <Pressable
           onPress={() => router.push('/coupons/claim')}
           style={({ pressed }) => [
             styles.centerBanner,
-            { backgroundColor: colors.primary },
+            {
+              backgroundColor: colors['surface-container'],
+              borderColor: colors.primary,
+            },
             pressed && { transform: [{ scale: 0.98 }] },
           ]}
           accessibilityRole="button"
           accessibilityLabel={t('coupons.centerTitle')}
           testID="coupon-center"
         >
-          <View style={styles.centerIconWrap}>
-            <Icon symbol="local_offer" size={20} color="#ffffff" />
+          <View style={[styles.centerIconWrap, { backgroundColor: colors['primary-container'] }]}>
+            <Icon symbol="local_offer" size={20} color={colors.primary} />
           </View>
           <View style={styles.centerTextBox}>
-            <Text style={styles.centerTitle}>
+            <Text style={[styles.centerTitle, { color: colors['on-surface'] }]}>
               {t('coupons.centerTitle', { defaultValue: 'Coupon Center' })}
             </Text>
-            <Text style={styles.centerDesc}>
+            <Text style={[styles.centerDesc, { color: colors['on-surface-variant'] }]}>
               {t('coupons.centerDesc', { defaultValue: 'Claim more exclusive coupons' })}
             </Text>
           </View>
-          <Icon symbol="arrow_forward" size={20} color="#ffffff" />
+          <Icon symbol="arrow_forward" size={20} color={colors.primary} />
         </Pressable>
       )}
 
@@ -323,6 +327,7 @@ const styles = StyleSheet.create({
     margin: layout['container-margin'],
     padding: spacing.md,
     borderRadius: borderRadius.xl,
+    borderWidth: 1,
   },
   centerIconWrap: {
     width: 40,
@@ -330,19 +335,16 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   centerTextBox: {
     flex: 1,
     gap: 2,
   },
   centerTitle: {
-    color: '#ffffff',
     ...typography['body-md'],
     fontWeight: '700',
   },
   centerDesc: {
-    color: 'rgba(255,255,255,0.85)',
     ...typography['label-caps'],
     fontSize: 10,
   },
