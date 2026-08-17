@@ -158,8 +158,8 @@ export default function CouponsPage() {
         </ScrollView>
       </View>
 
-      {/* P18 D4：领取中心入口视觉降级 —— 原 primary 大红 banner 视觉权重高于券卡本身，
-          改 surface-container 浅底 + primary 描边（icon 色仍 primary 保持引导性），文字转 on-surface */}
+      {/* P18 D4：领取中心入口视觉降级 —— surface-container 浅底 + outline-variant 细描边
+          （用户反馈 primary 描边仍过红；红色只保留 icon/箭头引导） */}
       {tab === 'available' && (
         <Pressable
           onPress={() => router.push('/coupons/claim')}
@@ -167,7 +167,7 @@ export default function CouponsPage() {
             styles.centerBanner,
             {
               backgroundColor: colors['surface-container'],
-              borderColor: colors.primary,
+              borderColor: colors['outline-variant'],
             },
             pressed && { transform: [{ scale: 0.98 }] },
           ]}

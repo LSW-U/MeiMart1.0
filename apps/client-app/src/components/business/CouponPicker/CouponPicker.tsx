@@ -82,17 +82,16 @@ export function CouponPicker({
           style={[
             styles.left,
             {
-              backgroundColor: disabled
-                ? colors['surface-container']
-                : colors['primary-container'],
-              borderRightColor: disabled ? colors['outline-variant'] : colors.primary,
+              // 红底白字（与主卡左栏同步，用户反馈淡红看不清）
+              backgroundColor: disabled ? colors['surface-container'] : colors.primary,
+              borderRightColor: disabled ? colors['outline-variant'] : colors['primary-container'],
             },
           ]}
         >
           <Text
             style={[
               styles.leftValue,
-              { color: disabled ? colors['on-surface-variant'] : colors['on-primary-container'] },
+              { color: disabled ? colors['on-surface-variant'] : colors['on-primary'] },
             ]}
           >
             {formatCouponValue(coupon, t)}
@@ -100,7 +99,7 @@ export function CouponPicker({
           <Text
             style={[
               styles.leftMin,
-              { color: disabled ? colors['on-surface-variant'] : colors['on-primary-container'] },
+              { color: disabled ? colors['on-surface-variant'] : colors['on-primary'] },
             ]}
           >
             {t('coupons.minSpendShort', { amount: coupon.minOrderAmount })}

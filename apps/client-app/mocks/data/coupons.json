@@ -19,8 +19,8 @@
   },
   {
     "id": "cp003",
-    "name": "8折优惠券",
-    "discount": 20,
+    "name": "9折优惠券",
+    "discount": 10,
     "type": "percentage",
     "minPurchase": 80,
     "validUntil": "2027-09-30",

@@ -66,11 +66,12 @@ export function CouponCard({
       })}
       accessibilityState={isValid ? undefined : { disabled: true }}
     >
-      {/* 左栏浅色徽章（原型 ticket-left：浅底 + 券类型 + 折扣主值 + 封顶，dashed 分隔） */}
+      {/* 左栏（用户反馈浅红看不清 → 红底白字：primary 底 + on-primary 字，dashed 分隔） */}
       <View
         style={[
           styles.left,
           {
+            backgroundColor: isValid ? colors.primary : colors['surface-container'],
             borderRightColor: isValid ? colors['primary-container'] : colors['outline-variant'],
           },
         ]}
@@ -86,12 +87,18 @@ export function CouponCard({
           </View>
         )}
         <Text
-          style={[styles.type, { color: isValid ? colors.primary : colors['on-surface-variant'] }]}
+          style={[
+            styles.type,
+            { color: isValid ? colors['on-primary'] : colors['on-surface-variant'] },
+          ]}
         >
           {typeLabel(coupon, t)}
         </Text>
         <Text
-          style={[styles.value, { color: isValid ? colors.primary : colors['on-surface-variant'] }]}
+          style={[
+            styles.value,
+            { color: isValid ? colors['on-primary'] : colors['on-surface-variant'] },
+          ]}
         >
           {discountLabel}
         </Text>
@@ -100,7 +107,7 @@ export function CouponCard({
           <Text
             style={[
               styles.cap,
-              { color: isValid ? colors.primary : colors['on-surface-variant'] },
+              { color: isValid ? colors['on-primary'] : colors['on-surface-variant'] },
             ]}
           >
             {t('coupons.maxSave', {
