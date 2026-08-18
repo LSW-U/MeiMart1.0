@@ -6,6 +6,7 @@ import { StyleSheet, View, Text, ScrollView, Pressable, TextInput } from 'react-
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
+import enLocale from '../../locales/en.json';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, serviceEntryThemes, type ServiceEntryThemeKey } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -50,6 +51,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
   return (
     <Text>
       {text.slice(0, idx)}
+      {/* 审查 Q7 —— RN Text 无法还原原型 mark 的 padding:0 2px + border-radius（方案 §9.4 接受折衷），纯背景色高亮 */}
       <Text style={{ backgroundColor: colors.semantic['warning-container'], color: colors.semantic.warning }}>
         {text.slice(idx, idx + query.length)}
       </Text>
@@ -70,20 +72,31 @@ export default function HelpCenterPage() {
 
   const searchActive = search.trim().length > 0;
 
-  // Why: P21 D3 —— 搜索匹配问题+答案文本；分类过滤叠加（search 优先显示，分类区隐藏）
+  // Why: P21 D3 —— 搜索匹配问题+答案文本；分类过滤叠加（search 优先显示，分类区隐藏）。
+  //      审查 Q5 —— en+当前 locale 双匹配：en 工作语言关键词在任何 locale 下可命中
+  //      （zh 环境搜 "payment" 不再落空）。en 文案直接读 en.json 的 faq 段
+  //      （静态 import，与 src/i18n/index.ts 同源；getFixedT 在测试 mock 环境不可用）。
+  const enFaq = enLocale.service?.help?.faq;
   const visibleFaqs = useMemo(() => {
     const base = CAT_FAQ_MAP[activeCat];
     if (!searchActive) return base;
     const q = search.trim().toLowerCase();
     return base.filter((id) => {
-      const question = t(`service.help.faq.${id}`);
-      const answer = t(`service.help.faq.a${id.slice(1)}`);
+      const qKey = `service.help.faq.${id}`;
+      const aKey = `service.help.faq.a${id.slice(1)}`;
+      const localizedHit =
+        t(qKey).toLowerCase().includes(q) ||
+        t(aKey).toLowerCase().includes(q);
+      if (localizedHit) return true;
+      // en 兜底：zh 环境英文关键词命中；en 文案天然无 [TET] 前缀污染
+      const enQuestion = enFaq?.[id as keyof typeof enFaq];
+      const enAnswer = enFaq?.[`a${id.slice(1)}` as keyof typeof enFaq];
       return (
-        question.toLowerCase().includes(q) ||
-        answer.toLowerCase().includes(q)
+        (typeof enQuestion === 'string' && enQuestion.toLowerCase().includes(q)) ||
+        (typeof enAnswer === 'string' && enAnswer.toLowerCase().includes(q))
       );
     });
-  }, [activeCat, search, searchActive, t]);
+  }, [activeCat, search, searchActive, t, enFaq]);
 
   return (
     <SafeAreaWrapper
@@ -192,7 +205,12 @@ export default function HelpCenterPage() {
                 return (
                   <Pressable
                     key={cat.id}
-                    onPress={() => setActiveCat(cat.id)}
+                    onPress={() => {
+                      // Why: 审查 Q3 —— 切分类时重置 expanded 为新列表首条，
+                      //      保证单条分类（payment/shipping/return）也有「默认展开首条」
+                      setActiveCat(cat.id);
+                      setExpanded(CAT_FAQ_MAP[cat.id][0] ?? null);
+                    }}
                     style={({ pressed }) => [
                       styles.catChip,
                       { backgroundColor: isActive ? colors['surface-container-low'] : colors['surface-container-lowest'] },
@@ -230,7 +248,11 @@ export default function HelpCenterPage() {
               </Text>
               {activeCat !== 'all' && (
                 <Pressable
-                  onPress={() => setActiveCat('all')}
+                  onPress={() => {
+                    // Why: 审查 Q3 —— 回 All 同步重置 expanded 首条（与切分类一致）
+                    setActiveCat('all');
+                    setExpanded(CAT_FAQ_MAP.all[0] ?? null);
+                  }}
                   style={styles.clearFilterBtn}
                   accessibilityRole="button"
                   accessibilityLabel={t('service.help.clearFilter')}
@@ -341,7 +363,9 @@ function FaqList({
             </Pressable>
             {isOpen && (
               <View style={styles.faqAInner}>
-                <View style={[styles.aBadge, { backgroundColor: 'rgba(16,185,129,0.12)' }]}>
+                {/* Why: 审查 Q1 —— success 浅底用 success-container token（dark 跟随），
+                    替代硬编码 rgba tint */}
+                <View style={[styles.aBadge, { backgroundColor: colors.semantic['success-container'] }]}>
                   <Text style={[styles.aBadgeText, { color: serviceEntryThemes.success.iconBg }]}>A</Text>
                 </View>
                 <Text style={[styles.answer, { color: colors['on-surface-variant'] }]}>

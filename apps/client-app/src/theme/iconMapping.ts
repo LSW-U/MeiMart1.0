@@ -47,6 +47,8 @@ const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = {
   notifications: 'bell',
   remove: 'minus',
   search: 'magnify',
+  // P21 审查 Q2 —— search_off 用 magnify-close（MC 无完全对应的带斜线搜索，取「关闭搜索」最近语义）
+  search_off: 'magnify-close',
   security: 'shield-check',
   send: 'send',
   settings: 'cog',
@@ -61,6 +63,7 @@ const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = {
   visibility_off: 'eye-off',
 
   // 电商 / 购物
+  apps: 'apps',
   bolt: 'flash',
   cart: 'cart',
   confirmation_number: 'ticket-percent',

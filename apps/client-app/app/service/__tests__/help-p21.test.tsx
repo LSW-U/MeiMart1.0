@@ -76,6 +76,25 @@ describe('HelpCenterPage（P21：分类过滤 + 搜索 + 一体化列表）', ()
     expect(queryByTestId('faq-q1')).toBeNull();
   });
 
+  it('审查 Q3 回归：切到单条分类时重置 expanded 为该分类首条（非全折叠）', () => {
+    const { getByTestId } = render(<HelpCenterPage />, { wrapper });
+    // 切 shipping（仅 q4）→ q4 应自动展开
+    fireEvent.press(getByTestId('help-cat-shipping'));
+    expect(getByTestId('faq-q4').props.accessibilityState?.expanded).toBe(true);
+    // Clear filter 回 all → 首条 q1 展开
+    fireEvent.press(getByTestId('help-clear-filter'));
+    expect(getByTestId('faq-q1').props.accessibilityState?.expanded).toBe(true);
+  });
+
+  it('审查 Q5 回归：locale 文案不命中时用 en 文案兜底匹配（zh 环境搜英文关键词可命中）', () => {
+    const { getByTestId, queryByTestId } = render(<HelpCenterPage />, { wrapper });
+    // mock t 对 q3/q5 返 key（不含 order/invoice 词），enT 走真 en 文案（含 order/invoice）
+    fireEvent.changeText(getByTestId('help-search'), 'order');
+    expect(queryByTestId('faq-q1')).toBeTruthy();
+    fireEvent.changeText(getByTestId('help-search'), 'invoice');
+    expect(queryByTestId('faq-q5')).toBeTruthy();
+  });
+
   it('D3 搜索空态：无匹配时显示 noResult 空态', () => {
     const { getByTestId, getByText, queryByTestId } = render(<HelpCenterPage />, { wrapper });
     fireEvent.changeText(getByTestId('help-search'), 'zzz-not-exist');
