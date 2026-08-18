@@ -1,11 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { TaskCard } from '../../src/components/business/TaskCard';
 import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader';
+import { BottomActionBar } from '../../src/components/layout/BottomActionBar';
 import { QueryBoundary } from '../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../src/components/feedback/Toast';
-import { AppIcon } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useNetwork } from '../../src/hooks/useNetwork';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
@@ -31,7 +31,8 @@ export default function TaskDetailPage() {
   const { t } = useTranslation();
   const goBack = useGoBack('/(main)/tasks');
   // B3: 三态——loading 骨架 / error 重试（弱网不再误报"任务不存在"）/ null 才是未找到
-  const { data: task, isLoading: taskLoading, isError: taskError, refetch } = useTask(id);
+  // B5: isFetching 供底栏刷新 spinner 反馈
+  const { data: task, isLoading: taskLoading, isError: taskError, isFetching: taskFetching, refetch } = useTask(id);
   const acceptTask = useAcceptTask();
   const { isOffline } = useNetwork();
   const taskData: DeliveryTask | null = task ?? null;
@@ -116,16 +117,14 @@ export default function TaskDetailPage() {
           )}
         </QueryBoundary>
       </ScrollView>
-      <View className="absolute bottom-0 left-0 right-0 flex-row items-center gap-4 border-t border-surface-variant bg-surface px-3 py-4">
-        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.settings')} className="items-center px-2" onPress={() => router.push('/settings')}>
-          <AppIcon name="settings" className="text-2xl text-on-surface-variant" />
-          <Text className="mt-1 text-[10px] font-bold text-on-surface-variant">{t('tasks.settings')}</Text>
-        </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.refresh')} className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-outline-variant bg-white py-4 shadow-sm" onPress={() => void refetch()}>
-          <AppIcon name="refresh" className="text-xl text-primary-container" />
-          <Text className="text-base font-bold text-primary-container">{t('tasks.refresh')}</Text>
-        </Pressable>
-      </View>
+      <BottomActionBar
+        absolute
+        isRefreshing={taskFetching}
+        refreshLabel={t('tasks.refresh')}
+        settingsLabel={t('tasks.settings')}
+        onPressSettings={() => router.push('/settings')}
+        onRefresh={() => void refetch()}
+      />
     </View>
   );
 }

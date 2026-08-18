@@ -1,15 +1,15 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, Text, View } from 'react-native';
 
 import { DutyStatusMenu } from '../../src/components/business/DutyStatusMenu';
 import { TaskCard } from '../../src/components/business/TaskCard';
 import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader';
+import { BottomActionBar } from '../../src/components/layout/BottomActionBar';
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { QueryBoundary } from '../../src/components/feedback/QueryBoundary';
-import { AppIcon, Button } from '../../src/components/ui';
+import { Button } from '../../src/components/ui';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { useTaskLists } from '../../src/services/queries/useTask';
 import { getTaskAction } from '../../src/services/task-flow';
@@ -34,7 +34,6 @@ export default function TasksPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
-  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TaskTab>(tabParam === 'pickups' ? 'pickups' : tabParam === 'deliveries' ? 'deliveries' : 'new');
   const [menuVisible, setMenuVisible] = useState(false);
   const [pending, setPending] = useState<DutyStatus | null>(null);
@@ -44,7 +43,8 @@ export default function TasksPage() {
   const updateSettings = useUpdateRiderSettings();
   const dutyStatus = settings?.dutyStatus ?? 'offDuty';
   // B3: 消费三态——loading 骨架替代闪空态，error 显式重试（不再误报"暂无任务"）
-  const { data: taskListsData, isLoading: taskListsLoading, isError: taskListsError, refetch: refetchTasks } = useTaskLists();
+  // B5: isFetching 供底栏刷新 spinner 反馈
+  const { data: taskListsData, isLoading: taskListsLoading, isError: taskListsError, isFetching: taskListsFetching, refetch: refetchTasks } = useTaskLists();
   const taskLists = taskListsData ?? { available: [] as DeliveryTask[], pickups: [] as DeliveryTask[], deliveries: [] as DeliveryTask[] };
   const rider = useAuthStore((s) => s.rider);
 
@@ -186,8 +186,6 @@ export default function TasksPage() {
     );
   };
 
-  const bottomPadding = Math.max(insets.bottom, 12);
-
   return (
     <View className="flex-1 bg-white">
       <TaskDetailHeader
@@ -215,19 +213,13 @@ export default function TasksPage() {
           </View>
         </View>
       )}
-      <View
-        className="flex-row items-center gap-3 border-t border-surface-variant bg-surface px-4 pt-3 shadow-sm"
-        style={{ paddingBottom: bottomPadding }}
-      >
-        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.settings')} className="items-center px-3 py-1" onPress={() => router.push('/settings')}>
-          <AppIcon name="settings" className="text-2xl text-on-surface-variant" />
-          <Text className="mt-1 text-[11px] font-bold text-on-surface-variant">{t('tasks.settings')}</Text>
-        </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.refresh')} className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-outline-variant bg-white py-3 shadow-sm" onPress={() => void refetchTasks()}>
-          <AppIcon name="refresh" className="text-xl text-primary-container" />
-          <Text className="text-base font-bold text-primary-container">{t('tasks.refresh')}</Text>
-        </Pressable>
-      </View>
+      <BottomActionBar
+        isRefreshing={taskListsFetching}
+        refreshLabel={t('tasks.refresh')}
+        settingsLabel={t('tasks.settings')}
+        onPressSettings={() => router.push('/settings')}
+        onRefresh={() => void refetchTasks()}
+      />
       <DutyStatusMenu
         cancelLabel={t('duty.menu.cancel')}
         current={dutyStatus}
