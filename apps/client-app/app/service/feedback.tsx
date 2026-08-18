@@ -130,12 +130,8 @@ export default function FeedbackPage() {
               { backgroundColor: colors.semantic['positive-container'] },
             ]}
           >
-            <Icon
-              symbol="check"
-              size={44}
-              color={colors.semantic.positive}
-              accessibilityLabel={t('service.feedback.successTitle')}
-            />
+            {/* 装饰性图标，语义由下方 successTitle Text 承载（避免读屏重复朗读） */}
+            <Icon symbol="check" size={44} color={colors.semantic.positive} />
           </View>
           <Text style={[styles.successTitle, { color: colors['on-surface'] }]}>
             {t('service.feedback.successTitle')}
@@ -254,7 +250,7 @@ export default function FeedbackPage() {
                       <TextInput
                         value={value}
                         onChangeText={onChange}
-                        placeholder={`${t('service.feedback.placeholder')} ${t('service.feedback.contentMin')}`}
+                        placeholder={t('service.feedback.placeholder')}
                         placeholderTextColor={colors['on-surface-variant']}
                         multiline
                         numberOfLines={6}
@@ -336,7 +332,9 @@ export default function FeedbackPage() {
                         onPress={() => setPhotos((prev) => prev.filter((_, i) => i !== index))}
                         style={styles.photoDel}
                         accessibilityRole="button"
-                        accessibilityLabel={t('service.feedback.deletePhoto')}
+                        accessibilityLabel={t('service.feedback.deletePhoto', {
+                          count: index + 1,
+                        })}
                         hitSlop={8}
                         testID={`feedback-remove-photo-${index}`}
                       >
