@@ -1,7 +1,9 @@
-// ⚠️ 无 HTML 原型，参考 CheckoutPage 推导实现，待设计确认
-// FeedbackPage — 反馈表单（参考 CheckoutPage.html 的表单样式）
-// D.8: PrimaryHeader + 类型 Chip + 内容 textarea + 联系方式 + 照片占位 + 提交按钮
+// FeedbackPage — 反馈表单（P22 优化）
+// 原型：第四梯队HTML原型设计/P22-反馈页-优化原型.html
+// D1 四块独立卡片 → 一体化 form-card（field-divider 分隔 + 内联 field-label）
+// D2 类型扁平 chip → 3×2 图标网格；D6 输入 focus 态；D7 计数器阈值变色；D9 硬编码白色 → on-primary token
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable } from 'react-native';
+import { useState } from 'react';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -10,7 +12,6 @@ import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } fr
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { Chip } from '@/components/ui/Chip';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { toast } from '@/store/toastStore';
@@ -25,10 +26,24 @@ const FEEDBACK_TYPE_KEYS = [
   'service.feedback.types.other',
 ];
 
+// D2：类型网格 icon（iconMapping 已存在 receipt_long/credit_card/local_shipping/more_horiz，
+// lightbulb/inventory_2 为本页新增映射）
+const FEEDBACK_TYPE_ICONS: Record<string, string> = {
+  'service.feedback.types.feature': 'lightbulb',
+  'service.feedback.types.product': 'inventory_2',
+  'service.feedback.types.order': 'receipt_long',
+  'service.feedback.types.payment': 'credit_card',
+  'service.feedback.types.shipping': 'local_shipping',
+  'service.feedback.types.other': 'more_horiz',
+};
+
 export default function FeedbackPage() {
   const handleBack = useSafeBack();
   const { t } = useTranslation();
   const { colors } = useTheme();
+  // D6：输入框 focus 态（RN 无 :focus 伪类，手动跟踪）
+  const [contentFocused, setContentFocused] = useState(false);
+  const [contactFocused, setContactFocused] = useState(false);
 
   const { control, handleSubmit, setValue } = useForm<FeedbackValues>({
     resolver: zodResolver(feedbackSchema),
@@ -60,147 +75,211 @@ export default function FeedbackPage() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* 类型卡片 */}
+        {/* D1 一体化表单容器 */}
         <View
           style={[
-            styles.card,
+            styles.formCard,
             { backgroundColor: colors['surface-container-lowest'] },
             shadowPresets.sm,
           ]}
         >
-          <View style={styles.cardHeader}>
-            <Icon symbol="tune" size={16} color={colors.primary} />
-            <Text style={[styles.cardHeaderText, { color: colors.primary }]}>
-              {t('service.feedback.type')}
-            </Text>
-          </View>
-          <View style={styles.tagsRow}>
-            {FEEDBACK_TYPE_KEYS.map((key) => (
-              <Chip
-                key={key}
-                label={t(key)}
-                selected={categoryValue === key}
-                onSelect={() => setValue('category', categoryValue === key ? '' : key)}
-              />
-            ))}
-          </View>
-        </View>
-
-        {/* 内容卡片 */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
-          ]}
-        >
-          <View style={styles.cardHeader}>
-            <Icon symbol="edit" size={16} color={colors.primary} />
-            <Text style={[styles.cardHeaderText, { color: colors.primary }]}>
-              {t('service.feedback.content')}
-            </Text>
-          </View>
-          <Controller
-            control={control}
-            name="content"
-            render={({ field: { value, onChange }, fieldState: { error } }) => (
-              <>
-                <TextInput
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder={t('service.feedback.placeholder')}
-                  placeholderTextColor={colors['on-surface-variant']}
-                  multiline
-                  numberOfLines={6}
-                  maxLength={500}
-                  style={[
-                    styles.textarea,
-                    {
-                      color: colors['on-surface'],
-                      backgroundColor: colors['surface-container-low'],
-                      borderColor: error ? colors.error : colors['outline-variant'],
-                    },
-                  ]}
-                  testID="feedback-content"
-                />
-                {error?.message && (
-                  <Text
-                    style={[styles.errorText, { color: colors.error }]}
-                    accessibilityRole="alert"
+          {/* 反馈类型（D2 3×2 图标网格） */}
+          <View>
+            <View style={styles.fieldLabelRow}>
+              <Text style={[styles.fieldLabel, { color: colors['on-surface'] }]}>
+                {t('service.feedback.type')}
+              </Text>
+              <Text style={[styles.requiredMark, { color: colors.error }]}>*</Text>
+            </View>
+            <View style={styles.typeGrid}>
+              {FEEDBACK_TYPE_KEYS.map((key) => {
+                const selected = categoryValue === key;
+                return (
+                  <Pressable
+                    key={key}
+                    onPress={() => setValue('category', selected ? '' : key)}
+                    style={({ pressed }) => [
+                      styles.typeCell,
+                      {
+                        borderColor: selected ? colors.primary : colors['outline-variant'],
+                        backgroundColor: selected
+                          ? colors['surface-container-low']
+                          : colors['surface-container-lowest'],
+                      },
+                      pressed && { transform: [{ scale: 0.95 }] },
+                    ]}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: selected }}
+                    accessibilityLabel={t(key)}
+                    testID={`feedback-type-${key.split('.').pop()}`}
                   >
-                    {error.message}
-                  </Text>
-                )}
-              </>
-            )}
-          />
-          <Text style={[styles.counter, { color: colors['on-surface-variant'] }]}>
-            {contentValue.length} / 500
-          </Text>
+                    <View
+                      style={[
+                        styles.typeIconWrap,
+                        {
+                          backgroundColor: selected
+                            ? colors.primary
+                            : colors['surface-container'],
+                        },
+                      ]}
+                    >
+                      <Icon
+                        symbol={FEEDBACK_TYPE_ICONS[key]}
+                        size={20}
+                        color={selected ? colors['on-primary'] : colors['on-surface-variant']}
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.typeLabel,
+                        { color: selected ? colors.primary : colors['on-surface-variant'] },
+                      ]}
+                    >
+                      {t(key)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
 
-          {/* 照片上传占位 */}
-          <Text style={[styles.subLabel, { color: colors['on-surface-variant'] }]}>
-            {t('service.feedback.photosLabel', { defaultValue: 'Add screenshots (optional)' })}
-          </Text>
-          <View style={styles.photosRow}>
-            <Pressable
+          <View style={[styles.fieldDivider, { backgroundColor: colors['outline-variant'] }]} />
+
+          {/* 反馈内容（D6 focus 态 + D7 计数器阈值变色） */}
+          <View>
+            <View style={styles.fieldLabelRow}>
+              <Text style={[styles.fieldLabel, { color: colors['on-surface'] }]}>
+                {t('service.feedback.content')}
+              </Text>
+              <Text style={[styles.requiredMark, { color: colors.error }]}>*</Text>
+            </View>
+            <Controller
+              control={control}
+              name="content"
+              render={({ field: { value, onChange }, fieldState: { error } }) => (
+                <>
+                  <TextInput
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder={t('service.feedback.placeholder')}
+                    placeholderTextColor={colors['on-surface-variant']}
+                    multiline
+                    numberOfLines={6}
+                    maxLength={500}
+                    onFocus={() => setContentFocused(true)}
+                    onBlur={() => setContentFocused(false)}
+                    style={[
+                      styles.textarea,
+                      {
+                        color: colors['on-surface'],
+                        borderColor: error
+                          ? colors.error
+                          : contentFocused
+                            ? colors.primary
+                            : colors['outline-variant'],
+                        backgroundColor:
+                          error || contentFocused
+                            ? colors['surface-container-lowest']
+                            : colors['surface-container-low'],
+                      },
+                    ]}
+                    testID="feedback-content"
+                  />
+                  {error?.message && (
+                    <Text
+                      style={[styles.errorText, { color: colors.error }]}
+                      accessibilityRole="alert"
+                    >
+                      {error.message}
+                    </Text>
+                  )}
+                </>
+              )}
+            />
+            <Text
               style={[
-                styles.photoAddBtn,
+                styles.counter,
                 {
-                  backgroundColor: colors['surface-container-low'],
-                  borderColor: colors['outline-variant'],
+                  color:
+                    contentValue.length === 500
+                      ? colors.error
+                      : contentValue.length >= 450
+                        ? colors.semantic.warning
+                        : colors['on-surface-variant'],
+                  fontWeight: contentValue.length >= 450 ? '700' : '400',
                 },
               ]}
-              accessibilityRole="button"
-              accessibilityLabel={t('service.feedback.a11y.addScreenshot')}
-              testID="feedback-add-photo"
             >
-              <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />
-              <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
-                {t('service.feedback.addPhoto', { defaultValue: 'Add' })}
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* 联系方式卡片 */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
-          ]}
-        >
-          <View style={styles.cardHeader}>
-            <Icon symbol="call" size={16} color={colors.primary} />
-            <Text style={[styles.cardHeaderText, { color: colors.primary }]}>
-              {t('service.feedback.contact')}
+              {contentValue.length} / 500
             </Text>
           </View>
-          <Controller
-            control={control}
-            name="contact"
-            render={({ field: { value, onChange } }) => (
-              <TextInput
-                value={value ?? ''}
-                onChangeText={onChange}
-                placeholder={t('service.feedback.contactPlaceholder')}
-                placeholderTextColor={colors['on-surface-variant']}
+
+          <View style={[styles.fieldDivider, { backgroundColor: colors['outline-variant'] }]} />
+
+          {/* 照片（D3 真实化见后续：暂保留添加占位） */}
+          <View>
+            <Text style={[styles.fieldLabel, { color: colors['on-surface'], marginBottom: spacing.sm }]}>
+              {t('service.feedback.photosLabel')}
+            </Text>
+            <View style={styles.photosRow}>
+              <Pressable
                 style={[
-                  styles.input,
+                  styles.photoAddBtn,
                   {
-                    color: colors['on-surface'],
                     backgroundColor: colors['surface-container-low'],
                     borderColor: colors['outline-variant'],
                   },
                 ]}
-                testID="feedback-contact"
-              />
-            )}
-          />
-          <Text style={[styles.optionalHint, { color: colors['on-surface-variant'] }]}>
-            {t('service.feedback.optionalHint', { defaultValue: 'Optional · We may contact you' })}
-          </Text>
+                accessibilityRole="button"
+                accessibilityLabel={t('service.feedback.a11y.addScreenshot')}
+                testID="feedback-add-photo"
+              >
+                <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />
+                <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
+                  {t('service.feedback.addPhoto')}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={[styles.fieldDivider, { backgroundColor: colors['outline-variant'] }]} />
+
+          {/* 联系方式（D6 focus 态） */}
+          <View>
+            <Text style={[styles.fieldLabel, { color: colors['on-surface'], marginBottom: spacing.sm }]}>
+              {t('service.feedback.contact')}
+            </Text>
+            <Controller
+              control={control}
+              name="contact"
+              render={({ field: { value, onChange } }) => (
+                <TextInput
+                  value={value ?? ''}
+                  onChangeText={onChange}
+                  placeholder={t('service.feedback.contactPlaceholder')}
+                  placeholderTextColor={colors['on-surface-variant']}
+                  onFocus={() => setContactFocused(true)}
+                  onBlur={() => setContactFocused(false)}
+                  style={[
+                    styles.input,
+                    {
+                      color: colors['on-surface'],
+                      borderColor: contactFocused
+                        ? colors.primary
+                        : colors['outline-variant'],
+                      backgroundColor: contactFocused
+                        ? colors['surface-container-lowest']
+                        : colors['surface-container-low'],
+                    },
+                  ]}
+                  testID="feedback-contact"
+                />
+              )}
+            />
+            <Text style={[styles.optionalHint, { color: colors['on-surface-variant'] }]}>
+              {t('service.feedback.optionalHint')}
+            </Text>
+          </View>
         </View>
 
         {/* 提示信息卡片（TaisPattern 装饰） */}
@@ -209,16 +288,14 @@ export default function FeedbackPage() {
             <TaisPattern width={400} height={80} opacity={0.18} />
           </View>
           <View style={[styles.tipIconWrap, { backgroundColor: colors.primary }]}>
-            <Icon symbol="info" size={18} color="#ffffff" />
+            <Icon symbol="info" size={18} color={colors['on-primary']} />
           </View>
           <View style={styles.tipTextBox}>
             <Text style={[styles.tipTitle, { color: colors['on-surface'] }]}>
-              {t('service.feedback.tipTitle', { defaultValue: 'Privacy notice' })}
+              {t('service.feedback.tipTitle')}
             </Text>
             <Text style={[styles.tipDesc, { color: colors['on-surface-variant'] }]}>
-              {t('service.feedback.tipDesc', {
-                defaultValue: 'Your feedback will be handled confidentially',
-              })}
+              {t('service.feedback.tipDesc')}
             </Text>
           </View>
         </View>
@@ -246,8 +323,10 @@ export default function FeedbackPage() {
           accessibilityLabel={t('service.feedback.submit')}
           testID="feedback-submit"
         >
-          <Icon symbol="send" size={18} color="#ffffff" />
-          <Text style={styles.submitText}>{t('service.feedback.submit')}</Text>
+          <Icon symbol="send" size={18} color={colors['on-primary']} />
+          <Text style={[styles.submitText, { color: colors['on-primary'] }]}>
+            {t('service.feedback.submit')}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaWrapper>
@@ -260,48 +339,76 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
     gap: spacing.md,
   },
-  card: {
+  // D1 一体化表单容器（替代原 4 块独立 card）
+  formCard: {
     borderRadius: borderRadius.xl,
     padding: spacing.md,
+    gap: spacing.md,
   },
-  cardHeader: {
+  fieldLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 2,
     marginBottom: spacing.sm,
   },
-  cardHeaderText: {
-    ...typography['label-caps'],
+  fieldLabel: {
+    ...typography['body-md'],
+    fontSize: 13,
     fontWeight: '700',
-    fontSize: 11,
   },
-  tagsRow: {
+  requiredMark: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  fieldDivider: {
+    height: StyleSheet.hairlineWidth,
+    opacity: 0.5,
+  },
+  // D2 类型网格（3×2，flexWrap 模拟 CSS Grid）
+  typeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
+  typeCell: {
+    width: '31%',
+    borderWidth: 1.5,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    gap: 5,
+  },
+  typeIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  typeLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 13,
+  },
   textarea: {
-    minHeight: 120,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
+    minHeight: 100,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
     textAlignVertical: 'top',
-    borderWidth: StyleSheet.hairlineWidth,
     ...typography['body-md'],
   },
   counter: {
     ...typography['label-caps'],
     textAlign: 'right',
     marginTop: spacing.xs,
-    fontSize: 10,
-  },
-  subLabel: {
-    ...typography['label-caps'],
     fontSize: 11,
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
   },
   photosRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   photoAddBtn: {
@@ -319,14 +426,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   input: {
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
     ...typography['body-md'],
   },
   optionalHint: {
     ...typography['label-caps'],
-    fontSize: 10,
+    fontSize: 11,
     marginTop: spacing.xs,
   },
   errorText: {
@@ -387,7 +494,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
   },
   submitText: {
-    color: '#ffffff',
     ...typography['label-caps'],
     fontWeight: '700',
     fontSize: 14,
