@@ -997,7 +997,8 @@
     "E-AUTH-002": "Token expired",
     "E-AUTH-003": "No permission to access",
     "notFoundTitle": "Page not found",
-    "notFoundDesc": "The page does not exist"
+    "notFoundDesc": "The page does not exist",
+    "openLinkFailed": "Could not open the app for this link"
   },
   "search": {
     "recent": "Recent Searches",

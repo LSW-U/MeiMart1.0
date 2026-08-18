@@ -1,8 +1,8 @@
 // CustomerServicePage — 客服入口（P20 优化方案，见 第四梯队-辅助页面/P20-客服页-完整方案.md）
 // 结构：greeting 瘦身条 + My Orders 快捷入口 + Contact 卡（online 主行 + phone/email 副行）
 //       + FAQ 真折叠（复用 help.faq q1-q4）+ 底部工作时间一行
-import { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, Pressable, Linking } from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, ScrollView, Pressable, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { openExternalLink } from '@/utils/linking';
 
 interface Shortcut {
   id: 'orders' | 'refunds' | 'tracking';
@@ -20,11 +21,14 @@ interface Shortcut {
   route: string;
 }
 
-// Why: P20 D1 —— 电商客服页最高频诉求入口；路由方案已核实存在
+// Why: P20 D1 —— 电商客服页最高频诉求入口。
+//      tracking 入口原路由 '/order/tracking'（审查 Q1）：tracking 页是「订单上下文页」（useOrder
+//      以 params.id 为 enabled 守卫），无 id 跳入必落 ErrorState "Order not found"——与 orders
+//      页 track 按钮一致，改为先到订单列表让用户选订单。
 const SHORTCUTS: Shortcut[] = [
   { id: 'orders', icon: 'receipt_long', theme: 'info', route: '/(main)/orders' },
   { id: 'refunds', icon: 'assignment_return', theme: 'warning', route: '/(main)/refunds' },
-  { id: 'tracking', icon: 'local_shipping', theme: 'success', route: '/order/tracking' },
+  { id: 'tracking', icon: 'local_shipping', theme: 'success', route: '/(main)/orders' },
 ];
 
 // Why: P20 D3（Q1 拍板）—— 复用 help 中心前 4 条 FAQ 文案（零新增 key），
@@ -37,6 +41,19 @@ export default function CustomerServicePage() {
   const { colors } = useTheme();
   // Why: FAQ 折叠交互复用 help.tsx:56 模式（单开手风琴）
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Why: 审查 Q5 —— 展开态箭头 rotate 180°（原型 .faq.open .ar），200ms 过渡；
+  //      useState 初始化函数建 Animated.Value（review.tsx:134 同款，避免 render 阶段触 ref）
+  const [arrowAnim] = useState(() => new Animated.Value(0));
+  const arrowStyle = {
+    transform: [{ rotate: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }],
+  };
+  useEffect(() => {
+    Animated.timing(arrowAnim, {
+      toValue: expanded ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [expanded, arrowAnim]);
 
   return (
     <SafeAreaWrapper
@@ -125,7 +142,6 @@ export default function CustomerServicePage() {
             onPress={() => router.push('/service/feedback')}
             style={({ pressed }) => [
               styles.contactMain,
-              { backgroundColor: colors.primary },
               pressed && { opacity: 0.9 },
             ]}
             accessibilityRole="button"
@@ -148,7 +164,7 @@ export default function CustomerServicePage() {
           <View style={styles.contactSub}>
             <Pressable
               testID="cs-contact-phone"
-              onPress={() => Linking.openURL('tel:+67077000000')}
+              onPress={() => openExternalLink('tel:+67077000000', t('errors.openLinkFailed'))}
               style={({ pressed }) => [styles.contactSubRow, pressed && { opacity: 0.6 }]}
               accessibilityRole="button"
               accessibilityLabel={t('service.callHotline')}
@@ -166,7 +182,7 @@ export default function CustomerServicePage() {
             <View style={[styles.contactSubDivider, { backgroundColor: colors['outline-variant'] }]} />
             <Pressable
               testID="cs-contact-email"
-              onPress={() => Linking.openURL('mailto:support@meimart.tl')}
+              onPress={() => openExternalLink('mailto:support@meimart.tl', t('errors.openLinkFailed'))}
               style={({ pressed }) => [styles.contactSubRow, pressed && { opacity: 0.6 }]}
               accessibilityRole="button"
               accessibilityLabel={t('service.email')}
@@ -227,13 +243,15 @@ export default function CustomerServicePage() {
                   <Text style={[styles.faqQuestion, { color: colors['on-surface'] }]}>
                     {t(`service.help.faq.${id}`)}
                   </Text>
-                  <Icon
-                    symbol="expand_more"
-                    size={20}
-                    color={colors['on-surface-variant']}
-                  />
-                  {/* Why: 展开态语义由 accessibilityState.expanded 表达；原型箭头 rotate 动效 RN 侧用
-                      Icon 无 transform prop，保持静态箭头（原型 .ar rotate 180deg 为 web 过渡装饰） */}
+                  {/* Why: 审查 Q5 —— 展开态箭头随 expanded 旋转 180°（原型 .faq.open .ar），
+                      视觉反馈 + accessibilityState.expanded 语义双通道 */}
+                  <Animated.View style={arrowStyle}>
+                    <Icon
+                      symbol="expand_more"
+                      size={20}
+                      color={colors['on-surface-variant']}
+                    />
+                  </Animated.View>
                 </Pressable>
                 {isOpen && (
                   <Text style={[styles.faqAnswer, { color: colors['on-surface-variant'] }]}>
@@ -360,6 +378,10 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     position: 'relative',
     overflow: 'hidden',
+    // 原因（审查 Q2）：primary 实心底承载 tais 纹理 + 白字，dark 不变（文化元素固定色，同 greetAvatar）。
+    // colors.primary 是会随主题翻转的 token（dark #ffb4aa 浅红），浅红底白字对比度不足，
+    // 故用固定深红字面量让「红底白字」豁免在两种主题下均成立。
+    backgroundColor: '#961813',
   },
   contactMainPattern: {
     position: 'absolute',

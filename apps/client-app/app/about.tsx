@@ -1,7 +1,7 @@
 // ⚠️ 无 HTML 原型，参考 SplashPage 推导实现，待设计确认
 // AboutPage — 品牌展示页（参考 SplashPage.html 192 行的视觉风格）
 // D.1: Primary tais-pattern Header + DiamondPattern 背景 + LogoBadge + 文化装饰
-import { StyleSheet, View, Text, Linking, Pressable, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
@@ -14,6 +14,7 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { UmaLulikSkyline } from '@/components/cultural/UmaLulikSkyline';
 import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { Icon } from '@/components/ui/Icon';
+import { openExternalLink } from '@/utils/linking';
 
 const APP_VERSION = '1.0.0';
 
@@ -127,7 +128,7 @@ export default function AboutPage() {
             color={colors['on-surface']}
             subColor={colors['on-surface-variant']}
             testID="about-email"
-            onPress={() => Linking.openURL('mailto:support@meimart.tl')}
+            onPress={() => openExternalLink('mailto:support@meimart.tl', t('errors.openLinkFailed'))}
           />
 
           <View style={[styles.rowDivider, { backgroundColor: colors['outline-variant'] }]} />
@@ -139,7 +140,7 @@ export default function AboutPage() {
             color={colors['on-surface']}
             subColor={colors['on-surface-variant']}
             testID="about-phone"
-            onPress={() => Linking.openURL('tel:+67077000000')}
+            onPress={() => openExternalLink('tel:+67077000000', t('errors.openLinkFailed'))}
           />
         </View>
 

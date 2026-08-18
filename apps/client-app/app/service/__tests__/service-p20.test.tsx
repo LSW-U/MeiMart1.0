@@ -1,6 +1,8 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { ThemeProvider } from '@/theme';
+// router mock 句柄（断言 push 实参用；jest.mock hoist 保证拿到的是 mock 版）
+import { router } from 'expo-router';
 import CustomerServicePage from '../index';
 
 // P20 页面测试：快捷入口 / Contact 卡 / FAQ 折叠（结构 + 交互）
@@ -31,7 +33,8 @@ describe('CustomerServicePage（P20：快捷入口 + Contact 卡 + FAQ 折叠）
 
   beforeAll(() => {
     const { Linking } = jest.requireActual('react-native');
-    linkingOpenURL = jest.spyOn(Linking, 'openURL').mockImplementation(() => {});
+    // Why: mockImplementation 必须返回 Promise（openExternalLink 内会 .catch）
+    linkingOpenURL = jest.spyOn(Linking, 'openURL').mockImplementation(() => Promise.resolve());
   });
 
   it('渲染 3 个快捷入口（orders/refunds/tracking）', () => {
@@ -39,6 +42,13 @@ describe('CustomerServicePage（P20：快捷入口 + Contact 卡 + FAQ 折叠）
     expect(getByTestId('cs-shortcut-orders')).toBeTruthy();
     expect(getByTestId('cs-shortcut-refunds')).toBeTruthy();
     expect(getByTestId('cs-shortcut-tracking')).toBeTruthy();
+  });
+
+  it('审查 Q1 回归：tracking 快捷入口路由指向订单列表（非无 id 的 /order/tracking）', () => {
+    const { getByTestId } = render(<CustomerServicePage />, { wrapper });
+    fireEvent.press(getByTestId('cs-shortcut-tracking'));
+    // Why: '/order/tracking' 无 id 必落 ErrorState（useOrder enabled 守卫），改由订单列表选择
+    expect(router.push).toHaveBeenCalledWith('/(main)/orders');
   });
 
   it('Contact 卡：online 主行 + phone/email 副行，phone 可点拉起 tel:', () => {

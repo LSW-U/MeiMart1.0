@@ -955,7 +955,8 @@
     "E-AUTH-002": "[TET] Token expired",
     "E-AUTH-003": "[TET] No permission to access",
     "notFoundTitle": "[TET] Page not found",
-    "notFoundDesc": "[TET] The page does not exist"
+    "notFoundDesc": "[TET] The page does not exist",
+    "openLinkFailed": "[TET] Could not open the app for this link"
   },
   "search": {
     "recent": "[TET] Recent Searches",
