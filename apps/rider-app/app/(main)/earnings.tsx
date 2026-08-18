@@ -7,6 +7,7 @@ import { Button } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useEarningSummary, useEarningTransactions } from '../../src/services/queries/useEarnings';
+import { formatCurrency } from '../../src/utils/format';
 import { useState } from 'react';
 
 type BillingTab = 'today' | 'all';
@@ -22,11 +23,11 @@ export default function EarningsPage() {
   // TODO: 后端按时间过滤；当前前端按 createdAt 是否在今天内筛选
   const today = new Date();
   const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const currency = t('common.currency');
+
   const visibleTransactions = billingTab === 'today'
     ? transactions.filter((tx) => new Date(tx.createdAt).getTime() >= startOfDay)
     : transactions;
-
-  const formatAmount = (amount: number) => (amount >= 0 ? `+${t('common.currency')}${amount.toFixed(2)}` : `-${t('common.currency')}${Math.abs(amount).toFixed(2)}`);
 
   return (
     <View className="flex-1 bg-surface">
@@ -39,9 +40,9 @@ export default function EarningsPage() {
 
       <ScrollView className="flex-1" contentContainerClassName="px-5 pb-24">
         <EarningCard
-          balance={summary ? `${t('common.currency')}${summary.availableBalance.toFixed(2)}` : '—'}
+          balance={summary ? formatCurrency(summary.availableBalance, currency) : '—'}
           balanceLabel={t('earnings.balanceLabel')}
-          depositAmount={summary ? `${t('common.currency')}${summary.todayEarnings.toFixed(2)}` : '—'}
+          depositAmount={summary ? formatCurrency(summary.todayEarnings, currency) : '—'}
           depositLabel={t('earnings.deposit')}
           paidLabel={t('earnings.paid')}
           unsettledLabel={t('earnings.unsettled')}
@@ -83,7 +84,7 @@ export default function EarningsPage() {
               visibleTransactions.map((tx) => (
                 <HistoryItem
                   key={tx.id}
-                  amount={formatAmount(tx.amount)}
+                  amount={formatCurrency(tx.amount, currency, { sign: true })}
                   positive={tx.amount >= 0}
                   time={new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   title={tx.description}

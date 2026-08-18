@@ -9,8 +9,8 @@ import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { useTask } from '../../../src/services/queries/useTask';
 import type { DeliveryTask } from '../../../src/types/task';
+import { formatDistance } from '../../../src/utils/format';
 
-const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)}km`;
 
 export default function TaskOngoingPage() {
   const router = useRouter();

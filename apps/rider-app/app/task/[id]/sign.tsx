@@ -11,6 +11,7 @@ import { useNetwork } from '../../../src/hooks/useNetwork';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { useConfirmDelivery } from '../../../src/services/queries/useDelivery';
 import { useTask } from '../../../src/services/queries/useTask';
+import { formatCurrency } from '../../../src/utils/format';
 
 const doorExampleUri = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMHfhBvHWt0EecfMzNQjHgZFZdCRkcX5m9k6xbe1n5-EuFhwQzbzaGDpescZFwxD6bwuFdYiDnqr0XjS4F7jp7iHOsTQZsAYXd4v1pQE4cTFZCj8xdbHqm0VafUAXRae7WVXt0tG_RkbJtgmY__0k2-My2H5W_HoUKhk712Vr-w-zh5rwImNXPpXr2gH5MmFWODGepHtni4Ewasgd55Jqoon6xLKPjeix0QJrFE2KSKWYhGbqqX5omVklWn9OoJrLxpxg1G9PLEQ';
 const packageExampleUri = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDCKIaAFgN904UuZQyPS-CIO6WA5rJyPR3Kb9_GetDw7gCAox--tq9ZYbenQOj9DPKVlzTAXhoMzo6aPzcSwyrRgyvc0txMXchb9Q0yF0l-F0HuDclzq1gVRXnghARoPCnj-clXMfCtTWltbLzJj4jy7LcA8Evyz9IxE72TfKvDIm47Y9_LnyBovKiA9swd3jHEko3m5HbB3lPWaGP71vYmLRoInHXMThMjqrFnid0BLOlLqFU2mpH2nPDcFNwFVsEkCUCFOWTlaA';
@@ -50,7 +51,7 @@ export default function SignConfirmPage() {
 
   // COD 判断 + 应收展示（后端单位分，展示转元）
   const isCod = task?.paymentMethod === 'COD';
-  const payableDisplay = ((task?.payableAmount ?? 0) / 100).toFixed(2);
+  const payable = (task?.payableAmount ?? 0) / 100;
 
   const canSubmit = doorCaptured && packageCaptured && status !== 'processing';
 
@@ -106,7 +107,7 @@ export default function SignConfirmPage() {
           <View className="gap-3 rounded-xl border border-outline-variant bg-surface-container-low p-4">
             <View className="flex-row items-center justify-between">
               <Text className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t('sign.codPayable')}</Text>
-              <Text className="text-xl font-bold text-primary">{t('common.currency')}{payableDisplay}</Text>
+              <Text className="text-xl font-bold text-primary">{formatCurrency(payable, t('common.currency'))}</Text>
             </View>
             <Input
               keyboardType="decimal-pad"

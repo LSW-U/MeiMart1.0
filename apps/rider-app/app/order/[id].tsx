@@ -7,6 +7,7 @@ import { useTranslation } from '../../src/i18n/useTranslation';
 import { useOrder } from '../../src/services/queries/useOrder';
 import { colors } from '../../src/theme/colors';
 import type { OrderHistoryItem } from '../../src/types/order';
+import { formatCurrency, formatDistance } from '../../src/utils/format';
 
 const statusToneMap: Record<OrderHistoryItem['status'], 'history.status.completed' | 'history.status.cancelled' | 'history.status.transferred'> = {
   completed: 'history.status.completed',
@@ -26,7 +27,6 @@ const formatDateTime = (timestamp: number) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-const formatIncome = (income: number, fallback: string, currency: string) => (income > 0 ? `${currency}${income.toFixed(2)}` : fallback);
 
 export default function OrderDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -81,7 +81,7 @@ export default function OrderDetailPage() {
         <View className="mb-4 flex-row gap-3">
           <View className="flex-1 rounded-2xl border border-outline-variant bg-white p-4 shadow-sm">
             <Text className="text-xs text-outline">{t('order.detail.distance')}</Text>
-            <Text className="mt-1 text-lg font-bold text-on-surface">{order.distanceKm.toFixed(1)} km</Text>
+            <Text className="mt-1 text-lg font-bold text-on-surface">{formatDistance(order.distanceKm)}</Text>
           </View>
           <View className="flex-1 rounded-2xl border border-outline-variant bg-white p-4 shadow-sm">
             <Text className="text-xs text-outline">{t('order.detail.duration')}</Text>
@@ -93,7 +93,7 @@ export default function OrderDetailPage() {
 
         <View className="rounded-2xl border border-primary bg-surface-container-low p-5 shadow-sm">
           <Text className="text-xs font-bold uppercase tracking-wider text-primary">{t('order.detail.income')}</Text>
-          <Text className="mt-1 text-2xl font-bold text-primary">{formatIncome(order.income, t('history.noIncome'), t('common.currency'))}</Text>
+          <Text className="mt-1 text-2xl font-bold text-primary">{order.income > 0 ? formatCurrency(order.income, t('common.currency')) : t('history.noIncome')}</Text>
         </View>
       </ScrollView>
     );

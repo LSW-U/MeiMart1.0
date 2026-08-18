@@ -13,9 +13,9 @@ import { useTranslation } from '../../../src/i18n/useTranslation';
 import { ApiError } from '../../../src/services/api';
 import { useStartDelivering, useTask } from '../../../src/services/queries/useTask';
 import type { DeliveryTask } from '../../../src/types/task';
+import { formatCurrency, formatDistance } from '../../../src/utils/format';
+import { pickupDistance } from '../../../src/utils/distance';
 
-const formatFee = (fee: number, currency: string) => `${currency}${fee.toFixed(2)}`;
-const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)} KM`;
 
 export default function TaskNavigatePage() {
   const router = useRouter();
@@ -92,7 +92,7 @@ export default function TaskNavigatePage() {
                   </View>
                   <View className="items-end">
                     <Text className="mb-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('flow.totalEarnings')}</Text>
-                    <Text className="text-2xl font-bold text-primary">{formatFee(task.fee, t('common.currency'))}</Text>
+                    <Text className="text-2xl font-bold text-primary">{formatCurrency(task.fee, t('common.currency'))}</Text>
                     <Text className="text-[10px] text-outline">{task.orderId}</Text>
                   </View>
                 </View>
@@ -108,7 +108,7 @@ export default function TaskNavigatePage() {
                       <Text className="mt-1 text-sm text-on-surface-variant">{task.pickup.address}</Text>
                       <Text className="mt-2 self-start rounded-lg bg-surface-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{t('flow.storePickup')}</Text>
                     </View>
-                    <Text className="text-xs font-bold uppercase tracking-wider text-outline">{formatDistance(Math.max(task.distanceKm - 1.3, 0.5))}</Text>
+                    <Text className="text-xs font-bold uppercase tracking-wider text-outline">{formatDistance(pickupDistance(task.distanceKm))}</Text>
                   </View>
                   <View className="z-10 flex-row gap-4">
                     <View className="h-8 w-8 items-center justify-center rounded-full border border-tertiary bg-tertiary-container">

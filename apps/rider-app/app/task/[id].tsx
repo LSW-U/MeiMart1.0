@@ -13,8 +13,9 @@ import { ApiError } from '../../src/services/api';
 import { useAcceptTask, useTask } from '../../src/services/queries/useTask';
 import { getTaskAction } from '../../src/services/task-flow';
 import type { DeliveryTask } from '../../src/types/task';
+import { formatDistance } from '../../src/utils/format';
+import { pickupDistance } from '../../src/utils/distance';
 
-const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)}km`;
 const formatItems = (items: string[], t: (key: TranslationKey, vars?: Record<string, string | number>) => string) => t('common.items', { items: items.join(' · ') });
 
 // S6: accept 失败按 ApiError.code 差异化提示
@@ -107,7 +108,7 @@ export default function TaskDetailPage() {
               note={detail.note ?? undefined}
               orderId={detail.orderId}
               points={[
-                { label: 'P', title: detail.pickup.title, subtitle: detail.pickup.address, distance: t('common.fromHere', { distance: formatDistance(Math.max(detail.distanceKm - 1.3, 0.5)) }) },
+                { label: 'P', title: detail.pickup.title, subtitle: detail.pickup.address, distance: t('common.fromHere', { distance: formatDistance(pickupDistance(detail.distanceKm)) }) },
                 { label: 'D', title: detail.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(detail.distanceKm) }) },
               ]}
               timeLabel={t('common.remaining', { minutes: String(detail.estimatedMinutes) })}

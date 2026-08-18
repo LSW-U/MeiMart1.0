@@ -6,6 +6,7 @@ import { WithdrawForm } from '../../src/components/business/WithdrawForm';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useEarningSummary, useCreateWithdrawal } from '../../src/services/queries/useEarnings';
+import { formatCurrency } from '../../src/utils/format';
 
 export default function WithdrawalPage() {
   const router = useRouter();
@@ -64,7 +65,7 @@ export default function WithdrawalPage() {
         <View className="items-center justify-center rounded-xl border border-surface-container-high bg-surface-container p-6 shadow-sm">
           <Text className="mb-1 text-sm text-on-surface-variant">{t('withdraw.availableBalance')}</Text>
           <Text className="text-[32px] font-bold tracking-tight text-on-surface">
-            {summary ? `${t('common.currency')}${summary.availableBalance.toFixed(2)}` : '—'}
+            {summary ? formatCurrency(summary.availableBalance, t('common.currency')) : '—'}
           </Text>
         </View>
 

@@ -8,6 +8,7 @@ import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useOrderHistory, useOrderStatusCounts, useOrderTodayStats } from '../../src/services/queries/useOrder';
 import type { OrderHistoryStatus } from '../../src/types/order';
+import { formatCurrency } from '../../src/utils/format';
 
 type FilterKey = 'all' | OrderHistoryStatus;
 
@@ -29,7 +30,6 @@ const formatTime = (timestamp: number) => {
   return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
 };
 
-const formatIncome = (income: number, fallback: string, currency: string) => (income > 0 ? `${currency}${income.toFixed(2)}` : fallback);
 
 export default function OrderHistoryPage() {
   const router = useRouter();
@@ -93,7 +93,7 @@ export default function OrderHistoryPage() {
                 key={order.id}
                 dropoffAddress={order.dropoffAddress}
                 dropoffName={order.dropoffName}
-                income={formatIncome(order.income, t('history.noIncome'), t('common.currency'))}
+                income={order.income > 0 ? formatCurrency(order.income, t('common.currency')) : t('history.noIncome')}
                 incomeLabel={t('history.income')}
                 orderNo={order.orderNo}
                 pickupAddress={order.pickupAddress}
@@ -112,7 +112,7 @@ export default function OrderHistoryPage() {
       <View className="absolute bottom-0 left-0 right-0 border-t border-outline-variant bg-surface-container-high px-4 py-4 shadow-sm">
         <View className="mx-auto flex-row w-full max-w-md items-center justify-between">
           <Text className="font-bold text-on-surface">{t('history.todayOrders')}</Text>
-          <Text className="text-xl font-bold text-primary">{today.count} · {t('common.currency')}{today.totalIncome.toFixed(2)}</Text>
+          <Text className="text-xl font-bold text-primary">{today.count} · {formatCurrency(today.totalIncome, t('common.currency'))}</Text>
         </View>
       </View>
     </View>

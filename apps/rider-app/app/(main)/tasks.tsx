@@ -17,6 +17,8 @@ import { useRiderSettings, useUpdateRiderSettings } from '../../src/services/que
 import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import type { DeliveryTask } from '../../src/types/task';
+import { formatCurrency, formatDistance } from '../../src/utils/format';
+import { pickupDistance } from '../../src/utils/distance';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
 
@@ -26,8 +28,6 @@ const dutyLabelKey: Record<DutyStatus, 'duty.onDuty' | 'duty.offDuty' | 'duty.bu
   busy: 'duty.busy',
 };
 
-const formatFee = (fee: number, currency: string) => `${currency}${fee % 1 === 0 ? fee.toFixed(0) : fee.toFixed(1)}`;
-const formatDistance = (distanceKm: number) => `${distanceKm.toFixed(1)}km`;
 const formatItems = (items: string[], t: (key: TranslationKey, vars?: Record<string, string | number>) => string) => t('common.items', { items: items.join(' · ') });
 
 export default function TasksPage() {
@@ -93,12 +93,12 @@ export default function TasksPage() {
       key={task.id}
       actionLabel={t('tasks.accept')}
       badge={index === 0 ? t('tasks.reward.firstOrder') : undefined}
-      fee={formatFee(task.fee, currency)}
+      fee={formatCurrency(task.fee, currency, { decimals: task.fee % 1 === 0 ? 0 : 1 })}
       feeNote={index === 0 ? t('tasks.feeNote') : undefined}
       items={task.items.length ? formatItems(task.items, t) : undefined}
       note={task.note ?? undefined}
       points={[
-        { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) },
+        { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: formatDistance(pickupDistance(task.distanceKm)) },
         { label: 'D', title: task.dropoff.title, distance: formatDistance(task.distanceKm) },
       ]}
       tags={index === 0 ? [t('tasks.tag.express')] : []}
@@ -120,7 +120,7 @@ export default function TasksPage() {
         note={task.note ?? undefined}
         orderId={task.orderId}
         points={[
-          { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: t('common.fromHere', { distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) }) },
+          { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: t('common.fromHere', { distance: formatDistance(pickupDistance(task.distanceKm)) }) },
           { label: 'D', title: task.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
         ]}
         timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
@@ -139,7 +139,7 @@ export default function TasksPage() {
       note={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : (task.note ?? undefined)}
       orderId={task.orderId.replace('JD Delivery ', '')}
       points={[
-        { label: 'P', title: task.pickup.title, distance: t('common.fromHere', { distance: formatDistance(Math.max(task.distanceKm - 1.3, 0.5)) }) },
+        { label: 'P', title: task.pickup.title, distance: t('common.fromHere', { distance: formatDistance(pickupDistance(task.distanceKm)) }) },
         { label: 'D', title: task.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
       ]}
       tags={[t('tasks.tag.callOnArrival'), t('tasks.tag.doNotLeave')]}
