@@ -658,7 +658,9 @@
     "removeFailed": "[TET] Failed to remove, please retry",
     "a11y": {
       "cancelSelect": "[TET] Cancel select",
-      "manage": "[TET] Manage favorites"
+      "manage": "[TET] Manage favorites",
+      "gridView": "[TET] Grid view",
+      "listView": "[TET] List view"
     }
   },
   "afterSales": {

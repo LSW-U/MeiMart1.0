@@ -1,7 +1,6 @@
-// ⚠️ 无 HTML 原型，参考 ProductListPage 推导实现，待设计确认
-// FavoriteListPage — 收藏列表（参考 ProductListPage.html 的商品网格）
-// D.12: PrimaryHeader + 2 列商品网格 + 批量管理 + 空状态
-import { useState } from 'react';
+// FavoriteListPage — 收藏列表（P19：原型 第四梯队HTML原型设计/P18-P19 优化原型）
+// D.12: PrimaryHeader + 网格/列表视图切换 + 批量管理 + 空状态
+import { useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -12,6 +11,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
@@ -20,12 +20,17 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ProductCard } from '@/components/business/ProductCard';
+import { HorizontalProductCard } from '@/components/business/HorizontalProductCard/HorizontalProductCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useFavorites, useRemoveFavorites } from '@/services/queries/useFavorites';
 import { toast } from '@/store/toastStore';
 import type { Product } from '@/types';
+
+// Why: 视图偏好持久化（P19 D2），键名对齐现有 meimart.recentSearches / meimart.locale 风格
+const VIEW_STORAGE_KEY = 'meimart.favorites.view';
+type FavoritesView = 'grid' | 'list';
 
 export default function FavoritesPage() {
   const handleBack = useSafeBack();
@@ -35,6 +40,23 @@ export default function FavoritesPage() {
   const removeFavorites = useRemoveFavorites();
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Why: 持久化读取放 effect（首帧渲染 'grid' 默认，读到偏好后切换，避免 hydration 闪烁）
+  const [view, setView] = useState<FavoritesView>('grid');
+
+  useEffect(() => {
+    AsyncStorage.getItem(VIEW_STORAGE_KEY)
+      .then((v) => {
+        if (v === 'grid' || v === 'list') setView(v);
+      })
+      .catch(() => {
+        // 读取失败保持默认网格，不阻塞页面
+      });
+  }, []);
+
+  const switchView = (next: FavoritesView) => {
+    setView(next);
+    AsyncStorage.setItem(VIEW_STORAGE_KEY, next).catch(() => {});
+  };
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -94,6 +116,9 @@ export default function FavoritesPage() {
     setSelectMode(true);
     toggleSelect(id);
   };
+
+  // Why: 列表态快速加购占位（P19 C3 接 useAddToCart；先留跳板保证本 commit 可编译可渲染）
+  const handleQuickAdd = (_item: Product) => {};
 
   const HeaderRight = selectMode ? (
     <View style={styles.headerActions}>
@@ -201,17 +226,47 @@ export default function FavoritesPage() {
         </View>
       )}
 
-      {/* 提示信息条 */}
+      {/* 工具栏（原型 fav-tools）：左计数 · 右网格/列表切换；管理态隐藏（选择优先） */}
       {!selectMode && favorites && favorites.length > 0 && (
-        <View style={[styles.hintBar, { backgroundColor: colors['surface-container-low'] }]}>
-          <Icon symbol="favorite" size={14} color={colors.primary} />
-          <Text style={[styles.hintText, { color: colors['on-surface-variant'] }]}>
-            {t('favorites.countHint', {
-              defaultValue: `${favorites.length} item(s) in your favorites`,
+        <View style={styles.toolsBar}>
+          <View style={styles.toolsCount}>
+            <Icon symbol="favorite" size={13} color={colors.primary} />
+            <Text style={[styles.toolsCountText, { color: colors['on-surface-variant'] }]}>
+              {t('favorites.countHint', {
+                count: favorites.length,
+                defaultValue: `{{count}} item(s) in your favorites`,
+              })}
+            </Text>
+          </View>
+          <View
+            style={[styles.viewSwitch, { borderColor: colors['outline-variant'] }]}
+            accessibilityRole="tablist"
+          >
+            {(
+              [
+                { key: 'grid' as FavoritesView, icon: 'grid_view', label: t('favorites.a11y.gridView') },
+                { key: 'list' as FavoritesView, icon: 'view_list', label: t('favorites.a11y.listView') },
+              ]
+            ).map(({ key, icon, label }) => {
+              const active = view === key;
+              return (
+                <Pressable
+                  key={key}
+                  onPress={() => switchView(key)}
+                  style={[
+                    styles.viewBtn,
+                    { backgroundColor: active ? colors.primary : colors['surface-container-lowest'] },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={label}
+                  accessibilityState={active ? { selected: true } : undefined}
+                  testID={`favorites-view-${key}`}
+                >
+                  <Icon symbol={icon} size={18} color={active ? '#ffffff' : colors['on-surface-variant']} />
+                </Pressable>
+              );
             })}
-            {' · '}
-            {t('favorites.longPressHint', { defaultValue: 'Long-press to manage' })}
-          </Text>
+          </View>
         </View>
       )}
 
@@ -236,19 +291,32 @@ export default function FavoritesPage() {
           initialNumToRender={6}
           maxToRenderPerBatch={4}
           windowSize={5}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-          contentContainerStyle={styles.list}
+          // Why: 网格 2 列 / 列表 1 列（P19 D2）—— 视图切换时 numColumns 变化需重建列表，
+          //      extraData 驱动 re-render（RN numColumns 不可运行时热切换 key 才稳妥）
+          key={view}
+          numColumns={view === 'grid' ? 2 : 1}
+          columnWrapperStyle={view === 'grid' ? styles.row : undefined}
+          contentContainerStyle={view === 'grid' ? styles.list : styles.listStack}
           renderItem={({ item }: { item: Product }) => {
             const isSelected = selected.has(item.id);
+            if (view === 'list' && !selectMode) {
+              // 列表常态（P19 D2）：复用 HorizontalProductCard —— 72px 图 + 名称/价格/销量 + 32px 圆形加购
+              return (
+                <HorizontalProductCard
+                  product={item}
+                  onPress={() => router.push(`/product/${item.id}`)}
+                  onAddToCart={() => handleQuickAdd(item)}
+                />
+              );
+            }
             return (
-              <View style={styles.cell}>
+              <View style={view === 'grid' ? styles.cell : styles.listCell}>
                 {selectMode && (
                   <View
                     style={[
                       styles.selectBadge,
                       {
-                        backgroundColor: isSelected ? colors.primary : 'rgba(255,255,255,0.9)',
+                        backgroundColor: isSelected ? colors.primary : colors['surface-container-lowest'],
                         borderColor: isSelected ? colors.primary : colors['outline-variant'],
                       },
                       shadowPresets.sm,
@@ -273,9 +341,16 @@ export default function FavoritesPage() {
                     pressed && { transform: [{ scale: 0.98 }] },
                   ]}
                 >
-                  <View style={shadowPresets.sm}>
-                    <ProductCard product={item} />
-                  </View>
+                  {view === 'grid' ? (
+                    <View style={shadowPresets.sm}>
+                      <ProductCard product={item} />
+                    </View>
+                  ) : (
+                    // 管理态列表视图：HPC 无选择语义，统一降级用 ProductCard 结构同网格（简化）
+                    <View style={shadowPresets.sm}>
+                      <ProductCard product={item} />
+                    </View>
+                  )}
                 </Pressable>
               </View>
             );
@@ -345,8 +420,41 @@ const styles = StyleSheet.create({
     ...typography['label-caps'],
     fontSize: 10,
   },
+  toolsBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: layout['container-margin'],
+    paddingVertical: spacing.xs,
+  },
+  toolsCount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  toolsCountText: {
+    ...typography['label-caps'],
+    fontSize: 10,
+  },
+  viewSwitch: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+  },
+  viewBtn: {
+    width: 36,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   list: {
     padding: layout['container-margin'],
+    paddingBottom: spacing.xxl * 2,
+  },
+  listStack: {
+    padding: layout['container-margin'],
+    gap: spacing.sm + 2,
     paddingBottom: spacing.xxl * 2,
   },
   row: {
@@ -355,6 +463,9 @@ const styles = StyleSheet.create({
   },
   cell: {
     flex: 1,
+    position: 'relative',
+  },
+  listCell: {
     position: 'relative',
   },
   cardWrapper: {

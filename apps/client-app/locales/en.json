@@ -700,7 +700,9 @@
     "removeFailed": "Failed to remove, please retry",
     "a11y": {
       "cancelSelect": "Cancel select",
-      "manage": "Manage favorites"
+      "manage": "Manage favorites",
+      "gridView": "Grid view",
+      "listView": "List view"
     }
   },
   "afterSales": {

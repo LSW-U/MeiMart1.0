@@ -700,7 +700,9 @@
     "removeFailed": "移除失败，请重试",
     "a11y": {
       "cancelSelect": "取消选择",
-      "manage": "管理收藏"
+      "manage": "管理收藏",
+      "gridView": "网格视图",
+      "listView": "列表视图"
     }
   },
   "afterSales": {
