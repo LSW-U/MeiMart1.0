@@ -8,8 +8,10 @@ import type { ClientCoupon } from '@/services/promotion';
 import type { CouponCardProps } from './CouponCard.types';
 
 // Why: 剩余天数 chip 三档（模块方案 D2 / 决策 4A）：>3 天 positive、≤3 天 warning、
-//      <1 天「今天到期」；used/expired 由状态章表达，不算天数。
-//      纯工具函数（组件外）不受 react-hooks/purity 约束
+//      今天内到期「今天到期」；used/expired 由状态章表达，不算天数。
+//      纯工具函数（组件外）不受 react-hooks/purity 约束。
+//      Math.ceil 口径：剩 12h → 1（还有今天可算），今天 0 点后已过 → ≤0，券已过期。
+//      返回 0 表示「今天内到期」（endAt 在今天剩余时间内），<0 已过期。
 export function couponDaysLeft(endAt: string): number {
   return Math.ceil((new Date(endAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
 }
@@ -44,6 +46,8 @@ export function CouponCard({
   const isUsed = coupon.status === 'used';
 
   // 剩余天数（仅 available 态显示；决策 4A 全量 chip）
+  // Why: Math.ceil 使「今天内到期」算出 0（剩 12h → ceil(0.5)=1 只有跨过今天 0 点才对）——
+  //      精确口径：>0 剩 N 天，=0 今天到期，<0 已过期不显示（审查 Q1 与 Picker 统一）
   const daysLeft = isValid ? couponDaysLeft(coupon.endAt) : 0;
 
   // Why: 外层不包 Pressable —— Web 端 Pressable 渲染成 <button>，与内部动作按钮（也是
@@ -139,8 +143,9 @@ export function CouponCard({
                 {t('coupons.minSpend', { amount: coupon.minOrderAmount })}
               </Text>
             </View>
-            {daysLeft > 0 && (
-              // 决策 4A：>3 天 positive / ≤3 天 warning（P18 页面另有近过期汇总条呼应）
+            {/* 决策 4A：>3 天 positive / ≤3 天 warning（P18 页面另有近过期汇总条呼应）。
+                三元与 Picker 一致（审查 Q1：原外层 daysLeft > 0 gate 使「今天到期」永不可达） */}
+            {isValid && (daysLeft > 0 || couponDaysLeft(coupon.endAt) > -1) && (
               <View
                 style={[
                   styles.chip,
@@ -160,12 +165,12 @@ export function CouponCard({
                     },
                   ]}
                 >
-                  {daysLeft < 1
-                    ? t('coupons.expiresToday', { defaultValue: 'Expires today' })
-                    : t('coupons.daysLeft', {
+                  {daysLeft > 0
+                    ? t('coupons.daysLeft', {
                         count: daysLeft,
                         defaultValue: '{{count}} days left',
-                      })}
+                      })
+                    : t('coupons.expiresToday', { defaultValue: 'Expires today' })}
                 </Text>
               </View>
             )}

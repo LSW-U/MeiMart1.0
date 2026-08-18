@@ -35,7 +35,8 @@ import { useState } from 'react';
 
 // Why: mock demo 金额（与 cart 页一致）。real 模式由 useCheckoutPreview 一次拿全金额
 //      —— preview.payableAmount 后端已聚合（itemsSubtotal + deliveryFee - discount，传 couponCode 时算折扣）。
-//      ⚠️ checkout 券选择 Modal 无 HTML 原型（CheckoutPage.html 无券 UI），按 coupons.tsx 卡片风格推导实现，待设计确认。
+//      ⚠️ checkout 券选择 Modal 无 HTML 原型（CheckoutPage.html 无券 UI），视觉参照
+//      模块化处理HTML/优惠券卡片模块-优化原型.html compact-ticket（与 CouponPicker 注释同口径）。
 const MOCK_DISCOUNT = 5.0;
 const MOCK_DELIVERY_FEE = 0.0;
 
@@ -526,7 +527,7 @@ export default function CheckoutPage() {
           </Text>
         </Pressable>
       </View>
-      {/* ⚠️ 无 HTML 原型：选券 Modal 参考 coupons.tsx 卡片风格推导，待设计确认 */}
+      {/* ⚠️ 无 HTML 原型：选券 Modal 视觉参照 模块化处理HTML/优惠券卡片模块-优化原型.html compact-ticket */}
       <CouponPicker
         visible={showCouponModal}
         onClose={() => setShowCouponModal(false)}
