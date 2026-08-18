@@ -656,9 +656,9 @@
     "removeConfirm": "[TET] Remove {{count}} item(s) from favorites?",
     "selectedTitle": "[TET] Selected {{count}}",
     "countHint": "[TET] {{count}} item(s) in your favorites",
-    "longPressHint": "[TET] Long-press to manage",
     "goBrowse": "[TET] Browse Products",
     "removed": "[TET] Removed from favorites",
+    "partiallyRemoved": "[TET] {{count}} item(s) removed, some failed — please retry",
     "removeFailed": "[TET] Failed to remove, please retry",
     "a11y": {
       "cancelSelect": "[TET] Cancel select",

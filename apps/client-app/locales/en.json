@@ -698,9 +698,9 @@
     "removeConfirm": "Remove {{count}} item(s) from favorites?",
     "selectedTitle": "Selected {{count}}",
     "countHint": "{{count}} item(s) in your favorites",
-    "longPressHint": "Long-press to manage",
     "goBrowse": "Browse Products",
     "removed": "Removed from favorites",
+    "partiallyRemoved": "{{count}} item(s) removed, some failed — please retry",
     "removeFailed": "Failed to remove, please retry",
     "a11y": {
       "cancelSelect": "Cancel select",

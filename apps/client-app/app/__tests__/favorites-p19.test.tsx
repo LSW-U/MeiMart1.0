@@ -118,4 +118,17 @@ describe('FavoritesPage（P19：视图切换 + 登录空态 + 无排序）', () 
     const { queryByLabelText } = render(<FavoritesPage />, { wrapper });
     expect(queryByLabelText(/sort/i)).toBeNull();
   });
+
+  it('管理态勾选刷新（审查 Q1 extraData 回归）：点卡后删除按钮计数 +1', () => {
+    const { getByTestId, getByLabelText, getByText } = render(<FavoritesPage />, { wrapper });
+    fireEvent.press(getByTestId('favorites-manage'));
+    // 网格态首卡 Pressable（a11y label "name, price $X"）→ 点选 toggleSelect
+    fireEvent.press(getByLabelText('Apple, price $3.50'));
+    // extraData 修复前 FlatList cell 不重渲染，但 manageBar 删除按钮计数走 header 层
+    // （selected 状态页级）——按钮文案 (1) 即勾选生效
+    expect(getByText('common.delete (1)')).toBeTruthy();
+    // 取消勾选 → 计数归 0
+    fireEvent.press(getByLabelText('Apple, price $3.50'));
+    expect(getByText('common.delete (0)')).toBeTruthy();
+  });
 });

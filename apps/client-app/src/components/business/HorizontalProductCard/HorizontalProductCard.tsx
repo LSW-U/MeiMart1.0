@@ -20,6 +20,7 @@ export function HorizontalProductCard({
   badge,
   showRating = false,
   addPending = false,
+  addDisabled = false,
   testID,
 }: HorizontalProductCardProps) {
   const { colors } = useTheme();
@@ -78,18 +79,21 @@ export function HorizontalProductCard({
       </View>
       <Pressable
         onPress={onAddToCart}
-        disabled={addPending}
+        disabled={addPending || addDisabled}
         style={({ pressed }) => [
           styles.addBtn,
-          { backgroundColor: colors.primary, opacity: addPending ? 0.6 : 1 },
+          { backgroundColor: colors.primary, opacity: addPending || addDisabled ? 0.6 : 1 },
           pressed && { opacity: 0.85 },
         ]}
         accessibilityRole="button"
         accessibilityLabel={t('product.addToCartLabel', { name })}
-        accessibilityState={addPending ? { disabled: true } : undefined}
+        accessibilityState={
+          addPending || addDisabled ? { disabled: true } : undefined
+        }
       >
         {addPending ? (
-          // P19 D4：加购进行中用 spinner 占位（复用 add 按钮位，尺寸与 icon 对齐）
+          // P19 D4：加购进行中用 spinner 占位（复用 add 按钮位，尺寸与 icon 对齐）；
+          // addDisabled（他卡单飞行期）不转 spinner 只禁点（审查 Q4 拆分语义）
           <ActivityIndicator size="small" color={ON_PRIMARY} />
         ) : (
           <Icon symbol="add" size={18} color={ON_PRIMARY} />

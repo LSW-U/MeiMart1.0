@@ -698,9 +698,9 @@
     "removeConfirm": "确认从收藏中移除 {{count}} 件商品？",
     "selectedTitle": "已选 {{count}}",
     "countHint": "共 {{count}} 件收藏",
-    "longPressHint": "长按管理",
     "goBrowse": "去逛逛",
     "removed": "已移除收藏",
+    "partiallyRemoved": "已移除 {{count}} 件，部分失败，请重试",
     "removeFailed": "移除失败，请重试",
     "a11y": {
       "cancelSelect": "取消选择",

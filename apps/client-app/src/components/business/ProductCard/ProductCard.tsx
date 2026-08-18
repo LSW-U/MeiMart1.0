@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
 import { useLocalizer } from '@/i18n';
+import { formatPrice } from '@/utils/format';
 
 import { PriceText } from '@/components/ui/PriceText';
 import { Button } from '@/components/ui/Button';
@@ -84,7 +85,7 @@ function ProductCardBase({
         style={({ pressed }) => [styles.clickableArea, pressed && styles.pressed]}
         onPress={onPress ? () => onPress(product) : undefined}
         accessibilityRole="button"
-        accessibilityLabel={`${name}, price ${product.price}`}
+        accessibilityLabel={`${name}, price ${formatPrice(product.price)}`}
       >
         <View style={[styles.imageWrap, { backgroundColor: colors['surface-container-lowest'] }]}>
           <SafeImage source={{ uri: product.image }} style={styles.image} accessible={false} />

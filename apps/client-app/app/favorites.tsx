@@ -27,6 +27,8 @@ import { Icon } from '@/components/ui/Icon';
 import { useFavorites, useRemoveFavorites } from '@/services/queries/useFavorites';
 import { useAddToCart } from '@/services/queries/useCart';
 import { useAuthStore } from '@/store/authStore';
+import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
+import { OfflineBanner } from '@/components/feedback/OfflineBanner';
 import { toast } from '@/store/toastStore';
 import { getApiErrorMessage } from '@/utils/error';
 import type { Product } from '@/types';
@@ -41,6 +43,7 @@ export default function FavoritesPage() {
   const { t } = useTranslation();
   const { data: favorites, isLoading, isError, refetch } = useFavorites();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { isOffline } = useWeakNetworkUI();
   const removeFavorites = useRemoveFavorites();
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -76,18 +79,37 @@ export default function FavoritesPage() {
     setSelected(new Set());
   };
 
-  // Why: 真实批量删除（P19 D1）—— 并行 toggle + 乐观移除；成功 toast + 退出选择，
-  //      失败 hook onError 已回滚 cache，这里保留选择集合供重试
+  // Why: 真实批量删除（P19 D1 + 审查 Q2）—— 并行 toggle + 乐观移除；allSettled 局部回滚：
+  //      失败项 hook 已加回 cache，这里按结果分流 toast；失败时选择集合只保留失败项可重试
   const executeRemove = () => {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
     removeFavorites.mutate(ids, {
-      onSuccess: () => {
-        toast.success(t('favorites.removed', { defaultValue: 'Removed from favorites' }));
-        exitSelectMode();
+      onSuccess: ({ failedIds, okCount }) => {
+        if (failedIds.length === 0) {
+          toast.success(t('favorites.removed', { defaultValue: 'Removed from favorites' }));
+          exitSelectMode();
+          return;
+        }
+        if (okCount > 0) {
+          toast.error(
+            t('favorites.partiallyRemoved', {
+              count: okCount,
+              defaultValue: '{{count}} item(s) removed, some failed — please retry',
+            }),
+          );
+        } else {
+          toast.error(
+            t('favorites.removeFailed', { defaultValue: 'Failed to remove, please retry' }),
+          );
+        }
+        // 只保留失败项为选中态（成功项已移除，重试不会反向加回）
+        setSelected(new Set(failedIds));
       },
       onError: () => {
-        toast.error(t('favorites.removeFailed', { defaultValue: 'Failed to remove, please retry' }));
+        toast.error(
+          t('favorites.removeFailed', { defaultValue: 'Failed to remove, please retry' }),
+        );
       },
     });
   };
@@ -257,6 +279,9 @@ export default function FavoritesPage() {
         </View>
       )}
 
+      {/* Q5 stale 态（规则 10）：离线时 offlineFirst 返回缓存，用 OfflineBanner 提示数据可能过期 */}
+      {isOffline && !isLoading && !isError && <OfflineBanner onRetry={() => refetch()} />}
+
       {/* 工具栏（原型 fav-tools）：左计数 · 右网格/列表切换；管理态隐藏（选择优先） */}
       {!selectMode && favorites && favorites.length > 0 && (
         <View style={styles.toolsBar}>
@@ -330,6 +355,9 @@ export default function FavoritesPage() {
       ) : (
         <FlatList
           data={favorites}
+          // Why: 管理态勾选依赖 selected，不传 extraData 则已渲染 cell 不重执行 renderItem，
+          //      勾选对勾不刷新（审查 Q1 CONFIRMED，管理态核心交互失效）
+          extraData={selected}
           keyExtractor={(item) => item.id}
           initialNumToRender={6}
           maxToRenderPerBatch={4}
@@ -349,7 +377,10 @@ export default function FavoritesPage() {
                   product={item}
                   onPress={() => router.push(`/product/${item.id}`)}
                   onAddToCart={() => handleQuickAdd(item)}
+                  // Q4：spinner 只在发起卡；单飞行期间其他卡 disabled（点按不再静默丢弃）
                   addPending={addingId === item.id}
+                  addDisabled={addingId !== null && addingId !== item.id}
+                  testID={`favorites-hpc-${item.id}`}
                 />
               );
             }
@@ -385,16 +416,11 @@ export default function FavoritesPage() {
                     pressed && { transform: [{ scale: 0.98 }] },
                   ]}
                 >
-                  {view === 'grid' ? (
-                    <View style={shadowPresets.sm}>
-                      <ProductCard product={item} />
-                    </View>
-                  ) : (
-                    // 管理态列表视图：HPC 无选择语义，统一降级用 ProductCard 结构同网格（简化）
-                    <View style={shadowPresets.sm}>
-                      <ProductCard product={item} />
-                    </View>
-                  )}
+                  {/* 管理态（含列表视图）统一降级 ProductCard：HPC 无选择徽章位、
+                      加购按钮在管理态无意义（P19 实施决策，非冗余分支） */}
+                  <View style={shadowPresets.sm}>
+                    <ProductCard product={item} />
+                  </View>
                 </Pressable>
               </View>
             );
@@ -452,17 +478,6 @@ const styles = StyleSheet.create({
     ...typography['label-caps'],
     fontWeight: '700',
     fontSize: 12,
-  },
-  hintBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: layout['container-margin'],
-    paddingVertical: spacing.sm,
-  },
-  hintText: {
-    ...typography['label-caps'],
-    fontSize: 10,
   },
   toolsBar: {
     flexDirection: 'row',
