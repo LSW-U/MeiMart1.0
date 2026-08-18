@@ -8,7 +8,7 @@ export function EarningChart({ values }: EarningChartProps) {
   const maxValue = Math.max(...values, 1);
 
   return (
-    <View className="flex-row items-end gap-2 rounded-3xl bg-white p-4">
+    <View className="flex-row items-end gap-2 rounded-3xl bg-surface p-4">
       {values.map((value, index) => (
         <View key={`${value}-${index}`} className="flex-1 items-center gap-2">
           <View className="w-full rounded-t-xl bg-primary" style={{ height: 24 + (value / maxValue) * 72 }} />

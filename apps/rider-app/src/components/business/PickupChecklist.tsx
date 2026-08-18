@@ -6,7 +6,7 @@ type PickupChecklistProps = {
 
 export function PickupChecklist({ items }: PickupChecklistProps) {
   return (
-    <View className="gap-3 rounded-3xl bg-white p-4">
+    <View className="gap-3 rounded-3xl bg-surface p-4">
       {items.map((item) => (
         <View key={item} className="flex-row items-center gap-3">
           <View className="h-5 w-5 rounded-full border border-primary" />

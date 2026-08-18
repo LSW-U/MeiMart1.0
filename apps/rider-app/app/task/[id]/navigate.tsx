@@ -83,7 +83,7 @@ export default function TaskNavigatePage() {
               delivery={task.dropoff.coordinates ? { ...task.dropoff.coordinates, title: task.dropoff.title } : undefined}
             />
             <View className="-mt-8 gap-4 px-5">
-              <View className="rounded-xl border border-outline/10 bg-white p-4 shadow-md">
+              <View className="rounded-xl border border-outline/10 bg-surface p-4 shadow-md">
                 <View className="mb-6 flex-row items-start justify-between">
                   <View>
                     <Text className="mb-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('flow.remainingTime')}</Text>

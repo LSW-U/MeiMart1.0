@@ -187,7 +187,7 @@ export default function TasksPage() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-surface">
       <TaskDetailHeader
         activeTab={activeTab}
         deliveriesLabel={taskLists.deliveries.length ? t('tasks.tabs.deliveries1') : t('tasks.tabs.deliveries0')}
@@ -204,7 +204,7 @@ export default function TasksPage() {
       </ScrollView>
       {!bondPaid && (
         <View className="absolute inset-0 items-center justify-center bg-black/50 px-8">
-          <View className="gap-4 rounded-2xl bg-white p-8 shadow-xl">
+          <View className="gap-4 rounded-2xl bg-surface p-8 shadow-xl">
             <Text className="text-center text-xl font-bold text-on-surface">{t('tasks.deposit.title')}</Text>
             <Text className="text-center text-sm text-on-surface-variant">{t('tasks.deposit.message')}</Text>
             <Button className="bg-primary-container" onPress={() => router.push('/settings')}>

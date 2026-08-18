@@ -7,5 +7,5 @@ type CardProps = {
 };
 
 export function Card({ children, className = '' }: CardProps) {
-  return <View className={`rounded-lg bg-white p-6 shadow-sm ${className}`}>{children}</View>;
+  return <View className={`rounded-lg bg-surface p-6 shadow-sm ${className}`}>{children}</View>;
 }

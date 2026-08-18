@@ -46,7 +46,7 @@ function EvidenceUploadNative({ title, actionLabel, capturedLabel, required = fa
         {required ? <Text className="font-bold text-primary">*</Text> : null}
       </View>
       <Pressable
-        className={`aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed overflow-hidden ${captured ? 'border-tertiary-container bg-tier-gold-soft/20' : 'border-outline bg-white'}`}
+        className={`aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed overflow-hidden ${captured ? 'border-tertiary-container bg-tier-gold-soft/20' : 'border-outline bg-surface'}`}
         onPress={() => void takePhoto()}
       >
         {captured && photoUri ? (
@@ -93,7 +93,7 @@ function EvidenceUploadWeb({ title, actionLabel, capturedLabel, required = false
         onChange={handleFile}
       />
       <Pressable
-        className={`aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed overflow-hidden ${captured ? 'border-tertiary-container bg-tier-gold-soft/20' : 'border-outline bg-white'}`}
+        className={`aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed overflow-hidden ${captured ? 'border-tertiary-container bg-tier-gold-soft/20' : 'border-outline bg-surface'}`}
         onPress={() => inputRef.current?.click()}
       >
         {captured && photoUri ? (

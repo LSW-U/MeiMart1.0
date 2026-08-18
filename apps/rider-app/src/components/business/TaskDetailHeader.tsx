@@ -22,8 +22,8 @@ type TaskDetailHeaderProps = {
 };
 
 const dotColor: Record<DutyStatus, string> = {
-  onDuty: 'bg-green-500',
-  busy: 'bg-orange-500',
+  onDuty: 'bg-success-deep',
+  busy: 'bg-status-transferred-text',
   offDuty: 'bg-dot-off',
 };
 

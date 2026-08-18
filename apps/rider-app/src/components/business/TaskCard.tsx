@@ -34,9 +34,9 @@ type TaskCardProps = {
 
 export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags = [], items, note, actionLabel, actionPending = false, actionDisabled = false, chatLabel = 'Chat', contactLabel = 'Contact', variant = 'new', onAction, onChat, onContact }: TaskCardProps) {
   return (
-    <View className="relative gap-3 rounded-lg border border-surface-variant bg-white p-4 shadow-sm">
+    <View className="relative gap-3 rounded-lg border border-surface-variant bg-surface p-4 shadow-sm">
       {badge ? (
-        <View className="absolute -left-2 -top-2 z-10 rounded-sm border border-primary bg-white px-2 py-1 shadow-sm">
+        <View className="absolute -left-2 -top-2 z-10 rounded-sm border border-primary bg-surface px-2 py-1 shadow-sm">
           <Text className="text-[10px] font-bold text-primary">{badge}</Text>
         </View>
       ) : null}

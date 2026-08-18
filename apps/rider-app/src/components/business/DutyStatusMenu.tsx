@@ -21,8 +21,8 @@ type DutyStatusMenuProps = {
 };
 
 const dotColor: Record<DutyStatus, string> = {
-  onDuty: 'bg-green-500',
-  busy: 'bg-orange-500',
+  onDuty: 'bg-success-deep',
+  busy: 'bg-status-transferred-text',
   offDuty: 'bg-dot-off',
 };
 
@@ -30,7 +30,7 @@ export function DutyStatusMenu({ visible, current, title, cancelLabel, options, 
   return (
     <NativeModal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
       <Pressable className="flex-1 items-stretch justify-start bg-black/40 px-4 pt-24" onPress={onClose}>
-        <Pressable className="self-center w-full max-w-md rounded-3xl bg-white p-3 shadow-lg" onPress={() => null}>
+        <Pressable className="self-center w-full max-w-md rounded-3xl bg-surface p-3 shadow-lg" onPress={() => null}>
           <Text className="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wider text-outline">{title}</Text>
           {options.map((option) => {
             const active = option.value === current;

@@ -156,7 +156,7 @@ export default function SignConfirmPage() {
         </View>
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 gap-2 bg-white px-5 py-4 shadow-lg">
+      <View className="absolute bottom-0 left-0 right-0 gap-2 bg-surface px-5 py-4 shadow-lg">
         <Button
           className={canSubmit && !codAmountInvalid ? 'bg-primary-container' : 'bg-neutral-muted'}
           disabled={submitDisabled}

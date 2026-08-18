@@ -123,7 +123,7 @@ export default function RegisterPage() {
                 leftSlot={<Text className="self-stretch border-r border-outline-variant bg-surface-container-low px-4 py-3 text-base text-on-surface-variant">+670</Text>}
                 placeholder={t('auth.register.phonePlaceholder')}
                 rightSlot={
-                  <Pressable accessibilityRole="button" accessibilityLabel={sendCodeLabel} className={`items-center justify-center rounded-lg px-4 ${codeState === 'sent' ? 'bg-green-700' : 'bg-primary'}`} onPress={sendCode}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={sendCodeLabel} className={`items-center justify-center rounded-lg px-4 ${codeState === 'sent' ? 'bg-success-deep' : 'bg-primary'}`} onPress={sendCode}>
                     <Text className="text-[11px] font-bold text-white">{sendCodeLabel}</Text>
                   </Pressable>
                 }
@@ -189,8 +189,8 @@ export default function RegisterPage() {
 
           {/* 错误提示 */}
           {error && (
-            <View className="rounded-xl bg-red-100 p-4">
-              <Text className="text-sm text-red-700">{error}</Text>
+            <View className="rounded-xl bg-status-danger-bg p-4">
+              <Text className="text-sm text-status-danger-text">{error}</Text>
             </View>
           )}
 
