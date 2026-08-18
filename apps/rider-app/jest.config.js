@@ -53,6 +53,10 @@ module.exports = {
       // 换成 src/test/react-native.mock.js 的最小 host 壳（组件测试只需可渲染可透传 props）
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
+        // 审查修复 P3-1：rider-app 本地 react@19.2.8 而 react-dom/@testing-library 从
+        // root 解析（react-dom@19.2.7）→ 双 React dispatcher，Toast（首个值 import
+        // useReducer/useEffect 的被测组件）报 Invalid hook call。钉到 root 副本统一。
+        '^react$': '<rootDir>/../../node_modules/react',
         '^react-native$': '<rootDir>/src/test/react-native.mock.js',
         // AppIcon 经 @expo/vector-icons 拉真图标集（ESM），组件测试只需要可渲染 host
         '^@expo/vector-icons$': '<rootDir>/src/test/expo-vector-icons.mock.js',

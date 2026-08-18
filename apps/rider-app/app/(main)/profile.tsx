@@ -53,7 +53,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-surface" contentContainerClassName="pb-12">
+    <ScrollView className="flex-1 bg-background" contentContainerClassName="pb-12">
       <View className="sticky top-0 z-50 flex-row items-center justify-between bg-surface/90 px-5 py-3">
         <View className="flex-row items-center gap-3">
           <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-container" onPress={() => router.replace('/(main)/tasks')}>

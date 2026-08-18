@@ -6,10 +6,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // 审查修复 P2-3：真值以 B1/B7 原型 CSS 变量与 colors.ts 为准——
+        // --bg:#fff8f7（页面背景暖白）/ --surface:#ffffff（卡片纯白）。
+        // 原 surface:'#fff8f7' 是历史笔误（把 background 值写进了 surface）。
+        background: '#fff8f7',
         primary: '#720003',
         'primary-container': '#961813',
-        surface: '#fff8f7',
-        'surface-warm': '#fff8f7',
+        surface: '#ffffff',
         'surface-container': '#ffe9e6',
         'surface-container-low': '#fff0ee',
         'surface-container-high': '#fde2df',

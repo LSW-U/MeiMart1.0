@@ -96,7 +96,7 @@ export default function SignConfirmPage() {
   };
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <StepPageHeader backLabel={t('common.back')} title={t('sign.title')} />
 
       <ScrollView className="flex-1" contentContainerClassName="gap-6 px-5 pb-40 pt-4">

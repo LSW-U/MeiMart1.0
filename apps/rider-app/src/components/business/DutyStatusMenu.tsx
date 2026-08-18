@@ -20,6 +20,8 @@ type DutyStatusMenuProps = {
   onClose: () => void;
 };
 
+// 审查 P2-1：busy 点复用 transferred-text 仅取橙色值（#b06000），非"已转单"语义；
+// 与 TaskDetailHeader 同款，专用 token 待 Q6 第二步
 const dotColor: Record<DutyStatus, string> = {
   onDuty: 'bg-success-deep',
   busy: 'bg-status-transferred-text',

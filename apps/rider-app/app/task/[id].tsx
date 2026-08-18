@@ -73,7 +73,7 @@ export default function TaskDetailPage() {
       : t('tasks.refresh');
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <TaskDetailHeader
         activeTab="pickups"
         deliveriesLabel={t('tasks.tabs.deliveries0')}

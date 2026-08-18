@@ -30,7 +30,7 @@ export default function EarningsPage() {
     : transactions;
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <View className="relative flex-row items-center justify-center px-5 pb-4 pt-6">
         <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="absolute left-5 h-10 w-10 items-center justify-center rounded-full active:bg-surface-variant" onPress={() => void goBack()}>
           <AppIcon className="text-2xl text-on-surface" name="chevronLeft" size={28} />

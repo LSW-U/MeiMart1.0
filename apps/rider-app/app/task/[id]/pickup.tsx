@@ -54,7 +54,7 @@ export default function PickupConfirmPage() {
   };
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <StepPageHeader
         actionLabel={t('help.title')}
         backLabel={t('common.back')}

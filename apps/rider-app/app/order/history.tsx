@@ -49,7 +49,7 @@ export default function OrderHistoryPage() {
   }, [orders, filter]);
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <View className="flex-row items-center justify-between border-b border-surface-variant bg-surface px-4 py-4">
         <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="rounded-full p-2" onPress={() => void goBack()}>
           <AppIcon className="text-2xl text-on-surface" name="chevronLeft" size={28} />

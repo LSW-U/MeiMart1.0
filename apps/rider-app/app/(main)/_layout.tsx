@@ -23,7 +23,7 @@ export default function MainLayout() {
   // Why: 等 hydrate 完成，避免未登录用户看到任务页内容
   if (!hydrated) {
     return (
-      <View className="flex-1 items-center justify-center bg-surface">
+      <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );

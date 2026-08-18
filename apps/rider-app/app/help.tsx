@@ -16,7 +16,7 @@ export default function HelpPage() {
 
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <SimplePageHeader backLabel={t('common.back')} title={t('help.title')} />
       <ScrollView contentContainerClassName="gap-4 px-5 py-6 pb-12">
         <View className="rounded-3xl bg-primary p-6 shadow-sm">

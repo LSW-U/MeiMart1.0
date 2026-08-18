@@ -75,7 +75,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <SimplePageHeader
         action={
           unreadCount > 0 ? (

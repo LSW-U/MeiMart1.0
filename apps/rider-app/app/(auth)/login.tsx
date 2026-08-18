@@ -107,7 +107,7 @@ export default function LoginPage() {
   const sendCodeLabel = countdown > 0 ? t('auth.login.resend', { seconds: countdown }) : t('auth.login.sendCode');
 
   return (
-    <ScrollView className="flex-1 bg-surface" contentContainerClassName="min-h-full items-center justify-center px-5 py-12">
+    <ScrollView className="flex-1 bg-background" contentContainerClassName="min-h-full items-center justify-center px-5 py-12">
       <View className="mb-6 flex-row items-center gap-1">
         <Text className="text-3xl text-primary">▣</Text>
         <Text className="text-xl font-bold text-primary">{t('app.name')}</Text>

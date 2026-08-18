@@ -29,6 +29,22 @@ function makeHost(name) {
   };
 }
 
+// Animated.Value/timing 最小壳：Toast 等动画组件在 jsdom 里只需"启动即完成"
+// （timing 回调同步触发），让 setTimeout 主导时序，测试不被动画卡住
+function makeAnimatedValue(initial) {
+  return { _value: initial };
+}
+const Animated = {
+  View: makeHost('Animated.View'),
+  Text: makeHost('Animated.Text'),
+  timing: (value, _config) => ({
+    start: (cb) => {
+      if (typeof cb === 'function') cb({ finished: true });
+    },
+  }),
+  Value: makeAnimatedValue,
+};
+
 module.exports = {
   Pressable: makeHost('Pressable'),
   Text: makeHost('Text'),
@@ -38,4 +54,5 @@ module.exports = {
   TextInput: makeHost('TextInput'),
   Switch: makeHost('Switch'),
   Platform: { OS: 'web', select: (obj) => obj.web ?? obj.default },
+  Animated,
 };

@@ -68,7 +68,7 @@ export default function ProfileEditPage() {
   };
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <SimplePageHeader backLabel={t('common.back')} fallbackHref="/(main)/profile" title={t('auth.register.title')} />
       <ScrollView contentContainerClassName="items-center px-5 py-8 pb-10">
         <View className="w-full max-w-lg gap-12">

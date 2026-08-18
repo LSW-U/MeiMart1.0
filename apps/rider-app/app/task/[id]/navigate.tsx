@@ -71,7 +71,7 @@ export default function TaskNavigatePage() {
       : t('tasks.goSignoff');
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       {/* B4: 统一页头（背景 bg-surface-container → bg-surface）；假 STATUS 点不迁入（T4 处理） */}
       <StepPageHeader backLabel={t('common.back')} title={t('flow.orderDetails')} />
 

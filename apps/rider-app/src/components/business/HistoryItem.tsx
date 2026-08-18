@@ -56,6 +56,7 @@ export function OrderHistoryCard({ status, statusTone, orderNo, time, pickupName
       <View className="relative mb-4 gap-4 pl-6">
         <View className="absolute bottom-2 left-[9px] top-2 w-px border-l-2 border-dashed border-outline-variant" />
         <View className="relative">
+          {/* 审查 P2-1：pickup 点复用品牌色/dropoff 点复用 transferred 橙均为取值非语义；专用点位 token 待 Q6 第二步 */}
           <View className={`absolute left-[-24px] top-1.5 h-3 w-3 rounded-full border-2 border-surface bg-primary ${muted ? 'opacity-60' : ''}`} />
           <Text className={`mb-0.5 font-bold leading-tight text-on-surface ${muted ? 'opacity-60' : ''}`}>{pickupName}</Text>
           <Text className={`text-sm leading-tight text-on-surface-variant ${muted ? 'opacity-60' : ''}`}>{pickupAddress}</Text>

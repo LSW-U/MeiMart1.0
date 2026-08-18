@@ -75,7 +75,7 @@ export default function SettingsPage() {
   const languageDescription = `${languageLabels[locale] ?? languageLabels[languages[0]]} ${t('settings.language.activeSuffix')} ${t('settings.language.cycleHint')}`;
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <SimplePageHeader backLabel={t('common.back')} title={t('settings.title')} />
       <ScrollView contentContainerClassName="gap-5 px-5 py-6 pb-12">
         <View className="rounded-3xl bg-primary p-5 shadow-sm">

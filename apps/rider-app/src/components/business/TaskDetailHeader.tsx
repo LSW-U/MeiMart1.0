@@ -21,6 +21,8 @@ type TaskDetailHeaderProps = {
   onTabChange?: (tab: TaskTab) => void;
 };
 
+// 审查 P2-1：busy 点复用 transferred-text 仅取橙色值（#b06000），非"已转单"语义；
+// 专用 token（如 bg-busy）待 Q6 第二步与 pickup/dropoff 点一起评估
 const dotColor: Record<DutyStatus, string> = {
   onDuty: 'bg-success-deep',
   busy: 'bg-status-transferred-text',

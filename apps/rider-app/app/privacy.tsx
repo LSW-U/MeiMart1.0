@@ -10,7 +10,7 @@ export default function PrivacyPage() {
 
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <SimplePageHeader backLabel={t('common.back')} title={t('legal.privacy.title')} />
       <ScrollView contentContainerClassName="gap-4 px-5 py-6 pb-12">
         <View className="rounded-3xl bg-primary p-6 shadow-sm">
