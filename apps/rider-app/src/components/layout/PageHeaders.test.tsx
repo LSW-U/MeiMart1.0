@@ -40,6 +40,13 @@ describe('StepPageHeader', () => {
     expect(attr(pressables[1], 'accessibilityLabel')).toBe('帮助中心');
   });
 
+  it('actionIcon 可定制（默认 help，非帮助类 action 不撞 help 语义）', () => {
+    const { container } = render(<StepPageHeader actionIcon="sms" actionLabel="联系商家" backLabel="返回" title="T" onAction={() => {}} />);
+    const names = Array.from(container.querySelectorAll('[data-testid]')).map((el) => el.getAttribute('data-testid'));
+    expect(names).toContain('icon-cellphone-message');
+    expect(names).not.toContain('icon-help-circle-outline');
+  });
+
   it('标题 numberOfLines=1', () => {
     const { container } = render(<StepPageHeader backLabel="返回" title="订单详情" />);
     const title = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).find((el) => el.textContent === '订单详情');

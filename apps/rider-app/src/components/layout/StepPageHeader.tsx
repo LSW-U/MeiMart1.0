@@ -1,7 +1,7 @@
 import { type Href } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
-import { AppIcon } from '../ui/AppIcon';
+import { AppIcon, type AppIconName } from '../ui/AppIcon';
 import { useGoBack } from '../../hooks/useGoBack';
 
 /**
@@ -18,10 +18,12 @@ type StepPageHeaderProps = {
   backLabel: string;
   fallbackHref?: Href;
   actionLabel?: string;
+  /** B4 审查 D1: action 图标可定制（默认 help），非帮助类 action 不撞 help 语义 */
+  actionIcon?: AppIconName;
   onAction?: () => void;
 };
 
-export function StepPageHeader({ title, backLabel, fallbackHref, actionLabel, onAction }: StepPageHeaderProps) {
+export function StepPageHeader({ title, backLabel, fallbackHref, actionLabel, actionIcon = 'help', onAction }: StepPageHeaderProps) {
   const goBack = useGoBack(fallbackHref);
 
   return (
@@ -43,7 +45,7 @@ export function StepPageHeader({ title, backLabel, fallbackHref, actionLabel, on
           className="h-11 w-11 items-center justify-center rounded-full active:bg-surface-container"
           onPress={onAction}
         >
-          <AppIcon className="text-2xl text-primary" name="help" size={24} />
+          <AppIcon className="text-2xl text-primary" name={actionIcon} size={24} />
         </Pressable>
       ) : (
         <View className="h-11 w-11" />
