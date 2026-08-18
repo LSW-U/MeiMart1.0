@@ -690,6 +690,8 @@
     "loadError": "Failed to load favorites",
     "empty": "No favorites yet",
     "emptyDesc": "Browse products and save what you love",
+    "loginTitle": "Log in to view favorites",
+    "loginDesc": "Log in to see products you saved",
     "removeTitle": "Remove Favorites",
     "removeConfirm": "Remove {{count}} item(s) from favorites?",
     "selectedTitle": "Selected {{count}}",

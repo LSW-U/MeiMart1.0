@@ -26,6 +26,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useFavorites, useRemoveFavorites } from '@/services/queries/useFavorites';
 import { useAddToCart } from '@/services/queries/useCart';
+import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
 import { getApiErrorMessage } from '@/utils/error';
 import type { Product } from '@/types';
@@ -39,6 +40,7 @@ export default function FavoritesPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { data: favorites, isLoading, isError, refetch } = useFavorites();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const removeFavorites = useRemoveFavorites();
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -138,7 +140,7 @@ export default function FavoritesPage() {
             msg === 'SOLD_OUT'
               ? t('product.soldOut', { defaultValue: 'Sold Out' })
               : msg === 'STOCK_EXCEEDED'
-                ? t('cart.stockExceeded', { defaultValue: 'Not enough stock' })
+                ? t('product.stockExceeded')
                 : getApiErrorMessage(err, t('product.addToCartFailed', { defaultValue: 'Failed to add to cart' }));
           toast.error(friendly);
         },
@@ -304,13 +306,25 @@ export default function FavoritesPage() {
       ) : isError ? (
         <ErrorState message={t('favorites.loadError')} onRetry={() => refetch()} />
       ) : !favorites || favorites.length === 0 ? (
-        <EmptyState
-          title={t('favorites.empty')}
-          description={t('favorites.emptyDesc')}
-          icon="favorite-border"
-          actionLabel={t('favorites.goBrowse', { defaultValue: 'Browse Products' })}
-          onAction={() => router.push('/(main)/home')}
-        />
+        // P19 D6：未登录 → 登录引导（useFavorites enabled=false 落空态但不该引导去逛逛）；
+        //        已登录无数据 → 去逛逛
+        !isAuthenticated ? (
+          <EmptyState
+            title={t('favorites.loginTitle')}
+            description={t('favorites.loginDesc')}
+            icon="favorite-border"
+            actionLabel={t('profile.loginRegister')}
+            onAction={() => router.replace('/(auth)/login')}
+          />
+        ) : (
+          <EmptyState
+            title={t('favorites.empty')}
+            description={t('favorites.emptyDesc')}
+            icon="favorite-border"
+            actionLabel={t('favorites.goBrowse', { defaultValue: 'Browse Products' })}
+            onAction={() => router.push('/(main)/home')}
+          />
+        )
       ) : (
         <FlatList
           data={favorites}

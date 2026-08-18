@@ -648,6 +648,8 @@
     "loadError": "[TET] Failed to load favorites",
     "empty": "[TET] No favorites yet",
     "emptyDesc": "[TET] Browse products and save what you love",
+    "loginTitle": "[TET] Log in to view favorites",
+    "loginDesc": "[TET] Log in to see products you saved",
     "removeTitle": "[TET] Remove Favorites",
     "removeConfirm": "[TET] Remove {{count}} item(s) from favorites?",
     "selectedTitle": "[TET] Selected {{count}}",
