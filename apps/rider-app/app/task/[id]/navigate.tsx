@@ -8,6 +8,8 @@ import { showToast } from '../../../src/components/feedback/Toast';
 import { MapView } from '../../../src/components/map/MapView';
 import { NavigationLauncher } from '../../../src/components/map/NavigationLauncher';
 import { Button } from '../../../src/components/ui';
+import { AppIcon } from '../../../src/components/ui/AppIcon';
+import { colors } from '../../../src/theme/colors';
 import { useNetwork } from '../../../src/hooks/useNetwork';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { ApiError } from '../../../src/services/api';
@@ -101,7 +103,7 @@ export default function TaskNavigatePage() {
                   <View className="absolute bottom-8 left-[15px] top-8 w-0.5 border-l border-dotted border-outline bg-outline-variant" />
                   <View className="z-10 flex-row gap-4">
                     <View className="h-8 w-8 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high">
-                      <Text className="font-bold text-primary">P</Text>
+                      <AppIcon className="text-primary" name="pickup" size={18} />
                     </View>
                     <View className="flex-1">
                       <Text className="font-bold leading-tight text-on-surface">{task.pickup.title}</Text>
@@ -112,7 +114,7 @@ export default function TaskNavigatePage() {
                   </View>
                   <View className="z-10 flex-row gap-4">
                     <View className="h-8 w-8 items-center justify-center rounded-full border border-tertiary bg-tertiary-container">
-                      <Text className="font-bold text-white">D</Text>
+                      <AppIcon color={colors.surface} name="dropoff" size={18} />
                     </View>
                     <View className="flex-1">
                       <Text className="font-bold leading-tight text-on-surface">{task.dropoff.title}</Text>

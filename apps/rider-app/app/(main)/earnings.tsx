@@ -3,7 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EarningCard } from '../../src/components/business/EarningCard';
 import { HistoryItem } from '../../src/components/business/HistoryItem';
-import { Button } from '../../src/components/ui';
+import { AppIcon, Button } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useEarningSummary, useEarningTransactions } from '../../src/services/queries/useEarnings';
@@ -33,7 +33,7 @@ export default function EarningsPage() {
     <View className="flex-1 bg-surface">
       <View className="relative flex-row items-center justify-center px-5 pb-4 pt-6">
         <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="absolute left-5 h-10 w-10 items-center justify-center rounded-full active:bg-surface-variant" onPress={() => void goBack()}>
-          <Text className="text-2xl text-on-surface">‹</Text>
+          <AppIcon className="text-2xl text-on-surface" name="chevronLeft" size={28} />
         </Pressable>
         <Text className="text-2xl font-bold text-on-surface">{t('earnings.title')}</Text>
       </View>

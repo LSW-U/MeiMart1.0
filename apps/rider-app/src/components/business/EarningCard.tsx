@@ -1,5 +1,7 @@
 import { Text, View } from 'react-native';
 
+import { AppIcon } from '../ui';
+
 type EarningCardProps = {
   balanceLabel: string;
   balance: string;
@@ -14,7 +16,8 @@ export function EarningCard({ balanceLabel, balance, unsettledLabel, depositLabe
     <View className="gap-2 rounded-lg bg-surface-container-low p-6 shadow-sm">
       <View className="flex-row items-center justify-between">
         <Text className="text-base text-primary-container">{balanceLabel}</Text>
-        <Text className="text-primary-container">V</Text>
+        {/* B7: V 字符 → 已结算/可信标记（§7.1 A） */}
+        <AppIcon className="text-primary-container" name="verified" size={18} />
       </View>
       <Text className="py-2 text-[40px] font-bold leading-none tracking-tight text-primary-container">{balance}</Text>
       <Text className="text-sm text-primary-container">{unsettledLabel}</Text>

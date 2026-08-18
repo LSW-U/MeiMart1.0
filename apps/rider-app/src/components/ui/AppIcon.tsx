@@ -4,7 +4,7 @@ import type { StyleProp, TextStyle } from 'react-native';
 
 import { colors } from '../../theme/colors';
 
-export type AppIconName = 'menu' | 'notification' | 'settings' | 'refresh' | 'orders' | 'wallet' | 'upload' | 'camera' | 'profile' | 'document' | 'security' | 'bank' | 'rider' | 'help' | 'logout' | 'language' | 'shield' | 'bell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'check' | 'lock' | 'eye' | 'eyeOff' | 'sms';
+export type AppIconName = 'menu' | 'notification' | 'settings' | 'refresh' | 'orders' | 'wallet' | 'upload' | 'camera' | 'profile' | 'document' | 'security' | 'bank' | 'rider' | 'help' | 'logout' | 'language' | 'shield' | 'bell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'check' | 'lock' | 'eye' | 'eyeOff' | 'sms' | 'info' | 'pickup' | 'dropoff' | 'arrowUp' | 'arrowDown' | 'verified';
 
 type MaterialIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -44,6 +44,13 @@ const icons: Record<AppIconName, MaterialIconName> = {
   eye: 'eye-outline',
   eyeOff: 'eye-off-outline',
   sms: 'cellphone-message',
+  // B7: 字符图标占位清零新增（sign COD 提示 / navigate P·D 标记 / HistoryItem 收支 / EarningCard 已结算）
+  info: 'information-outline',
+  pickup: 'map-marker-radius',
+  dropoff: 'map-marker-check-outline',
+  arrowUp: 'arrow-up-bold',
+  arrowDown: 'arrow-down-bold',
+  verified: 'check-circle-outline',
 };
 
 // 适配层：调用方 className 用 text-primary 等 token，映射到 theme colors（颜色迁移后无遗留 #hex）

@@ -2,6 +2,8 @@ import type { TranslationKey } from '../../i18n/useTranslation';
 
 import { Pressable, Text, View } from 'react-native';
 
+import { AppIcon } from './AppIcon';
+
 type UploadTileProps = {
   title: string;
   subtitle?: string;
@@ -29,7 +31,14 @@ export function UploadTile({ title, subtitle, icon, selected, compact, onPress, 
           {subtitle ? <Text className={`text-sm font-semibold ${selected ? 'text-primary' : 'text-on-surface'}`}>{subtitle}</Text> : null}
         </View>
       </View>
-      {!compact ? <Text className={`text-xl ${selected ? 'text-primary' : 'text-outline'}`}>{selected ? '✓' : t('auth.register.cam')}</Text> : null}
+      {/* B7: 选中态 ✓ → AppIcon；未选中态是 i18n 文案（拍照/CAM）保留 Text */}
+      {!compact ? (
+        selected ? (
+          <AppIcon className="text-xl text-primary" name="check" size={22} />
+        ) : (
+          <Text className="text-xl text-outline">{t('auth.register.cam')}</Text>
+        )
+      ) : null}
     </Pressable>
   );
 }

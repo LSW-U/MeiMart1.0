@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { WithdrawForm } from '../../src/components/business/WithdrawForm';
+import { AppIcon } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useEarningSummary, useCreateWithdrawal } from '../../src/services/queries/useEarnings';
@@ -56,7 +57,7 @@ export default function WithdrawalPage() {
     <View className="flex-1 bg-surface">
       <View className="flex-row items-center border-b border-surface-variant bg-surface px-5 py-4">
         <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-container" onPress={() => void goBack()}>
-          <Text className="text-2xl text-on-surface">‹</Text>
+          <AppIcon className="text-2xl text-on-surface" name="chevronLeft" size={28} />
         </Pressable>
         <Text className="ml-2 text-xl font-semibold text-on-surface">{t('withdraw.title')}</Text>
       </View>

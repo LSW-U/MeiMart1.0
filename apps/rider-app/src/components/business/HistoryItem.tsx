@@ -1,5 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 
+import { AppIcon } from '../ui';
+
 type HistoryItemProps = {
   title: string;
   time: string;
@@ -11,7 +13,8 @@ export function HistoryItem({ title, time, amount, positive = false }: HistoryIt
   return (
     <View className="flex-row items-center gap-4 border-b border-surface-container-high py-2">
       <View className="h-10 w-10 items-center justify-center rounded-full bg-surface-container-high">
-        <Text className="text-on-surface-variant">{positive ? 'IN' : 'OUT'}</Text>
+        {/* B7: IN/OUT 英文缩写 → 方向箭头（positive 与金额收入色对齐） */}
+        <AppIcon className={positive ? 'text-primary' : 'text-on-surface-variant'} name={positive ? 'arrowUp' : 'arrowDown'} size={20} />
       </View>
       <View className="flex-1">
         <Text className="font-medium text-on-surface">{title}</Text>

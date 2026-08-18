@@ -57,7 +57,7 @@ export default function ProfilePage() {
       <View className="sticky top-0 z-50 flex-row items-center justify-between bg-surface/90 px-5 py-3">
         <View className="flex-row items-center gap-3">
           <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-container" onPress={() => router.replace('/(main)/tasks')}>
-            <Text className="text-2xl text-primary">‹</Text>
+            <AppIcon className="text-2xl text-primary" name="chevronLeft" size={28} />
           </Pressable>
           <Text className="text-xl font-bold text-on-surface">{t('profile.title')}</Text>
         </View>

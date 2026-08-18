@@ -7,6 +7,8 @@ import { StepPageHeader } from '../../../src/components/layout/StepPageHeader';
 import { showToast } from '../../../src/components/feedback/Toast';
 import { ApiError } from '../../../src/services/api';
 import { Button, Input } from '../../../src/components/ui';
+import { AppIcon } from '../../../src/components/ui/AppIcon';
+import { colors } from '../../../src/theme/colors';
 import { useNetwork } from '../../../src/hooks/useNetwork';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { useConfirmDelivery } from '../../../src/services/queries/useDelivery';
@@ -99,7 +101,7 @@ export default function SignConfirmPage() {
 
       <ScrollView className="flex-1" contentContainerClassName="gap-6 px-5 pb-40 pt-4">
         <View className="flex-row items-start gap-4 rounded-lg bg-primary-container p-4 shadow-sm">
-          <Text className="text-lg font-bold text-white">i</Text>
+          <AppIcon color={colors.surface} name="info" size={20} />
           <Text className="flex-1 font-semibold leading-5 text-white">{t('sign.alert')}</Text>
         </View>
 

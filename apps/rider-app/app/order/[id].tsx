@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { useGoBack } from '../../src/hooks/useGoBack';
+import { AppIcon } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useOrder } from '../../src/services/queries/useOrder';
 import { colors } from '../../src/theme/colors';
@@ -103,7 +104,7 @@ export default function OrderDetailPage() {
     <View className="flex-1 bg-surface">
       <View className="flex-row items-center border-b border-surface-variant bg-surface px-5 py-4">
         <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-container" onPress={() => void goBack()}>
-          <Text className="text-2xl text-on-surface">‹</Text>
+          <AppIcon className="text-2xl text-on-surface" name="chevronLeft" size={28} />
         </Pressable>
         <Text className="ml-2 text-xl font-semibold text-on-surface">{t('order.detail.title')}</Text>
       </View>

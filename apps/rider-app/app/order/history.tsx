@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { OrderHistoryCard } from '../../src/components/business/HistoryItem';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { useGoBack } from '../../src/hooks/useGoBack';
+import { AppIcon } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useOrderHistory, useOrderStatusCounts, useOrderTodayStats } from '../../src/services/queries/useOrder';
 import type { OrderHistoryStatus } from '../../src/types/order';
@@ -51,7 +52,7 @@ export default function OrderHistoryPage() {
     <View className="flex-1 bg-surface">
       <View className="flex-row items-center justify-between border-b border-surface-variant bg-surface px-4 py-4">
         <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="rounded-full p-2" onPress={() => void goBack()}>
-          <Text className="text-2xl text-on-surface">‹</Text>
+          <AppIcon className="text-2xl text-on-surface" name="chevronLeft" size={28} />
         </Pressable>
         <Text className="flex-1 pr-8 text-center text-2xl font-bold tracking-tight text-on-surface">{t('history.title')}</Text>
       </View>
