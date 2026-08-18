@@ -655,6 +655,7 @@
     "longPressHint": "[TET] Long-press to manage",
     "goBrowse": "[TET] Browse Products",
     "removed": "[TET] Removed from favorites",
+    "removeFailed": "[TET] Failed to remove, please retry",
     "a11y": {
       "cancelSelect": "[TET] Cancel select",
       "manage": "[TET] Manage favorites"

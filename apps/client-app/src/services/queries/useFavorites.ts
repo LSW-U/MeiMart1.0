@@ -39,3 +39,29 @@ export function useToggleFavorite() {
     onSettled: () => qc.invalidateQueries({ queryKey: FAVORITES_QUERY_KEY }),
   });
 }
+
+// Why: P19 D1 批量删除 —— 后端无 batch-remove 端点，第一期并行 toggle（方案 D1）。
+//      乐观整体移除（一次 setQueryData，不闪烁）；Promise.all 语义：任一失败即整体失败，
+//      onError 回滚 previous，页面保留选择集合可重试（不做静默部分成功）。
+export function useRemoveFavorites() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (productIds: string[]) => {
+      await Promise.all(productIds.map((id) => favoritesApi.toggle(id)));
+    },
+    onMutate: async (productIds) => {
+      await qc.cancelQueries({ queryKey: FAVORITES_QUERY_KEY });
+      const previous = qc.getQueryData<Product[]>(FAVORITES_QUERY_KEY);
+      qc.setQueryData<Product[]>(FAVORITES_QUERY_KEY, (old) => {
+        if (!old) return old;
+        const remove = new Set(productIds);
+        return old.filter((p) => !remove.has(p.id));
+      });
+      return { previous };
+    },
+    onError: (_err, _productIds, ctx) => {
+      if (ctx?.previous) qc.setQueryData(FAVORITES_QUERY_KEY, ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: FAVORITES_QUERY_KEY }),
+  });
+}

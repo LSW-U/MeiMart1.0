@@ -697,6 +697,7 @@
     "longPressHint": "长按管理",
     "goBrowse": "去逛逛",
     "removed": "已移除收藏",
+    "removeFailed": "移除失败，请重试",
     "a11y": {
       "cancelSelect": "取消选择",
       "manage": "管理收藏"

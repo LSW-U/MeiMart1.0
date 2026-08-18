@@ -697,6 +697,7 @@
     "longPressHint": "Long-press to manage",
     "goBrowse": "Browse Products",
     "removed": "Removed from favorites",
+    "removeFailed": "Failed to remove, please retry",
     "a11y": {
       "cancelSelect": "Cancel select",
       "manage": "Manage favorites"

@@ -23,7 +23,7 @@ import { ProductCard } from '@/components/business/ProductCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
-import { useFavorites } from '@/services/queries/useFavorites';
+import { useFavorites, useRemoveFavorites } from '@/services/queries/useFavorites';
 import { toast } from '@/store/toastStore';
 import type { Product } from '@/types';
 
@@ -32,6 +32,7 @@ export default function FavoritesPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { data: favorites, isLoading, isError, refetch } = useFavorites();
+  const removeFavorites = useRemoveFavorites();
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -49,29 +50,41 @@ export default function FavoritesPage() {
     setSelected(new Set());
   };
 
+  // Why: 真实批量删除（P19 D1）—— 并行 toggle + 乐观移除；成功 toast + 退出选择，
+  //      失败 hook onError 已回滚 cache，这里保留选择集合供重试
+  const executeRemove = () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    removeFavorites.mutate(ids, {
+      onSuccess: () => {
+        toast.success(t('favorites.removed', { defaultValue: 'Removed from favorites' }));
+        exitSelectMode();
+      },
+      onError: () => {
+        toast.error(t('favorites.removeFailed', { defaultValue: 'Failed to remove, please retry' }));
+      },
+    });
+  };
+
   const removeSelected = () => {
-    if (selected.size === 0) return;
-    // Why: Web 端 Alert 不显示，直接执行 + toast；Native 端用 Alert 确认
+    if (selected.size === 0 || removeFavorites.isPending) return;
+    // Why: Web 端 Alert 不显示，直接执行；Native 端用 Alert 确认
     if (Platform.OS === 'web') {
-      // TODO: 接入 useRemoveFavorite mutation（API 待实现）
-      exitSelectMode();
-      toast.success(t('favorites.removed', { defaultValue: 'Removed from favorites' }));
+      executeRemove();
       return;
     }
     Alert.alert(
       t('favorites.removeTitle', { defaultValue: 'Remove Favorites' }),
       t('favorites.removeConfirm', {
-        defaultValue: `Remove ${selected.size} item(s) from favorites? (mock)`,
+        count: selected.size,
+        defaultValue: `Remove ${selected.size} item(s) from favorites?`,
       }),
       [
         { text: t('common.cancel'), style: 'cancel' },
         {
           text: t('common.delete'),
           style: 'destructive',
-          onPress: () => {
-            // TODO: 接入 useRemoveFavorite mutation（API 待实现）
-            exitSelectMode();
-          },
+          onPress: executeRemove,
         },
       ],
     );
@@ -161,17 +174,23 @@ export default function FavoritesPage() {
 
           <Pressable
             onPress={removeSelected}
-            disabled={selected.size === 0}
+            disabled={selected.size === 0 || removeFavorites.isPending}
             style={({ pressed }) => [
               styles.manageBarDelete,
               {
-                backgroundColor: selected.size === 0 ? colors['outline-variant'] : colors.error,
-                opacity: selected.size === 0 ? 0.5 : 1,
+                backgroundColor:
+                  selected.size === 0 || removeFavorites.isPending
+                    ? colors['outline-variant']
+                    : colors.error,
+                opacity: selected.size === 0 || removeFavorites.isPending ? 0.5 : 1,
               },
               pressed && { transform: [{ scale: 0.98 }] },
             ]}
             accessibilityRole="button"
             accessibilityLabel={t('common.delete')}
+            accessibilityState={
+              selected.size === 0 || removeFavorites.isPending ? { disabled: true } : undefined
+            }
             testID="favorites-batch-delete"
           >
             <Icon symbol="delete" size={18} color="#ffffff" />
