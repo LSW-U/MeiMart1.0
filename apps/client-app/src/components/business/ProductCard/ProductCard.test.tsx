@@ -4,6 +4,14 @@ import { ThemeProvider } from '@/theme';
 import { ProductCard } from './ProductCard';
 import type { Product } from '@/types';
 
+// P19 D8 收口后 sold/Add to Cart 走 i18n，mock 返回 key（refunds.test 模式）
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: { name?: string }) =>
+      opts?.name !== undefined ? `${key}:${opts.name}` : key,
+  }),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );
@@ -45,7 +53,7 @@ describe('ProductCard', () => {
     const { getByText } = render(<ProductCard product={product} onAddToCart={onAddToCart} />, {
       wrapper,
     });
-    fireEvent.press(getByText('Add to Cart'));
+    fireEvent.press(getByText('product.addToCart'));
     expect(onAddToCart).toHaveBeenCalledWith(product);
   });
 
@@ -59,13 +67,13 @@ describe('ProductCard', () => {
 
   it('renders favorite button when showFavorite is true', () => {
     const { getByLabelText } = render(<ProductCard product={product} showFavorite />, { wrapper });
-    expect(getByLabelText('Add to favorites')).toBeTruthy();
+    expect(getByLabelText('product.addToFavorites')).toBeTruthy();
   });
 
   it('reflects favorite state', () => {
     const { getByLabelText } = render(<ProductCard product={product} showFavorite isFavorite />, {
       wrapper,
     });
-    expect(getByLabelText('Remove from favorites')).toBeTruthy();
+    expect(getByLabelText('product.removeFromFavorites')).toBeTruthy();
   });
 });

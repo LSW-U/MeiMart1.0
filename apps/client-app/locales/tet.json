@@ -245,7 +245,9 @@
     "removedFromFavorites": "[TET] Removed from favorites",
     "reviewAfterPurchase": "[TET] Review after purchase",
     "noProducts": "[TET] No products",
-    "noProductsDesc": "[TET] No items match this filter"
+    "noProductsDesc": "[TET] No items match this filter",
+    "addToFavorites": "[TET] Add to favorites",
+    "removeFromFavorites": "[TET] Remove from favorites"
   },
   "order": {
     "status": {

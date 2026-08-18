@@ -69,7 +69,7 @@ export function HorizontalProductCard({
             </Text>
             {typeof product.salesCount === 'number' && (
               <Text style={[styles.sales, { color: colors['on-surface-variant'] }]}>
-                · {product.salesCount} sold
+                · {product.salesCount} {t('product.sold')}
               </Text>
             )}
           </View>

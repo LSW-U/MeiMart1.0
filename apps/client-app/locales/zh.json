@@ -287,7 +287,9 @@
     "removedFromFavorites": "已取消收藏",
     "reviewAfterPurchase": "购买后评价",
     "noProducts": "暂无商品",
-    "noProductsDesc": "没有符合条件的商品"
+    "noProductsDesc": "没有符合条件的商品",
+    "addToFavorites": "加入收藏",
+    "removeFromFavorites": "取消收藏"
   },
   "order": {
     "status": {

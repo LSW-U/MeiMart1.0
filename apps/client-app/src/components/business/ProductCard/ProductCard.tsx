@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
 import { useLocalizer } from '@/i18n';
 
@@ -60,6 +61,7 @@ function ProductCardBase({
   testID,
 }: ProductCardProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const badgeColors = useBadgeColors();
   const localize = useLocalizer();
   const name = localize(product.name);
@@ -104,7 +106,7 @@ function ProductCardBase({
               </Text>
               {typeof product.salesCount === 'number' && (
                 <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-                  · {product.salesCount} sold
+                  · {product.salesCount} {t('product.sold')}
                 </Text>
               )}
             </View>
@@ -114,10 +116,14 @@ function ProductCardBase({
 
       {showFavorite && (
         <Pressable
-          style={styles.favoriteBtn}
+          style={[styles.favoriteBtn, { backgroundColor: colors['surface-container-lowest'] }]}
           onPress={onFavoritePress ? () => onFavoritePress(product) : undefined}
           accessibilityRole="button"
-          accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          accessibilityLabel={
+            isFavorite
+              ? t('product.removeFromFavorites', { defaultValue: 'Remove from favorites' })
+              : t('product.addToFavorites', { defaultValue: 'Add to favorites' })
+          }
         >
           <MaterialCommunityIcons
             name={isFavorite ? 'heart' : 'heart-outline'}
@@ -130,7 +136,7 @@ function ProductCardBase({
       {onAddToCart && (
         <View style={styles.addToCartWrap}>
           <Button
-            label="Add to Cart"
+            label={t('product.addToCart')}
             variant="outline"
             size="sm"
             onPress={() => onAddToCart(product)}
@@ -187,7 +193,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    // Why: P19 D8 收口 —— 底色从 rgba(255,255,255,0.8) 改 surface-container-lowest token（dark 跟随）
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,

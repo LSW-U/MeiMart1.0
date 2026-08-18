@@ -287,7 +287,9 @@
     "removedFromFavorites": "Removed from favorites",
     "reviewAfterPurchase": "Review after purchase",
     "noProducts": "No products",
-    "noProductsDesc": "No items match this filter"
+    "noProductsDesc": "No items match this filter",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites"
   },
   "order": {
     "status": {

@@ -157,7 +157,9 @@ export default function FavoritesPage() {
         accessibilityRole="button"
         accessibilityLabel={t('favorites.a11y.cancelSelect')}
       >
-        <Text style={styles.headerActionText}>{t('common.cancel')}</Text>
+        <Text style={[styles.headerActionText, { color: colors['on-primary'] }]}>
+          {t('common.cancel')}
+        </Text>
       </Pressable>
     </View>
   ) : (
@@ -169,7 +171,7 @@ export default function FavoritesPage() {
       accessibilityLabel={t('favorites.a11y.manage')}
       testID="favorites-manage"
     >
-      <Icon symbol="edit" size={22} color="#ffffff" />
+      <Icon symbol="edit" size={22} color={colors['on-primary']} />
     </Pressable>
   );
 
@@ -247,8 +249,8 @@ export default function FavoritesPage() {
             }
             testID="favorites-batch-delete"
           >
-            <Icon symbol="delete" size={18} color="#ffffff" />
-            <Text style={styles.manageBarDeleteText}>
+            <Icon symbol="delete" size={18} color={colors['on-primary']} />
+            <Text style={[styles.manageBarDeleteText, { color: colors['on-primary'] }]}>
               {t('common.delete')} ({selected.size})
             </Text>
           </Pressable>
@@ -291,7 +293,7 @@ export default function FavoritesPage() {
                   accessibilityState={active ? { selected: true } : undefined}
                   testID={`favorites-view-${key}`}
                 >
-                  <Icon symbol={icon} size={18} color={active ? '#ffffff' : colors['on-surface-variant']} />
+                  <Icon symbol={icon} size={18} color={active ? colors['on-primary'] : colors['on-surface-variant']} />
                 </Pressable>
               );
             })}
@@ -367,7 +369,7 @@ export default function FavoritesPage() {
                     <Icon
                       symbol={isSelected ? 'check' : 'radio_button_unchecked'}
                       size={14}
-                      color={isSelected ? '#ffffff' : colors['on-surface-variant']}
+                      color={isSelected ? colors['on-primary'] : colors['on-surface-variant']}
                     />
                   </View>
                 )}
@@ -415,7 +417,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerActionText: {
-    color: '#ffffff',
+    // Why: on-primary 运行时注入（styles 模块级拿不到 colors；header 红底白字）
     ...typography['label-caps'],
     fontWeight: '700',
     fontSize: 13,
@@ -446,7 +448,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
   },
   manageBarDeleteText: {
-    color: '#ffffff',
+    // Why: on-primary 运行时注入（error 红底白字，同上）
     ...typography['label-caps'],
     fontWeight: '700',
     fontSize: 12,
