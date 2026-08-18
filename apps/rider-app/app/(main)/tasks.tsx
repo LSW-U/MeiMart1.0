@@ -137,7 +137,7 @@ export default function TasksPage() {
       chatLabel={t('tasks.chat')}
       contactLabel={t('tasks.contact')}
       note={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : (task.note ?? undefined)}
-      orderId={task.orderId.replace('JD Delivery ', '')}
+      orderId={task.orderId}
       points={[
         { label: 'P', title: task.pickup.title, distance: t('common.fromHere', { distance: formatDistance(pickupDistance(task.distanceKm)) }) },
         { label: 'D', title: task.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
