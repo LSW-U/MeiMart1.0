@@ -111,7 +111,10 @@ export default function SettingsPage() {
         <View
           style={[
             styles.groupCard,
-            { backgroundColor: colors['surface-container-lowest'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.sm,
           ]}
         >
@@ -170,7 +173,10 @@ export default function SettingsPage() {
         <View
           style={[
             styles.groupCard,
-            { backgroundColor: colors['surface-container-lowest'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.sm,
           ]}
         >
@@ -242,7 +248,10 @@ export default function SettingsPage() {
         <View
           style={[
             styles.groupCard,
-            { backgroundColor: colors['surface-container-lowest'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.sm,
           ]}
         >
@@ -273,7 +282,10 @@ export default function SettingsPage() {
         <View
           style={[
             styles.groupCard,
-            { backgroundColor: colors['surface-container-lowest'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.sm,
           ]}
         >
@@ -307,7 +319,10 @@ export default function SettingsPage() {
         <View
           style={[
             styles.groupCard,
-            { backgroundColor: colors['surface-container-lowest'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.sm,
           ]}
         >
@@ -547,6 +562,9 @@ const styles = StyleSheet.create({
   groupCard: {
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
+    // Why: 用户反馈分组卡边界看不清（原仅 shadow 分隔）——outline-variant 描边，
+    //      与券卡/地址卡同款语言，dark mode 自动跟随
+    borderWidth: 1,
   },
   row: {
     flexDirection: 'row',
