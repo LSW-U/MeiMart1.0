@@ -93,7 +93,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <SimplePageHeader backLabel={t('common.back')} fallbackHref="/(auth)/login" title={t('auth.register.title')} />
       <ScrollView contentContainerClassName="items-center px-5 py-8 pb-10">
         <View className="w-full max-w-lg gap-12">
@@ -188,8 +188,9 @@ export default function RegisterPage() {
           </View>
 
           {/* 错误提示 */}
+          {/* 审查修复 P2-2：原 bg-status-danger-bg 是幽灵 token（tailwind config 未定义，渲染空背景）→ 复用现有 danger-soft（#ffdad6 淡红底，≈原 bg-red-100） */}
           {error && (
-            <View className="rounded-xl bg-status-danger-bg p-4">
+            <View className="rounded-xl bg-danger-soft p-4">
               <Text className="text-sm text-status-danger-text">{error}</Text>
             </View>
           )}

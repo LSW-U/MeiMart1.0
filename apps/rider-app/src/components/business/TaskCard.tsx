@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 
 import { Button } from '../ui';
+import { AppIcon } from '../ui/AppIcon';
 import { showToast } from '../feedback/Toast';
 
 type RoutePoint = {
@@ -43,7 +44,10 @@ export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags
 
       <View className="flex-row items-start justify-between pt-1">
         <View className="flex-1 pr-3">
-          <Text className="text-lg font-semibold text-tertiary-container">◷ {timeLabel}</Text>
+          <View className="flex-row items-center gap-1">
+            <AppIcon name="clock" className="text-lg text-tertiary-container" size={18} />
+            <Text className="text-lg font-semibold text-tertiary-container">{timeLabel}</Text>
+          </View>
           {orderId ? <Text className="mt-1 self-start rounded bg-surface-container px-2 py-1 text-xs font-bold text-on-surface-variant">{orderId}</Text> : null}
         </View>
         {fee ? (
@@ -81,7 +85,10 @@ export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags
           ))}
           {items ? (
             <Pressable className="rounded-lg bg-accent-amber px-2 py-1" onPress={() => showToast(items, 'info')}>
-              <Text className="text-sm text-white">{items} ˅</Text>
+              <View className="flex-row items-center gap-1">
+                <Text className="text-sm text-white">{items}</Text>
+                <AppIcon name="chevronDown" className="text-sm text-white" size={14} />
+              </View>
             </Pressable>
           ) : null}
         </View>

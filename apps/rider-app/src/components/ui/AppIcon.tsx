@@ -4,7 +4,7 @@ import type { StyleProp, TextStyle } from 'react-native';
 
 import { colors } from '../../theme/colors';
 
-export type AppIconName = 'menu' | 'notification' | 'settings' | 'refresh' | 'orders' | 'wallet' | 'upload' | 'camera' | 'profile' | 'document' | 'security' | 'bank' | 'rider' | 'help' | 'logout' | 'language' | 'shield' | 'bell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'check' | 'lock' | 'eye' | 'eyeOff' | 'sms' | 'info' | 'pickup' | 'dropoff' | 'arrowUp' | 'arrowDown' | 'verified';
+export type AppIconName = 'menu' | 'notification' | 'settings' | 'refresh' | 'orders' | 'wallet' | 'upload' | 'camera' | 'profile' | 'document' | 'security' | 'bank' | 'rider' | 'help' | 'logout' | 'language' | 'shield' | 'bell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'check' | 'lock' | 'eye' | 'eyeOff' | 'sms' | 'info' | 'pickup' | 'dropoff' | 'arrowUp' | 'arrowDown' | 'verified' | 'clock';
 
 type MaterialIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -51,6 +51,8 @@ const icons: Record<AppIconName, MaterialIconName> = {
   arrowUp: 'arrow-up-bold',
   arrowDown: 'arrow-down-bold',
   verified: 'check-circle-outline',
+  // T1 §3.5: TaskCard ◷ 时间图标（B7 执行遗漏项补齐）
+  clock: 'clock-outline',
 };
 
 // 适配层：调用方 className 用 text-primary 等 token，映射到 theme colors（颜色迁移后无遗留 #hex）

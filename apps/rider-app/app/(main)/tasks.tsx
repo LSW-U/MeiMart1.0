@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { DutyStatusMenu } from '../../src/components/business/DutyStatusMenu';
 import { TaskCard } from '../../src/components/business/TaskCard';
@@ -9,13 +9,16 @@ import { BottomActionBar } from '../../src/components/layout/BottomActionBar';
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { QueryBoundary } from '../../src/components/feedback/QueryBoundary';
+import { showToast } from '../../src/components/feedback/Toast';
 import { Button } from '../../src/components/ui';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
+import { useNetwork } from '../../src/hooks/useNetwork';
 import { useTaskLists } from '../../src/services/queries/useTask';
 import { getTaskAction } from '../../src/services/task-flow';
 import { useRiderSettings, useUpdateRiderSettings } from '../../src/services/queries/useSettings';
 import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
 import { useAuthStore } from '../../src/store/useAuthStore';
+import { colors } from '../../src/theme/colors';
 import type { DeliveryTask } from '../../src/types/task';
 import { formatCurrency, formatDistance } from '../../src/utils/format';
 import { pickupDistance } from '../../src/utils/distance';
@@ -47,6 +50,9 @@ export default function TasksPage() {
   const { data: taskListsData, isLoading: taskListsLoading, isError: taskListsError, isFetching: taskListsFetching, refetch: refetchTasks } = useTaskLists();
   const taskLists = taskListsData ?? { available: [] as DeliveryTask[], pickups: [] as DeliveryTask[], deliveries: [] as DeliveryTask[] };
   const rider = useAuthStore((s) => s.rider);
+  // §7.2 拍板：下拉刷新离线守卫——onlineManager 未配置，Query 不会自动拦离线 refetch，
+  // 不守卫会真发请求 reject 后 QueryBoundary 切 error 态覆盖已有缓存数据
+  const { isOffline } = useNetwork();
 
   const online = dutyStatus !== 'offDuty';
   const bondPaid = rider?.bondPaid ?? true;
@@ -74,8 +80,15 @@ export default function TasksPage() {
 
   const confirmPending = async () => {
     if (!pending) return;
-    await updateSettings.mutateAsync({ dutyStatus: pending });
-    setPending(null);
+    // 清单 #5：无 catch 时 mutateAsync reject → setPending(null) 跳过 → ConfirmDialog 卡死。
+    // useUpdateRiderSettings.onError 已回滚缓存（UI 恢复旧状态），这里补 toast + 关弹窗。
+    try {
+      await updateSettings.mutateAsync({ dutyStatus: pending });
+      setPending(null);
+    } catch {
+      showToast(t('duty.updateFailed'), 'error');
+      setPending(null);
+    }
   };
 
   const menuOptions = useMemo(
@@ -88,20 +101,18 @@ export default function TasksPage() {
     [activeTasksExist, dutyStatus, t],
   );
 
-  const renderNewTask = (task: DeliveryTask, index: number) => (
+  // §7.3 拍板 A：删 index 第二参数——Q1 假数据清零后无下标依赖；后端有 reward 字段再恢复
+  const renderNewTask = (task: DeliveryTask) => (
     <TaskCard
       key={task.id}
       actionLabel={t('tasks.accept')}
-      badge={index === 0 ? t('tasks.reward.firstOrder') : undefined}
       fee={formatCurrency(task.fee, currency, { decimals: task.fee % 1 === 0 ? 0 : 1 })}
-      feeNote={index === 0 ? t('tasks.feeNote') : undefined}
       items={task.items.length ? formatItems(task.items, t) : undefined}
       note={task.note ?? undefined}
       points={[
         { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: formatDistance(pickupDistance(task.distanceKm)) },
         { label: 'D', title: task.dropoff.title, distance: formatDistance(task.distanceKm) },
       ]}
-      tags={index === 0 ? [t('tasks.tag.express')] : []}
       timeLabel={t('common.deliverWithin', { minutes: String(task.estimatedMinutes) })}
       onAction={() => router.push(`/task/${task.id}`)}
     />
@@ -142,7 +153,6 @@ export default function TasksPage() {
         { label: 'P', title: task.pickup.title, distance: t('common.fromHere', { distance: formatDistance(pickupDistance(task.distanceKm)) }) },
         { label: 'D', title: task.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
       ]}
-      tags={[t('tasks.tag.callOnArrival'), t('tasks.tag.doNotLeave')]}
       timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
       variant="active"
       onAction={() => router.push(`/task/${task.id}/sign`)}
@@ -187,7 +197,7 @@ export default function TasksPage() {
   };
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-background">
       <TaskDetailHeader
         activeTab={activeTab}
         deliveriesLabel={taskLists.deliveries.length ? t('tasks.tabs.deliveries1') : t('tasks.tabs.deliveries0')}
@@ -199,7 +209,25 @@ export default function TasksPage() {
         onMenuPress={() => router.push('/(main)/profile')}
         onTabChange={setActiveTab}
       />
-      <ScrollView className="flex-1" contentContainerClassName="gap-6 px-3 py-6">
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="gap-6 px-3 py-6"
+        refreshControl={
+          // B5 同款 danger 刷新色；refreshing 与底栏 spinner 同源 isFetching（双向一致反馈）
+          <RefreshControl
+            refreshing={taskListsFetching}
+            onRefresh={() => {
+              if (isOffline) {
+                showToast(t('common.networkError'), 'error');
+                return;
+              }
+              void refetchTasks();
+            }}
+            colors={[colors.danger]}
+            tintColor={colors.danger}
+          />
+        }
+      >
         {renderContent()}
       </ScrollView>
       {!bondPaid && (
