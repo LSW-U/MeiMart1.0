@@ -902,6 +902,22 @@
       "contactLink": "[TET] Contact support",
       "searchPlaceholder": "[TET] Search help",
       "hotTitle": "[TET] Hot FAQs",
+      "cat": {
+        "all": "[TET] All",
+        "order": "[TET] Orders",
+        "payment": "[TET] Payment",
+        "shipping": "[TET] Shipping",
+        "return": "[TET] Returns"
+      },
+      "browseTitle": "[TET] Browse by topic",
+      "allFaqsTitle": "[TET] All FAQs",
+      "questionCount": "[TET] {{count}} questions",
+      "faqCount": "[TET] {{count}} FAQs",
+      "matchCount": "[TET] {{count}} match",
+      "resultFor": "[TET] Results for \"{{query}}\"",
+      "noResult": "[TET] No results found",
+      "noResultDesc": "[TET] Try different keywords or contact us directly",
+      "clearFilter": "[TET] Clear filter",
       "a11y": {
         "searchPlaceholder": "[TET] Search help center"
       },

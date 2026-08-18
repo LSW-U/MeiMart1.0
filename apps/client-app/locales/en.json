@@ -944,6 +944,22 @@
       "contactLink": "Contact support",
       "searchPlaceholder": "Search help",
       "hotTitle": "Hot FAQs",
+      "cat": {
+        "all": "All",
+        "order": "Orders",
+        "payment": "Payment",
+        "shipping": "Shipping",
+        "return": "Returns"
+      },
+      "browseTitle": "Browse by topic",
+      "allFaqsTitle": "All FAQs",
+      "questionCount": "{{count}} questions",
+      "faqCount": "{{count}} FAQs",
+      "matchCount": "{{count}} match",
+      "resultFor": "Results for \"{{query}}\"",
+      "noResult": "No results found",
+      "noResultDesc": "Try different keywords or contact us directly",
+      "clearFilter": "Clear filter",
       "a11y": {
         "searchPlaceholder": "Search help center"
       },

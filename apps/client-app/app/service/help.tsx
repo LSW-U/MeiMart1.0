@@ -1,7 +1,7 @@
-// ⚠️ 无 HTML 原型，参考 ProfilePage 推导实现，待设计确认
-// HelpCenterPage — 帮助中心（参考 ProfilePage.html 的列表样式）
-// D.9: PrimaryHeader + 搜索框 + 分类网格 + 热门 FAQ + 联系客服
-import { useState } from 'react';
+// HelpCenterPage — 帮助中心（P21 优化方案，见 第四梯队-辅助页面/P21-帮助中心页-完整方案.md）
+// 结构：搜索框（真实过滤）+ 横排分类 chip（高亮过滤）+ 一体化 FAQ 列表（hairline 分隔）
+//       + 紧凑联系 CTA（白底卡片，非大色块）
+import { useState, useMemo } from 'react';
 import { StyleSheet, View, Text, ScrollView, Pressable, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -10,51 +10,80 @@ import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, ser
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 
 const FAQ_IDS = ['q1', 'q2', 'q3', 'q4', 'q5'] as const;
-
+type FaqId = (typeof FAQ_IDS)[number];
 interface HelpCategory {
-  id: string;
+  id: 'all' | 'order' | 'payment' | 'shipping' | 'return';
   labelKey: string;
   icon: string;
   theme: ServiceEntryThemeKey;
 }
 
+// Why: P21 D6 —— FAQ↔分类映射（q1=订单状态 q2=支付 q3=退换 q4=配送 q5=发票）。
+//      order 含 q5（发票申请属订单相关）；chip 条数按映射动态计算。
+//      all 直接引用 FAQ_IDS 保持同源（改 FAQ_IDS 时 all 跟随）。
+const CAT_FAQ_MAP: Record<HelpCategory['id'], readonly FaqId[]> = {
+  all: FAQ_IDS,
+  order: ['q1', 'q5'],
+  payment: ['q2'],
+  shipping: ['q4'],
+  return: ['q3'],
+};
+
+// Why: P21 D1 —— 「All」chip 首位默认选中；其余 4 分类复用 serviceEntryThemes 色板
 const CATEGORIES: HelpCategory[] = [
-  {
-    id: 'order',
-    labelKey: 'service.help.cat.order',
-    icon: 'receipt_long',
-    theme: 'info',
-  },
-  {
-    id: 'payment',
-    labelKey: 'service.help.cat.payment',
-    icon: 'credit_card',
-    theme: 'success',
-  },
-  {
-    id: 'shipping',
-    labelKey: 'service.help.cat.shipping',
-    icon: 'local_shipping',
-    theme: 'warning',
-  },
-  {
-    id: 'return',
-    labelKey: 'service.help.cat.return',
-    icon: 'history',
-    theme: 'error',
-  },
+  { id: 'all', labelKey: 'service.help.cat.all', icon: 'apps', theme: 'info' },
+  { id: 'order', labelKey: 'service.help.cat.order', icon: 'receipt_long', theme: 'info' },
+  { id: 'payment', labelKey: 'service.help.cat.payment', icon: 'credit_card', theme: 'success' },
+  { id: 'shipping', labelKey: 'service.help.cat.shipping', icon: 'local_shipping', theme: 'warning' },
+  { id: 'return', labelKey: 'service.help.cat.return', icon: 'history', theme: 'error' },
 ];
+
+/** 搜索词高亮：按 query 切分文本，匹配段单独设 warning 系样式（P21 §9.4） */
+function HighlightedText({ text, query }: { text: string; query: string }) {
+  const { colors } = useTheme();
+  if (!query) return <Text>{text}</Text>;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return <Text>{text}</Text>;
+  return (
+    <Text>
+      {text.slice(0, idx)}
+      <Text style={{ backgroundColor: colors.semantic['warning-container'], color: colors.semantic.warning }}>
+        {text.slice(idx, idx + query.length)}
+      </Text>
+      {text.slice(idx + query.length)}
+    </Text>
+  );
+}
 
 export default function HelpCenterPage() {
   const handleBack = useSafeBack();
   const { t } = useTranslation();
   const { colors } = useTheme();
+  // Why: expanded 折叠模式复用（P20 同款单开手风琴；默认展开首条）
   const [expanded, setExpanded] = useState<string | null>('q1');
   const [search, setSearch] = useState('');
+  // Why: P21 D1 —— activeCat 真实过滤（替代旧「分类点击写 expanded」的无效交互）
+  const [activeCat, setActiveCat] = useState<HelpCategory['id']>('all');
+
+  const searchActive = search.trim().length > 0;
+
+  // Why: P21 D3 —— 搜索匹配问题+答案文本；分类过滤叠加（search 优先显示，分类区隐藏）
+  const visibleFaqs = useMemo(() => {
+    const base = CAT_FAQ_MAP[activeCat];
+    if (!searchActive) return base;
+    const q = search.trim().toLowerCase();
+    return base.filter((id) => {
+      const question = t(`service.help.faq.${id}`);
+      const answer = t(`service.help.faq.a${id.slice(1)}`);
+      return (
+        question.toLowerCase().includes(q) ||
+        answer.toLowerCase().includes(q)
+      );
+    });
+  }, [activeCat, search, searchActive, t]);
 
   return (
     <SafeAreaWrapper
@@ -68,19 +97,20 @@ export default function HelpCenterPage() {
         style={{ flex: 1 }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* 搜索框 */}
+        {/* 搜索框（P21 D3：激活时边框变 primary） */}
         <View
           style={[
             styles.searchBox,
             {
               backgroundColor: colors['surface-container-lowest'],
-              borderColor: colors['outline-variant'],
+              borderColor: searchActive ? colors.primary : colors['outline-variant'],
             },
             shadowPresets.sm,
           ]}
         >
-          <Icon symbol="search" size={20} color={colors['on-surface-variant']} />
+          <Icon symbol="search" size={20} color={searchActive ? colors.primary : colors['on-surface-variant']} />
           <TextInput
             value={search}
             onChangeText={setSearch}
@@ -90,150 +120,239 @@ export default function HelpCenterPage() {
             accessibilityLabel={t('service.help.a11y.searchPlaceholder')}
             testID="help-search"
           />
-          {search.length > 0 && (
+          {searchActive && (
             <Pressable
               onPress={() => setSearch('')}
               hitSlop={8}
+              style={[styles.searchClear, { backgroundColor: colors['surface-container'] }]}
               accessibilityRole="button"
               accessibilityLabel={t('common.clearSearch')}
             >
-              <Icon symbol="close" size={18} color={colors['on-surface-variant']} />
+              <Icon symbol="close" size={14} color={colors['on-surface-variant']} />
             </Pressable>
           )}
         </View>
 
-        {/* 分类网格（2x2） */}
-        <View style={styles.categoriesGrid}>
-          {CATEGORIES.map((cat) => (
-            <Pressable
-              key={cat.id}
-              onPress={() => setExpanded(cat.id)}
-              style={({ pressed }) => [
-                styles.categoryCard,
-                { backgroundColor: colors['surface-container-lowest'] },
-                shadowPresets.sm,
-                pressed && { transform: [{ scale: 0.97 }] },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t(cat.labelKey)}
-              testID={`help-cat-${cat.id}`}
-            >
-              <View style={[styles.categoryIconWrap, { backgroundColor: serviceEntryThemes[cat.theme].bg }]}>
-                <View style={[styles.categoryIconInner, { backgroundColor: serviceEntryThemes[cat.theme].iconBg }]}>
-                  <Icon symbol={cat.icon} size={20} color="#ffffff" />
-                </View>
-              </View>
-              <Text
-                style={[styles.categoryLabel, { color: colors['on-surface'] }]}
-                numberOfLines={1}
-              >
-                {t(cat.labelKey)}
+        {searchActive ? (
+          /* 搜索态：隐藏分类区，标题 resultFor + 匹配条数（P21 D3） */
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                {t('service.help.resultFor', { query: search.trim() })}
               </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* 热门 FAQ 标题 */}
-        <View style={styles.sectionHeader}>
-          <Icon symbol="star" size={16} color={colors.primary} />
-          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-            {t('service.help.hotTitle', { defaultValue: 'Hot FAQs' })}
-          </Text>
-        </View>
-
-        {/* FAQ 折叠列表 */}
-        <View style={styles.list}>
-          {FAQ_IDS.map((id) => {
-            const isOpen = expanded === id;
-            return (
+              <Text style={[styles.sectionSub, { color: colors['on-surface-variant'] }]}>
+                {t('service.help.matchCount', { count: visibleFaqs.length })}
+              </Text>
+            </View>
+            {visibleFaqs.length === 0 ? (
+              /* 空态：search_off + noResult + 引导（原型 .empty） */
               <View
-                key={id}
                 style={[
-                  styles.faqCard,
+                  styles.empty,
                   { backgroundColor: colors['surface-container-lowest'] },
                   shadowPresets.sm,
                 ]}
               >
-                <Pressable
-                  testID={`faq-${id}`}
-                  onPress={() => setExpanded(isOpen ? null : id)}
-                  style={({ pressed }) => [styles.faqHeader, pressed && { opacity: 0.6 }]}
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: isOpen }}
-                  accessibilityLabel={t(`service.help.faq.${id}`)}
-                >
-                  <View
-                    style={[
-                      styles.qIconWrap,
-                      { backgroundColor: isOpen ? colors.primary : 'rgba(150,24,19,0.08)' },
-                    ]}
-                  >
-                    <Text style={[styles.qIcon, { color: isOpen ? '#ffffff' : colors.primary }]}>
-                      Q
-                    </Text>
-                  </View>
-                  <Text style={[styles.question, { color: colors['on-surface'] }]}>
-                    {t(`service.help.faq.${id}`)}
-                  </Text>
-                  <Icon
-                    symbol={isOpen ? 'expand_more' : 'chevron_right'}
-                    size={20}
-                    color={colors['on-surface-variant']}
-                  />
-                </Pressable>
-                {isOpen && (
-                  <View
-                    style={[
-                      styles.answerBox,
-                      {
-                        backgroundColor: colors['surface-container-low'],
-                        borderColor: colors['outline-variant'],
-                      },
-                    ]}
-                  >
-                    <View style={[styles.aIconWrap, { backgroundColor: 'rgba(16,185,129,0.12)' }]}>
-                      <Text style={[styles.aIcon, { color: serviceEntryThemes.success.iconBg }]}>A</Text>
-                    </View>
-                    <Text style={[styles.answer, { color: colors['on-surface-variant'] }]}>
-                      {t(`service.help.faq.a${id.slice(1)}`)}
-                    </Text>
-                  </View>
-                )}
+                <View style={styles.emptyIconWrap}>
+                  <Icon symbol="search_off" size={44} color={colors['on-surface-variant']} />
+                </View>
+                <Text style={[styles.emptyTitle, { color: colors['on-surface'] }]}>
+                  {t('service.help.noResult')}
+                </Text>
+                <Text style={[styles.emptyDesc, { color: colors['on-surface-variant'] }]}>
+                  {t('service.help.noResultDesc')}
+                </Text>
               </View>
-            );
-          })}
-        </View>
+            ) : (
+              <FaqList
+                faqIds={visibleFaqs}
+                expanded={expanded}
+                onToggle={setExpanded}
+                query={search.trim()}
+              />
+            )}
+          </>
+        ) : (
+          /* 默认态：分类 chip 行 + 一体化 FAQ 列表（P21 D1/D2） */
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                {t('service.help.browseTitle')}
+              </Text>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.catRow}
+            >
+              {CATEGORIES.map((cat) => {
+                const isActive = activeCat === cat.id;
+                const count = CAT_FAQ_MAP[cat.id].length;
+                const activeColor = serviceEntryThemes[cat.theme].iconBg;
+                return (
+                  <Pressable
+                    key={cat.id}
+                    onPress={() => setActiveCat(cat.id)}
+                    style={({ pressed }) => [
+                      styles.catChip,
+                      { backgroundColor: isActive ? colors['surface-container-low'] : colors['surface-container-lowest'] },
+                      isActive && { borderColor: activeColor },
+                      pressed && { transform: [{ scale: 0.95 }] },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isActive }}
+                    accessibilityLabel={t(cat.labelKey)}
+                    testID={`help-cat-${cat.id}`}
+                  >
+                    <View style={[styles.catIcon, { backgroundColor: serviceEntryThemes[cat.theme].bg }]}>
+                      <Icon symbol={cat.icon} size={20} color={serviceEntryThemes[cat.theme].iconBg} />
+                    </View>
+                    <Text style={[styles.catLabel, { color: colors['on-surface'] }]} numberOfLines={1}>
+                      {t(cat.labelKey)}
+                    </Text>
+                    <Text style={[styles.catCount, { color: colors['on-surface-variant'] }]}>
+                      {t('service.help.faqCount', { count })}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
 
-        {/* 联系客服 CTA */}
+            {/* 列表标题：activeCat=all → allFaqsTitle + 条数；否则分类名 + 条数 + Clear filter */}
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                {activeCat === 'all'
+                  ? t('service.help.allFaqsTitle')
+                  : t(`service.help.cat.${activeCat}`)}
+              </Text>
+              <Text style={[styles.sectionSub, { color: colors['on-surface-variant'] }]}>
+                {t('service.help.questionCount', { count: visibleFaqs.length })}
+              </Text>
+              {activeCat !== 'all' && (
+                <Pressable
+                  onPress={() => setActiveCat('all')}
+                  style={styles.clearFilterBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('service.help.clearFilter')}
+                  testID="help-clear-filter"
+                >
+                  <Text style={[styles.clearFilterText, { color: colors['on-surface-variant'] }]}>
+                    {t('service.help.clearFilter')}
+                  </Text>
+                  <Icon symbol="close" size={14} color={colors['on-surface-variant']} />
+                </Pressable>
+              )}
+            </View>
+            <FaqList
+              faqIds={visibleFaqs}
+              expanded={expanded}
+              onToggle={setExpanded}
+              query=""
+            />
+          </>
+        )}
+
+        {/* 联系 CTA（P21 D4）：紧凑横排白底卡片，非大色块 */}
         <Pressable
-          onPress={() => router.push('/service')}
+          onPress={() => router.push('/service/feedback')}
           style={({ pressed }) => [
-            styles.contactCard,
-            { backgroundColor: colors.primary },
+            styles.contactRow,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.sm,
             pressed && { transform: [{ scale: 0.98 }] },
           ]}
           accessibilityRole="button"
           accessibilityLabel={t('service.help.contactLink')}
           testID="help-contact-cs"
         >
-          <View style={styles.contactPattern} pointerEvents="none">
-            <TaisPattern width={400} height={100} opacity={0.2} />
+          <View style={[styles.contactIcon, { backgroundColor: colors.primary }]}>
+            <Icon symbol="headset_mic" size={22} color={colors['on-primary']} />
           </View>
-          <View style={styles.contactIconWrap}>
-            <Icon symbol="headset_mic" size={24} color="#ffffff" />
-          </View>
-          <View style={styles.contactTextBox}>
-            <Text style={styles.contactTitle}>
+          <View style={styles.contactInfo}>
+            <Text style={[styles.contactTitle, { color: colors['on-surface'] }]}>
               {t('service.help.contactPrompt', { defaultValue: 'Still need help?' })}
             </Text>
-            <Text style={styles.contactDesc}>
+            <Text style={[styles.contactDesc, { color: colors['on-surface-variant'] }]}>
               {t('service.help.contactLink', { defaultValue: 'Contact our customer service' })}
             </Text>
           </View>
-          <Icon symbol="arrow_forward" size={20} color="#ffffff" />
+          <Icon symbol="arrow_forward" size={20} color={colors['on-surface-variant']} />
         </Pressable>
       </ScrollView>
     </SafeAreaWrapper>
+  );
+}
+
+/** 一体化 FAQ 列表（P21 D2）：单容器 + hairline 分隔，Q 徽章展开态 primary 实底 */
+function FaqList({
+  faqIds,
+  expanded,
+  onToggle,
+  query,
+}: {
+  faqIds: readonly FaqId[];
+  expanded: string | null;
+  onToggle: (id: string | null) => void;
+  query: string;
+}) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  return (
+    <View
+      style={[
+        styles.faqList,
+        { backgroundColor: colors['surface-container-lowest'] },
+        shadowPresets.sm,
+      ]}
+    >
+      {faqIds.map((id, idx) => {
+        const isOpen = expanded === id;
+        return (
+          <View
+            key={id}
+            style={idx < faqIds.length - 1 ? [styles.faqItem, { borderBottomColor: colors['outline-variant'] }] : styles.faqItem}
+          >
+            <Pressable
+              testID={`faq-${id}`}
+              onPress={() => onToggle(isOpen ? null : id)}
+              style={({ pressed }) => [styles.faqQ, pressed && { backgroundColor: colors['surface-container'] }]}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: isOpen }}
+              accessibilityLabel={t(`service.help.faq.${id}`)}
+            >
+              <View
+                style={[
+                  styles.qBadge,
+                  { backgroundColor: isOpen ? colors.primary : colors['surface-container'] },
+                ]}
+              >
+                <Text style={[styles.qBadgeText, { color: isOpen ? colors['on-primary'] : colors.primary }]}>
+                  Q
+                </Text>
+              </View>
+              <Text style={[styles.question, { color: colors['on-surface'] }]}>
+                <HighlightedText text={t(`service.help.faq.${id}`)} query={query} />
+              </Text>
+              <Icon
+                symbol={isOpen ? 'expand_more' : 'chevron_right'}
+                size={20}
+                color={isOpen ? colors.primary : colors['on-surface-variant']}
+              />
+            </Pressable>
+            {isOpen && (
+              <View style={styles.faqAInner}>
+                <View style={[styles.aBadge, { backgroundColor: 'rgba(16,185,129,0.12)' }]}>
+                  <Text style={[styles.aBadgeText, { color: serviceEntryThemes.success.iconBg }]}>A</Text>
+                </View>
+                <Text style={[styles.answer, { color: colors['on-surface-variant'] }]}>
+                  {t(`service.help.faq.a${id.slice(1)}`)}
+                </Text>
+              </View>
+            )}
+          </View>
+        );
+      })}
+    </View>
   );
 }
 
@@ -243,156 +362,191 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl * 2,
     gap: spacing.md,
   },
+  // 搜索框（原型 .search-bar：12px 圆角 + 1.5px 边框）
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: spacing.md + 2,
+    paddingVertical: spacing.md - 2,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1.5,
   },
   searchInput: {
     flex: 1,
     ...typography['body-md'],
     paddingVertical: 4,
   },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  categoryCard: {
-    width: '47%',
-    flexGrow: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  categoryIconWrap: {
-    width: 56,
-    height: 56,
+  searchClear: {
+    width: 22,
+    height: 22,
     borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  categoryIconInner: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryLabel: {
-    ...typography['body-sm'],
-    fontWeight: '600',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.xs + 2,
     paddingHorizontal: spacing.xs,
     marginTop: spacing.sm,
   },
   sectionTitle: {
     ...typography['label-caps'],
     fontWeight: '700',
+    fontSize: 13,
   },
-  list: {
-    gap: spacing.sm,
+  sectionSub: {
+    fontSize: 11,
   },
-  faqCard: {
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-  },
-  faqHeader: {
+  // 分类 chip 行（原型 .cat-row：横滑 + 紧凑小卡）
+  catRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.md,
+    gap: spacing.sm,
+    paddingBottom: 2,
   },
-  qIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: borderRadius.md,
+  catChip: {
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.md - 2,
+    paddingVertical: spacing.md - 4,
+    borderRadius: borderRadius.lg,
+    minWidth: 72,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  catIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  qIcon: {
-    ...typography['label-caps'],
+  catLabel: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
+  },
+  catCount: {
+    fontSize: 10,
+  },
+  clearFilterBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginLeft: 'auto',
+    paddingHorizontal: spacing.xs,
+  },
+  clearFilterText: {
+    fontSize: 11,
+  },
+  // 一体化 FAQ 列表（原型 .faq-list：单容器 + hairline 分隔）
+  faqList: {
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+  },
+  faqItem: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  faqQ: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md - 2,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md - 2,
+    minHeight: 52,
+  },
+  qBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: borderRadius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
   },
   question: {
     ...typography['body-md'],
     fontWeight: '600',
+    fontSize: 14,
     flex: 1,
     lineHeight: 20,
   },
-  answerBox: {
+  faqAInner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: spacing.md,
-    marginTop: spacing.sm,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    gap: spacing.md - 2,
+    paddingLeft: spacing.md + 36, // 对齐问题文字（26 徽章 + 10 间距）
+    paddingRight: spacing.md,
+    paddingBottom: spacing.md,
   },
-  aIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: borderRadius.md,
+  aBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  aIcon: {
-    ...typography['label-caps'],
-    fontSize: 12,
-    fontWeight: '700',
+  aBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
   },
   answer: {
     ...typography['body-sm'],
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 21,
     flex: 1,
   },
-  contactCard: {
+  // 搜索空态（原型 .empty）
+  empty: {
+    borderRadius: borderRadius.xl,
+    paddingVertical: spacing.xxl + 4,
+    paddingHorizontal: spacing.lg,
+    alignItems: 'center',
+  },
+  emptyIconWrap: {
+    opacity: 0.35,
+  },
+  emptyTitle: {
+    ...typography['body-md'],
+    fontWeight: '600',
+    marginTop: spacing.sm + 2,
+  },
+  emptyDesc: {
+    ...typography['body-sm'],
+    fontSize: 12,
+    marginTop: spacing.xs,
+    lineHeight: 18,
+    textAlign: 'center',
+  },
+  // 联系 CTA（原型 .contact-bar：紧凑横排白底）
+  contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    padding: spacing.lg,
+    padding: spacing.md,
     borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    position: 'relative',
   },
-  contactPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  contactIconWrap: {
-    width: 48,
-    height: 48,
+  contactIcon: {
+    width: 44,
+    height: 44,
     borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    zIndex: 2,
   },
-  contactTextBox: {
+  contactInfo: {
     flex: 1,
     gap: 2,
-    zIndex: 2,
   },
   contactTitle: {
-    color: '#ffffff',
     ...typography['body-md'],
     fontWeight: '700',
+    fontSize: 14,
   },
   contactDesc: {
-    color: 'rgba(255,255,255,0.85)',
     ...typography['body-sm'],
+    fontSize: 11,
+    lineHeight: 15,
   },
 });

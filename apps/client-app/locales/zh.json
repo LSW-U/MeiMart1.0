@@ -944,6 +944,22 @@
       "contactLink": "联系在线客服",
       "searchPlaceholder": "搜索帮助",
       "hotTitle": "热门问答",
+      "cat": {
+        "all": "全部",
+        "order": "订单",
+        "payment": "支付",
+        "shipping": "配送",
+        "return": "退换"
+      },
+      "browseTitle": "按主题浏览",
+      "allFaqsTitle": "全部常见问题",
+      "questionCount": "{{count}} 个问题",
+      "faqCount": "{{count}} 条问答",
+      "matchCount": "{{count}} 条匹配",
+      "resultFor": "\"{{query}}\"的搜索结果",
+      "noResult": "未找到相关结果",
+      "noResultDesc": "换个关键词试试，或直接联系客服",
+      "clearFilter": "清除筛选",
       "a11y": {
         "searchPlaceholder": "搜索帮助中心"
       },
