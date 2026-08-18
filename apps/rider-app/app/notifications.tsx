@@ -4,7 +4,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '../src/components/ui';
 import { EmptyState } from '../src/components/feedback/EmptyState';
-import { useGoBack } from '../src/hooks/useGoBack';
+import { SimplePageHeader } from '../src/components/layout/SimplePageHeader';
 import { useTranslation, type TranslationKey } from '../src/i18n/useTranslation';
 import {
   useNotifications,
@@ -41,8 +41,6 @@ export default function NotificationsPage() {
   const markAsReadMutation = useMarkAsRead();
   const markAllAsReadMutation = useMarkAllAsRead();
 
-  const goBack = useGoBack('/(main)/tasks');
-
   const visibleItems = useMemo(() => {
     if (filter === 'all') return items;
     return items.filter((item) => item.category === filter);
@@ -78,19 +76,17 @@ export default function NotificationsPage() {
 
   return (
     <View className="flex-1 bg-surface">
-      <View className="flex-row items-center justify-between border-b border-surface-variant bg-surface px-5 py-4">
-        <View className="flex-row items-center">
-          <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-container" onPress={() => void goBack()}>
-            <Text className="text-2xl text-on-surface">‹</Text>
-          </Pressable>
-          <Text className="ml-2 text-xl font-semibold text-on-surface">{t('notification.title')}</Text>
-        </View>
-        {unreadCount > 0 ? (
-          <Pressable accessibilityRole="button" accessibilityLabel={t('notification.markAllRead')} className="rounded-full bg-surface-container-low px-3 py-1.5 active:bg-surface-blush" onPress={() => void handleMarkAllRead()}>
-            <Text className="text-xs font-bold text-primary">{t('notification.markAllRead')}</Text>
-          </Pressable>
-        ) : null}
-      </View>
+      <SimplePageHeader
+        action={
+          unreadCount > 0 ? (
+            <Pressable accessibilityRole="button" accessibilityLabel={t('notification.markAllRead')} className="rounded-full bg-surface-container-low px-3 py-1.5 active:bg-surface-blush" onPress={() => void handleMarkAllRead()}>
+              <Text className="text-xs font-bold text-primary">{t('notification.markAllRead')}</Text>
+            </Pressable>
+          ) : undefined
+        }
+        backLabel={t('common.back')}
+        title={t('notification.title')}
+      />
 
       <View className="flex-row gap-2 border-b border-surface-variant bg-surface px-5 py-3">
         {filters.map(({ key, labelKey }) => {

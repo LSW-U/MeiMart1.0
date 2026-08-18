@@ -1,12 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import { EvidenceExample, EvidenceUpload } from '../../../src/components/camera/SignaturePad';
+import { StepPageHeader } from '../../../src/components/layout/StepPageHeader';
 import { showToast } from '../../../src/components/feedback/Toast';
 import { ApiError } from '../../../src/services/api';
 import { Button, Input } from '../../../src/components/ui';
-import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useNetwork } from '../../../src/hooks/useNetwork';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { useConfirmDelivery } from '../../../src/services/queries/useDelivery';
@@ -19,7 +19,6 @@ export default function SignConfirmPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
-  const goBack = useGoBack('/(main)/tasks');
   const [doorCaptured, setDoorCaptured] = useState(false);
   const [packageCaptured, setPackageCaptured] = useState(false);
   const [doorUri, setDoorUri] = useState('');
@@ -95,13 +94,7 @@ export default function SignConfirmPage() {
 
   return (
     <View className="flex-1 bg-surface">
-      <View className="h-16 flex-row items-center justify-between bg-surface px-5">
-        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full" onPress={() => void goBack()}>
-          <Text className="text-2xl text-primary">‹</Text>
-        </Pressable>
-        <Text className="text-2xl font-bold tracking-tight text-primary">{t('sign.title')}</Text>
-        <View className="w-10" />
-      </View>
+      <StepPageHeader backLabel={t('common.back')} title={t('sign.title')} />
 
       <ScrollView className="flex-1" contentContainerClassName="gap-6 px-5 pb-40 pt-4">
         <View className="flex-row items-start gap-4 rounded-lg bg-primary-container p-4 shadow-sm">

@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
-import { PageHeader } from '../../src/components/layout/PageHeader';
+import { SimplePageHeader } from '../../src/components/layout/SimplePageHeader';
 import { showToast } from '../../src/components/feedback/Toast';
 import { AppIcon, Button, Input, UploadTile } from '../../src/components/ui';
 import { useTranslation } from '../../src/i18n/useTranslation';
@@ -69,7 +69,7 @@ export default function ProfileEditPage() {
 
   return (
     <View className="flex-1 bg-surface">
-      <PageHeader title={t('auth.register.title')} />
+      <SimplePageHeader backLabel={t('common.back')} fallbackHref="/(main)/profile" title={t('auth.register.title')} />
       <ScrollView contentContainerClassName="items-center px-5 py-8 pb-10">
         <View className="w-full max-w-lg gap-12">
           <View className="flex-row items-center justify-between rounded-xl bg-primary px-6 py-5 shadow-md">

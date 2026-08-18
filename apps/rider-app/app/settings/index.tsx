@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { AppIcon } from '../../src/components/ui';
-import { useGoBack } from '../../src/hooks/useGoBack';
+import { SimplePageHeader } from '../../src/components/layout/SimplePageHeader';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useRiderSettings, useUpdateRiderSettings } from '../../src/services/queries/useSettings';
 import { getLanguageOptions, type AppLanguage } from '../../src/services/settings';
@@ -71,18 +71,12 @@ export default function SettingsPage() {
     await updateSettings.mutateAsync({ notificationsEnabled: true });
   };
 
-  const goBack = useGoBack('/(main)/profile');
 
   const languageDescription = `${languageLabels[locale] ?? languageLabels[languages[0]]} ${t('settings.language.activeSuffix')} ${t('settings.language.cycleHint')}`;
 
   return (
     <View className="flex-1 bg-surface">
-      <View className="flex-row items-center border-b border-surface-variant bg-surface px-5 py-4">
-        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-container" onPress={() => void goBack()}>
-          <Text className="text-2xl text-on-surface">‹</Text>
-        </Pressable>
-        <Text className="ml-2 text-xl font-semibold text-on-surface">{t('settings.title')}</Text>
-      </View>
+      <SimplePageHeader backLabel={t('common.back')} title={t('settings.title')} />
       <ScrollView contentContainerClassName="gap-5 px-5 py-6 pb-12">
         <View className="rounded-3xl bg-primary p-5 shadow-sm">
           <Text className="text-sm font-bold uppercase tracking-wider text-white/70">{t('settings.hero.eyebrow')}</Text>

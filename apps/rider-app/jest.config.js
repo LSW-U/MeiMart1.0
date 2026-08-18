@@ -24,15 +24,15 @@ module.exports = {
         'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|nativewind|react-native-svg)',
       ],
       // queries 目录的 hooks 测试归 web project（jsdom），rn project 跳过
-      testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/', '/src/services/queries/', '/src/components/ui/', '/src/components/feedback/'],
+      testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/', '/src/services/queries/', '/src/components/ui/', '/src/components/feedback/', '/src/components/layout/'],
     },
     {
       displayName: 'web',
       testEnvironment: 'jsdom',
       // react-native index.js 顶层读 __DEV__，jsdom 无 RN runtime 需注入（jest-expo preset 同款）
       globals: { __DEV__: true },
-      // queries hooks + ui/feedback 组件测试归 web project（jsdom + @testing-library/react）
-      testMatch: ['<rootDir>/src/services/queries/**/*.test.tsx', '<rootDir>/src/components/ui/**/*.test.tsx', '<rootDir>/src/components/feedback/**/*.test.tsx'],
+      // queries hooks + ui/feedback/layout 组件测试归 web project（jsdom + @testing-library/react）
+      testMatch: ['<rootDir>/src/services/queries/**/*.test.tsx', '<rootDir>/src/components/ui/**/*.test.tsx', '<rootDir>/src/components/feedback/**/*.test.tsx', '<rootDir>/src/components/layout/**/*.test.tsx'],
       // 不复用项目 babel.config.js（含 nativewind/babel，会把 JSX 改写成 nativewind jsx-runtime
       // → 拉入 react-native → jsdom 炸）。用 babel-preset-expo 单 preset（已顶层装、处理 TS+JSX），
       // configFile:false 跳过 babel.config.js，nativewind 插件不参与 → JSX 走标准 react runtime。

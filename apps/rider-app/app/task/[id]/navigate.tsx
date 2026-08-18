@@ -1,13 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import { EmptyState } from '../../../src/components/feedback/EmptyState';
+import { StepPageHeader } from '../../../src/components/layout/StepPageHeader';
 import { showToast } from '../../../src/components/feedback/Toast';
 import { MapView } from '../../../src/components/map/MapView';
 import { NavigationLauncher } from '../../../src/components/map/NavigationLauncher';
 import { Button } from '../../../src/components/ui';
-import { useGoBack } from '../../../src/hooks/useGoBack';
 import { useNetwork } from '../../../src/hooks/useNetwork';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { ApiError } from '../../../src/services/api';
@@ -21,7 +21,6 @@ export default function TaskNavigatePage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
-  const goBack = useGoBack('/(main)/tasks');
   const { data } = useTask(id);
   const task: DeliveryTask | null = data ?? null;
   const startDelivering = useStartDelivering();
@@ -71,18 +70,8 @@ export default function TaskNavigatePage() {
 
   return (
     <View className="flex-1 bg-surface">
-      <View className="h-16 flex-row items-center justify-between bg-surface-container px-5">
-        <View className="flex-row items-center gap-4">
-          <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full" onPress={() => void goBack()}>
-            <Text className="text-2xl text-primary">‹</Text>
-          </Pressable>
-          <Text className="text-xl font-bold text-primary">{t('flow.orderDetails')}</Text>
-        </View>
-        <View className="flex-row items-center gap-2">
-          <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('flow.status')}</Text>
-          <View className="h-2 w-2 rounded-full bg-tertiary" />
-        </View>
-      </View>
+      {/* B4: 统一页头（背景 bg-surface-container → bg-surface）；假 STATUS 点不迁入（T4 处理） */}
+      <StepPageHeader backLabel={t('common.back')} title={t('flow.orderDetails')} />
 
       <ScrollView className="flex-1" contentContainerClassName="pb-32">
         {task ? (
