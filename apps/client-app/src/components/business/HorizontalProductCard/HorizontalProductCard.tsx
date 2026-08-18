@@ -1,4 +1,4 @@
-import { Pressable, View, Text, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, View, Text, StyleSheet } from 'react-native';
 import { useTheme, spacing, borderRadius, typography, shadowPresets } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
@@ -19,6 +19,7 @@ export function HorizontalProductCard({
   onAddToCart,
   badge,
   showRating = false,
+  addPending = false,
   testID,
 }: HorizontalProductCardProps) {
   const { colors } = useTheme();
@@ -77,15 +78,22 @@ export function HorizontalProductCard({
       </View>
       <Pressable
         onPress={onAddToCart}
+        disabled={addPending}
         style={({ pressed }) => [
           styles.addBtn,
-          { backgroundColor: colors.primary },
+          { backgroundColor: colors.primary, opacity: addPending ? 0.6 : 1 },
           pressed && { opacity: 0.85 },
         ]}
         accessibilityRole="button"
         accessibilityLabel={t('product.addToCartLabel', { name })}
+        accessibilityState={addPending ? { disabled: true } : undefined}
       >
-        <Icon symbol="add" size={18} color={ON_PRIMARY} />
+        {addPending ? (
+          // P19 D4：加购进行中用 spinner 占位（复用 add 按钮位，尺寸与 icon 对齐）
+          <ActivityIndicator size="small" color={ON_PRIMARY} />
+        ) : (
+          <Icon symbol="add" size={18} color={ON_PRIMARY} />
+        )}
       </Pressable>
     </View>
   );

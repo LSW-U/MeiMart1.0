@@ -25,7 +25,9 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useFavorites, useRemoveFavorites } from '@/services/queries/useFavorites';
+import { useAddToCart } from '@/services/queries/useCart';
 import { toast } from '@/store/toastStore';
+import { getApiErrorMessage } from '@/utils/error';
 import type { Product } from '@/types';
 
 // Why: 视图偏好持久化（P19 D2），键名对齐现有 meimart.recentSearches / meimart.locale 风格
@@ -117,8 +119,33 @@ export default function FavoritesPage() {
     toggleSelect(id);
   };
 
-  // Why: 列表态快速加购占位（P19 C3 接 useAddToCart；先留跳板保证本 commit 可编译可渲染）
-  const handleQuickAdd = (_item: Product) => {};
+  // Why: 列表态快速加购（P19 D4）—— useAddToCart 自带乐观更新；收藏摘要无 stock 字段，
+  //      SOLD_OUT/STOCK_EXCEEDED/无 SKU 的失败统一走 onError toast（无库存/网络兜底）
+  const addToCart = useAddToCart();
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const handleQuickAdd = (item: Product) => {
+    if (addingId) return; // 同一时间只允许一个加购请求（防重复提交）
+    setAddingId(item.id);
+    addToCart.mutate(
+      { product: item, quantity: 1 },
+      {
+        onSuccess: () => {
+          toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' }));
+        },
+        onError: (err) => {
+          const msg = err instanceof Error ? err.message : '';
+          const friendly =
+            msg === 'SOLD_OUT'
+              ? t('product.soldOut', { defaultValue: 'Sold Out' })
+              : msg === 'STOCK_EXCEEDED'
+                ? t('cart.stockExceeded', { defaultValue: 'Not enough stock' })
+                : getApiErrorMessage(err, t('product.addToCartFailed', { defaultValue: 'Failed to add to cart' }));
+          toast.error(friendly);
+        },
+        onSettled: () => setAddingId(null),
+      },
+    );
+  };
 
   const HeaderRight = selectMode ? (
     <View style={styles.headerActions}>
@@ -306,6 +333,7 @@ export default function FavoritesPage() {
                   product={item}
                   onPress={() => router.push(`/product/${item.id}`)}
                   onAddToCart={() => handleQuickAdd(item)}
+                  addPending={addingId === item.id}
                 />
               );
             }
