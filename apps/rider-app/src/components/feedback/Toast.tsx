@@ -37,11 +37,18 @@ function ToastEntry({ item, onDone }: { item: ToastItem; onDone: () => void }) {
     return () => clearTimeout(timer);
   }, [item.duration, opacity]);
 
-  const bgColor = item.type === 'success' ? 'bg-success-deep' : item.type === 'error' ? 'bg-primary-container' : 'bg-on-surface';
+  // Q6 语义修正：error 走 error token（原 bg-primary-container 品牌色误作错误色）
+  const bgColor = item.type === 'success' ? 'bg-success-deep' : item.type === 'error' ? 'bg-error' : 'bg-on-surface';
 
   return (
     <Animated.View style={{ opacity }} className="w-full items-center px-5">
-      <Pressable className={`w-full rounded-xl ${bgColor} px-4 py-3 shadow-lg`} onPress={onDone}>
+      <Pressable
+        accessibilityLabel={item.message}
+        accessibilityLiveRegion="polite"
+        accessibilityRole="alert"
+        className={`w-full rounded-xl ${bgColor} px-4 py-3 shadow-lg`}
+        onPress={onDone}
+      >
         <Text className="text-center text-sm font-semibold text-white">{item.message}</Text>
       </Pressable>
     </Animated.View>
@@ -49,8 +56,10 @@ function ToastEntry({ item, onDone }: { item: ToastItem; onDone: () => void }) {
 }
 
 export function ToastHost() {
+  // 队列上限 3：超出丢弃最旧（防弱网连点 toast 风暴堆叠遮挡屏幕）
+  const MAX_QUEUE = 3;
   const [queue, dispatch] = useReducer((state: ToastItem[], action: Action) => {
-    if (action.type === 'add') return [...state, action.item];
+    if (action.type === 'add') return [...state, action.item].slice(-MAX_QUEUE);
     if (action.type === 'remove') return state.filter((t) => t.id !== action.id);
     return state;
   }, []);
