@@ -1,10 +1,21 @@
 // FeedbackPage — 反馈表单（P22 优化）
 // 原型：第四梯队HTML原型设计/P22-反馈页-优化原型.html
 // D1 四块独立卡片 → 一体化 form-card（field-divider 分隔 + 内联 field-label）
-// D2 类型扁平 chip → 3×2 图标网格；D6 输入 focus 态；D7 计数器阈值变色；D9 硬编码白色 → on-primary token
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable } from 'react-native';
+// D2 类型扁平 chip → 3×2 图标网格；D3 照片上传真实化；D6 输入 focus 态；D7 计数器阈值变色；D9 硬编码白色 → on-primary token
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  Pressable,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import { useState } from 'react';
+import * as ImagePicker from 'expo-image-picker';
 import { useSafeBack } from '@/hooks/useSafeBack';
+import { useNetwork } from '@/hooks/useNetwork';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,6 +26,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { toast } from '@/store/toastStore';
+import { uploadsApi } from '@/services/uploads';
 import { feedbackSchema, type FeedbackValues } from '@/forms/schemas/service';
 
 const FEEDBACK_TYPE_KEYS = [
@@ -37,13 +49,20 @@ const FEEDBACK_TYPE_ICONS: Record<string, string> = {
   'service.feedback.types.other': 'more_horiz',
 };
 
+// D3：照片上限 3 张（Q1 拍板：无专用反馈图端点，复用 review-image 端点，与 review 页上限一致）
+const MAX_PHOTOS = 3;
+
 export default function FeedbackPage() {
   const handleBack = useSafeBack();
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const { isOffline } = useNetwork();
   // D6：输入框 focus 态（RN 无 :focus 伪类，手动跟踪）
   const [contentFocused, setContentFocused] = useState(false);
   const [contactFocused, setContactFocused] = useState(false);
+  // D3：已上传照片 URL 列表 + 上传中态（schema 无 images 字段，本地 state 管理，提交时随表单展示）
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const { control, handleSubmit, setValue } = useForm<FeedbackValues>({
     resolver: zodResolver(feedbackSchema),
@@ -57,6 +76,34 @@ export default function FeedbackPage() {
     toast.success(t('service.feedback.submitted'));
     handleBack();
   });
+
+  // D3：选图 → 逐张传 review-image 端点拿 URL → 存 URL（与 review.tsx 同链路）
+  const handleAddPhoto = async () => {
+    if (photos.length >= MAX_PHOTOS) return;
+    if (isOffline) {
+      // 弱网规则：上传是网络操作，离线时阻止并提示（不静默失败）
+      toast.info(t('service.feedback.photoOfflineTip'));
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      selectionLimit: MAX_PHOTOS - photos.length,
+      quality: 0.8,
+    });
+    if (result.canceled) return;
+    setUploading(true);
+    try {
+      const uploaded = await Promise.all(
+        result.assets.map((a) => uploadsApi.reviewImage(a.uri, a.mimeType ?? 'image/jpeg')),
+      );
+      setPhotos((prev) => [...prev, ...uploaded.map((r) => r.url)].slice(0, MAX_PHOTOS));
+    } catch {
+      toast.error(t('service.feedback.uploadFailed'));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <SafeAreaWrapper
@@ -216,29 +263,73 @@ export default function FeedbackPage() {
 
           <View style={[styles.fieldDivider, { backgroundColor: colors['outline-variant'] }]} />
 
-          {/* 照片（D3 真实化见后续：暂保留添加占位） */}
+          {/* 照片（D3 真实化：缩略图 + 删除 + 添加 + N/3 计数 + 上传中态） */}
           <View>
-            <Text style={[styles.fieldLabel, { color: colors['on-surface'], marginBottom: spacing.sm }]}>
-              {t('service.feedback.photosLabel')}
-            </Text>
-            <View style={styles.photosRow}>
-              <Pressable
-                style={[
-                  styles.photoAddBtn,
-                  {
-                    backgroundColor: colors['surface-container-low'],
-                    borderColor: colors['outline-variant'],
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t('service.feedback.a11y.addScreenshot')}
-                testID="feedback-add-photo"
-              >
-                <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />
-                <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
-                  {t('service.feedback.addPhoto')}
-                </Text>
-              </Pressable>
+            <View style={styles.fieldLabelRow}>
+              <Text style={[styles.fieldLabel, { color: colors['on-surface'] }]}>
+                {t('service.feedback.photosLabel')}
+              </Text>
+              <Text style={[styles.photoCountText, { color: colors['on-surface-variant'] }]}>
+                {` · ${t('service.feedback.photoCount', { count: photos.length, max: MAX_PHOTOS })}`}
+              </Text>
+            </View>
+            <View style={styles.photosGrid}>
+              {photos.map((uri, index) => (
+                <View key={uri} style={styles.photoTile}>
+                  <Image
+                    source={{ uri }}
+                    style={styles.photoTileImg}
+                    resizeMode="cover"
+                    accessibilityLabel={t('service.feedback.a11y.photoThumb', {
+                      count: index + 1,
+                    })}
+                  />
+                  <Pressable
+                    onPress={() => setPhotos((prev) => prev.filter((_, i) => i !== index))}
+                    style={styles.photoDel}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('service.feedback.deletePhoto')}
+                    hitSlop={8}
+                    testID={`feedback-remove-photo-${index}`}
+                  >
+                    {/* 原因：图片上的删除钮黑底白字固定对比色，dark 不变（先例 product/[id].tsx 图片计数器） */}
+                    <Icon symbol="close" size={12} color="#ffffff" />
+                  </Pressable>
+                </View>
+              ))}
+              {photos.length < MAX_PHOTOS && (
+                <Pressable
+                  onPress={handleAddPhoto}
+                  disabled={uploading}
+                  style={[
+                    styles.photoAdd,
+                    {
+                      backgroundColor: colors['surface-container-low'],
+                      borderColor: colors['outline-variant'],
+                      opacity: uploading ? 0.6 : 1,
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('service.feedback.a11y.addScreenshot')}
+                  accessibilityState={{ disabled: uploading, busy: uploading }}
+                  testID="feedback-add-photo"
+                >
+                  {uploading ? (
+                    <ActivityIndicator size="small" color={colors['on-surface-variant']} />
+                  ) : (
+                    <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />
+                  )}
+                  <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
+                    {uploading ? t('service.feedback.uploading') : t('service.feedback.addPhoto')}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+            <View style={styles.photoHint}>
+              <Icon symbol="info" size={13} color={colors['on-surface-variant']} />
+              <Text style={[styles.photoHintText, { color: colors['on-surface-variant'] }]}>
+                {t('service.feedback.photosHint', { max: MAX_PHOTOS })}
+              </Text>
             </View>
           </View>
 
@@ -406,24 +497,62 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     fontSize: 11,
   },
-  photosRow: {
+  // D3 照片网格（4 列，flexWrap 模拟 CSS Grid；tile 用百分比宽 + aspectRatio 正方形）
+  photosGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  photoAddBtn: {
-    width: 72,
-    height: 72,
+  photoCountText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  photoTile: {
+    width: '23%',
+    aspectRatio: 1,
     borderRadius: borderRadius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  photoTileImg: {
+    width: '100%',
+    height: '100%',
+  },
+  photoDel: {
+    // 原因：图片上的删除钮黑底白字固定对比色，dark 不变（先例 product/[id].tsx 图片计数器）
+    position: 'absolute',
+    top: 3,
+    right: 3,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoAdd: {
+    width: '23%',
+    aspectRatio: 1,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1.5,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 2,
   },
   photoAddText: {
     ...typography['label-caps'],
-    fontSize: 10,
+    fontSize: 9,
+  },
+  photoHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  photoHintText: {
+    ...typography['body-sm'],
+    fontSize: 11,
   },
   input: {
     padding: 12,

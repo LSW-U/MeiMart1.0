@@ -922,6 +922,12 @@
       "submitted": "Thanks for your feedback",
       "photosLabel": "Add screenshots (optional)",
       "addPhoto": "Add",
+      "photosHint": "Up to {{max}} · JPG / PNG",
+      "photoCount": "{{count}}/{{max}}",
+      "uploading": "Uploading…",
+      "uploadFailed": "Upload failed",
+      "deletePhoto": "Remove photo",
+      "photoOfflineTip": "Cannot upload photos offline",
       "optionalHint": "Optional · We may contact you",
       "tipTitle": "Privacy notice",
       "tipDesc": "Your feedback will be handled confidentially",
@@ -934,7 +940,8 @@
         "other": "Other"
       },
       "a11y": {
-        "addScreenshot": "Add screenshot"
+        "addScreenshot": "Add screenshot",
+        "photoThumb": "Screenshot {{count}}"
       }
     },
     "help": {

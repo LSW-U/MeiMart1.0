@@ -922,6 +922,12 @@
       "submitted": "感谢你的反馈",
       "photosLabel": "添加截图（可选）",
       "addPhoto": "添加",
+      "photosHint": "最多 {{max}} 张 · 支持 JPG / PNG",
+      "photoCount": "{{count}}/{{max}}",
+      "uploading": "上传中…",
+      "uploadFailed": "上传失败",
+      "deletePhoto": "删除照片",
+      "photoOfflineTip": "离线时无法上传照片",
       "optionalHint": "可选 · 我们可能会联系你",
       "tipTitle": "隐私声明",
       "tipDesc": "我们会保密处理你的反馈",
@@ -934,7 +940,8 @@
         "other": "其他"
       },
       "a11y": {
-        "addScreenshot": "添加截图"
+        "addScreenshot": "添加截图",
+        "photoThumb": "截图 {{count}}"
       }
     },
     "help": {

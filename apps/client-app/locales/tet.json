@@ -880,6 +880,12 @@
       "submitted": "[TET] Thanks for your feedback",
       "photosLabel": "[TET] Add screenshots (optional)",
       "addPhoto": "[TET] Add",
+      "photosHint": "[TET] Up to {{max}} · JPG / PNG",
+      "photoCount": "[TET] {{count}}/{{max}}",
+      "uploading": "[TET] Uploading…",
+      "uploadFailed": "[TET] Upload failed",
+      "deletePhoto": "[TET] Remove photo",
+      "photoOfflineTip": "[TET] Cannot upload photos offline",
       "optionalHint": "[TET] Optional · We may contact you",
       "tipTitle": "[TET] Privacy notice",
       "tipDesc": "[TET] Your feedback will be handled confidentially",
@@ -892,7 +898,8 @@
         "other": "[TET] Other"
       },
       "a11y": {
-        "addScreenshot": "[TET] Add screenshot"
+        "addScreenshot": "[TET] Add screenshot",
+        "photoThumb": "[TET] Screenshot {{count}}"
       }
     },
     "help": {
