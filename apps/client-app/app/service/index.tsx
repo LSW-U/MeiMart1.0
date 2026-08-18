@@ -1,6 +1,7 @@
-// ⚠️ 无 HTML 原型，参考 ProfilePage 推导实现，待设计确认
-// CustomerServicePage — 客服入口（参考 ProfilePage.html 的列表样式 + tais-pattern）
-// D.7: PrimaryHeader + 服务入口卡片 + 工作时间 + FAQ + 联系方式
+// CustomerServicePage — 客服入口（P20 优化方案，见 第四梯队-辅助页面/P20-客服页-完整方案.md）
+// 结构：greeting 瘦身条 + My Orders 快捷入口 + Contact 卡（online 主行 + phone/email 副行）
+//       + FAQ 真折叠（复用 help.faq q1-q4）+ 底部工作时间一行
+import { useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, Pressable, Linking } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -12,100 +13,30 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 
-interface ChannelCard {
-  id: 'online' | 'phone' | 'email' | 'faq';
-  labelKey: string;
-  descKey: string;
+interface Shortcut {
+  id: 'orders' | 'refunds' | 'tracking';
   icon: string;
   theme: ServiceEntryThemeKey;
-  onPress: () => void;
+  route: string;
 }
 
-interface FaqEntry {
-  id: string;
-  labelKey: string;
-  descKey: string;
-  icon: string;
-  route?: string;
-}
+// Why: P20 D1 —— 电商客服页最高频诉求入口；路由方案已核实存在
+const SHORTCUTS: Shortcut[] = [
+  { id: 'orders', icon: 'receipt_long', theme: 'info', route: '/(main)/orders' },
+  { id: 'refunds', icon: 'assignment_return', theme: 'warning', route: '/(main)/refunds' },
+  { id: 'tracking', icon: 'local_shipping', theme: 'success', route: '/order/tracking' },
+];
+
+// Why: P20 D3（Q1 拍板）—— 复用 help 中心前 4 条 FAQ 文案（零新增 key），
+//      接受第 4 条与原型 change address 主题不一致（显示 delivery area）
+const FAQ_IDS = ['q1', 'q2', 'q3', 'q4'] as const;
 
 export default function CustomerServicePage() {
   const handleBack = useSafeBack();
   const { t } = useTranslation();
   const { colors } = useTheme();
-
-  const channels: ChannelCard[] = [
-    {
-      id: 'online',
-      labelKey: 'service.channels.online',
-      descKey: 'service.channels.onlineDesc',
-      icon: 'headset_mic',
-      theme: 'info',
-      onPress: () => router.push('/service/feedback'),
-    },
-    {
-      id: 'phone',
-      labelKey: 'service.channels.phone',
-      descKey: 'service.channels.phoneDesc',
-      icon: 'call',
-      theme: 'success',
-      onPress: () => Linking.openURL('tel:+67077000000'),
-    },
-    {
-      id: 'email',
-      labelKey: 'service.channels.email',
-      descKey: 'service.channels.emailDesc',
-      icon: 'mail',
-      theme: 'warning',
-      onPress: () => Linking.openURL('mailto:support@meimart.tl'),
-    },
-    {
-      id: 'faq',
-      labelKey: 'service.channels.faq',
-      descKey: 'service.channels.faqDesc',
-      icon: 'help',
-      theme: 'error',
-      onPress: () => router.push('/service/help'),
-    },
-  ];
-
-  const faqs: FaqEntry[] = [
-    {
-      id: 'order',
-      labelKey: 'service.categories.order',
-      descKey: 'service.categories.orderDesc',
-      icon: 'receipt_long',
-      route: '/(main)/orders',
-    },
-    {
-      id: 'payment',
-      labelKey: 'service.categories.payment',
-      descKey: 'service.categories.paymentDesc',
-      icon: 'credit_card',
-      route: '/order/checkout',
-    },
-    {
-      id: 'product',
-      labelKey: 'service.categories.product',
-      descKey: 'service.categories.productDesc',
-      icon: 'shopping_cart',
-      route: '/(main)/categories',
-    },
-    {
-      id: 'feedback',
-      labelKey: 'service.categories.feedback',
-      descKey: 'service.categories.feedbackDesc',
-      icon: 'edit',
-      route: '/service/feedback',
-    },
-    {
-      id: 'help',
-      labelKey: 'service.categories.help',
-      descKey: 'service.categories.helpDesc',
-      icon: 'help',
-      route: '/service/help',
-    },
-  ];
+  // Why: FAQ 折叠交互复用 help.tsx:56 模式（单开手风琴）
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
     <SafeAreaWrapper
@@ -120,217 +51,209 @@ export default function CustomerServicePage() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* Greeting Block */}
-        <View style={[styles.greetingCard, { backgroundColor: colors.primary }, shadowPresets.md]}>
-          <View style={styles.greetingPattern} pointerEvents="none">
-            <TaisPattern width={400} height={120} opacity={0.2} />
+        {/* Greeting 瘦身条（D4）：44px 头像（primary 底 + tais 纹理）+ 文案 + 在线徽章 */}
+        <View
+          style={[
+            styles.greet,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.sm,
+          ]}
+        >
+          <View style={styles.greetAvatar}>
+            <View style={styles.greetAvatarPattern} pointerEvents="none">
+              <TaisPattern width={88} height={88} opacity={0.35} />
+            </View>
+            <Icon symbol="support_agent" size={22} color="#ffffff" />
           </View>
-          <View style={styles.greetingIconWrap}>
-            <Icon symbol="headset_mic" size={32} color="#ffffff" />
-          </View>
-          <View style={styles.greetingTextBox}>
-            <Text style={styles.greetingTitle} accessibilityRole="header">
+          <View style={styles.greetTextBox}>
+            <Text style={[styles.greetTitle, { color: colors['on-surface'] }]}>
               {t('service.greetingTitle')}
             </Text>
-            <Text style={styles.greetingDesc}>{t('service.greetingDesc')}</Text>
+            <Text style={[styles.greetDesc, { color: colors['on-surface-variant'] }]}>
+              {t('service.greetingDesc')}
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.greetPill,
+              { backgroundColor: colors.semantic['positive-container'] },
+            ]}
+          >
+            <View style={[styles.greetPillDot, { backgroundColor: colors.semantic.positive }]} />
+            <Text style={[styles.greetPillText, { color: colors.semantic.positive }]}>
+              {t('service.online')}
+            </Text>
           </View>
         </View>
 
-        {/* 4 个服务入口卡片（2x2 网格） */}
-        <View style={styles.channelsGrid}>
-          {channels.map((ch) => (
+        {/* My Orders 快捷入口（D1）：3 横排 */}
+        <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
+          {t('service.shortcut.orders')}
+        </Text>
+        <View style={styles.shortcuts}>
+          {SHORTCUTS.map((sc) => (
             <Pressable
-              key={ch.id}
-              testID={`cs-channel-${ch.id}`}
-              onPress={ch.onPress}
+              key={sc.id}
+              testID={`cs-shortcut-${sc.id}`}
+              onPress={() => router.push(sc.route as never)}
               style={({ pressed }) => [
-                styles.channelCard,
+                styles.shortcut,
                 { backgroundColor: colors['surface-container-lowest'] },
                 shadowPresets.sm,
                 pressed && { transform: [{ scale: 0.97 }] },
               ]}
               accessibilityRole="button"
-              accessibilityLabel={t(ch.labelKey)}
+              accessibilityLabel={t(`service.shortcut.${sc.id}`)}
             >
-              <View style={[styles.channelIconWrap, { backgroundColor: serviceEntryThemes[ch.theme].bg }]}>
-                <View style={[styles.channelIconInner, { backgroundColor: serviceEntryThemes[ch.theme].iconBg }]}>
-                  <Icon symbol={ch.icon} size={20} color="#ffffff" />
-                </View>
+              <View style={[styles.shortcutIcon, { backgroundColor: serviceEntryThemes[sc.theme].iconBg }]}>
+                <Icon symbol={sc.icon} size={22} color="#ffffff" />
               </View>
-              <Text
-                style={[styles.channelLabel, { color: colors['on-surface'] }]}
-                numberOfLines={1}
-              >
-                {t(ch.labelKey)}
-              </Text>
-              <Text
-                style={[styles.channelDesc, { color: colors['on-surface-variant'] }]}
-                numberOfLines={2}
-              >
-                {t(ch.descKey)}
+              <Text style={[styles.shortcutLabel, { color: colors['on-surface'] }]}>
+                {t(`service.shortcut.${sc.id}`)}
               </Text>
             </Pressable>
           ))}
         </View>
 
-        {/* 工作时间卡片 */}
-        <View
-          style={[
-            styles.workHourCard,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
-          ]}
-        >
-          <View style={styles.workHourRow}>
-            <View style={styles.workHourIconWrap}>
-              <Icon symbol="schedule" size={20} color={colors.primary} />
-            </View>
-            <View style={styles.workHourTextBox}>
-              <Text style={[styles.workHourTitle, { color: colors['on-surface'] }]}>
-                {t('service.workHours', { defaultValue: 'Working Hours' })}
-              </Text>
-              <Text style={[styles.workHourDesc, { color: colors['on-surface-variant'] }]}>
-                {t('service.workHoursDesc', {
-                  defaultValue: 'Mon - Sun · 08:00 - 22:00 (Dili time)',
-                })}
-              </Text>
-            </View>
-            <View style={[styles.onlinePill, { backgroundColor: colors.semantic['success-container'] }]}>
-              <View style={[styles.onlineDot, { backgroundColor: serviceEntryThemes.success.iconBg }]} />
-              <Text style={styles.onlineText}>
-                {t('service.online', { defaultValue: 'Online' })}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* FAQ 入口列表 */}
-        <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
-          {t('service.faqTitle')}
-        </Text>
-        <View
-          style={[
-            styles.faqCard,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
-          ]}
-        >
-          {faqs.map((item, idx) => (
-            <Pressable
-              key={item.id}
-              testID={`cs-entry-${item.id}`}
-              onPress={() => item.route && router.push(item.route)}
-              style={({ pressed }) => [
-                styles.entryRow,
-                idx > 0 && {
-                  borderTopWidth: StyleSheet.hairlineWidth,
-                  borderTopColor: colors['outline-variant'],
-                },
-                pressed && { opacity: 0.6 },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t(item.labelKey)}
-            >
-              <View
-                style={[styles.entryIconWrap, { backgroundColor: colors['surface-container'] }]}
-              >
-                <Icon symbol={item.icon} size={20} color={colors.primary} />
-              </View>
-              <View style={styles.entryTextBox}>
-                <Text style={[styles.entryLabel, { color: colors['on-surface'] }]}>
-                  {t(item.labelKey)}
-                </Text>
-                <Text style={[styles.entryDesc, { color: colors['on-surface-variant'] }]}>
-                  {t(item.descKey)}
-                </Text>
-              </View>
-              <Icon symbol="chevron_right" size={20} color={colors['on-surface-variant']} />
-            </Pressable>
-          ))}
-        </View>
-
-        {/* 联系方式卡片 */}
+        {/* Contact 卡（D2）：Online Chat 主行（primary + tais 纹理）+ phone/email 副行 */}
         <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
           {t('service.contactTitle')}
         </Text>
-        <View
-          style={[
-            styles.contactCard,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
-          ]}
-        >
-          <ContactRow
-            icon="call"
-            label={t('service.callHotline')}
-            value="+670 7700 0000"
-            color={colors.primary}
-            textColor={colors['on-surface']}
-            subColor={colors['on-surface-variant']}
-            testID="cs-call"
-            onPress={() => Linking.openURL('tel:+67077000000')}
-          />
-          <View style={[styles.rowDivider, { backgroundColor: colors['outline-variant'] }]} />
-          <ContactRow
-            icon="mail"
-            label={t('service.email')}
-            value="support@meimart.tl"
-            color={colors.primary}
-            textColor={colors['on-surface']}
-            subColor={colors['on-surface-variant']}
-            testID="cs-email"
-            onPress={() => Linking.openURL('mailto:support@meimart.tl')}
-          />
-          <View style={[styles.rowDivider, { backgroundColor: colors['outline-variant'] }]} />
-          <ContactRow
-            icon="notifications"
-            label={t('service.notifications.title')}
-            color={colors.primary}
-            textColor={colors['on-surface']}
-            subColor={colors['on-surface-variant']}
-            testID="cs-notifications"
-            onPress={() => router.push('/service/notifications')}
-          />
+        <View style={[styles.contact, { backgroundColor: colors['surface-container-lowest'] }, shadowPresets.sm]}>
+          <Pressable
+            testID="cs-contact-online"
+            onPress={() => router.push('/service/feedback')}
+            style={({ pressed }) => [
+              styles.contactMain,
+              { backgroundColor: colors.primary },
+              pressed && { opacity: 0.9 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('service.contact.online')}
+          >
+            <View style={styles.contactMainPattern} pointerEvents="none">
+              <TaisPattern width={400} height={80} opacity={0.18} />
+            </View>
+            <View style={styles.contactMainIcon}>
+              <Icon symbol="chat" size={26} color="#ffffff" />
+            </View>
+            <View style={styles.contactMainText}>
+              <Text style={styles.contactMainLabel}>{t('service.contact.online')}</Text>
+              <Text style={styles.contactMainDesc}>{t('service.contact.onlineDesc')}</Text>
+            </View>
+            <View style={styles.contactMainGo}>
+              <Icon symbol="chevron_right" size={18} color="#ffffff" />
+            </View>
+          </Pressable>
+          <View style={styles.contactSub}>
+            <Pressable
+              testID="cs-contact-phone"
+              onPress={() => Linking.openURL('tel:+67077000000')}
+              style={({ pressed }) => [styles.contactSubRow, pressed && { opacity: 0.6 }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('service.callHotline')}
+            >
+              <View style={[styles.contactSubIcon, { backgroundColor: serviceEntryThemes.success.bg }]}>
+                <Icon symbol="call" size={20} color={serviceEntryThemes.success.iconBg} />
+              </View>
+              <Text style={[styles.contactSubLabel, { color: colors['on-surface'] }]}>
+                {t('service.callHotline')}
+              </Text>
+              <Text style={[styles.contactSubValue, { color: colors['on-surface-variant'] }]}>
+                +670 7700 0000
+              </Text>
+            </Pressable>
+            <View style={[styles.contactSubDivider, { backgroundColor: colors['outline-variant'] }]} />
+            <Pressable
+              testID="cs-contact-email"
+              onPress={() => Linking.openURL('mailto:support@meimart.tl')}
+              style={({ pressed }) => [styles.contactSubRow, pressed && { opacity: 0.6 }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('service.email')}
+            >
+              <View style={[styles.contactSubIcon, { backgroundColor: serviceEntryThemes.warning.bg }]}>
+                <Icon symbol="mail" size={20} color={serviceEntryThemes.warning.iconBg} />
+              </View>
+              <Text style={[styles.contactSubLabel, { color: colors['on-surface'] }]}>
+                {t('service.email')}
+              </Text>
+              <Text style={[styles.contactSubValue, { color: colors['on-surface-variant'] }]}>
+                support@meimart.tl
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* FAQ 真折叠（D3）：4 条 + All topics 入口 */}
+        <View style={styles.faqHeaderRow}>
+          <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
+            {t('service.faqTitle')}
+          </Text>
+          <Pressable
+            testID="cs-faq-all"
+            onPress={() => router.push('/service/help')}
+            style={styles.faqAllBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('service.help.title')}
+          >
+            <Text style={[styles.faqAllText, { color: colors['on-surface-variant'] }]}>
+              {t('service.help.title')}
+            </Text>
+            <Icon symbol="chevron_right" size={15} color={colors['on-surface-variant']} />
+          </Pressable>
+        </View>
+        <View style={[styles.faqList, { backgroundColor: colors['surface-container-lowest'] }, shadowPresets.sm]}>
+          {FAQ_IDS.map((id, idx) => {
+            const isOpen = expanded === id;
+            return (
+              <View
+                key={id}
+                style={[
+                  styles.faqItem,
+                  idx > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors['outline-variant'] },
+                ]}
+              >
+                <Pressable
+                  testID={`cs-faq-${id}`}
+                  onPress={() => setExpanded(isOpen ? null : id)}
+                  style={({ pressed }) => [styles.faqQ, pressed && { opacity: 0.6 }]}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: isOpen }}
+                  accessibilityLabel={t(`service.help.faq.${id}`)}
+                >
+                  <View style={[styles.faqNum, { backgroundColor: colors['surface-container'] }]}>
+                    <Text style={[styles.faqNumText, { color: colors.primary }]}>{idx + 1}</Text>
+                  </View>
+                  <Text style={[styles.faqQuestion, { color: colors['on-surface'] }]}>
+                    {t(`service.help.faq.${id}`)}
+                  </Text>
+                  <Icon
+                    symbol="expand_more"
+                    size={20}
+                    color={colors['on-surface-variant']}
+                  />
+                  {/* Why: 展开态语义由 accessibilityState.expanded 表达；原型箭头 rotate 动效 RN 侧用
+                      Icon 无 transform prop，保持静态箭头（原型 .ar rotate 180deg 为 web 过渡装饰） */}
+                </Pressable>
+                {isOpen && (
+                  <Text style={[styles.faqAnswer, { color: colors['on-surface-variant'] }]}>
+                    {t(`service.help.faq.a${id.slice(1)}`)}
+                  </Text>
+                )}
+              </View>
+            );
+          })}
+        </View>
+
+        {/* 底部工作时间一行（D5）：schedule 图标 + 时间 + online 徽章语义弱化为纯文字 */}
+        <View style={styles.workHoursRow}>
+          <Icon symbol="schedule" size={14} color={colors['on-surface-variant']} />
+          <Text style={[styles.workHoursText, { color: colors['on-surface-variant'] }]}>
+            {t('service.workHoursDesc')}
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaWrapper>
-  );
-}
-
-function ContactRow({
-  icon,
-  label,
-  value,
-  color,
-  textColor,
-  subColor,
-  onPress,
-  testID,
-}: {
-  icon: string;
-  label: string;
-  value?: string;
-  color: string;
-  textColor: string;
-  subColor: string;
-  onPress?: () => void;
-  testID?: string;
-}) {
-  return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => [styles.contactRow, pressed && { opacity: 0.6 }]}
-    >
-      <View style={[styles.contactIconWrap, { backgroundColor: 'rgba(150,24,19,0.08)' }]}>
-        <Icon symbol={icon} size={20} color={color} />
-      </View>
-      <Text style={[styles.contactLabel, { color: textColor, flex: 1 }]}>{label}</Text>
-      {value && <Text style={[styles.contactValue, { color: subColor }]}>{value}</Text>}
-      <Icon symbol="chevron_right" size={20} color={subColor} />
-    </Pressable>
   );
 }
 
@@ -340,191 +263,242 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl * 2,
     gap: spacing.md,
   },
-  greetingCard: {
+  // Greeting 瘦身条（原型 .greet）
+  greet: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    padding: spacing.lg,
+    padding: spacing.md + 2,
     borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    position: 'relative',
   },
-  greetingPattern: {
+  greetAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.full,
+    backgroundColor: '#961813', // 原因：primary 实心底承载 tais 纹理，dark 不变（文化元素固定色）
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  greetAvatarPattern: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
   },
-  greetingIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    zIndex: 2,
-  },
-  greetingTextBox: {
-    flex: 1,
-    gap: 4,
-    zIndex: 2,
-  },
-  greetingTitle: {
-    ...typography.h3,
-    color: '#ffffff',
-    fontWeight: '700',
-  },
-  greetingDesc: {
-    ...typography['body-sm'],
-    color: 'rgba(255,255,255,0.85)',
-  },
-  channelsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  channelCard: {
-    width: '47%',
-    flexGrow: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  channelIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  channelIconInner: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  channelLabel: {
-    ...typography['body-md'],
-    fontWeight: '700',
-  },
-  channelDesc: {
-    ...typography['label-caps'],
-    fontSize: 10,
-    textAlign: 'center',
-  },
-  workHourCard: {
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-  },
-  workHourRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  workHourIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(150,24,19,0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  workHourTextBox: {
+  greetTextBox: {
     flex: 1,
     gap: 2,
   },
-  workHourTitle: {
+  greetTitle: {
     ...typography['body-md'],
-    fontWeight: '600',
+    fontWeight: '700',
+    fontSize: 15,
   },
-  workHourDesc: {
+  greetDesc: {
     ...typography['body-sm'],
+    fontSize: 11,
+    lineHeight: 15,
   },
-  onlinePill: {
+  greetPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 999,
   },
-  onlineDot: {
-    width: 6,
-    height: 6,
+  greetPillDot: {
+    width: 7,
+    height: 7,
     borderRadius: 999,
   },
-  onlineText: {
-    fontSize: 10,
+  greetPillText: {
+    fontSize: 11,
     fontWeight: '700',
-    color: '#047857', // 原因：在线状态深绿文字（emerald-700），与 semantic.success 色阶不同
   },
   sectionTitle: {
     ...typography['label-caps'],
     paddingHorizontal: spacing.xs,
     marginTop: spacing.sm,
   },
-  faqCard: {
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-  },
-  entryRow: {
+  // 快捷入口（原型 .shortcuts / .sc）
+  shortcuts: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    gap: spacing.md,
-    minHeight: 64,
+    gap: spacing.sm,
   },
-  entryIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  entryTextBox: {
+  shortcut: {
     flex: 1,
-    gap: 2,
-  },
-  entryLabel: {
-    ...typography['body-md'],
-    fontWeight: '600',
-  },
-  entryDesc: {
-    ...typography['body-sm'],
-  },
-  contactCard: {
     borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    padding: spacing.sm,
-  },
-  contactRow: {
-    flexDirection: 'row',
+    paddingVertical: spacing.md + 2,
     alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    gap: spacing.md,
-    minHeight: 48,
+    gap: spacing.sm,
   },
-  rowDivider: {
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: spacing.md,
-  },
-  contactIconWrap: {
-    width: 36,
-    height: 36,
+  shortcutIcon: {
+    width: 44,
+    height: 44,
     borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  contactLabel: {
-    ...typography['body-md'],
-    fontWeight: '500',
-  },
-  contactValue: {
+  shortcutLabel: {
     ...typography['body-sm'],
+    fontWeight: '600',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  // Contact 卡（原型 .contact）
+  contact: {
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+  },
+  contactMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  contactMainPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  contactMainIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255,255,255,0.22)', // 原因：primary 主卡上的白 22% 图标底（原型 .ci），dark 不变
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  contactMainText: {
+    flex: 1,
+    gap: 2,
+    zIndex: 2,
+  },
+  contactMainLabel: {
+    ...typography['body-md'],
+    fontWeight: '700',
+    fontSize: 15,
+    color: '#ffffff',
+  },
+  contactMainDesc: {
+    ...typography['body-sm'],
+    fontSize: 11,
+    lineHeight: 15,
+    color: 'rgba(255,255,255,0.85)', // 原因：primary 主卡白 85% 副文字（原型 .d），dark 不变
+  },
+  contactMainGo: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255,255,255,0.25)', // 原因：primary 主卡白 25% 箭头底（原型 .go），dark 不变
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  contactSub: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  contactSubRow: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.sm,
+  },
+  contactSubIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contactSubLabel: {
+    ...typography['body-sm'],
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  contactSubValue: {
+    fontSize: 11,
+  },
+  contactSubDivider: {
+    width: StyleSheet.hairlineWidth,
+    alignSelf: 'stretch',
+  },
+  // FAQ 折叠（原型 .faq-list / .faq）
+  faqHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  faqAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.xs,
+  },
+  faqAllText: {
+    ...typography['label-caps'],
+    fontSize: 11,
+  },
+  faqList: {
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+  },
+  faqItem: {
+    // 分隔线运行时注入（idx > 0）
+  },
+  faqQ: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md + 2,
+    minHeight: 52,
+  },
+  faqNum: {
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  faqNumText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  faqQuestion: {
+    ...typography['body-md'],
+    flex: 1,
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  faqAnswer: {
+    fontSize: 12,
+    lineHeight: 19,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+    paddingLeft: spacing.md + 34, // 对齐问题文字（22 数字圈 + 10 间距）
+  },
+  // 底部工作时间（原型最后一行）
+  workHoursRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.xs,
+  },
+  workHoursText: {
+    fontSize: 11,
   },
 });

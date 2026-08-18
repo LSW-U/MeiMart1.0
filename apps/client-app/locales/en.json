@@ -900,17 +900,14 @@
     "workHours": "Working Hours",
     "online": "Online",
     "workHoursDesc": "Mon - Sun · 08:00 - 22:00 (Dili time)",
-    "categories": {
-      "order": "Order issues",
-      "orderDesc": "Check orders, shipping, returns",
-      "payment": "Payment issues",
-      "paymentDesc": "Payment failures, refund status",
-      "product": "Product advice",
-      "productDesc": "Authenticity, expiry dates",
-      "feedback": "Feedback",
-      "feedbackDesc": "Product suggestions, bug reports",
-      "help": "Help center",
-      "helpDesc": "Frequently asked questions"
+    "contact": {
+      "online": "Online Chat",
+      "onlineDesc": "Submit your question"
+    },
+    "shortcut": {
+      "orders": "My Orders",
+      "refunds": "Refunds",
+      "tracking": "Tracking"
     },
     "feedback": {
       "title": "Feedback",

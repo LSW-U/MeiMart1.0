@@ -900,17 +900,14 @@
     "workHours": "工作时间",
     "online": "在线",
     "workHoursDesc": "周一至周日 · 08:00 - 22:00（帝力时间）",
-    "categories": {
-      "order": "订单问题",
-      "orderDesc": "查询订单、物流、退换货",
-      "payment": "支付问题",
-      "paymentDesc": "支付失败、退款进度",
-      "product": "商品咨询",
-      "productDesc": "商品真假、保质期",
-      "feedback": "意见反馈",
-      "feedbackDesc": "产品建议、bug 反馈",
-      "help": "帮助中心",
-      "helpDesc": "常见问题解答"
+    "contact": {
+      "online": "在线客服",
+      "onlineDesc": "提交您的问题"
+    },
+    "shortcut": {
+      "orders": "我的订单",
+      "refunds": "退款",
+      "tracking": "物流"
     },
     "feedback": {
       "title": "意见反馈",

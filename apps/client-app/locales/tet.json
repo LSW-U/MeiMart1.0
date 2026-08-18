@@ -858,17 +858,14 @@
     "workHours": "[TET] Working Hours",
     "online": "[TET] Online",
     "workHoursDesc": "[TET] Mon - Sun · 08:00 - 22:00 (Dili time)",
-    "categories": {
-      "order": "[TET] Order issues",
-      "orderDesc": "[TET] Check orders, shipping, returns",
-      "payment": "[TET] Payment issues",
-      "paymentDesc": "[TET] Payment failures, refund status",
-      "product": "[TET] Product advice",
-      "productDesc": "[TET] Authenticity, expiry dates",
-      "feedback": "[TET] Feedback",
-      "feedbackDesc": "[TET] Product suggestions, bug reports",
-      "help": "[TET] Help center",
-      "helpDesc": "[TET] Frequently asked questions"
+    "contact": {
+      "online": "[TET] Online Chat",
+      "onlineDesc": "[TET] Submit your question"
+    },
+    "shortcut": {
+      "orders": "[TET] My Orders",
+      "refunds": "[TET] Refunds",
+      "tracking": "[TET] Tracking"
     },
     "feedback": {
       "title": "[TET] Feedback",
