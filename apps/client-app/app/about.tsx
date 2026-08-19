@@ -1,9 +1,10 @@
 // AboutPage — 品牌展示页（PrimaryHeader + 品牌区 + 信任数据条 + 联系/社交/法律/评分卡，P25 优化）
 // 版本号走 @/utils/appInfo（P17 决策 6 单一数据源）；法律 terms/privacy 跳 legal/[type]
-import { StyleSheet, View, Text, Pressable, ScrollView, Share } from 'react-native';
+import { StyleSheet, View, Text, Pressable, ScrollView, Share, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
+import { toast } from '@/store/toastStore';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -18,7 +19,10 @@ import { APP_VERSION } from '@/utils/appInfo';
 export default function AboutPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  // F4：订单数按 locale 格式化——zh「5万+」对齐原型 L217，en/tet 用「50K+」（K 千缩写不通用 zh/tet 习惯）
+  const ordersStat = i18n.language === 'zh' ? '5万+' : '50K+';
 
   return (
     <SafeAreaWrapper
@@ -79,7 +83,7 @@ export default function AboutPage() {
             [
               { num: '13', label: t('about.statRegions') },
               { num: '200+', label: t('about.statMerchants') },
-              { num: '50K+', label: t('about.statOrders') },
+              { num: ordersStat, label: t('about.statOrders') },
             ] as const
           ).map((s, i) => (
             <View
@@ -104,8 +108,19 @@ export default function AboutPage() {
             <View style={[styles.missionIco, { backgroundColor: colors['primary-container'] }]}>
               <Icon symbol="handshake" size={22} color={colors['on-primary-container']} />
             </View>
+            {/* F3：`|...|` 分隔符段渲染 primary 加粗强调（对齐原型 <b> 商家与消费者/送货到家） */}
             <Text style={[styles.missionTxt, { color: colors['on-surface'] }]}>
-              {t('about.mission')}
+              {t('about.mission')
+                .split('|')
+                .map((seg, i) =>
+                  i % 2 === 1 ? (
+                    <Text key={i} style={{ color: colors.primary, fontWeight: '700' }}>
+                      {seg}
+                    </Text>
+                  ) : (
+                    <Text key={i}>{seg}</Text>
+                  ),
+                )}
             </Text>
           </View>
         </View>
@@ -244,27 +259,37 @@ export default function AboutPage() {
           <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
             {t('about.supportTitle')}
           </Text>
+          {/* F1：评分按平台分流——iOS 跳 App Store / Android 跳 Play Store（单平台链接在另一端只会开网页报不兼容） */}
           <LegalRow
             icon="star_rate"
             label={t('about.rate')}
             testID="about-rate"
-            onPress={() =>
-              openExternalLink(
-                'https://play.google.com/store/apps/details?id=com.meimart.client',
-                t('errors.openLinkFailed'),
-              )
-            }
+            onPress={() => {
+              // 商店链接均为占位（EAS 上架后换真实 appId），对齐 order/[id].tsx 的平台分流先例
+              const storeUrl =
+                Platform.OS === 'ios'
+                  ? 'https://apps.apple.com/app/meimart/idPLACEHOLDER'
+                  : 'https://play.google.com/store/apps/details?id=com.meimart.client';
+              openExternalLink(storeUrl, t('errors.openLinkFailed'));
+            }}
           />
           <LegalRow
             icon="share"
             label={t('about.share')}
             testID="about-share"
             onPress={() => {
-              Share.share({
-                message: `${t('about.tagline')} — MeiMart`,
-              }).catch(() => {
-                // 分享面板取消/失败无需打断用户（无对应面板的 Web 环境静默降级）
-              });
+              const message = `${t('about.tagline')} — MeiMart`;
+              if (Platform.OS === 'web') {
+                // F2：Web 端 Share API 兼容性差，clipboard 兜底 + toast 反馈（对齐 order/[id] 先例）
+                if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                  navigator.clipboard.writeText(message).catch(() => {});
+                  toast.success(t('order.shareCopied', { defaultValue: 'Order link copied' }));
+                }
+              } else {
+                Share.share({ message }).catch(() => {
+                  // 用户取消分享，静默
+                });
+              }
             }}
           />
         </View>
