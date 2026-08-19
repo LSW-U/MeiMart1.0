@@ -1,28 +1,30 @@
-import { StyleSheet, View, Text, FlatList, Pressable } from 'react-native';
+// LanguagePage - 语言选择页（PrimaryHeader + 说明条 + 三语言卡 + toast 反馈 + 版本底栏，P26 优化）
+// 切换走 changeLocale（async）；tet 已启用（Q1=A 拍板，与 SUPPORTED_LOCALES 一致）
+import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, typography } from '@/theme';
+import { useTheme, spacing, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
+import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { Icon } from '@/components/ui/Icon';
 import { useAppStore } from '@/store/appStore';
 import { changeLocale, type AppLocale } from '@/i18n';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { toIconName } from '@/types';
 import { toast } from '@/store/toastStore';
+import { APP_VERSION } from '@/utils/appInfo';
 
 interface LanguageItem {
   code: AppLocale;
   label: string;
   native: string;
-  icon: string;
-  available: boolean;
 }
 
+// D1：图标语义统一 language（->translate），不再 per-language 配 icon
+// D2：tet 启用（Q1=A 拍板，翻译文件存在且持续补译）
 const LANGUAGES: LanguageItem[] = [
-  { code: 'zh', label: '中文', native: '中文（简体）', icon: 'account', available: true },
-  { code: 'en', label: 'English', native: 'English', icon: 'alphabetical', available: true },
-  { code: 'tet', label: 'Tetun', native: 'Tetun', icon: 'alphabetical', available: false },
+  { code: 'zh', label: '中文', native: '中文（简体）' },
+  { code: 'en', label: 'English', native: 'English' },
+  { code: 'tet', label: 'Tetun', native: 'Tetun' },
 ];
 
 export default function LanguagePage() {
@@ -31,62 +33,102 @@ export default function LanguagePage() {
   const { t } = useTranslation();
   const locale = useAppStore((s) => s.locale);
 
-  const select = (item: LanguageItem) => {
-    if (!item.available) {
-      toast.info(t('language.comingSoon', { native: item.native }));
+  // D6：await 切换完成后再取 t()（toast 用切换后语言文案）+ 500ms 延迟返回让用户看到 toast
+  const select = async (item: LanguageItem) => {
+    if (locale === item.code) {
+      handleBack();
       return;
     }
-    void changeLocale(item.code);
-    handleBack();
+    await changeLocale(item.code);
+    toast.success(t('language.changed'));
+    setTimeout(handleBack, 500);
   };
 
   return (
-    <SafeAreaWrapper style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <StatusBarConfig />
-      <PageHeader
+      <PrimaryHeader
         title={t('language.title')}
         showBack
         onBackPress={handleBack}
         testID="language-back"
       />
-      <FlatList
-        data={LANGUAGES}
-        keyExtractor={(item) => item.code}
-          initialNumToRender={6}
-          maxToRenderPerBatch={4}
-          windowSize={5}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => {
+
+      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+        {/* D7 顶部说明条 */}
+        <View style={[styles.infoBar, { backgroundColor: colors['surface-container-low'] }]}>
+          <Icon symbol="language" size={18} color={colors.primary} />
+          <Text style={[styles.infoTxt, { color: colors['on-surface-variant'] }]}>
+            {t('language.desc')}
+          </Text>
+        </View>
+
+        {/* D5：3 静态项 ScrollView + map（FlatList 杀鸡用牛刀已删） */}
+        {LANGUAGES.map((item) => {
           const active = locale === item.code;
           return (
             <Pressable
+              key={item.code}
               testID={`lang-${item.code}`}
-              onPress={() => select(item)}
+              onPress={() => void select(item)}
               style={({ pressed }) => [
-                styles.row,
-                { backgroundColor: colors['surface-container-low'], opacity: pressed ? 0.7 : 1 },
+                styles.langCard,
+                {
+                  backgroundColor: active
+                    ? colors['surface-container-high']
+                    : colors['surface-container-lowest'],
+                  borderColor: active ? colors.primary : 'transparent',
+                },
+                pressed && { opacity: 0.7 },
               ]}
               accessibilityRole="button"
               accessibilityLabel={item.native}
               accessibilityState={{ selected: active }}
             >
-              <MaterialCommunityIcons
-                name={toIconName(item.icon)}
-                size={20}
-                color={colors['on-surface-variant']}
-              />
-              <View style={styles.textCol}>
-                <Text style={[styles.label, { color: colors['on-surface'] }]}>{item.label}</Text>
-                <Text style={[styles.sub, { color: colors['on-surface-variant'] }]}>
+              {/* D3：图标盒 36px 圆底，选中 primary 底白字 */}
+              <View
+                style={[
+                  styles.langIcon,
+                  { backgroundColor: active ? colors.primary : colors['surface-container-low'] },
+                ]}
+              >
+                <Icon
+                  symbol="language"
+                  size={20}
+                  color={active ? colors['on-primary'] : colors['on-surface-variant']}
+                />
+              </View>
+              <View style={styles.langText}>
+                <Text
+                  style={[
+                    styles.langName,
+                    { color: active ? colors.primary : colors['on-surface'] },
+                  ]}
+                >
+                  {item.label}
+                </Text>
+                <Text style={[styles.langNative, { color: colors['on-surface-variant'] }]}>
                   {item.native}
-                  {!item.available && `（${t('language.comingSoonShort')}）`}
                 </Text>
               </View>
-              {active && <MaterialCommunityIcons name="check" size={20} color={colors.primary} />}
+              {/* D3：选中 primary 实心圆 + 白 check（22px） */}
+              {active && (
+                <View style={[styles.langCheck, { backgroundColor: colors.primary }]}>
+                  <Icon symbol="check" size={14} color={colors['on-primary']} />
+                </View>
+              )}
             </Pressable>
           );
-        }}
-      />
+        })}
+
+        {/* D8 底部版本/地区小字（版本单一数据源 appInfo，地区随语言切换） */}
+        <Text style={[styles.footNote, { color: colors['on-surface-variant'] }]}>
+          {`MeiMart · ${t('language.region')}\nv${APP_VERSION}`}
+        </Text>
+      </ScrollView>
     </SafeAreaWrapper>
   );
 }
@@ -94,15 +136,52 @@ export default function LanguagePage() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { padding: spacing.md, gap: spacing.sm },
-  row: {
+  infoBar: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm + 2,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.sm + 4,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  infoTxt: {
+    flex: 1,
+    ...typography['body-sm'],
+    lineHeight: 18,
+  },
+  langCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
-    borderRadius: 12,
+    borderRadius: borderRadius.xl,
     gap: spacing.md,
-    minHeight: 56,
+    minHeight: 60,
+    borderWidth: 1.5,
   },
-  textCol: { flex: 1 },
-  label: { ...typography['body-md'], fontWeight: '600' },
-  sub: { ...typography['body-sm'] },
+  langIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  langText: { flex: 1 },
+  langName: { ...typography['body-md'], fontSize: 16, fontWeight: '600' },
+  langNative: { ...typography['body-sm'], marginTop: 2 },
+  langCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footNote: {
+    ...typography['body-sm'],
+    fontSize: 11,
+    textAlign: 'center',
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.lg,
+    lineHeight: 18,
+  },
 });
