@@ -35,10 +35,8 @@ export default function LanguagePage() {
 
   // D6：await 切换完成后再取 t()（toast 用切换后语言文案）+ 500ms 延迟返回让用户看到 toast
   const select = async (item: LanguageItem) => {
-    if (locale === item.code) {
-      handleBack();
-      return;
-    }
+    // 点当前已选语言：无操作静默返回（审查 F4——selected 项点击触发导航离开与选中语义不符）
+    if (locale === item.code) return;
     await changeLocale(item.code);
     toast.success(t('language.changed'));
     setTimeout(handleBack, 500);
@@ -124,10 +122,15 @@ export default function LanguagePage() {
           );
         })}
 
-        {/* D8 底部版本/地区小字（版本单一数据源 appInfo，地区随语言切换） */}
-        <Text style={[styles.footNote, { color: colors['on-surface-variant'] }]}>
-          {`MeiMart · ${t('language.region')}\nv${APP_VERSION}`}
-        </Text>
+        {/* D8 底部版本/地区小字（版本单一数据源 appInfo，地区随语言切换）；两行独立 Text（审查 F6，a11y 停顿+可测） */}
+        <View style={styles.footNote}>
+          <Text style={[styles.footRegion, { color: colors['on-surface-variant'] }]}>
+            {`MeiMart · ${t('language.region')}`}
+          </Text>
+          <Text style={[styles.footVersion, { color: colors['on-surface-variant'] }]}>
+            {`v${APP_VERSION}`}
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaWrapper>
   );
@@ -177,11 +180,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   footNote: {
-    ...typography['body-sm'],
-    fontSize: 11,
-    textAlign: 'center',
+    alignItems: 'center',
+    gap: 2,
     paddingTop: spacing.sm,
     paddingBottom: spacing.lg,
-    lineHeight: 18,
+  },
+  footRegion: {
+    ...typography['body-sm'],
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  footVersion: {
+    ...typography['body-sm'],
+    fontSize: 11,
+    lineHeight: 16,
   },
 });

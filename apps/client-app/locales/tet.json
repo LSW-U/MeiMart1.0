@@ -332,7 +332,7 @@
       "stripe": "[TET] Credit Card"
     },
     "shareMessage": "[TET] MeiMart order {{orderNo}}",
-    "shareCopied": "[TET] Order link copied",
+    "shareCopied": "Link pedidos nakopia ona",
     "shareA11y": "[TET] Share order {{orderNo}}",
     "riderDefault": "[TET] Delivery Rider",
     "riderOnTheWay": "[TET] ON THE WAY",
@@ -525,8 +525,6 @@
   },
   "language": {
     "title": "Hili lingua",
-    "comingSoon": "{{native}} sei mai loro",
-    "comingSoonShort": "Sei mai loro",
     "desc": "Hili lingua preferida. Konteudu aplikasaun sei atualiza imediatamente.",
     "changed": "Lingua atualiza ona",
     "region": "Timor-Leste"

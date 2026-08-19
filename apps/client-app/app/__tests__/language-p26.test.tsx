@@ -53,9 +53,9 @@ describe('LanguagePage（P26）', () => {
     expect(getByTestId('lang-tet')).toBeTruthy(); // Q1=A：tet 可选
     expect(getByText('language.desc')).toBeTruthy();
     const appJson = jest.requireActual('../../app.json');
-    // foot-note 是单 Text 含换行——用正则匹配两段内容
-    expect(getByText(/MeiMart · language\.region/)).toBeTruthy();
-    expect(getByText(new RegExp(`v${appJson.expo.version.replace(/\./g, '\\.')}`))).toBeTruthy();
+    // F6 拆两行 Text 后可整串直接命中
+    expect(getByText('MeiMart · language.region')).toBeTruthy();
+    expect(getByText(`v${appJson.expo.version}`)).toBeTruthy();
   });
 
   it('选中项（en）有选中标记，点 zh 触发 changeLocale + toast（D3/D6）', async () => {
@@ -71,7 +71,7 @@ describe('LanguagePage（P26）', () => {
     // changeLocale 是 mock，appStore locale 不变——调用链已验证即足够（切换后 selected 断言依赖真 changeLocale）
   });
 
-  it('点当前语言不切换只返回（select 守卫）', () => {
+  it('点当前语言无操作（select 守卫，审查 F4——不切换不返回）', () => {
     fireEvent.press(render(<LanguagePage />, { wrapper }).getByTestId('lang-en'));
     expect(mockChangeLocale).not.toHaveBeenCalled();
     expect(toastSuccessSpy).not.toHaveBeenCalled();

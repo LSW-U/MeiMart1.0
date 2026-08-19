@@ -566,8 +566,6 @@
   },
   "language": {
     "title": "选择语言",
-    "comingSoon": "{{native}} 即将上线",
-    "comingSoonShort": "即将上线",
     "desc": "选择您的首选语言，应用内容将立即更新。",
     "changed": "语言已切换",
     "region": "东帝汶"

@@ -16,13 +16,20 @@ import { Icon } from '@/components/ui/Icon';
 import { openExternalLink } from '@/utils/linking';
 import { APP_VERSION } from '@/utils/appInfo';
 
+// 应用商店评分链接（集中管理，审查 F2）—— ⚠️ CP8/EAS 上架前必须替换真实 appId：
+// TODO(CP8): iOS 换 App Store Connect 的数字 id；Android 确认 EAS package 名后核对
+const STORE_LINKS = {
+  ios: 'https://apps.apple.com/app/meimart/idPLACEHOLDER',
+  android: 'https://play.google.com/store/apps/details?id=com.meimart.client',
+} as const;
+
 export default function AboutPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t, i18n } = useTranslation();
 
-  // F4：订单数按 locale 格式化——zh「5万+」对齐原型 L217，en/tet 用「50K+」（K 千缩写不通用 zh/tet 习惯）
-  const ordersStat = i18n.language === 'zh' ? '5万+' : '50K+';
+  // F4：订单数按 locale 格式化——zh「5万+」对齐原型 L217；tet 无 K 千缩写习惯用「50 mil+」（审查 F5）；en「50K+」
+  const ordersStat = i18n.language === 'zh' ? '5万+' : i18n.language === 'tet' ? '50 mil+' : '50K+';
 
   return (
     <SafeAreaWrapper
@@ -265,11 +272,8 @@ export default function AboutPage() {
             label={t('about.rate')}
             testID="about-rate"
             onPress={() => {
-              // 商店链接均为占位（EAS 上架后换真实 appId），对齐 order/[id].tsx 的平台分流先例
-              const storeUrl =
-                Platform.OS === 'ios'
-                  ? 'https://apps.apple.com/app/meimart/idPLACEHOLDER'
-                  : 'https://play.google.com/store/apps/details?id=com.meimart.client';
+              // F1：评分按平台分流——iOS 跳 App Store / Android 跳 Play Store（链接见 STORE_LINKS，上架前替换 TODO）
+              const storeUrl = Platform.OS === 'ios' ? STORE_LINKS.ios : STORE_LINKS.android;
               openExternalLink(storeUrl, t('errors.openLinkFailed'));
             }}
           />
