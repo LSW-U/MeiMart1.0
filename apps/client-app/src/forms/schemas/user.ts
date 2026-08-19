@@ -5,10 +5,18 @@ const phoneSchema = z
   .min(1, 'Phone is required')
   .regex(/^(\+?670|0)?\s?\d{7,12}$/, 'Invalid phone number (e.g. +670 7XXX XXXX)');
 
-const emailSchema = z.string().min(1, 'Email is required').email('Invalid email').or(z.literal(''));
+// P27 D4：email 校验信息带 key 标记（编辑页 t() 映射显示；'Email is required' 分支被 or(literal('')) 吸收不会触发）
+const emailSchema = z
+  .string()
+  .min(1, 'Email is required')
+  .email('profileEdit.emailInvalid')
+  .or(z.literal(''));
 
 export const profileEditSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(40, 'Name too long'),
+  // P27 D5：昵称上限 40 → 15（电商超市用户名 8-12 字符，15 给余量）；错误文案前端 t() 覆盖（D4）
+  name: z.string().min(1, 'profileEdit.nameRequired').max(15, 'profileEdit.nameTooLong'),
+  // phone 保留 required 定义（类型完整 + 复用 phoneSchema 给 addressEditSchema）；
+  // UI 只读 + submit 排除不提交（P27 D5.1），schema 校验不触发
   phone: phoneSchema,
   email: emailSchema,
 });

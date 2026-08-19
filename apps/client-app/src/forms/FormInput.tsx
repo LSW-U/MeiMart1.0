@@ -10,12 +10,18 @@ type FormInputProps<T extends FieldValues> = Omit<
   name: FieldPath<T>;
   control: Control<T>;
   rules?: RegisterOptions<T>;
+  /**
+   * P27 D4：schema 错误信息 i18n 化——传入页面的 t()，zod message 是 i18n key（如
+   * 'profileEdit.nameRequired'）时翻译显示；不传则直显原文（旧页面英文串不受影响）
+   */
+  tError?: (msg: string) => string;
 };
 
 export function FormInput<T extends FieldValues>({
   name,
   control,
   rules,
+  tError,
   ...inputProps
 }: FormInputProps<T>) {
   return (
@@ -29,7 +35,7 @@ export function FormInput<T extends FieldValues>({
           value={(value as string) ?? ''}
           onChangeText={onChange}
           onBlur={onBlur}
-          error={error?.message}
+          error={error?.message != null && tError ? tError(error.message) : error?.message}
         />
       )}
     />
