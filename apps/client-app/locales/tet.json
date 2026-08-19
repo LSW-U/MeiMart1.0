@@ -951,7 +951,44 @@
       "tabSystem": "[TET] System",
       "a11y": {
         "settings": "[TET] Notification settings"
-      }
+      },
+      "timeToday": "[TET] Today",
+      "timeYesterday": "[TET] Yesterday",
+      "timeEarlier": "[TET] Earlier",
+      "unreadCount": "[TET] {{count}} unread",
+      "cta": {
+        "viewTracking": "[TET] Track order",
+        "payNow": "[TET] Pay now",
+        "writeReview": "[TET] Write review",
+        "confirmReplacement": "[TET] Confirm",
+        "viewDetails": "[TET] Details",
+        "viewOrder": "[TET] View order",
+        "callRider": "[TET] Call",
+        "shopNow": "[TET] Shop now",
+        "buyNow": "[TET] Buy now",
+        "addMore": "[TET] Add more",
+        "useCoupon": "[TET] Use coupon"
+      },
+      "rider": "[TET] Rider",
+      "step": {
+        "ordered": "[TET] Ordered",
+        "picked": "[TET] Picked",
+        "delivering": "[TET] Delivering",
+        "delivered": "[TET] Delivered"
+      },
+      "eta": "[TET] Est. delivery {{time}}",
+      "distance": "[TET] {{dist}} km away",
+      "endsIn": "[TET] Ends in",
+      "remaining": "[TET] Left",
+      "ended": "[TET] Ended",
+      "emptyOrder": "[TET] No order notifications",
+      "emptyPromo": "[TET] No promotions yet",
+      "emptyPromoDesc": "[TET] Coupons and deals will appear here",
+      "emptySystem": "[TET] No system notifications",
+      "loginTitle": "[TET] Sign in to view",
+      "loginDesc": "[TET] Receive order delivery and promo updates after sign in",
+      "loginBtn": "[TET] Sign in",
+      "goBrowse": "[TET] Browse"
     }
   },
   "errors": {

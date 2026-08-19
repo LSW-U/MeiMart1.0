@@ -191,6 +191,11 @@ export interface Notification {
   type: NotificationType;
   read: boolean;
   createdAt: string;
+  /**
+   * 富内容数据（P23 D4/Q1 方案 A）：后端 data 原样透传，可选不破坏现有消费方。
+   * NotificationItem 按 data?.orderId / endsAt 等条件渲染富内容，无 data 降级简单卡片。
+   */
+  data?: Record<string, unknown> | null;
 }
 
 export interface Review {

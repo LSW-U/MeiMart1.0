@@ -993,7 +993,44 @@
       "tabSystem": "System",
       "a11y": {
         "settings": "Notification settings"
-      }
+      },
+      "timeToday": "Today",
+      "timeYesterday": "Yesterday",
+      "timeEarlier": "Earlier",
+      "unreadCount": "{{count}} unread",
+      "cta": {
+        "viewTracking": "Track order",
+        "payNow": "Pay now",
+        "writeReview": "Write review",
+        "confirmReplacement": "Confirm",
+        "viewDetails": "Details",
+        "viewOrder": "View order",
+        "callRider": "Call",
+        "shopNow": "Shop now",
+        "buyNow": "Buy now",
+        "addMore": "Add more",
+        "useCoupon": "Use coupon"
+      },
+      "rider": "Rider",
+      "step": {
+        "ordered": "Ordered",
+        "picked": "Picked",
+        "delivering": "Delivering",
+        "delivered": "Delivered"
+      },
+      "eta": "Est. delivery {{time}}",
+      "distance": "{{dist}} km away",
+      "endsIn": "Ends in",
+      "remaining": "Left",
+      "ended": "Ended",
+      "emptyOrder": "No order notifications",
+      "emptyPromo": "No promotions yet",
+      "emptyPromoDesc": "Coupons and deals will appear here",
+      "emptySystem": "No system notifications",
+      "loginTitle": "Sign in to view",
+      "loginDesc": "Receive order delivery and promo updates after sign in",
+      "loginBtn": "Sign in",
+      "goBrowse": "Browse"
     }
   },
   "errors": {

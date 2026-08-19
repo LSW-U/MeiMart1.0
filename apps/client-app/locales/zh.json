@@ -993,7 +993,44 @@
       "tabSystem": "系统",
       "a11y": {
         "settings": "通知设置"
-      }
+      },
+      "timeToday": "今天",
+      "timeYesterday": "昨天",
+      "timeEarlier": "更早",
+      "unreadCount": "{{count}} 条未读",
+      "cta": {
+        "viewTracking": "查看物流",
+        "payNow": "立即付款",
+        "writeReview": "去评价",
+        "confirmReplacement": "确认替换",
+        "viewDetails": "查看详情",
+        "viewOrder": "查看订单",
+        "callRider": "呼叫",
+        "shopNow": "去抢购",
+        "buyNow": "去购买",
+        "addMore": "去凑单",
+        "useCoupon": "去使用"
+      },
+      "rider": "骑手",
+      "step": {
+        "ordered": "已下单",
+        "picked": "已拣货",
+        "delivering": "配送中",
+        "delivered": "已送达"
+      },
+      "eta": "预计 {{time}} 送达",
+      "distance": "距您 {{dist}} km",
+      "endsIn": "距结束",
+      "remaining": "剩余",
+      "ended": "已结束",
+      "emptyOrder": "暂无订单通知",
+      "emptyPromo": "暂无促销通知",
+      "emptyPromoDesc": "优惠券和活动会显示在这里",
+      "emptySystem": "暂无系统通知",
+      "loginTitle": "登录后查看通知",
+      "loginDesc": "登录后即可接收订单配送、促销优惠消息",
+      "loginBtn": "立即登录",
+      "goBrowse": "去逛逛"
     }
   },
   "errors": {

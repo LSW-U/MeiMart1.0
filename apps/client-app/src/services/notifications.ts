@@ -36,6 +36,7 @@ function transformNotification(raw: NotificationRaw): Notification {
     type: TYPE_MAP[raw.type] ?? 'system',
     read: raw.isRead,
     createdAt: raw.createdAt,
+    data: raw.data, // P23 D4 —— 保留富内容数据（原 transform 丢弃）
   };
 }
 
