@@ -94,7 +94,7 @@ export default function TaskNavigatePage() {
     try {
       await Linking.openURL('tel:' + phone);
     } catch {
-      showToast(t('tasks.openNavigationFailed'), 'error');
+      showToast(t('common.callFailed'), 'error');
     }
   };
 

@@ -399,5 +399,7 @@
   "tasks.deliveryProgress.delivering": "配送中",
   "tasks.deliveryProgress.pending": "待送达",
   "tasks.etaLabel": "预计到达",
-  "tasks.doorDelivery": "送货上门"
+  "tasks.doorDelivery": "送货上门",
+  "pickup.camPlaceholder": "拍照",
+  "common.callFailed": "无法拨打电话"
 }

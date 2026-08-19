@@ -105,7 +105,7 @@ export default function SignConfirmPage() {
     try {
       await Linking.openURL('tel:' + phone);
     } catch {
-      showToast(t('common.networkError'), 'error');
+      showToast(t('common.callFailed'), 'error');
     }
   };
 
@@ -139,15 +139,17 @@ export default function SignConfirmPage() {
           onRetry={() => void refetch()}
         >
           {(detail) => {
-            // T5 L2: 配送进度条（取货✓→配送✓→送达●）。成功态③变绿✓
-            const step = detail.status === 'DELIVERING' ? 2 : 1;
+            // T5 L2: 配送进度条（取货✓→配送✓→送达●）。sign 页语义比 navigate 前进一位：
+            //   PICKED_UP（已取货完，配送中）→ step=2；DELIVERING（配送完，待送达）→ step=3。
+            //   成功态 stepReached=3 全绿✓（审查修复 P2-1，原照抄 navigate 的 step 推导错位）
+            const step = detail.status === 'DELIVERING' ? 3 : 2;
             const stepReached = status === 'success' ? 3 : step;
             const dotState = (n: 1 | 2 | 3): 'done' | 'active' | 'todo' =>
               n < stepReached ? 'done' : n === stepReached ? 'active' : 'todo';
             const progressLabels = [
               t('tasks.deliveryProgress.pickedUp'),
               t('tasks.deliveryProgress.delivering'),
-              t('tasks.deliveryProgress.pending'),
+              status === 'success' ? t('sign.success') : t('tasks.deliveryProgress.pending'),
             ];
             const detailIsCod = detail.paymentMethod === 'COD';
             const detailPayable = (detail.payableAmount ?? 0) / 100;
@@ -176,7 +178,10 @@ export default function SignConfirmPage() {
                           >
                             {state === 'done' ? <AppIcon color={colors.surface} name="check" size={14} /> : null}
                           </View>
-                          <Text className={'text-[10px] font-semibold ' + (state === 'active' ? 'font-bold text-primary' : 'text-on-surface-variant')}>
+                          <Text
+                            className={'text-[10px] font-semibold ' + (status === 'success' && n === 3 ? 'font-bold' : state === 'active' ? 'font-bold text-primary' : 'text-on-surface-variant')}
+                            style={status === 'success' && n === 3 ? { color: colors.success } : undefined}
+                          >
                             {progressLabels[n - 1]}
                           </Text>
                         </View>
@@ -209,14 +214,14 @@ export default function SignConfirmPage() {
                       style={{ backgroundColor: colors.success }}
                       onPress={() => void handleCallCustomer()}
                     >
-                      <AppIcon color={colors.surface} name="sms" size={14} />
+                      <AppIcon color={colors.surface} name="phone" size={14} />
                       <Text className="text-xs font-bold uppercase tracking-wider text-white">{t('sign.contactCustomer')}</Text>
                     </Pressable>
                   ) : null}
                 </View>
 
                 {/* L3 备注 note-block（仅 note != null 渲染）。tailwind token bg-warn-bg，非 CSS 变量。
-                    文字色用 colors.warning（colors.ts 无 warnText），对齐 tailwind warn-text 语义 */}
+                    原型仅图标/label 用 warn 色，正文是正常深色（P3 修正：原全文橙色可读性差） */}
                 {detail.note ? (
                   <View className="gap-1 rounded-lg border border-warn-border bg-warn-bg p-3">
                     <View className="flex-row items-center gap-1.5">
@@ -225,7 +230,7 @@ export default function SignConfirmPage() {
                         {t('flow.customerNote')}
                       </Text>
                     </View>
-                    <Text className="text-sm leading-5" style={{ color: colors.warning }}>{detail.note}</Text>
+                    <Text className="text-sm leading-5 text-on-surface">{detail.note}</Text>
                   </View>
                 ) : null}
 
@@ -302,8 +307,9 @@ export default function SignConfirmPage() {
           className={status === 'success' ? '' : canSubmit && !codAmountInvalid ? 'bg-primary-container' : 'bg-neutral-muted'}
           disabled={submitDisabled}
           loading={status === 'processing'}
-          // T5 §3.4/§7.5: 成功态按钮变绿，tailwind 无 success key，必须 inline style 覆盖
-          //   （Button 默认 bg-primary 在 className，inline style 优先级最高）
+          // T5 §3.4/§7.5: 成功态按钮变绿（审查修复 P1-1：tailwind 无 success key，
+          //   经 Button style prop inline 注入——className 拼接无法表达，原实现没传导致仍是红底）
+          style={status === 'success' ? { backgroundColor: colors.success } : undefined}
           onPress={() => void handleConfirmDelivery()}
           icon={status === 'success' ? <AppIcon color={colors.surface} name="check" size={16} /> : undefined}
         >

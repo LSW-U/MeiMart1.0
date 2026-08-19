@@ -399,5 +399,7 @@
   "tasks.deliveryProgress.delivering": "Delivering",
   "tasks.deliveryProgress.pending": "Pending delivery",
   "tasks.etaLabel": "ETA",
-  "tasks.doorDelivery": "Door delivery"
+  "tasks.doorDelivery": "Door delivery",
+  "pickup.camPlaceholder": "PHOTO",
+  "common.callFailed": "Failed to make the call"
 }

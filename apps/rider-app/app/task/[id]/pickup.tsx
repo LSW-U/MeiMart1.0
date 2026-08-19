@@ -103,6 +103,7 @@ export default function PickupConfirmPage() {
                 actionLabel={t('pickup.tapPhoto')}
                 captured={captured}
                 capturedLabel={t('pickup.capturedLabel')}
+                placeholderLabel={t('pickup.camPlaceholder')}
                 required
                 title={t('pickup.receiptPhoto')}
                 photoUri={photoUri}
