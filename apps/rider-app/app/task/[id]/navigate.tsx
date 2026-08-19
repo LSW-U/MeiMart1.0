@@ -1,7 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Fragment, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { DeliveryProgressBar } from '../../../src/components/business/DeliveryProgressBar';
 import { StepPageHeader } from '../../../src/components/layout/StepPageHeader';
 import { QueryBoundary } from '../../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../../src/components/feedback/Toast';
@@ -153,49 +154,18 @@ export default function TaskNavigatePage() {
               </View>
 
               {/* T4 审查修复 P1-2（原型 .progress-bar）：三段进度条，消费 deliveryProgress 3 key。
-                  PICKED_UP → step1 done + step2 active；DELIVERING → 前两段 done + step3 active */}
-              {(() => {
-                const step = taskData.status === 'DELIVERING' ? 2 : 1;
-                const dotState = (n: 1 | 2 | 3): 'done' | 'active' | 'todo' =>
-                  n < step ? 'done' : n === step ? 'active' : 'todo';
-                const labels = [
-                  t('tasks.deliveryProgress.pickedUp'),
-                  t('tasks.deliveryProgress.delivering'),
-                  t('tasks.deliveryProgress.pending'),
-                ];
-                return (
-                  <View className="flex-row items-start px-4 pb-2 pt-3">
-                    {[1, 2, 3].map((n) => {
-                      const idx = n as 1 | 2 | 3;
-                      const state = dotState(idx);
-                      return (
-                        <Fragment key={n}>
-                          {n > 1 ? (
-                            // 连接线（原型 .progress-line）：done 绿 / todo 灰；对齐 dot 垂直中心（dot 28px/2 - 线 1.5px）
-                            <View className="mx-[-2px] mt-[13px] h-[3px] flex-1 rounded-sm" style={{ backgroundColor: state === 'todo' ? colors.border : colors.success }} />
-                          ) : null}
-                          <View className="items-center gap-1">
-                            <View
-                              className={'h-7 w-7 items-center justify-center rounded-full ' + (state === 'todo' ? 'bg-surface-container' : '')}
-                              style={
-                                state === 'done'
-                                  ? { backgroundColor: colors.success }
-                                  : state === 'active'
-                                    ? { backgroundColor: colors.primary }
-                                    : undefined}
-                            >
-                              {state === 'done' ? <AppIcon color={colors.surface} name="check" size={14} /> : null}
-                            </View>
-                            <Text className={'text-[10px] font-semibold ' + (state === 'active' ? 'font-bold text-primary' : 'text-on-surface-variant')}>
-                              {labels[n - 1]}
-                            </Text>
-                          </View>
-                        </Fragment>
-                      );
-                    })}
-                  </View>
-                );
-              })()}
+                  PICKED_UP → step1 done + step2 active；DELIVERING → 前两段 done + step3 active。
+                  T5 审查 P2-1：抽 DeliveryProgressBar 共享组件（与 sign 收口，业务 step 语义在调用方推导） */}
+              <View className="px-3 pb-2 pt-3">
+                <DeliveryProgressBar
+                  labels={[
+                    t('tasks.deliveryProgress.pickedUp'),
+                    t('tasks.deliveryProgress.delivering'),
+                    t('tasks.deliveryProgress.pending'),
+                  ]}
+                  step={taskData.status === 'DELIVERING' ? 2 : 1}
+                />
+              </View>
 
               <View className="gap-4 px-5">
                 <View className="rounded-xl border border-outline/10 bg-surface p-4 shadow-md">

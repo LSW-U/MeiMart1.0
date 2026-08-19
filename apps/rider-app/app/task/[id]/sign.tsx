@@ -1,8 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EvidenceExample, EvidenceUpload } from '../../../src/components/camera/SignaturePad';
+import { DeliveryProgressBar } from '../../../src/components/business/DeliveryProgressBar';
 import { QueryBoundary } from '../../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../../src/components/feedback/Toast';
 import { StepPageHeader } from '../../../src/components/layout/StepPageHeader';
@@ -81,10 +82,12 @@ export default function SignConfirmPage() {
         evidence: { doorUri, packageUri },
         collectedAmount: codAtSubmit ? Math.round(Number.parseFloat(collectedInput) * 100) : undefined,
       });
+      // CLAUDE.md 规则 12：离线入队成功提示（mutationFn resolve 不 reject，调用方按 isOffline 区分）。
+      // T5 审查 P3-1：对齐 pickup 互斥模式——离线只 info（已入队将同步），在线才 success toast
       if (isOffline) showToast(t('common.savedOffline'), 'info');
+      else showToast(t('sign.successToast'), 'success');
       setStatus('success');
-      // T5 §3.4: 成功 toast + 延长反馈 500→1200ms（骑行途中 500ms 易错过）
-      showToast(t('sign.successToast'), 'success');
+      // T5 §3.4: 成功反馈（alert 绿/进度条③绿/按钮绿）+ 延长 1200ms（骑行途中 500ms 易错过）
       if (redirectTimer.current) clearTimeout(redirectTimer.current);
       redirectTimer.current = setTimeout(() => {
         redirectTimer.current = null;
@@ -141,54 +144,23 @@ export default function SignConfirmPage() {
           {(detail) => {
             // T5 L2: 配送进度条（取货✓→配送✓→送达●）。sign 页语义比 navigate 前进一位：
             //   PICKED_UP（已取货完，配送中）→ step=2；DELIVERING（配送完，待送达）→ step=3。
-            //   成功态 stepReached=3 全绿✓（审查修复 P2-1，原照抄 navigate 的 step 推导错位）
+            //   成功态 success=3 全绿✓（审查修复 P2-1，原照抄 navigate 的 step 推导错位）
             const step = detail.status === 'DELIVERING' ? 3 : 2;
-            const stepReached = status === 'success' ? 3 : step;
-            const dotState = (n: 1 | 2 | 3): 'done' | 'active' | 'todo' =>
-              n < stepReached ? 'done' : n === stepReached ? 'active' : 'todo';
-            const progressLabels = [
-              t('tasks.deliveryProgress.pickedUp'),
-              t('tasks.deliveryProgress.delivering'),
-              status === 'success' ? t('sign.success') : t('tasks.deliveryProgress.pending'),
-            ];
             const detailIsCod = detail.paymentMethod === 'COD';
             const detailPayable = (detail.payableAmount ?? 0) / 100;
 
             return (
               <>
-                {/* L2 配送进度条 */}
-                <View className="flex-row items-start px-1 pb-1">
-                  {[1, 2, 3].map((n) => {
-                    const idx = n as 1 | 2 | 3;
-                    const state = dotState(idx);
-                    return (
-                      <Fragment key={n}>
-                        {n > 1 ? (
-                          <View className="mx-[-2px] mt-[13px] h-[3px] flex-1 rounded-sm" style={{ backgroundColor: state === 'todo' ? colors.border : colors.success }} />
-                        ) : null}
-                        <View className="items-center gap-1">
-                          <View
-                            className={'h-7 w-7 items-center justify-center rounded-full ' + (state === 'todo' ? 'bg-surface-container' : '')}
-                            style={
-                              state === 'done'
-                                ? { backgroundColor: colors.success }
-                                : state === 'active'
-                                  ? { backgroundColor: colors.primary }
-                                  : undefined}
-                          >
-                            {state === 'done' ? <AppIcon color={colors.surface} name="check" size={14} /> : null}
-                          </View>
-                          <Text
-                            className={'text-[10px] font-semibold ' + (status === 'success' && n === 3 ? 'font-bold' : state === 'active' ? 'font-bold text-primary' : 'text-on-surface-variant')}
-                            style={status === 'success' && n === 3 ? { color: colors.success } : undefined}
-                          >
-                            {progressLabels[n - 1]}
-                          </Text>
-                        </View>
-                      </Fragment>
-                    );
-                  })}
-                </View>
+                {/* L2 配送进度条（T5 审查 P2-1：抽 DeliveryProgressBar 共享组件，与 navigate 收口） */}
+                <DeliveryProgressBar
+                  labels={[
+                    t('tasks.deliveryProgress.pickedUp'),
+                    t('tasks.deliveryProgress.delivering'),
+                    status === 'success' ? t('sign.success') : t('tasks.deliveryProgress.pending'),
+                  ]}
+                  step={step}
+                  success={status === 'success'}
+                />
 
                 {/* L1 送达地址卡 + 联系客人入口 */}
                 <View className="gap-3 rounded-xl border border-outline/10 bg-surface p-4 shadow-md">
