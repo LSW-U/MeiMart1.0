@@ -1,7 +1,7 @@
-// ⚠️ 无 HTML 原型，参考 SplashPage 推导实现，待设计确认
-// AboutPage — 品牌展示页（参考 SplashPage.html 192 行的视觉风格）
-// D.1: Primary tais-pattern Header + DiamondPattern 背景 + LogoBadge + 文化装饰
-import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
+// AboutPage — 品牌展示页（PrimaryHeader + 品牌区 + 信任数据条 + 联系/社交/法律/评分卡，P25 优化）
+// 版本号走 @/utils/appInfo（P17 决策 6 单一数据源）；法律 terms/privacy 跳 legal/[type]
+import { StyleSheet, View, Text, Pressable, ScrollView, Share } from 'react-native';
+import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
@@ -10,13 +10,10 @@ import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { LogoBadge } from '@/components/cultural/LogoBadge';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
-import { TaisPattern } from '@/components/cultural/TaisPattern';
-import { UmaLulikSkyline } from '@/components/cultural/UmaLulikSkyline';
 import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { Icon } from '@/components/ui/Icon';
 import { openExternalLink } from '@/utils/linking';
-
-const APP_VERSION = '1.0.0';
+import { APP_VERSION } from '@/utils/appInfo';
 
 export default function AboutPage() {
   const handleBack = useSafeBack();
@@ -70,23 +67,47 @@ export default function AboutPage() {
           <TaisDivider width={140} />
         </View>
 
-        {/* 文化使命区 */}
+        {/* 信任数据条（D5）— 白底浮起卡片，3 列竖线分隔；数值为前端兜底静态值（D13 后端可配置预留） */}
         <View
           style={[
-            styles.culturalCard,
+            styles.statStrip,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.md,
+          ]}
+        >
+          {(
+            [
+              { num: '13', label: t('about.statRegions') },
+              { num: '200+', label: t('about.statMerchants') },
+              { num: '50K+', label: t('about.statOrders') },
+            ] as const
+          ).map((s, i) => (
+            <View
+              key={s.label}
+              style={[styles.statItem, i > 0 && { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: colors['outline-variant'] }]}
+            >
+              <Text style={[styles.statNum, { color: colors.primary }]}>{s.num}</Text>
+              <Text style={[styles.statLbl, { color: colors['on-surface-variant'] }]}>{s.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* 使命卡（D4/D12）— handshake 图标 + 左对齐文案，替代 TaisPattern/Skyline 堆叠 */}
+        <View
+          style={[
+            styles.card,
             { backgroundColor: colors['surface-container-lowest'] },
             shadowPresets.sm,
           ]}
         >
-          <View style={styles.taisStrip} pointerEvents="none">
-            <TaisPattern width={400} height={40} opacity={0.18} />
+          <View style={styles.missionRow}>
+            <View style={[styles.missionIco, { backgroundColor: colors['primary-container'] }]}>
+              <Icon symbol="handshake" size={22} color={colors['on-primary-container']} />
+            </View>
+            <Text style={[styles.missionTxt, { color: colors['on-surface'] }]}>
+              {t('about.mission')}
+            </Text>
           </View>
-          <View style={styles.skylineWrap}>
-            <UmaLulikSkyline height={48} />
-          </View>
-          <Text style={[styles.mission, { color: colors['on-surface'] }]}>
-            {t('about.mission')}
-          </Text>
         </View>
 
         {/* 信息卡片 */}
@@ -144,6 +165,110 @@ export default function AboutPage() {
           />
         </View>
 
+        {/* 关注我们（D7）— 东帝汶主流社交三入口 */}
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.sm,
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
+            {t('about.followTitle')}
+          </Text>
+          <View style={styles.socialRow}>
+            {(
+              [
+                { icon: 'facebook', label: 'Facebook', url: 'https://facebook.com/meimart' },
+                { icon: 'whatsapp', label: 'WhatsApp', url: 'https://wa.me/67077000000' },
+                { icon: 'instagram', label: 'Instagram', url: 'https://instagram.com/meimart' },
+              ] as const
+            ).map((s) => (
+              <Pressable
+                key={s.icon}
+                onPress={() => openExternalLink(s.url, t('errors.openLinkFailed'))}
+                style={({ pressed }) => [
+                  styles.socialBtn,
+                  { backgroundColor: colors['surface-container-high'] },
+                  pressed && { opacity: 0.6 },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={s.label}
+                testID={`about-social-${s.icon}`}
+              >
+                <Icon symbol={s.icon} size={22} color={colors.primary} />
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {/* 法律与条款（D6）— terms/privacy 跳 legal/[type]；license 占位不跳（LegalType 仅两值，见 P25 拍板 A） */}
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.sm,
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
+            {t('about.legalTitle')}
+          </Text>
+          <LegalRow
+            icon="description"
+            label={t('about.terms')}
+            testID="about-legal-terms"
+            onPress={() => router.push('/legal/terms')}
+          />
+          <LegalRow
+            icon="privacy_tip"
+            label={t('about.privacy')}
+            testID="about-legal-privacy"
+            onPress={() => router.push('/legal/privacy')}
+          />
+          <LegalRow
+            icon="verified"
+            label={t('about.license')}
+            testID="about-legal-license"
+            caption={t('legal.comingSoon')}
+          />
+        </View>
+
+        {/* 支持我们（D8）— 评分降级跳应用商店；分享走 RN Share */}
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.sm,
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
+            {t('about.supportTitle')}
+          </Text>
+          <LegalRow
+            icon="star_rate"
+            label={t('about.rate')}
+            testID="about-rate"
+            onPress={() =>
+              openExternalLink(
+                'https://play.google.com/store/apps/details?id=com.meimart.client',
+                t('errors.openLinkFailed'),
+              )
+            }
+          />
+          <LegalRow
+            icon="share"
+            label={t('about.share')}
+            testID="about-share"
+            onPress={() => {
+              Share.share({
+                message: `${t('about.tagline')} — MeiMart`,
+              }).catch(() => {
+                // 分享面板取消/失败无需打断用户（无对应面板的 Web 环境静默降级）
+              });
+            }}
+          />
+        </View>
+
         {/* 版本号 + Copyright */}
         <View style={styles.footer}>
           <Text style={[styles.version, { color: colors['on-surface-variant'] }]}>
@@ -184,7 +309,7 @@ function InfoRow({
       style={({ pressed }) => [styles.infoRow, pressed && onPress && { opacity: 0.6 }]}
       accessibilityRole={onPress ? 'button' : undefined}
     >
-      <View style={[styles.infoIcon, { backgroundColor: 'rgba(150,24,19,0.08)' }]}>
+      <View style={[styles.infoIcon, { backgroundColor: colors['surface-container-high'] }]}>
         <Icon symbol={icon} size={18} color={colors.primary} />
       </View>
       <View style={styles.infoText}>
@@ -192,6 +317,51 @@ function InfoRow({
         <Text style={[styles.infoValue, { color }]}>{value}</Text>
       </View>
       {onPress && <Icon symbol="chevron_right" size={18} color={subColor} />}
+    </Wrapper>
+  );
+}
+
+/** 法律/评分类单行入口（D6/D8）：圆形图标 + 单行文案 + chevron；license 类占位行用 caption 替代跳转 */
+function LegalRow({
+  icon,
+  label,
+  testID,
+  onPress,
+  caption,
+}: {
+  icon: string;
+  label: string;
+  testID?: string;
+  onPress?: () => void;
+  /** 占位说明（如营业资质「即将上线」），有 caption 时不跳转 */
+  caption?: string;
+}) {
+  const { colors } = useTheme();
+  const Wrapper = onPress ? Pressable : View;
+  return (
+    <Wrapper
+      testID={testID}
+      onPress={onPress}
+      style={({ pressed }) => [styles.legalRow, pressed && onPress && { opacity: 0.6 }]}
+      accessibilityRole={onPress ? 'button' : undefined}
+    >
+      <View style={[styles.legalIco, { backgroundColor: colors['surface-container-high'] }]}>
+        <Icon symbol={icon} size={18} color={colors.primary} />
+      </View>
+      <View style={styles.legalText}>
+        <Text style={[styles.legalLabel, { color: colors['on-surface'] }]}>{label}</Text>
+        {caption != null && (
+          <Text
+            style={[styles.legalCaption, { color: colors['on-surface-variant'] }]}
+            numberOfLines={1}
+          >
+            {caption}
+          </Text>
+        )}
+      </View>
+      {onPress && (
+        <Icon symbol="chevron_right" size={18} color={colors['on-surface-variant']} />
+      )}
     </Wrapper>
   );
 }
@@ -241,29 +411,48 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     opacity: 0.5,
   },
-  culturalCard: {
-    position: 'relative',
-    overflow: 'hidden',
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    alignItems: 'center',
-    gap: spacing.md,
+  statStrip: {
+    flexDirection: 'row',
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     marginBottom: spacing.lg,
   },
-  taisStrip: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
   },
-  skylineWrap: {
-    width: '100%',
-    marginTop: spacing.md,
+  statNum: {
+    ...typography.h3,
+    fontWeight: '800',
   },
-  mission: {
+  statLbl: {
+    ...typography['label-caps'],
+    fontSize: 10,
+  },
+  card: {
+    borderRadius: borderRadius.xl,
+    marginBottom: spacing.lg,
+    overflow: 'hidden',
+  },
+  missionRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    padding: spacing.md,
+  },
+  missionIco: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  missionTxt: {
+    flex: 1,
     ...typography['body-md'],
-    textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 21,
   },
   infoBlock: {
     borderRadius: borderRadius.xl,
@@ -307,6 +496,49 @@ const styles = StyleSheet.create({
   rowDivider: {
     height: StyleSheet.hairlineWidth,
     marginHorizontal: spacing.sm,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
+  },
+  socialBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    minHeight: 52,
+  },
+  legalIco: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  legalText: {
+    flex: 1,
+    flexDirection: 'column',
+    gap: 2,
+  },
+  legalLabel: {
+    ...typography['body-md'],
+    fontWeight: '500',
+  },
+  legalCaption: {
+    ...typography['body-sm'],
+    opacity: 0.7,
   },
   footer: {
     alignItems: 'center',
