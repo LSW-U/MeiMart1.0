@@ -54,7 +54,7 @@
     "id": "n005",
     "title": "评价有礼",
     "body": "完成订单评价可获得 5 积分",
-    "type": "system",
+    "type": "promotion",
     "read": true,
     "createdAt": "2026-08-11T05:23:34Z",
     "data": {

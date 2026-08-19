@@ -49,6 +49,9 @@ const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = {
   search: 'magnify',
   // P21 审查 Q2 —— search_off 用 magnify-close（MC 无完全对应的带斜线搜索，取「关闭搜索」最近语义）
   search_off: 'magnify-close',
+  // P23 审查发现 1 -- 分组头图标补映射（today/schedule 原漏映射兜底 circle-outline）
+  today: 'calendar-today',
+  schedule: 'clock-outline',
   security: 'shield-check',
   send: 'send',
   settings: 'cog',

@@ -200,7 +200,7 @@ export function NotificationItem({ notification, onPress, onCta, testID }: Notif
                   { backgroundColor: colors.semantic['positive-container'] },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={t('service.notifications.cta.callRider', { defaultValue: 'Call' })}
+                accessibilityLabel={t('service.notifications.cta.callRider')}
               >
                 <MaterialCommunityIcons name="phone" size={16} color={colors.semantic.positive} />
               </Pressable>
@@ -280,7 +280,7 @@ export function NotificationItem({ notification, onPress, onCta, testID }: Notif
                       {formatPrice(originalPrice)}
                     </Text>
                   )}
-                  {typeof originalPrice === 'number' && salePrice > 0 && (
+                  {typeof originalPrice === 'number' && originalPrice > 0 && salePrice > 0 && (
                     <View
                       style={[
                         styles.discountTag,

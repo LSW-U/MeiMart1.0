@@ -82,12 +82,16 @@ export default function NotificationsPage() {
       }));
   }, [filtered, t]);
 
-  const tabUnread: Record<TabKey, number> = {
-    all: unreadCount,
-    order: notifications?.filter((n) => !n.read && n.type === 'order').length ?? 0,
-    promotion: notifications?.filter((n) => !n.read && n.type === 'promotion').length ?? 0,
-    system: notifications?.filter((n) => !n.read && n.type === 'system').length ?? 0,
-  };
+  // Why: 审查发现 7 —— useMemo 记忆化（原先每渲染 4 趟 filter）
+  const tabUnread: Record<TabKey, number> = useMemo(
+    () => ({
+      all: unreadCount,
+      order: notifications?.filter((n) => !n.read && n.type === 'order').length ?? 0,
+      promotion: notifications?.filter((n) => !n.read && n.type === 'promotion').length ?? 0,
+      system: notifications?.filter((n) => !n.read && n.type === 'system').length ?? 0,
+    }),
+    [notifications, unreadCount],
+  );
 
   const markAllRead = () => markAllReadMutation.mutate();
 
@@ -139,13 +143,13 @@ export default function NotificationsPage() {
   };
 
   const TABS: { key: TabKey; label: string }[] = [
-    { key: 'all', label: t('service.notifications.tabAll', { defaultValue: 'All' }) },
-    { key: 'order', label: t('service.notifications.tabOrder', { defaultValue: 'Orders' }) },
+    { key: 'all', label: t('service.notifications.tabAll') },
+    { key: 'order', label: t('service.notifications.tabOrder') },
     {
       key: 'promotion',
-      label: t('service.notifications.tabPromo', { defaultValue: 'Promotions' }),
+      label: t('service.notifications.tabPromo'),
     },
-    { key: 'system', label: t('service.notifications.tabSystem', { defaultValue: 'System' }) },
+    { key: 'system', label: t('service.notifications.tabSystem') },
   ];
 
   // Why: P23 D7 —— 分 tab 空态 + 未登录引导（未登录优先于 loading/error 判断）
