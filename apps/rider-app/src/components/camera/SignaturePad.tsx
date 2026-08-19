@@ -1,17 +1,31 @@
 import React from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 
+import { AppIcon } from '../ui/AppIcon';
+import { colors } from '../../theme/colors';
+import { useTranslation } from '../../i18n/useTranslation';
+
+type EvidenceExampleType = 'door' | 'package';
+
 type EvidenceExampleProps = {
   label: string;
-  uri: string;
+  /** T5 §3.2/L5：外链示例图换本地图标占位（离线不裂图）。door→门牌、package→包裹 */
+  type: EvidenceExampleType;
 };
 
-export function EvidenceExample({ label, uri }: EvidenceExampleProps) {
-  const { Image } = require('react-native');
+/**
+ * T5 §3.2/L5：示例图从 googleusercontent 外链改为本地图标占位。
+ * 外链离线/链路失效会裂图，骑手无法判断是加载中还是失败；本地图标零依赖、离线可用。
+ */
+export function EvidenceExample({ label, type }: EvidenceExampleProps) {
+  const { t } = useTranslation();
   return (
     <View className="gap-1">
-      <View className="aspect-square overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low">
-        <Image className="h-full w-full" resizeMode="cover" source={{ uri }} />
+      <View className="aspect-square items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-low">
+        <AppIcon color={colors.outline} name={type === 'door' ? 'dropoff' : 'orders'} size={28} />
+        <Text className="text-[9px] font-semibold uppercase tracking-wider text-on-surface-variant">
+          {type === 'door' ? t('sign.doorExample') : t('sign.packageExample')}
+        </Text>
       </View>
       <Text className="text-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{label}</Text>
     </View>
@@ -22,6 +36,8 @@ type EvidenceUploadProps = {
   title: string;
   actionLabel: string;
   capturedLabel: string;
+  /** T5 §3.3 B：占位文字（替代写死的英文「CAM」）。默认 'CAM' 兼容其他调用方 */
+  placeholderLabel?: string;
   required?: boolean;
   captured: boolean;
   photoUri?: string;
@@ -32,7 +48,7 @@ type EvidenceUploadProps = {
   onError?: () => void;
 };
 
-function EvidenceUploadNative({ title, actionLabel, capturedLabel, required = false, captured, photoUri, onPress, onPermissionDenied, onError }: EvidenceUploadProps) {
+function EvidenceUploadNative({ title, actionLabel, capturedLabel, placeholderLabel = 'CAM', required = false, captured, photoUri, onPress, onPermissionDenied, onError }: EvidenceUploadProps) {
   const ImagePicker = require('expo-image-picker');
   const { Image, Pressable } = require('react-native');
 
@@ -64,7 +80,7 @@ function EvidenceUploadNative({ title, actionLabel, capturedLabel, required = fa
           <Image className="h-full w-full" resizeMode="cover" source={{ uri: photoUri }} />
         ) : (
           <>
-            <Text className="mb-1 text-4xl text-outline">CAM</Text>
+            <Text className="mb-1 text-4xl text-outline">{placeholderLabel}</Text>
             <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{actionLabel}</Text>
           </>
         )}
@@ -76,7 +92,7 @@ function EvidenceUploadNative({ title, actionLabel, capturedLabel, required = fa
   );
 }
 
-function EvidenceUploadWeb({ title, actionLabel, capturedLabel, required = false, captured, photoUri, onPress, onError }: EvidenceUploadProps) {
+function EvidenceUploadWeb({ title, actionLabel, capturedLabel, placeholderLabel = 'CAM', required = false, captured, photoUri, onPress, onError }: EvidenceUploadProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +131,7 @@ function EvidenceUploadWeb({ title, actionLabel, capturedLabel, required = false
           <img src={photoUri} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <>
-            <Text className="mb-1 text-4xl text-outline">CAM</Text>
+            <Text className="mb-1 text-4xl text-outline">{placeholderLabel}</Text>
             <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{actionLabel}</Text>
           </>
         )}
