@@ -53,6 +53,8 @@ export type DeliveryTask = {
   paymentMethod?: string;
   /** 订单应付金额（COD 实收参考，单位：分） */
   payableAmount?: number;
+  /** T6 联系拨号：客户电话（后端从 order.deliveryAddress.phone 透传，历史订单可能无） */
+  contactPhone?: string;
   // ── 兼容字段（旧 UI 引用 task.pickup.title / task.fee 等） ──
   // service 层 fromView() 保证 real 模式也填充这些字段（缺失时填默认空值）
   pickup: TaskStop;

@@ -173,6 +173,9 @@ function fromView(view: DeliveryTask): DeliveryTask {
       coordinates: { latitude: view.dropoffLat, longitude: view.dropoffLng },
       lat: view.dropoffLat,
       lng: view.dropoffLng,
+      // T6 联系拨号：后端 toView 从 order.deliveryAddress.phone 透传（顶层字段），
+      // 映射到 dropoff.contactPhone 供 TaskCard 联系按钮/尾号展示消费
+      contactPhone: view.contactPhone,
     },
     // TODO(W6-backend): 后端补 fee 字段后删 ?? 0
     fee: view.fee ?? 0,

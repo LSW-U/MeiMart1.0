@@ -189,7 +189,7 @@ export interface paths {
                          * @default LOGIN
                          * @enum {string}
                          */
-                        scene?: "REGISTER" | "LOGIN" | "RESET_PASSWORD";
+                        scene?: "REGISTER" | "LOGIN" | "RESET_PASSWORD" | "BIND_PHONE";
                     };
                 };
             };
@@ -287,6 +287,165 @@ export interface paths {
                 };
                 /** @description PHONE_NOT_FOUND */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/common/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 登录态修改密码（需 Bearer accessToken）。password=null（SMS 注册用户）返 400 E-AUTH-007 引导走 /password-reset 首次设密；旧密码错 401 E-USER-006；成功撤销全部会话（前端引导重登）。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        oldPassword: string;
+                        newPassword: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 修改成功（全部会话已撤销，需重新登录） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description E-AUTH-007 未设置密码（SMS 注册用户），走 /password-reset 首次设密 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-USER-006 旧密码错误 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/common/auth/change-phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 登录态换绑手机号（需 Bearer accessToken，双号验证）。前置：POST /sms-code 两次（旧号 + 新号，scene=BIND_PHONE）。新号已被注册 409 E-USER-004；验证码错 401 E-USER-003；成功撤销全部会话（强制重登）。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        oldSmsCode: string;
+                        newPhone: string;
+                        newSmsCode: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 换绑成功（全部会话已撤销，需重新登录） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description E-USER-003 验证码无效或已过期（旧号/新号统一） */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-USER-004 新号已被注册或与当前号相同 */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -597,6 +756,177 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/v1/client/user/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 通知偏好（三分类开关，null/缺省兜底全 true） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 偏好全量 {orderUpdates, promotions, system} */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            orderUpdates: boolean;
+                            promotions: boolean;
+                            system: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description 通知偏好部分更新（至少传一个 key，未传保持不变，返回更新后全量）。列表/未读数按偏好过滤（关 false 的 type 不返/不计数）。 */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        orderUpdates?: boolean;
+                        promotions?: boolean;
+                        system?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description 更新后偏好全量 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            orderUpdates: boolean;
+                            promotions: boolean;
+                            system: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/client/user/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 登录设备列表（Redis Token Family 只读聚合，family 维度一条，最新登录在前）。P17 决策 3：不补设备元数据（无机型/IP），只显示 deviceType + 登录/过期时间 + 状态。 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 会话列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            familyId: string;
+                            /** @enum {string} */
+                            deviceType: "client_app" | "rider_app" | "admin_web";
+                            /** @enum {string} */
+                            status: "active" | "used" | "revoked";
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/user/sessions/{familyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description 下线指定设备（按 familyId 撤销整族 refresh token，归属校验防撤他人会话） */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 已下线 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description E-USER-007 会话不存在或不属于当前用户 */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/client/addresses": {
@@ -5708,6 +6038,7 @@ export interface paths {
                                     createdAt: string;
                                     /** Format: date-time */
                                     updatedAt: string;
+                                    contactPhone?: string;
                                     /** Format: date-time */
                                     estimatedArrival: string | null;
                                     warehouseCode: string;
@@ -5804,6 +6135,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
                                 /** Format: date-time */
                                 estimatedArrival: string | null;
                                 warehouseCode: string;
@@ -5925,6 +6257,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
                                 /** Format: date-time */
                                 estimatedArrival: string | null;
                                 warehouseCode: string;
@@ -6042,6 +6375,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
                                 /** Format: date-time */
                                 estimatedArrival: string | null;
                                 warehouseCode: string;
@@ -6203,6 +6537,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
                                 /** Format: date-time */
                                 estimatedArrival: string | null;
                                 warehouseCode: string;
@@ -10310,6 +10645,7 @@ export interface paths {
                                     createdAt: string;
                                     /** Format: date-time */
                                     updatedAt: string;
+                                    contactPhone?: string;
                                 }[];
                             };
                         };
@@ -10387,6 +10723,7 @@ export interface paths {
                                     createdAt: string;
                                     /** Format: date-time */
                                     updatedAt: string;
+                                    contactPhone?: string;
                                 }[];
                             };
                         };
@@ -10471,6 +10808,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
                             };
                         };
                     };
@@ -10573,6 +10911,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
                             };
                         };
                     };
@@ -10676,6 +11015,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
                             };
                         };
                     };
@@ -10780,6 +11120,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
                             };
                         };
                     };
@@ -10863,6 +11204,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
                             };
                         };
                     };
@@ -11831,6 +12173,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
                             };
                         };
                     };
@@ -12349,6 +12692,142 @@ export interface paths {
             requestBody?: never;
             responses: {
                 /** @description 上传成功，返回公开 URL + key + size（前端拿到 URL 后提交 POST /client/orders/:id/review 的 images[]） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uri */
+                            url: string;
+                            key: string;
+                            size: number;
+                        };
+                    };
+                };
+                /** @description 不支持的 mime / 空文件 / magic bytes 不匹配 / 尺寸过小（< 100×100） */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-AUTH-003 未授权 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-AUTH-001 跨端调用或 E-AUTH-012 非本人 */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description 文件超过 5MB 上限 */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-UPLOAD-001 存储服务错误（StorageError）/ E-UPLOAD-002 其他上传错误 */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/uploads/feedback-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 反馈截图上传（P22 F2 2026-08-19）。multipart/form-data，field name="file"。CUSTOMER 权限 + DeviceTypeGuard 自动校验 client_app deviceType。支持 jpg/png/webp，size ≤ 5MB，最小 100×100（无 1:1 约束，反馈截图任意比例），服务端校验 magic bytes（防 mime 伪造）。MinIO 路径前缀 feedbacks/（与 reviews/、refunds/ 区分，便于审计/清理）。止血用途：反馈页此前复用 review-image，real 模式上传 URL 无消费方 → 孤儿文件 + reviews/ 前缀语义污染。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 上传成功，返回公开 URL + key + size（前端拿到 URL 后提交 POST /client/feedback 的 images[]） */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -13272,6 +13751,122 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/v1/client/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 客户提交反馈（P22 F1 2026-08-19）。category 六值纯枚举（feature/product/order/payment/shipping/other，前端 FEEDBACK_TYPE_KEYS 提交前 .split('.').pop() 转尾段）。content 10-500 字单语言原话。截图先调 POST /client/uploads/feedback-image 拿 URL 传 images[]（isOwnUrl 校验防外链）。限流：user 维度 5 次/小时 + ip 维度 20 次/小时。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        category: "feature" | "product" | "order" | "payment" | "shipping" | "other";
+                        content: string;
+                        contact?: string;
+                        /** @default [] */
+                        images?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description 反馈创建成功，返回 feedbackId */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            userId: string;
+                            /** @enum {string} */
+                            category: "feature" | "product" | "order" | "payment" | "shipping" | "other";
+                            content: string;
+                            contact: string | null;
+                            images: string[];
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+                /** @description 校验失败（category 枚举外 / content 长度 / images > 9） */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-FEEDBACK-001 图片 URL 非本服务上传（防 SSRF/外链） */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description 限流（5 次/小时/用户） */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/settle/settlements": {
@@ -14281,7 +14876,7 @@ export interface components {
              * @default LOGIN
              * @enum {string}
              */
-            scene: "REGISTER" | "LOGIN" | "RESET_PASSWORD";
+            scene: "REGISTER" | "LOGIN" | "RESET_PASSWORD" | "BIND_PHONE";
         };
         SendSmsResponseData: {
             expireIn: number;
@@ -15419,6 +16014,7 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+            contactPhone?: string;
             /** Format: date-time */
             estimatedArrival: string | null;
             warehouseCode: string;
@@ -15474,6 +16070,7 @@ export interface components {
                     createdAt: string;
                     /** Format: date-time */
                     updatedAt: string;
+                    contactPhone?: string;
                     /** Format: date-time */
                     estimatedArrival: string | null;
                     warehouseCode: string;
@@ -15998,6 +16595,27 @@ export interface components {
             word: string;
             lang: string;
             count: number;
+        };
+        Feedback: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            userId: string;
+            /** @enum {string} */
+            category: "feature" | "product" | "order" | "payment" | "shipping" | "other";
+            content: string;
+            contact: string | null;
+            images: string[];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        CreateFeedbackRequest: {
+            /** @enum {string} */
+            category: "feature" | "product" | "order" | "payment" | "shipping" | "other";
+            content: string;
+            contact?: string;
+            /** @default [] */
+            images: string[];
         };
     };
     responses: never;
