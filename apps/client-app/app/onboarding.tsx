@@ -109,6 +109,12 @@ export default function OnboardingPage() {
     router.replace('/(auth)/login');
   };
 
+  // D7：末屏「已有账号？登录」独立函数——行为同 skip 但语义独立，不复用跳过引导的命名
+  const goLogin = () => {
+    setOnboardingCompleted(true);
+    router.replace('/(auth)/login');
+  };
+
   const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const i = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
     if (i !== index) setIndex(i);
@@ -263,7 +269,7 @@ export default function OnboardingPage() {
         {/* 最后屏额外的 Login / Register 入口 */}
         {isLast && (
           <Pressable
-            onPress={skip}
+            onPress={goLogin}
             style={styles.secondaryBtn}
             accessibilityRole="button"
             accessibilityLabel={t('auth.alreadyHaveAccount')}

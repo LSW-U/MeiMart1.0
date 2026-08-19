@@ -16,7 +16,7 @@
     "retry": "[TET] Retry",
     "back": "[TET] Back",
     "help": "[TET] Help",
-    "next": "[TET] Next",
+    "next": "Tinan",
     "previous": "[TET] Previous",
     "finish": "[TET] Done",
     "more": "[TET] More",
@@ -65,19 +65,19 @@
     "welcome": "[TET] Welcome"
   },
   "onboarding": {
-    "title1": "[TET] Local groceries",
-    "desc1": "[TET] Same-day delivery in Dili",
-    "title2": "[TET] Authentic goods",
-    "desc2": "[TET] Full-chain anti-counterfeit",
-    "title3": "[TET] Tais culture",
-    "desc3": "[TET] Traditional Timor-Leste patterns",
+    "title1": "Sasan lokal",
+    "desc1": "Entrega iha loron ida iha Dili",
+    "title2": "Sasan fiar",
+    "desc2": "Kontrafaze ho fonte hatete",
+    "title3": "Kultura Tais",
+    "desc3": "Motif tradisional Timor-Leste",
     "title4": "[TET] Secure payments",
     "desc4": "[TET] Multiple local payment methods",
-    "start": "[TET] Get started",
-    "skip": "[TET] Skip"
+    "start": "Hahú",
+    "skip": "Halo"
   },
   "auth": {
-    "login": "[TET] Log in",
+    "login": "Tama",
     "relogin": "[TET] Re-login",
     "register": "[TET] Sign up",
     "phone": "[TET] Phone number",
@@ -96,7 +96,8 @@
       "invalidPassword": "[TET] Password must be at least 6 characters",
       "codeSent": "[TET] Code sent",
       "loginFailed": "[TET] Login failed, please try again"
-    }
+    },
+    "alreadyHaveAccount": "Sé iha ona konta?"
   },
   "home": {
     "search": "[TET] Search products",
