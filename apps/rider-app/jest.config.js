@@ -60,6 +60,9 @@ module.exports = {
         '^react-native$': '<rootDir>/src/test/react-native.mock.js',
         // AppIcon 经 @expo/vector-icons 拉真图标集（ESM），组件测试只需要可渲染 host
         '^@expo/vector-icons$': '<rootDir>/src/test/expo-vector-icons.mock.js',
+        // T3：EvidenceUpload（pickup/sign）require('expo-image-picker') 拉原生相机，
+        // jsdom 无 runtime；桩成可控 mock（权限/拍照结果可注入）
+        '^expo-image-picker$': '<rootDir>/src/test/expo-image-picker.mock.js',
         // T1 审查 P3-1（tasks 页测试）：babel-preset-expo 把 process.env.EXPO_PUBLIC_*
         // 编译成 require('expo/virtual/env')（ESM 发布，web project 不 transform →
         // "Unexpected token 'export'"）。页面级测试经 TaskDetailHeader→api.ts 首次

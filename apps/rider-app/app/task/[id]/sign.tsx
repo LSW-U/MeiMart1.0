@@ -142,6 +142,8 @@ export default function SignConfirmPage() {
             required
             title={t('sign.doorNumber')}
             photoUri={doorUri}
+            onPermissionDenied={() => showToast(t('pickup.cameraPermissionDenied'), 'error')}
+            onError={() => showToast(t('pickup.cameraError'), 'error')}
             onPress={(uri) => { setDoorCaptured(true); setDoorUri(uri); }}
           />
           <EvidenceUpload
@@ -151,6 +153,8 @@ export default function SignConfirmPage() {
             required
             title={t('sign.packageImage')}
             photoUri={packageUri}
+            onPermissionDenied={() => showToast(t('pickup.cameraPermissionDenied'), 'error')}
+            onError={() => showToast(t('pickup.cameraError'), 'error')}
             onPress={(uri) => { setPackageCaptured(true); setPackageUri(uri); }}
           />
         </View>

@@ -144,13 +144,12 @@
   "pickup.title": "确认取货",
   "pickup.verifyReceipt": "核对小票",
   "pickup.instructionPrefix": "请拍摄商家小票完成核对",
-  "pickup.orderNumber": "订单 #102",
   "pickup.ensureVisible": "请确保订单号和商品信息在照片中清晰可见。",
   "pickup.fileName": "PHOTO_CAP_001.JPG",
   "pickup.ready": "已准备确认",
   "pickup.confirm": "确认并开始配送",
   "pickup.failed": "取货确认失败",
-  "pickup.verified": "订单 #102 已核对，开始配送。",
+  "pickup.verified": "订单已核对，开始配送。",
   "pickup.retake": "重拍",
   "pickup.retakeTitle": "重新拍照",
   "pickup.retakeMessage": "丢弃当前照片并重新拍摄？",
@@ -398,5 +397,12 @@
   "profile.saveFailed": "资料保存失败，请稍后重试",
   "common.loadError.title": "加载失败",
   "common.loadError.desc": "请检查网络后重试",
-  "common.retry": "重试"
+  "common.retry": "重试",
+  "pickup.orderLabel": "订单 #{order}",
+  "pickup.tapPhoto": "点击拍照",
+  "pickup.capturedLabel": "已捕获照片",
+  "pickup.cameraPermissionDenied": "需要相机权限才能拍照，请在设置中开启",
+  "pickup.cameraError": "拍照出错，请重试",
+  "pickup.notFound": "任务不存在",
+  "pickup.notFoundDesc": "该任务可能已被处理或取消"
 }

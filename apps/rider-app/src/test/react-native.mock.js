@@ -81,6 +81,8 @@ module.exports = {
   Text: makeHost('Text'),
   View: makeHost('View'),
   ActivityIndicator: makeHost('ActivityIndicator'),
+  // T3：EvidenceUpload（pickup/sign 取证卡）经 require('react-native') 解构 Image 渲染已拍照片
+  Image: makeHost('Image'),
   ScrollView: function ScrollView(props) {
     const { refreshControl, children, ...rest } = props;
     return React.createElement(
@@ -105,6 +107,13 @@ module.exports = {
       ...Object.fromEntries(Object.entries(rest).map(([k, v]) => [`data-prop-${k}`, propToAttr(v)])),
     }, children);
   },
-  Platform: { OS: 'web', select: (obj) => obj.web ?? obj.default },
+  // T3：Platform.OS 可切换（pickup 页测 EvidenceUpload Native 分支权限/异常治理时置 'ios'，
+  // 默认 'web' 与真实 jsdom 环境一致）。select 按 OS 取值。
+  Platform: {
+    get OS() {
+      return global.__RN_PLATFORM_OS__ ?? 'web';
+    },
+    select: (obj) => (global.__RN_PLATFORM_OS__ ? obj[global.__RN_PLATFORM_OS__] ?? obj.default : obj.web ?? obj.default),
+  },
   Animated,
 };

@@ -26,17 +26,28 @@ type EvidenceUploadProps = {
   captured: boolean;
   photoUri?: string;
   onPress: (uri: string) => void;
+  // T3 §3.6/§3.5.2: 权限拒绝不再静默 return（骑手以为按钮坏了），由调用方传 toast
+  onPermissionDenied?: () => void;
+  // T3 §3.5.3: launchCameraAsync 异常（设备无相机/存储满）不裸抛未捕获 rejection
+  onError?: () => void;
 };
 
-function EvidenceUploadNative({ title, actionLabel, capturedLabel, required = false, captured, photoUri, onPress }: EvidenceUploadProps) {
+function EvidenceUploadNative({ title, actionLabel, capturedLabel, required = false, captured, photoUri, onPress, onPermissionDenied, onError }: EvidenceUploadProps) {
   const ImagePicker = require('expo-image-picker');
   const { Image, Pressable } = require('react-native');
 
   const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') return;
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 });
-    if (!result.canceled && result.assets[0]) onPress(result.assets[0].uri);
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        onPermissionDenied?.();
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 });
+      if (!result.canceled && result.assets[0]) onPress(result.assets[0].uri);
+    } catch {
+      onError?.();
+    }
   };
 
   return (
@@ -65,7 +76,7 @@ function EvidenceUploadNative({ title, actionLabel, capturedLabel, required = fa
   );
 }
 
-function EvidenceUploadWeb({ title, actionLabel, capturedLabel, required = false, captured, photoUri, onPress }: EvidenceUploadProps) {
+function EvidenceUploadWeb({ title, actionLabel, capturedLabel, required = false, captured, photoUri, onPress, onError }: EvidenceUploadProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,6 +85,10 @@ function EvidenceUploadWeb({ title, actionLabel, capturedLabel, required = false
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') onPress(reader.result);
+    };
+    reader.onerror = () => {
+      // Web 文件读取失败兜底（对称 Native onError 治理）
+      onError?.();
     };
     reader.readAsDataURL(file);
   };

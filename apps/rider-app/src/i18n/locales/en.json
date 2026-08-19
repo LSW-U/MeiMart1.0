@@ -144,13 +144,12 @@
   "pickup.title": "Confirm Pickup",
   "pickup.verifyReceipt": "Verify Receipt",
   "pickup.instructionPrefix": "Please photograph the merchant receipt to verify",
-  "pickup.orderNumber": "Order #102",
   "pickup.ensureVisible": "Ensure the order number and items are clearly visible in the photo.",
   "pickup.fileName": "PHOTO_CAP_001.JPG",
   "pickup.ready": "Ready for confirmation",
   "pickup.confirm": "Confirm & Start Delivery",
   "pickup.failed": "Failed to confirm pickup",
-  "pickup.verified": "Order #102 verified. Delivery route started.",
+  "pickup.verified": "Order verified, starting delivery.",
   "pickup.retake": "Retake",
   "pickup.retakeTitle": "Retake photo",
   "pickup.retakeMessage": "Discard the current photo and capture a new one?",
@@ -398,5 +397,12 @@
   "profile.saveFailed": "Failed to save profile, please retry",
   "common.loadError.title": "Failed to load",
   "common.loadError.desc": "Please check your network and retry",
-  "common.retry": "Retry"
+  "common.retry": "Retry",
+  "pickup.orderLabel": "Order #{order}",
+  "pickup.tapPhoto": "Tap to take photo",
+  "pickup.capturedLabel": "Photo Captured",
+  "pickup.cameraPermissionDenied": "Camera permission required. Please enable in Settings.",
+  "pickup.cameraError": "Camera error, please retry.",
+  "pickup.notFound": "Task not found",
+  "pickup.notFoundDesc": "This task may have been processed or cancelled."
 }
