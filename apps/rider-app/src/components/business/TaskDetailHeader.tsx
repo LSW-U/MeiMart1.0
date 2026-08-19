@@ -10,12 +10,14 @@ import { useTranslation } from '../../i18n/useTranslation';
 type TaskTab = 'new' | 'pickups' | 'deliveries';
 
 type TaskDetailHeaderProps = {
-  activeTab: TaskTab;
+  // T2 §3.2：tab 4 prop 改可选——详情页单任务视图不传（tab 行不渲染），
+  // 列表页全传保持原行为。漏传任一 prop tab 行静默消失（渲染条件 && 全检兜底）
+  activeTab?: TaskTab;
   dutyStatus: DutyStatus;
   dutyStatusLabel: string;
-  newTasksLabel: string;
-  pickupsLabel: string;
-  deliveriesLabel: string;
+  newTasksLabel?: string;
+  pickupsLabel?: string;
+  deliveriesLabel?: string;
   onDutyPress?: () => void;
   onMenuPress?: () => void;
   onTabChange?: (tab: TaskTab) => void;
@@ -58,17 +60,19 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTa
           ) : null}
         </Pressable>
       </View>
-      <View className="mt-2 flex-row gap-6 border-b border-surface-variant">
-        {tabs.map((tab) => {
-          const active = activeTab === tab.key;
-          return (
-            <Pressable accessibilityRole="button" accessibilityLabel={tab.label} accessibilityState={{ selected: active }} className="pb-1" key={tab.key} onPress={() => onTabChange?.(tab.key)}>
-              <Text className={`text-base font-semibold ${active ? 'text-primary-container' : 'text-on-surface-variant'}`}>{tab.label}</Text>
-              {active ? <View className="mt-1 h-0.5 rounded-full bg-primary-container" /> : <View className="mt-1 h-0.5 rounded-full bg-transparent" />}
-            </Pressable>
-          );
-        })}
-      </View>
+      {activeTab && newTasksLabel && pickupsLabel && deliveriesLabel ? (
+        <View className="mt-2 flex-row gap-6 border-b border-surface-variant">
+          {tabs.map((tab) => {
+            const active = activeTab === tab.key;
+            return (
+              <Pressable accessibilityRole="button" accessibilityLabel={tab.label} accessibilityState={{ selected: active }} className="pb-1" key={tab.key} onPress={() => onTabChange?.(tab.key)}>
+                <Text className={`text-base font-semibold ${active ? 'text-primary-container' : 'text-on-surface-variant'}`}>{tab.label}</Text>
+                {active ? <View className="mt-1 h-0.5 rounded-full bg-primary-container" /> : <View className="mt-1 h-0.5 rounded-full bg-transparent" />}
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
     </View>
   );
 }
