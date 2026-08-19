@@ -1,21 +1,18 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Linking, ScrollView, Text, View } from 'react-native';
 
-import { DutyStatusMenu } from '../../src/components/business/DutyStatusMenu';
 import { TaskCard } from '../../src/components/business/TaskCard';
 import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader';
 import { BottomActionBar } from '../../src/components/layout/BottomActionBar';
-import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { QueryBoundary } from '../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../src/components/feedback/Toast';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useNetwork } from '../../src/hooks/useNetwork';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { ApiError } from '../../src/services/api';
-import { useAcceptTask, useTask, useTaskLists } from '../../src/services/queries/useTask';
-import { useRiderSettings, useUpdateRiderSettings } from '../../src/services/queries/useSettings';
-import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
+import { useAcceptTask, useTask } from '../../src/services/queries/useTask';
+import { useRiderSettings } from '../../src/services/queries/useSettings';
+import type { DutyStatus } from '../../src/services/settings';
 import { getTaskAction } from '../../src/services/task-flow';
 import { colors } from '../../src/theme/colors';
 import type { DeliveryTask } from '../../src/types/task';
@@ -53,52 +50,9 @@ export default function TaskDetailPage() {
   const action = taskData ? getTaskAction(taskData) : undefined;
   // T2 §3.4: getTaskAction 返回 undefined = 终态（DELIVERED/FAILED），显示 banner + 返回列表
   const isTerminal = taskData !== null && !action;
-
   // T2 §3.1: 真实班次（原硬编码 onDuty），与 tasks.tsx 同源范式
   const { data: settings } = useRiderSettings();
-  const updateSettings = useUpdateRiderSettings();
   const dutyStatus = settings?.dutyStatus ?? 'offDuty';
-  const { data: taskLists } = useTaskLists();
-  const activeTasksExist = ((taskLists?.pickups.length ?? 0) + (taskLists?.deliveries.length ?? 0)) > 0;
-
-  // T2 §3.3: 切班流程（复用 tasks.tsx 已验证范式，含 T1 catch+toast）
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [pending, setPending] = useState<DutyStatus | null>(null);
-  const [blockVisible, setBlockVisible] = useState(false);
-
-  const handlePick = (next: DutyStatus) => {
-    if (next === dutyStatus) {
-      setMenuVisible(false);
-      return;
-    }
-    if (next === 'offDuty' && (dutyStatus === 'onDuty' || dutyStatus === 'busy') && activeTasksExist) {
-      // 用派生数据判断是否有进行中任务（useTaskLists 缓存已含最新状态，无需后端再确认）
-      setMenuVisible(false);
-      setBlockVisible(true);
-      return;
-    }
-    setMenuVisible(false);
-    setPending(next);
-  };
-
-  const confirmPending = async () => {
-    if (!pending) return;
-    // 无 catch 时 mutateAsync reject → setPending(null) 跳过 → ConfirmDialog 卡死（T1 修的 bug）
-    // useUpdateRiderSettings.onError 已回滚缓存（UI 恢复旧状态），这里补 toast + 关弹窗。
-    try {
-      await updateSettings.mutateAsync({ dutyStatus: pending });
-      setPending(null);
-    } catch {
-      showToast(t('duty.updateFailed'), 'error');
-      setPending(null);
-    }
-  };
-
-  const menuOptions = dutyStatusOptions.map((value) => ({
-    value,
-    label: t(dutyLabelKey[value]),
-    disabled: value === 'offDuty' && dutyStatus !== 'offDuty' && activeTasksExist,
-  }));
 
   // Why: PENDING_ASSIGN 先 accept（接单）再跳；其他状态直接跳对应步骤页
   // T2 §3.4: 终态无 action → 返回列表（原 fallback 刷新当主 CTA 语义错位）
@@ -149,11 +103,11 @@ export default function TaskDetailPage() {
 
   return (
     <View className="flex-1 bg-background">
-      {/* T2 §3.2: 不传 4 个 tab prop——详情页单任务视图，tab 是列表页分组语义（死 tab 移除） */}
+      {/* T2 §3.2: 不传 4 个 tab prop——详情页单任务视图，tab 是列表页分组语义（死 tab 移除）
+          T6 §7.4 A: 不传 onDutyPress——详情页专注单任务，切班在列表页做（duty 区降级纯展示） */}
       <TaskDetailHeader
         dutyStatus={dutyStatus}
         dutyStatusLabel={t(dutyLabelKey[dutyStatus])}
-        onDutyPress={() => setMenuVisible(true)}
         onMenuPress={() => router.push('/(main)/profile')}
       />
       <ScrollView className="flex-1" contentContainerClassName="px-3 py-6 pb-28">
@@ -190,6 +144,7 @@ export default function TaskDetailPage() {
                 actionPending={acceptTask.isPending}
                 chatLabel={t('tasks.chat')}
                 contactLabel={t('tasks.contact')}
+                contactSuffix={detail.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${detail.dropoff.contactPhone.slice(-4)}` : undefined}
                 items={detail.items.length ? formatItems(detail.items, t) : undefined}
                 note={detail.note ?? undefined}
                 orderId={detail.orderId}
@@ -208,6 +163,16 @@ export default function TaskDetailPage() {
                 }
                 timeTone={detail.status === 'DELIVERED' ? 'neutral' : detail.status === 'FAILED' ? 'error' : 'default'}
                 variant="active"
+                // T6 §3.1: 联系按钮接线拨号（有电话 tel: 直拨，失败/无电话 toast；Linking 在调用方，组件不感知 task）
+                onContact={
+                  detail.dropoff.contactPhone
+                    ? () => {
+                        void Linking.openURL(`tel:${detail.dropoff.contactPhone}`).catch(() =>
+                          showToast(t('common.callFailed'), 'error'),
+                        );
+                      }
+                    : () => showToast(t('tasks.noPhone'), 'info')
+                }
                 onAction={() => void handleAction()}
               />
             </>
@@ -221,32 +186,6 @@ export default function TaskDetailPage() {
         settingsLabel={t('tasks.settings')}
         onPressSettings={() => router.push('/settings')}
         onRefresh={() => void refetch()}
-      />
-      <DutyStatusMenu
-        cancelLabel={t('duty.menu.cancel')}
-        current={dutyStatus}
-        options={menuOptions}
-        title={t('duty.menu.title')}
-        visible={menuVisible}
-        onClose={() => setMenuVisible(false)}
-        onPick={(next) => handlePick(next)}
-      />
-      <ConfirmDialog
-        cancelLabel={t('duty.confirm.cancel')}
-        message={pending ? t('duty.confirm.message', { from: t(dutyLabelKey[dutyStatus]), to: t(dutyLabelKey[pending]) }) : ''}
-        okLabel={t('duty.confirm.ok')}
-        title={t('duty.confirm.title')}
-        visible={pending !== null}
-        onCancel={() => setPending(null)}
-        onOk={() => void confirmPending()}
-      />
-      <ConfirmDialog
-        message={t('duty.block.activeTasks')}
-        okLabel={t('duty.block.ok')}
-        title={t('duty.block.title')}
-        visible={blockVisible}
-        onCancel={() => setBlockVisible(false)}
-        onOk={() => setBlockVisible(false)}
       />
     </View>
   );

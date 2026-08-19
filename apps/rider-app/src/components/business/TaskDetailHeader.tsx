@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { colors } from "../../theme/colors";
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
@@ -42,17 +43,29 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTa
     { key: 'deliveries', label: deliveriesLabel },
   ] as const;
 
+  // T6 §7.4 A：onDutyPress 未传（详情页单任务视图）时 duty 区降级纯展示——
+  // 不接 Pressable、隐藏 chevronDown（无展开语义），切班集中在列表页做
+  const dutyArea: ReactElement =
+    typeof onDutyPress === 'function' ? (
+      <Pressable accessibilityRole="button" accessibilityLabel={dutyStatusLabel} className="flex-row items-center gap-2 rounded-full border border-primary-container bg-surface px-4 py-1" onPress={onDutyPress}>
+        <View className={`h-2 w-2 rounded-full ${dotColor[dutyStatus]}`} />
+        <Text className="text-xl font-bold text-on-surface">{dutyStatusLabel}</Text>
+        <AppIcon name="chevronDown" color={colors.textMuted} size={18} />
+      </Pressable>
+    ) : (
+      <View className="flex-row items-center gap-2 rounded-full border border-primary-container bg-surface px-4 py-1">
+        <View className={`h-2 w-2 rounded-full ${dotColor[dutyStatus]}`} />
+        <Text className="text-xl font-bold text-on-surface">{dutyStatusLabel}</Text>
+      </View>
+    );
+
   return (
     <View className="border-b border-surface-variant bg-surface-container px-5 pb-1 pt-2">
       <View className="h-12 flex-row items-center justify-between">
         <Pressable accessibilityRole="button" accessibilityLabel={t('common.menu')} className="rounded-full p-1" onPress={onMenuPress}>
           <AppIcon name="menu" className="text-2xl text-on-surface-variant" />
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={dutyStatusLabel} className="flex-row items-center gap-2 rounded-full border border-primary-container bg-surface px-4 py-1" onPress={onDutyPress}>
-          <View className={`h-2 w-2 rounded-full ${dotColor[dutyStatus]}`} />
-          <Text className="text-xl font-bold text-on-surface">{dutyStatusLabel}</Text>
-          <AppIcon name="chevronDown" color={colors.textMuted} size={18} />
-        </Pressable>
+        {dutyArea}
         <Pressable accessibilityRole="button" accessibilityLabel={t('notification.title')} accessibilityHint={unread > 0 ? t('notification.unreadCount', { count: unread }) : undefined} className="relative rounded-full p-1" onPress={() => router.push('/notifications')}>
           <AppIcon name="notification" className="text-2xl text-on-surface-variant" />
           {unread > 0 ? (

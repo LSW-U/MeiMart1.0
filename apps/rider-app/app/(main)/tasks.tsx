@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Linking, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { DutyStatusMenu } from '../../src/components/business/DutyStatusMenu';
 import { TaskCard } from '../../src/components/business/TaskCard';
@@ -32,6 +32,16 @@ const dutyLabelKey: Record<DutyStatus, 'duty.onDuty' | 'duty.offDuty' | 'duty.bu
 };
 
 const formatItems = (items: string[], t: (key: TranslationKey, vars?: Record<string, string | number>) => string) => t('common.items', { items: items.join(' · ') });
+
+// T6 §3.1: 联系按钮拨号回调工厂（tasks.tsx 3 处 active 卡共用；Linking 在调用方，组件不感知 task）
+const contactHandler = (task: DeliveryTask, t: (key: TranslationKey, vars?: Record<string, string | number>) => string) =>
+  task.dropoff.contactPhone
+    ? () => {
+        void Linking.openURL(`tel:${task.dropoff.contactPhone}`).catch(() =>
+          showToast(t('common.callFailed'), 'error'),
+        );
+      }
+    : () => showToast(t('tasks.noPhone'), 'info');
 
 export default function TasksPage() {
   const router = useRouter();
@@ -127,6 +137,7 @@ export default function TasksPage() {
         actionLabel={action ? t(action.labelKey) : t('tasks.arrivedPickup')}
         chatLabel={t('tasks.chat')}
         contactLabel={t('tasks.contact')}
+        contactSuffix={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : undefined}
         items={task.items.length ? formatItems(task.items, t) : undefined}
         note={task.note ?? undefined}
         orderId={task.orderId}
@@ -136,6 +147,7 @@ export default function TasksPage() {
         ]}
         timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
         variant="active"
+        onContact={contactHandler(task, t)}
         onAction={() => action && router.push(`/task/${task.id}/${action.target}`)}
       />
     );
@@ -147,6 +159,7 @@ export default function TasksPage() {
       actionLabel={t('tasks.arrivedDelivery')}
       chatLabel={t('tasks.chat')}
       contactLabel={t('tasks.contact')}
+      contactSuffix={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : undefined}
       note={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : (task.note ?? undefined)}
       orderId={task.orderId}
       points={[
@@ -155,6 +168,7 @@ export default function TasksPage() {
       ]}
       timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
       variant="active"
+      onContact={contactHandler(task, t)}
       onAction={() => router.push(`/task/${task.id}/sign`)}
     />
   );

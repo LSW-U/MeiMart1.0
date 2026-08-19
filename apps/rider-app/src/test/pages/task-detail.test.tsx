@@ -4,6 +4,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render } from '@testing-library/react';
 import { type ReactNode } from 'react';
+import { Linking } from 'react-native';
 
 import TaskDetailPage from '../../../app/task/[id]';
 import { showToast } from '../../../src/components/feedback/Toast';
@@ -27,6 +28,11 @@ const mockAccept = jest.fn();
 const mockBack = jest.fn();
 let mockTaskStatus: string | null = 'DELIVERED';
 let mockDutyStatus = 'offDuty';
+// T6 §3.1：联系拨号两态（有电话 tel: 直拨 / 无电话 toast tasks.noPhone）
+let mockContactPhone: string | null = null;
+
+// Linking.openURL spy（navigate.test 同款范式；页面真 import react-native 的 Linking）
+let mockLinkingOpenURL: jest.Mock;
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: mockBack, canGoBack: () => true }),
@@ -50,7 +56,7 @@ jest.mock('../../../src/services/queries/useTask', () => ({
           status: mockTaskStatus,
           taskType: 'DELIVERY',
           pickup: { title: '乐购超市', address: '杨浦区' },
-          dropoff: { title: '久久公寓', address: '1 号楼' },
+          dropoff: { title: '久久公寓', address: '1 号楼', contactPhone: mockContactPhone ?? undefined },
           items: ['超市'],
           fee: 10,
           distanceKm: 3.7,
@@ -105,6 +111,9 @@ beforeEach(() => {
   showToastMock.mockClear();
   mockTaskStatus = 'DELIVERED';
   mockDutyStatus = 'offDuty';
+  mockContactPhone = null;
+  mockLinkingOpenURL = jest.fn(async () => undefined);
+  (Linking as unknown as { openURL: jest.Mock }).openURL = mockLinkingOpenURL;
 });
 
 describe('终态 banner（T2 §3.4）', () => {
@@ -180,7 +189,7 @@ describe('终态 banner（T2 §3.4）', () => {
   });
 });
 
-describe('duty 真实班次 + 切班（T2 §3.1/§3.3）', () => {
+describe('duty 真实班次 + 切班（T2 §3.1/§3.3 · T6 §7.4 A 后切班集中列表页）', () => {
   it('页头显示真实班次（offDuty 非硬编码「工作中」）', () => {
     const { getByText, queryByText } = renderPage();
 
@@ -188,34 +197,15 @@ describe('duty 真实班次 + 切班（T2 §3.1/§3.3）', () => {
     expect(queryByText('工作中')).toBeNull();
   });
 
-  it('点 duty 区弹切班菜单（非返回上一页）', () => {
-    const { getByText } = renderPage();
+  it('T6 §7.4 A：duty 区降级纯展示——点击不弹切班菜单、无 chevronDown', () => {
+    const { getByText, queryByText, container } = renderPage();
 
+    // 详情页专注单任务，切班在列表页做（TaskDetailHeader 未传 onDutyPress 降级 View）
     fireEvent.click(getByText('已下班'));
 
-    // DutyStatusMenu 打开（mock 壳 visible=false 不渲染 children——
-    // 「切换状态」标题可查即菜单已打开；同时确认不是返回上一页）
-    expect(getByText('切换状态')).toBeTruthy();
+    expect(queryByText('切换状态')).toBeNull();
+    expect(container.querySelector('[data-testid="icon-chevron-down"]')).toBeNull();
     expect(mockBack).not.toHaveBeenCalled();
-  });
-
-  it('切班失败：toast duty.updateFailed + 弹窗关闭（复用 T1 catch 范式）', async () => {
-    mockDutyStatus = 'onDuty';
-    mockMutateAsync.mockRejectedValueOnce(new Error('network'));
-    const { container, getByText } = renderPage();
-
-    fireEvent.click(getByText('工作中'));
-    fireEvent.click(getByText('已下班'));
-    await act(async () => {
-      fireEvent.click(getByText('确定'));
-    });
-
-    expect(mockMutateAsync).toHaveBeenCalledWith({ dutyStatus: 'offDuty' });
-    expect(showToastMock).toHaveBeenCalledWith('班次切换失败，请重试', 'error');
-    const openDialogs = Array.from(container.querySelectorAll('[data-rn-host="Modal"]')).filter(
-      (m) => m.getAttribute('data-prop-visible') === 'true',
-    );
-    expect(openDialogs).toHaveLength(0);
   });
 });
 
@@ -228,5 +218,74 @@ describe('tab 行移除（T2 §3.2）', () => {
     expect(queryByText(/新任务 \(/)).toBeNull();
     expect(queryByText(/配送中 \(/)).toBeNull();
     expect(queryByText(/待取货 \(/)).toBeNull();
+  });
+});
+
+describe('联系拨号接线 + 按钮重排（T6 §3.1/§7.7）', () => {
+  // ASSIGNED 进行中卡片才有 active 按钮区（联系/聊天次要行）
+  beforeEach(() => {
+    mockTaskStatus = 'ASSIGNED';
+  });
+
+  it('有电话：联系按钮显示尾号，点击 Linking.openURL tel: 直拨', () => {
+    mockContactPhone = '+670 7733 4072';
+    const { getByText } = renderPage();
+
+    // 原型 tc-btn-tel：label + 尾号（recipientSuffix「收件人手机尾号：4072」）
+    expect(getByText(/收件人手机尾号.*4072/)).toBeTruthy();
+    fireEvent.click(getByText(/收件人手机尾号.*4072/));
+
+    expect(mockLinkingOpenURL).toHaveBeenCalledWith('tel:+670 7733 4072');
+    expect(showToastMock).not.toHaveBeenCalled();
+  });
+
+  it('有电话：拨号失败 catch → toast common.callFailed', async () => {
+    mockContactPhone = '+670 7733 4072';
+    mockLinkingOpenURL = jest.fn(async () => Promise.reject(new Error('no scheme')));
+    (Linking as unknown as { openURL: jest.Mock }).openURL = mockLinkingOpenURL;
+    const { getByText } = renderPage();
+
+    fireEvent.click(getByText(/收件人手机尾号.*4072/));
+    await act(async () => undefined);
+
+    expect(showToastMock).toHaveBeenCalledWith('无法拨打电话', 'error');
+  });
+
+  it('无电话：联系按钮无尾号不降级隐藏，点击 toast tasks.noPhone（不触发 Linking）', () => {
+    const { getByText } = renderPage();
+
+    // §7.1 A：按钮可见（label「联系」无尾号），点击提示原因
+    expect(getByText(/^联系$/)).toBeTruthy();
+    fireEvent.click(getByText(/^联系$/));
+
+    expect(mockLinkingOpenURL).not.toHaveBeenCalled();
+    expect(showToastMock).toHaveBeenCalledWith('无电话', 'info');
+  });
+
+  it('聊天按钮：点击 toast tasks.chatComingSoon（i18n 替英文 fallback）', () => {
+    const { getByText, queryByText } = renderPage();
+
+    expect(queryByText(/Chat feature coming soon|Contact feature coming soon/)).toBeNull();
+    fireEvent.click(getByText(/^聊天$/));
+
+    expect(showToastMock).toHaveBeenCalledWith('聊天功能即将上线', 'info');
+  });
+
+  it('按钮重排：主 CTA 全宽 Button（bg-primary）在次要行上方', () => {
+    const { container, getByText } = renderPage();
+
+    // 主行动：Button host（h-14 全宽）+ bg-primary；次要行 Pressable 不再有 bg-primary-container 主行动
+    const mainBtn = container.querySelector('[data-rn-host="Pressable"][data-prop-classname*="h-14"][data-prop-classname*="bg-primary"]');
+    expect(mainBtn).not.toBeNull();
+    expect(getByText('已到取货点')).toBeTruthy();
+    // 次要行联系按钮描边红（有电话态 border-primary-container）
+    mockContactPhone = '+670 7733 4072';
+  });
+
+  it('items chip：info 图标替 chevronDown + a11y label 复用 items 文本', () => {
+    const { container } = renderPage();
+
+    expect(container.querySelector('[data-testid="icon-information-outline"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="icon-chevron-down"]')).toBeNull();
   });
 });

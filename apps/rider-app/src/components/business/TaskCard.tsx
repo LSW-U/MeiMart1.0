@@ -3,6 +3,8 @@ import { Pressable, Text, View } from 'react-native';
 import { Button } from '../ui';
 import { AppIcon } from '../ui/AppIcon';
 import { showToast } from '../feedback/Toast';
+import { useTranslation } from '../../i18n/useTranslation';
+import { colors } from '../../theme/colors';
 
 type RoutePoint = {
   label: 'P' | 'D';
@@ -29,13 +31,19 @@ type TaskCardProps = {
   actionDisabled?: boolean;
   chatLabel?: string;
   contactLabel?: string;
+  /** T6 §7.7：联系按钮尾号展示（如「尾号4072」，无电话不传 → 按钮降级描边灰 + toast） */
+  contactSuffix?: string;
   variant?: 'new' | 'active';
   onAction?: () => void;
   onChat?: () => void;
   onContact?: () => void;
 };
 
-export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote, orderId, points, tags = [], items, note, actionLabel, actionPending = false, actionDisabled = false, chatLabel = 'Chat', contactLabel = 'Contact', variant = 'new', onAction, onChat, onContact }: TaskCardProps) {
+// T6 §7.5 A：默认值收紧空字符串，强制调用方传 t() 本地化 label（英文默认值不再兜底）
+export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote, orderId, points, tags = [], items, note, actionLabel, actionPending = false, actionDisabled = false, chatLabel = '', contactLabel = '', contactSuffix, variant = 'new', onAction, onChat, onContact }: TaskCardProps) {
+  const { t } = useTranslation();
+  // T6 §7.1 A：无电话时按钮可见但降级（描边灰 + opacity），点击 toast 提示原因
+  const hasContact = contactSuffix !== undefined;
   // T2 审查 P3-1：default=进行中（tertiary-container+clock）/ neutral=已送达（outline，原型 --neutral 同值）/ error=配送失败
   const timeTextClass = timeTone === 'error' ? 'text-error' : timeTone === 'neutral' ? 'text-outline' : 'text-tertiary-container';
   return (
@@ -88,10 +96,16 @@ export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote,
             <Text className="rounded border border-outline-variant px-2 py-1 text-[11px] text-neutral-muted" key={tag}>{tag}</Text>
           ))}
           {items ? (
-            <Pressable className="rounded-lg bg-accent-amber px-2 py-1" onPress={() => showToast(items, 'info')}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={items}
+              className="rounded-lg bg-accent-amber px-2 py-1"
+              onPress={() => showToast(items, 'info')}
+            >
               <View className="flex-row items-center gap-1">
                 <Text className="text-sm text-white">{items}</Text>
-                <AppIcon name="chevronDown" className="text-sm text-white" size={14} />
+                {/* T6 §7.6 A：chevronDown 暗示展开实为 toast，改 info「查看」语义 */}
+                <AppIcon name="info" className="text-sm text-white" size={14} />
               </View>
             </Pressable>
           ) : null}
@@ -105,31 +119,41 @@ export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote,
       ) : null}
 
       {variant === 'active' ? (
-        <View className="mt-1 flex-row items-stretch gap-2">
-          <Pressable
-            className="min-w-16 items-center justify-center rounded-lg border border-outline-variant px-3"
-            onPress={() => (onChat ? onChat() : showToast('Chat feature coming soon', 'info'))}
-          >
-            <Text className="text-xs font-bold text-on-surface">{chatLabel}</Text>
-          </Pressable>
-          <Pressable
-            className="flex-1 items-center justify-center rounded-lg border border-outline-variant py-3"
-            onPress={() => (onContact ? onContact() : showToast('Contact feature coming soon', 'info'))}
-          >
-            <Text className="text-sm font-bold text-on-surface">{contactLabel}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
+        // T6 §7.7 A：主行动全宽主按钮 + 次要行（联系拨号｜聊天 toast 占位），
+        // 对齐原型 tc-actions-v2（flex-col gap-8px）——联系/聊天是次要手段，不再与主 CTA 抢一行
+        <View className="mt-1 flex-col gap-2">
+          <Button
             accessibilityLabel={actionLabel}
-            accessibilityState={{ disabled: actionDisabled || actionPending, busy: actionPending }}
-            className="flex-[2] items-center justify-center rounded-lg bg-primary-container py-3"
+            className="w-full"
             disabled={actionDisabled || actionPending}
             onPress={onAction}
-            // B1/审查 M1: opacity 走 style 不走 className，避免 Tailwind class 优先级不稳定（同 Button §3.7）
-            style={{ opacity: actionDisabled || actionPending ? 0.5 : 1 }}
           >
-            <Text className="text-sm font-bold text-white">{actionLabel}</Text>
-          </Pressable>
+            {actionLabel}
+          </Button>
+          <View className="flex-row gap-2">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={contactLabel}
+              accessibilityHint={hasContact ? t('tasks.callCustomer') : t('tasks.noPhone')}
+              className={`flex-1 flex-row items-center justify-center gap-1 rounded-lg border py-2.5 ${hasContact ? 'border-primary-container bg-surface-container-low' : 'border-outline-variant opacity-50'}`}
+              onPress={() => (onContact ? onContact() : showToast(t('tasks.noPhone'), 'info'))}
+            >
+              <AppIcon name="phone" size={16} color={hasContact ? colors.primary : colors.textMuted} />
+              <Text className={`text-xs font-bold ${hasContact ? 'text-primary-container' : 'text-neutral-muted'}`}>
+                {hasContact ? `${contactLabel} ${contactSuffix}` : contactLabel}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={chatLabel}
+              accessibilityHint={t('tasks.chatComingSoon')}
+              className="flex-1 flex-row items-center justify-center gap-1 rounded-lg border border-outline-variant bg-surface-container-low py-2.5"
+              onPress={() => (onChat ? onChat() : showToast(t('tasks.chatComingSoon'), 'info'))}
+            >
+              <AppIcon name="sms" size={16} color={colors.textMuted} />
+              <Text className="text-xs font-bold text-neutral-muted">{chatLabel}</Text>
+            </Pressable>
+          </View>
         </View>
       ) : (
         <Button className="mt-1 bg-primary-container" textClassName="text-xl" onPress={onAction}>{actionLabel}</Button>
