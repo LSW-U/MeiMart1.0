@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render } from '@testing-library/react';
 import { type ReactNode } from 'react';
 
-import PickupPage from './pickup';
+import PickupPage from '../../../app/task/[id]/pickup';
 import { showToast } from '../../../src/components/feedback/Toast';
 import imagePicker from '../../../src/test/expo-image-picker.mock';
 

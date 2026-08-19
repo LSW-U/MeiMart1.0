@@ -5,8 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render } from '@testing-library/react';
 import { type ReactNode } from 'react';
 
-import TasksPage from './tasks';
-import { showToast } from '../../src/components/feedback/Toast';
+import TasksPage from '../../../app/(main)/tasks';
+import { showToast } from '../../../src/components/feedback/Toast';
 
 // showToast 被 jest.mock 成 jest.fn()——同 useTask.test 的既有收窄写法（模块成员 → jest.Mock）
 const showToastMock = showToast as jest.Mock;
@@ -44,7 +44,7 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 20, left: 0, right: 0 }),
 }));
 
-jest.mock('../../src/services/queries/useTask', () => ({
+jest.mock('../../../src/services/queries/useTask', () => ({
   useTaskLists: () => ({
     data: { available: [], pickups: [], deliveries: [] },
     isLoading: false,
@@ -54,20 +54,20 @@ jest.mock('../../src/services/queries/useTask', () => ({
   }),
 }));
 
-jest.mock('../../src/services/queries/useSettings', () => ({
+jest.mock('../../../src/services/queries/useSettings', () => ({
   useRiderSettings: () => ({ data: { dutyStatus: 'onDuty', language: 'zh' } }),
   useUpdateRiderSettings: () => ({ mutateAsync: mockMutateAsync, isPending: false }),
 }));
 
-jest.mock('../../src/hooks/useNetwork', () => ({
+jest.mock('../../../src/hooks/useNetwork', () => ({
   useNetwork: () => ({ isConnected: !mockOffline, isOffline: mockOffline }),
 }));
 
-jest.mock('../../src/store/useAuthStore', () => ({
+jest.mock('../../../src/store/useAuthStore', () => ({
   useAuthStore: (selector: (s: { rider: unknown }) => unknown) => selector({ rider: { bondPaid: true } }),
 }));
 
-jest.mock('../../src/components/feedback/Toast', () => ({
+jest.mock('../../../src/components/feedback/Toast', () => ({
   showToast: jest.fn(),
 }));
 

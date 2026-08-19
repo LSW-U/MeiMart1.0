@@ -6,7 +6,7 @@ import { act, fireEvent, render } from '@testing-library/react';
 import { type ReactNode } from 'react';
 import { Linking } from 'react-native';
 
-import SignPage from './sign';
+import SignPage from '../../../app/task/[id]/sign';
 import { showToast } from '../../../src/components/feedback/Toast';
 
 const showToastMock = showToast as jest.Mock;

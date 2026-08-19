@@ -5,8 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render } from '@testing-library/react';
 import { type ReactNode } from 'react';
 
-import TaskDetailPage from './[id]';
-import { showToast } from '../../src/components/feedback/Toast';
+import TaskDetailPage from '../../../app/task/[id]';
+import { showToast } from '../../../src/components/feedback/Toast';
 
 const showToastMock = showToast as jest.Mock;
 
@@ -37,11 +37,11 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 20, left: 0, right: 0 }),
 }));
 
-jest.mock('../../src/hooks/useGoBack', () => ({
+jest.mock('../../../src/hooks/useGoBack', () => ({
   useGoBack: () => mockBack,
 }));
 
-jest.mock('../../src/services/queries/useTask', () => ({
+jest.mock('../../../src/services/queries/useTask', () => ({
   useTask: () => ({
     data: mockTaskStatus
       ? {
@@ -72,20 +72,20 @@ jest.mock('../../src/services/queries/useTask', () => ({
   useAcceptTask: () => ({ mutateAsync: mockAccept, isPending: false }),
 }));
 
-jest.mock('../../src/services/queries/useSettings', () => ({
+jest.mock('../../../src/services/queries/useSettings', () => ({
   useRiderSettings: () => ({ data: { dutyStatus: mockDutyStatus, language: 'zh' } }),
   useUpdateRiderSettings: () => ({ mutateAsync: mockMutateAsync, isPending: false }),
 }));
 
-jest.mock('../../src/services/queries/useNotifications', () => ({
+jest.mock('../../../src/services/queries/useNotifications', () => ({
   useUnreadCount: () => ({ data: 0 }),
 }));
 
-jest.mock('../../src/hooks/useNetwork', () => ({
+jest.mock('../../../src/hooks/useNetwork', () => ({
   useNetwork: () => ({ isConnected: true, isOffline: false }),
 }));
 
-jest.mock('../../src/components/feedback/Toast', () => ({
+jest.mock('../../../src/components/feedback/Toast', () => ({
   showToast: jest.fn(),
 }));
 
