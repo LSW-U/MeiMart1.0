@@ -165,4 +165,48 @@ export const uploadsApi = {
     const json = (await res.json()) as { success: boolean; data: UploadResult };
     return json.data;
   },
+
+  /**
+   * 上传用户头像（P27 D1，avatar 端点）
+   * 后端：POST /api/v1/client/uploads/avatar —— ⚠️ 端点待后端新增（P27 方案 §11.1，前缀 avatars/avatar-*）
+   * real 模式端点未就绪时 404，调用方 toast 引导（不阻塞 name/email 保存）
+   * @param fileUri 本地文件 URI（expo-image-picker assets[].uri）
+   * @param mimeType MIME 类型（如 image/jpeg）
+   */
+  async avatar(fileUri: string, mimeType: string): Promise<UploadResult> {
+    if (isMockMode) {
+      // mock：返回伪造 MinIO URL（不实际上传）。mock updateProfile 不校验 URL 来源
+      const mock: UploadResult = {
+        url: `https://mock-minio.local/meimart/avatars/avatar-mock-${Date.now()}.jpg`,
+        key: `avatars/avatar-mock-${Date.now()}.jpg`,
+        size: 1024,
+      };
+      return new Promise((resolve) => setTimeout(() => resolve(mock), 500));
+    }
+    const formData = new FormData();
+    await appendUploadFile(
+      formData,
+      fileUri,
+      mimeType,
+      `avatar.${mimeType.split('/')[1] ?? 'jpg'}`,
+    );
+    const token = await getToken();
+    const res = await fetch(`${baseURL}/client/uploads/avatar`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'Accept-Language': getCurrentLocale(),
+      },
+      body: formData,
+    });
+    if (!res.ok) {
+      const errBody = (await res.json().catch(() => null)) as
+        | { error?: { message?: string }; message?: string }
+        | null;
+      const msg = errBody?.error?.message ?? errBody?.message ?? `Upload failed (${res.status})`;
+      throw new Error(msg);
+    }
+    const json = (await res.json()) as { success: boolean; data: UploadResult };
+    return json.data;
+  },
 };
