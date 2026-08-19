@@ -392,5 +392,7 @@
   "tasks.chatComingSoon": "Chat segera hadir",
   "tasks.deliveryProgress.pickedUp": "Sudah diambil",
   "tasks.deliveryProgress.delivering": "Sedang mengantar",
-  "tasks.deliveryProgress.pending": "Menunggu pengiriman"
+  "tasks.deliveryProgress.pending": "Menunggu pengiriman",
+  "tasks.etaLabel": "Estimasi tiba",
+  "tasks.doorDelivery": "Antar ke pintu"
 }

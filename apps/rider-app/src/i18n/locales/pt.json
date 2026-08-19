@@ -392,5 +392,7 @@
   "tasks.chatComingSoon": "Chat em breve",
   "tasks.deliveryProgress.pickedUp": "Recolhido",
   "tasks.deliveryProgress.delivering": "Em entrega",
-  "tasks.deliveryProgress.pending": "Entrega pendente"
+  "tasks.deliveryProgress.pending": "Entrega pendente",
+  "tasks.etaLabel": "Chegada prevista",
+  "tasks.doorDelivery": "Entrega à porta"
 }

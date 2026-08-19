@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { Fragment, useEffect } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { StepPageHeader } from '../../../src/components/layout/StepPageHeader';
@@ -127,32 +127,86 @@ export default function TaskNavigatePage() {
         >
           {(taskData) => (
             <>
-              <MapView
-                pickup={taskData.pickup.coordinates ? { ...taskData.pickup.coordinates, title: taskData.pickup.title } : undefined}
-                delivery={taskData.dropoff.coordinates ? { ...taskData.dropoff.coordinates, title: taskData.dropoff.title } : undefined}
-              />
-              <View className="-mt-8 gap-4 px-5">
-                <View className="rounded-xl border border-outline/10 bg-surface p-4 shadow-md">
-                  <View className="mb-6 flex-row items-start justify-between">
-                    <View>
-                      <Text className="mb-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('flow.remainingTime')}</Text>
-                      <View className="flex-row items-end gap-2">
-                        <Text className="text-xl font-semibold text-primary">{t('common.minutes', { minutes: String(taskData.estimatedMinutes) })}</Text>
-                        <Text className="text-sm text-on-surface-variant">{t('common.deliveryRoute')}</Text>
-                      </View>
-                    </View>
-                    <View className="items-end">
-                      <Text className="mb-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('flow.totalEarnings')}</Text>
-                      <Text className="text-2xl font-bold text-primary">{formatCurrency(taskData.fee, t('common.currency'))}</Text>
-                      <Text className="text-[10px] text-outline">{taskData.orderId}</Text>
-                    </View>
+              <View className="relative">
+                <MapView
+                  pickup={taskData.pickup.coordinates ? { ...taskData.pickup.coordinates, title: taskData.pickup.title } : undefined}
+                  delivery={taskData.dropoff.coordinates ? { ...taskData.dropoff.coordinates, title: taskData.dropoff.title } : undefined}
+                />
+                {/* T4 审查修复 P1-1（原型 .map-eta-card）：ETA 浮层卡叠地图底部，「地图即看板」；
+                    收入 success 绿（原型 .map-eta-fee），副标题 = 距离 · 配送中 */}
+                <View className="absolute bottom-3 left-3 right-3 flex-row items-center justify-between rounded-xl bg-surface px-4 py-3 shadow-md">
+                  <View className="gap-0.5">
+                    <Text className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{t('tasks.etaLabel')}</Text>
+                    <Text className="text-[22px] font-extrabold leading-tight text-primary">{t('common.minutes', { minutes: String(taskData.estimatedMinutes) })}</Text>
+                    <Text className="text-[11px] text-on-surface-variant">
+                      {formatDistance(taskData.distanceKm)} · {t('tasks.deliveryProgress.delivering')}
+                    </Text>
                   </View>
+                  <View className="items-end gap-0.5">
+                    <Text className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{t('flow.totalEarnings')}</Text>
+                    <Text className="text-xl font-extrabold" style={{ color: colors.success }}>
+                      {formatCurrency(taskData.fee, t('common.currency'))}
+                    </Text>
+                    <Text className="text-[10px] text-outline">{taskData.orderId}</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* T4 审查修复 P1-2（原型 .progress-bar）：三段进度条，消费 deliveryProgress 3 key。
+                  PICKED_UP → step1 done + step2 active；DELIVERING → 前两段 done + step3 active */}
+              {(() => {
+                const step = taskData.status === 'DELIVERING' ? 2 : 1;
+                const dotState = (n: 1 | 2 | 3): 'done' | 'active' | 'todo' =>
+                  n < step ? 'done' : n === step ? 'active' : 'todo';
+                const labels = [
+                  t('tasks.deliveryProgress.pickedUp'),
+                  t('tasks.deliveryProgress.delivering'),
+                  t('tasks.deliveryProgress.pending'),
+                ];
+                return (
+                  <View className="flex-row items-start px-4 pb-2 pt-3">
+                    {[1, 2, 3].map((n) => {
+                      const idx = n as 1 | 2 | 3;
+                      const state = dotState(idx);
+                      return (
+                        <Fragment key={n}>
+                          {n > 1 ? (
+                            // 连接线（原型 .progress-line）：done 绿 / todo 灰；对齐 dot 垂直中心（dot 28px/2 - 线 1.5px）
+                            <View className="mx-[-2px] mt-[13px] h-[3px] flex-1 rounded-sm" style={{ backgroundColor: state === 'todo' ? colors.border : colors.success }} />
+                          ) : null}
+                          <View className="items-center gap-1">
+                            <View
+                              className={'h-7 w-7 items-center justify-center rounded-full ' + (state === 'todo' ? 'bg-surface-container' : '')}
+                              style={
+                                state === 'done'
+                                  ? { backgroundColor: colors.success }
+                                  : state === 'active'
+                                    ? { backgroundColor: colors.primary }
+                                    : undefined}
+                            >
+                              {state === 'done' ? <AppIcon color={colors.surface} name="check" size={14} /> : null}
+                            </View>
+                            <Text className={'text-[10px] font-semibold ' + (state === 'active' ? 'font-bold text-primary' : 'text-on-surface-variant')}>
+                              {labels[n - 1]}
+                            </Text>
+                          </View>
+                        </Fragment>
+                      );
+                    })}
+                  </View>
+                );
+              })()}
+
+              <View className="gap-4 px-5">
+                <View className="rounded-xl border border-outline/10 bg-surface p-4 shadow-md">
+                  {/* P1-1 后 ETA 区已移地图浮层；此卡承载路线 + 订单摘要 */}
 
                   <View className="relative gap-6">
                     <View className="absolute bottom-8 left-[15px] top-8 w-0.5 border-l border-dotted border-outline bg-outline-variant" />
                     <View className="z-10 flex-row gap-4">
-                      <View className="h-8 w-8 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high">
-                        <AppIcon className="text-primary" name="pickup" size={18} />
+                      {/* T4 审查修复 P2-1（原型 .route-marker）：序号化 ①②，pickup 红底/dropoff 棕底白字 */}
+                      <View className="h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: colors.primary }}>
+                        <Text className="text-[13px] font-extrabold text-white">1</Text>
                       </View>
                       <View className="flex-1">
                         <Text className="font-bold leading-tight text-on-surface">{taskData.pickup.title}</Text>
@@ -162,12 +216,17 @@ export default function TaskNavigatePage() {
                       <Text className="text-xs font-bold uppercase tracking-wider text-outline">{formatDistance(pickupDistance(taskData.distanceKm))}</Text>
                     </View>
                     <View className="z-10 flex-row gap-4">
-                      <View className="h-8 w-8 items-center justify-center rounded-full border border-tertiary bg-tertiary-container">
-                        <AppIcon color={colors.surface} name="dropoff" size={18} />
+                      <View className="h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: colors.tertiary }}>
+                        <Text className="text-[13px] font-extrabold text-white">2</Text>
                       </View>
                       <View className="flex-1">
                         <Text className="font-bold leading-tight text-on-surface">{taskData.dropoff.title}</Text>
                         <Text className="mt-1 text-sm text-on-surface-variant">{taskData.dropoff.address}</Text>
+                        {/* T4 审查修复 P3-1（原型 .route-tag.dropoff）：送货上门 tag（对称 pickup 到店取货）。
+                            原型 bg tertiary-soft 是幽灵 token，用 bg-surface-container + tertiary 文字色 */}
+                        <Text className="mt-2 self-start rounded-lg bg-surface-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: colors.tertiary }}>
+                          {t('tasks.doorDelivery')}
+                        </Text>
                         {/* T4 §3.2: 假 chips（verifiedReceiver/leaveAtDoor 无字段支撑）已删；
                             §3.6 新增 dropoff 联系客人入口 */}
                         {(taskData.dropoff.contactName || taskData.dropoff.contactPhone) && (
@@ -211,15 +270,20 @@ export default function TaskNavigatePage() {
                     <Text className="font-bold text-on-surface">{t('common.orderSummary', { count: String(taskData.items.length) })}</Text>
                     <View className="mt-4 gap-3 px-6">
                       {/* T4 §3.3: qty1「数量：1」假数据已删（items 元素本身含数量描述，
-                          再贴恒 1 与「2 units」自相矛盾）；§7.3 拍板 A 保持 flex-row justify-between */}
+                          再贴恒 1 与「2 units」自相矛盾）；审查修复 P2-2（原型 .order-item-dot）补 6px 圆点 */}
                       {taskData.items.map((item) => (
-                        <View className="flex-row justify-between" key={item}>
-                          <Text className="flex-1 text-sm text-on-surface-variant">{item}</Text>
+                        <View className="flex-row items-center gap-2.5" key={item}>
+                          <View className="h-1.5 w-1.5 rounded-full bg-outline-variant" />
+                          <Text className="flex-1 text-[13px] text-on-surface">{item}</Text>
                         </View>
                       ))}
                       {taskData.note ? (
                         <View className="mt-2 rounded-lg border-l-4 border-primary bg-surface p-3">
-                          <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary">{t('flow.customerNote')}</Text>
+                          {/* 审查修复 P3-2（原型 .note-label）：label 补 info 图标 */}
+                          <View className="mb-1 flex-row items-center gap-1">
+                            <AppIcon className="text-primary" name="info" size={10} />
+                            <Text className="text-[10px] font-bold uppercase tracking-widest text-primary">{t('flow.customerNote')}</Text>
+                          </View>
                           <Text className="text-sm italic text-on-surface">{taskData.note}</Text>
                         </View>
                       ) : null}
@@ -233,19 +297,21 @@ export default function TaskNavigatePage() {
       </ScrollView>
 
       {/* T4 §7.9 拍板 A + §3.5: 底栏双 CTA--左「打开导航」52px 图标按钮（内联 Linking，
-          onError 接 toast，原 ScrollView 内 NavigationLauncher 移除）+ 右主按钮 flex-1 */}
-      <View className="absolute bottom-0 left-0 right-0 flex-row items-center gap-3 bg-surface p-5 shadow-lg">
+          onError 接 toast，原 ScrollView 内 NavigationLauncher 移除）+ 右主按钮 flex-1。
+          审查修复 P2-4/Q-1/Q-2：主按钮 bg-tertiary → bg-primary（主 CTA 对齐原型与兄弟页）、
+          左按钮图标 pickup → navigation（语义修正）、补 border-top（原型 .bottom-bar） */}
+      <View className="absolute bottom-0 left-0 right-0 flex-row items-center gap-3 border-t border-surface-variant bg-surface p-5 shadow-lg">
         <Pressable
           accessibilityLabel={t('tasks.openNavigation')}
           accessibilityRole="button"
-          className="h-[52px] w-[52px] items-center justify-center rounded-lg border border-outline-variant bg-surface-container"
+          className="h-[52px] w-[52px] items-center justify-center rounded-xl bg-surface-container"
           disabled={!task?.dropoff.coordinates}
           onPress={() => void handleOpenNavigation()}
         >
-          <AppIcon className="text-primary" name="pickup" size={22} />
+          <AppIcon className="text-primary" name="navigation" size={22} />
         </Pressable>
         <View className="flex-1">
-          <Button className="bg-tertiary" disabled={!task || startDelivering.isPending} loading={startDelivering.isPending} onPress={() => void handleNavigateAction()}>
+          <Button className="bg-primary" disabled={!task || startDelivering.isPending} loading={startDelivering.isPending} onPress={() => void handleNavigateAction()}>
             {startDelivering.isPending ? t('flow.processing') : actionLabel}
           </Button>
         </View>

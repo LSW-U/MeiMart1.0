@@ -392,5 +392,7 @@
   "tasks.chatComingSoon": "聊天功能即将上线",
   "tasks.deliveryProgress.pickedUp": "已取货",
   "tasks.deliveryProgress.delivering": "配送中",
-  "tasks.deliveryProgress.pending": "待送达"
+  "tasks.deliveryProgress.pending": "待送达",
+  "tasks.etaLabel": "预计到达",
+  "tasks.doorDelivery": "送货上门"
 }

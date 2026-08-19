@@ -392,5 +392,7 @@
   "tasks.chatComingSoon": "Chat sei mai kedan",
   "tasks.deliveryProgress.pickedUp": "Rekolta tiha ona",
   "tasks.deliveryProgress.delivering": "Entrega hela",
-  "tasks.deliveryProgress.pending": "Sei hela atu entrega"
+  "tasks.deliveryProgress.pending": "Sei hela atu entrega",
+  "tasks.etaLabel": "Chegada estimo",
+  "tasks.doorDelivery": "Entrega ba odan"
 }

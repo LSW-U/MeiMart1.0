@@ -392,5 +392,7 @@
   "tasks.chatComingSoon": "Chat coming soon",
   "tasks.deliveryProgress.pickedUp": "Picked up",
   "tasks.deliveryProgress.delivering": "Delivering",
-  "tasks.deliveryProgress.pending": "Pending delivery"
+  "tasks.deliveryProgress.pending": "Pending delivery",
+  "tasks.etaLabel": "ETA",
+  "tasks.doorDelivery": "Door delivery"
 }

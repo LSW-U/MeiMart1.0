@@ -145,7 +145,8 @@ describe('三态接入（T4 §3.1）', () => {
   it('正常（PICKED_UP）：渲染路线卡 + 底栏双 CTA', () => {
     const { getByText, container } = renderPage();
 
-    expect(getByText('剩余时间')).toBeTruthy();
+    // P1-1 后 ETA 移地图浮层（label 预计到达），路线卡内剩余时间区已移除
+    expect(getByText('预计到达')).toBeTruthy();
     expect(getByText('TL Delivery #102')).toBeTruthy();
     // 打开导航是纯图标按钮（a11y label 非 Text 子节点），按 a11y 属性查
     expect(container.querySelector('[data-prop-accessibilitylabel="打开导航"]')).not.toBeNull();
@@ -166,6 +167,43 @@ describe('假数据清零（T4 §3.2/§3.3）', () => {
 
     expect(getByText('2 units')).toBeTruthy();
     expect(queryByText('数量：1')).toBeNull();
+  });
+});
+
+describe('v2 视觉（T4 审查修复 P1-2/P2-1/P3-1）', () => {
+  it('P1-2 进度条：DELIVERING 时已取货 done（check 图标）+ 待送达 active', () => {
+    // PICKED_UP: step=1（已取货 done，配送中 active）；DELIVERING: step=2（前两段 done）
+    // check 图标断言用 DELIVERING 场景（step1 done 有 check；PICKED_UP 时 step1 是 active 无 check）
+    mockTaskState = 'DELIVERING';
+    const { getByText, container } = renderPage();
+
+    expect(getByText('已取货')).toBeTruthy();
+    expect(getByText('配送中')).toBeTruthy();
+    expect(getByText('待送达')).toBeTruthy();
+    expect(container.querySelector('[data-testid="icon-check"]')).not.toBeNull();
+  });
+
+  it('P1-2 进度条：PICKED_UP 时三段文案渲染（step2 active）', () => {
+    const { getByText, container } = renderPage();
+
+    expect(getByText('已取货')).toBeTruthy();
+    expect(getByText('待送达')).toBeTruthy();
+    // PICKED_UP step=1：step1 是 active（无 done check 图标）
+    expect(container.querySelector('[data-testid="icon-check"]')).toBeNull();
+  });
+
+  it('P2-1 路线卡序号化：marker 显示数字 1/2（marker 图标不再用于路线卡）', () => {
+    const { getByText, container } = renderPage();
+
+    expect(getByText('1')).toBeTruthy();
+    expect(getByText('2')).toBeTruthy();
+    expect(container.querySelector('[data-testid="icon-map-marker-radius"]')).toBeNull();
+  });
+
+  it('P3-1 dropoff 显示「送货上门」tag', () => {
+    const { getByText } = renderPage();
+
+    expect(getByText('送货上门')).toBeTruthy();
   });
 });
 
