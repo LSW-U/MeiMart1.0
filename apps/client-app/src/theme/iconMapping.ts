@@ -118,6 +118,15 @@ const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = {
   group_add: 'account-group',
   storefront: 'storefront',
   qr_code_scanner: 'scan-helper',
+
+  // P25 关于页（使命/法律/联系/社交）
+  handshake: 'handshake',
+  description: 'file-document-outline',
+  privacy_tip: 'shield-lock',
+  phone: 'phone',
+  facebook: 'facebook',
+  whatsapp: 'whatsapp',
+  instagram: 'instagram',
 };
 
 const FALLBACK_NAME = 'circle-outline' as IconName;
