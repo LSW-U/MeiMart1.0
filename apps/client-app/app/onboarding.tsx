@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
+import type { AppColors } from '@/theme/colors';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { LogoBadge } from '@/components/cultural/LogoBadge';
@@ -31,8 +32,6 @@ interface Slide {
   id: string;
   /** Material Symbol 名（iconMapping 已映射） */
   icon: string;
-  /** 该屏强调色（图标 + 角标底 + 渐变底）；非 theme token 体系，inline 注入 */
-  accentColor: string;
   titleKey: string;
   bodyKey: string;
   /** 仅末屏 'tais' 铺文化纹样 + Divider 收尾，屏1/2 保持干净（D4） */
@@ -44,7 +43,6 @@ const SLIDES: Slide[] = [
   {
     id: 's1',
     icon: 'shopping_cart',
-    accentColor: '#961813',
     titleKey: 'onboarding.title1',
     bodyKey: 'onboarding.desc1',
     motif: 'cart',
@@ -52,7 +50,6 @@ const SLIDES: Slide[] = [
   {
     id: 's2',
     icon: 'verified',
-    accentColor: '#16a34a',
     titleKey: 'onboarding.title2',
     bodyKey: 'onboarding.desc2',
     motif: 'verified',
@@ -60,8 +57,6 @@ const SLIDES: Slide[] = [
   {
     id: 's3',
     icon: 'local_florist',
-    // 原型 #b45309(amber-700) 项目无 token，统一 warning 系亮橙（方案 Q3 拍板 A）
-    accentColor: '#F57C00',
     titleKey: 'onboarding.title3',
     bodyKey: 'onboarding.desc3',
     motif: 'tais',
@@ -71,6 +66,14 @@ const SLIDES: Slide[] = [
 // Why: FlatList 的 viewabilityConfig 必须引用稳定，否则触发
 // "Changing onViewableItemsChanged on the fly is not supported"
 const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 60 };
+
+/** 本地阶段强调色走 token（dark 自动翻转）；D8 后端下发 hex 后再切 inline + 校验 */
+function motifAccent(colors: AppColors, motif: Slide['motif']): string {
+  // 屏3 原型 #b45309(amber-700) 项目无 token，统一 warning（方案 Q3 拍板 A）
+  if (motif === 'verified') return colors.semantic.positive;
+  if (motif === 'tais') return colors.semantic.warning;
+  return colors.primary;
+}
 
 export default function OnboardingPage() {
   const { colors } = useTheme();
@@ -161,14 +164,16 @@ export default function OnboardingPage() {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id}
-          initialNumToRender={6}
-          maxToRenderPerBatch={4}
-          windowSize={5}
+        initialNumToRender={6}
+        maxToRenderPerBatch={4}
+        windowSize={5}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={VIEWABILITY_CONFIG}
         onMomentumScrollEnd={onMomentumScrollEnd}
         getItemLayout={(_, i) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * i, index: i })}
-        renderItem={({ item }: { item: Slide }) => (
+        renderItem={({ item }: { item: Slide }) => {
+          const accent = motifAccent(colors, item.motif);
+          return (
           <View style={styles.slide}>
             {/* Tais 文化纹样：仅末屏铺（D4，屏1/2 删） */}
             {item.motif === 'tais' && (
@@ -181,18 +186,19 @@ export default function OnboardingPage() {
             <View style={styles.imageWrap}>
               <View style={[styles.imageCard, shadowPresets.lg]}>
                 <LinearGradient
-                  colors={[`${item.accentColor}33`, `${item.accentColor}11`]}
+                  colors={[`${accent}33`, `${accent}11`]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.illustration}
                 >
-                  <Icon symbol={item.icon} size={96} color={item.accentColor} />
+                  {/* opacity 0.85 对齐原型 .ob-ill-inner span（图标略透明融入渐变底） */}
+                  <Icon symbol={item.icon} size={96} color={accent} style={{ opacity: 0.85 }} />
                 </LinearGradient>
               </View>
               <View
                 style={[
                   styles.motifBadge,
-                  { backgroundColor: item.accentColor, borderColor: colors['on-primary'] },
+                  { backgroundColor: accent, borderColor: colors['on-primary'] },
                   shadowPresets.md,
                 ]}
               >
@@ -218,7 +224,8 @@ export default function OnboardingPage() {
               </View>
             )}
           </View>
-        )}
+          );
+        }}
       />
 
       {/* Footer — Dots + 主按钮 + 次按钮 */}
@@ -349,6 +356,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
   },
   imageCard: {
+    // 原型 .ob-ill 为 26px，borderRadius token 无此档（2xl=16/full），计划内接受硬编码（SYS-nonstd-radius）
     borderRadius: 26,
     overflow: 'hidden',
   },
