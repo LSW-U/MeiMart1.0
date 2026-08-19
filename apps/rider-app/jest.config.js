@@ -23,16 +23,16 @@ module.exports = {
       transformIgnorePatterns: [
         'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|nativewind|react-native-svg)',
       ],
-      // queries 目录的 hooks 测试归 web project（jsdom），rn project 跳过
-      testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/', '/src/services/queries/', '/src/components/ui/', '/src/components/feedback/', '/src/components/layout/'],
+      // queries hooks + ui/feedback/layout 组件 + app 页面测试归 web project（jsdom），rn project 跳过
+      testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/', '/src/services/queries/', '/src/components/ui/', '/src/components/feedback/', '/src/components/layout/', '/app/'],
     },
     {
       displayName: 'web',
       testEnvironment: 'jsdom',
       // react-native index.js 顶层读 __DEV__，jsdom 无 RN runtime 需注入（jest-expo preset 同款）
       globals: { __DEV__: true },
-      // queries hooks + ui/feedback/layout 组件测试归 web project（jsdom + @testing-library/react）
-      testMatch: ['<rootDir>/src/services/queries/**/*.test.tsx', '<rootDir>/src/components/ui/**/*.test.tsx', '<rootDir>/src/components/feedback/**/*.test.tsx', '<rootDir>/src/components/layout/**/*.test.tsx'],
+      // queries hooks + ui/feedback/layout 组件 + app 页面测试归 web project（jsdom + @testing-library/react）
+      testMatch: ['<rootDir>/src/services/queries/**/*.test.tsx', '<rootDir>/src/components/ui/**/*.test.tsx', '<rootDir>/src/components/feedback/**/*.test.tsx', '<rootDir>/src/components/layout/**/*.test.tsx', '<rootDir>/app/**/*.test.tsx'],
       // 不复用项目 babel.config.js（含 nativewind/babel，会把 JSX 改写成 nativewind jsx-runtime
       // → 拉入 react-native → jsdom 炸）。用 babel-preset-expo 单 preset（已顶层装、处理 TS+JSX），
       // configFile:false 跳过 babel.config.js，nativewind 插件不参与 → JSX 走标准 react runtime。
@@ -60,6 +60,11 @@ module.exports = {
         '^react-native$': '<rootDir>/src/test/react-native.mock.js',
         // AppIcon 经 @expo/vector-icons 拉真图标集（ESM），组件测试只需要可渲染 host
         '^@expo/vector-icons$': '<rootDir>/src/test/expo-vector-icons.mock.js',
+        // T1 审查 P3-1（tasks 页测试）：babel-preset-expo 把 process.env.EXPO_PUBLIC_*
+        // 编译成 require('expo/virtual/env')（ESM 发布，web project 不 transform →
+        // "Unexpected token 'export'"）。页面级测试经 TaskDetailHeader→api.ts 首次
+        // 拉进该链。桩成 CJS env 透传 process.env（与真包语义一致）。
+        '^expo/virtual/env$': '<rootDir>/src/test/expo-virtual-env.mock.js',
       },
     },
   ],
