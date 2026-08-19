@@ -14,6 +14,8 @@ type RoutePoint = {
 type TaskCardProps = {
   badge?: string;
   timeLabel: string;
+  /** T2 审查 P3-1：终态卡片 time 显示状态文本（已送达/配送失败）+ 中性/错误色（原型终态 tcard-time 无 clock 图标语义） */
+  timeTone?: 'default' | 'neutral' | 'error';
   fee?: string;
   feeNote?: string;
   orderId?: string;
@@ -33,7 +35,9 @@ type TaskCardProps = {
   onContact?: () => void;
 };
 
-export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags = [], items, note, actionLabel, actionPending = false, actionDisabled = false, chatLabel = 'Chat', contactLabel = 'Contact', variant = 'new', onAction, onChat, onContact }: TaskCardProps) {
+export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote, orderId, points, tags = [], items, note, actionLabel, actionPending = false, actionDisabled = false, chatLabel = 'Chat', contactLabel = 'Contact', variant = 'new', onAction, onChat, onContact }: TaskCardProps) {
+  // T2 审查 P3-1：default=进行中（tertiary-container+clock）/ neutral=已送达（outline，原型 --neutral 同值）/ error=配送失败
+  const timeTextClass = timeTone === 'error' ? 'text-error' : timeTone === 'neutral' ? 'text-outline' : 'text-tertiary-container';
   return (
     <View className="relative gap-3 rounded-lg border border-surface-variant bg-surface p-4 shadow-sm">
       {badge ? (
@@ -45,8 +49,8 @@ export function TaskCard({ badge, timeLabel, fee, feeNote, orderId, points, tags
       <View className="flex-row items-start justify-between pt-1">
         <View className="flex-1 pr-3">
           <View className="flex-row items-center gap-1">
-            <AppIcon name="clock" className="text-lg text-tertiary-container" size={18} />
-            <Text className="text-lg font-semibold text-tertiary-container">{timeLabel}</Text>
+            {timeTone === 'default' ? <AppIcon name="clock" className="text-lg text-tertiary-container" size={18} /> : null}
+            <Text className={`text-lg font-semibold ${timeTextClass}`}>{timeLabel}</Text>
           </View>
           {orderId ? <Text className="mt-1 self-start rounded bg-surface-container px-2 py-1 text-xs font-bold text-on-surface-variant">{orderId}</Text> : null}
         </View>

@@ -109,20 +109,43 @@ beforeEach(() => {
 
 describe('终态 banner（T2 §3.4）', () => {
   it('DELIVERED：显示「已送达」banner + 主 CTA「返回列表」（非「刷新」）', () => {
-    const { getByText } = renderPage();
+    // P3-1 后「已送达」出现两处（banner 标题 + timeLabel 状态文本），getAll 断言
+    const { getAllByText, getByText } = renderPage();
 
-    expect(getByText('已送达')).toBeTruthy();
+    expect(getAllByText('已送达').length).toBeGreaterThanOrEqual(2);
     expect(getByText('本单已完成，感谢您的配送')).toBeTruthy();
     // 主 CTA 是返回列表（底栏 BottomActionBar 的刷新 a11y label 仍存在，是 B5 设计，
     // 断言只管 TaskCard 主 CTA：返回列表出现即终态 CTA 生效）
     expect(getByText('返回列表')).toBeTruthy();
   });
 
+  it('终态 timeLabel：已送达状态文本 + neutral tone（无 clock 图标）', () => {
+    const { container } = renderPage();
+
+    // P3-1：time 区 text-lg（banner 标题是 text-sm，同文案用字号区分），neutral 色 + 无 clock 图标
+    const timeText = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).find(
+      (el) => el.textContent === '已送达' && (el.getAttribute('data-prop-classname') ?? '').includes('text-lg'),
+    );
+    expect(timeText?.getAttribute('data-prop-classname')).toContain('text-outline');
+    expect(container.querySelector('[data-testid="icon-clock-outline"]')).toBeNull();
+  });
+
+  it('FAILED：timeLabel 显示「配送失败」+ error tone', () => {
+    mockTaskStatus = 'FAILED';
+    const { container } = renderPage();
+
+    const timeText = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).find(
+      (el) => el.textContent === '配送失败' && (el.getAttribute('data-prop-classname') ?? '').includes('text-lg'),
+    );
+    expect(timeText?.getAttribute('data-prop-classname')).toContain('text-error');
+    expect(container.querySelector('[data-testid="icon-clock-outline"]')).toBeNull();
+  });
+
   it('FAILED：显示「配送失败」banner', () => {
     mockTaskStatus = 'FAILED';
-    const { getByText } = renderPage();
+    const { getAllByText, getByText } = renderPage();
 
-    expect(getByText('配送失败')).toBeTruthy();
+    expect(getAllByText('配送失败').length).toBeGreaterThanOrEqual(2);
     expect(getByText('本单已标记为失败，请联系调度')).toBeTruthy();
     expect(getByText('返回列表')).toBeTruthy();
   });
@@ -146,6 +169,14 @@ describe('终态 banner（T2 §3.4）', () => {
     expect(queryByText('返回列表')).toBeNull();
     // ASSIGNED → 已到取货点（getTaskAction 状态机，zh.json 实值）
     expect(getByText('已到取货点')).toBeTruthy();
+  });
+
+  it('非终态（ASSIGNED）：time 显示「剩余 N 分钟」+ clock 图标（default tone）', () => {
+    mockTaskStatus = 'ASSIGNED';
+    const { getByText, container } = renderPage();
+
+    expect(getByText(/剩余 30 分钟/)).toBeTruthy();
+    expect(container.querySelector('[data-testid="icon-clock-outline"]')).not.toBeNull();
   });
 });
 

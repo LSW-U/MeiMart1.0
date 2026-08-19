@@ -197,7 +197,16 @@ export default function TaskDetailPage() {
                   { label: 'P', title: detail.pickup.title, subtitle: detail.pickup.address, distance: t('common.fromHere', { distance: formatDistance(pickupDistance(detail.distanceKm)) }) },
                   { label: 'D', title: detail.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(detail.distanceKm) }) },
                 ]}
-                timeLabel={t('common.remaining', { minutes: String(detail.estimatedMinutes) })}
+                // T2 审查 P3-1：终态 time 显示状态文本 + 中性/错误色（原型 372/431 行），
+                // 非终态保持「剩余 N 分钟」+ clock 图标
+                timeLabel={
+                  detail.status === 'DELIVERED' || detail.status === 'FAILED'
+                    ? detail.status === 'DELIVERED'
+                      ? t('tasks.terminalDelivered')
+                      : t('tasks.terminalFailed')
+                    : t('common.remaining', { minutes: String(detail.estimatedMinutes) })
+                }
+                timeTone={detail.status === 'DELIVERED' ? 'neutral' : detail.status === 'FAILED' ? 'error' : 'default'}
                 variant="active"
                 onAction={() => void handleAction()}
               />
