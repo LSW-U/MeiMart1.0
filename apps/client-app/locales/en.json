@@ -567,7 +567,10 @@
   "language": {
     "title": "Select language",
     "comingSoon": "{{native}} coming soon",
-    "comingSoonShort": "Coming soon"
+    "comingSoonShort": "Coming soon",
+    "desc": "Select your preferred language. App content will update immediately.",
+    "changed": "Language updated",
+    "region": "Timor-Leste"
   },
   "coupons": {
     "title": "Coupons",

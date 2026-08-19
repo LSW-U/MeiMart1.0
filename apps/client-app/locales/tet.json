@@ -524,9 +524,12 @@
     "notifUpdateFailed": "[TET] Failed to update preferences"
   },
   "language": {
-    "title": "[TET] Select language",
-    "comingSoon": "[TET] {{native}} coming soon",
-    "comingSoonShort": "[TET] Coming soon"
+    "title": "Hili lingua",
+    "comingSoon": "{{native}} sei mai loro",
+    "comingSoonShort": "Sei mai loro",
+    "desc": "Hili lingua preferida. Konteudu aplikasaun sei atualiza imediatamente.",
+    "changed": "Lingua atualiza ona",
+    "region": "Timor-Leste"
   },
   "coupons": {
     "title": "[TET] Coupons",
