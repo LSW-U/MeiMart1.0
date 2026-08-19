@@ -627,7 +627,18 @@
     "tagline": "Tolu Hamutuk Sosa Fácil",
     "subtitle": "东帝汶本地生活超市",
     "contactTitle": "联系我们",
-    "phone": "电话"
+    "phone": "电话",
+    "statRegions": "服务地区",
+    "statMerchants": "合作商家",
+    "statOrders": "累计订单",
+    "followTitle": "关注我们",
+    "legalTitle": "法律与条款",
+    "terms": "用户协议",
+    "privacy": "隐私政策",
+    "license": "营业资质",
+    "supportTitle": "支持我们",
+    "rate": "给 MeiMart 评分",
+    "share": "分享给朋友"
   },
   "checkout": {
     "title": "确认订单",

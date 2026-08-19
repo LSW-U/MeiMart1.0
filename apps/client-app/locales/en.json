@@ -627,7 +627,18 @@
     "tagline": "Tolu Hamutuk Sosa Fácil",
     "subtitle": "Your Local Marketplace in Timor-Leste",
     "contactTitle": "Contact",
-    "phone": "Phone"
+    "phone": "Phone",
+    "statRegions": "Regions served",
+    "statMerchants": "Partner merchants",
+    "statOrders": "Total orders",
+    "followTitle": "Follow us",
+    "legalTitle": "Legal & Terms",
+    "terms": "User Agreement",
+    "privacy": "Privacy Policy",
+    "license": "Business License",
+    "supportTitle": "Support us",
+    "rate": "Rate MeiMart",
+    "share": "Share with friends"
   },
   "checkout": {
     "title": "Confirm order",

@@ -577,16 +577,27 @@
     "claimed": "[TET] Claimed"
   },
   "about": {
-    "title": "[TET] About us",
-    "company": "[TET] Company",
-    "address": "[TET] Address",
-    "email": "[TET] Email",
-    "mission": "[TET] Connecting local Timor-Leste merchants and shoppers — making daily life easier",
-    "rights": "[TET] All rights reserved.",
-    "tagline": "[TET] Tolu Hamutuk Sosa Fácil",
-    "subtitle": "[TET] Your Local Marketplace in Timor-Leste",
-    "contactTitle": "[TET] Contact",
-    "phone": "[TET] Phone"
+    "title": "Kona-ba ami",
+    "company": "Kompania",
+    "address": "Enderesu",
+    "email": "Email",
+    "mission": "Hak conectar komersante lokal Timor-Leste ho sira ne'ebe sosa — halo moris diak liu",
+    "rights": "Direitu hotu rezervadu.",
+    "tagline": "Tolu Hamutuk Sosa Fácil",
+    "subtitle": "Supermerkadu lokal iha Timor-Leste",
+    "contactTitle": "Kontaktu",
+    "phone": "Telefoni",
+    "statRegions": "Rejiun servesu",
+    "statMerchants": "Komersante partner",
+    "statOrders": "Orden total",
+    "followTitle": "Segre ami",
+    "legalTitle": "Lei no Termu",
+    "terms": "Akordu uzuáriu",
+    "privacy": "Polítika privasidade",
+    "license": "Lisensa komérsiu",
+    "supportTitle": "Apoia ami",
+    "rate": "Avalia MeiMart",
+    "share": "Partilha ho amigo"
   },
   "checkout": {
     "title": "[TET] Confirm order",
@@ -1014,7 +1025,7 @@
     "E-AUTH-003": "[TET] No permission to access",
     "notFoundTitle": "[TET] Page not found",
     "notFoundDesc": "[TET] The page does not exist",
-    "openLinkFailed": "[TET] Could not open the app for this link"
+    "openLinkFailed": "La bele loke aplikasaun ba link ne'e"
   },
   "search": {
     "recent": "[TET] Recent Searches",
