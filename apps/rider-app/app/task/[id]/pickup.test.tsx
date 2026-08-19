@@ -157,6 +157,14 @@ describe('订单号修正（T3 §3.2）', () => {
     // 内部 UUID 不出现
     expect(queryByText(/internal-uuid-1/)).toBeNull();
   });
+
+  it('取证卡标题用「商家小票」非重复的「核对小票」（P3-1）', () => {
+    const { getAllByText, getByText } = renderPage();
+
+    // 核对区段标题 1 次（:76）；取证卡 title 是「商家小票」（P3-1 修复，原型 ev-title）
+    expect(getAllByText('核对小票')).toHaveLength(1);
+    expect(getByText('商家小票')).toBeTruthy();
+  });
 });
 
 describe('processing 语义 + 成功反馈（T3 §3.3/§3.4）', () => {

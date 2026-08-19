@@ -54,7 +54,7 @@ export default function PickupConfirmPage() {
       else showToast(t('pickup.verified'), 'success');
       router.replace('/(main)/tasks?tab=pickups');
     } catch (e) {
-      // 审查报告 TODO toast：按 ApiError 差异化（业务失败 vs 网络）
+      // ApiError 差异化：业务失败（取货冲突）vs 网络
       const msg = e instanceof ApiError ? t('pickup.failed') : t('common.networkError');
       showToast(msg, 'error');
     }
@@ -104,10 +104,10 @@ export default function PickupConfirmPage() {
                 captured={captured}
                 capturedLabel={t('pickup.capturedLabel')}
                 required
-                title={t('pickup.verifyReceipt')}
+                title={t('pickup.receiptPhoto')}
                 photoUri={photoUri}
-                onPermissionDenied={() => showToast(t('pickup.cameraPermissionDenied'), 'error')}
-                onError={() => showToast(t('pickup.cameraError'), 'error')}
+                onPermissionDenied={() => showToast(t('common.cameraPermissionDenied'), 'error')}
+                onError={() => showToast(t('common.cameraError'), 'error')}
                 onPress={(uri) => { setCaptured(true); setPhotoUri(uri); }}
               />
               {/* 取证提示（原 PhotoCapture 的 instruction，统一视觉后保留为说明文字） */}

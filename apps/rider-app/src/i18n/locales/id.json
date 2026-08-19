@@ -401,8 +401,9 @@
   "pickup.orderLabel": "Pesanan #{order}",
   "pickup.tapPhoto": "Ketuk untuk ambil foto",
   "pickup.capturedLabel": "Foto Diambil",
-  "pickup.cameraPermissionDenied": "Izin kamera diperlukan. Aktifkan di Pengaturan.",
-  "pickup.cameraError": "Galat kamera, silakan coba lagi.",
   "pickup.notFound": "Tugas tidak ditemukan",
-  "pickup.notFoundDesc": "Tugas ini mungkin telah diproses atau dibatalkan."
+  "pickup.notFoundDesc": "Tugas ini mungkin telah diproses atau dibatalkan.",
+  "pickup.receiptPhoto": "Struk Merchant",
+  "common.cameraPermissionDenied": "Izin kamera diperlukan. Aktifkan di Pengaturan.",
+  "common.cameraError": "Galat kamera, silakan coba lagi."
 }

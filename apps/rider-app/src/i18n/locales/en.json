@@ -401,8 +401,9 @@
   "pickup.orderLabel": "Order #{order}",
   "pickup.tapPhoto": "Tap to take photo",
   "pickup.capturedLabel": "Photo Captured",
-  "pickup.cameraPermissionDenied": "Camera permission required. Please enable in Settings.",
-  "pickup.cameraError": "Camera error, please retry.",
   "pickup.notFound": "Task not found",
-  "pickup.notFoundDesc": "This task may have been processed or cancelled."
+  "pickup.notFoundDesc": "This task may have been processed or cancelled.",
+  "pickup.receiptPhoto": "Merchant Receipt",
+  "common.cameraPermissionDenied": "Camera permission required. Please enable in Settings.",
+  "common.cameraError": "Camera error, please retry."
 }

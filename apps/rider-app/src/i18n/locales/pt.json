@@ -401,8 +401,9 @@
   "pickup.orderLabel": "Pedido #{order}",
   "pickup.tapPhoto": "Toque para tirar foto",
   "pickup.capturedLabel": "Foto Capturada",
-  "pickup.cameraPermissionDenied": "É necessária permissão de câmara. Ative nas Configurações.",
-  "pickup.cameraError": "Erro na câmara, tente novamente.",
   "pickup.notFound": "Tarefa não encontrada",
-  "pickup.notFoundDesc": "Esta tarefa pode ter sido processada ou cancelada."
+  "pickup.notFoundDesc": "Esta tarefa pode ter sido processada ou cancelada.",
+  "pickup.receiptPhoto": "Recibo do Comerciante",
+  "common.cameraPermissionDenied": "É necessária permissão de câmara. Ative nas Configurações.",
+  "common.cameraError": "Erro na câmara, tente novamente."
 }

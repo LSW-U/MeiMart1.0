@@ -401,8 +401,9 @@
   "pickup.orderLabel": "Ordena #{order}",
   "pickup.tapPhoto": "Klik atu rai foto",
   "pickup.capturedLabel": "Foto mosu ona",
-  "pickup.cameraPermissionDenied": "Presiza permisaun kamera. Lige iha Setup.",
-  "pickup.cameraError": "Sala kamera, koko fali.",
   "pickup.notFound": "Servisu la hetan",
-  "pickup.notFoundDesc": "Servisu nebe bele proses ona ka kansela ona."
+  "pickup.notFoundDesc": "Servisu nebe bele proses ona ka kansela ona.",
+  "pickup.receiptPhoto": "Resibu Merchant",
+  "common.cameraPermissionDenied": "Presiza permisaun kamera. Lige iha Setup.",
+  "common.cameraError": "Sala kamera, koko fali."
 }

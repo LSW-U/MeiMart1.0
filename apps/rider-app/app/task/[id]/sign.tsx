@@ -89,7 +89,7 @@ export default function SignConfirmPage() {
       }, 500);
     } catch (e) {
       setStatus('idle');
-      // 审查报告 TODO toast：按 ApiError 差异化（业务失败 vs 网络）
+      // ApiError 差异化：业务失败（送达冲突）vs 网络
       const msg = e instanceof ApiError ? t('sign.failed') : t('common.networkError');
       showToast(msg, 'error');
     }
@@ -142,8 +142,8 @@ export default function SignConfirmPage() {
             required
             title={t('sign.doorNumber')}
             photoUri={doorUri}
-            onPermissionDenied={() => showToast(t('pickup.cameraPermissionDenied'), 'error')}
-            onError={() => showToast(t('pickup.cameraError'), 'error')}
+            onPermissionDenied={() => showToast(t('common.cameraPermissionDenied'), 'error')}
+            onError={() => showToast(t('common.cameraError'), 'error')}
             onPress={(uri) => { setDoorCaptured(true); setDoorUri(uri); }}
           />
           <EvidenceUpload
@@ -153,8 +153,8 @@ export default function SignConfirmPage() {
             required
             title={t('sign.packageImage')}
             photoUri={packageUri}
-            onPermissionDenied={() => showToast(t('pickup.cameraPermissionDenied'), 'error')}
-            onError={() => showToast(t('pickup.cameraError'), 'error')}
+            onPermissionDenied={() => showToast(t('common.cameraPermissionDenied'), 'error')}
+            onError={() => showToast(t('common.cameraError'), 'error')}
             onPress={(uri) => { setPackageCaptured(true); setPackageUri(uri); }}
           />
         </View>

@@ -401,8 +401,9 @@
   "pickup.orderLabel": "订单 #{order}",
   "pickup.tapPhoto": "点击拍照",
   "pickup.capturedLabel": "已捕获照片",
-  "pickup.cameraPermissionDenied": "需要相机权限才能拍照，请在设置中开启",
-  "pickup.cameraError": "拍照出错，请重试",
   "pickup.notFound": "任务不存在",
-  "pickup.notFoundDesc": "该任务可能已被处理或取消"
+  "pickup.notFoundDesc": "该任务可能已被处理或取消",
+  "pickup.receiptPhoto": "商家小票",
+  "common.cameraPermissionDenied": "需要相机权限才能拍照，请在设置中开启",
+  "common.cameraError": "拍照出错，请重试"
 }
