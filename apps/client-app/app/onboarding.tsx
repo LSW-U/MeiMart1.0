@@ -1,6 +1,5 @@
-// ⚠️ 无 HTML 原型，参考 SplashPage 推导实现，待设计确认
-// OnboardingPage — 引导页（参考 SplashPage.html 192 行的视觉风格）
-// D.2: 3 屏滑动 + DiamondPattern + LogoBadge + TaisPattern + 文化装饰
+// OnboardingPage — 引导页（3 屏滑动 + DiamondPattern + LogoBadge，末屏 TaisPattern/TaisDivider 收尾）
+// 插画区：图标 + 强调色渐变底（P24 方案 D2，替换原 Unsplash 外链图，断网不白屏）
 import { useCallback, useRef, useState } from 'react';
 import {
   StyleSheet,
@@ -13,6 +12,7 @@ import {
   Pressable,
   Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
@@ -24,48 +24,49 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useAppStore } from '@/store/appStore';
-import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 interface Slide {
   id: string;
-  image: string;
+  /** Material Symbol 名（iconMapping 已映射） */
+  icon: string;
+  /** 该屏强调色（图标 + 角标底 + 渐变底）；非 theme token 体系，inline 注入 */
+  accentColor: string;
   titleKey: string;
   bodyKey: string;
-  motif: 'cart' | 'verified' | 'tais' | 'lock';
+  /** 仅末屏 'tais' 铺文化纹样 + Divider 收尾，屏1/2 保持干净（D4） */
+  motif: 'cart' | 'verified' | 'tais';
 }
 
+// 本地兜底 SLIDES；后端 GET /client/onboarding/slides 就绪后由 useOnboardingSlides() 切换（D8）
 const SLIDES: Slide[] = [
   {
     id: 's1',
-    image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600',
+    icon: 'shopping_cart',
+    accentColor: '#961813',
     titleKey: 'onboarding.title1',
     bodyKey: 'onboarding.desc1',
     motif: 'cart',
   },
   {
     id: 's2',
-    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600',
+    icon: 'verified',
+    accentColor: '#16a34a',
     titleKey: 'onboarding.title2',
     bodyKey: 'onboarding.desc2',
     motif: 'verified',
   },
   {
     id: 's3',
-    image: 'https://images.unsplash.com/photo-1578916171728-46686eac8b58?w=600',
+    icon: 'local_florist',
+    // 原型 #b45309(amber-700) 项目无 token，统一 warning 系亮橙（方案 Q3 拍板 A）
+    accentColor: '#F57C00',
     titleKey: 'onboarding.title3',
     bodyKey: 'onboarding.desc3',
     motif: 'tais',
   },
 ];
-
-const MOTIF_ICON: Record<Slide['motif'], string> = {
-  cart: 'shopping_cart',
-  verified: 'verified',
-  tais: 'local_florist',
-  lock: 'lock',
-};
 
 // Why: FlatList 的 viewabilityConfig 必须引用稳定，否则触发
 // "Changing onViewableItemsChanged on the fly is not supported"
@@ -120,7 +121,7 @@ export default function OnboardingPage() {
     >
       <StatusBarConfig />
 
-      {/* DiamondPattern 装饰背景（参考 SplashPage 第 150 行） */}
+      {/* DiamondPattern 极淡装饰背景（D4 保留） */}
       <View style={styles.diamondBg} pointerEvents="none">
         <DiamondPattern width={SCREEN_WIDTH} height={SCREEN_WIDTH} opacity={0.04} />
       </View>
@@ -163,20 +164,33 @@ export default function OnboardingPage() {
         getItemLayout={(_, i) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * i, index: i })}
         renderItem={({ item }: { item: Slide }) => (
           <View style={styles.slide}>
-            {/* 文化纹样背景（参考 SplashPage 的 tais-pattern） */}
-            <View style={styles.slidePattern} pointerEvents="none">
-              <TaisPattern width={SCREEN_WIDTH} height={160} opacity={0.18} />
-            </View>
-
-            {/* motif 图标 + 图片 */}
-            <View style={styles.imageWrap}>
-              <View
-                style={[styles.motifBadge, { backgroundColor: colors.primary }, shadowPresets.md]}
-              >
-                <Icon symbol={MOTIF_ICON[item.motif]} size={24} color="#ffffff" />
+            {/* Tais 文化纹样：仅末屏铺（D4，屏1/2 删） */}
+            {item.motif === 'tais' && (
+              <View style={styles.slidePattern} pointerEvents="none">
+                <TaisPattern width={SCREEN_WIDTH} height={160} opacity={0.18} />
               </View>
+            )}
+
+            {/* 插画区：图标 + 强调色渐变底 + motif 角标（D2，替外链图） */}
+            <View style={styles.imageWrap}>
               <View style={[styles.imageCard, shadowPresets.lg]}>
-                <SafeImage source={{ uri: item.image }} style={styles.image} resizeMode="cover" />
+                <LinearGradient
+                  colors={[`${item.accentColor}33`, `${item.accentColor}11`]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.illustration}
+                >
+                  <Icon symbol={item.icon} size={96} color={item.accentColor} />
+                </LinearGradient>
+              </View>
+              <View
+                style={[
+                  styles.motifBadge,
+                  { backgroundColor: item.accentColor, borderColor: colors['on-primary'] },
+                  shadowPresets.md,
+                ]}
+              >
+                <Icon symbol={item.icon} size={24} color={colors['on-primary']} />
               </View>
             </View>
 
@@ -191,10 +205,12 @@ export default function OnboardingPage() {
               {t(item.bodyKey)}
             </Text>
 
-            {/* Tais Divider */}
-            <View style={styles.dividerWrap}>
-              <TaisDivider width={100} />
-            </View>
+            {/* Tais Divider：仅末屏收尾（D4） */}
+            {item.motif === 'tais' && (
+              <View style={styles.dividerWrap}>
+                <TaisDivider width={100} />
+              </View>
+            )}
           </View>
         )}
       />
@@ -238,10 +254,10 @@ export default function OnboardingPage() {
           accessibilityLabel={isLast ? t('onboarding.start') : t('common.next')}
           testID="onboarding-next"
         >
-          <Text style={styles.primaryBtnText}>
+          <Text style={[styles.primaryBtnText, { color: colors['on-primary'] }]}>
             {isLast ? t('onboarding.start') : t('common.next')}
           </Text>
-          <Icon symbol="arrow_forward" size={18} color="#ffffff" />
+          <Icon symbol="arrow_forward" size={18} color={colors['on-primary']} />
         </Pressable>
 
         {/* 最后屏额外的 Login / Register 入口 */}
@@ -314,8 +330,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   motifBadge: {
+    // 对齐原型 .ob-ill-badge（右下角悬浮），非旧版右上角（P24 方案 §9.3）
     position: 'absolute',
-    top: -spacing.sm,
+    bottom: -spacing.sm,
     right: -spacing.sm,
     width: 44,
     height: 44,
@@ -324,15 +341,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 2,
     borderWidth: 3,
-    borderColor: '#ffffff',
   },
   imageCard: {
-    borderRadius: borderRadius.xl,
+    borderRadius: 26,
     overflow: 'hidden',
   },
-  image: {
-    width: 240,
-    height: 240,
+  illustration: {
+    width: 210,
+    height: 210,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     ...typography.h2,
@@ -357,7 +375,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(141,112,108,0.2)',
   },
   dots: {
     flexDirection: 'row',
@@ -378,7 +395,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
   },
   primaryBtnText: {
-    color: '#ffffff',
     ...typography['label-caps'],
     fontWeight: '700',
     fontSize: 14,
