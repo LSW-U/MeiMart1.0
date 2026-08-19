@@ -99,6 +99,12 @@ module.exports = {
   //   丢标签。ScrollView wrapper 把它渲染为首个子节点（带原 props）。
   // - Modal visible=false 时不渲染 children（对齐 RN 真行为，弹窗关闭断言依赖此语义）
   RefreshControl: makeHost('RefreshControl'),
+  // T4：navigate 页 Linking.openURL('tel:')/maps 直连测试。可注入 stub（canOpenURL/openURL
+  // 默认全通过；测试 beforeEach 里覆写为 jest.fn 控制行为）
+  Linking: {
+    canOpenURL: async () => true,
+    openURL: async () => undefined,
+  },
   Modal: function Modal(props) {
     const { visible, children, ...rest } = props;
     if (visible === false) return null;
