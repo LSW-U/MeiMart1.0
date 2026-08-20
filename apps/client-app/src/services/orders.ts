@@ -67,6 +67,8 @@ interface OrderRaw {
     metadata: unknown;
     createdAt: string;
   }[];
+  // Why: P28 订单结果页 - 待支付倒计时截止（ISO），后端契约 createdAt + 15min（D11）
+  payDeadline?: string | null;
 }
 
 interface OrderListResponse {
@@ -147,6 +149,8 @@ function transformOrder(raw: OrderRaw): Order {
       metadata: e.metadata,
       createdAt: e.createdAt ?? '',
     })),
+    // Why: P28 - 透传待支付截止时间，null 表示非待支付态（D11）
+    payDeadline: raw.payDeadline ?? null,
   };
 }
 

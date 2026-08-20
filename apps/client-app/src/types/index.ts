@@ -135,6 +135,9 @@ export interface Order {
   cancelledAt?: string | null;
   // Why: P10 §8.1 events[] 真实事件流，timeline 精细化的备用数据源 + P11 物流页共享
   events?: OrderEvent[];
+  // Why: P28 订单结果页 - 待支付倒计时截止（ISO，= createdAt + 15min）。仅 PENDING_PAYMENT 有值，其他状态 null；
+  //     后端就绪前前端用 createdAt + 15min 兜底计算（D11）
+  payDeadline?: string | null;
 }
 
 export interface User {
