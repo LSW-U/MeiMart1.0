@@ -31,6 +31,8 @@ const mockBack = jest.fn();
 let mockTaskState: string = 'PICKED_UP';
 // dropoff contactPhone：有值 -> 致电可用；null -> 禁用「无电话」
 let mockDropoffPhone: string | null = '+670 7733 4072';
+// 真机反馈③：real 任务 contactName 也可能 undefined（联系区常驻测试切场景用）
+let mockContactName: string | null = 'Resident 4B';
 // Linking mock（react-native mock 壳透出）
 let mockLinkingCanOpen = true;
 let mockLinkingOpen: ((url: string) => Promise<void>) | null = null;
@@ -63,8 +65,8 @@ jest.mock('../../../src/services/queries/useTask', () => ({
         dropoff: {
           title: 'Timor Plaza Apartments, Unit 4B',
           address: 'Avenida Presidente Nicolau Lobato, Dili',
-          contactName: 'Resident 4B',
-          contactPhone: mockDropoffPhone,
+          contactName: mockContactName ?? undefined,
+          contactPhone: mockDropoffPhone ?? undefined,
           coordinates: { latitude: -8.54, longitude: 125.57 },
         },
         items: ['Groceries', '2kg', '2 units'],
@@ -106,6 +108,7 @@ beforeEach(() => {
   showToastMock.mockClear();
   mockTaskState = 'PICKED_UP';
   mockDropoffPhone = '+670 7733 4072';
+  mockContactName = 'Resident 4B';
   mockLinkingCanOpen = true;
   mockLinkingOpen = null;
   (Linking as unknown as { canOpenURL: jest.Mock }).canOpenURL = jest.fn(async () => mockLinkingCanOpen);
@@ -143,8 +146,11 @@ describe('三态接入（T4 §3.1）', () => {
   });
 
   it('正常（PICKED_UP）：渲染路线卡 + 底栏双 CTA', () => {
-    const { getByText, container } = renderPage();
+    const { getByText, queryByText, container } = renderPage();
 
+    // 真机反馈②：页头是「配送导航」（原型 step-title）非「订单详情」
+    expect(getByText('配送导航')).toBeTruthy();
+    expect(queryByText('订单详情')).toBeNull();
     // P1-1 后 ETA 移地图浮层（label 预计到达），路线卡内剩余时间区已移除
     expect(getByText('预计到达')).toBeTruthy();
     expect(getByText('TL Delivery #102')).toBeTruthy();
@@ -171,25 +177,20 @@ describe('假数据清零（T4 §3.2/§3.3）', () => {
 });
 
 describe('v2 视觉（T4 审查修复 P1-2/P2-1/P3-1）', () => {
-  it('P1-2 进度条：DELIVERING 时已取货 done（check 图标）+ 待送达 active', () => {
-    // PICKED_UP: step=1（已取货 done，配送中 active）；DELIVERING: step=2（前两段 done）
-    // check 图标断言用 DELIVERING 场景（step1 done 有 check；PICKED_UP 时 step1 是 active 无 check）
-    mockTaskState = 'DELIVERING';
+  it('P1-2 进度条：已取货 done（check 图标）+ 配送中 active + 待送达 todo', () => {
+    // 真机反馈①：进 navigate 页即处于「配送中」段（原型 271-289：step1 done 绿✓ + step2 active），
+    // PICKED_UP/DELIVERING 都是 step=2——原 step=1 把「已取货」当当前步语义错已修
     const { getByText, container } = renderPage();
 
     expect(getByText('已取货')).toBeTruthy();
     expect(getByText('配送中')).toBeTruthy();
     expect(getByText('待送达')).toBeTruthy();
+    // step1 done 有 check 图标；「配送中」label 是 active 红（text-primary class）
     expect(container.querySelector('[data-testid="icon-check"]')).not.toBeNull();
-  });
-
-  it('P1-2 进度条：PICKED_UP 时三段文案渲染（step2 active）', () => {
-    const { getByText, container } = renderPage();
-
-    expect(getByText('已取货')).toBeTruthy();
-    expect(getByText('待送达')).toBeTruthy();
-    // PICKED_UP step=1：step1 是 active（无 done check 图标）
-    expect(container.querySelector('[data-testid="icon-check"]')).toBeNull();
+    const activeLabel = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).find(
+      (el) => el.textContent === '配送中',
+    );
+    expect(activeLabel?.getAttribute('data-prop-classname')).toContain('text-primary');
   });
 
   it('P2-1 路线卡序号化：marker 显示数字 1/2（marker 图标不再用于路线卡）', () => {
@@ -238,6 +239,18 @@ describe('联系客人入口（T4 §3.6 · B1 裁决 B 40×40 图标钮形态）
       fireEvent.click(callBtn);
     });
     expect((Linking as unknown as { openURL: jest.Mock }).openURL).not.toHaveBeenCalled();
+  });
+
+  it('真机反馈③：联系区常驻——无 contactName/Phone 也不消失（占位「收件人」+「无电话」）', () => {
+    // real 任务两字段都 undefined 时原条件渲染整块消失（40×40 钮不可见），原型此区常驻已修
+    mockContactName = null;
+    mockDropoffPhone = null;
+    const { getByText, container } = renderPage();
+
+    expect(getByText('收件人')).toBeTruthy();
+    expect(getByText('无电话')).toBeTruthy();
+    expect(container.querySelector('[data-prop-accessibilitylabel="无电话"]')).not.toBeNull();
+    expect(container.querySelector('[data-prop-accessibilitylabel="聊天"]')).not.toBeNull();
   });
 
   it('聊天图标钮：toast 占位（chatComingSoon）', async () => {
