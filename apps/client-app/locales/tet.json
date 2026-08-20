@@ -95,7 +95,13 @@
       "codeSent": "[TET] Code sent",
       "loginFailed": "[TET] Login failed, please try again"
     },
-    "alreadyHaveAccount": "Sé iha ona konta?"
+    "alreadyHaveAccount": "Sé iha ona konta?",
+    "pwdWeak": "[TET] Weak",
+    "pwdMedium": "[TET] Medium",
+    "pwdStrong": "[TET] Strong",
+    "pwdHintWeak": "[TET] At least 8 chars with letters and numbers",
+    "pwdHintMedium": "[TET] Add special characters for stronger password",
+    "pwdHintStrong": "[TET] Strong password"
   },
   "home": {
     "search": "[TET] Search products",

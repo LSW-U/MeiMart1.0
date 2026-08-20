@@ -52,6 +52,8 @@ const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = {
   // P23 审查发现 1 -- 分组头图标补映射（today/schedule 原漏映射兜底 circle-outline）
   today: 'calendar-today',
   schedule: 'clock-outline',
+  // P29-D11 —— 验证码图标对齐 HTML（MC 无 sms，取 message-text-outline 最近语义）
+  sms: 'message-text-outline',
   security: 'shield-check',
   send: 'send',
   settings: 'cog',

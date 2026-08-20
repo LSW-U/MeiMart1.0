@@ -22,6 +22,24 @@ import { registerSchema, type RegisterValues } from '@/forms/schemas/auth';
 
 const COUNTDOWN = 60;
 
+// P29-D5: 密码强度分级——1 弱（<8 位或纯数字/纯字母）/ 2 中（8+ 含字母+数字）/ 3 强（8+ 字母+数字+特殊字符）
+export function passwordStrength(pwd: string): 1 | 2 | 3 {
+  if (pwd.length < 8 || !/[a-zA-Z]/.test(pwd) || !/\d/.test(pwd)) return 1;
+  if (!/[^a-zA-Z0-9]/.test(pwd)) return 2;
+  return 3;
+}
+
+const STRENGTH_LABEL: Record<1 | 2 | 3, string> = {
+  1: 'auth.pwdWeak',
+  2: 'auth.pwdMedium',
+  3: 'auth.pwdStrong',
+};
+const STRENGTH_HINT: Record<1 | 2 | 3, string> = {
+  1: 'auth.pwdHintWeak',
+  2: 'auth.pwdHintMedium',
+  3: 'auth.pwdHintStrong',
+};
+
 export default function RegisterPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -46,6 +64,8 @@ export default function RegisterPage() {
     mode: 'onBlur',
   });
   const phoneValue = useWatch({ control, name: 'phone' }) as string;
+  const passwordValue = useWatch({ control, name: 'password' }) as string;
+  const strength = passwordStrength(passwordValue ?? '');
   const agreedError = formState.errors.agreed?.message;
 
   useEffect(() => {
@@ -146,6 +166,7 @@ export default function RegisterPage() {
           label={t('auth.phoneNumber')}
           placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
+          prefix="+670"
           leftIcon="phone"
           testID="register-phone"
         />
@@ -158,7 +179,7 @@ export default function RegisterPage() {
               label={t('auth.verificationCode')}
               placeholder={t('auth.codePlaceholder')}
               keyboardType="number-pad"
-              leftIcon="message-text"
+              leftIcon="sms"
               maxLength={6}
               testID="register-code"
             />
@@ -181,19 +202,62 @@ export default function RegisterPage() {
           label={t('auth.setPasswordLabel')}
           placeholder={t('auth.setPasswordPlaceholder')}
           leftIcon="lock"
-          rightIcon={showPassword ? 'eye' : 'eye-off'}
+          rightIcon={showPassword ? 'visibility' : 'visibility_off'}
           onRightIconPress={() => setShowPassword((v) => !v)}
           secureTextEntry={!showPassword}
           testID="register-password"
         />
+
+        {/* P29-D5: 密码强度条（HTML .pwd-strength —— 3 段 flex bar + hint 文字） */}
+        {passwordValue !== '' && (
+          <View testID="register-pwd-strength">
+            <View style={styles.pwdStrength}>
+              {([1, 2, 3] as const).map((seg) => (
+                <View
+                  key={seg}
+                  style={[
+                    styles.pwdBar,
+                    {
+                      backgroundColor:
+                        seg <= strength
+                          ? strength === 1
+                            ? colors.error
+                            : strength === 2
+                              ? colors.semantic.warning
+                              : colors.semantic.positive
+                          : colors['outline-variant'],
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+            <Text
+              style={[
+                styles.pwdHint,
+                {
+                  color:
+                    strength === 1
+                      ? colors.error
+                      : strength === 2
+                        ? colors.semantic.warning
+                        : colors.semantic.positive,
+                },
+              ]}
+            >
+              {t(STRENGTH_LABEL[strength])}
+              {' · '}
+              {t(STRENGTH_HINT[strength])}
+            </Text>
+          </View>
+        )}
 
         <FormInput
           control={control}
           name="confirmPassword"
           label={t('auth.confirmPasswordLabel')}
           placeholder={t('auth.confirmPasswordPlaceholder')}
-          leftIcon="lock-check"
-          rightIcon={showConfirm ? 'eye' : 'eye-off'}
+          leftIcon="lock"
+          rightIcon={showConfirm ? 'visibility' : 'visibility_off'}
           onRightIconPress={() => setShowConfirm((v) => !v)}
           secureTextEntry={!showConfirm}
           testID="register-confirm"
@@ -269,6 +333,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: 8,
+  },
+  // P29-D5: HTML .pwd-strength（3 段 flex bar gap 4）+ .pwd-hint（11px）
+  pwdStrength: {
+    flexDirection: 'row',
+    gap: 4,
+    marginTop: 6,
+  },
+  pwdBar: {
+    flex: 1,
+    height: 3,
+    borderRadius: 2,
+  },
+  pwdHint: {
+    ...typography['body-sm'],
+    fontSize: 11,
+    marginTop: 4,
   },
   registerErrorText: {
     ...typography['body-sm'],

@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTheme } from '@/theme';
+import { useTheme, symbolToMc } from '@/theme';
 
 import type { InputProps } from './Input.types';
 
@@ -10,6 +10,7 @@ export function Input({
   error,
   leftIcon,
   rightIcon,
+  prefix,
   onRightIconPress,
   value,
   onChangeText,
@@ -23,6 +24,10 @@ export function Input({
   const { colors } = useTheme();
   const inputRef = useRef<TextInput>(null);
   const hasError = Boolean(error);
+  // P29-D11: 图标名经 symbolToMc 解析（HTML Material Symbols 名 → MC 名）；
+  // 旧调用方直接传 MC 名（如 'lock'）也在映射表命中自身，行为不变
+  const resolvedLeftIcon = leftIcon ? symbolToMc(leftIcon) : undefined;
+  const resolvedRightIcon = rightIcon ? symbolToMc(rightIcon) : undefined;
 
   useEffect(() => {
     if (autoFocus) {
@@ -53,11 +58,17 @@ export function Input({
       >
         {leftIcon && (
           <MaterialCommunityIcons
-            name={leftIcon}
+            name={resolvedLeftIcon}
             size={20}
             color={colors['on-surface-variant']}
             style={styles.icon}
           />
+        )}
+        {prefix && (
+          <View style={styles.prefixWrap}>
+            <Text style={[styles.prefixText, { color: colors.primary }]}>{prefix}</Text>
+            <View style={[styles.prefixDivider, { backgroundColor: colors['outline-variant'] }]} />
+          </View>
         )}
         <TextInput
           ref={inputRef}
@@ -84,7 +95,7 @@ export function Input({
             accessibilityLabel={onRightIconPress ? `${rightIcon} action` : rightIcon}
           >
             <MaterialCommunityIcons
-              name={rightIcon}
+              name={resolvedRightIcon}
               size={20}
               color={colors['on-surface-variant']}
             />
@@ -131,6 +142,22 @@ const styles = StyleSheet.create({
   },
   icon: {
     margin: 0,
+  },
+  // P29-D10: HTML .prefix-block —— +670 代码 + 右侧 1.5px 分隔线
+  prefixWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingRight: 10,
+    marginRight: 4,
+  },
+  prefixText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  prefixDivider: {
+    width: 1.5,
+    height: 24,
   },
   iconPressable: {
     minWidth: 44,

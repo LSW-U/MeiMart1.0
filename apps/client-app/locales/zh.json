@@ -134,7 +134,13 @@
       "invalidPassword": "密码至少 6 位",
       "codeSent": "验证码已发送",
       "loginFailed": "登录失败，请重试"
-    }
+    },
+    "pwdWeak": "弱",
+    "pwdMedium": "中",
+    "pwdStrong": "强",
+    "pwdHintWeak": "密码至少 8 位，含字母和数字",
+    "pwdHintMedium": "建议加入特殊字符增强安全性",
+    "pwdHintStrong": "密码强度足够"
   },
   "home": {
     "search": "搜索商品",

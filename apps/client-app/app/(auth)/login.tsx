@@ -92,6 +92,7 @@ export default function LoginPage() {
           label={t('auth.phoneNumber')}
           placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
+          prefix="+670"
           leftIcon="phone"
           testID="login-phone"
         />
@@ -102,7 +103,7 @@ export default function LoginPage() {
           label={t('auth.password')}
           placeholder={t('auth.passwordPlaceholder')}
           leftIcon="lock"
-          rightIcon={showPassword ? 'eye' : 'eye-off'}
+          rightIcon={showPassword ? 'visibility' : 'visibility_off'}
           onRightIconPress={() => setShowPassword((v) => !v)}
           secureTextEntry={!showPassword}
           testID="login-password"

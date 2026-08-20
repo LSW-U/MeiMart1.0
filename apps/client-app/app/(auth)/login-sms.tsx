@@ -105,6 +105,7 @@ export default function LoginSmsPage() {
           label={t('auth.phoneNumber')}
           placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
+          prefix="+670"
           leftIcon="phone"
           testID="login-sms-phone"
         />
@@ -117,7 +118,7 @@ export default function LoginSmsPage() {
               label={t('auth.verificationCode')}
               placeholder={t('auth.codePlaceholder')}
               keyboardType="number-pad"
-              leftIcon="message-text"
+              leftIcon="sms"
               maxLength={6}
               testID="login-sms-code"
             />

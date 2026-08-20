@@ -109,6 +109,7 @@ export default function ResetPasswordPage() {
           label={t('auth.phoneNumber')}
           placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
+          prefix="+670"
           leftIcon="phone"
           testID="reset-phone"
         />
@@ -121,7 +122,7 @@ export default function ResetPasswordPage() {
               label={t('auth.verificationCode')}
               placeholder={t('auth.codePlaceholder')}
               keyboardType="number-pad"
-              leftIcon="message-text"
+              leftIcon="sms"
               maxLength={6}
               testID="reset-code"
             />
@@ -144,7 +145,7 @@ export default function ResetPasswordPage() {
           label={t('auth.newPasswordLabel')}
           placeholder={t('auth.newPasswordPlaceholder')}
           leftIcon="lock"
-          rightIcon={showPassword ? 'eye' : 'eye-off'}
+          rightIcon={showPassword ? 'visibility' : 'visibility_off'}
           onRightIconPress={() => setShowPassword((v) => !v)}
           secureTextEntry={!showPassword}
           testID="reset-password-input"
@@ -155,8 +156,8 @@ export default function ResetPasswordPage() {
           name="confirmPassword"
           label={t('auth.confirmPasswordLabel')}
           placeholder={t('auth.confirmPasswordPlaceholder')}
-          leftIcon="lock-check"
-          rightIcon={showPassword ? 'eye' : 'eye-off'}
+          leftIcon="lock"
+          rightIcon={showPassword ? 'visibility' : 'visibility_off'}
           onRightIconPress={() => setShowPassword((v) => !v)}
           secureTextEntry={!showPassword}
           testID="reset-confirm-input"

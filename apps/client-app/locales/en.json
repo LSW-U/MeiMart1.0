@@ -134,7 +134,13 @@
       "invalidPassword": "Password must be at least 6 characters",
       "codeSent": "Code sent",
       "loginFailed": "Login failed, please try again"
-    }
+    },
+    "pwdWeak": "Weak",
+    "pwdMedium": "Medium",
+    "pwdStrong": "Strong",
+    "pwdHintWeak": "At least 8 chars with letters and numbers",
+    "pwdHintMedium": "Add special characters for stronger password",
+    "pwdHintStrong": "Strong password"
   },
   "home": {
     "search": "Search products",
