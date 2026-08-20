@@ -150,10 +150,12 @@ describe('三态接入（T3 §3.1）', () => {
 });
 
 describe('订单号修正（T3 §3.2）', () => {
-  it('显示 task.orderId（TL Delivery #102）非路由内部 id', () => {
+  it('显示 task.orderId（TL Delivery #102）非路由内部 id，无双 #（A5）', () => {
     const { getByText, queryByText } = renderPage();
 
+    // A5：orderId 值自带 # 时前导 # 被 trim，模板 # 兜底分隔 → 单 #
     expect(getByText('订单 #TL Delivery #102')).toBeTruthy();
+    expect(queryByText(/##/)).toBeNull();
     // 内部 UUID 不出现
     expect(queryByText(/internal-uuid-1/)).toBeNull();
   });

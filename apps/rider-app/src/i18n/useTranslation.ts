@@ -22,14 +22,18 @@ const interpolate = (template: string, vars?: TranslationVars) => {
   return template.replace(/\{(\w+)\}/g, (match, name: string) => (name in vars ? String(vars[name]) : match));
 };
 
+// A4：服务层（notification vars 等 hook 外场景）用的纯函数翻译——
+// 与 hook 同一套字典 + 回退规则（当前语言 → en → key）
+export function translate(language: AppLanguage, key: TranslationKey, vars?: TranslationVars): string {
+  const template = dictionaries[language][key] || dictionaries.en[key] || key;
+  return interpolate(template, vars);
+}
+
 export function useTranslation() {
   const { data: settings } = useRiderSettings();
   const language: AppLanguage = settings?.language ?? 'zh';
 
-  const t = (key: TranslationKey, vars?: TranslationVars) => {
-    const template = dictionaries[language][key] || dictionaries.en[key] || key;
-    return interpolate(template, vars);
-  };
+  const t = (key: TranslationKey, vars?: TranslationVars) => translate(language, key, vars);
 
   return { t, language };
 }

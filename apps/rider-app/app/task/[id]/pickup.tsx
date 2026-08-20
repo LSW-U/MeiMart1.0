@@ -76,7 +76,12 @@ export default function PickupConfirmPage() {
           <Text className="mb-1 text-center text-xl font-semibold text-on-surface">{t('pickup.verifyReceipt')}</Text>
           <Text className="text-center text-base text-on-surface-variant">
             {t('pickup.instructionPrefix')}{' '}
-            <Text className="font-bold text-primary">{t('pickup.orderLabel', { order: taskOrNull.orderId })}</Text>
+            {/* A5：模板已带 # 前缀（订单 #{order}），orderId 值自带 #（mock 'TL Delivery #104'）
+                会在渲染成「订单 #TL Delivery #104」双 #——以 # 开头时 trim；real orderId 若为
+                纯数字则保留模板 # 分隔，两态都正确 */}
+            <Text className="font-bold text-primary">
+              {t('pickup.orderLabel', { order: taskOrNull.orderId.replace(/^#/, '') })}
+            </Text>
           </Text>
         </View>
       ) : null}

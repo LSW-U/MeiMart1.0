@@ -2,6 +2,9 @@ import type { EarningSummary, EarningTransaction, WithdrawalRequest } from '@/sr
 
 import { api, isMockMode } from './api';
 import { notificationApi } from './notification';
+import { riderSettingsApi } from './settings';
+import { translate } from '../i18n/useTranslation';
+import { formatCurrency } from '../utils/format';
 
 // 后端无 rider earnings / withdraw 端点（W6+ 才实现），real 模式也强制走 mock。
 // W6+ 后端实现时把 FORCE_MOCK 改为 false 即可启用真实分支。
@@ -119,7 +122,14 @@ export const earningsApi = {
         category: 'wallet',
         titleKey: 'notification.template.walletWithdrawSuccess.title',
         messageKey: 'notification.template.walletWithdrawSuccess.message',
-        vars: { amount: `$${amount.toFixed(2)}` },
+        // A4：金额走 formatCurrency + 当前语言货币符号（原 `$${amount.toFixed(2)}` 硬编码 $，
+        // zh 用户看到 $ 而 earnings 页是 ¥）。服务层无 hook，translate 纯函数取 common.currency
+        vars: {
+          amount: formatCurrency(
+            amount,
+            translate((await riderSettingsApi.get()).language, 'common.currency'),
+          ),
+        },
         link: '/(main)/earnings',
       });
       return;
