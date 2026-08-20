@@ -13,6 +13,7 @@ export function PrimaryHeader({
   showLocation = false,
   locationLabel,
   onLocationPress,
+  centerTitle = false,
   testID,
 }: PrimaryHeaderProps) {
   const { colors } = useTheme();
@@ -44,7 +45,7 @@ export function PrimaryHeader({
           <View style={styles.btnPlaceholder} />
         )}
 
-        <View style={styles.titleWrap}>
+        <View style={centerTitle ? styles.titleWrapCentered : styles.titleWrap}>
           <Text style={[styles.title, { color: colors['on-primary'] }]} numberOfLines={1} accessibilityRole="header">
             {title}
           </Text>
@@ -110,6 +111,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+  },
+  // centerTitle：绝对定位铺满整行居中——不受 back 按钮占位影响（标题对屏幕居中）
+  // Why: RN types 只有 absoluteFill 无 absoluteFillObject（P27 同坑），展开 position 四向
+  titleWrapCentered: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Why: 左右 padding 让长标题不被 back/右侧按钮压住
+    paddingHorizontal: 88,
   },
   title: {
     ...typography.h3,

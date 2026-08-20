@@ -936,7 +936,6 @@
     "saved": "资料已更新",
     "avatar": "头像",
     "avatarHint": "点击更换头像",
-    "avatarFormat": "支持 JPG/PNG，≤2MB",
     "avatarUploading": "头像上传中…",
     "avatarFailed": "头像上传失败，请重试",
     "avatarTooLarge": "图片过大，请选择 2MB 以内的图片",

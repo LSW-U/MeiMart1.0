@@ -74,8 +74,8 @@ describe('ProfileEditPage（P27）', () => {
     expect(getByText('profileEdit.avatarHint')).toBeTruthy();
     expect(getByText('profileEdit.sectionBasic')).toBeTruthy();
     expect(getByText('profileEdit.sectionAccount')).toBeTruthy();
-    // 手机号只读：头像区展示 + 账号安全行两处出现（getAllByText）
-    expect(getAllByText('+670 7123 4567').length).toBeGreaterThanOrEqual(2);
+    // 手机号只读：dev 反馈删除头像区手机号后，仅账号安全行一处
+    expect(getAllByText('+670 7123 4567').length).toBe(1);
     expect(getByText('profileEdit.phoneLocked')).toBeTruthy();
     // F7：禁用态保存按钮 label 走 noChanges（未 dirty 时 isDirty=false）
     expect(getByText('profileEdit.noChanges')).toBeTruthy();
@@ -83,9 +83,9 @@ describe('ProfileEditPage（P27）', () => {
     expect(getByText('10/15')).toBeTruthy();
   });
 
-  it('F7：头像格式提示行 avatarFormat 渲染', () => {
-    const { getByText } = render(<EditPage />, { wrapper });
-    expect(getByText('profileEdit.avatarFormat')).toBeTruthy();
+  it('头像格式提示行已按 dev 反馈移除（avatarFormat 不再渲染）', () => {
+    const { queryByText } = render(<EditPage />, { wrapper });
+    expect(queryByText('profileEdit.avatarFormat')).toBeNull();
   });
 
   it('客服提示行跳 /(main)/service（D2：改号本期不接，只读+跳客服）', () => {

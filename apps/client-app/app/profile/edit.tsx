@@ -125,6 +125,7 @@ export default function ProfileEditPage() {
         title={t('profileEdit.title')}
         showBack
         onBackPress={handleBack}
+        centerTitle
         testID="profile-edit-back"
       />
       <KeyboardAvoidingView
@@ -132,8 +133,9 @@ export default function ProfileEditPage() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          {/* 头像区（D1）：96px 金边圆头像 + 相机角标 + 昵称/手机号展示 + 更换提示 */}
-          <View style={[styles.avatarZone, { backgroundColor: colors['surface-container-low'] }]}>
+          {/* 头像区（D1）：96px 金边圆头像 + 相机角标 + 昵称展示 + 更换提示
+              dev 反馈：背景与页面一致（去掉 surface-container-low 色块）、不显手机号与格式提示行 */}
+          <View style={styles.avatarZone}>
             <Pressable
               onPress={() => void handlePickAvatar()}
               style={styles.avatarWrap}
@@ -180,21 +182,12 @@ export default function ProfileEditPage() {
               )}
             </Pressable>
             <Text style={[styles.avatarName, { color: colors['on-surface'] }]}>{displayName}</Text>
-            {user?.phone != null && user.phone !== '' && (
-              <Text style={[styles.avatarPhone, { color: colors['on-surface-variant'] }]}>
-                {user.phone}
-              </Text>
-            )}
             <View style={styles.avatarHintRow}>
               <Icon symbol="photo_camera" size={12} color={colors['on-surface-variant']} />
               <Text style={[styles.avatarHint, { color: colors['on-surface-variant'] }]}>
                 {t('profileEdit.avatarHint')}
               </Text>
             </View>
-            {/* F7：头像格式提示行（avatarFormat 死键接入 UI） */}
-            <Text style={[styles.avatarFormat, { color: colors['on-surface-variant'] }]}>
-              {t('profileEdit.avatarFormat')}
-            </Text>
           </View>
 
           {/* 基本信息（D3）：昵称（可编辑行）+ 邮箱（选填） */}
@@ -394,9 +387,6 @@ const styles = StyleSheet.create({
     ...typography.h3,
     fontWeight: '700',
   },
-  avatarPhone: {
-    ...typography['body-sm'],
-  },
   avatarHintRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -406,12 +396,6 @@ const styles = StyleSheet.create({
   avatarHint: {
     ...typography['body-sm'],
     fontSize: 12,
-  },
-  // F7：头像格式提示（avatarFormat）
-  avatarFormat: {
-    ...typography['body-sm'],
-    fontSize: 11,
-    marginTop: 2,
   },
   section: { gap: spacing.sm },
   sectionTitle: {
