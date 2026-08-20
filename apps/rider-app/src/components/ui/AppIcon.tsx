@@ -4,7 +4,7 @@ import type { StyleProp, TextStyle } from 'react-native';
 
 import { colors } from '../../theme/colors';
 
-export type AppIconName = 'menu' | 'notification' | 'settings' | 'refresh' | 'orders' | 'wallet' | 'upload' | 'camera' | 'profile' | 'document' | 'security' | 'bank' | 'rider' | 'help' | 'logout' | 'language' | 'shield' | 'bell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'check' | 'lock' | 'eye' | 'eyeOff' | 'sms' | 'phone' | 'navigation' | 'info' | 'pickup' | 'dropoff' | 'arrowUp' | 'arrowDown' | 'verified' | 'clock';
+export type AppIconName = 'menu' | 'notification' | 'settings' | 'refresh' | 'orders' | 'wallet' | 'upload' | 'camera' | 'profile' | 'document' | 'security' | 'bank' | 'rider' | 'help' | 'logout' | 'language' | 'shield' | 'bell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'check' | 'lock' | 'eye' | 'eyeOff' | 'sms' | 'chat' | 'account' | 'phone' | 'navigation' | 'info' | 'pickup' | 'dropoff' | 'arrowUp' | 'arrowDown' | 'verified' | 'clock';
 
 type MaterialIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -44,6 +44,10 @@ const icons: Record<AppIconName, MaterialIconName> = {
   eye: 'eye-outline',
   eyeOff: 'eye-off-outline',
   sms: 'cellphone-message',
+  // B1 裁决 B：navigate 联系客人 chat 40×40 图标钮（原型 message-square 线框形）
+  chat: 'message-outline',
+  // B1 裁决 B：contact-name 行 13px 人形图标（原型 contact-info 前缀）
+  account: 'account',
   // T4 §3.6: navigate 页 dropoff 联系客人致电按钮（与 sms 同源 MaterialCommunityIcons）
   phone: 'phone',
   // T4 审查修复 Q-2: 底栏「打开导航」按钮（原 pickup 图标语义错位；原型是导航 pin 图标）

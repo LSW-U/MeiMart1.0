@@ -207,36 +207,47 @@ describe('v2 视觉（T4 审查修复 P1-2/P2-1/P3-1）', () => {
   });
 });
 
-describe('联系客人入口（T4 §3.6）', () => {
-  it('有 contactPhone：显示联系人 + 「致电」按钮，点击打开 tel:', async () => {
-    const { getByText } = renderPage();
+describe('联系客人入口（T4 §3.6 · B1 裁决 B 40×40 图标钮形态）', () => {
+  it('有 contactPhone：联系人姓名/电话分两行 + 致电图标钮，点击打开 tel:', async () => {
+    const { getByText, container } = renderPage();
 
+    // B1：原型 .contact-name/.contact-phone 分两行（不再合并「姓名 · 电话」单行）
     expect(getByText(/Resident 4B/)).toBeTruthy();
-    expect(getByText('致电')).toBeTruthy();
+    expect(getByText('+670 7733 4072')).toBeTruthy();
+
+    const callBtn = container.querySelector('[data-prop-accessibilitylabel="致电"]')!;
+    expect(callBtn).toBeTruthy();
 
     await act(async () => {
-      fireEvent.click(getByText('致电'));
+      fireEvent.click(callBtn);
     });
     expect((Linking as unknown as { openURL: jest.Mock }).openURL).toHaveBeenCalledWith('tel:+670 7733 4072');
   });
 
-  it('无 contactPhone：致电禁用显示「无电话」，点击无动作', async () => {
+  it('无 contactPhone：致电钮禁用（电话行显示「无电话」），点击无动作', async () => {
     mockDropoffPhone = null;
-    const { getByText } = renderPage();
+    const { getByText, container } = renderPage();
 
     expect(getByText('无电话')).toBeTruthy();
 
+    const callBtn = container.querySelector('[data-prop-accessibilitylabel="无电话"]')!;
+    // B1：禁用态 neutral-bg 浅底（原型 .contact-btn.disabled）
+    expect((callBtn.getAttribute('data-prop-classname') ?? '')).toContain('bg-neutral-bg');
+
     await act(async () => {
-      fireEvent.click(getByText('无电话'));
+      fireEvent.click(callBtn);
     });
     expect((Linking as unknown as { openURL: jest.Mock }).openURL).not.toHaveBeenCalled();
   });
 
-  it('聊天按钮：toast 占位（chatComingSoon）', async () => {
-    const { getByText } = renderPage();
+  it('聊天图标钮：toast 占位（chatComingSoon）', async () => {
+    const { container } = renderPage();
+
+    const chatBtn = container.querySelector('[data-prop-accessibilitylabel="聊天"]')!;
+    expect(chatBtn).toBeTruthy();
 
     await act(async () => {
-      fireEvent.click(getByText('聊天'));
+      fireEvent.click(chatBtn);
     });
     expect(showToastMock).toHaveBeenCalledWith('聊天功能即将上线', 'info');
   });

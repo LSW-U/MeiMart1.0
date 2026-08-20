@@ -10,6 +10,8 @@ export const colors = {
   success: '#137a3a',
   warning: '#b25a00',
   danger: '#961813',
+  // B1 裁决 B：chat 图标钮蓝底（原型 --info: #1a6fb0）
+  info: '#1a6fb0',
 
   // 状态标签语义色（bg + text 配对）
   statusSuccessBg: '#dcf5e3',

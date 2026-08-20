@@ -199,37 +199,47 @@ export default function TaskNavigatePage() {
                         </Text>
                         {/* T4 §3.2: 假 chips（verifiedReceiver/leaveAtDoor 无字段支撑）已删；
                             §3.6 新增 dropoff 联系客人入口 */}
+                        {/* B1 裁决 B（原型 .contact-block）：分隔线上边框 + 姓名一行(人形图标)/电话一行
+                            + 右侧两个 40×40 图标钮（call 绿 success / chat 蓝 info），禁用态灰底 */}
                         {(taskData.dropoff.contactName || taskData.dropoff.contactPhone) && (
-                          <Text className="mt-1 text-xs text-on-surface-variant">
-                            {taskData.dropoff.contactName}
-                            {taskData.dropoff.contactName && taskData.dropoff.contactPhone ? ' · ' : ''}
-                            {taskData.dropoff.contactPhone ?? ''}
-                          </Text>
+                          <View className="mt-3 flex-row items-center gap-2.5 border-t border-surface-variant pt-2.5">
+                            <View className="min-w-0 flex-1">
+                              {taskData.dropoff.contactName ? (
+                                <View className="flex-row items-center gap-1">
+                                  <AppIcon className="text-on-surface" name="account" size={13} />
+                                  <Text className="text-xs font-semibold text-on-surface">{taskData.dropoff.contactName}</Text>
+                                </View>
+                              ) : null}
+                              {taskData.dropoff.contactPhone ? (
+                                <Text className="mt-0.5 text-[11px] text-on-surface-variant">{taskData.dropoff.contactPhone}</Text>
+                              ) : (
+                                <Text className="mt-0.5 text-[11px] text-on-surface-variant">{t('tasks.noPhone')}</Text>
+                              )}
+                            </View>
+                            <Pressable
+                              accessibilityLabel={taskData.dropoff.contactPhone ? t('tasks.callCustomer') : t('tasks.noPhone')}
+                              accessibilityRole="button"
+                              accessibilityState={{ disabled: !taskData.dropoff.contactPhone }}
+                              className={'h-10 w-10 items-center justify-center rounded-[10px] ' + (taskData.dropoff.contactPhone ? '' : 'bg-neutral-bg')}
+                              style={taskData.dropoff.contactPhone ? { backgroundColor: colors.success } : undefined}
+                              disabled={!taskData.dropoff.contactPhone}
+                              onPress={() => void handleCallCustomer()}
+                            >
+                              {/* 禁用态（原型 .contact-btn.disabled）：neutral-bg 浅底 + outline 图标 */}
+                              <AppIcon color={taskData.dropoff.contactPhone ? colors.surface : colors.outline} name="phone" size={18} />
+                            </Pressable>
+                            <Pressable
+                              accessibilityHint={t('tasks.chatComingSoon')}
+                              accessibilityLabel={t('tasks.chat')}
+                              accessibilityRole="button"
+                              className="h-10 w-10 items-center justify-center rounded-[10px]"
+                              style={{ backgroundColor: colors.info }}
+                              onPress={() => showToast(t('tasks.chatComingSoon'), 'info')}
+                            >
+                              <AppIcon color={colors.surface} name="chat" size={18} />
+                            </Pressable>
+                          </View>
                         )}
-                        <View className="mt-2 flex-row gap-2">
-                          <Pressable
-                            accessibilityLabel={taskData.dropoff.contactPhone ? t('tasks.callCustomer') : t('tasks.noPhone')}
-                            accessibilityRole="button"
-                            className={'flex-row items-center gap-1 rounded-lg px-3 py-1.5 ' + (taskData.dropoff.contactPhone ? '' : 'bg-surface-container')}
-                            style={taskData.dropoff.contactPhone ? { backgroundColor: colors.success } : undefined}
-                            disabled={!taskData.dropoff.contactPhone}
-                            onPress={() => void handleCallCustomer()}
-                          >
-                            <AppIcon color={taskData.dropoff.contactPhone ? colors.surface : colors.outline} name="phone" size={14} />
-                            <Text className={'text-xs font-bold ' + (taskData.dropoff.contactPhone ? 'text-white' : 'text-on-surface-variant')}>
-                              {taskData.dropoff.contactPhone ? t('tasks.callCustomer') : t('tasks.noPhone')}
-                            </Text>
-                          </Pressable>
-                          <Pressable
-                            accessibilityLabel={t('tasks.chat')}
-                            accessibilityRole="button"
-                            className="flex-row items-center gap-1 rounded-lg border border-outline-variant bg-surface-container px-3 py-1.5"
-                            onPress={() => showToast(t('tasks.chatComingSoon'), 'info')}
-                          >
-                            <AppIcon className="text-primary" name="sms" size={14} />
-                            <Text className="text-xs font-bold text-primary">{t('tasks.chat')}</Text>
-                          </Pressable>
-                        </View>
                       </View>
                       <Text className="text-xs font-bold uppercase tracking-wider text-outline">{formatDistance(taskData.distanceKm)}</Text>
                     </View>

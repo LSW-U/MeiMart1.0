@@ -125,6 +125,9 @@ export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote,
           <Button
             accessibilityLabel={actionLabel}
             className="w-full"
+            // B2 裁决 B：active 卡主 CTA 对齐原型 tc-btn-main 15px/800（text-base font-extrabold），
+            // 仅此一处覆盖，不动 Button 默认（其他 30+ 调用方维持 text-xs 统一规格）
+            textClassName="text-base font-extrabold"
             disabled={actionDisabled || actionPending}
             onPress={onAction}
           >
