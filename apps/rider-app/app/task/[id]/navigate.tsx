@@ -110,9 +110,12 @@ export default function TaskNavigatePage() {
       {/* B4: 统一页头。真机反馈②：原型 step-title 是「配送导航」非「订单详情」（navigate 页语义） */}
       <StepPageHeader backLabel={t('common.back')} title={t('flow.deliveryNavigation')} />
 
-      <ScrollView className="flex-1" contentContainerClassName="gap-3 pb-32">
+      <ScrollView className="flex-1" contentContainerClassName="pb-32">
         {/* T4 §3.1: 三态边界（判错 1 修正版：common.loadError.* + taskNotFoundDesc，非
             common.loadFailed/common.routeNotFound--前者不存在，后者是路线失效语义） */}
+        {/* 真机反馈：gap 不能放 contentContainer——QueryBoundary 是唯一直接子节点，
+            fragment 里的地图/路线卡/订单卡/启动条不吃 gap（上下零间距根因）。
+            包一层 gap-3（原型 .content-area gap:12px） */}
         <QueryBoundary<DeliveryTask | null>
           data={data}
           isLoading={isLoading}
@@ -127,7 +130,7 @@ export default function TaskNavigatePage() {
           onRetry={() => void refetch()}
         >
           {(taskData) => (
-            <>
+            <View className="gap-3">
               <View className="relative">
                 <MapView
                   pickup={taskData.pickup.coordinates ? { ...taskData.pickup.coordinates, title: taskData.pickup.title } : undefined}
@@ -279,7 +282,8 @@ export default function TaskNavigatePage() {
               </View>
 
               {/* 真机反馈②（原型 :355 .nav-launch-row）：订单摘要下的「打开系统导航」启动条
-                  （白底描边卡 + pin 图标 + primary 文字，整条可点） */}
+                  （白底描边卡 + pin 图标 + primary 文字，整条可点）。
+                  真机反馈三轮：pin 装进 28px primary 圆底（用户裁定，同进度条 step-dot 形态）白图标 */}
               <Pressable
                 accessibilityLabel={t('tasks.openNavigation')}
                 accessibilityRole="button"
@@ -287,10 +291,12 @@ export default function TaskNavigatePage() {
                 disabled={!taskData.dropoff.coordinates}
                 onPress={() => void handleOpenNavigation()}
               >
-                <AppIcon className="text-primary" name="pin" size={18} />
+                <View className="h-7 w-7 items-center justify-center rounded-full" style={{ backgroundColor: colors.primary }}>
+                  <AppIcon color={colors.surface} name="pin" size={16} />
+                </View>
                 <Text className="text-[13px] font-semibold text-primary">{t('tasks.openNavigation')}</Text>
               </Pressable>
-            </>
+            </View>
           )}
         </QueryBoundary>
       </ScrollView>
