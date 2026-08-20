@@ -123,7 +123,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
       <AuthShell
         welcomeTitle={t('auth.registerTitle')}

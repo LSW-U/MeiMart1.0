@@ -98,7 +98,7 @@ describe('P29-D5 register：密码强度条', () => {
   it('passwordStrength 纯函数三态：弱/中/强', () => {
     expect(passwordStrength('')).toBe(1);
     expect(passwordStrength('12345678')).toBe(1); // 纯数字
-    expect(passwordStrength('abcdefgh')).toBe(1); // 纯字母（<8 也弱）
+    expect(passwordStrength('abcdefgh')).toBe(1); // 8 位纯字母无数字 → 弱（缺数字命中）
     expect(passwordStrength('Abc12345')).toBe(2); // 字母+数字无特殊字符
     expect(passwordStrength('Abc12345!')).toBe(3); // 含特殊字符
   });

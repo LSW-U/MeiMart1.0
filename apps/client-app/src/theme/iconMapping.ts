@@ -16,8 +16,11 @@ import type { IconName } from '@/types';
 /**
  * Material Symbols（HTML）→ MaterialCommunityIcons（RN）名称映射。
  * 缺失项返回 'circle-outline' 作为兜底（避免运行时崩溃）。
+ *
+ * P29 审查 F2：字面量表用 satisfies 保留 key 联合推导（MaterialSymbolName 需要），
+ * 显式 Record<string,...> 注解会让 keyof 退化成 string。
  */
-const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = {
+const SYMBOL_TO_MC_LITERAL = {
   // 通用导航 / 操作
   add: 'plus',
   add_circle: 'plus-circle',
@@ -139,7 +142,9 @@ const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = {
   facebook: 'facebook',
   whatsapp: 'whatsapp',
   instagram: 'instagram',
-};
+} satisfies Readonly<Record<string, IconName>>;
+
+const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = SYMBOL_TO_MC_LITERAL;
 
 const FALLBACK_NAME = 'circle-outline' as IconName;
 
@@ -154,3 +159,10 @@ export function symbolToMc(symbolName: string): IconName {
 }
 
 export type { IconName };
+
+/**
+ * P29 审查 F2：HTML Material Symbols 名联合（映射表 key 推导）。
+ * 供 Input 等 UI 组件入参收窄用——`IconName | MaterialSymbolName`
+ * 既允许传 HTML 符号名（如 'sms'）、又保留编译期拼写校验（拼错 tsc 即拦）。
+ */
+export type MaterialSymbolName = keyof typeof SYMBOL_TO_MC_LITERAL;

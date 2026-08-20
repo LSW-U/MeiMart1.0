@@ -25,6 +25,8 @@ export default function ResetPasswordPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
+  // P29 审查 F4：确认密码独立开关（与 register 对齐，不再与新密码共用导致双框同显）
+  const [showConfirm, setShowConfirm] = useState(false);
   const [counter, setCounter] = useState(0);
   const resetMutation = useResetPassword();
   const sendMutation = useSendSmsCode();
@@ -76,7 +78,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
       <AuthShell
         welcomeTitle={t('auth.forgotPasswordTitle')}
@@ -157,9 +159,9 @@ export default function ResetPasswordPage() {
           label={t('auth.confirmPasswordLabel')}
           placeholder={t('auth.confirmPasswordPlaceholder')}
           leftIcon="lock"
-          rightIcon={showPassword ? 'visibility' : 'visibility_off'}
-          onRightIconPress={() => setShowPassword((v) => !v)}
-          secureTextEntry={!showPassword}
+          rightIcon={showConfirm ? 'visibility' : 'visibility_off'}
+          onRightIconPress={() => setShowConfirm((v) => !v)}
+          secureTextEntry={!showConfirm}
           testID="reset-confirm-input"
         />
       </AuthShell>

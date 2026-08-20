@@ -32,7 +32,7 @@ export {
   type ServiceEntryTheme,
   type ServiceEntryThemeKey,
 } from './serviceEntryThemes';
-export { symbolToMc, type IconName } from './iconMapping';
+export { symbolToMc, type IconName, type MaterialSymbolName } from './iconMapping';
 export {
   fontFamilies,
   defaultHitSlop,
