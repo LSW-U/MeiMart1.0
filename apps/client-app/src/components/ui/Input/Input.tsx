@@ -21,6 +21,7 @@ export function Input({
   disabled,
   testID,
   autoFocus,
+  style,
 }: InputProps) {
   const { colors } = useTheme();
   const inputRef = useRef<TextInput>(null);
@@ -37,7 +38,7 @@ export function Input({
   }, [autoFocus]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, variant === 'bare' && styles.containerBare]}>
       {label && (
         <Text
           style={[styles.label, { color: colors['on-surface-variant'] }]}
@@ -84,7 +85,8 @@ export function Input({
           editable={!disabled}
           autoCapitalize="none"
           autoCorrect={false}
-          style={[styles.input, { color: colors['on-surface'] }]}
+          // 调用方 style（如 bareInput 的 flex:1）应用到 TextInput 本体——原实现不解构 style 静默丢弃导致布局塌
+          style={[styles.input, { color: colors['on-surface'] }, style]}
           accessibilityLabel={label || placeholder}
           accessibilityState={{ disabled: !!disabled }}
         />
@@ -119,7 +121,11 @@ export function Input({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    // bare 变体行式内嵌：外层高度随内容（filled 保持 56 独立输入高度）
     minHeight: 56,
+  },
+  containerBare: {
+    minHeight: 0,
   },
   label: {
     fontSize: 12,

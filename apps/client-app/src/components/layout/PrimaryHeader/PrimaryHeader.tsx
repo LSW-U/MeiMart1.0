@@ -45,7 +45,11 @@ export function PrimaryHeader({
           <View style={styles.btnPlaceholder} />
         )}
 
-        <View style={centerTitle ? styles.titleWrapCentered : styles.titleWrap}>
+        {/* centerTitle 层 pointerEvents none：绝对定位铺满行会挡住 back 按钮点击（Web 端透明层也拦截），标题纯展示放行穿透 */}
+        <View
+          style={centerTitle ? styles.titleWrapCentered : styles.titleWrap}
+          pointerEvents={centerTitle ? 'none' : 'auto'}
+        >
           <Text style={[styles.title, { color: colors['on-primary'] }]} numberOfLines={1} accessibilityRole="header">
             {title}
           </Text>
