@@ -131,7 +131,10 @@ export default function RegisterPage() {
         testID="register-page"
       >
         {registerError && (
-          <View style={styles.registerErrorBox} accessibilityRole="alert">
+          <View
+            style={[styles.registerErrorBox, { backgroundColor: colors['error-container'] }]}
+            accessibilityRole="alert"
+          >
             <Text style={[styles.registerErrorText, { color: colors.error }]}>
               {registerError}
             </Text>
@@ -266,7 +269,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: 8,
-    backgroundColor: 'rgba(220, 38, 38, 0.08)',
   },
   registerErrorText: {
     ...typography['body-sm'],

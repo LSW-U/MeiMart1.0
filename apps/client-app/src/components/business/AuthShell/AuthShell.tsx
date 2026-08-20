@@ -1,15 +1,13 @@
 // AuthShell — 共享的 auth 页面外壳
-// 还原自 5 个 auth 页面 HTML 的共性结构（Header + DiamondPattern + Welcome Card + Cultural Image）
-// Fix-16: 避免在 5 个 auth 页面重复同样的 300 行外壳代码
-import { StyleSheet, View, Text, ScrollView, Pressable, Image } from 'react-native';
+// P29-D2: 320px primary-container 头图+文化图 → 紧凑品牌区（surface 底，按内容撑开无固定高度）
+// P29-D3: CTA tertiary-container 金色 → primary 红色（核心转化操作用品牌红）
+// P29-D6: 硬编码 rgba → theme token
+// 还原自 P29 HTML 原型 .brand-head（flex:0 0 auto 无固定高度，logo+name+tag+welcome+sub）
+import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
-import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { Icon } from '@/components/ui/Icon';
 import { LocaleSwitch } from '@/components/business/LocaleSwitch/LocaleSwitch';
 import type { AuthShellProps } from './AuthShell.types';
-
-const CULTURAL_IMAGE =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuBEQ9pd8vHWPVWbH0PVh2bipzAFX1TaB1i_pm-b1VLDhwtmrQ9aB4gGDPoh1y3hPGaDmOaery53HsMgsPk7y5sx7Nrzy3ZLbNM_t9lTSgGcXlXt80bmFeE-FXCYotnAJZx8NpI5TgyjNyCNwz5M1gdej59aV-CIqdZ5yt0mvnH3IOKkZzwnN9agK7ZVXIIBU2KIe7i2bHm3n91bBFAU2rWcbQFMk-h2VY878FXvH6P1-8ye_jjsXzWoy3JRZWAcBQmFSRQs0JTj';
 
 export function AuthShell({
   welcomeTitle,
@@ -30,87 +28,53 @@ export function AuthShell({
       contentContainerStyle={styles.scroll}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header: primary-container + DiamondPattern + Logo */}
-      <View
-        style={[styles.header, { backgroundColor: colors['primary-container'] }]}
-        accessibilityRole="header"
-      >
-        <View style={styles.headerPattern} pointerEvents="none">
-          <DiamondPattern width={390} height={320} opacity={0.2} />
+      {/* 紧凑品牌区：surface 底色，按内容撑开（HTML .brand-head padding 48/24/20，gap 10） */}
+      <View style={styles.brandHead} accessibilityRole="header">
+        <View
+          style={[
+            styles.brandLogo,
+            { backgroundColor: colors.primary, borderColor: colors['outline-variant'] },
+          ]}
+        >
+          <Icon symbol="shopping_basket" size={30} color={colors['on-primary']} />
         </View>
-        <View style={styles.brandCol}>
-          <View
-            style={[
-              styles.logoBadge,
-              {
-                backgroundColor: colors['surface-container-lowest'],
-                borderColor: 'rgba(150,24,19,0.1)',
-              },
-            ]}
-          >
-            <Icon symbol="shopping_basket" size={40} color={colors.primary} />
-          </View>
-          <Text style={[styles.brandTitle, { color: colors['on-primary-container'] }]}>MEI MART</Text>
-          <Text style={styles.brandSubtitle}>EST. 2024 • DILI</Text>
-        </View>
+        <Text style={[styles.brandName, { color: colors.primary }]}>MeiMart</Text>
+        <Text style={[styles.brandTag, { color: colors['on-surface-variant'] }]}>
+          EST. 2024 • DILI
+        </Text>
+        <Text style={[styles.brandWelcome, { color: colors['on-surface'] }]}>{welcomeTitle}</Text>
+        <Text style={[styles.brandSub, { color: colors['on-surface-variant'] }]}>{welcomeSub}</Text>
       </View>
 
-      {/* Welcome Card（HTML -mt-24 = -96px 上覆盖） */}
+      {/* 表单卡（HTML .form-card surface-lowest + shadow-md） */}
       <View
         style={[
-          styles.welcomeCard,
-          {
-            backgroundColor: colors['surface-container-lowest'],
-            borderColor: 'rgba(141,112,108,0.1)',
-          },
-          shadowPresets.xl,
+          styles.formCard,
+          { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+          shadowPresets.md,
         ]}
       >
-        <View style={styles.welcomeText}>
-          <Text style={[styles.welcomeTitleText, { color: colors['on-surface'] }]}>
-            {welcomeTitle}
-          </Text>
-          <Text style={[styles.welcomeSubText, { color: colors.secondary }]}>{welcomeSub}</Text>
-        </View>
-
         <View style={styles.formGap}>{children}</View>
 
-        {/* Primary Action — tertiary-container 金色 + arrow_forward */}
+        {/* Primary Action — P29-D3: primary 红色 + arrow_forward */}
         <Pressable
           onPress={onAction}
           disabled={loading}
           style={({ pressed }) => [
             styles.actionBtn,
-            { backgroundColor: colors['tertiary-container'] },
+            { backgroundColor: colors.primary },
             pressed && { transform: [{ scale: 0.98 }] },
             loading && { opacity: 0.7 },
           ]}
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
+          accessibilityState={{ disabled: loading }}
         >
-          <Text style={[styles.actionText, { color: colors['on-tertiary-container'] }]}>{actionLabel}</Text>
+          <Text style={[styles.actionText, { color: colors['on-primary'] }]}>{actionLabel}</Text>
           <Icon symbol="arrow_forward" size={22} color={colors['on-primary']} />
         </Pressable>
 
         {secondary && <View style={styles.secondaryRow}>{secondary}</View>}
-      </View>
-
-      {/* Cultural Anchor Image（HTML 2-col grid） */}
-      <View style={styles.culturalGrid}>
-        <View style={styles.culturalImageWrap}>
-          <Image source={{ uri: CULTURAL_IMAGE }} style={styles.culturalImage} />
-          <View style={[styles.culturalOverlay, { backgroundColor: 'rgba(150,24,19,0.1)' }]} />
-        </View>
-        <View
-          style={[styles.culturalTextCard, { backgroundColor: colors['surface-container-high'] }]}
-        >
-          <Text style={[styles.culturalTitle, { color: colors['on-surface-variant'] }]}>
-            Loke Odamatan
-          </Text>
-          <Text style={[styles.culturalSub, { color: colors.secondary }]}>
-            Opening the doors to local quality.
-          </Text>
-        </View>
       </View>
 
       {/* 语言切换按钮（底部，所有 auth 页面共用） */}
@@ -124,69 +88,54 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout['container-margin'],
     paddingBottom: spacing.xxl,
   },
-  header: {
-    position: 'relative',
-    height: 320,
+  // HTML .brand-head: padding 48px 24px 20px, align center, gap 10, surface 底
+  brandHead: {
+    paddingTop: spacing.xxl + spacing.lg,
+    paddingBottom: spacing.lg,
+    paddingHorizontal: spacing.lg,
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingBottom: spacing.xxl,
-    overflow: 'hidden',
-    marginHorizontal: -layout['container-margin'],
+    gap: spacing.xs + 2,
   },
-  headerPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  brandCol: {
-    alignItems: 'center',
-    zIndex: 2,
-  },
-  logoBadge: {
-    width: 64,
-    height: 64,
+  // HTML .brand-logo: 56px 圆角 16 primary 底白字，shadow 0 4 14 rgba(150,24,19,.25)
+  brandLogo: {
+    width: 56,
+    height: 56,
     borderRadius: borderRadius.xl,
-    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
     ...shadowPresets.md,
   },
-  brandTitle: {
-    ...typography.h1,
-    fontWeight: '700',
-    letterSpacing: -0.5,
+  // HTML .brand-name: 22px 800 primary
+  brandName: {
+    ...typography.h2,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
-  brandSubtitle: {
+  // HTML .brand-tag: 12px on-sv2
+  brandTag: {
     ...typography['label-caps'],
-    color: 'rgba(255,255,255,0.8)',
+  },
+  // HTML .brand-welcome: 20px 700 on-surface
+  brandWelcome: {
+    ...typography.h3,
+    fontWeight: '700',
     marginTop: spacing.xs,
   },
-  welcomeCard: {
-    marginTop: -96,
+  // HTML .brand-sub: 13px on-sv
+  brandSub: {
+    ...typography['body-sm'],
+  },
+  formCard: {
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     borderWidth: 1,
-    zIndex: 10,
-  },
-  welcomeText: {
-    marginBottom: spacing.xl,
-    gap: spacing.xs,
-  },
-  welcomeTitleText: {
-    ...typography.h2,
-    fontWeight: '700',
-  },
-  welcomeSubText: {
-    ...typography['body-md'],
   },
   formGap: {
     gap: spacing.lg,
   },
   actionBtn: {
-    height: 56,
+    height: 52,
     borderRadius: borderRadius.lg,
     flexDirection: 'row',
     alignItems: 'center',
@@ -201,44 +150,5 @@ const styles = StyleSheet.create({
   },
   secondaryRow: {
     marginTop: spacing.xl,
-  },
-  culturalGrid: {
-    flexDirection: 'row',
-    height: 160,
-    gap: spacing.md,
-    marginTop: spacing.xl,
-  },
-  culturalImageWrap: {
-    flex: 1,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  culturalImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-    opacity: 0.6,
-  },
-  culturalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  culturalTextCard: {
-    flex: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    justifyContent: 'center',
-    gap: spacing.xs,
-  },
-  culturalTitle: {
-    ...typography.h3,
-    fontWeight: '600',
-  },
-  culturalSub: {
-    ...typography['body-sm'],
   },
 });

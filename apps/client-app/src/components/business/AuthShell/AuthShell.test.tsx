@@ -23,8 +23,8 @@ describe('AuthShell', () => {
     expect(getByText('Sign In')).toBeTruthy();
   });
 
-  it('renders brand identity', () => {
-    const { getByText } = wrap(
+  it('renders compact brand identity (P29-D2: no cultural image / no fixed header)', () => {
+    const { getByText, queryByText } = wrap(
       <AuthShell
         welcomeTitle="Welcome"
         welcomeSub="subtitle"
@@ -34,22 +34,25 @@ describe('AuthShell', () => {
         <></>
       </AuthShell>,
     );
-    expect(getByText('MEI MART')).toBeTruthy();
+    expect(getByText('MeiMart')).toBeTruthy();
     expect(getByText('EST. 2024 • DILI')).toBeTruthy();
+    // P29-D2: 文化锚点区已删，不再渲染
+    expect(queryByText('Loke Odamatan')).toBeNull();
+    expect(queryByText('Opening the doors to local quality.')).toBeNull();
   });
 
-  it('renders cultural anchor section', () => {
-    const { getByText } = wrap(
+  it('renders action button as the primary CTA (P29-D3)', () => {
+    const { getByRole } = wrap(
       <AuthShell
         welcomeTitle="Welcome"
         welcomeSub="subtitle"
-        actionLabel="Submit"
+        actionLabel="Sign In"
         onAction={() => {}}
       >
         <></>
       </AuthShell>,
     );
-    expect(getByText('Loke Odamatan')).toBeTruthy();
-    expect(getByText('Opening the doors to local quality.')).toBeTruthy();
+    const btn = getByRole('button', { name: 'Sign In' });
+    expect(btn).toBeTruthy();
   });
 });

@@ -109,10 +109,11 @@ export default function LoginPage() {
         />
 
         {loginError && (
-          <View style={styles.loginErrorBox} accessibilityRole="alert">
-            <Text style={[styles.loginErrorText, { color: colors.error }]}>
-              {loginError}
-            </Text>
+          <View
+            style={[styles.loginErrorBox, { backgroundColor: colors['error-container'] }]}
+            accessibilityRole="alert"
+          >
+            <Text style={[styles.loginErrorText, { color: colors.error }]}>{loginError}</Text>
           </View>
         )}
 
@@ -211,7 +212,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: 8,
-    backgroundColor: 'rgba(220, 38, 38, 0.08)',
   },
   loginErrorText: {
     ...typography['body-sm'],
