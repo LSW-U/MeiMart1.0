@@ -114,7 +114,6 @@
   "tasks.openNavigation": "Open Navigation",
   "tasks.goSignoff": "Go to Sign-off",
   "tasks.recipientSuffix": "Recipient Phone Suffix:",
-  "tasks.recipientSuffixValue": "4072",
   "flow.orderDetails": "Order Details",
   "flow.remainingTime": "REMAINING TIME",
   "flow.totalEarnings": "TOTAL EARNINGS",

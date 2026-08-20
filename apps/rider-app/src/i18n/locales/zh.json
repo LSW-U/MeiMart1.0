@@ -114,7 +114,6 @@
   "tasks.openNavigation": "打开导航",
   "tasks.goSignoff": "去签收",
   "tasks.recipientSuffix": "收件人手机尾号：",
-  "tasks.recipientSuffixValue": "4072",
   "flow.orderDetails": "订单详情",
   "flow.remainingTime": "剩余时间",
   "flow.totalEarnings": "本单收入",

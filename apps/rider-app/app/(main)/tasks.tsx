@@ -160,7 +160,9 @@ export default function TasksPage() {
       chatLabel={t('tasks.chat')}
       contactLabel={t('tasks.contact')}
       contactSuffix={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : undefined}
-      note={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : (task.note ?? undefined)}
+      // T6 审查 P1-1：note 只放真实客户备注（尾号已在联系按钮 contactSuffix 展示，
+      // 原「有电话时 note 被尾号覆盖」会吞掉配送环节最关键的留言信息）
+      note={task.note ?? undefined}
       orderId={task.orderId}
       points={[
         { label: 'P', title: task.pickup.title, distance: t('common.fromHere', { distance: formatDistance(pickupDistance(task.distanceKm)) }) },
