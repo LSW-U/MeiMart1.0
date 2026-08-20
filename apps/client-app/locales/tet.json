@@ -643,7 +643,8 @@
     "license": "Lisensa komérsiu",
     "supportTitle": "Apoia ami",
     "rate": "Avalia MeiMart",
-    "share": "Partilha ho amigo"
+    "share": "Partilha ho amigo",
+    "versionLabel": "[TET] Version"
   },
   "checkout": {
     "title": "[TET] Confirm order",
@@ -1148,6 +1149,9 @@
     },
     "privacy": {
       "title": "[TET] Privacy Policy"
+    },
+    "license": {
+      "title": "[TET] Business License"
     },
     "comingSoon": "[TET] This content is being prepared and will be provided by our legal team."
   }

@@ -68,10 +68,10 @@ describe('AboutPage（P25）', () => {
     expect(getByText('连接东帝汶本地的')).toBeTruthy();
   });
 
-  it('法律卡：terms/privacy 可点跳 legal 路由，license 占位显示 comingSoon 且不跳', () => {
+  it('法律卡：terms/privacy/license 三行都可点跳 legal 路由（dev 反馈后 license 一致可跳）', () => {
     const mockPush = jest.mocked(expoRouter.push);
     mockPush.mockClear();
-    const { getByTestId, getByText } = render(<AboutPage />, { wrapper });
+    const { getByTestId, queryByText } = render(<AboutPage />, { wrapper });
 
     fireEvent.press(getByTestId('about-legal-terms'));
     expect(mockPush).toHaveBeenCalledWith('/legal/terms');
@@ -79,11 +79,11 @@ describe('AboutPage（P25）', () => {
     fireEvent.press(getByTestId('about-legal-privacy'));
     expect(mockPush).toHaveBeenCalledWith('/legal/privacy');
 
+    // dev 反馈：license 从「占位不跳」改为与其他行一致跳 legal/license
     fireEvent.press(getByTestId('about-legal-license'));
-    // 拍板 A：license 不跳（LegalType 仅 terms/privacy）--本轮只发生过上面两次 terms/privacy 调用
-    expect(mockPush).toHaveBeenCalledTimes(2);
-    expect(mockPush).not.toHaveBeenCalledWith('/legal/license');
-    expect(getByText('legal.comingSoon')).toBeTruthy(); // 占位文案显示（复用 P17 key）
+    expect(mockPush).toHaveBeenCalledTimes(3);
+    expect(mockPush).toHaveBeenCalledWith('/legal/license');
+    expect(queryByText('legal.comingSoon')).toBeNull(); // 行内不再显示占位 caption
   });
 
   it('社交三按钮 + 评分/分享行渲染（D7/D8），分享触发 Share.share', () => {
@@ -98,9 +98,11 @@ describe('AboutPage（P25）', () => {
     expect(shareSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('版本号来自 appInfo 单一数据源（D2，与 P17 设置页一致）', () => {
+  it('版本号来自 appInfo 单一数据源（D2，与 P17 设置页一致）+ 版权对齐原型 Lda. 格式', () => {
     const { getByText } = render(<AboutPage />, { wrapper });
     const appJson = jest.requireActual('../../app.json');
-    expect(getByText(`v${appJson.expo.version}`)).toBeTruthy();
+    // dev 反馈后：「版本 v1.0.0」+「© 2026 MeiMart Lda.」（原型 .ab-footer 格式）
+    expect(getByText(`about.versionLabel v${appJson.expo.version}`)).toBeTruthy();
+    expect(getByText(/© 2026 MeiMart Lda\./)).toBeTruthy();
   });
 });

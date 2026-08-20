@@ -643,7 +643,8 @@
     "license": "营业资质",
     "supportTitle": "支持我们",
     "rate": "给 MeiMart 评分",
-    "share": "分享给朋友"
+    "share": "分享给朋友",
+    "versionLabel": "版本"
   },
   "checkout": {
     "title": "确认订单",
@@ -1148,6 +1149,9 @@
     },
     "privacy": {
       "title": "隐私政策"
+    },
+    "license": {
+      "title": "营业资质"
     },
     "comingSoon": "本内容正在准备中，正式文案将由法务提供，不影响您当前使用 App 的功能。"
   }

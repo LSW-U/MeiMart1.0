@@ -643,7 +643,8 @@
     "license": "Business License",
     "supportTitle": "Support us",
     "rate": "Rate MeiMart",
-    "share": "Share with friends"
+    "share": "Share with friends",
+    "versionLabel": "Version"
   },
   "checkout": {
     "title": "Confirm order",
@@ -1148,6 +1149,9 @@
     },
     "privacy": {
       "title": "Privacy Policy"
+    },
+    "license": {
+      "title": "Business License"
     },
     "comingSoon": "This content is being prepared and will be provided by our legal team. It does not affect your current use of the app."
   }

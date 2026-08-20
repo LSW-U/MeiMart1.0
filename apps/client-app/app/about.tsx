@@ -10,7 +10,6 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { LogoBadge } from '@/components/cultural/LogoBadge';
-import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { Icon } from '@/components/ui/Icon';
 import { openExternalLink } from '@/utils/linking';
@@ -73,10 +72,7 @@ export default function AboutPage() {
           </Text>
         </View>
 
-        {/* Tais Divider（文化分割） */}
-        <View style={styles.dividerWrap}>
-          <TaisDivider width={140} />
-        </View>
+        {/* dev 反馈：TaisDivider 装饰分割线已删 */}
 
         {/* 信任数据条（D5）— 白底浮起卡片，3 列竖线分隔；数值为前端兜底静态值（D13 后端可配置预留） */}
         <View
@@ -157,7 +153,7 @@ export default function AboutPage() {
           <InfoRow
             icon="location_on"
             label={t('about.address')}
-            value="Dili, Timor-Leste"
+            value="Rua de Bebora, Colmera, Dili, Timor-Leste"
             color={colors['on-surface']}
             subColor={colors['on-surface-variant']}
           />
@@ -241,17 +237,20 @@ export default function AboutPage() {
             testID="about-legal-terms"
             onPress={() => router.push('/legal/terms')}
           />
+          <View style={[styles.rowDivider, { backgroundColor: colors['outline-variant'] }]} />
           <LegalRow
             icon="privacy_tip"
             label={t('about.privacy')}
             testID="about-legal-privacy"
             onPress={() => router.push('/legal/privacy')}
           />
+          {/* dev 反馈：营业资质与上两行一致可跳转（legal/license 占位页） */}
+          <View style={[styles.rowDivider, { backgroundColor: colors['outline-variant'] }]} />
           <LegalRow
             icon="verified"
             label={t('about.license')}
             testID="about-legal-license"
-            caption={t('legal.comingSoon')}
+            onPress={() => router.push('/legal/license')}
           />
         </View>
 
@@ -298,13 +297,14 @@ export default function AboutPage() {
           />
         </View>
 
-        {/* 版本号 + Copyright */}
+        {/* 版本号 + Copyright（dev 反馈：对齐原型 .ab-footer——「版本 v1.0.0」+「© 2026 MeiMart Lda.」两行） */}
         <View style={styles.footer}>
           <Text style={[styles.version, { color: colors['on-surface-variant'] }]}>
-            v{APP_VERSION}
+            {t('about.versionLabel')} v{APP_VERSION}
           </Text>
           <Text style={[styles.copyright, { color: colors['on-surface-variant'] }]}>
-            © 2026 MeiMart. {t('about.rights')}
+            © 2026 MeiMart Lda.{'\n'}
+            {t('about.rights')}
           </Text>
         </View>
       </ScrollView>
@@ -330,14 +330,8 @@ function InfoRow({
   onPress?: () => void;
 }) {
   const { colors } = useTheme();
-  const Wrapper = onPress ? Pressable : View;
-  return (
-    <Wrapper
-      testID={testID}
-      onPress={onPress}
-      style={({ pressed }) => [styles.infoRow, pressed && onPress && { opacity: 0.6 }]}
-      accessibilityRole={onPress ? 'button' : undefined}
-    >
+  const body = (
+    <>
       <View style={[styles.infoIcon, { backgroundColor: colors['surface-container-high'] }]}>
         <Icon symbol={icon} size={18} color={colors.primary} />
       </View>
@@ -346,7 +340,26 @@ function InfoRow({
         <Text style={[styles.infoValue, { color }]}>{value}</Text>
       </View>
       {onPress && <Icon symbol="chevron_right" size={18} color={subColor} />}
-    </Wrapper>
+    </>
+  );
+  // dev 反馈修复：View 不支持函数 style（原 Wrapper 技巧在无 onPress 行样式静默失效 → 竖排），
+  // 改双分支 return（P25 审查发现 6 的类型债一并清偿）
+  if (onPress) {
+    return (
+      <Pressable
+        testID={testID}
+        onPress={onPress}
+        style={({ pressed }) => [styles.infoRow, pressed && { opacity: 0.6 }]}
+        accessibilityRole="button"
+      >
+        {body}
+      </Pressable>
+    );
+  }
+  return (
+    <View testID={testID} style={styles.infoRow}>
+      {body}
+    </View>
   );
 }
 
@@ -366,14 +379,8 @@ function LegalRow({
   caption?: string;
 }) {
   const { colors } = useTheme();
-  const Wrapper = onPress ? Pressable : View;
-  return (
-    <Wrapper
-      testID={testID}
-      onPress={onPress}
-      style={({ pressed }) => [styles.legalRow, pressed && onPress && { opacity: 0.6 }]}
-      accessibilityRole={onPress ? 'button' : undefined}
-    >
+  const body = (
+    <>
       <View style={[styles.legalIco, { backgroundColor: colors['surface-container-high'] }]}>
         <Icon symbol={icon} size={18} color={colors.primary} />
       </View>
@@ -391,7 +398,25 @@ function LegalRow({
       {onPress && (
         <Icon symbol="chevron_right" size={18} color={colors['on-surface-variant']} />
       )}
-    </Wrapper>
+    </>
+  );
+  // dev 反馈修复：同 InfoRow——View 分支不支持函数 style，改双分支 return
+  if (onPress) {
+    return (
+      <Pressable
+        testID={testID}
+        onPress={onPress}
+        style={({ pressed }) => [styles.legalRow, pressed && { opacity: 0.6 }]}
+        accessibilityRole="button"
+      >
+        {body}
+      </Pressable>
+    );
+  }
+  return (
+    <View testID={testID} style={styles.legalRow}>
+      {body}
+    </View>
   );
 }
 
@@ -434,11 +459,6 @@ const styles = StyleSheet.create({
     ...typography['body-sm'],
     opacity: 0.8,
     marginTop: 2,
-  },
-  dividerWrap: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    opacity: 0.5,
   },
   statStrip: {
     flexDirection: 'row',
@@ -485,20 +505,23 @@ const styles = StyleSheet.create({
   },
   infoBlock: {
     borderRadius: borderRadius.xl,
-    padding: spacing.md,
+    // dev 反馈：外层去 padding，留白由 sectionTitle/infoRow 自带（对齐原型 .card 的行级 padding 16）
     marginBottom: spacing.lg,
+    overflow: 'hidden',
   },
   sectionTitle: {
     ...typography['label-caps'],
-    paddingHorizontal: spacing.sm,
-    paddingBottom: spacing.sm,
-    paddingTop: spacing.xs,
+    // 对齐原型 .card-title（padding 14 16 6）——dev 反馈：标题不再贴卡片左上角
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md + 2,
+    paddingBottom: spacing.sm - 2,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
+    // 对齐原型 .info-row：padding 12 16 + 行间细线由外层 rowDivider 提供
+    paddingVertical: spacing.sm + 4,
+    paddingHorizontal: spacing.md,
     gap: spacing.md,
     minHeight: 56,
   },
@@ -524,14 +547,14 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     height: StyleSheet.hairlineWidth,
-    marginHorizontal: spacing.sm,
   },
   socialRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: spacing.md,
+    // 对齐原型 .social-row：padding 6 16 16
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
+    paddingTop: spacing.xs + 2,
     paddingBottom: spacing.md,
   },
   socialBtn: {
@@ -545,7 +568,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    paddingVertical: spacing.sm + 2,
+    // 对齐原型 .legal-row：padding 14 16
+    paddingVertical: spacing.sm + 6,
     paddingHorizontal: spacing.md,
     minHeight: 52,
   },

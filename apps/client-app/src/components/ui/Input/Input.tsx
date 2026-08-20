@@ -11,6 +11,7 @@ export function Input({
   leftIcon,
   rightIcon,
   prefix,
+  variant = 'filled',
   onRightIconPress,
   value,
   onChangeText,
@@ -48,10 +49,12 @@ export function Input({
       <View
         style={[
           styles.inputWrapper,
+          variant === 'bare' && styles.inputWrapperBare,
           {
-            backgroundColor: colors['surface-variant'],
-            borderColor: hasError ? colors.error : colors['outline-variant'],
-            borderWidth: hasError ? 1.5 : 1,
+            // bare 变体：无底色无边框（行式卡片内嵌）；错误态仍保留红边可辨识
+            backgroundColor: variant === 'bare' ? 'transparent' : colors['surface-variant'],
+            borderColor: hasError ? colors.error : variant === 'bare' ? 'transparent' : colors['outline-variant'],
+            borderWidth: hasError ? 1.5 : variant === 'bare' ? 0 : 1,
             opacity: disabled ? 0.5 : 1,
           },
         ]}
@@ -130,8 +133,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: 56,
     borderRadius: 4,
+    // bare 变体（行式卡片内嵌）padding 收敛，由外层行提供留白
     paddingHorizontal: 12,
     gap: 8,
+  },
+  inputWrapperBare: {
+    minHeight: 40,
+    paddingHorizontal: 0,
   },
   input: {
     flex: 1,

@@ -214,6 +214,7 @@ export default function ProfileEditPage() {
                       control={control}
                       name="name"
                       placeholder={t('profileEdit.nicknamePlaceholder')}
+                      variant="bare"
                       style={styles.bareInput}
                       maxLength={15}
                       testID="edit-name"
@@ -242,6 +243,7 @@ export default function ProfileEditPage() {
                     control={control}
                     name="email"
                     placeholder={t('profileEdit.emailPlaceholder')}
+                    variant="bare"
                     style={styles.bareInput}
                     keyboardType="email-address"
                     testID="edit-email"

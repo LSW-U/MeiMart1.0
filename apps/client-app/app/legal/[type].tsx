@@ -13,8 +13,8 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Icon } from '@/components/ui/Icon';
 import { EmptyState } from '@/components/feedback/EmptyState';
 
-type LegalType = 'terms' | 'privacy';
-const LEGAL_TYPES: LegalType[] = ['terms', 'privacy'];
+type LegalType = 'terms' | 'privacy' | 'license';
+const LEGAL_TYPES: LegalType[] = ['terms', 'privacy', 'license'];
 
 function isLegalType(v: string | undefined): v is LegalType {
   return !!v && (LEGAL_TYPES as string[]).includes(v);
