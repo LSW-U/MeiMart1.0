@@ -13,6 +13,7 @@ import { profileEditSchema } from '@/forms/schemas/user';
 import EditPage from '../profile/edit';
 
 const mockMutate = jest.fn();
+const mockMutateAsync = jest.fn();
 
 const fakeUser = {
   id: 'u1',
@@ -37,12 +38,21 @@ jest.mock('react-i18next', () => ({
 
 jest.mock('@/services/queries/useUser', () => ({
   useProfile: () => ({ data: fakeUser }),
-  useUpdateProfile: () => ({ mutate: mockMutate, isPending: false }),
+  useUpdateProfile: () => ({ mutate: mockMutate, mutateAsync: mockMutateAsync, isPending: false }),
+  PROFILE_QUERY_KEY: ['user', 'profile'],
 }));
 
 jest.mock('expo-image-picker', () => ({
   MediaTypeOptions: { Images: 'Images' },
   launchImageLibraryAsync: jest.fn(),
+}));
+
+jest.mock('@tanstack/react-query', () => ({
+  ...jest.requireActual('@tanstack/react-query'),
+  useQueryClient: () => ({
+    getQueryData: jest.fn(() => fakeUser),
+    setQueryData: jest.fn(),
+  }),
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -54,6 +64,7 @@ describe('ProfileEditPage（P27）', () => {
 
   beforeEach(() => {
     mockMutate.mockClear();
+    mockMutateAsync.mockClear();
     mockPush.mockClear();
   });
 
@@ -66,10 +77,15 @@ describe('ProfileEditPage（P27）', () => {
     // 手机号只读：头像区展示 + 账号安全行两处出现（getAllByText）
     expect(getAllByText('+670 7123 4567').length).toBeGreaterThanOrEqual(2);
     expect(getByText('profileEdit.phoneLocked')).toBeTruthy();
-    // 保存按钮 label 从 common.save 改 profileEdit.save（D5/§4 删除清单）
-    expect(getByText('profileEdit.save')).toBeTruthy();
+    // F7：禁用态保存按钮 label 走 noChanges（未 dirty 时 isDirty=false）
+    expect(getByText('profileEdit.noChanges')).toBeTruthy();
     // 字数计数（D5）：初始 10/15
     expect(getByText('10/15')).toBeTruthy();
+  });
+
+  it('F7：头像格式提示行 avatarFormat 渲染', () => {
+    const { getByText } = render(<EditPage />, { wrapper });
+    expect(getByText('profileEdit.avatarFormat')).toBeTruthy();
   });
 
   it('客服提示行跳 /(main)/service（D2：改号本期不接，只读+跳客服）', () => {
