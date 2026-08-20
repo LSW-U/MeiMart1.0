@@ -112,6 +112,16 @@ const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = {
   battery_full: 'battery',
   signal_cellular_alt: 'signal-cellular-3',
   wifi: 'wifi',
+  // P28 订单结果页 —— 状态机 icon / 倒计时 / 失败原因 / 支付 badge（7 个补映射）
+  // 注意：HTML Material Symbols 的 `cancel` 是 ❌ 图标，但 MC 的 `cancel` 是关闭按钮，故用 close-circle；
+  // MC 无 hourglass-top，S2 待支付用 timer-sand（沙漏）兜底
+  hourglass_top: 'timer-sand',
+  timer: 'timer-sand',
+  timer_off: 'timer-off',
+  cancel: 'close-circle',
+  cloud_off: 'cloud-off-outline',
+  error_outline: 'alert-circle-outline',
+  payments: 'credit-card',
 
   // 学习
   auto_stories: 'book-open-page-variant',
