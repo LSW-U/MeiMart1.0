@@ -5,14 +5,6 @@ const phoneSchema = z
   .min(1, 'Phone is required')
   .regex(/^(\+?670|0)?\s?\d{7,12}$/, 'Invalid phone number (e.g. +670 7XXX XXXX)');
 
-const emailOrPhoneSchema = z
-  .string()
-  .min(1, 'Account is required')
-  .refine(
-    (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || /^(\+?670|0)?\s?\d{7,12}$/.test(v),
-    'Enter a valid email or phone',
-  );
-
 const passwordSchema = z
   .string()
   .min(8, 'Password must be at least 8 characters')
@@ -26,8 +18,10 @@ const smsCodeSchema = z
   .max(6, 'Code must be 4-6 digits')
   .regex(/^\d+$/, 'Digits only');
 
+// P29-D4: account(emailOrPhone) → phone-only——service loginPassword 只发 phone（auth.ts:81），
+// 邮箱输入通过校验却发给后端当 phone 必失败；东帝汶用户统一手机号登录
 export const loginPasswordSchema = z.object({
-  account: emailOrPhoneSchema,
+  phone: phoneSchema,
   password: passwordSchema,
   agreed: z.boolean().refine((v) => v, 'You must agree to the terms'),
 });

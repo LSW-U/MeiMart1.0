@@ -29,7 +29,7 @@ export default function LoginPage() {
 
   const { control, handleSubmit, formState } = useForm<LoginPasswordValues>({
     resolver: zodResolver(loginPasswordSchema),
-    defaultValues: { account: '', password: '', agreed: false },
+    defaultValues: { phone: '', password: '', agreed: false },
     mode: 'onBlur',
   });
   const agreedError = formState.errors.agreed?.message;
@@ -37,7 +37,7 @@ export default function LoginPage() {
   const submit = (values: LoginPasswordValues) => {
     setLoginError(null);
     loginMutation.mutate(
-      { phone: values.account, password: values.password },
+      { phone: values.phone, password: values.password },
       {
         onSuccess: (data) => {
           setAuth(data.accessToken, data.refreshToken);
@@ -88,11 +88,12 @@ export default function LoginPage() {
       >
         <FormInput
           control={control}
-          name="account"
-          label={t('auth.accountOrMobile')}
-          placeholder={t('auth.accountPlaceholder')}
-          leftIcon="account"
-          testID="login-account"
+          name="phone"
+          label={t('auth.phoneNumber')}
+          placeholder={t('auth.phonePlaceholder')}
+          keyboardType="phone-pad"
+          leftIcon="phone"
+          testID="login-phone"
         />
 
         <FormInput
