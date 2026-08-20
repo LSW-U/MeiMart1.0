@@ -168,11 +168,11 @@ export default function CheckoutPage() {
       // Why: 下单成功清除本次会话的手选地址，避免污染下次结算（P16 决策 6）
       useAddressSelectionStore.getState().clear();
       toast.success(t('checkout.orderPlaced', { defaultValue: 'Order placed' }));
-      // Why: P28 D2 - replace 传 orderId/orderNo/status，result 页据 status 渲染 S1-S5 状态机。
+      // Why: P28 - replace 传 orderId/orderNo，result 页拉详情渲染成功态（按 HTML PaymentResultPage 还原）。
       //     replace 不入栈，避免返回键回到 checkout 重复下单
       router.replace({
         pathname: '/order/result',
-        params: { orderId: order.id, orderNo: order.orderNo, status: order.status },
+        params: { orderId: order.id, orderNo: order.orderNo },
       });
     } catch (error: unknown) {
       // Why: 提取后端错误码，用 i18n 翻译
