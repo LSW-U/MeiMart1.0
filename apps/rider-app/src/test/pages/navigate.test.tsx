@@ -279,6 +279,22 @@ describe('底栏双 CTA（T4 §7.9/§3.5）', () => {
     expect(String(openURL.mock.calls[0][0])).toContain('google.com/maps');
   });
 
+  it('真机反馈②：订单摘要下渲染「打开系统导航」启动条（pin 图标 + 同名 a11y），点击同样打开地图', async () => {
+    // 原型 :355 .nav-launch-row——条形按钮（非仅底栏 52px 钮）；nav-launch 与底栏钮同 a11y label，用 getAll
+    const { container, getAllByText } = renderPage();
+
+    // 两个「打开导航」入口：底栏图标钮（无 Text）+ 启动条（带 Text 文字节点）
+    const entries = container.querySelectorAll('[data-prop-accessibilitylabel="打开导航"]');
+    expect(entries.length).toBeGreaterThanOrEqual(2);
+    expect(getAllByText('打开导航').length).toBeGreaterThanOrEqual(1);
+
+    await act(async () => {
+      fireEvent.click(entries[entries.length - 1]);
+    });
+    const openURL = (Linking as unknown as { openURL: jest.Mock }).openURL;
+    expect(String(openURL.mock.calls[0][0])).toContain('google.com/maps');
+  });
+
   it('打开导航失败（openURL reject）：toast 无法打开导航', async () => {
     mockLinkingOpen = async () => {
       throw new Error('no maps app');

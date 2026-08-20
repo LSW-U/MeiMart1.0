@@ -110,7 +110,7 @@ export default function TaskNavigatePage() {
       {/* B4: 统一页头。真机反馈②：原型 step-title 是「配送导航」非「订单详情」（navigate 页语义） */}
       <StepPageHeader backLabel={t('common.back')} title={t('flow.deliveryNavigation')} />
 
-      <ScrollView className="flex-1" contentContainerClassName="pb-32">
+      <ScrollView className="flex-1" contentContainerClassName="gap-3 pb-32">
         {/* T4 §3.1: 三态边界（判错 1 修正版：common.loadError.* + taskNotFoundDesc，非
             common.loadFailed/common.routeNotFound--前者不存在，后者是路线失效语义） */}
         <QueryBoundary<DeliveryTask | null>
@@ -277,6 +277,19 @@ export default function TaskNavigatePage() {
                   </View>
                 </View>
               </View>
+
+              {/* 真机反馈②（原型 :355 .nav-launch-row）：订单摘要下的「打开系统导航」启动条
+                  （白底描边卡 + pin 图标 + primary 文字，整条可点） */}
+              <Pressable
+                accessibilityLabel={t('tasks.openNavigation')}
+                accessibilityRole="button"
+                className="mx-5 flex-row items-center justify-center gap-2 rounded-xl border border-surface-variant bg-surface p-3 shadow-sm"
+                disabled={!taskData.dropoff.coordinates}
+                onPress={() => void handleOpenNavigation()}
+              >
+                <AppIcon className="text-primary" name="pin" size={18} />
+                <Text className="text-[13px] font-semibold text-primary">{t('tasks.openNavigation')}</Text>
+              </Pressable>
             </>
           )}
         </QueryBoundary>
@@ -294,7 +307,8 @@ export default function TaskNavigatePage() {
           disabled={!task?.dropoff.coordinates}
           onPress={() => void handleOpenNavigation()}
         >
-          <AppIcon className="text-primary" name="navigation" size={22} />
+          {/* 真机反馈③：原型 .btn-secondary 是地图 pin（水滴+圆心）非箭头，对齐 nav-launch 同形 */}
+          <AppIcon className="text-primary" name="pin" size={22} />
         </Pressable>
         <View className="flex-1">
           <Button className="bg-primary" disabled={!task || startDelivering.isPending} loading={startDelivering.isPending} onPress={() => void handleNavigateAction()}>
