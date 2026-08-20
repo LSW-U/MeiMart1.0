@@ -102,7 +102,9 @@ export default function OrderResultScreen() {
     if (order?.createdAt) return new Date(order.createdAt).getTime() + PAY_COUNTDOWN_MS;
     return null;
   })();
-  const remaining = useCountdown(payDeadlineMs, () => setState('TIMEOUT'));
+  // 仅 PENDING 态需要倒计时；其他态 payDeadline 不参与（避免历史订单 createdAt 已过期触发误切 S5）
+  const countdownDeadline = state === 'PENDING' ? payDeadlineMs : null;
+  const remaining = useCountdown(countdownDeadline, () => setState('TIMEOUT'));
 
   const orderNo = order?.orderNo ?? initialOrderNo;
   const items = order?.items ?? [];
