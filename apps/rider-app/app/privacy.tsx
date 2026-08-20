@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           <AppIcon color={colors.surface} name="shield" size={34} />
           <Text className="mt-4 text-2xl font-bold text-white">{t('legal.privacy.title')}</Text>
         </View>
-        <View className="rounded-2xl border border-surface-container bg-white p-5 shadow-sm">
+        <View className="rounded-2xl border border-surface-container bg-surface p-5 shadow-sm">
           <Text className="text-sm leading-6 text-on-surface-variant">{t('legal.privacy.body')}</Text>
         </View>
       </ScrollView>

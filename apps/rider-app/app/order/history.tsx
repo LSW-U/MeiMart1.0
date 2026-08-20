@@ -58,7 +58,7 @@ export default function OrderHistoryPage() {
       </View>
 
       <ScrollView className="flex-1" contentContainerClassName="mx-auto w-full max-w-md px-4 pb-28 pt-4">
-        <View className="mb-6 flex-row items-center justify-between rounded-lg border border-outline-variant bg-white p-3 shadow-sm">
+        <View className="mb-6 flex-row items-center justify-between rounded-lg border border-outline-variant bg-surface p-3 shadow-sm">
           <Text className="font-bold text-on-surface">{t('history.date')}</Text>
           <Text className="text-outline">{t('history.calendar')}</Text>
         </View>
@@ -73,7 +73,7 @@ export default function OrderHistoryPage() {
                 accessibilityState={{ selected: active }}
                 key={key}
                 className={`flex-1 items-center justify-center rounded-full border px-2 py-2 ${
-                  active ? 'border-primary bg-primary' : 'border-outline-variant bg-white'
+                  active ? 'border-primary bg-primary' : 'border-outline-variant bg-surface'
                 }`}
                 onPress={() => setFilter(key)}
               >

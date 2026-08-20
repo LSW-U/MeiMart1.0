@@ -108,13 +108,13 @@ export default function ProfilePage() {
       </View>
 
       <View className="mx-5 mb-8 flex-row gap-4">
-        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.myOrders')} className="flex-1 flex-row items-center gap-4 rounded-2xl border border-surface-container bg-white p-5 shadow-sm" onPress={() => router.push('/order/history')}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.myOrders')} className="flex-1 flex-row items-center gap-4 rounded-2xl border border-surface-container bg-surface p-5 shadow-sm" onPress={() => router.push('/order/history')}>
           <View className="rounded-xl bg-surface-container p-3">
             <AppIcon name="orders" className="text-xl text-primary" />
           </View>
           <Text className="text-[17px] font-semibold text-on-surface">{t('profile.myOrders')}</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.myWallet')} className="flex-1 flex-row items-center gap-4 rounded-2xl border border-surface-container bg-white p-5 shadow-sm" onPress={() => router.push('/(main)/earnings')}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.myWallet')} className="flex-1 flex-row items-center gap-4 rounded-2xl border border-surface-container bg-surface p-5 shadow-sm" onPress={() => router.push('/(main)/earnings')}>
           <View className="rounded-xl bg-surface-container p-3">
             <AppIcon name="wallet" className="text-xl text-primary" />
           </View>
@@ -122,7 +122,7 @@ export default function ProfilePage() {
         </Pressable>
       </View>
 
-      <View className="mx-5 overflow-hidden rounded-[20px] border border-surface-container bg-white shadow-sm">
+      <View className="mx-5 overflow-hidden rounded-[20px] border border-surface-container bg-surface shadow-sm">
         <MenuItem icon="wallet" label={t('profile.earningsHistory')} onPress={() => router.push('/(main)/earnings')} />
         <View className="mx-5 h-px bg-outline-variant/40" />
         <MenuItem icon="settings" label={t('profile.settings')} onPress={() => router.push('/settings')} />

@@ -98,7 +98,7 @@ export default function NotificationsPage() {
               accessibilityState={{ selected: active }}
               key={key}
               className={`flex-1 items-center justify-center rounded-full border px-3 py-2 ${
-                active ? 'border-primary bg-primary' : 'border-outline-variant bg-white'
+                active ? 'border-primary bg-primary' : 'border-outline-variant bg-surface'
               }`}
               onPress={() => setFilter(key)}
             >
@@ -121,7 +121,7 @@ export default function NotificationsPage() {
                 accessibilityRole="button"
                 accessibilityLabel={t(item.titleKey as TranslationKey)}
                 key={item.id}
-                className={`flex-row items-start gap-3 rounded-2xl border p-4 ${item.read ? 'border-blush-border bg-white' : 'border-outline-variant bg-surface-container-low'}`}
+                className={`flex-row items-start gap-3 rounded-2xl border p-4 ${item.read ? 'border-blush-border bg-surface' : 'border-outline-variant bg-surface-container-low'}`}
                 onPress={() => void onItemPress(item)}
               >
                 <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: style.bg }}>

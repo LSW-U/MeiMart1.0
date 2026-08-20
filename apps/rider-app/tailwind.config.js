@@ -53,6 +53,8 @@ module.exports = {
         'surface-frame': '#eed4d1',
         'dot-off': '#b9aaa7',
         'dot-unread': '#ff4d4f',
+        // busy 班次点（B7 P2-1：原复用 status-transferred-text「已转单」语义，补专用 token）
+        busy: '#b06000',
 
         // 通知/危险辅助色（HTML 原型色）
         'notification-task': '#ff9800',

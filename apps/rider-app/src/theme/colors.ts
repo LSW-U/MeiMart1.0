@@ -3,6 +3,7 @@ export const colors = {
   surface: '#ffffff',
   primary: '#720003',
   primarySoft: '#ffe9e6',
+  primaryContainer: '#961813',
   border: '#f7ddd9',
   text: '#261816',
   textMuted: '#59413d',
@@ -17,6 +18,8 @@ export const colors = {
   statusDangerText: '#a3322a',
   statusWarningBg: '#fff3d6',
   statusWarningText: '#a06b00',
+  // busy 班次点（原复用 status-transferred-text「已转单」橙 #b06000 取值，B7 P2-1 补专用语义）
+  busy: '#b06000',
 
   // 通知分类色
   notificationTask: '#ff9800',
@@ -26,6 +29,7 @@ export const colors = {
 
   // 交互辅助色
   outline: '#8d706c',
+  outlineVariant: '#e1bfba',
   error: '#ba1a1a',
 
   // 地图标记色（对齐 tailwind tertiary，pinColor JS 用）

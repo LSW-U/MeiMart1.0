@@ -136,7 +136,7 @@ export default function RegisterPage() {
               <View className="gap-1.5">
                 <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{t('auth.register.homeAddress')}</Text>
                 <TextInput
-                  className="min-h-[100px] rounded-lg border border-outline-variant bg-white p-4 text-base text-on-surface"
+                  className="min-h-[100px] rounded-lg border border-outline-variant bg-surface p-4 text-base text-on-surface"
                   multiline
                   placeholder={t('auth.register.homeAddressPlaceholder')}
                   placeholderTextColor={colors.outline}

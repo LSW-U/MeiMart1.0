@@ -52,7 +52,7 @@ export default function OrderDetailPage() {
 
     return (
       <ScrollView className="flex-1" contentContainerClassName="mx-auto w-full max-w-md px-4 pb-12 pt-4">
-        <View className="mb-4 rounded-2xl border border-outline-variant bg-white p-5 shadow-sm">
+        <View className="mb-4 rounded-2xl border border-outline-variant bg-surface p-5 shadow-sm">
           <View className="flex-row items-center justify-between">
             <Text className="text-lg font-bold text-on-surface">{order.orderNo}</Text>
             <View className="rounded-full px-3 py-1" style={{ backgroundColor: tone.bg }}>
@@ -65,7 +65,7 @@ export default function OrderDetailPage() {
           <Text className="text-sm font-medium text-on-surface">{formatDateTime(order.completedAt)}</Text>
         </View>
 
-        <View className="mb-4 rounded-2xl border border-outline-variant bg-white p-5 shadow-sm">
+        <View className="mb-4 rounded-2xl border border-outline-variant bg-surface p-5 shadow-sm">
           <View className="mb-4">
             <Text className="text-xs font-bold uppercase tracking-wider text-primary">{t('order.detail.pickup')}</Text>
             <Text className="mt-1 text-base font-bold text-on-surface">{order.pickupName}</Text>
@@ -80,11 +80,11 @@ export default function OrderDetailPage() {
         </View>
 
         <View className="mb-4 flex-row gap-3">
-          <View className="flex-1 rounded-2xl border border-outline-variant bg-white p-4 shadow-sm">
+          <View className="flex-1 rounded-2xl border border-outline-variant bg-surface p-4 shadow-sm">
             <Text className="text-xs text-outline">{t('order.detail.distance')}</Text>
             <Text className="mt-1 text-lg font-bold text-on-surface">{formatDistance(order.distanceKm)}</Text>
           </View>
-          <View className="flex-1 rounded-2xl border border-outline-variant bg-white p-4 shadow-sm">
+          <View className="flex-1 rounded-2xl border border-outline-variant bg-surface p-4 shadow-sm">
             <Text className="text-xs text-outline">{t('order.detail.duration')}</Text>
             <Text className="mt-1 text-lg font-bold text-on-surface">
               {order.durationMinutes > 0 ? t('order.detail.minutes', { minutes: order.durationMinutes }) : '—'}

@@ -64,7 +64,8 @@ const icons: Record<AppIconName, MaterialIconName> = {
 const colorByClass = (className = '') => {
   if (className.includes('text-white/60')) return colors.surface60;
   if (className.includes('text-white')) return colors.surface;
-  if (className.includes('text-primary-container')) return colors.danger;
+  // B5 D2/A1：text-primary-container 是品牌深红非危险色，改引 primaryContainer（原同值复用 danger 语义错位）
+  if (className.includes('text-primary-container')) return colors.primaryContainer;
   if (className.includes('text-primary')) return colors.primary;
   if (className.includes('text-on-surface-variant')) return colors.textMuted;
   if (className.includes('text-on-surface')) return colors.text;

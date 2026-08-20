@@ -25,7 +25,7 @@ export default function HelpPage() {
           <Text className="mt-2 text-sm leading-6 text-white/80">{t('help.hero.description')}</Text>
         </View>
         {topicKeys.map(({ titleKey, descKey }) => (
-          <View key={titleKey} className="rounded-2xl border border-surface-container bg-white p-5 shadow-sm">
+          <View key={titleKey} className="rounded-2xl border border-surface-container bg-surface p-5 shadow-sm">
             <Text className="text-lg font-bold text-on-surface">{t(titleKey)}</Text>
             <Text className="mt-2 text-sm leading-6 text-on-surface-variant">{t(descKey)}</Text>
           </View>

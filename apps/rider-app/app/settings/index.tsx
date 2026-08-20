@@ -83,7 +83,7 @@ export default function SettingsPage() {
           <Text className="mt-2 text-2xl font-bold text-white">{t('settings.hero.title')}</Text>
           <Text className="mt-2 text-sm leading-6 text-white/80">{t('settings.hero.description')}</Text>
         </View>
-        <View className="overflow-hidden rounded-3xl border border-surface-container bg-white shadow-sm">
+        <View className="overflow-hidden rounded-3xl border border-surface-container bg-surface shadow-sm">
           <SettingsItem description={languageDescription} icon="language" title={t('settings.language.title')} onPress={() => void rotateLanguage()} />
           <View className="mx-5 h-px bg-outline-variant/40" />
           <SettingsItem description={notificationsEnabled ? t('settings.notifications.descriptionOn') : t('settings.notifications.descriptionOff')} icon="bell" switchValue={notificationsEnabled} title={t('settings.notifications.title')} trailing="switch" onSwitchChange={(value) => void toggleNotifications(value)} />

@@ -20,11 +20,10 @@ type DutyStatusMenuProps = {
   onClose: () => void;
 };
 
-// 审查 P2-1：busy 点复用 transferred-text 仅取橙色值（#b06000），非"已转单"语义；
-// 与 TaskDetailHeader 同款，专用 token 待 Q6 第二步
+// A2 收口：busy 点专用 token bg-busy（原复用 status-transferred-text「已转单」取值，语义错位）
 const dotColor: Record<DutyStatus, string> = {
   onDuty: 'bg-success-deep',
-  busy: 'bg-status-transferred-text',
+  busy: 'bg-busy',
   offDuty: 'bg-dot-off',
 };
 
@@ -47,7 +46,8 @@ export function DutyStatusMenu({ visible, current, title, cancelLabel, options, 
               >
                 <View className={`h-2.5 w-2.5 rounded-full ${disabled ? 'bg-outline-variant' : dotColor[option.value]}`} />
                 <Text className={`flex-1 text-base font-semibold ${textTone}`}>{option.label}</Text>
-                {active ? <AppIcon name="check" color={colors.danger} size={20} /> : null}
+                {/* A1：选中态 check 是品牌深红非危险色，改引 primaryContainer */}
+                {active ? <AppIcon name="check" color={colors.primaryContainer} size={20} /> : null}
               </Pressable>
             );
           })}

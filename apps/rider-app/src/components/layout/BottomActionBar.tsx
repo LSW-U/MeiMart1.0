@@ -39,14 +39,14 @@ export function BottomActionBar({ settingsLabel, refreshLabel, isRefreshing, onP
         accessibilityRole="button"
         accessibilityLabel={refreshLabel}
         accessibilityState={{ busy: isRefreshing }}
-        className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-outline-variant bg-white py-3.5 shadow-sm"
+        className="flex-1 flex-row items-center justify-center gap-2 rounded-full border border-outline-variant bg-surface py-3.5 shadow-sm"
         disabled={isRefreshing}
         onPress={onRefresh}
         style={{ opacity: isRefreshing ? 0.75 : 1 }}
       >
         {isRefreshing ? (
-          // colors.danger = AppIcon colorByClass 的 text-primary-container 映射色（同色反馈）
-          <ActivityIndicator color={colors.danger} />
+          // A1：刷新 spinner 与图标/文字同为品牌深红（原 colors.danger 同值复用，语义错位改 primaryContainer）
+          <ActivityIndicator color={colors.primaryContainer} />
         ) : (
           <AppIcon className="text-xl text-primary-container" name="refresh" />
         )}
