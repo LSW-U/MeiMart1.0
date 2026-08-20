@@ -124,7 +124,10 @@ const styles = StyleSheet.create({
     // bare 变体行式内嵌：外层高度随内容（filled 保持 56 独立输入高度）
     minHeight: 56,
   },
+  // bare：width 100% 会让行内兄弟（如字数计数）被挤出容器——收 auto 随内容收缩
   containerBare: {
+    width: 'auto',
+    flex: 1,
     minHeight: 0,
   },
   label: {
