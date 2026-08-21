@@ -34,6 +34,17 @@ jest.mock('@/services/uploads', () => ({
   uploadsApi: { reviewImage: jest.fn() },
 }));
 
+// V12：提交链路 useMutation 骨架（并行改动的 hook，测试 mock 免 QueryClient）
+jest.mock('@/services/queries/useFeedback', () => ({
+  useSubmitFeedback: () => ({
+    mutate: jest.fn((_input: unknown, opts?: { onSuccess?: () => void }) => {
+      // 默认走成功分支（现有用例断言成功态）；失败分支由 hook 自身 onError 覆盖
+      opts?.onSuccess?.();
+    }),
+    isPending: false,
+  }),
+}));
+
 jest.mock('expo-image-picker', () => ({
   launchImageLibraryAsync: jest.fn(),
   MediaTypeOptions: { Images: 'Images' },

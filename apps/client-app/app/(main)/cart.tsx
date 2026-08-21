@@ -66,6 +66,7 @@ export default function CartPage() {
   const totalPrice = cart?.totalPrice ?? 0;
   const totalItems = cart?.totalItems ?? 0;
   const couponCount = (coupons ?? []).length; // §5.1 可用优惠券计数（ClientCoupon 全 available）
+  const discountAmount = cart?.discountAmount ?? 0; // V5 已应用券折扣（后端有值才显示 DISCOUNT 行）
 
   // §4 管理模式 state（批量删除替代单个 trash 按钮）
   const [manageMode, setManageMode] = useState(false);
@@ -230,11 +231,11 @@ export default function CartPage() {
                 <Pressable
                   onPress={enterManage}
                   hitSlop={8}
-                  style={[styles.manageBtnWrap, { borderColor: colors.primary }]}
+                  style={[styles.manageBtnWrap, { borderColor: colors['outline-variant'] }]}
                   accessibilityRole="button"
                   accessibilityLabel={t('cart.manage')}
                 >
-                  <Text style={[styles.manageBtn, { color: colors.primary }]}>
+                  <Text style={[styles.manageBtn, { color: colors['on-surface-variant'] }]}>
                     {t('cart.manage')}
                   </Text>
                 </Pressable>
@@ -376,14 +377,30 @@ export default function CartPage() {
             accessibilityLabel={t('cart.selectAllLabel')}
           />
 
-          {/* 合计（§5.2 去写死 discount，无优惠券接口隐藏折扣行，总价 = totalPrice） */}
+          {/* 合计：有折扣时显示 DISCOUNT 行（后端 cart.discountAmount 有值才显示，无值隐藏） */}
           <View style={styles.totalBox}>
             <View style={styles.totalRow}>
               <Text style={[styles.selectedLabel, { color: colors['on-surface-variant'] }]}>
                 {t('cart.selectedTotal')}
               </Text>
-              <PriceText value={Math.max(0, totalPrice)} size="lg" />
+              {/* V24：合计对齐原型 Georgia 18px（PriceText lg 是 sans 20，此处行内覆盖字体） */}
+              <PriceText value={Math.max(0, totalPrice)} size="lg" style={styles.totalPriceSerif} />
             </View>
+            {discountAmount > 0 && (
+              <View style={[styles.totalRow, { marginTop: 4 }]}>
+                <Text
+                  style={[
+                    styles.discountPill,
+                    { color: colors.semantic.positive, backgroundColor: colors.semantic['positive-container'] },
+                  ]}
+                >
+                  {t('cart.discount')}
+                </Text>
+                <Text style={[styles.discountAmount, { color: colors.semantic.positive }]}>
+                  −${discountAmount.toFixed(2)}
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* CHECKOUT 按钮 */}
@@ -548,6 +565,25 @@ const styles = StyleSheet.create({
   selectedLabel: {
     fontSize: 12,
   },
+  // V24：合计 Georgia 18px（原型 .checkout-bar .total）
+  totalPriceSerif: {
+    fontFamily: 'Georgia',
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  // V5 DISCOUNT 行样式（有折扣时显示）
+  discountPill: {
+    fontSize: 10,
+    fontWeight: '700',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  discountAmount: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
   // §4.3 管理态删除栏
   barSpacer: {
     flex: 1, // Why: 把 DELETE 按钮顶到底部栏最右侧（同结算栏 totalBox 的作用）
@@ -564,8 +600,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   checkoutBtn: {
+    // V24：对齐原型 padding 14/24（原 lg/sm=24/8 偏矮）
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md - 2,
     borderRadius: borderRadius.md,
     ...shadowPresets.md,
   },

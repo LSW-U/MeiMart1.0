@@ -221,13 +221,16 @@ export default function NotificationsPage() {
             <Pressable
               onPress={markAllRead}
               hitSlop={8}
-              style={styles.headerBtn}
+              style={styles.readAllBtn}
               accessibilityRole="button"
               accessibilityLabel={t('service.notifications.readAll')}
               testID="notif-read-all"
             >
-              {/* 原因：primary 底上固定白（on-primary token），dark 不变——PrimaryHeader 实心底例外 */}
-              <Icon symbol="check_circle" size={22} color={colors['on-primary']} />
+              {/* V22：done_all 图标 + 文字形态（原型明确操作入口）；原因：primary 底上固定白（on-primary token） */}
+              <Icon symbol="done_all" size={20} color={colors['on-primary']} />
+              <Text style={[styles.readAllText, { color: colors['on-primary'] }]}>
+                {t('service.notifications.readAll')}
+              </Text>
               <View style={[styles.readAllBadge, { backgroundColor: colors['on-primary'] }]}>
                 <Text style={[styles.readAllBadgeText, { color: colors.primary }]}>
                   {unreadCount}
@@ -378,6 +381,17 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // V22：read-all 专用（图标+文字+badge 横排，非 40x40 图标钮）
+  readAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  // V22：全部已读文字（与图标并排）
+  readAllText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   readAllBadge: {
     position: 'absolute',

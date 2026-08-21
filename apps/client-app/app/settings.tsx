@@ -14,6 +14,7 @@ import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
+import { useAddresses } from '@/services/queries/useAddress';
 import { toast } from '@/store/toastStore';
 import { APP_VERSION } from '@/utils/appInfo';
 import { clearAppCache, getCacheSizeLabel } from '@/services/cache';
@@ -34,6 +35,8 @@ export default function SettingsPage() {
   const clearAuth = useAuthStore((s) => s.clearAuth);
   // P17 决策 5 —— 登录态自适应：未登录不显示「退出登录」（语义错误），显示登录/注册入口
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // V20：地址行右值「N 个」（登录态才有地址数据）
+  const { data: addresses } = useAddresses();
   // P17-B1 通知偏好（决策 1：未登录不渲染三行——偏好是登录态能力）
   const { data: notifPrefs, isLoading: prefsLoading } = useNotificationPreferences();
   const updatePrefs = useUpdateNotificationPreferences();
@@ -134,6 +137,11 @@ export default function SettingsPage() {
             icon="location_on"
             iconBg={colors.primary}
             iconFg={colors['on-primary']}
+            value={
+              isAuthenticated && addresses != null
+                ? t('settings.addressCount', { count: addresses.length })
+                : undefined
+            }
             textColor={colors['on-surface']}
             subColor={colors['on-surface-variant']}
             dividerColor={colors['outline-variant']}
@@ -260,12 +268,11 @@ export default function SettingsPage() {
             icon="delete"
             iconBg={colors.primary}
             iconFg={colors['on-primary']}
+            // V20：缓存值 state-chip 形态（值 + 提示可点击清理）
             value={
-              clearing
+              clearing || cacheSize === null
                 ? t('settings.cacheCalculating')
-                : cacheSize === null
-                  ? t('settings.cacheCalculating')
-                  : cacheSize
+                : t('settings.cacheChip', { size: cacheSize })
             }
             disabled={clearing}
             textColor={colors['on-surface']}

@@ -531,22 +531,22 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     paddingVertical: spacing.sm,
   },
+  // V14：圆对齐原型 56px（原 80 大一档），内图 56→40
   subItem: {
     alignItems: 'center',
-    width: 80,
     gap: spacing.sm,
   },
   subIcon: {
-    width: 80,
-    height: 80,
+    width: 56,
+    height: 56,
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
   },
   subImage: {
-    width: 56,
-    height: 56,
+    width: 40,
+    height: 40,
     borderRadius: 999,
     resizeMode: 'contain',
   },

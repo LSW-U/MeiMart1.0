@@ -142,8 +142,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   imageWrap: {
-    width: 64,
-    height: 64,
+    // V7：对齐原型 .item-img-wrap 72px（原 64）
+    width: 72,
+    height: 72,
     borderRadius: borderRadius.md,
     overflow: 'hidden',
   },
@@ -165,8 +166,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   qtyBtn: {
-    width: 28,
-    height: 28,
+    // V7：对齐原型 .stepper button 32px（原 28）
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },

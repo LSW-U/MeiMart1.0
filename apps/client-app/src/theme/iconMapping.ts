@@ -86,6 +86,10 @@ const SYMBOL_TO_MC_LITERAL = {
   local_offer: 'tag',
   local_shipping: 'truck',
   location_city: 'city',
+  // V19 P16 地址 chip —— 学校标签小图标
+  school: 'school',
+  // V22 P23 通知 —— 全部已读（MC 无 done_all，check-all 最近语义）
+  done_all: 'check-all',
   location_on: 'map-marker',
   lock: 'lock',
   logout: 'logout',

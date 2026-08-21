@@ -417,11 +417,12 @@ const styles = StyleSheet.create({
     ...typography['body-sm'],
   },
   bannerSection: {
-    // Why: P6 S2 - searchSection → banner 拉到统一 xl(32) 节奏
-    marginTop: spacing.xl,
+    // V15：区块节奏 24px 对齐原型（原误映射 xl(32)，HTML 24px 应映射 lg）
+    marginTop: spacing.lg,
   },
   section: {
-    marginTop: spacing.xl,
+    // V15：区块节奏 24px 对齐原型（原误映射 xl(32)）
+    marginTop: spacing.lg,
     paddingHorizontal: layout['container-margin'],
     gap: spacing.md,
   },
@@ -451,15 +452,16 @@ const styles = StyleSheet.create({
     // Why: P6 S3 - TaisDivider 上下 padding md(16) -> lg(24)，视觉呼吸更充分
     paddingVertical: spacing.lg,
     gap: spacing.md,
-    marginTop: spacing.xl,
+    // V15：区块节奏 24px 对齐原型（原误映射 xl(32)）
+    marginTop: spacing.lg,
   },
   dividerLine: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
   },
   recommendSection: {
-    // Why: P6 S4 - PromoDock → 推荐区 xl(32) + sm(8)，避免 dock 与推荐区贴太近
-    marginTop: spacing.xl + spacing.sm,
+    // V15：推荐区间距 lg(24)+sm(8) 对齐原型节奏（原 xl(32)+sm 偏松）
+    marginTop: spacing.lg + spacing.sm,
   },
   recommendHeader: {
     paddingHorizontal: layout['container-margin'],

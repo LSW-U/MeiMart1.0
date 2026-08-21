@@ -233,7 +233,8 @@
       "itemCount": "Cart with {{count}} items"
     },
     "quantity": "Quantity",
-    "removed": "Item removed from cart"
+    "removed": "Item removed from cart",
+    "discount": "DISCOUNT"
   },
   "product": {
     "localBestsellers": "Local Bestsellers",
@@ -257,7 +258,9 @@
     "inStock": "In Stock",
     "deliverTo": "DELIVER TO",
     "eta": "ETA",
+    "etaValue": "Arrives Today 6:00 PM",
     "shipping": "SHIPPING",
+    "shippingFree": "Free over $10",
     "selectVariant": "Select Variant",
     "detailsTitle": "Product Details",
     "reviewsTitle": "Reviews",
@@ -411,7 +414,9 @@
     "cardHeaderA11y": "Order {{orderNo}}, status {{status}}",
     "viewOrderA11y": "View order {{orderNo}} details",
     "tabWithCount": "{{label}}, {{count}}",
-    "cancelled": "Order cancelled"
+    "cancelled": "Order cancelled",
+    "copied": "Copied",
+    "copyOrderNo": "Copy order number"
   },
   "tracking": {
     "title": "Order Tracking",
@@ -423,7 +428,10 @@
     "arrivingNow": "Arriving now",
     "scaleBar": "500 m",
     "unknownAddress": "Unknown address",
-    "unknownRecipient": "Unknown recipient"
+    "unknownRecipient": "Unknown recipient",
+    "deliveredTitle": "Order Delivered",
+    "deliveredSub": "Enjoy your order!",
+    "redirectNote": "Redirecting to order details for after-sales options"
   },
   "address": {
     "list": "Shipping addresses",
@@ -490,7 +498,8 @@
     "smartParseFailed": "Could not recognize name or phone",
     "smartPlaceholder": "Maria Silva, 7712 3456, Rua de Lecidere, Dili",
     "parseAndFill": "Parse and Fill",
-    "cityPlaceholder": "Dili"
+    "cityPlaceholder": "Dili",
+    "swipeHint": "Swipe a card to edit / set default / delete"
   },
   "profile": {
     "title": "My Account",
@@ -566,7 +575,9 @@
     "notifOrderUpdates": "Order updates",
     "notifPromotions": "Promotions",
     "notifSystem": "System notices",
-    "notifUpdateFailed": "Failed to update preferences"
+    "notifUpdateFailed": "Failed to update preferences",
+    "addressCount": "{{count}} saved",
+    "cacheChip": "{{size}} · Tap to clear"
   },
   "language": {
     "title": "Select language",
@@ -897,7 +908,8 @@
       "charCount": "{{count}} of {{max}} characters",
       "photoThumb": "Photo {{count}}",
       "removePhoto": "Remove photo {{count}}"
-    }
+    },
+    "progressHint": "Completed {{done}}/{{total}} reviews"
   },
   "refunds": {
     "title": "After-sales",
@@ -979,6 +991,7 @@
       "placeholder": "Describe your feedback in detail, at least 10 characters…",
       "contactPlaceholder": "Email or phone, so we can reply",
       "submit": "Submit feedback",
+      "submitFailed": "Submit failed, please try again later",
       "photosLabel": "Add screenshots (optional)",
       "addPhoto": "Add",
       "photosHint": "Up to {{max}} · JPG / PNG",

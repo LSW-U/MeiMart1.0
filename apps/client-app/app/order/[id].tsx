@@ -15,6 +15,7 @@ import {
   Pressable,
   Platform,
   Share,
+  Clipboard,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -263,9 +264,32 @@ export default function OrderDetailPage() {
               <Text style={[styles.labelCaps, { color: colors['on-surface-variant'] }]}>
                 {t('order.orderNo', { defaultValue: 'ORDER NUMBER' }).toUpperCase()}
               </Text>
-              <Text style={[styles.priceDisplay, { color: colors['on-surface'] }]}>
-                {order.orderNo}
-              </Text>
+              <View style={styles.orderNoRow}>
+                <Text style={[styles.priceDisplay, { color: colors['on-surface'] }]}>
+                  {order.orderNo}
+                </Text>
+                {/* V16：订单号旁复制小按钮（原型 content_copy） */}
+                <Pressable
+                  onPress={() => {
+                    const no = order.orderNo;
+                    if (Platform.OS === 'web') {
+                      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                        navigator.clipboard.writeText(no).catch(() => {});
+                      }
+                      toast.success(t('order.copied', { defaultValue: 'Copied' }));
+                    } else {
+                      Clipboard.setString(no);
+                      toast.success(t('order.copied', { defaultValue: 'Copied' }));
+                    }
+                  }}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('order.copyOrderNo', { defaultValue: 'Copy order number' })}
+                  testID="order-copy-no"
+                >
+                  <Icon symbol="content_copy" size={14} color={colors['on-surface-variant']} />
+                </Pressable>
+              </View>
               <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
                 {t('order.createdAt', { defaultValue: 'Placed' })}{' '}
                 {formatDate(order.createdAt, i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
@@ -825,7 +849,8 @@ const styles = StyleSheet.create({
   // Header
   header: {
     position: 'relative',
-    height: 64,
+    // V16：对齐原型 56px（原 64）
+    height: 56,
     overflow: 'hidden',
     paddingHorizontal: layout['container-margin'],
     justifyContent: 'center',
@@ -861,6 +886,12 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   // Order Header Card
+  // V16：订单号 + 复制按钮同行
+  orderNoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   orderHeaderRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',

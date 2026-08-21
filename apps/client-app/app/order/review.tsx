@@ -271,6 +271,17 @@ export default function OrderReviewPage() {
       >
         {/* 多商品切换 tab（方案 C：单商品订单不显，多商品订单顶部切换逐条评价，切换 reset 表单） */}
         {orderItems.length > 1 && (
+          <>
+          {/* V18：显式进度提示（原型 info-c 蓝底条「已完成 1/3」，tab 仅隐含进度） */}
+          <View style={[styles.reviewProgressRow, { backgroundColor: colors.semantic['info-container'] }]}>
+            <Icon symbol="info" size={14} color={colors.semantic.info} />
+            <Text style={[styles.reviewProgressText, { color: colors.semantic.info }]}>
+              {t('review.progressHint', {
+                done: reviewedProductIds.size,
+                total: orderItems.length,
+              })}
+            </Text>
+          </View>
           <View style={styles.productTabs}>
             <ScrollView
               horizontal
@@ -340,6 +351,7 @@ export default function OrderReviewPage() {
               })}
             </ScrollView>
           </View>
+          </>
         )}
 
         {/* 商品卡片 */}
@@ -656,6 +668,20 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   // 方案 C：多商品切换 tab（顶部横滑，缩略图 + 商品名，选中态 primary 底）
+  // V18：进度提示条（原型 info-c 蓝底 + info 字）
+  reviewProgressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+  reviewProgressText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   productTabs: {
     marginHorizontal: -spacing.xs, // 让横滑两端对齐 container
   },

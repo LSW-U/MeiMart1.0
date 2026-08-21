@@ -169,7 +169,11 @@ export default function OrdersPage() {
                     </Text>
                     {count > 0 && (
                       <View
-                        style={[styles.tabBadge, { backgroundColor: colors.error }]}
+                        style={[
+                          styles.tabBadge,
+                          // V17：激活 Tab 角标变 primary（与 tab 文字同色系），非激活才 error
+                          { backgroundColor: isActive ? colors.primary : colors.error },
+                        ]}
                         accessible={false}
                       >
                         <Text style={styles.tabBadgeText} accessible={false}>

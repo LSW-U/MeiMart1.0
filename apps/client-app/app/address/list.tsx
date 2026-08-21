@@ -159,15 +159,16 @@ export default function AddressListPage() {
             style={({ pressed }) => [
               styles.smartEntry,
               {
-                backgroundColor: colors['surface-container-lowest'],
-                borderColor: colors['outline-variant'],
+                // V19：回 info 蓝语义（原白底普通卡，识别功能无提示性）
+                backgroundColor: colors.semantic['info-container'],
+                borderColor: colors.semantic.info,
               },
               pressed && { opacity: 0.7 },
             ]}
             accessibilityRole="button"
             accessibilityLabel={t('address.smartRecognize', { defaultValue: 'Smart recognize' })}
           >
-            <Icon symbol="content_paste" size={18} color={colors.primary} />
+            <Icon symbol="content_paste" size={18} color={colors.semantic.info} />
             <View style={styles.smartEntryText}>
               <Text style={[styles.smartEntryTitle, { color: colors['on-surface'] }]}>
                 {t('address.smartRecognize', { defaultValue: 'Smart Recognize' })}
@@ -224,6 +225,16 @@ export default function AddressListPage() {
               />
             )}
           />
+
+          {/* V19：左滑操作提示（删除/设默认不可发现，原型有此提示文案） */}
+          {addresses.length > 0 && (
+            <View style={styles.swipeHintRow}>
+              <Icon symbol="swap_vert" size={12} color={colors['on-surface-variant']} />
+              <Text style={[styles.swipeHintText, { color: colors['on-surface-variant'] }]}>
+                {t('address.swipeHint', { defaultValue: 'Swipe a card to edit / set default / delete' })}
+              </Text>
+            </View>
+          )}
 
           {/* Cultural Motif Separator（HTML 第 258-265 行 — uma-lulik-silhouette 三角） */}
           <View style={styles.motifRow}>
@@ -283,8 +294,21 @@ export function AddressTagChip({ tag }: { tag: string }) {
   };
   const isPreset = tag in presetLabel;
   const theme = getAddressTagTheme(tag);
+  // V19：preset chip 内嵌小图标（原型 home/work/school 11px icon）
+  const presetIcon: Record<'home' | 'company' | 'school', string> = {
+    home: 'home',
+    company: 'location_city',
+    school: 'school',
+  };
   return (
     <View style={[styles.tagChip, { backgroundColor: theme.bg }]}>
+      {isPreset && (
+        <Icon
+          symbol={presetIcon[tag as 'home' | 'company' | 'school']}
+          size={11}
+          color={theme.fg}
+        />
+      )}
       <Text style={[styles.tagChipText, { color: theme.fg }]} numberOfLines={1}>
         {isPreset ? presetLabel[tag as 'home' | 'company' | 'school'] : tag}
       </Text>
@@ -577,7 +601,21 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.xs,
   },
+  // V19：左滑提示行
+  swipeHintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: spacing.sm,
+  },
+  swipeHintText: {
+    fontSize: 11,
+  },
   tagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
     borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 2,

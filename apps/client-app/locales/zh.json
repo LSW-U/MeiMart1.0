@@ -233,7 +233,8 @@
       "itemCount": "购物车 {{count}} 件商品"
     },
     "quantity": "数量",
-    "removed": "已移除商品"
+    "removed": "已移除商品",
+    "discount": "折扣"
   },
   "product": {
     "localBestsellers": "本地热销",
@@ -257,7 +258,9 @@
     "inStock": "有货",
     "deliverTo": "配送至",
     "eta": "预计送达",
+    "etaValue": "今日 6:00 PM 送达",
     "shipping": "配送",
+    "shippingFree": "满 $10 免运费",
     "selectVariant": "选择规格",
     "detailsTitle": "商品详情",
     "reviewsTitle": "评价",
@@ -411,7 +414,9 @@
     "cardHeaderA11y": "订单 {{orderNo}},状态 {{status}}",
     "viewOrderA11y": "查看订单 {{orderNo}} 详情",
     "tabWithCount": "{{label}},{{count}}",
-    "cancelled": "订单已取消"
+    "cancelled": "订单已取消",
+    "copied": "已复制",
+    "copyOrderNo": "复制订单号"
   },
   "tracking": {
     "title": "订单追踪",
@@ -423,7 +428,10 @@
     "arrivingNow": "即将到达",
     "scaleBar": "500 米",
     "unknownAddress": "地址未知",
-    "unknownRecipient": "收件人未知"
+    "unknownRecipient": "收件人未知",
+    "deliveredTitle": "订单已送达",
+    "deliveredSub": "感谢您的惠顾！",
+    "redirectNote": "即将跳转订单详情，可查看售后入口"
   },
   "address": {
     "list": "收货地址",
@@ -490,7 +498,8 @@
     "smartParseFailed": "未能识别出姓名或电话",
     "smartPlaceholder": "张三，13800138000，北京市朝阳区xx路1号",
     "parseAndFill": "解析并填充",
-    "cityPlaceholder": "Dili"
+    "cityPlaceholder": "Dili",
+    "swipeHint": "左滑卡片可编辑 / 设默认 / 删除"
   },
   "profile": {
     "title": "我的账户",
@@ -566,7 +575,9 @@
     "notifOrderUpdates": "订单通知",
     "notifPromotions": "促销活动",
     "notifSystem": "系统公告",
-    "notifUpdateFailed": "偏好设置失败，请重试"
+    "notifUpdateFailed": "偏好设置失败，请重试",
+    "addressCount": "{{count}} 个",
+    "cacheChip": "{{size}} · 点击清理"
   },
   "language": {
     "title": "选择语言",
@@ -897,7 +908,8 @@
       "charCount": "已输入 {{count}} / 最大 {{max}} 字",
       "photoThumb": "第 {{count}} 张照片",
       "removePhoto": "删除第 {{count}} 张照片"
-    }
+    },
+    "progressHint": "已完成 {{done}}/{{total}} 条评价"
   },
   "refunds": {
     "title": "退款售后",
@@ -979,6 +991,7 @@
       "placeholder": "请详细描述你的反馈，至少 10 个字…",
       "contactPlaceholder": "邮箱或手机号，方便我们回复你",
       "submit": "提交反馈",
+      "submitFailed": "提交失败，请稍后重试",
       "photosLabel": "添加截图（可选）",
       "addPhoto": "添加",
       "photosHint": "最多 {{max}} 张 · 支持 JPG / PNG",

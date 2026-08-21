@@ -15,6 +15,9 @@ import { Icon } from '@/components/ui/Icon';
 import { openExternalLink } from '@/utils/linking';
 import { APP_VERSION } from '@/utils/appInfo';
 
+// V23：构建号标签（原型 ver-tag「build 2026.08」——年.月）
+const BUILD_LABEL = '2026.08';
+
 // 应用商店评分链接（集中管理，审查 F2）—— ⚠️ CP8/EAS 上架前必须替换真实 appId：
 // TODO(CP8): iOS 换 App Store Connect 的数字 id；Android 确认 EAS package 名后核对
 const STORE_LINKS = {
@@ -299,9 +302,17 @@ export default function AboutPage() {
 
         {/* 版本号 + Copyright（dev 反馈：对齐原型 .ab-footer——「版本 v1.0.0」+「© 2026 MeiMart Lda.」两行） */}
         <View style={styles.footer}>
-          <Text style={[styles.version, { color: colors['on-surface-variant'] }]}>
-            {t('about.versionLabel')} v{APP_VERSION}
-          </Text>
+          <View style={styles.versionRow}>
+            <Text style={[styles.version, { color: colors['on-surface-variant'] }]}>
+              {t('about.versionLabel')} v{APP_VERSION}
+            </Text>
+            {/* V23：构建号小标签（原型 .ver-tag，年.月） */}
+            <View style={[styles.verTag, { borderColor: colors['outline-variant'] }]}>
+              <Text style={[styles.verTagText, { color: colors['on-surface-variant'] }]}>
+                build {BUILD_LABEL}
+              </Text>
+            </View>
+          </View>
           <Text style={[styles.copyright, { color: colors['on-surface-variant'] }]}>
             © 2026 MeiMart Lda.{'\n'}
             {t('about.rights')}
@@ -597,6 +608,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
     paddingVertical: spacing.lg,
+  },
+  versionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  verTag: {
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  verTagText: {
+    fontSize: 9,
+    fontWeight: '600',
   },
   version: {
     ...typography['label-caps'],

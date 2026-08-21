@@ -22,6 +22,7 @@ export function PriceText({
   strikeThroughOriginal = true,
   decimals = 2,
   testID,
+  style,
 }: PriceTextProps) {
   const { colors } = useTheme();
   const token = SIZE_TOKEN[size];
@@ -39,7 +40,7 @@ export function PriceText({
       }`}
     >
       <Text
-        style={[baseStyle, { color: colors.primary }]}
+        style={[baseStyle, { color: colors.primary }, style]}
         testID={testID ? `${testID}-current` : undefined}
       >
         {formatPrice(value, currency, decimals)}

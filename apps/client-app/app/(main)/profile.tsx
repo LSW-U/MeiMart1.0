@@ -192,7 +192,7 @@ export default function ProfilePage() {
         <View style={[styles.userCardNew, shadowPresets.md]}>
           {/* member-banner */}
           <LinearGradient
-            colors={[colors.primary, '#d4453a']} // 原因：banner 渐变终止色，比 primary 亮一档让渐变可见（dark 不变）
+            colors={[colors.primary, '#b53026']} // V13：渐变终止色对齐原型 #b53026（原 #d4453a 偏亮一档）
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.memberBanner}
@@ -256,7 +256,8 @@ export default function ProfilePage() {
           <View
             style={[
               styles.pointsStrip,
-              { backgroundColor: colors['surface-container-low'], borderTopColor: colors['outline-variant'] },
+              // V13：底色提一档对齐原型 rgba(255,233,230,.4)≈surface-container-high
+              { backgroundColor: colors['surface-container-high'], borderTopColor: colors['outline-variant'] },
             ]}
           >
             <Pressable
@@ -374,6 +375,19 @@ export default function ProfilePage() {
               <Text style={[styles.quickLabel, { color: colors['on-surface-variant'] }]}>
                 {t(entry.labelKey)}
               </Text>
+              {entry.isNew && (
+                <Text
+                  style={[
+                    styles.newTag,
+                    {
+                      color: colors.semantic.positive,
+                      backgroundColor: colors.semantic['positive-container'],
+                    },
+                  ]}
+                >
+                  NEW
+                </Text>
+              )}
             </Pressable>
           ))}
         </View>
@@ -843,6 +857,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.xs,
+    position: 'relative',
   },
   quickIcon: {
     width: 40,
@@ -866,9 +881,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   newTag: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
     fontSize: 8,
     fontWeight: '700',
-    marginTop: -2,
+    letterSpacing: 0.5,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+    overflow: 'hidden',
   },
   // === funcs ===
   funcRow: {

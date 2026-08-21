@@ -30,6 +30,11 @@ jest.mock('@/services/queries/useNotifications', () => ({
   }),
 }));
 
+// V20：设置页地址行右值接 useAddresses（页面顶层 hook，测试补 mock）
+jest.mock('@/services/queries/useAddress', () => ({
+  useAddresses: () => ({ data: [] }),
+}));
+
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), push: jest.fn(), replace: jest.fn() },
 }));

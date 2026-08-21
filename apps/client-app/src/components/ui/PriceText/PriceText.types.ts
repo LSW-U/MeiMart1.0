@@ -1,3 +1,5 @@
+import type { TextStyle } from 'react-native';
+
 export type PriceSize = 'sm' | 'md' | 'lg';
 
 export interface PriceTextProps {
@@ -15,4 +17,6 @@ export interface PriceTextProps {
   decimals?: number;
   /** 测试 ID */
   testID?: string;
+  /** V24：当前价 Text 样式透传（如字体覆盖），数组时后者优先 */
+  style?: TextStyle;
 }
