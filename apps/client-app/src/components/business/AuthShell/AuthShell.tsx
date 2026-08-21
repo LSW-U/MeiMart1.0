@@ -1,12 +1,16 @@
 // AuthShell — 共享的 auth 页面外壳
-// P29-D2: 320px primary-container 头图+文化图 → 紧凑品牌区（surface 底，按内容撑开无固定高度）
-// P29-D3: CTA tertiary-container 金色 → primary 红色（核心转化操作用品牌红）
-// P29-D6: 硬编码 rgba → theme token
-// 还原自 P29 HTML 原型 .brand-head（flex:0 0 auto 无固定高度，logo+name+tag+welcome+sub）
+// 严格还原 P29 HTML 原型五屏共通结构：
+//   .brand-head（紧凑品牌区：logo+name+tag+welcome+sub）
+//   .form-card（白卡表单，children + .btn-primary CTA）
+//   .switch-row（卡外底部次要切换，如「新用户？注册账号」）
+//   .locale-bar（底部语言条）
+// P29-D2: 320px 头图+文化图 → 紧凑品牌区（surface 底按内容撑开）
+// P29-D3: CTA tertiary 金 → primary 红（.btn-primary 52px 圆角 14，纯文字无箭头）
 import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
-import { LocaleSwitch } from '@/components/business/LocaleSwitch/LocaleSwitch';
+import { LocaleBar } from '@/components/business/LocaleSwitch/LocaleBar';
 import type { AuthShellProps } from './AuthShell.types';
 
 export function AuthShell({
@@ -20,6 +24,7 @@ export function AuthShell({
   testID,
 }: AuthShellProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <ScrollView
@@ -28,35 +33,26 @@ export function AuthShell({
       contentContainerStyle={styles.scroll}
       showsVerticalScrollIndicator={false}
     >
-      {/* 紧凑品牌区：surface 底色，按内容撑开（HTML .brand-head padding 48/24/20，gap 10） */}
+      {/* .brand-head：padding 48 24 20，gap 10，surface 底 */}
       <View style={styles.brandHead} accessibilityRole="header">
-        <View
-          style={[
-            styles.brandLogo,
-            { backgroundColor: colors.primary, borderColor: colors['outline-variant'] },
-          ]}
-        >
+        <View style={[styles.brandLogo, { backgroundColor: colors.primary }]}>
           <Icon symbol="shopping_basket" size={30} color={colors['on-primary']} />
         </View>
         <Text style={[styles.brandName, { color: colors.primary }]}>MeiMart</Text>
         <Text style={[styles.brandTag, { color: colors['on-surface-variant'] }]}>
-          EST. 2024 • DILI
+          {t('about.subtitle')}
         </Text>
         <Text style={[styles.brandWelcome, { color: colors['on-surface'] }]}>{welcomeTitle}</Text>
         <Text style={[styles.brandSub, { color: colors['on-surface-variant'] }]}>{welcomeSub}</Text>
       </View>
 
-      {/* 表单卡（HTML .form-card surface-lowest + shadow-md） */}
+      {/* .form-card：surface-lowest 白卡 + shadow-md，无描边（原型无 border） */}
       <View
-        style={[
-          styles.formCard,
-          { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
-          shadowPresets.md,
-        ]}
+        style={[styles.formCard, { backgroundColor: colors['surface-container-lowest'] }, shadowPresets.md]}
       >
         <View style={styles.formGap}>{children}</View>
 
-        {/* Primary Action — P29-D3: primary 红色 + arrow_forward */}
+        {/* .btn-primary：52px 圆角 14 primary 底白字，纯文字 */}
         <Pressable
           onPress={onAction}
           disabled={loading}
@@ -71,14 +67,14 @@ export function AuthShell({
           accessibilityState={{ disabled: loading }}
         >
           <Text style={[styles.actionText, { color: colors['on-primary'] }]}>{actionLabel}</Text>
-          <Icon symbol="arrow_forward" size={22} color={colors['on-primary']} />
         </Pressable>
-
-        {secondary && <View style={styles.secondaryRow}>{secondary}</View>}
       </View>
 
-      {/* 语言切换按钮（底部，所有 auth 页面共用） */}
-      <LocaleSwitch />
+      {/* .switch-row：卡外底部次要切换（如「新用户？注册账号」） */}
+      {secondary && <View style={styles.switchRow}>{secondary}</View>}
+
+      {/* .locale-bar：底部语言条 */}
+      <LocaleBar />
     </ScrollView>
   );
 }
@@ -88,67 +84,72 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout['container-margin'],
     paddingBottom: spacing.xxl,
   },
-  // HTML .brand-head: padding 48px 24px 20px, align center, gap 10, surface 底
+  // .brand-head{padding:48px 24px 20px;gap:10px;align-items:center}
   brandHead: {
-    paddingTop: spacing.xxl + spacing.lg,
+    paddingTop: spacing.xxl,
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
-    gap: spacing.xs + 2,
+    gap: 10,
   },
-  // HTML .brand-logo: 56px 圆角 16 primary 底白字，shadow 0 4 14 rgba(150,24,19,.25)
+  // .brand-logo{56px 圆角 16 primary 底白 icon，shadow 0 4 14 rgba(150,24,19,.25)}
   brandLogo: {
     width: 56,
     height: 56,
-    borderRadius: borderRadius.xl,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
     ...shadowPresets.md,
   },
-  // HTML .brand-name: 22px 800 primary
+  // .brand-name{22px 800 primary letter-spacing -.3px}
   brandName: {
     ...typography.h2,
     fontWeight: '800',
     letterSpacing: -0.3,
   },
-  // HTML .brand-tag: 12px on-sv2
+  // .brand-tag{12px on-sv2}
   brandTag: {
-    ...typography['label-caps'],
+    fontSize: 12,
+    lineHeight: 16,
   },
-  // HTML .brand-welcome: 20px 700 on-surface
+  // .brand-welcome{20px 700 on-surface margin-top 6}
   brandWelcome: {
-    ...typography.h3,
+    fontSize: 20,
+    lineHeight: 26,
     fontWeight: '700',
-    marginTop: spacing.xs,
+    marginTop: 6,
   },
-  // HTML .brand-sub: 13px on-sv
+  // .brand-sub{13px on-sv}
   brandSub: {
-    ...typography['body-sm'],
+    fontSize: 13,
+    lineHeight: 18,
   },
+  // .form-card{surface-lowest 圆角 18 padding 20 gap 16 shadow-md}
   formCard: {
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    borderWidth: 1,
+    borderRadius: 18,
+    padding: 20,
   },
   formGap: {
-    gap: spacing.lg,
+    gap: 16,
   },
+  // .btn-primary{height 52 圆角 14 primary 白字 16/700}
   actionBtn: {
     height: 52,
-    borderRadius: borderRadius.lg,
+    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.lg,
+    marginTop: 4,
     ...shadowPresets.md,
   },
   actionText: {
     fontSize: 16,
     fontWeight: '700',
   },
-  secondaryRow: {
-    marginTop: spacing.xl,
+  // .switch-row{text-align center padding 16 0 4}
+  switchRow: {
+    alignItems: 'center',
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xs,
   },
 });

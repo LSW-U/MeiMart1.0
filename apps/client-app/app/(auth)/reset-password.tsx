@@ -9,10 +9,9 @@ import { router } from 'expo-router';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, typography } from '@/theme';
+import { useTheme, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { Button } from '@/components/ui/Button';
 import { AuthShell } from '@/components/business/AuthShell';
 import { useResetPassword, useSendSmsCode } from '@/services/queries/useAuth';
 import { toast } from '@/store/toastStore';
@@ -112,7 +111,6 @@ export default function ResetPasswordPage() {
           placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
           prefix="+670"
-          leftIcon="phone"
           testID="reset-phone"
         />
 
@@ -129,16 +127,23 @@ export default function ResetPasswordPage() {
               testID="reset-code"
             />
           </View>
-          <View style={styles.codeBtn}>
-            <Button
-              label={counter > 0 ? `${counter}s` : t('auth.sendCodeBtn')}
-              variant="outline"
-              size="sm"
-              disabled={counter > 0 || sendMutation.isPending}
-              onPress={sendCode}
-              testID="reset-send"
-            />
-          </View>
+          {/* .code-btn：50px 与输入框等高，1.5px primary 描边 13/700 红字白底（P29 原型） */}
+          <Pressable
+            onPress={sendCode}
+            disabled={counter > 0 || sendMutation.isPending}
+            style={({ pressed }) => [
+              styles.codeBtn,
+              { borderColor: colors.primary },
+              pressed && { opacity: 0.7 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('auth.sendCodeBtn')}
+            testID="reset-send"
+          >
+            <Text style={[styles.codeBtnText, { color: colors.primary }]}>
+              {counter > 0 ? `${counter}s` : t('auth.sendCodeBtn')}
+            </Text>
+          </Pressable>
         </View>
 
         <FormInput
@@ -170,16 +175,27 @@ export default function ResetPasswordPage() {
 }
 
 const styles = StyleSheet.create({
+  // .code-row{gap:10px;align-items:flex-end}
   codeRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: spacing.sm,
+    gap: 10,
   },
   codeInput: {
     flex: 1,
   },
+  // .code-btn{height:50px;border:1.5px solid primary;圆角 12;padding 0 16;13/700 primary}
   codeBtn: {
-    paddingBottom: spacing.xs,
+    minHeight: 50,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  codeBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   loginRow: {
     flexDirection: 'row',

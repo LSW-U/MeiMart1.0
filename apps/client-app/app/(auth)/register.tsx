@@ -12,7 +12,6 @@ import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { AuthShell } from '@/components/business/AuthShell';
 import { useRegister, useSendSmsCode } from '@/services/queries/useAuth';
@@ -167,7 +166,6 @@ export default function RegisterPage() {
           placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
           prefix="+670"
-          leftIcon="phone"
           testID="register-phone"
         />
 
@@ -184,16 +182,23 @@ export default function RegisterPage() {
               testID="register-code"
             />
           </View>
-          <View style={styles.codeBtn}>
-            <Button
-              label={counter > 0 ? `${counter}s` : t('auth.sendCodeBtn')}
-              variant="outline"
-              size="sm"
-              disabled={counter > 0 || sendMutation.isPending}
-              onPress={sendCode}
-              testID="register-send"
-            />
-          </View>
+          {/* .code-btn：50px 与输入框等高，1.5px primary 描边 13/700 红字白底（P29 原型） */}
+          <Pressable
+            onPress={sendCode}
+            disabled={counter > 0 || sendMutation.isPending}
+            style={({ pressed }) => [
+              styles.codeBtn,
+              { borderColor: colors.primary },
+              pressed && { opacity: 0.7 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('auth.sendCodeBtn')}
+            testID="register-send"
+          >
+            <Text style={[styles.codeBtnText, { color: colors.primary }]}>
+              {counter > 0 ? `${counter}s` : t('auth.sendCodeBtn')}
+            </Text>
+          </Pressable>
         </View>
 
         <FormInput
@@ -292,16 +297,27 @@ export default function RegisterPage() {
 }
 
 const styles = StyleSheet.create({
+  // .code-row{gap:10px;align-items:flex-end}
   codeRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: spacing.sm,
+    gap: 10,
   },
   codeInput: {
     flex: 1,
   },
+  // .code-btn{height:50px;border:1.5px solid primary;圆角 12;padding 0 16;13/700 primary}
   codeBtn: {
-    paddingBottom: spacing.xs,
+    minHeight: 50,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  codeBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   agreementRow: {
     flexDirection: 'row',

@@ -52,10 +52,20 @@ export function Input({
           styles.inputWrapper,
           variant === 'bare' && styles.inputWrapperBare,
           {
-            // bare 变体：无底色无边框（行式卡片内嵌）；错误态仍保留红边可辨识
-            backgroundColor: variant === 'bare' ? 'transparent' : colors['surface-variant'],
-            borderColor: hasError ? colors.error : variant === 'bare' ? 'transparent' : colors['outline-variant'],
-            borderWidth: hasError ? 1.5 : variant === 'bare' ? 0 : 1,
+            // P29 原型 .field-input：1.5px var(--outline) 描边 + surface-lowest 白底 + err 怄 error；
+            // ⚠️ HTML 变量名与 RN token 名错位：HTML --outline(#fae8e6)=RN surface-variant，
+            // HTML --outline-v(#e1bfba)=RN outline-variant（边框用前者，placeholder 用后者）
+            backgroundColor: hasError
+              ? colors['error-container']
+              : variant === 'bare'
+                ? 'transparent'
+                : colors['surface-container-lowest'],
+            borderColor: hasError
+              ? colors.error
+              : variant === 'bare'
+                ? 'transparent'
+                : colors['surface-variant'],
+            borderWidth: variant === 'bare' && !hasError ? 0 : 1.5,
             opacity: disabled ? 0.5 : 1,
           },
         ]}
@@ -71,7 +81,8 @@ export function Input({
         {prefix && (
           <View style={styles.prefixWrap}>
             <Text style={[styles.prefixText, { color: colors.primary }]}>{prefix}</Text>
-            <View style={[styles.prefixDivider, { backgroundColor: colors['outline-variant'] }]} />
+            {/* .prefix-block 分隔线：1.5px var(--outline)（= surface-variant 浅粉） */}
+            <View style={[styles.prefixDivider, { backgroundColor: colors['surface-variant'] }]} />
           </View>
         )}
         <TextInput
@@ -80,7 +91,7 @@ export function Input({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={colors['on-surface-variant']}
+          placeholderTextColor={colors['outline-variant']}
           secureTextEntry={secureTextEntry}
           editable={!disabled}
           autoCapitalize="none"
@@ -121,30 +132,29 @@ export function Input({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    // bare 变体行式内嵌：外层高度随内容（filled 保持 56 独立输入高度）
-    minHeight: 56,
+    // .field{gap:6px}——label 与输入框间距
+    gap: 6,
   },
   // bare：width 100% 会让行内兄弟（如字数计数）被挤出容器——收 auto 随内容收缩
   containerBare: {
     width: 'auto',
     flex: 1,
-    minHeight: 0,
   },
+  // .field-label{11px 700 on-sv letter-spacing .08em uppercase}
   label: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    marginBottom: 6,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
+  // .field-input{height:50px;border:1.5px solid outline;圆角 12;padding 0 14px;gap:10px}
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 56,
-    borderRadius: 4,
-    // bare 变体（行式卡片内嵌）padding 收敛，由外层行提供留白
-    paddingHorizontal: 12,
-    gap: 8,
+    minHeight: 50,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    gap: 10,
   },
   inputWrapperBare: {
     minHeight: 40,
@@ -153,14 +163,15 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     minHeight: 24,
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: '500',
     padding: 0,
     includeFontPadding: false,
   },
   icon: {
     margin: 0,
   },
-  // P29-D10: HTML .prefix-block —— +670 代码 + 右侧 1.5px 分隔线
+  // P29-D10: HTML .prefix-block —— +670 代码 15/700 primary + 右侧 1.5px 分隔线
   prefixWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -182,8 +193,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // .field-err{11px error}
   helper: {
-    fontSize: 12,
+    fontSize: 11,
     marginTop: 4,
   },
 });

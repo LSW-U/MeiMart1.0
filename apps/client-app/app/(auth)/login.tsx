@@ -13,6 +13,7 @@ import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Checkbox } from '@/components/ui/Checkbox';
+import { Icon } from '@/components/ui/Icon';
 import { AuthShell } from '@/components/business/AuthShell';
 import { useLoginPassword } from '@/services/queries/useAuth';
 import { useAuthStore } from '@/store/authStore';
@@ -86,6 +87,17 @@ export default function LoginPage() {
         }
         testID="login-page"
       >
+        {/* .error-banner：卡内顶部红底条（P29 原型 Phone5 错误态，D8 前置） */}
+        {loginError && (
+          <View
+            style={[styles.loginErrorBox, { backgroundColor: colors['error-container'] }]}
+            accessibilityRole="alert"
+          >
+            <Icon symbol="error_outline" size={16} color={colors.error} />
+            <Text style={[styles.loginErrorText, { color: colors.error }]}>{loginError}</Text>
+          </View>
+        )}
+
         <FormInput
           control={control}
           name="phone"
@@ -93,7 +105,6 @@ export default function LoginPage() {
           placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
           prefix="+670"
-          leftIcon="phone"
           testID="login-phone"
         />
 
@@ -108,15 +119,6 @@ export default function LoginPage() {
           secureTextEntry={!showPassword}
           testID="login-password"
         />
-
-        {loginError && (
-          <View
-            style={[styles.loginErrorBox, { backgroundColor: colors['error-container'] }]}
-            accessibilityRole="alert"
-          >
-            <Text style={[styles.loginErrorText, { color: colors.error }]}>{loginError}</Text>
-          </View>
-        )}
 
         <View style={styles.linkRow}>
           <Pressable
@@ -175,12 +177,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  // .link-row a{13px 600}——primary/secondary 色在 JSX 注入
   codeLink: {
-    ...typography['label-caps'],
-    textDecorationLine: 'underline',
+    fontSize: 13,
+    fontWeight: '600',
   },
   forgotLink: {
-    ...typography['label-caps'],
+    fontSize: 13,
+    fontWeight: '600',
   },
   agreementRow: {
     flexDirection: 'row',
@@ -208,14 +212,18 @@ const styles = StyleSheet.create({
     ...typography['body-sm'],
     marginTop: spacing.xs,
   },
+  // .error-banner{error-c 底 圆角 10 padding 10 14 gap 8 13/600 error}
   loginErrorBox: {
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
   },
   loginErrorText: {
     ...typography['body-sm'],
+    flex: 1,
     fontWeight: '600',
   },
 });
