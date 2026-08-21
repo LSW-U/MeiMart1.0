@@ -8,7 +8,7 @@
 // P29-D3: CTA tertiary 金 → primary 红（.btn-primary 52px 圆角 14，纯文字无箭头）
 import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, shadowPresets } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
 import { LocaleBar } from '@/components/business/LocaleSwitch/LocaleBar';
 import type { AuthShellProps } from './AuthShell.types';
@@ -73,6 +73,9 @@ export function AuthShell({
       {/* .switch-row：卡外底部次要切换（如「新用户？注册账号」） */}
       {secondary && <View style={styles.switchRow}>{secondary}</View>}
 
+      {/* 弹性占位：内容不足一屏时把 LocaleBar 推到最底（原型 .screen flex column + locale-bar flex:0 0 auto） */}
+      <View style={styles.spacer} />
+
       {/* .locale-bar：底部语言条 */}
       <LocaleBar />
     </ScrollView>
@@ -82,6 +85,8 @@ export function AuthShell({
 const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: layout['container-margin'],
+    // flexGrow:1 让内容不足一屏时也撑满，LocaleBar 能沉到屏幕底部（原型 .screen flex column）
+    flexGrow: 1,
     paddingBottom: spacing.xxl,
   },
   // .brand-head{padding:48px 24px 20px;gap:10px;align-items:center}
@@ -151,5 +156,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: spacing.lg,
     paddingBottom: spacing.xs,
+  },
+  // 内容不足一屏时的弹性占位（LocaleBar 沉底）
+  spacer: {
+    flex: 1,
+    minHeight: spacing.lg,
   },
 });
