@@ -191,7 +191,7 @@
   "history.time1345": "13:45",
   "history.title": "我的订单",
   "history.todayAmount": "$245.00",
-  "history.todayOrders": "今日：15 单",
+  "history.todayOrders": "今日：{count} 单",
   "history.viewDetails": "查看详情",
   "legal.privacy.body": "这里是骑手数据收集、存储与保护说明的占位文案，正式上线前将替换为最终版《隐私政策》。",
   "legal.privacy.title": "隐私政策",

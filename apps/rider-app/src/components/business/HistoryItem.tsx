@@ -46,11 +46,14 @@ type OrderHistoryCardProps = {
   dropoffAddress: string;
   incomeLabel: string;
   income: string;
+  // E3 §3.2: 高亮判定由调用方传 isPositive（基于 order.income > 0 数值，与货币符号无关），
+  // 替换原 income.startsWith('$') 字符串判定（zh currency='¥' 永远不高亮的 bug）。
+  isPositive: boolean;
   viewDetailsLabel: string;
   onPress?: () => void;
 };
 
-export function OrderHistoryCard({ status, statusTone, orderNo, time, pickupName, pickupAddress, dropoffName, dropoffAddress, incomeLabel, income, viewDetailsLabel, onPress }: OrderHistoryCardProps) {
+export function OrderHistoryCard({ status, statusTone, orderNo, time, pickupName, pickupAddress, dropoffName, dropoffAddress, incomeLabel, income, isPositive, viewDetailsLabel, onPress }: OrderHistoryCardProps) {
   const badgeClass = statusTone === 'completed' ? 'bg-status-done-bg text-status-done-text' : statusTone === 'cancelled' ? 'bg-status-cancelled-bg text-status-cancelled-text' : 'bg-status-transferred-bg text-status-transferred-text';
   const muted = statusTone === 'cancelled';
 
@@ -59,7 +62,7 @@ export function OrderHistoryCard({ status, statusTone, orderNo, time, pickupName
       <View className="mb-4 flex-row items-center justify-between border-b border-surface-variant pb-3">
         <View className="flex-row items-center gap-2">
           <Text className={`rounded-sm px-2 py-1 text-xs font-bold uppercase tracking-wide ${badgeClass}`}>{status}</Text>
-          <Text className="text-sm font-bold text-on-surface-variant">{orderNo}</Text>
+          <Text className="flex-1 text-sm font-bold text-on-surface-variant" numberOfLines={1}>{orderNo}</Text>
         </View>
         <Text className="text-sm text-on-surface-variant">{time}</Text>
       </View>
@@ -80,7 +83,7 @@ export function OrderHistoryCard({ status, statusTone, orderNo, time, pickupName
       <View className="flex-row items-center justify-between border-t border-surface-variant pt-3">
         <View>
           <Text className={`text-xs font-bold uppercase tracking-wider text-outline ${muted ? 'opacity-60' : ''}`}>{incomeLabel}</Text>
-          <Text className={`font-bold ${income.startsWith('$') ? 'text-primary' : 'text-on-surface-variant'}`}>{income}</Text>
+          <Text className={`font-bold ${isPositive ? 'text-primary' : 'text-on-surface-variant'}`}>{income}</Text>
         </View>
         <Text className="text-sm font-bold text-primary">{viewDetailsLabel} ›</Text>
       </View>

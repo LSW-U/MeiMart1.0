@@ -191,7 +191,7 @@
   "history.time1345": "13:45",
   "history.title": "My Orders",
   "history.todayAmount": "$245.00",
-  "history.todayOrders": "Today: 15 orders",
+  "history.todayOrders": "Today: {count} orders",
   "history.viewDetails": "View Details",
   "legal.privacy.body": "This placeholder describes how rider data is collected, stored, and protected. The official Privacy Policy will replace this content before public launch.",
   "legal.privacy.title": "Privacy Policy",
