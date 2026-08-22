@@ -4,7 +4,7 @@ import type { StyleProp, TextStyle } from 'react-native';
 
 import { colors } from '../../theme/colors';
 
-export type AppIconName = 'menu' | 'notification' | 'settings' | 'refresh' | 'orders' | 'wallet' | 'upload' | 'camera' | 'profile' | 'document' | 'security' | 'bank' | 'rider' | 'help' | 'logout' | 'language' | 'shield' | 'bell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'check' | 'lock' | 'eye' | 'eyeOff' | 'sms' | 'chat' | 'account' | 'pin' | 'phone' | 'info' | 'pickup' | 'dropoff' | 'arrowUp' | 'arrowDown' | 'verified' | 'clock' | 'gift';
+export type AppIconName = 'menu' | 'notification' | 'settings' | 'refresh' | 'orders' | 'wallet' | 'upload' | 'camera' | 'profile' | 'document' | 'security' | 'bank' | 'rider' | 'help' | 'logout' | 'language' | 'shield' | 'bell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'check' | 'lock' | 'eye' | 'eyeOff' | 'sms' | 'chat' | 'account' | 'pin' | 'phone' | 'info' | 'pickup' | 'dropoff' | 'arrowUp' | 'arrowDown' | 'verified' | 'clock' | 'gift' | 'cash' | 'plus';
 
 type MaterialIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -63,6 +63,10 @@ const icons: Record<AppIconName, MaterialIconName> = {
   clock: 'clock-outline',
   // E1 §3.4 方案 A：bonus 交易类型徽标（gift-outline，glyphmap 已验证 983713）
   gift: 'gift-outline',
+  // E2 §3.7：提现方式 cash 图标（cash-outline 不存在，改 hand-coin-outline，glyphmap 已验证 989328）
+  cash: 'hand-coin-outline',
+  // E2 §3.1: 绑定入口 + 图标（plus，glyphmap 已验证 984085）
+  plus: 'plus',
 };
 
 // 适配层：调用方 className 用 text-primary 等 token，映射到 theme colors（颜色迁移后无遗留 #hex）

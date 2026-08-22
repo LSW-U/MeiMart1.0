@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { WithdrawForm } from '../../src/components/business/WithdrawForm';
+import { showToast } from '../../src/components/feedback/Toast';
 import { AppIcon } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
@@ -16,7 +17,6 @@ export default function WithdrawalPage() {
   const [method, setMethod] = useState<'bank' | 'cash'>('bank');
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
-  const [errorMsg, setErrorMsg] = useState('');
   const { data: summary } = useEarningSummary();
   const createWithdrawal = useCreateWithdrawal();
 
@@ -29,27 +29,52 @@ export default function WithdrawalPage() {
     [],
   );
 
+  // E2 §3.4: 金额输入小数位限制——只允许数字和一个小数点，小数点后最多 2 位。
+  // （onAmountChange 中过滤，非 maxLength——避免多输入时直接吞掉光标）
+  const handleAmountChange = (value: string) => {
+    const matched = value.match(/^\d*\.?\d{0,2}/);
+    setAmount(matched ? matched[0] : '');
+  };
+
+  // E2 §3.5: 「全部提现」一键填入可用余额（保留 2 位小数）
+  const handleWithdrawAll = () => {
+    if (summary == null) return;
+    setAmount(summary.availableBalance.toFixed(2));
+  };
+
   const parsedAmount = Number.parseFloat(amount);
   const amountValid = Number.isFinite(parsedAmount) && parsedAmount > 0;
   const exceedsBalance = summary != null && parsedAmount > summary.availableBalance;
   const submitLabel = status === 'processing' ? t('withdraw.processing') : status === 'success' ? t('withdraw.success') : t('withdraw.submit');
-  const submitDisabled = status !== 'idle' || !amountValid || exceedsBalance;
+  const submitDisabled = status === 'processing' || status === 'success' || !amountValid || exceedsBalance;
+
+  // E2 §3.2: 错误映射——createWithdrawal 抛裸 Error（非 ApiError，无 code/status），
+  // 按 e.message 字符串匹配到 i18n key。W6+ 后端实现真实端点时应改抛 ApiError 带 code，
+  // 届时改用 code 判断（与 acceptTask 范式统一），此处字符串匹配为技术债。
+  const resolveErrorMessage = (e: unknown): string => {
+    const msg = e instanceof Error ? e.message : '';
+    if (msg.includes('Insufficient balance')) return t('withdraw.exceedsBalance');
+    if (!msg || msg.includes('not available')) return t('common.networkError');
+    return t('withdraw.failed');
+  };
 
   const submit = async () => {
-    if (!amountValid) return;
+    if (!amountValid || status === 'processing' || status === 'success') return;
     setStatus('processing');
-    setErrorMsg('');
     try {
       await createWithdrawal.mutateAsync({ amount: parsedAmount, method });
       setStatus('success');
+      // E2 §3.3: 成功 toast——跳转后仍可见（ToastHost 全局挂载）
+      showToast(t('withdraw.success'), 'success');
       if (redirectTimer.current) clearTimeout(redirectTimer.current);
       redirectTimer.current = setTimeout(() => {
         redirectTimer.current = null;
         router.replace('/(main)/earnings');
       }, 800);
     } catch (e) {
+      // E2 §3.2: error 改 toast（移除内联 error Text），保留 'error' 态让 submitLabel 回 submit 可重提
       setStatus('error');
-      setErrorMsg(e instanceof Error ? e.message : t('withdraw.failed'));
+      showToast(resolveErrorMessage(e), 'error');
     }
   };
 
@@ -70,30 +95,26 @@ export default function WithdrawalPage() {
           </Text>
         </View>
 
-        {exceedsBalance ? (
-          <Text className="text-center text-sm text-status-danger-text">{t('withdraw.exceedsBalance')}</Text>
-        ) : null}
-        {status === 'error' ? (
-          <Text className="text-center text-sm text-status-danger-text">{errorMsg}</Text>
-        ) : null}
-
         <WithdrawForm
           amount={amount}
           amountLabel={t('withdraw.amountLabel')}
           amountPlaceholder={t('withdraw.amountPlaceholder')}
           bankCardLabel={t('withdraw.bankCard')}
-          bankCardNumber={t('withdraw.bankCardNumber')}
+          bindEntryLabel={t('withdraw.unboundCard')}
+          exceedsHint={exceedsBalance ? t('withdraw.exceedsBalance') : ''}
           note={t('withdraw.note')}
           selectedMethod={method}
           servicePointLabel={t('withdraw.servicePoint')}
-          servicePointName={t('withdraw.servicePointName')}
+          servicePointSub={t('withdraw.unboundServicePoint')}
           submitDisabled={submitDisabled}
           submitLabel={submitLabel}
           submitLoading={status === 'processing'}
           toLabel={t('withdraw.toLabel')}
-          onAmountChange={setAmount}
+          withdrawAllLabel={t('withdraw.withdrawAll')}
+          onAmountChange={handleAmountChange}
           onSelectMethod={setMethod}
           onSubmit={() => void submit()}
+          onWithdrawAll={() => void handleWithdrawAll()}
         />
       </ScrollView>
     </View>
