@@ -1,20 +1,30 @@
 import { Pressable, Text, View } from 'react-native';
 
-import { AppIcon } from '../ui';
+import { AppIcon, type AppIconName } from '../ui';
 
 type HistoryItemProps = {
   title: string;
   time: string;
   amount: string;
   positive?: boolean;
+  /**
+   * E1：左侧圆形图标自定义（交易类型徽标——rider/gift/bank + 类型底色）。
+   * 不传时回退方向箭头（arrowUp/Down，正负语义）。传 icon 后 positive 只控制
+   * 金额色——类型徽标语境下方向已由徽标+描述表达，不再叠方向箭头（原型 .tx-item 单圆）。
+   */
+  icon?: { name: AppIconName; circleClass: string; color: string; label: string };
 };
 
-export function HistoryItem({ title, time, amount, positive = false }: HistoryItemProps) {
+export function HistoryItem({ title, time, amount, positive = false, icon }: HistoryItemProps) {
   return (
     <View className="flex-row items-center gap-4 border-b border-surface-container-high py-2">
-      <View className="h-10 w-10 items-center justify-center rounded-full bg-surface-container-high">
-        {/* B7: IN/OUT 英文缩写 → 方向箭头（positive 与金额收入色对齐） */}
-        <AppIcon className={positive ? 'text-primary' : 'text-on-surface-variant'} name={positive ? 'arrowUp' : 'arrowDown'} size={20} />
+      <View className={`h-10 w-10 items-center justify-center rounded-full ${icon ? icon.circleClass : 'bg-surface-container-high'}`}>
+        {icon ? (
+          <AppIcon accessibilityLabel={icon.label} color={icon.color} name={icon.name} size={18} />
+        ) : (
+          /* B7: IN/OUT 英文缩写 → 方向箭头（positive 与金额收入色对齐） */
+          <AppIcon className={positive ? 'text-primary' : 'text-on-surface-variant'} name={positive ? 'arrowUp' : 'arrowDown'} size={20} />
+        )}
       </View>
       <View className="flex-1">
         <Text className="font-medium text-on-surface">{title}</Text>
