@@ -81,14 +81,19 @@ beforeEach(() => {
   mockPush.mockClear();
   mockSummaryState = 'summary-ok';
   mockTxState = 'tx-ok';
-  const now = Date.now();
+  // 时间锚定（方案 §3.8 跨午夜坑的根治版）：以「今日 startOfDay」为锚而非 Date.now()
+  // 相对偏移——now-1h 在 00:xx 跑测时落昨天，今日 tab 的 filter 会滤空整列表
+  // （2026-08-23 凌晨实证）。锚定 startOfDay 后「今日/昨日/更早」分组归属与
+  // 跑测时刻无关，任何时间跑都稳定。
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const HOUR = 60 * 60 * 1000;
   // service 层语义：按 createdAt 降序
   mockTransactions = [
-    buildTx({ id: 'tx-today-delivery', type: 'deliveryFee', amount: 12.5, orderId: '1023', createdAt: new Date(now - 1 * HOUR).toISOString() }),
-    buildTx({ id: 'tx-today-withdraw', type: 'withdrawal', amount: -10, createdAt: new Date(now - 5 * HOUR).toISOString() }),
-    buildTx({ id: 'tx-yesterday-bonus', type: 'bonus', amount: 4, createdAt: new Date(now - 25 * HOUR).toISOString() }),
-    buildTx({ id: 'tx-earlier-delivery', type: 'deliveryFee', amount: 8.2, orderId: '1021', createdAt: new Date(now - 3 * 24 * HOUR).toISOString() }),
+    buildTx({ id: 'tx-today-delivery', type: 'deliveryFee', amount: 12.5, orderId: '1023', createdAt: new Date(startOfDay + 12 * HOUR).toISOString() }),
+    buildTx({ id: 'tx-today-withdraw', type: 'withdrawal', amount: -10, createdAt: new Date(startOfDay + 8 * HOUR).toISOString() }),
+    buildTx({ id: 'tx-yesterday-bonus', type: 'bonus', amount: 4, createdAt: new Date(startOfDay - 1 * HOUR).toISOString() }),
+    buildTx({ id: 'tx-earlier-delivery', type: 'deliveryFee', amount: 8.2, orderId: '1021', createdAt: new Date(startOfDay - 3 * 24 * HOUR).toISOString() }),
   ];
 });
 

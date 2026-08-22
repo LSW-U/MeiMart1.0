@@ -22,6 +22,10 @@ export const colors = {
   statusWarningText: '#a06b00',
   // busy 班次点（原复用 status-transferred-text「已转单」橙 #b06000 取值，B7 P2-1 补专用语义）
   busy: '#b06000',
+  // E1 审查 P2-1：交易类型徽标图标色——与 tailwind status-done-text / warn-text 同源
+  // （#137333 / #e65100），AppIcon color prop 场景引用（colorByClass 不含 status/warn 系）
+  statusDoneText: '#137333',
+  warnText: '#e65100',
 
   // 通知分类色
   notificationTask: '#ff9800',

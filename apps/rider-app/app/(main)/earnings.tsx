@@ -19,17 +19,17 @@ type BillingTab = 'today' | 'all';
 type TxGroup = { key: 'today' | 'yesterday' | 'earlier'; items: EarningTransaction[] };
 
 /**
- * E1 §3.4 方案 A：交易类型徽标——页面层渲染（路径 1，HistoryItem 不动，
- * 不牵连 E3 OrderHistoryCard）。配色钉死真实 token（原型 v2 token 对照，
- * 原型 --success-bg/--warning-bg 是幽灵 token 已废）：
- *   deliveryFee → rider 图标（底 status-done-bg #e6f4ea / 图标 #137333）
- *   bonus       → gift 图标（底 warn-bg #fff3e0 / 图标 #e65100）
- *   withdrawal  → bank 图标（底 surface-container-high #fde2df / 图标 #59413d）
+ * E1 §3.4 方案 A：交易类型徽标——HistoryItem 通用 icon 能力渲染（审查 P3-2：
+ * 原方案「HistoryItem 不动」表述已按实施修正，icon 非业务耦合）。配色钉死真实
+ * token（原型 v2 token 对照，原型 --success-bg/--warning-bg 是幽灵 token 已废）：
+ *   deliveryFee → rider 图标（底 status-done-bg / 图标 colors.statusDoneText）
+ *   bonus       → gift 图标（底 warn-bg / 图标 colors.warnText）
+ *   withdrawal  → bank 图标（底 surface-container-high / 图标 colors.textMuted）
  * 图标色走 AppIcon color prop（colorByClass 不含 status/warn 系 token）。
  */
 const txBadgeMeta: Record<EarningTransaction['type'], { icon: 'rider' | 'gift' | 'bank'; circleClass: string; iconColor: string; titleKey: TranslationKey }> = {
-  deliveryFee: { icon: 'rider', circleClass: 'bg-status-done-bg', iconColor: '#137333', titleKey: 'earnings.tx.deliveryFee' },
-  bonus: { icon: 'gift', circleClass: 'bg-warn-bg', iconColor: '#e65100', titleKey: 'earnings.tx.bonus' },
+  deliveryFee: { icon: 'rider', circleClass: 'bg-status-done-bg', iconColor: colors.statusDoneText, titleKey: 'earnings.tx.deliveryFee' },
+  bonus: { icon: 'gift', circleClass: 'bg-warn-bg', iconColor: colors.warnText, titleKey: 'earnings.tx.bonus' },
   withdrawal: { icon: 'bank', circleClass: 'bg-surface-container-high', iconColor: colors.textMuted, titleKey: 'earnings.tx.withdrawal' },
 };
 
