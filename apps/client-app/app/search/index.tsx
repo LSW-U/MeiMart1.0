@@ -44,34 +44,35 @@ const ON_AMBER = '#000000';
 // Why: 推荐商品改用 useProducts 真实数据（避免 mock id 'rec-*' 跳转详情 404）
 // Why: P7 §2.4 R4 - badge 改 resolveBadges 派生（删 getRecommendBadge 轮转）
 
-// Uma Lulik curve 锯齿底边（HTML clip-path polygon，22 个点 zigzag）
+// Uma Lulik curve 锯齿底边（HTML clip-path polygon，D-V1：90px 头按百分比重映射）
+// 原型点阵 y 在 header 高度的 85%/88% 交替——90px 头即 76.5/79.2，实底只到齿谷线（headerBg 高度同步 76.5）
 function UmaLulikCurve({ color }: { color: string }) {
   const width = 390;
-  const height = 176;
+  const height = 90;
+  const y85 = 76.5; // 齿谷（85%）
+  const y88 = 79.2; // 齿尖（88%）
   const points = [
-    '0,0',
-    `${width},0`,
-    `${width},149`,
-    '370.5,154',
-    '351,149',
-    '331.5,154',
-    '312,149',
-    '292.5,154',
-    '273,149',
-    '253.5,154',
-    '234,149',
-    '214.5,154',
-    '195,149',
-    '175.5,154',
-    '156,149',
-    '136.5,154',
-    '117,149',
-    '97.5,154',
-    '78,149',
-    '58.5,154',
-    '39,149',
-    '19.5,154',
-    '0,149',
+    `${width},${y85}`,
+    `370.5,${y88}`,
+    `351,${y85}`,
+    `331.5,${y88}`,
+    `312,${y85}`,
+    `292.5,${y88}`,
+    `273,${y85}`,
+    `253.5,${y88}`,
+    `234,${y85}`,
+    `214.5,${y88}`,
+    `195,${y85}`,
+    `175.5,${y88}`,
+    `156,${y85}`,
+    `136.5,${y88}`,
+    `117,${y85}`,
+    `97.5,${y88}`,
+    `78,${y85}`,
+    `58.5,${y88}`,
+    `39,${y85}`,
+    `19.5,${y88}`,
+    `0,${y85}`,
   ].join(' ');
   return (
     <Svg
@@ -82,7 +83,8 @@ function UmaLulikCurve({ color }: { color: string }) {
       style={StyleSheet.absoluteFill}
       pointerEvents="none"
     >
-      <Polygon points={points} fill={color} />
+      {/* D-V1：实底矩形（0→齿谷线）+ 锯齿带顺时针环绕——齿尖向下延伸到 88%，齿谷间透出页面背景 */}
+      <Polygon points={`0,0 ${width},0 ${points}`} fill={color} />
     </Svg>
   );
 }
@@ -447,8 +449,9 @@ const styles = StyleSheet.create({
   headerBg: {
     // Why: 改 relative（原 absolute）-- TaisPattern 的 absolute container 在 absolute parent 内 right:0 解析异常（左半边塌缩）。
     //   对齐 PrimaryHeader 的 relative header，让 TaisPattern 全宽撑满
+    // D-V1: 实底只铺到齿谷线（90×85%=76.5）——下方留给锯齿多边形的齿尖，透出页面背景形成 zigzag
     position: 'relative',
-    height: 90,
+    height: 76.5,
     overflow: 'hidden',
   },
   headerPattern: {
