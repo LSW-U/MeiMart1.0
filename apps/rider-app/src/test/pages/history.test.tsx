@@ -144,6 +144,29 @@ describe('三态接入（E3 §3.1 orders QueryBoundary）', () => {
     expect(container.querySelector('[data-testid="query-skeleton"]')).toBeNull();
   });
 
+  it('filter 无匹配状态：显示「暂无订单」空态（data 传原始 orders，filter 在 children/isEmpty 内做）', () => {
+    // E3 审查 P2-1 回归：data 改传原始 orders（非 visibleOrders），filter 在 children 内做。
+    // default 2 条（1 completed / 1 cancelled）；切 transferred tab 应 0 条 → 空态。
+    // 注：tab 文案「已转单 (N)」含数字，用正则匹配整段文案避免「已转单」自身也作 status badge 出现多匹配。
+    const { container, getAllByText } = renderPage();
+    const transferredTab = getAllByText(/已转单/).find((el) => el.closest('[data-rn-host="Pressable"]'));
+    expect(transferredTab).toBeTruthy();
+    fireEvent.click(transferredTab!);
+    expect(getAllByText('暂无订单').length).toBeGreaterThan(0);
+    expect(container.querySelector('[data-testid="query-empty"]')).not.toBeNull();
+  });
+
+  it('orders error 不落入空态（data===undefined 兜底恢复生效，非纯靠 isError）', () => {
+    // E3 审查 P2-1 回归：error 态 data 传 undefined（原始 orders），QueryBoundary 第 2 分支
+    // isError||data===undefined 命中 → ErrorState「加载失败」，不落入 isEmpty([]) 误报「暂无订单」。
+    mockOrdersState = 'orders-error';
+    const { container, getByText, queryByText } = renderPage();
+
+    expect(getByText('加载失败')).toBeTruthy();
+    expect(queryByText('暂无订单')).toBeNull();
+    expect(container.querySelector('[data-testid="query-empty"]')).toBeNull();
+  });
+
   it('orders data：渲染订单卡片列表（2 条，含 isPositive 高亮与无收入灰）', () => {
     const { getByText, container } = renderPage();
 
