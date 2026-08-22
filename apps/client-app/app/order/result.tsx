@@ -2,6 +2,13 @@
 // 状态判定：checkout 跳转传 status/orderId/orderNo，result 页据 status 渲染对应态。
 //   S1 成功（COD 下单 / 预付支付成功）/ S2 待支付（PENDING_PAYMENT）/ S3 支付失败 /
 //   S4 下单失败（createOrder catch，无 orderId）/ S5 超时取消（S2 倒计时到 0）
+//
+// ⚠️ S3 PAY_FAIL 预留态：当前架构下 result 页由 checkout 跳入（createOrder 成功后），
+//   支付动作发生在订单详情页 /order/[id] 的 pay action（跳 /order/checkout 兜底），
+//   不在 result 页入口，故 S3 暂无触发路径——pickState 不映射 PAY_FAIL。
+//   待后期独立支付页 L1（app/order/pay.tsx）落地后，由支付页回传 status=PAY_FAIL 触发。
+//   见方案 §6.3 L1 / §11.3。代码与 i18n（payFail* key）保留不删。
+//
 // 倒计时：payDeadline（后端契约 createdAt+15min，未就绪前端兜底），useCountdown 每秒 mm:ss，到 0 切 S5
 // 取消订单：Alert 确认 + useCancelOrder + toast + 1.5s 返回首页（D13/D14）
 import { useEffect, useState } from 'react';
