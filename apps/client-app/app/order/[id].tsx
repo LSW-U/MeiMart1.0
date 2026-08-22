@@ -15,8 +15,8 @@ import {
   Pressable,
   Platform,
   Share,
-  Clipboard,
 } from 'react-native';
+import * as expoClipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
@@ -273,14 +273,15 @@ export default function OrderDetailPage() {
                   onPress={() => {
                     const no = order.orderNo;
                     if (Platform.OS === 'web') {
+                      // F7：web 保留 navigator.clipboard（expo-clipboard web 也走它，直连少一层）
                       if (typeof navigator !== 'undefined' && navigator.clipboard) {
                         navigator.clipboard.writeText(no).catch(() => {});
                       }
-                      toast.success(t('order.copied', { defaultValue: 'Copied' }));
                     } else {
-                      Clipboard.setString(no);
-                      toast.success(t('order.copied', { defaultValue: 'Copied' }));
+                      // F7：native 迁 expo-clipboard（RN core Clipboard 已废弃，未来版本移除）
+                      expoClipboard.setStringAsync(no).catch(() => {});
                     }
+                    toast.success(t('order.copied', { defaultValue: 'Copied' }));
                   }}
                   hitSlop={6}
                   accessibilityRole="button"

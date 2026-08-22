@@ -3,6 +3,7 @@
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 123%）
 // Fix-19: Primary tais-pattern Header + 商品缩略图 + TaisDivider + You May Also Like + Checkout Bar
 import { useState } from 'react';
+import { formatPrice } from '@/utils/format';
 import {
   StyleSheet,
   View,
@@ -397,7 +398,8 @@ export default function CartPage() {
                   {t('cart.discount')}
                 </Text>
                 <Text style={[styles.discountAmount, { color: colors.semantic.positive }]}>
-                  −${discountAmount.toFixed(2)}
+                  {/* F4：formatPrice 统一货币符（-5 输出 -$5.00，ASCII 减号同 P3 优化原型 discount-pill） */}
+                  {formatPrice(-discountAmount)}
                 </Text>
               </View>
             )}

@@ -27,6 +27,12 @@ export const addressTagThemes: Record<AddressTagPreset, AddressTagTheme> & {
   custom: { bg: '#E7E5E4', fg: '#57534E' }, // stone-200 / stone-600（灰）
 };
 
+/** 类型守卫：tag 是三预设之一（守卫后 TS 自动窄化，消费方免 as 断言） */
+export function isAddressTagPreset(tag: string): tag is AddressTagPreset {
+  return tag === 'home' || tag === 'company' || tag === 'school';
+}
+
 export function getAddressTagTheme(tag: string): AddressTagTheme {
-  return addressTagThemes[tag as AddressTagPreset] ?? addressTagThemes.custom;
+  // 守卫窄化替代 as 断言（F6：原 tag as AddressTagPreset 违反规则 #36）
+  return isAddressTagPreset(tag) ? addressTagThemes[tag] : addressTagThemes.custom;
 }

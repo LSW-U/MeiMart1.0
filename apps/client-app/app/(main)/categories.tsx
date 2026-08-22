@@ -535,8 +535,12 @@ const styles = StyleSheet.create({
   subItem: {
     alignItems: 'center',
     gap: spacing.sm,
+    // F1：恢复固定列宽（P5 优化原型 .sub-item{width:64px}）——无固定宽时长 label 会把 item 拉宽，外圆不再居中
+    width: 64,
   },
   subIcon: {
+    // F1 注释订正：56 外圆出自 P5 优化原型 .sub-circle{width:56px;height:56px;border:1px solid var(--outline-v);background:var(--surface-ch)}
+    //   （审查 F1 误比原始原型 80/56——对照基准以优化原型为准，同 D-V4 轮播 380px 先例）
     width: 56,
     height: 56,
     borderRadius: 999,
@@ -545,6 +549,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   subImage: {
+    // F1 注释订正：40 内图同为优化原型 .sub-circle img{width:40px;height:40px}
     width: 40,
     height: 40,
     borderRadius: 999,

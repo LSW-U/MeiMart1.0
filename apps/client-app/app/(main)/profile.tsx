@@ -385,7 +385,8 @@ export default function ProfilePage() {
                     },
                   ]}
                 >
-                  NEW
+                  {/* F5：走 common.badgeNew（resolveBadges 同 key），zh「新品」/tet 占位 */}
+                  {t('common.badgeNew')}
                 </Text>
               )}
             </Pressable>

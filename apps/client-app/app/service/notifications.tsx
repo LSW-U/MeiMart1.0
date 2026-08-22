@@ -387,6 +387,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    // F2：readAllBadge 是 absolute 子元素，父级显式 relative 做参考系（同 orders tabBtn 惯例）
+    position: 'relative',
   },
   // V22：全部已读文字（与图标并排）
   readAllText: {

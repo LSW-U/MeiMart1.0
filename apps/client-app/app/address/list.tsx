@@ -32,7 +32,7 @@ import {
   useSetDefaultAddress,
 } from '@/services/queries/useAddress';
 import type { Address } from '@/types';
-import { getAddressTagTheme } from '@/theme/tagThemes';
+import { getAddressTagTheme, isAddressTagPreset, type AddressTagPreset } from '@/theme/tagThemes';
 import { parseAddressText } from '@/utils/addressParse';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -287,15 +287,16 @@ export default function AddressListPage() {
 // P16 决策 7 —— 地址标签 chip：家=蓝 / 公司=琥珀 / 学校=绿 / 自定义=灰（theme/tagThemes 场景色板）
 export function AddressTagChip({ tag }: { tag: string }) {
   const { t } = useTranslation();
-  const presetLabel: Record<'home' | 'company' | 'school', string> = {
+  // F6：守卫窄化（isAddressTagPreset）替代 as 断言索引（规则 #36）
+  const isPreset = isAddressTagPreset(tag);
+  const theme = getAddressTagTheme(tag);
+  const presetLabel: Record<AddressTagPreset, string> = {
     home: t('address.tagHome', { defaultValue: 'Home' }),
     company: t('address.tagCompany', { defaultValue: 'Company' }),
     school: t('address.tagSchool', { defaultValue: 'School' }),
   };
-  const isPreset = tag in presetLabel;
-  const theme = getAddressTagTheme(tag);
   // V19：preset chip 内嵌小图标（原型 home/work/school 11px icon）
-  const presetIcon: Record<'home' | 'company' | 'school', string> = {
+  const presetIcon: Record<AddressTagPreset, string> = {
     home: 'home',
     company: 'location_city',
     school: 'school',
@@ -304,13 +305,13 @@ export function AddressTagChip({ tag }: { tag: string }) {
     <View style={[styles.tagChip, { backgroundColor: theme.bg }]}>
       {isPreset && (
         <Icon
-          symbol={presetIcon[tag as 'home' | 'company' | 'school']}
+          symbol={presetIcon[tag]}
           size={11}
           color={theme.fg}
         />
       )}
       <Text style={[styles.tagChipText, { color: theme.fg }]} numberOfLines={1}>
-        {isPreset ? presetLabel[tag as 'home' | 'company' | 'school'] : tag}
+        {isPreset ? presetLabel[tag] : tag}
       </Text>
     </View>
   );

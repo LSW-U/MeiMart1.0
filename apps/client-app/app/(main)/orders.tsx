@@ -176,7 +176,11 @@ export default function OrdersPage() {
                         ]}
                         accessible={false}
                       >
-                        <Text style={styles.tabBadgeText} accessible={false}>
+                        <Text
+                          // F3：文字色随底色走 theme（暗色 primary/error 是浅红，恒白对比度不足）
+                          style={[styles.tabBadgeText, { color: isActive ? colors['on-primary'] : colors['on-error'] }]}
+                          accessible={false}
+                        >
                           {count}
                         </Text>
                       </View>
@@ -284,7 +288,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabBadgeText: {
-    color: ON_PRIMARY,
+    // F3：底色运行时按 isActive 分流（on-primary/on-error），静态段不留 color
     fontSize: 10,
     fontWeight: '700',
   },
