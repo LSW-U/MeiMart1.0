@@ -26,6 +26,9 @@ interface CartRaw {
   items: CartItemRaw[];
   selectedSubtotal: number;
   totalSubtotal: number;
+  // F5：后端 CartView（apps/api cart.service.ts:62）暂无折扣字段——discount 只在 checkout-preview 端点聚合。
+  // 后端 CartView 加 discountAmount（分单位）后此处补透传：`discountAmount: (raw.discountAmount ?? 0) / 100`
+  discountAmount?: number;
 }
 
 function pickLocalized(raw: unknown, fallback = ''): string {
@@ -58,6 +61,8 @@ function transformCart(raw: CartRaw): Cart {
     items,
     totalPrice: (raw.selectedSubtotal ?? 0) / 100,
     totalItems: items.filter((i) => i.selected).reduce((sum, i) => sum + i.quantity, 0),
+    // F5：后端 CartView 就绪后透传（分→元）；当前后端无此字段，恒 0 → DISCOUNT 行 real 模式隐藏（预期行为）
+    discountAmount: (raw.discountAmount ?? 0) / 100,
   };
 }
 

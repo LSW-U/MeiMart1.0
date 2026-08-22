@@ -54,5 +54,6 @@
     }
   ],
   "totalPrice": 94.7,
-  "totalItems": 4
+  "totalItems": 4,
+  "discountAmount": 5.0
 }

@@ -123,6 +123,12 @@ export default function DeliveryTrackingPage() {
   const trackingNo = order.trackingNo ?? order.orderNo;
   // Why: P11 Commit 3 - lastOrderStatus（WS 实时）优先于 order.status（初始查询），保证状态最新
   const currentStatus = lastOrderStatus ?? order.status;
+  // V8 配送完成态：显示 done-hero 送达视觉（跳转前先展示）
+  const isDelivered =
+    currentStatus === 'DELIVERED_PAID' ||
+    currentStatus === 'DELIVERED_UNPAID' ||
+    currentStatus === 'DELIVERED' ||
+    currentStatus === 'COMPLETED';
   // Why: P11 取消订单（CONFIRMED 待发货可取消，与 P10 BottomActions 一致；cancel 后跳回 P10 订单详情）
   const handleCancel = () => {
     const onCancelSuccess = () => {
@@ -175,6 +181,44 @@ export default function DeliveryTrackingPage() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
+        {/* V8 配送完成态：done-hero 送达视觉 + redirect-note 提示卡（跳转前先展示） */}
+        {isDelivered && (
+          <View style={styles.doneHero}>
+            <View
+              style={[
+                styles.doneHeroRing,
+                {
+                  borderColor: colors.semantic.positive,
+                  backgroundColor: colors.semantic['positive-container'],
+                },
+              ]}
+            >
+              <Icon symbol="check_circle" size={40} color={colors.semantic.positive} />
+            </View>
+            <Text style={[styles.doneHeroTitle, { color: colors['on-surface'] }]}>
+              {t('tracking.deliveredTitle', { defaultValue: 'Order Delivered' })}
+            </Text>
+            <Text style={[styles.doneHeroSub, { color: colors['on-surface-variant'] }]}>
+              {t('tracking.deliveredSub', { defaultValue: 'Enjoy your order!' })}
+            </Text>
+            <View
+              style={[
+                styles.redirectNote,
+                {
+                  backgroundColor: colors['surface-container-low'],
+                  borderColor: colors['outline-variant'],
+                },
+              ]}
+            >
+              {/* F2：arrow_forward 对齐 P11 原型 .redirect-note（「即将跳转」动势，info 表提示语义错配） */}
+              <Icon symbol="arrow_forward" size={18} color={colors.primary} />
+              <Text style={[styles.redirectNoteText, { color: colors['on-surface-variant'] }]}>
+                {t('tracking.redirectNote', { defaultValue: 'Redirecting to order details' })}
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Order Header Card（HTML 第 158-175 行 — ORDER NUMBER + PROCESSING badge + ETA） */}
         <View
           style={[
@@ -812,5 +856,44 @@ const styles = StyleSheet.create({
   btnText: {
     fontSize: 15,
     fontWeight: '700',
+  },
+  // V8 配送完成态 done-hero 送达视觉
+  doneHero: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+  },
+  doneHeroRing: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  doneHeroTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  doneHeroSub: {
+    fontSize: 13,
+  },
+  redirectNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignSelf: 'stretch',
+  },
+  redirectNoteText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 18,
   },
 });

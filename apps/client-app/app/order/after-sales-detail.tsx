@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
+import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PriceText } from '@/components/ui/PriceText';
 import { TimelineStep } from '@/components/business/TimelineStep';
@@ -230,6 +231,27 @@ export default function AfterSalesDetailPage() {
     }
   })();
 
+  // V10 state-tag 右上小标签（五态色：reviewing/pickup/processing/done/rejected/cancelled）
+  // F6 备案（用户拍板 2026-08-22）：标签刻意保留英文状态码——P14 原型即 monospace 9px 英文码，
+  //   定位是「跨语言通用状态标识」（同订单号 ORD-xxx），非业务文案，不走 i18n
+  const stateTag = (() => {
+    switch (refund.status) {
+      case 'COMPLETED':
+        return { label: 'DONE', bg: colors.semantic.positive };
+      case 'REJECTED':
+        return { label: 'REJECTED', bg: colors.semantic.error };
+      case 'CANCELLED':
+        return { label: 'CANCELLED', bg: colors.secondary };
+      case 'APPROVED':
+        return isReturnRefund
+          ? { label: 'PICKUP', bg: colors.semantic.info }
+          : { label: 'PROCESSING', bg: colors.semantic.positive };
+      case 'PENDING':
+      default:
+        return { label: 'REVIEWING', bg: colors.semantic.warning };
+    }
+  })();
+
   // T1/T2/T3 时间轴动态化（决策 2）：按售后类型 4/6 步 + 真实时间戳 + currentIndex 推导
   const formatTs = (iso: string | null) =>
     iso ? formatDate(iso, i18n.language === 'zh' ? 'zh-CN' : 'en-US') : '';
@@ -294,7 +316,12 @@ export default function AfterSalesDetailPage() {
         showsVerticalScrollIndicator={false}
       >
         {/* 状态色块 */}
-        <View style={[styles.statusBlock, { backgroundColor: statusAppearance.container }, shadowPresets.sm]}>
+        <View style={[styles.statusBlock, { backgroundColor: statusAppearance.container, position: 'relative', overflow: 'hidden' }, shadowPresets.sm]}>
+          <TaisPattern height={120} opacity={0.15} />
+          {/* F1：state-tag 挂状态色块右上角（P14 原型 :210 五处都挂在 .status-block 内，V10 误挂商品卡） */}
+          <View style={[styles.stateTag, { backgroundColor: stateTag.bg }]}>
+            <Text style={styles.stateTagText}>{stateTag.label}</Text>
+          </View>
           <View style={styles.statusIconWrap}>
             <View style={[styles.statusIcon, { backgroundColor: statusAppearance.iconColor }]}>
               <Icon symbol={statusAppearance.stepIcon} size={22} color={colors['on-primary']} />
@@ -310,14 +337,21 @@ export default function AfterSalesDetailPage() {
           </View>
         </View>
 
-        {/* 商品卡片 - 真实订单商品 */}
+        {/* 商品卡片 - 真实订单商品（V9 去 shadow 加 border + TaisPattern 纹样层） */}
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'] },
-            shadowPresets.sm,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: colors['outline-variant'],
+              position: 'relative',
+              overflow: 'hidden',
+            },
           ]}
         >
+          {/* F8：40px 顶条对齐 P14 原型 .card.main-card::before{height:40px}（V9 误铺 200 全卡） */}
+          <TaisPattern height={40} opacity={0.15} />
           <View style={styles.cardHeader}>
             <Icon symbol="shopping_cart" size={18} color={colors.primary} />
             <Text style={[styles.cardHeaderText, { color: colors.primary }]}>
@@ -719,5 +753,24 @@ const styles = StyleSheet.create({
     ...typography['label-caps'],
     fontWeight: '700',
     fontSize: 12,
+  },
+  // V10 state-tag 右上小标签
+  stateTag: {
+    position: 'absolute',
+    top: 8,
+    right: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    zIndex: 10,
+  },
+  stateTagText: {
+    // F7 备案（用户拍板 2026-08-22）：原型 .state-tag 即 #fff；五态底色（绿/红/金/蓝/橙）均中饱和
+    //   色白字全模式可读；semantic 色板无 on- 配套 token，不为单一标签新造 token（规则 6 例外已备案）
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: '700',
+    fontFamily: 'monospace',
+    letterSpacing: 0.5,
   },
 });
