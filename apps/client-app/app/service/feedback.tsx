@@ -27,6 +27,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Icon } from '@/components/ui/Icon';
 import { toast } from '@/store/toastStore';
 import { uploadsApi } from '@/services/uploads';
+import { useSubmitFeedback } from '@/services/queries/useFeedback';
 import { feedbackSchema, type FeedbackValues } from '@/forms/schemas/service';
 
 const FEEDBACK_TYPE_KEYS = [
@@ -65,6 +66,8 @@ export default function FeedbackPage() {
   const [uploading, setUploading] = useState(false);
   // D5：提交成功态（替代 toast+返回，覆盖表单区域）
   const [submitted, setSubmitted] = useState(false);
+  // V12 提交链路接 useMutation 骨架（后端 F1 就绪填 URL 即通，当前端点未就绪→onError toast）
+  const submitFeedback = useSubmitFeedback();
 
   const { control, handleSubmit, setValue } = useForm<FeedbackValues>({
     resolver: zodResolver(feedbackSchema),
@@ -77,8 +80,19 @@ export default function FeedbackPage() {
   // D4：category 已选 + content ≥10 字（schema min）时按钮才可点
   const canSubmit = categoryValue !== '' && contentValue.length >= 10;
 
-  const submit = handleSubmit(() => {
-    setSubmitted(true);
+  const submit = handleSubmit((values) => {
+    submitFeedback.mutate(
+      {
+        category: values.category,
+        content: values.content,
+        contact: values.contact,
+        images: photos,
+      },
+      {
+        // TODO(F1): 端点就绪后 mutationFn 成功返回，此处触发成功态
+        onSuccess: () => setSubmitted(true),
+      },
+    );
   });
 
   // D3：选图 → 逐张传 review-image 端点拿 URL → 存 URL（与 review.tsx 同链路）
@@ -447,7 +461,7 @@ export default function FeedbackPage() {
           >
             <Pressable
               onPress={submit}
-              disabled={!canSubmit}
+              disabled={!canSubmit || submitFeedback.isPending}
               style={({ pressed }) => [
                 styles.submitBtn,
                 {

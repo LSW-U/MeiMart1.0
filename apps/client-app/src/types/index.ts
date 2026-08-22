@@ -65,6 +65,8 @@ export interface Cart {
   items: CartItem[];
   totalPrice: number;
   totalItems: number;
+  /** V5 已应用券折扣金额（后端有值才在结算栏显示 DISCOUNT 行，无值隐藏） */
+  discountAmount?: number;
 }
 
 export interface PaymentMethod {
