@@ -386,6 +386,7 @@
   "withdraw.amountPlaceholder": "12",
   "withdraw.availableBalance": "Saldo tersedia",
   "withdraw.bankCard": "Tarik ke kartu bank",
+  "withdraw.bindComingSoon": "Fitur pengikatan segera hadir",
   "withdraw.exceedsBalance": "Jumlah melebihi saldo",
   "withdraw.failed": "Penarikan gagal",
   "withdraw.note": "Dana tiba dalam 1-2 hari kerja.",

@@ -112,6 +112,7 @@ export default function WithdrawalPage() {
           toLabel={t('withdraw.toLabel')}
           withdrawAllLabel={t('withdraw.withdrawAll')}
           onAmountChange={handleAmountChange}
+          onBindComingSoon={() => showToast(t('withdraw.bindComingSoon'), 'info')}
           onSelectMethod={setMethod}
           onSubmit={() => void submit()}
           onWithdrawAll={() => void handleWithdrawAll()}

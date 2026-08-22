@@ -23,6 +23,8 @@ type WithdrawFormProps = {
   onSelectMethod: (method: 'bank' | 'cash') => void;
   onSubmit: () => void;
   onWithdrawAll: () => void;
+  // 审查 P2-1：绑定入口占位反馈（W6+ 前）
+  onBindComingSoon: () => void;
 };
 
 type RadioDotProps = { checked: boolean };
@@ -56,6 +58,7 @@ export function WithdrawForm({
   onSelectMethod,
   onSubmit,
   onWithdrawAll,
+  onBindComingSoon,
 }: WithdrawFormProps) {
   return (
     <View className="gap-4">
@@ -121,12 +124,15 @@ export function WithdrawForm({
           </View>
           <RadioDot checked={selectedMethod === 'cash'} />
         </Pressable>
-        {/* E2 §3.1: 绑定入口（W6+，原型 .bind-entry surface-low 虚线边框 primary 文字） */}
+        {/* E2 §3.1: 绑定入口（W6+，原型 .bind-entry surface-low 虚线边框 primary 文字）
+            审查 P2-1 修复：原 onPress={onSelectMethod(selectedMethod)} 是 no-op（把当前已选方式
+            再设一次）。W6+ 前绑卡/服务点未实现，点击改 toast「即将上线」让用户有明确反馈，
+            非无效 setState。后端绑定端点就绪后接绑卡/选服务点页跳转。 */}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={bindEntryLabel}
           className="mt-2 flex-row items-center gap-1.5 self-start rounded-lg border border-dashed border-outline bg-surface-container-low px-3.5 py-2.5"
-          onPress={() => onSelectMethod(selectedMethod)}
+          onPress={onBindComingSoon}
         >
           <AppIcon name="plus" className="text-primary" size={14} />
           <Text className="text-xs font-semibold text-primary">{bindEntryLabel}</Text>

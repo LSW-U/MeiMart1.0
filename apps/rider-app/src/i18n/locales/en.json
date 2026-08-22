@@ -386,6 +386,7 @@
   "withdraw.amountPlaceholder": "12",
   "withdraw.availableBalance": "Available Balance",
   "withdraw.bankCard": "Withdraw to Bank Card",
+  "withdraw.bindComingSoon": "Binding feature coming soon",
   "withdraw.exceedsBalance": "Amount exceeds available balance",
   "withdraw.failed": "Withdrawal failed",
   "withdraw.note": "Funds usually arrive within 1-2 business days.",

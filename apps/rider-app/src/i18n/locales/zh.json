@@ -386,6 +386,7 @@
   "withdraw.amountPlaceholder": "12",
   "withdraw.availableBalance": "可用余额",
   "withdraw.bankCard": "提现至银行卡",
+  "withdraw.bindComingSoon": "绑定功能即将上线",
   "withdraw.exceedsBalance": "提现金额超出可用余额",
   "withdraw.failed": "提现失败",
   "withdraw.note": "款项通常在 1-2 个工作日内到账。",

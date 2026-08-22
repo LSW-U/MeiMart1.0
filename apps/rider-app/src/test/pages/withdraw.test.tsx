@@ -127,6 +127,20 @@ describe('占位态渲染（E2 §3.1 ①A 删假数据）', () => {
     const classes = Array.from(hosts).map((el) => el.getAttribute('data-prop-classname') ?? '');
     expect(classes.some((c) => c.includes('border-dashed'))).toBe(true);
   });
+
+  it('点击绑定入口：showToast(bindComingSoon, info)（审查 P2-1，非 no-op）', () => {
+    // 绑定入口 label 与子文案同字「未绑定银行卡」，取虚线边框那个 Pressable（绑定入口独有 border-dashed）
+    const { container } = renderPage();
+    const hosts = container.querySelectorAll('[data-rn-host="Pressable"]');
+    const bindEntry = Array.from(hosts).find((el) =>
+      (el.getAttribute('data-prop-classname') ?? '').includes('border-dashed'),
+    )!;
+    expect(bindEntry).toBeTruthy();
+
+    fireEvent.click(bindEntry);
+
+    expect(showToastMock).toHaveBeenCalledWith('绑定功能即将上线', 'info');
+  });
 });
 
 describe('全部提现按钮（E2 §3.5 ④A）', () => {

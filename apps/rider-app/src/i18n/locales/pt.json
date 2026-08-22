@@ -386,6 +386,7 @@
   "withdraw.amountPlaceholder": "12",
   "withdraw.availableBalance": "Saldo disponível",
   "withdraw.bankCard": "Levantar para cartão bancário",
+  "withdraw.bindComingSoon": "Vinculação em breve",
   "withdraw.exceedsBalance": "Valor excede o saldo disponível",
   "withdraw.failed": "Falha no levantamento",
   "withdraw.note": "Os fundos chegam em 1-2 dias úteis.",
