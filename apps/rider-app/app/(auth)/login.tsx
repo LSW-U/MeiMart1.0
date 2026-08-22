@@ -1,7 +1,7 @@
 import { colors } from "../../src/theme/colors";
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { showToast } from '../../src/components/feedback/Toast';
@@ -14,6 +14,12 @@ import { getLanguageOptions, type AppLanguage } from '../../src/services/setting
 import { useUpdateRiderSettings } from '../../src/services/queries/useSettings';
 
 type LoginMode = 'password' | 'sms';
+type FieldErrors = {
+  phone?: string;
+  password?: string;
+  code?: string;
+  terms?: string;
+};
 
 const enabledLanguages = getLanguageOptions();
 
@@ -23,7 +29,7 @@ const isDev = __DEV__;
 export default function LoginPage() {
   const router = useRouter();
   const { t, language } = useTranslation();
-  const { login, mockLogin, sendSmsCode, isLoginPending } = useAuth();
+  const { login, mockLogin, sendSmsCode, isLoginPending, isSmsPending } = useAuth();
   const updateSettings = useUpdateRiderSettings();
   const [mode, setMode] = useState<LoginMode>('password');
   const [accepted, setAccepted] = useState(false);
@@ -32,9 +38,8 @@ export default function LoginPage() {
   const [code, setCode] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [phoneInvalidVisible, setPhoneInvalidVisible] = useState(false);
-  const [codeSentVisible, setCodeSentVisible] = useState(false);
-  const [codeSentPhone, setCodeSentPhone] = useState('');
+  // A1：字段级错误收敛到 errors 对象，Input.error 槽 inline 展示（替代原 phoneInvalid/codeSent 弹窗）
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [featureInProgressVisible, setFeatureInProgressVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -61,23 +66,44 @@ export default function LoginPage() {
     }, 1000);
   };
 
+  // A1 §3.1：手写提交前校验（phone 必填+格式 / password 模式必填 / code 模式必填 / accepted 必勾）。
+  // 与 A2 register 同一手写校验模式，不引入 RHF（全仓零安装，仅 2 表单页 ROI 低）。
+  const validate = (): boolean => {
+    const e: FieldErrors = {};
+    if (!phone) e.phone = t('auth.login.error.phoneRequired');
+    else if (!isValidPhone(phone)) e.phone = t('auth.login.error.phoneInvalid');
+    if (isPassword && !password) e.password = t('auth.login.error.passwordRequired');
+    if (!isPassword && !code) e.code = t('auth.login.error.codeRequired');
+    if (!accepted) e.terms = t('auth.login.error.termsRequired');
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const handleSendCode = async () => {
-    if (countdown > 0) return;
+    if (countdown > 0 || isSmsPending) return;
+    // A1 §3.3：号码格式错前置拦截 → inline error（降级原 phoneInvalid 弹窗）
     if (!isValidPhone(phone)) {
-      setPhoneInvalidVisible(true);
+      setErrors((prev) => ({ ...prev, phone: t('auth.login.error.phoneInvalid') }));
       return;
     }
     try {
       await sendSmsCode(phone);
-      setCodeSentPhone(phone);
-      setCodeSentVisible(true);
+      // A1 §5③：成功降级 Toast（替代 codeSent ConfirmDialog 弹窗，轻量不打断）
+      showToast(t('auth.login.codeSentToast', { phone }), 'success');
       startCountdown();
-    } catch {
-      setPhoneInvalidVisible(true);
+    } catch (e) {
+      // A1 §3.3：失败区分语义——ApiError（后端拒绝/网络层失败）→ codeSendFailed；
+      // 非 ApiError（mock 异常等兜底）→ networkError。不再一律误报"手机号无效"。
+      // 注：authApi.sendSmsCode 内部 !isValidPhone 抛裸 Error('invalid_phone')，
+      // 但本函数入口已 isValidPhone 前置拦截，catch 实际只命中此两类。
+      const msg = e instanceof ApiError ? t('auth.login.codeSendFailed') : t('common.networkError');
+      showToast(msg, 'error');
     }
   };
 
   const handleLogin = async () => {
+    // A1 §3.2：提交前校验先行，含 accepted 检查（修复原协议勾选纯摆设）。校验不过不调后端。
+    if (!validate()) return;
     try {
       await login(
         phone,
@@ -105,6 +131,7 @@ export default function LoginPage() {
   };
 
   const sendCodeLabel = countdown > 0 ? t('auth.login.resend', { seconds: countdown }) : t('auth.login.sendCode');
+  const sendCodeDisabled = countdown > 0 || isSmsPending;
 
   return (
     <ScrollView className="flex-1 bg-background" contentContainerClassName="min-h-full items-center justify-center px-5 py-12">
@@ -136,6 +163,7 @@ export default function LoginPage() {
 
         <View className="gap-4">
           <Input
+            error={errors.phone}
             keyboardType="phone-pad"
             label={t('auth.login.phoneLabel')}
             placeholder={t('auth.login.phonePlaceholder')}
@@ -144,6 +172,7 @@ export default function LoginPage() {
           />
           {isPassword ? (
             <Input
+              error={errors.password}
               label={t('auth.login.passwordLabel')}
               leftSlot={<AppIcon color={colors.outline} name="lock" size={24} />}
               placeholder={t('auth.login.passwordPlaceholder')}
@@ -158,6 +187,7 @@ export default function LoginPage() {
             />
           ) : (
             <Input
+              error={errors.code}
               keyboardType="number-pad"
               label={t('auth.login.smsLabel')}
               placeholder={t('auth.login.smsPlaceholder')}
@@ -165,11 +195,12 @@ export default function LoginPage() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={sendCodeLabel}
-                  className={`self-stretch justify-center rounded-lg px-3.5 ${countdown > 0 ? 'bg-outline-variant' : 'bg-primary'}`}
-                  disabled={countdown > 0}
+                  accessibilityState={{ disabled: sendCodeDisabled, busy: isSmsPending }}
+                  className={`self-stretch flex-row items-center justify-center rounded-lg px-3.5 ${sendCodeDisabled ? 'bg-outline-variant' : 'bg-primary'}`}
+                  disabled={sendCodeDisabled}
                   onPress={() => void handleSendCode()}
                 >
-                  <Text className={`text-xs font-bold ${countdown > 0 ? 'text-outline' : 'text-white'}`}>{sendCodeLabel}</Text>
+                  {isSmsPending ? <ActivityIndicator color={colors.surface} size="small" /> : <Text className={`text-xs font-bold ${countdown > 0 ? 'text-outline' : 'text-white'}`}>{sendCodeLabel}</Text>}
                 </Pressable>
               }
               value={code}
@@ -183,14 +214,18 @@ export default function LoginPage() {
         </Pressable>
 
         <View className="gap-4">
-          <View className="flex-row items-start gap-2">
-            <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={setAccepted} value={accepted} />
-            <Text className="flex-1 text-[13px] leading-5 text-on-surface-variant">
-              {t('auth.login.termsPrefix')}{' '}
-              <Text accessibilityRole="link" className="font-semibold text-primary" onPress={() => router.push('/terms')}>{t('auth.login.terms')}</Text>{' '}
-              {t('auth.login.privacyPrefix')}{' '}
-              <Text accessibilityRole="link" className="font-semibold text-primary" onPress={() => router.push('/privacy')}>{t('auth.login.privacy')}</Text>.
-            </Text>
+          <View className="gap-2">
+            <View className="flex-row items-start gap-2">
+              <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={setAccepted} value={accepted} />
+              <Text className="flex-1 text-[13px] leading-5 text-on-surface-variant">
+                {t('auth.login.termsPrefix')}{' '}
+                <Text accessibilityRole="link" className="font-semibold text-primary" onPress={() => router.push('/terms')}>{t('auth.login.terms')}</Text>{' '}
+                {t('auth.login.privacyPrefix')}{' '}
+                <Text accessibilityRole="link" className="font-semibold text-primary" onPress={() => router.push('/privacy')}>{t('auth.login.privacy')}</Text>.
+              </Text>
+            </View>
+            {/* A1 §5②：协议未勾选 inline 红字（与字段级错误范式一致） */}
+            {errors.terms ? <Text accessibilityRole="alert" className="ml-1 text-xs text-error">{errors.terms}</Text> : null}
           </View>
 
           <Button disabled={isLoginPending} loading={isLoginPending} onPress={() => void handleLogin()}>{t('auth.login.submit')}</Button>
@@ -222,22 +257,6 @@ export default function LoginPage() {
         </Pressable>
       </View>
 
-      <ConfirmDialog
-        message={t('auth.login.phoneInvalid.message')}
-        okLabel={t('auth.login.phoneInvalid.ok')}
-        title={t('auth.login.phoneInvalid.title')}
-        visible={phoneInvalidVisible}
-        onCancel={() => setPhoneInvalidVisible(false)}
-        onOk={() => setPhoneInvalidVisible(false)}
-      />
-      <ConfirmDialog
-        message={t('auth.login.codeSent.message', { phone: codeSentPhone })}
-        okLabel={t('auth.login.phoneInvalid.ok')}
-        title={t('auth.login.codeSent.title')}
-        visible={codeSentVisible}
-        onCancel={() => setCodeSentVisible(false)}
-        onOk={() => setCodeSentVisible(false)}
-      />
       <ConfirmDialog
         message={t('auth.login.featureInProgress.message')}
         okLabel={t('auth.login.featureInProgress.ok')}
