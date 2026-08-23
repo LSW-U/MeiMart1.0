@@ -75,6 +75,11 @@ export default function RegisterPage() {
     return Object.keys(e).length === 0;
   };
 
+  // 审查 P2-1（同源）：用户输入/勾选时清除对应字段的 error，避免红字残留到下次提交。
+  const clearFieldError = (field: string) => {
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: '' } : prev));
+  };
+
   // §3.3：sendCode 接线（删 codeState 假交互 → 调真实 sendSmsCode + 倒计时 + catch 区分）
   const sendCode = async () => {
     // 前置校验：phone 必填 + 格式（拦截 authApi.sendSmsCode 内部裸 Error('invalid_phone') 路径）
@@ -162,7 +167,7 @@ export default function RegisterPage() {
               <Text className="text-xl font-semibold text-on-surface">{t('auth.register.personalDetails')}</Text>
             </View>
             <View className="gap-6">
-              <Input label={t('auth.register.fullName')} placeholder={t('auth.register.fullNamePlaceholder')} value={name} onChangeText={setName} error={errors.name} />
+              <Input label={t('auth.register.fullName')} placeholder={t('auth.register.fullNamePlaceholder')} value={name} onChangeText={(v) => { setName(v); clearFieldError('name'); }} error={errors.name} />
               <Input
                 keyboardType="phone-pad"
                 label={t('auth.register.phone')}
@@ -182,7 +187,7 @@ export default function RegisterPage() {
                 }
                 className="px-2"
                 value={phone}
-                onChangeText={setPhone}
+                onChangeText={(v) => { setPhone(v); clearFieldError('phone'); }}
                 error={errors.phone}
               />
               <Input
@@ -191,14 +196,14 @@ export default function RegisterPage() {
                 maxLength={6}
                 placeholder={t('auth.register.smsPlaceholder')}
                 value={smsCode}
-                onChangeText={setSmsCode}
+                onChangeText={(v) => { setSmsCode(v); clearFieldError('smsCode'); }}
                 error={errors.smsCode}
               />
               <Input
                 label={t('auth.register.identityCard')}
                 placeholder={t('auth.register.identityCardPlaceholder')}
                 value={idCardNumber}
-                onChangeText={setIdCardNumber}
+                onChangeText={(v) => { setIdCardNumber(v); clearFieldError('idCard'); }}
                 error={errors.idCard}
               />
               {/* §6④ A：vehicleType 三选一 SegmentedControl（套用 history.tsx:76-95 范式） */}
@@ -248,7 +253,7 @@ export default function RegisterPage() {
 
           <View className="rounded-xl border border-outline-variant/30 bg-surface-container-low/50 p-4">
             <View className="flex-row items-start gap-3">
-              <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={setAccepted} value={accepted} />
+              <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={(v) => { setAccepted(v); clearFieldError('terms'); }} value={accepted} />
               <View className="flex-1">
                 <Text className="text-sm leading-6 text-on-surface-variant">
                   {t('auth.register.termsPrefix')} <Text className="font-bold text-primary">{t('auth.register.terms')}</Text>{' '}

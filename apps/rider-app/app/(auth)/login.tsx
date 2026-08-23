@@ -79,6 +79,12 @@ export default function LoginPage() {
     return Object.keys(e).length === 0;
   };
 
+  // 审查 P2-1：用户输入/勾选时清除对应字段的 error，避免红字残留到下次提交。
+  // 字段级精准清除——validate() 是整体覆盖，仅在再次提交时重算；输入过程必须主动清。
+  const clearFieldError = (field: keyof FieldErrors) => {
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
+
   const handleSendCode = async () => {
     if (countdown > 0 || isSmsPending) return;
     // A1 §3.3：号码格式错前置拦截 → inline error（降级原 phoneInvalid 弹窗）
@@ -168,7 +174,7 @@ export default function LoginPage() {
             label={t('auth.login.phoneLabel')}
             placeholder={t('auth.login.phonePlaceholder')}
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={(v) => { setPhone(v); clearFieldError('phone'); }}
           />
           {isPassword ? (
             <Input
@@ -183,7 +189,7 @@ export default function LoginPage() {
               }
               secureTextEntry={!passwordVisible}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(v) => { setPassword(v); clearFieldError('password'); }}
             />
           ) : (
             <Input
@@ -204,7 +210,7 @@ export default function LoginPage() {
                 </Pressable>
               }
               value={code}
-              onChangeText={setCode}
+              onChangeText={(v) => { setCode(v); clearFieldError('code'); }}
             />
           )}
         </View>
@@ -216,7 +222,7 @@ export default function LoginPage() {
         <View className="gap-4">
           <View className="gap-2">
             <View className="flex-row items-start gap-2">
-              <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={setAccepted} value={accepted} />
+              <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={(v) => { setAccepted(v); clearFieldError('terms'); }} value={accepted} />
               <Text className="flex-1 text-[13px] leading-5 text-on-surface-variant">
                 {t('auth.login.termsPrefix')}{' '}
                 <Text accessibilityRole="link" className="font-semibold text-primary" onPress={() => router.push('/terms')}>{t('auth.login.terms')}</Text>{' '}

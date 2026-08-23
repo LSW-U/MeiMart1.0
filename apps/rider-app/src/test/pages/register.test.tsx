@@ -414,3 +414,39 @@ describe('死字段清理回归（A2 §3.7 删除项）', () => {
     expect(mockApply).not.toHaveBeenCalled();
   });
 });
+
+// 审查 P2-1（同源）：用户改正输入/勾选后，对应字段 inline 红字实时清除
+describe('errors 输入实时清除（审查 P2-1 同源）', () => {
+  it('触发 name 红字后改输入 → name 红字立即清除（其它字段红字仍残留）', () => {
+    const { container, getByText, queryByText } = renderPage();
+
+    fireEvent.click(getByText('注册成为骑手'));
+    expect(getByText('请输入姓名')).toBeTruthy();
+
+    // 改 name 输入 → clearFieldError('name') 清除红字
+    act(() => {
+      getInputChangeText(container, 0)('Adão Belo');
+    });
+    expect(queryByText('请输入姓名')).toBeNull();
+    // 未改的 phone/证件号/协议 红字仍在（字段级精准清除）
+    expect(getByText('请输入手机号')).toBeTruthy();
+    expect(getByText('请输入证件号')).toBeTruthy();
+  });
+
+  it('触发协议红字后勾选 → 协议红字立即清除', () => {
+    const { container, getByText, queryByText } = renderPage();
+
+    fireEvent.click(getByText('注册成为骑手'));
+    expect(getByText('请先同意服务条款和隐私政策')).toBeTruthy();
+
+    // 勾选协议 → clearFieldError('terms') 清除红字
+    // as unknown as 原因：query selector 返回 Element，需取 host 壳挂在节点的 __fnProps（非标准 DOM 属性）
+    const switchEl = container.querySelector('[data-rn-host="Switch"]') as unknown as {
+      __fnProps: { onValueChange: (v: boolean) => void };
+    };
+    act(() => {
+      switchEl.__fnProps.onValueChange(true);
+    });
+    expect(queryByText('请先同意服务条款和隐私政策')).toBeNull();
+  });
+});

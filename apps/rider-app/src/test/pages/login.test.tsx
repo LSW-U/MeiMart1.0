@@ -363,3 +363,39 @@ describe('字段回读（host 壳 value 透传）', () => {
     expect(readInputValue(container)).toBe('+67077001234');
   });
 });
+
+// 审查 P2-1：用户改正输入/勾选后，对应字段 inline 红字实时清除（不残留到下次提交）
+describe('errors 输入实时清除（审查 P2-1）', () => {
+  it('触发 phone 红字后改输入 → phone 红字立即清除（不残留到下次提交）', () => {
+    const { container, getByText, queryByText } = renderPage();
+
+    fireEvent.click(getByText('登 录'));
+    expect(getByText('请输入手机号')).toBeTruthy();
+
+    // 改输入 → clearFieldError('phone') 清除红字
+    act(() => {
+      getInputChangeText(container)('+67077001234');
+    });
+    expect(queryByText('请输入手机号')).toBeNull();
+    // 未改的 password/协议 红字仍在（字段级精准清除，非整体清空）
+    expect(getByText('请输入密码')).toBeTruthy();
+    expect(getByText('请先同意服务条款和隐私政策')).toBeTruthy();
+  });
+
+  it('触发协议红字后勾选 → 协议红字立即清除', () => {
+    const { container, getByText, queryByText } = renderPage();
+
+    fireEvent.click(getByText('登 录'));
+    expect(getByText('请先同意服务条款和隐私政策')).toBeTruthy();
+
+    // 勾选协议 → clearFieldError('terms') 清除红字
+    // as unknown as 原因：query selector 返回 Element，需取 host 壳挂在节点的 __fnProps（非标准 DOM 属性）
+    const switchEl = container.querySelector('[data-rn-host="Switch"]') as unknown as {
+      __fnProps: { onValueChange: (v: boolean) => void };
+    };
+    act(() => {
+      switchEl.__fnProps.onValueChange(true);
+    });
+    expect(queryByText('请先同意服务条款和隐私政策')).toBeNull();
+  });
+});
