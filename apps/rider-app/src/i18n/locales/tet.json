@@ -285,6 +285,8 @@
   "profile.vehicleMotorcycle": "[TET] Motorcycle",
   "profile.vehicleBicycle": "[TET] Bicycle",
   "profile.vehicleCar": "[TET] Car",
+  "profile.vehiclePlate": "[TET] Vehicle Plate",
+  "profile.idCardReadonlyHint": "[TET] ID number cannot be changed after registration",
   "profile.helpCenter": "Sentru Ajuda",
   "profile.id": "",
   "profile.logout": "Sai",

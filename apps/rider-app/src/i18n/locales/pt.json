@@ -285,6 +285,8 @@
   "profile.vehicleMotorcycle": "Motocicleta",
   "profile.vehicleBicycle": "Bicicleta",
   "profile.vehicleCar": "Carro",
+  "profile.vehiclePlate": "Placa do Veículo",
+  "profile.idCardReadonlyHint": "O número de ID não pode ser alterado após o registro",
   "profile.helpCenter": "Centro de Ajuda",
   "profile.id": "",
   "profile.logout": "Sair",

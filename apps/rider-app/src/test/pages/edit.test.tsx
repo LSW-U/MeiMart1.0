@@ -19,7 +19,9 @@ import type { RiderProfile } from '../../../src/types/rider';
  *   §2③ 删 6 处死字段——无验证码/地址/密码/协议块/hero banner
  *   §2④ 字段错位修复——vehiclePlate 提交到 vehiclePlate（不再塞 licenseNumber），vehicleType 纳入 payload
  *   §2⑤ vehicleType 三选一 SegmentedControl
- *   §6⑥ 手写校验——name/phone/idCardNumber 红字
+ *   §6⑥ 手写校验——name/phone 红字（idCardNumber 路线 A 删校验只读）
+ *   P2-1 idCardNumber §6⑤A 路线 A——editable=false + helperText + 不进 validate
+ *   P2-2 vehiclePlate label 改 profile.vehiclePlate（不再误用 vehicleTypePlaceholder「摩托车快递员」）
  *
  * 桩法与 register/profile.test.tsx 同源（web project + RN host 壳）：
  *   - useUpdateProfile：mockMutateAsync 控制成功/reject
@@ -232,6 +234,65 @@ describe('手写校验（P2 §6⑥ mock 模式）', () => {
     const errorTexts = Array.from(container.querySelectorAll('[data-rn-host="Text"]'))
       .map((el) => el.textContent ?? '');
     expect(errorTexts).toContain('手机号格式不正确');
+  });
+});
+
+describe('idCardNumber 只读降级（P2-1 §6⑤A 路线 A）', () => {
+  it('idCardNumber Input editable=false + helperText「证件号注册后不可自行修改」+ 显示 rider.licenseNumber 值', () => {
+    const { container } = renderPage();
+
+    // idCardNumber Input 是第 2 个 TextInput（riderName=0 / phone=1 / idCardNumber=2 / vehiclePlate=3）
+    const inputs = container.querySelectorAll('[data-rn-host="TextInput"]');
+    const idCardInput = inputs[2];
+    // editable=false → host 壳 editable prop 序列化为 "false"
+    expect(idCardInput.getAttribute('data-prop-editable')).toBe('false');
+    // 显示 rider.licenseNumber 兼容字段值
+    expect(idCardInput.getAttribute('data-prop-value')).toBe('1234567');
+
+    // helperText「证件号注册后不可自行修改」渲染为 Text
+    const texts = Array.from(container.querySelectorAll('[data-rn-host="Text"]'))
+      .map((el) => el.textContent ?? '');
+    expect(texts).toContain('证件号注册后不可自行修改');
+  });
+
+  it('idCardNumber 清空也不触发校验（只读字段不进 validate），可正常保存', async () => {
+    // 路线 A：validate 已删 idCardNumber 两条校验，只读字段不阻断保存
+    const { container } = renderPage();
+
+    const saveBtn = getSaveButton(container)!;
+    mockMutateAsync.mockResolvedValueOnce({});
+    await act(async () => {
+      fireEvent.click(saveBtn);
+      await Promise.resolve();
+    });
+
+    // 正常保存（idCardNumber 只读默认值 1234567 不阻断）
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    // payload 不含 idCardNumber（RiderProfile 无此字段）
+    const payload = mockMutateAsync.mock.calls[0][0];
+    expect(payload).not.toHaveProperty('idCardNumber');
+    // 无 idCardNumber 校验红字
+    const errorTexts = Array.from(container.querySelectorAll('[data-rn-host="Text"]'))
+      .map((el) => el.textContent ?? '');
+    expect(errorTexts).not.toContain('请输入证件号');
+    expect(errorTexts).not.toContain('证件号至少 6 位');
+  });
+});
+
+describe('vehiclePlate label 修正（P2-2 label 改 profile.vehiclePlate）', () => {
+  it('车牌号输入框 label/placeholder 显示「车牌号」，非「摩托车快递员」', () => {
+    const { container } = renderPage();
+
+    // vehiclePlate Input 是第 3 个 TextInput
+    const inputs = container.querySelectorAll('[data-rn-host="TextInput"]');
+    const plateInput = inputs[3];
+    expect(plateInput.getAttribute('data-prop-placeholder')).toBe('车牌号');
+
+    // label「车牌号」渲染为 Text；不再误用 vehicleTypePlaceholder「摩托车快递员」
+    const texts = Array.from(container.querySelectorAll('[data-rn-host="Text"]'))
+      .map((el) => el.textContent ?? '');
+    expect(texts).toContain('车牌号');
+    expect(texts).not.toContain('摩托车快递员');
   });
 });
 

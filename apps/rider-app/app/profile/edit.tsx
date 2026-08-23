@@ -85,8 +85,6 @@ export default function ProfileEditPage() {
     if (!form.riderName.trim()) e.riderName = t('profile.error.nameRequired');
     if (!form.phone) e.phone = t('profile.error.phoneRequired');
     else if (!isValidPhone(form.phone)) e.phone = t('profile.error.phoneInvalid');
-    if (!form.idCardNumber) e.idCardNumber = t('profile.error.idCardRequired');
-    else if (form.idCardNumber.length < 6) e.idCardNumber = t('profile.error.idCardTooShort');
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -192,17 +190,19 @@ export default function ProfileEditPage() {
                   })}
                 </View>
               </View>
+              {/* P2-1 §6⑤A 路线 A：idCardNumber 只读展示（mock/real 均不可编辑）。
+                  RiderProfile 无此字段，提交时被 Partial<RiderProfile> 丢弃；只读是唯一不自相矛盾的实现。
+                  helperText 标注「证件号注册后不可自行修改」管理用户预期，避免「保存成功但未生效」困惑。 */}
               <Input
                 label={t('auth.register.identityCard')}
                 placeholder={t('auth.register.identityCardPlaceholder')}
+                helperText={t('profile.idCardReadonlyHint')}
                 value={form.idCardNumber}
-                onChangeText={(v) => setField('idCardNumber', v)}
-                error={errors.idCardNumber}
-                editable={editable}
+                editable={false}
               />
               <Input
-                label={t('auth.register.vehicleTypePlaceholder')}
-                placeholder={t('auth.register.vehicleTypePlaceholder')}
+                label={t('profile.vehiclePlate')}
+                placeholder={t('profile.vehiclePlate')}
                 value={form.vehiclePlate}
                 onChangeText={(v) => setField('vehiclePlate', v)}
                 editable={editable}

@@ -285,6 +285,8 @@
   "profile.vehicleMotorcycle": "Motorcycle",
   "profile.vehicleBicycle": "Bicycle",
   "profile.vehicleCar": "Car",
+  "profile.vehiclePlate": "Vehicle Plate",
+  "profile.idCardReadonlyHint": "ID number cannot be changed after registration",
   "profile.helpCenter": "Help Center",
   "profile.id": "ID: 8842910",
   "profile.logout": "Logout",

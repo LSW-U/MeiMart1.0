@@ -285,6 +285,8 @@
   "profile.vehicleMotorcycle": "Motor",
   "profile.vehicleBicycle": "Sepeda",
   "profile.vehicleCar": "Mobil",
+  "profile.vehiclePlate": "Plat Nomor",
+  "profile.idCardReadonlyHint": "Nomor ID tidak dapat diubah setelah pendaftaran",
   "profile.helpCenter": "Pusat Bantuan",
   "profile.id": "",
   "profile.logout": "Keluar",

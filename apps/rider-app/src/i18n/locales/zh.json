@@ -285,6 +285,8 @@
   "profile.vehicleMotorcycle": "摩托车",
   "profile.vehicleBicycle": "自行车",
   "profile.vehicleCar": "汽车",
+  "profile.vehiclePlate": "车牌号",
+  "profile.idCardReadonlyHint": "证件号注册后不可自行修改",
   "profile.helpCenter": "帮助中心",
   "profile.id": "ID: 8842910",
   "profile.logout": "退出登录",
