@@ -1,10 +1,11 @@
 import { useRouter, type Href } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '../src/components/ui';
-import { EmptyState } from '../src/components/feedback/EmptyState';
+import { ErrorState } from '../src/components/feedback/ErrorState';
 import { SimplePageHeader } from '../src/components/layout/SimplePageHeader';
+import { showToast } from '../src/components/feedback/Toast';
 import { useTranslation, type TranslationKey } from '../src/i18n/useTranslation';
 import {
   useNotifications,
@@ -32,14 +33,53 @@ const categoryStyle: Record<NotificationCategory, { bg: string; icon: 'notificat
   system: { bg: colors.notificationSystem, icon: 'settings' },
 };
 
+// P4-1 §3.1：loading 骨架卡——复用通知卡布局（圆角 2xl + border + p-4，左侧圆占位 + 右侧两行灰条）
+function NotificationSkeleton() {
+  return (
+    <View accessibilityRole="none" accessibilityLabel="loading" testID="notification-skeleton">
+      {[0, 1, 2].map((i) => (
+        <View className="flex-row items-start gap-3 rounded-2xl border border-surface-variant bg-surface p-4" key={i}>
+          <View className="h-9 w-9 rounded-full bg-surface-variant" />
+          <View className="flex-1 gap-2">
+            <View className="h-4 w-2/3 rounded bg-surface-variant" />
+            <View className="h-3 w-full rounded bg-surface-variant" />
+            <View className="h-3 w-1/3 rounded bg-surface-variant" />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// P4-3 §3.3：空态增强——图标 + 标题 + 描述（分类空态文案区分）
+function EmptyStateView({ icon, title, description }: { icon: 'notification'; title: string; description: string }) {
+  return (
+    <View className="items-center rounded-3xl bg-surface p-8" testID="notification-empty">
+      <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-surface-container-low">
+        <AppIcon color={colors.outline} name={icon} size={32} />
+      </View>
+      <Text className="text-lg font-bold text-on-surface">{title}</Text>
+      <Text className="mt-2 text-center text-sm text-on-surface-variant">{description}</Text>
+    </View>
+  );
+}
+
 export default function NotificationsPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const [filter, setFilter] = useState<FilterKey>('all');
-  const { data: items = [] } = useNotifications();
+  // P4-1 §3.1：取 isLoading/isError/refetch 三态（修 loading 误判空态）
+  const { data: items = [], isLoading, isError, refetch } = useNotifications();
   const { data: unreadCount = 0 } = useUnreadCount();
   const markAsReadMutation = useMarkAsRead();
   const markAllAsReadMutation = useMarkAllAsRead();
+
+  // P4-4 §3.4：每分钟 tick 重渲染，formatTime 重算（最小显示单位是分钟，60s 够用）
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const visibleItems = useMemo(() => {
     if (filter === 'all') return items;
@@ -60,18 +100,32 @@ export default function NotificationsPage() {
     [t],
   );
 
+  // P4-2 §3.2：跳转优先，标记已读异步容错——失败 toast 不阻断跳转（依赖数组补 t）
   const onItemPress = useCallback(
     async (item: NotificationItem) => {
-      if (!item.read) await markAsReadMutation.mutateAsync(item.id);
       // item.link 是后端/mock 返回的动态路由 string（/(main)/earnings、/order/{id}），
       // expo-router typed routes 无法静态窄化 runtime string，断言为 Href（合法路由联合）
       if (item.link) router.push(item.link as Href);
+      if (!item.read) {
+        try {
+          await markAsReadMutation.mutateAsync(item.id);
+        } catch {
+          // real 模式后端 /notifications 未就绪或网络异常时 mutateAsync throw——不阻断跳转，仅 toast
+          showToast(t('notification.error.markFailed'), 'error');
+        }
+      }
     },
-    [router, markAsReadMutation],
+    [router, markAsReadMutation, t],
   );
 
+  // P4-5 §3.5：全部已读 try/catch + 成功/失败 toast（修静默无反馈）
   const handleMarkAllRead = async () => {
-    await markAllAsReadMutation.mutateAsync();
+    try {
+      await markAllAsReadMutation.mutateAsync();
+      showToast(t('notification.markAllRead.success'), 'success');
+    } catch {
+      showToast(t('notification.markAllRead.failed'), 'error');
+    }
   };
 
   return (
@@ -111,8 +165,23 @@ export default function NotificationsPage() {
       </View>
 
       <ScrollView contentContainerClassName="gap-3 px-5 py-4 pb-12">
-        {visibleItems.length === 0 ? (
-          <EmptyState title={t('notification.empty')} />
+        {/* P4-1 §3.1：三态分支——loading 骨架优先（不再误判空态闪「暂无通知」），error 重试 */}
+        {isLoading ? (
+          <NotificationSkeleton />
+        ) : isError ? (
+          <ErrorState
+            actionLabel={t('notification.retry')}
+            message={t('notification.error.loadFailed')}
+            onAction={() => void refetch()}
+            title={t('notification.error.loadFailed')}
+          />
+        ) : visibleItems.length === 0 ? (
+          // P4-3 §3.3：空态增强——图标+标题+描述，分类空态文案区分
+          <EmptyStateView
+            description={filter === 'all' ? t('notification.empty.hint') : t('notification.empty.filtered')}
+            icon="notification"
+            title={t('notification.empty')}
+          />
         ) : (
           visibleItems.map((item) => {
             const style = categoryStyle[item.category];
