@@ -119,7 +119,9 @@ export default function NotificationsPage() {
   );
 
   // P4-5 §3.5：全部已读 try/catch + 成功/失败 toast（修静默无反馈）
+  // P3-审查④ isPending 防护：连点「全部已读」会并发 mutateAsync 堆叠两条 success toast，前置守卫 + 按钮 disabled 双重阻断
   const handleMarkAllRead = async () => {
+    if (markAllAsReadMutation.isPending) return;
     try {
       await markAllAsReadMutation.mutateAsync();
       showToast(t('notification.markAllRead.success'), 'success');
@@ -133,7 +135,7 @@ export default function NotificationsPage() {
       <SimplePageHeader
         action={
           unreadCount > 0 ? (
-            <Pressable accessibilityRole="button" accessibilityLabel={t('notification.markAllRead')} className="rounded-full bg-surface-container-low px-3 py-1.5 active:bg-surface-blush" onPress={() => void handleMarkAllRead()}>
+            <Pressable accessibilityRole="button" accessibilityLabel={t('notification.markAllRead')} accessibilityState={markAllAsReadMutation.isPending ? { disabled: true } : undefined} disabled={markAllAsReadMutation.isPending} className="rounded-full bg-surface-container-low px-3 py-1.5 active:bg-surface-blush" onPress={() => void handleMarkAllRead()}>
               <Text className="text-xs font-bold text-primary">{t('notification.markAllRead')}</Text>
             </Pressable>
           ) : undefined

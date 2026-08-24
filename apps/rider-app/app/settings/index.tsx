@@ -68,6 +68,8 @@ export default function SettingsPage() {
   const [confirmVisible, setConfirmVisible] = useState(false);
 
   const rotateLanguage = async () => {
+    // P3-审查④ isPending 防护：连点「语言」会并发 mutateAsync（乐观更新 onMutate 多次 setQueryData + onError 多次回滚竞态），前置守卫阻断
+    if (updateSettings.isPending) return;
     const index = languages.indexOf(locale);
     const nextLanguage = languages[(index + 1 + languages.length) % languages.length] ?? languages[0];
     try {

@@ -145,6 +145,7 @@ describe('② P3-2 Alert.alert → ConfirmDialog（关闭通知走确认弹窗�
     mockSettings = { dutyStatus: 'onDuty', language: 'zh', notificationsEnabled: false };
     const { container, queryByText } = renderPage();
 
+    // 原因：RN host 壳经 __fnProps 透传 onValueChange，querySelector 返回类型无此字段，交叉类型断言取 host 壳回调（非 as unknown as，更精确）
     const switchEl = container.querySelector('[data-rn-host="Switch"]') as HTMLElement & { __fnProps?: { onValueChange?: (v: boolean) => void } };
     await actAsync(() => {
       switchEl.__fnProps?.onValueChange?.(true);
@@ -265,6 +266,7 @@ async function actAsync(fn: () => void) {
 
 /** 取通知项 Switch host 并同步触发 onValueChange（裹 act 让 ConfirmDialog 立即 flush） */
 async function triggerSwitchFalse(container: HTMLElement) {
+  // 原因：RN host 壳经 __fnProps 透传 onValueChange，querySelector 返回类型无此字段，交叉类型断言取 host 壳回调（非 as unknown as，更精确）
   const switchEl = container.querySelector('[data-rn-host="Switch"]') as HTMLElement & { __fnProps?: { onValueChange?: (v: boolean) => void } };
   await actAsync(() => {
     switchEl.__fnProps?.onValueChange?.(false);
