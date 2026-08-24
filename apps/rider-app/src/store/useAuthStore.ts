@@ -20,6 +20,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   hydrated: false,
 
   hydrate: async () => {
+    // P6-2：幂等——已 hydrate 过直接返回（防 _layout StoreInitializer + app/index + profile 三处重复调用重复拉 profile）。
+    // Why：hydrate 在 StoreInitializer（root _layout）、index 跳转、profile useFocusEffect 三处被调，无幂等会并发拉 3 次 profile。
+    if (useAuthStore.getState().hydrated) {
+      if (__DEV__) console.warn('[useAuthStore] hydrate already done, skip');
+      return;
+    }
     try {
       const token = await tokenStorage.get();
       if (!token) {

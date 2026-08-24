@@ -52,9 +52,17 @@ export default function TasksPage() {
   const [pending, setPending] = useState<DutyStatus | null>(null);
   const [blockVisible, setBlockVisible] = useState(false);
 
-  const { data: settings } = useRiderSettings();
+  const { data: settings, isError: settingsError } = useRiderSettings();
   const updateSettings = useUpdateRiderSettings();
-  const dutyStatus = settings?.dutyStatus ?? 'offDuty';
+  // P6-1：dutyStatus 改三态推导（与 _layout 同源）。
+  //   - settings 加载失败 → dutyStatus=null（保守不判离线，renderContent 走任务三态而非 offline 空态）
+  //   - settings 成功 → 真实 dutyStatus（offDuty/onDuty/busy）
+  // 原 `settings?.dutyStatus ?? 'offDuty'` 在 settings=undefined 时回退 offDuty → online=false → 误显「你已离线」（同 _layout 静默掉线根因）。
+  const dutyStatus: DutyStatus | null = settingsError ? null : settings ? settings.dutyStatus : null;
+  // P6-1：UI 展示值——header/menu 的 prop 类型是 DutyStatus（非 null）。
+  //   加载中/失败时用 offDuty 占位（灰点 +「已下班」文案），但 online=null 仍走任务三态，不切 offline 空态。
+  //   语义：状态条视觉降级为「下班」点，但列表不显示「你已离线」（settings 失败 ≠ 真下班）。
+  const dutyStatusForUi: DutyStatus = dutyStatus ?? 'offDuty';
   // B3: 消费三态——loading 骨架替代闪空态，error 显式重试（不再误报"暂无任务"）
   // B5: isFetching 供底栏刷新 spinner 反馈
   const { data: taskListsData, isLoading: taskListsLoading, isError: taskListsError, isFetching: taskListsFetching, refetch: refetchTasks } = useTaskLists();
@@ -64,7 +72,8 @@ export default function TasksPage() {
   // 不守卫会真发请求 reject 后 QueryBoundary 切 error 态覆盖已有缓存数据
   const { isOffline } = useNetwork();
 
-  const online = dutyStatus !== 'offDuty';
+  // P6-1：null（settings 加载中/失败）→ online=null，renderContent 不走 offline 空态（保守不停派单展示）。
+  const online: boolean | null = dutyStatus === null ? null : dutyStatus !== 'offDuty';
   const bondPaid = rider?.bondPaid ?? true;
   const activeTasksExist = taskLists.pickups.length + taskLists.deliveries.length > 0;
   const currency = t('common.currency');
@@ -72,11 +81,11 @@ export default function TasksPage() {
   const openMenu = () => setMenuVisible(true);
 
   const handlePick = async (next: DutyStatus) => {
-    if (next === dutyStatus) {
+    if (next === dutyStatusForUi) {
       setMenuVisible(false);
       return;
     }
-    if (next === 'offDuty' && (dutyStatus === 'onDuty' || dutyStatus === 'busy')) {
+    if (next === 'offDuty' && (dutyStatusForUi === 'onDuty' || dutyStatusForUi === 'busy')) {
       // 用派生数据判断是否有进行中任务（useTaskLists 缓存已含最新状态，无需后端再确认）
       if (activeTasksExist) {
         setMenuVisible(false);
@@ -106,9 +115,9 @@ export default function TasksPage() {
       dutyStatusOptions.map((value) => ({
         value,
         label: t(dutyLabelKey[value]),
-        disabled: value === 'offDuty' && dutyStatus !== 'offDuty' && activeTasksExist,
+        disabled: value === 'offDuty' && dutyStatusForUi !== 'offDuty' && activeTasksExist,
       })),
-    [activeTasksExist, dutyStatus, t],
+    [activeTasksExist, dutyStatusForUi, t],
   );
 
   // §7.3 拍板 A：删 index 第二参数——Q1 假数据清零后无下标依赖；后端有 reward 字段再恢复
@@ -182,7 +191,10 @@ export default function TasksPage() {
   };
 
   const renderContent = () => {
-    if (!online) {
+    // P6-1：仅 online===false（settings 明确 dutyStatus=offDuty）才走 offline 空态。
+    //   online=null（settings 加载中/失败）保守不停派单 → 落 QueryBoundary 三态，不误显「你已离线」。
+    //   原 `if (!online)` 把 null 当 falsy → settings 失败时误显离线空态（静默掉线根因），已修。
+    if (online === false) {
       return <EmptyState title={t('common.offlineTitle')} description={t('common.offlineDesc')} />;
     }
 
@@ -217,8 +229,8 @@ export default function TasksPage() {
       <TaskDetailHeader
         activeTab={activeTab}
         deliveriesLabel={taskLists.deliveries.length ? t('tasks.tabs.deliveries1') : t('tasks.tabs.deliveries0')}
-        dutyStatus={dutyStatus}
-        dutyStatusLabel={t(dutyLabelKey[dutyStatus])}
+        dutyStatus={dutyStatusForUi}
+        dutyStatusLabel={t(dutyLabelKey[dutyStatusForUi])}
         newTasksLabel={t('tasks.tabs.new')}
         pickupsLabel={taskLists.pickups.length ? t('tasks.tabs.pickups1') : t('tasks.tabs.pickups0')}
         onDutyPress={openMenu}
@@ -266,7 +278,7 @@ export default function TasksPage() {
       />
       <DutyStatusMenu
         cancelLabel={t('duty.menu.cancel')}
-        current={dutyStatus}
+        current={dutyStatusForUi}
         options={menuOptions}
         title={t('duty.menu.title')}
         visible={menuVisible}
@@ -275,7 +287,7 @@ export default function TasksPage() {
       />
       <ConfirmDialog
         cancelLabel={t('duty.confirm.cancel')}
-        message={pending ? t('duty.confirm.message', { from: t(dutyLabelKey[dutyStatus]), to: t(dutyLabelKey[pending]) }) : ''}
+        message={pending ? t('duty.confirm.message', { from: t(dutyLabelKey[dutyStatusForUi]), to: t(dutyLabelKey[pending]) }) : ''}
         okLabel={t('duty.confirm.ok')}
         title={t('duty.confirm.title')}
         visible={pending !== null}

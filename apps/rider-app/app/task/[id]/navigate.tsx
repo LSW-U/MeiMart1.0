@@ -218,28 +218,33 @@ export default function TaskNavigatePage() {
                               {taskData.dropoff.contactPhone || t('tasks.noPhone')}
                             </Text>
                           </View>
-                          <Pressable
-                            accessibilityLabel={taskData.dropoff.contactPhone ? t('tasks.callCustomer') : t('tasks.noPhone')}
-                            accessibilityRole="button"
-                            accessibilityState={{ disabled: !taskData.dropoff.contactPhone }}
-                            className={'h-10 w-10 items-center justify-center rounded-[10px] ' + (taskData.dropoff.contactPhone ? '' : 'bg-neutral-bg')}
-                            style={taskData.dropoff.contactPhone ? { backgroundColor: colors.success } : undefined}
-                            disabled={!taskData.dropoff.contactPhone}
-                            onPress={() => void handleCallCustomer()}
-                          >
-                            {/* 禁用态（原型 .contact-btn.disabled）：neutral-bg 浅底 + outline 图标 */}
-                            <AppIcon color={taskData.dropoff.contactPhone ? colors.surface : colors.outline} name="phone" size={18} />
-                          </Pressable>
-                          <Pressable
-                            accessibilityHint={t('tasks.chatComingSoon')}
-                            accessibilityLabel={t('tasks.chat')}
-                            accessibilityRole="button"
-                            className="h-10 w-10 items-center justify-center rounded-[10px]"
-                            style={{ backgroundColor: colors.info }}
-                            onPress={() => showToast(t('tasks.chatComingSoon'), 'info')}
-                          >
-                            <AppIcon color={colors.surface} name="chat" size={18} />
-                          </Pressable>
+                          {/* B1 裁决 B（原型 .contact-btns）：call/chat 两按钮包一组，组内 gap:8px
+                              （原型 :130），与 contact-info 之间走外层 gap:10px——避免三节点平摊
+                              把按钮间距撑成 10px（原型按钮间是 8px） */}
+                          <View className="flex-row gap-2">
+                            <Pressable
+                              accessibilityLabel={taskData.dropoff.contactPhone ? t('tasks.callCustomer') : t('tasks.noPhone')}
+                              accessibilityRole="button"
+                              accessibilityState={{ disabled: !taskData.dropoff.contactPhone }}
+                              className={'h-10 w-10 items-center justify-center rounded-[10px]' + (taskData.dropoff.contactPhone ? '' : ' bg-neutral-bg')}
+                              style={taskData.dropoff.contactPhone ? { backgroundColor: colors.success } : undefined}
+                              disabled={!taskData.dropoff.contactPhone}
+                              onPress={() => void handleCallCustomer()}
+                            >
+                              {/* 禁用态（原型 .contact-btn.disabled）：neutral-bg 浅底 + outline 图标 */}
+                              <AppIcon color={taskData.dropoff.contactPhone ? colors.surface : colors.outline} name="phone" size={18} />
+                            </Pressable>
+                            <Pressable
+                              accessibilityHint={t('tasks.chatComingSoon')}
+                              accessibilityLabel={t('tasks.chat')}
+                              accessibilityRole="button"
+                              className="h-10 w-10 items-center justify-center rounded-[10px]"
+                              style={{ backgroundColor: colors.info }}
+                              onPress={() => showToast(t('tasks.chatComingSoon'), 'info')}
+                            >
+                              <AppIcon color={colors.surface} name="chat" size={18} />
+                            </Pressable>
+                          </View>
                         </View>
                       </View>
                       <Text className="text-xs font-bold uppercase tracking-wider text-outline">{formatDistance(taskData.distanceKm)}</Text>

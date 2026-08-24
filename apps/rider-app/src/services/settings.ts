@@ -93,15 +93,12 @@ export const riderSettingsApi = {
   async get(): Promise<RiderSettings> {
     if (isMockMode) return { ...getMockSettings() };
     const localSettings = getMockSettings();
-    try {
-      const profile = await riderApi.getProfile();
-      const dutyStatus = dutyStatusReverseMap[profile.status] ?? 'offDuty';
-      return { ...localSettings, dutyStatus };
-    } catch (e) {
-      // profile 拉取失败：回退到 offDuty，避免阻塞任务页渲染
-      console.error('[riderSettingsApi.get] getProfile failed:', e);
-      return { ...localSettings, dutyStatus: 'offDuty' };
-    }
+    // P6-1：失败直接 throw，让 useRiderSettings 的 isError 捕获——不再回退 offDuty。
+    // 原回退 offDuty 会让 _layout 的 online=false 静默掉线（停 GPS/心跳/派单），是丢派单收入的根源。
+    // 现在由调用方按 isError 判「加载失败」态（online=null 保守不停派单，见 _layout MainContent）。
+    const profile = await riderApi.getProfile();
+    const dutyStatus = dutyStatusReverseMap[profile.status] ?? 'offDuty';
+    return { ...localSettings, dutyStatus };
   },
 
   // Why: dutyStatus 调用 /rider/duty，language/notificationsEnabled 本地存储

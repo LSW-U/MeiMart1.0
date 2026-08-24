@@ -12,9 +12,9 @@ import { showToast } from '../../../src/components/feedback/Toast';
 const showToastMock = showToast as jest.Mock;
 
 /**
- * TasksPage 两分支单测 —— T1 审查 P3-1：切班失败 catch（b8ba835 修的弹窗卡死 bug
+ * TasksPage 单测 —— T1 审查 P3-1：切班失败 catch（b8ba835 修的弹窗卡死 bug
  * 核心分支，误删 catch 即回归）+ RefreshControl 离线守卫（弱网关键守卫，误删即
- * 离线下拉 error 态覆盖缓存）。
+ * 离线下拉 error 态覆盖缓存）+ P6-1 三态 online（settings 加载失败保守不停派单）。
  *
  * web project（jsdom）+ RN host 壳。TasksPage 是重组件，依赖全部 jest.mock 成最小桩：
  *   - expo-router：useRouter/useLocalSearchParams 桩（页面测试不关心导航）
@@ -32,6 +32,8 @@ const showToastMock = showToast as jest.Mock;
 const mockRefetch = jest.fn();
 const mockMutateAsync = jest.fn();
 let mockOffline = false;
+// P6-1：settings 加载态切换。'ok' | 'error'。'ok' → data.dutyStatus='onDuty'，'error' → isError=true。
+let mockSettingsState = 'ok';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => false }),
@@ -55,7 +57,13 @@ jest.mock('../../../src/services/queries/useTask', () => ({
 }));
 
 jest.mock('../../../src/services/queries/useSettings', () => ({
-  useRiderSettings: () => ({ data: { dutyStatus: 'onDuty', language: 'zh' } }),
+  // P6-1：补 isError 分支——mockSettingsState='error' 模拟 settings 加载失败（online=null 保守不停派单）。
+  // 注意：error 态仍返回 data.language='zh'（useTranslation 内部读 settings?.language），保证 zh 字典回退不报错；
+  // dutyStatus 缺失 → tasks.tsx dutyStatus=null（保守），但 useTranslation 仍走 zh 字典。
+  useRiderSettings: () => {
+    if (mockSettingsState === 'error') return { data: { language: 'zh' }, isError: true };
+    return { data: { dutyStatus: 'onDuty', language: 'zh' }, isError: false };
+  },
   useUpdateRiderSettings: () => ({ mutateAsync: mockMutateAsync, isPending: false }),
 }));
 
@@ -94,6 +102,7 @@ beforeEach(() => {
   mockRefetch.mockClear();
   mockMutateAsync.mockReset();
   mockOffline = false;
+  mockSettingsState = 'ok';
   showToastMock.mockClear();
 });
 
@@ -166,5 +175,22 @@ describe('RefreshControl 离线守卫（T1 §7.2 拍板分支）', () => {
 
     expect(mockRefetch).toHaveBeenCalledTimes(1);
     expect(showToastMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('P6-1 三态 online（settings 加载失败保守不停派单）', () => {
+  // P6-1 核心断言：settings 加载失败（isError）→ online=null → renderContent 不走 offline 空态，
+  // 仍渲染 QueryBoundary（任务列表三态）。原 bug：`settings?.dutyStatus ?? 'offDuty'` 在
+  // settings=undefined 时回退 offDuty → online=false → 误显「你已离线」空态（静默掉线根因）。
+  it('settings 加载失败：不显示「你已离线」空态，仍渲染任务列表（QueryBoundary）', () => {
+    mockSettingsState = 'error';
+    const { queryByText, container } = renderPage();
+
+    // 不渲染 offline 空态标题/描述（online=null 不走 !online 分支）
+    expect(queryByText('你已离线')).toBeNull();
+    expect(queryByText('请重新上线以接收附近配送任务。')).toBeNull();
+    // QueryBoundary 渲染：data 空列表 → 走 empty 态（EmptyState 宿主 View 在 DOM 中）
+    // 比 offline 空态多一层 QueryBoundary 结构——断言 RefreshControl/ScrollView 仍在（列表区未被子空态替换）
+    expect(container.querySelector('[data-rn-host="RefreshControl"]')).not.toBeNull();
   });
 });

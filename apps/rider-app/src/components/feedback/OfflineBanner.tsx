@@ -1,10 +1,11 @@
 import { Text, View } from 'react-native';
 
-import { useNetwork } from '../../hooks/useNetwork';
+import { useNetworkStore } from '../../hooks/useNetworkStore';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export function OfflineBanner() {
-  const { isOffline } = useNetwork();
+  // P6-5（Q3=B）：切单例 store——与 _layout MainContent 共享同一份网络状态。
+  const isOffline = useNetworkStore((s) => s.isOffline);
   const { t } = useTranslation();
 
   if (!isOffline) return null;

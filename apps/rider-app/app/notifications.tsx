@@ -172,10 +172,10 @@ export default function NotificationsPage() {
           <NotificationSkeleton />
         ) : isError ? (
           <ErrorState
-            actionLabel={t('notification.retry')}
-            message={t('notification.error.loadFailed')}
+            actionLabel={t('common.retry')}
+            message={t('common.loadError.desc')}
             onAction={() => void refetch()}
-            title={t('notification.error.loadFailed')}
+            title={t('common.loadError.title')}
           />
         ) : visibleItems.length === 0 ? (
           // P4-3 §3.3：空态增强——图标+标题+描述，分类空态文案区分
