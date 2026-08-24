@@ -1,26 +1,15 @@
-import { colors } from "../src/theme/colors";
-import { ScrollView, Text, View } from 'react-native';
-
-import { AppIcon } from '../src/components/ui';
+import { LegalPage } from '../src/components/layout/LegalPage';
 import { useTranslation } from '../src/i18n/useTranslation';
-import { SimplePageHeader } from '../src/components/layout/SimplePageHeader';
 
 export default function TermsPage() {
   const { t } = useTranslation();
-
-
   return (
-    <View className="flex-1 bg-background">
-      <SimplePageHeader backLabel={t('common.back')} title={t('legal.terms.title')} />
-      <ScrollView contentContainerClassName="gap-4 px-5 py-6 pb-12">
-        <View className="rounded-3xl bg-primary p-6 shadow-sm">
-          <AppIcon color={colors.surface} name="document" size={34} />
-          <Text className="mt-4 text-2xl font-bold text-white">{t('legal.terms.title')}</Text>
-        </View>
-        <View className="rounded-2xl border border-surface-container bg-surface p-5 shadow-sm">
-          <Text className="text-sm leading-6 text-on-surface-variant">{t('legal.terms.body')}</Text>
-        </View>
-      </ScrollView>
-    </View>
+    <LegalPage
+      bodyKey="legal.terms.body"
+      icon="document"
+      backLabel={t('common.back')}
+      titleKey="legal.terms.title"
+      versionKey="legal.terms.version"
+    />
   );
 }
