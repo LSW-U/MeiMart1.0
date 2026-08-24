@@ -14,11 +14,18 @@ import { create } from 'zustand';
  *   单例的价值在「同一屏的 _layout 与 OfflineBanner 共享同一份状态」，2 处即达成目标。
  *
  * init() 在 root _layout 注册一次（app 生命周期内 root 不卸载，等同常驻），返回 cleanup 解注。
- * 首帧 isConnected 默认 true（与原 useNetwork `?? true` 收敛一致），NetInfo 首次回调到达后更新真实状态。
+ *
+ * P6-4 路径 A：首帧 isConnected=null（NetInfo 未确认），与方案 §10「启动时未确认不触发 processQueue」对齐。
+ *   消费方按需守卫：
+ *   - _layout processQueue：仅 `isOffline === true → false`（明确从断网恢复）才 flush，null 首帧不触发。
+ *   - _layout bgEnabled：`isOffline === false`（明确在线）才启后台定位，null 不启（保守不耗电）。
+ *   - OfflineBanner：`if (!isOffline)` 中 null 为 falsy → 不显示，语义正确（未确认≠断网，不闪黄条）。
+ *   NetInfo 首次回调（fetch/addEventListener）到达后更新为真实 boolean。
  */
 type NetworkState = {
-  isConnected: boolean;
-  isOffline: boolean;
+  // null = NetInfo 首帧未确认（启动瞬态），boolean = 已确认在线/断网
+  isConnected: boolean | null;
+  isOffline: boolean | null;
   init: () => () => void;
 };
 
@@ -28,20 +35,22 @@ let unsub: (() => void) | null = null;
 let activeCount = 0;
 
 function derive(state: NetInfoState) {
+  const connected = state.isConnected ?? true;
   useNetworkStore.setState({
-    isConnected: state.isConnected ?? true,
-    isOffline: !(state.isConnected ?? true),
+    isConnected: connected,
+    isOffline: !connected,
   });
 }
 
 export const useNetworkStore = create<NetworkState>(() => ({
-  isConnected: true,
-  isOffline: false,
+  isConnected: null,
+  isOffline: null,
   init: () => {
     activeCount += 1;
     // 首个订阅者：fetch 同步拉真实状态 + 注册 addEventListener（NetInfo 内部单例广播，只注一次）
     if (activeCount === 1) {
       NetInfo.fetch().then(derive).catch(() => {
+        // fetch 失败保守视为在线（与原 useNetwork ?? true 一致），避免误判断网阻断派单
         useNetworkStore.setState({ isConnected: true, isOffline: false });
       });
       unsub = NetInfo.addEventListener(derive);
@@ -52,7 +61,7 @@ export const useNetworkStore = create<NetworkState>(() => ({
       if (activeCount === 0 && unsub) {
         unsub();
         unsub = null;
-        useNetworkStore.setState({ isConnected: true, isOffline: false });
+        useNetworkStore.setState({ isConnected: null, isOffline: null });
       }
     };
   },

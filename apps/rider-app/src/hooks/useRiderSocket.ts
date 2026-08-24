@@ -16,6 +16,13 @@ export type RiderSocketState = 'disconnected' | 'connecting' | 'connected' | 'er
  *   - token 变化时自动重连
  *
  * 调用方：在骑手工作台根 layout 或 (main)/_layout.tsx 调一次。
+ *
+ * P6-3 风险区分（方案 §8）：
+ *   - `'error'`：connect_error，握手/连接失败（token 失效、网络层断、CORS）—— 客观失败，需警示。
+ *   - `'disconnected'`：socket.io reconnection:true 下是重连中瞬态（每次重试前 emit disconnect）。
+ *     但服务端 graceful disconnect（网关重启主动断开）只 emit `disconnect` 不 emit `connect_error`，
+ *     socket.io 在 reconnectionAttempts 耗尽前一直 `disconnected`（reconnectionAttempts=Infinity 永不耗尽 → connect_error 不再 fire），
+ *     骑手长时间无感知。故 `disconnected` 持续态也需纳入可见反馈（见 _layout debounce 后显示 Banner）。
  */
 export function useRiderSocket() {
   // useAuthStore 暂未存 access token；从 tokenStorage 异步拿（与 hydrate 一致）
