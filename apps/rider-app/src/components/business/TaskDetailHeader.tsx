@@ -14,8 +14,12 @@ type TaskDetailHeaderProps = {
   // T2 §3.2：tab 4 prop 改可选——详情页单任务视图不传（tab 行不渲染），
   // 列表页全传保持原行为。漏传任一 prop tab 行静默消失（渲染条件 && 全检兜底）
   activeTab?: TaskTab;
+  // dutyStatus 类型是三态 DutyStatus（非 null）。加载中/失败态由 dutyLoading 显式标记，
+  // dutyStatus 仅作占位值（'offDuty'），圆点颜色与文案均走 loading 分支，不显误导性的「已下班」。
   dutyStatus: DutyStatus;
   dutyStatusLabel: string;
+  // P6 §四.9：settings 加载中/失败时显「加载中」+ 中性灰点，而非 offDuty 灰点 +「已下班」文案
+  dutyLoading?: boolean;
   newTasksLabel?: string;
   pickupsLabel?: string;
   deliveriesLabel?: string;
@@ -31,7 +35,7 @@ const dotColor: Record<DutyStatus, string> = {
   offDuty: 'bg-dot-off',
 };
 
-export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTasksLabel, pickupsLabel, deliveriesLabel, onDutyPress, onMenuPress, onTabChange }: TaskDetailHeaderProps) {
+export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, dutyLoading, newTasksLabel, pickupsLabel, deliveriesLabel, onDutyPress, onMenuPress, onTabChange }: TaskDetailHeaderProps) {
   const router = useRouter();
   const { data: unread = 0 } = useUnreadCount();
   const { t } = useTranslation();
@@ -42,19 +46,24 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, newTa
     { key: 'deliveries', label: deliveriesLabel },
   ] as const;
 
+  // P6 §四.9：加载中/失败态——圆点用中性 outline（非 offDuty 灰，避免误读为「已下班」），
+  // 文案显「加载中」。dutyStatus 此时仅为占位值，其取值不影响视觉。
+  const dotClass = dutyLoading ? 'bg-outline' : dotColor[dutyStatus];
+  const label = dutyLoading ? t('duty.loading') : dutyStatusLabel;
+
   // T6 §7.4 A：onDutyPress 未传（详情页单任务视图）时 duty 区降级纯展示——
   // 不接 Pressable、隐藏 chevronDown（无展开语义），切班集中在列表页做
   const dutyArea: ReactElement =
     typeof onDutyPress === 'function' ? (
-      <Pressable accessibilityRole="button" accessibilityLabel={dutyStatusLabel} className="flex-row items-center gap-2 rounded-full border border-primary-container bg-surface px-4 py-1" onPress={onDutyPress}>
-        <View className={`h-2 w-2 rounded-full ${dotColor[dutyStatus]}`} />
-        <Text className="text-xl font-bold text-on-surface">{dutyStatusLabel}</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={label} className="flex-row items-center gap-2 rounded-full border border-primary-container bg-surface px-4 py-1" onPress={onDutyPress}>
+        <View className={`h-2 w-2 rounded-full ${dotClass}`} />
+        <Text className="text-xl font-bold text-on-surface">{label}</Text>
         <AppIcon name="chevronDown" color={colors.textMuted} size={18} />
       </Pressable>
     ) : (
       <View className="flex-row items-center gap-2 rounded-full border border-primary-container bg-surface px-4 py-1">
-        <View className={`h-2 w-2 rounded-full ${dotColor[dutyStatus]}`} />
-        <Text className="text-xl font-bold text-on-surface">{dutyStatusLabel}</Text>
+        <View className={`h-2 w-2 rounded-full ${dotClass}`} />
+        <Text className="text-xl font-bold text-on-surface">{label}</Text>
       </View>
     );
 

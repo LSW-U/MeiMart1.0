@@ -50,9 +50,11 @@ export default function TaskDetailPage() {
   const action = taskData ? getTaskAction(taskData) : undefined;
   // T2 §3.4: getTaskAction 返回 undefined = 终态（DELIVERED/FAILED），显示 banner + 返回列表
   const isTerminal = taskData !== null && !action;
-  // T2 §3.1: 真实班次（原硬编码 onDuty），与 tasks.tsx 同源范式
-  const { data: settings } = useRiderSettings();
-  const dutyStatus = settings?.dutyStatus ?? 'offDuty';
+  const { data: settings, isError: settingsError } = useRiderSettings();
+  // P6 §四.9：settings 加载中/失败时 duty 区显「加载中」而非「已下班」（与 tasks.tsx 同源）。
+  //   dutyStatus 仅作 TaskDetailHeader 类型占位，dutyLoading 时视觉走 loading 分支。
+  const dutyStatus: DutyStatus = settingsError ? 'offDuty' : settings ? settings.dutyStatus : 'offDuty';
+  const dutyLoading = settingsError ? true : !settings;
 
   // Why: PENDING_ASSIGN 先 accept（接单）再跳；其他状态直接跳对应步骤页
   // T2 §3.4: 终态无 action → 返回列表（原 fallback 刷新当主 CTA 语义错位）
@@ -107,6 +109,7 @@ export default function TaskDetailPage() {
           T6 §7.4 A: 不传 onDutyPress——详情页专注单任务，切班在列表页做（duty 区降级纯展示） */}
       <TaskDetailHeader
         dutyStatus={dutyStatus}
+        dutyLoading={dutyLoading}
         dutyStatusLabel={t(dutyLabelKey[dutyStatus])}
         onMenuPress={() => router.push('/(main)/profile')}
       />

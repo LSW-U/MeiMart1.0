@@ -193,4 +193,15 @@ describe('P6-1 三态 online（settings 加载失败保守不停派单）', () =
     // 比 offline 空态多一层 QueryBoundary 结构——断言 RefreshControl/ScrollView 仍在（列表区未被子空态替换）
     expect(container.querySelector('[data-rn-host="RefreshControl"]')).not.toBeNull();
   });
+
+  // P6 §四.9：settings 加载失败时 header duty 区显「加载中」而非「已下班」（瞬时误导改进）。
+  //   dutyStatus=null（settingsError）→ dutyLoading=true → TaskDetailHeader 显 t('duty.loading') + 中性灰点。
+  it('settings 加载失败：header duty 区显「加载中」而非「已下班」（P6 §四.9）', () => {
+    mockSettingsState = 'error';
+    const { getByText, queryByText } = renderPage();
+
+    expect(getByText('加载中…')).toBeTruthy();
+    // 不显误导性的「已下班」（offDuty 占位仅作类型，视觉走 loading 分支）
+    expect(queryByText('已下班')).toBeNull();
+  });
 });

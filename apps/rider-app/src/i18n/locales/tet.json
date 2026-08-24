@@ -140,6 +140,7 @@
   "duty.busy": "Ocupadu",
   "duty.confirm.cancel": "Kansela",
   "duty.confirm.message": "Muda status husi \"{from}\" ba \"{to}\"?",
+  "duty.loading": "",
   "duty.confirm.ok": "Konfirma",
   "duty.confirm.title": "Konfirma muda status",
   "duty.menu.cancel": "Kansela",

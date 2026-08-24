@@ -140,6 +140,7 @@
   "duty.busy": "Busy",
   "duty.confirm.cancel": "Cancel",
   "duty.confirm.message": "Change status from \"{from}\" to \"{to}\"?",
+  "duty.loading": "Loading…",
   "duty.confirm.ok": "Confirm",
   "duty.confirm.title": "Confirm Status Change",
   "duty.menu.cancel": "Cancel",

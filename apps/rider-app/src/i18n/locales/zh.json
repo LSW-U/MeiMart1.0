@@ -140,6 +140,7 @@
   "duty.busy": "忙碌中",
   "duty.confirm.cancel": "取消",
   "duty.confirm.message": "确定将状态从「{from}」修改为「{to}」吗？",
+  "duty.loading": "加载中…",
   "duty.confirm.ok": "确定",
   "duty.confirm.title": "确认切换状态",
   "duty.menu.cancel": "取消",

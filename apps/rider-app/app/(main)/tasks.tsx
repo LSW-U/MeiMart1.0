@@ -60,9 +60,13 @@ export default function TasksPage() {
   // 原 `settings?.dutyStatus ?? 'offDuty'` 在 settings=undefined 时回退 offDuty → online=false → 误显「你已离线」（同 _layout 静默掉线根因）。
   const dutyStatus: DutyStatus | null = settingsError ? null : settings ? settings.dutyStatus : null;
   // P6-1：UI 展示值——header/menu 的 prop 类型是 DutyStatus（非 null）。
-  //   加载中/失败时用 offDuty 占位（灰点 +「已下班」文案），但 online=null 仍走任务三态，不切 offline 空态。
-  //   语义：状态条视觉降级为「下班」点，但列表不显示「你已离线」（settings 失败 ≠ 真下班）。
+  //   加载中/失败时用 offDuty 占位，但 dutyLoading=true 让 header 显「加载中」+ 中性灰点
+  //   （而非 offDuty 灰点 +「已下班」文案——见 P6 §四.9，避免瞬时误导骑手）。
+  //   online=null 仍走任务三态，不切 offline 空态（settings 失败 ≠ 真下班）。
   const dutyStatusForUi: DutyStatus = dutyStatus ?? 'offDuty';
+  // P6 §四.9：settings 未就绪（加载中/失败）→ header duty 区显「加载中」而非「已下班」。
+  //   dutyStatusForUi 仅作 TaskDetailHeader/DutyStatusMenu 类型占位，dutyLoading 时视觉走 loading 分支。
+  const dutyLoading = dutyStatus === null;
   // B3: 消费三态——loading 骨架替代闪空态，error 显式重试（不再误报"暂无任务"）
   // B5: isFetching 供底栏刷新 spinner 反馈
   const { data: taskListsData, isLoading: taskListsLoading, isError: taskListsError, isFetching: taskListsFetching, refetch: refetchTasks } = useTaskLists();
@@ -230,6 +234,7 @@ export default function TasksPage() {
         activeTab={activeTab}
         deliveriesLabel={taskLists.deliveries.length ? t('tasks.tabs.deliveries1') : t('tasks.tabs.deliveries0')}
         dutyStatus={dutyStatusForUi}
+        dutyLoading={dutyLoading}
         dutyStatusLabel={t(dutyLabelKey[dutyStatusForUi])}
         newTasksLabel={t('tasks.tabs.new')}
         pickupsLabel={taskLists.pickups.length ? t('tasks.tabs.pickups1') : t('tasks.tabs.pickups0')}

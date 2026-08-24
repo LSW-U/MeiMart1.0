@@ -140,6 +140,7 @@
   "duty.busy": "Sibuk",
   "duty.confirm.cancel": "Batal",
   "duty.confirm.message": "Ubah status dari \"{from}\" ke \"{to}\"?",
+  "duty.loading": "Memuat…",
   "duty.confirm.ok": "Konfirmasi",
   "duty.confirm.title": "Konfirmasi ubah status",
   "duty.menu.cancel": "Batal",

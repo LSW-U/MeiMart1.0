@@ -28,6 +28,8 @@ const mockAccept = jest.fn();
 const mockBack = jest.fn();
 let mockTaskStatus: string | null = 'DELIVERED';
 let mockDutyStatus = 'offDuty';
+// P6 §四.9：settings 就绪态切换（'ok' 真实班次 / 'loading' 未就绪 / 'error' 加载失败）。
+let mockDutySettings = 'ok';
 // T6 §3.1：联系拨号两态（有电话 tel: 直拨 / 无电话 toast tasks.noPhone）
 let mockContactPhone: string | null = null;
 
@@ -79,7 +81,13 @@ jest.mock('../../../src/services/queries/useTask', () => ({
 }));
 
 jest.mock('../../../src/services/queries/useSettings', () => ({
-  useRiderSettings: () => ({ data: { dutyStatus: mockDutyStatus, language: 'zh' } }),
+  // P6 §四.9：mockDutySettings 切 'ok'|'loading'|'error'。'ok' → data.dutyStatus=mockDutyStatus；
+  // 'loading' → data=undefined（settings 未就绪，dutyLoading=true）；'error' → isError=true。
+  useRiderSettings: () => {
+    if (mockDutySettings === 'error') return { data: { language: 'zh' }, isError: true };
+    if (mockDutySettings === 'loading') return { data: undefined, isError: false };
+    return { data: { dutyStatus: mockDutyStatus, language: 'zh' }, isError: false };
+  },
   useUpdateRiderSettings: () => ({ mutateAsync: mockMutateAsync, isPending: false }),
 }));
 
@@ -111,6 +119,7 @@ beforeEach(() => {
   showToastMock.mockClear();
   mockTaskStatus = 'DELIVERED';
   mockDutyStatus = 'offDuty';
+  mockDutySettings = 'ok';
   mockContactPhone = null;
   mockLinkingOpenURL = jest.fn(async () => undefined);
   (Linking as unknown as { openURL: jest.Mock }).openURL = mockLinkingOpenURL;
@@ -206,6 +215,16 @@ describe('duty 真实班次 + 切班（T2 §3.1/§3.3 · T6 §7.4 A 后切班集
     expect(queryByText('切换状态')).toBeNull();
     expect(container.querySelector('[data-testid="icon-chevron-down"]')).toBeNull();
     expect(mockBack).not.toHaveBeenCalled();
+  });
+
+  // P6 §四.9：settings 未就绪（加载中/失败）→ duty 区显「加载中」而非「已下班」，
+  // 避免瞬时误导（详情页 settings 跟列表页同源 useRiderSettings，加载中同样占位）。
+  it('settings 未就绪：duty 区显「加载中」而非「已下班」（P6 §四.9）', () => {
+    mockDutySettings = 'loading';
+    const { getByText, queryByText } = renderPage();
+
+    expect(getByText('加载中…')).toBeTruthy();
+    expect(queryByText('已下班')).toBeNull();
   });
 });
 
