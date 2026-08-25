@@ -72,11 +72,12 @@
         }
       ],
       "@sentry/react-native",
-      {
-        "expo-location": {
+      [
+        "expo-location",
+        {
           "locationWhenInUsePermission": "Show your location on the map to pick a delivery address."
         }
-      }
+      ]
     ],
     "updates": {
       "url": "https://u.expo.dev/your-eas-project-id"
