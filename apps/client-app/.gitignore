@@ -58,3 +58,6 @@ coverage/
 # AI tools
 .claude/
 .cursor/
+
+# WorkBuddy tool runtime data
+.workbuddy/
