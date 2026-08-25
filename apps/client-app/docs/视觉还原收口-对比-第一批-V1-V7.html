@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>视觉还原收口 · 第一批对比（V1-V7）</title>
+<style>
+:root{
+  --primary:#961813; --primary-container:#ffdcd6; --on-primary-container:#93302a;
+  --tertiary:#634700; --tertiary-fixed:#e3d4a8;
+  --surface:#fff8f7; --surface-lowest:#fff; --surface-low:#fff5f4; --surface-c:#fff0ee; --surface-h:#fdecea; --surface-ch:#fce2df; --surface-variant:#f5e0dc;
+  --on-surface:#261816; --on-sv:#59413d; --on-sv2:#8d706c; --outline-v:#e1bfba; --outline:#fae8e6;
+  --positive:#16a34a; --warning:#F57C00; --error:#C62828; --info:#1d4ed8;
+  --shadow-sm:0 2px 8px rgba(68,31,24,.06); --shadow-md:0 6px 18px rgba(68,31,24,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#efe8e3;font:14px/1.5 Inter,ui-sans-serif,system-ui,sans-serif;color:var(--on-surface);padding:24px 16px}
+.page{max-width:1180px;margin:0 auto}
+header.hd{background:#fff;border-radius:14px;box-shadow:var(--shadow-md);padding:20px 24px;margin-bottom:24px;border-left:6px solid var(--primary)}
+header.hd h1{font-size:20px;font-weight:800;color:var(--primary);margin-bottom:4px}
+header.hd .sub{font-size:12px;color:var(--on-sv)}
+header.hd .meta{font-size:11px;color:var(--on-sv2);margin-top:8px;display:flex;gap:16px;flex-wrap:wrap}
+header.hd .meta b{color:var(--on-sv)}
+
+.task{background:#fff;border-radius:14px;box-shadow:var(--shadow-md);margin-bottom:20px;overflow:hidden;border:1px solid var(--outline-v)}
+.task-head{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--outline-v);background:var(--surface-lowest)}
+.tid{font:700 10px/1 monospace;color:#fff;background:var(--primary);padding:3px 8px;border-radius:4px;letter-spacing:.04em}
+.tpage{font:700 11px/1 sans-serif;color:var(--on-sv);background:var(--surface-h);padding:4px 8px;border-radius:4px}
+.ttitle{font:700 14px/1.3 var(--on-surface);flex:1}
+.tstat{font:700 10px/1 sans-serif;padding:4px 8px;border-radius:999px;letter-spacing:.04em}
+.tstat.todo{background:#fee2e2;color:var(--error)}
+.tstat.decide{background:#fef3c7;color:var(--warning)}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.col{padding:16px 20px}
+.col.cur{background:#fff5f4;border-right:1px solid var(--outline-v)}
+.col.opt{background:#fff}
+.col-label{font:700 10px/1 sans-serif;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.col.cur .col-label{color:var(--error)}
+.col.opt .col-label{color:var(--positive)}
+.col-label .dot{width:8px;height:8px;border-radius:999px}
+.col.cur .dot{background:var(--error)}
+.col.opt .dot{background:var(--positive)}
+
+.mock{background:var(--surface);border-radius:12px;padding:14px;border:1px solid var(--outline-v);margin-bottom:12px}
+.mock-title{font:700 9px/1 sans-serif;letter-spacing:.06em;color:var(--on-sv2);text-transform:uppercase;margin-bottom:8px;text-align:center}
+
+.kv{font-size:12px;line-height:1.9;color:var(--on-sv)}
+.kv .row{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.sw{display:inline-block;width:20px;height:20px;border-radius:4px;border:1px solid var(--outline-v);vertical-align:middle;flex:0 0 auto}
+.code{background:var(--surface-h);padding:1px 6px;border-radius:3px;font:11px/1.5 ui-monospace,monospace;color:var(--on-surface)}
+.kv .arrow{color:var(--on-sv2);font-weight:700}
+
+.szbar{display:flex;align-items:center;gap:6px;margin:4px 0}
+.szbar .bar{background:var(--primary);border-radius:2px}
+.szbar .bar.cur{background:var(--error)}
+.szbar .lbl{font:600 10px/1 monospace;color:var(--on-sv2)}
+
+.diff{padding:12px 20px;background:var(--surface-low);border-top:1px solid var(--outline-v)}
+.diff-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:13px;line-height:1.5}
+.diff-item:last-child{margin-bottom:0}
+.dtag{font:700 9px/1.6 monospace;color:#fff;padding:1px 6px;border-radius:3px;flex:0 0 auto;min-width:44px;text-align:center}
+.dtag.color{background:var(--primary)}
+.dtag.size{background:var(--tertiary)}
+.dtag.i18n{background:var(--info)}
+.dtag.miss{background:var(--error)}
+.dtag.new{background:var(--positive)}
+.dtag.layout{background:#7c3aed}
+
+.decide-box{padding:12px 20px;background:#fffbeb;border-top:1px solid #fde68a}
+.decide-box .q{font:700 12px/1.4 sans-serif;color:#92400e;margin-bottom:8px}
+.opt-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:6px;font-size:12px;color:var(--on-sv)}
+.opt-row .ok{font:700 10px/1 monospace;color:#fff;background:var(--positive);padding:2px 6px;border-radius:3px}
+.opt-row .ko{font:700 10px/1 monospace;color:#fff;background:var(--on-sv2);padding:2px 6px;border-radius:3px}
+
+.foot{text-align:center;padding:20px;font-size:12px;color:var(--on-sv2)}
+.foot b{color:var(--primary)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="hd">
+  <h1>视觉还原收口 · 第一批对比（V1-V7）</h1>
+  <div class="sub">转化主链路：P1 商品详情 / P2 个人中心 / P3 购物车 · 核查产出 7 项</div>
+  <div class="meta">
+    <span>来源：<b>视觉还原收口-任务清单-20260821.md</b></span>
+    <span>对照基准：<b>P1/P2/P3 优化原型 HTML</b>（非原始旧原型）</span>
+    <span>核查日期：2026-08-21</span>
+    <span>本批 7 项 · 6 项待修 · 1 项待展开</span>
+  </div>
+</header>
+
+<!-- ===== V1 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V1</span><span class="tpage">P1 商品详情</span>
+    <span class="ttitle">加购按钮配色映射修正：浅粉底+深红字 → 实心红+白字</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · app/product/[id].tsx:882-895</div>
+      <div class="mock">
+        <div class="mock-title">底部栏 · 加购按钮</div>
+        <div style="height:48px;background:#ffdcd6;color:#93302a;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:6px;font:700 13px/1 sans-serif">🛒 TAMA CART</div>
+      </div>
+      <div class="kv">
+        <div class="row"><span class="sw" style="background:#ffdcd6"></span> 底色：<span class="code">primary-container #ffdcd6</span> <span style="color:var(--error)">（浅粉）</span></div>
+        <div class="row"><span class="sw" style="background:#93302a"></span> 字色：<span class="code">on-primary-container #93302a</span> <span style="color:var(--error)">（深红）</span></div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · P1 .cart-btn</div>
+      <div class="mock">
+        <div class="mock-title">底部栏 · 加购按钮</div>
+        <div style="height:48px;background:#961813;color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:6px;font:700 13px/1 sans-serif">🛒 TAMA CART</div>
+      </div>
+      <div class="kv">
+        <div class="row"><span class="sw" style="background:#961813"></span> 底色：<span class="code">primary #961813</span> <span style="color:var(--positive)">（实心红）</span></div>
+        <div class="row"><span class="sw" style="background:#fff;border:1px solid #961813"></span> 字色：<span class="code">#ffffff</span> <span style="color:var(--positive)">（白字）</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag color">配色</span> CTA 主操作未突出：浅粉底+深红字对比不足，原型要求 <b>primary 实心红 + 白字</b>，与全站主按钮（PrimaryHeader/结算栏）一致</div>
+  </div>
+</div>
+
+<!-- ===== V2 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V2</span><span class="tpage">P1 商品详情</span>
+    <span class="ttitle">档位连锁修正：评分/分布条/标签/推荐卡 6 处尺寸偏差</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · [id].tsx:1225/1495/1521/1673 等</div>
+      <div class="mock">
+        <div class="mock-title">评分汇总 · 标签 · 推荐卡</div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="text-align:center">
+            <div style="font:700 36px/1 Georgia,serif;color:var(--on-surface)">4.8</div>
+            <div style="font:9px/1 sans-serif;color:var(--on-sv2)">ratingBig 48px</div>
+          </div>
+          <div style="flex:1">
+            <div style="display:flex;gap:4px;margin-bottom:6px">
+              <span style="font:700 12px/1 sans-serif;background:var(--tertiary-fixed);color:var(--tertiary);padding:5px 8px;border-radius:2px">PRODUTU LOKAL</span>
+            </div>
+            <div style="height:8px;background:var(--surface-c);border-radius:999px;overflow:hidden"><div style="height:100%;width:85%;background:var(--tertiary)"></div></div>
+            <div style="font:9px/1 sans-serif;color:var(--on-sv2);margin-top:2px">分布条 height:8</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <div style="width:160px;background:#fff;border:1px solid var(--outline-v);border-radius:10px;overflow:hidden">
+            <div style="height:128px;background:var(--surface-variant)"></div>
+            <div style="padding:8px">
+              <div style="height:28px;border:1px solid var(--primary);border-radius:2px;font:700 10px/28px sans-serif;color:var(--primary);text-align:center">TAMA CART</div>
+            </div>
+          </div>
+          <div style="font:9px/1.4 sans-serif;color:var(--on-sv2);align-self:center">related-card 160px<br>图高 128<br>add按钮 r2 直角</div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">ratingBig <span class="code">fontSize:48</span></div>
+        <div class="row">ratingBarTrack <span class="code">height:8</span></div>
+        <div class="row">tag <span class="code">fontSize:12 · borderRadius:2</span></div>
+        <div class="row">related-card <span class="code">宽160 · 图高128</span></div>
+        <div class="row">relatedAddBtn <span class="code">borderRadius:2</span></div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · .rating-big/.dist-bar/.tag/.related-card</div>
+      <div class="mock">
+        <div class="mock-title">评分汇总 · 标签 · 推荐卡</div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="text-align:center">
+            <div style="font:700 24px/1 Georgia,serif;color:var(--on-surface)">4.8</div>
+            <div style="font:9px/1 sans-serif;color:var(--on-sv2)">ratingBig 32px</div>
+          </div>
+          <div style="flex:1">
+            <div style="display:flex;gap:4px;margin-bottom:6px">
+              <span style="font:700 9px/1 sans-serif;background:var(--tertiary-fixed);color:var(--tertiary);padding:5px 8px;border-radius:4px;letter-spacing:.06em">PRODUTU LOKAL</span>
+            </div>
+            <div style="height:5px;background:var(--surface-c);border-radius:999px;overflow:hidden"><div style="height:100%;width:85%;background:var(--tertiary)"></div></div>
+            <div style="font:9px/1 sans-serif;color:var(--on-sv2);margin-top:2px">分布条 height:5</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <div style="width:140px;background:#fff;border:1px solid var(--outline-v);border-radius:10px;overflow:hidden">
+            <div style="height:140px;background:var(--surface-variant)"></div>
+            <div style="padding:8px">
+              <div style="height:24px;border:1px solid var(--primary);border-radius:999px;font:700 10px/24px sans-serif;color:var(--primary);text-align:center">TAMA CART</div>
+            </div>
+          </div>
+          <div style="font:9px/1.4 sans-serif;color:var(--on-sv2);align-self:center">related-card 140px<br>图高 140<br>add按钮 r999 胶囊</div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">ratingBig <span class="code">font:700 32px</span> <span class="arrow">←</span> <span style="color:var(--positive)">48→32</span></div>
+        <div class="row">ratingBarTrack <span class="code">height:5</span> <span class="arrow">←</span> <span style="color:var(--positive)">8→5</span></div>
+        <div class="row">tag <span class="code">9px · r4</span> <span class="arrow">←</span> <span style="color:var(--positive)">12px·r2→9px·r4</span></div>
+        <div class="row">related-card <span class="code">宽140 · 图高140</span> <span class="arrow">←</span> <span style="color:var(--positive)">160→140 / 128→140</span></div>
+        <div class="row">relatedAddBtn <span class="code">r999 胶囊</span> <span class="arrow">←</span> <span style="color:var(--positive)">r2直角→r999</span></div>
+        <div class="row">ratingSummary 底色 <span class="code">rgba(255,233,230,.3)</span> <span class="arrow">←</span> <span style="color:var(--positive)">surface-low→high档</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag size">尺寸</span> 评分大数字 48→32（过大喧宾夺主）/ 分布条 8→5（视觉粗笨）/ 标签 12px·r2→9px·r4（原型更精致）</div>
+    <div class="diff-item"><span class="dtag layout">布局</span> 推荐卡宽 160→140 + 图高 128→140（接近正方形）/ 加购小按钮 r2 直角→r999 胶囊（与原型一致）</div>
+    <div class="diff-item"><span class="dtag color">底色</span> ratingSummary 底色需提到 surface-container-high 档（rgba(255,233,230,.3)）</div>
+  </div>
+</div>
+
+<!-- ===== V3 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V3</span><span class="tpage">P1 商品详情</span>
+    <span class="ttitle">配送卡 ETA / "Free over $10" 写死英文 → i18n</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · [id].tsx:473-481</div>
+      <div class="mock">
+        <div class="mock-title">配送卡</div>
+        <div style="background:var(--surface-c);border-radius:12px;padding:14px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px">
+            <div><div style="font:700 9px/1;color:var(--on-sv2)">ENTREGA BA</div><div style="color:var(--on-surface)">Dili, Cristo Rei</div></div>
+          </div>
+          <div style="display:flex;gap:16px;padding-top:10px;border-top:1px solid var(--outline-v)">
+            <div><div style="font:700 9px/1;color:var(--on-sv2)">ETA</div><div style="color:var(--error);font-weight:600">Arrives Today 6:00 PM</div></div>
+            <div><div style="font:700 9px/1;color:var(--on-sv2)">ENVIO</div><div style="color:var(--primary);font-weight:700">Free over $10</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">:473 <span class="code">Arrives Today 6:00 PM</span> <span style="color:var(--error)">写死英文</span></div>
+        <div class="row">:481 <span class="code">Free over $10</span> <span style="color:var(--error)">写死英文</span></div>
+        <div class="row" style="color:var(--on-sv2)">其余 label 已走 t()，仅这两行 value 写死</div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · P1 anno 配送 i18n</div>
+      <div class="mock">
+        <div class="mock-title">配送卡（三语言）</div>
+        <div style="background:var(--surface-c);border-radius:12px;padding:14px">
+          <div style="display:flex;gap:16px;padding-top:10px">
+            <div><div style="font:700 9px/1;color:var(--on-sv2)">ETA</div><div style="color:var(--positive);font-weight:600">Ohin 6:00 PM</div></div>
+            <div><div style="font:700 9px/1;color:var(--on-sv2)">ENVIO</div><div style="color:var(--primary);font-weight:700">Free over $10</div></div>
+          </div>
+          <div style="font:9px/1.4 sans-serif;color:var(--on-sv2);margin-top:8px">🌐 anno 标注：配送信息需 i18n</div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">需补 key：<span class="code">product.etaValue</span> / <span class="code">product.shippingFree</span></div>
+        <div class="row">三语言：en / zh / tet（tet 走 [TET] 占位）</div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag i18n">i18n</span> ETA 与免运费门槛文案写死英文，切语言不变化；需提 key 到 locales 三语言</div>
+  </div>
+</div>
+
+<!-- ===== V4 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V4</span><span class="tpage">P2 个人中心</span>
+    <span class="ttitle">Discover NEW 角标补渲染（数据/样式已存在，JSX 缺一行）</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · app/(main)/profile.tsx:363-378</div>
+      <div class="mock">
+        <div class="mock-title">Discover 宫格（Invite / Seller）</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--surface-lowest);padding:12px;border-radius:10px">
+          <div style="text-align:center;padding:10px;background:var(--surface-low);border-radius:8px">
+            <div style="font-size:22px;color:var(--primary)">👤</div>
+            <div style="font:600 11px/1 sans-serif;color:var(--on-sv)">Invite</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:var(--surface-low);border-radius:8px">
+            <div style="font-size:22px;color:var(--primary)">🏪</div>
+            <div style="font:600 11px/1 sans-serif;color:var(--on-sv)">Seller</div>
+          </div>
+        </div>
+        <div style="font:9px/1 sans-serif;color:var(--error);text-align:center;margin-top:6px">⚠ 无 NEW 角标输出</div>
+      </div>
+      <div class="kv">
+        <div class="row">:363 <span class="code">DISCOVER_ENTRIES.map</span> 渲染图标+标签</div>
+        <div class="row" style="color:var(--on-sv2)">isNew 数据 + newTag 样式（:868-872）已存在</div>
+        <div class="row" style="color:var(--error)">JSX 未输出 isNew 角标</div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · P2 .new-tag</div>
+      <div class="mock">
+        <div class="mock-title">Discover 宫格（Invite / Seller 带 NEW）</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--surface-lowest);padding:12px;border-radius:10px">
+          <div style="position:relative;text-align:center;padding:10px;background:var(--surface-low);border-radius:8px">
+            <div style="position:absolute;top:2px;right:4px;font:700 7px/1 sans-serif;color:var(--positive);background:#dcfce7;padding:2px 4px;border-radius:3px">NEW</div>
+            <div style="font-size:22px;color:var(--primary)">👤</div>
+            <div style="font:600 11px/1 sans-serif;color:var(--on-sv)">Invite</div>
+          </div>
+          <div style="position:relative;text-align:center;padding:10px;background:var(--surface-low);border-radius:8px">
+            <div style="position:absolute;top:2px;right:4px;font:700 7px/1 sans-serif;color:var(--positive);background:#dcfce7;padding:2px 4px;border-radius:3px">NEW</div>
+            <div style="font-size:22px;color:var(--primary)">🏪</div>
+            <div style="font:600 11px/1 sans-serif;color:var(--on-sv)">Seller</div>
+          </div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">补 JSX：<span class="code">{entry.isNew && &lt;Text style={styles.newTag}&gt;NEW&lt;/Text&gt;}</span></div>
+        <div class="row">newTag 样式：<span class="code">7px 绿字 + positive-c 底</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag miss">缺失</span> 数据/样式齐全，仅 JSX 缺一行输出；改动极小（补条件渲染）</div>
+  </div>
+</div>
+
+<!-- ===== V5 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V5</span><span class="tpage">P3 购物车</span>
+    <span class="ttitle">结算栏 DISCOUNT 行恢复：有券值时显示绿 pill，无值隐藏</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · app/(main)/cart.tsx:379-387</div>
+      <div class="mock">
+        <div class="mock-title">结算栏（DISCOUNT 行被砍）</div>
+        <div style="background:var(--surface-lowest);border-top:1px solid var(--outline-v);padding:12px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">
+            <span style="color:var(--on-sv)">已选合计</span><span style="font:700 16px/1 sans-serif;color:var(--primary)">$25.50</span>
+          </div>
+          <div style="background:#fce2df;color:var(--error);font:700 12px/1 sans-serif;text-align:center;padding:12px;border-radius:8px">CHECKOUT</div>
+        </div>
+        <div style="font:9px/1 sans-serif;color:var(--error);text-align:center;margin-top:6px">⚠ 无 DISCOUNT 行（整行砍掉）</div>
+      </div>
+      <div class="kv">
+        <div class="row">:379 注释 <span class="code">"去写死 discount，无优惠券接口隐藏折扣行"</span></div>
+        <div class="row" style="color:var(--error)">逻辑：无条件隐藏，有券也不显示</div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · P3 .checkout-bar DISCOUNT 行</div>
+      <div class="mock">
+        <div class="mock-title">结算栏（有券时显示 DISCOUNT）</div>
+        <div style="background:var(--surface-lowest);border-top:1px solid var(--outline-v);padding:12px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+            <span style="color:var(--on-sv)">已选合计</span><span style="color:var(--on-surface)">$25.50</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">
+            <span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:var(--positive);font:700 10px/1 sans-serif;padding:3px 8px;border-radius:999px">🏷 DISCOUNT</span>
+            <span style="color:var(--positive);font-weight:700">−$3.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px;padding-top:6px;border-top:1px dashed var(--outline-v)">
+            <span style="color:var(--on-sv)">小计</span><span style="font:700 16px/1 sans-serif;color:var(--primary)">$22.50</span>
+          </div>
+          <div style="background:#fce2df;color:var(--error);font:700 12px/1 sans-serif;text-align:center;padding:12px;border-radius:8px">CHECKOUT</div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">条件渲染：<span class="code">{couponValue &gt; 0 && &lt;DiscountRow/&gt;}</span></div>
+        <div class="row">绿 pill：<span class="code">positive-c 底 + positive 字</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag miss">缺失</span> 原型「接接口无值才隐藏」= 条件渲染；现状是无条件砍掉，有券时用户看不到优惠金额</div>
+  </div>
+</div>
+
+<!-- ===== V6 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V6</span><span class="tpage">P3 购物车</span>
+    <span class="ttitle">Manage 按钮色档修正：primary 边+primary 字 → outline-variant 边+on-sv 字</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · cart.tsx:230-241</div>
+      <div class="mock">
+        <div class="mock-title">Manage 按钮</div>
+        <div style="border:1.5px solid var(--primary);color:var(--primary);font:700 12px/1 sans-serif;padding:8px 14px;border-radius:8px;display:inline-block">Manage</div>
+      </div>
+      <div class="kv">
+        <div class="row"><span class="sw" style="background:#961813"></span> 边：<span class="code">borderColor: primary #961813</span> <span style="color:var(--error)">（过强）</span></div>
+        <div class="row"><span class="sw" style="background:#961813"></span> 字：<span class="code">color: primary #961813</span> <span style="color:var(--error)">（过强）</span></div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · P3 .manage-btn</div>
+      <div class="mock">
+        <div class="mock-title">Manage 按钮</div>
+        <div style="border:1.5px solid var(--outline-v);color:var(--on-sv);font:700 12px/1 sans-serif;padding:8px 14px;border-radius:8px;display:inline-block">Manage</div>
+      </div>
+      <div class="kv">
+        <div class="row"><span class="sw" style="background:#e1bfba"></span> 边：<span class="code">outline-variant #e1bfba</span> <span style="color:var(--positive)">（弱化）</span></div>
+        <div class="row"><span class="sw" style="background:#59413d"></span> 字：<span class="code">on-surface-variant #59413d</span> <span style="color:var(--positive)">（弱化）</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag color">色档</span> Manage 是次要操作（非主 CTA），原型用弱化色档；现状用 primary 过于抢眼，与 CHECKOUT 主按钮争夺视觉</div>
+  </div>
+</div>
+
+<!-- ===== V7 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V7</span><span class="tpage">P3/P12 组件</span>
+    <span class="ttitle">CartItemRow / SmallProductCard / OrderCard 组件内部样式核查（待展开）</span>
+    <span class="tstat todo">⬜ 待展开</span>
+  </div>
+  <div class="compare">
+    <div class="col cur" style="grid-column:1/-1;background:#fffbeb">
+      <div class="col-label" style="color:#92400e"><span class="dot" style="background:#F57C00"></span>待核查项 · src/components/business/ 相关组件</div>
+      <div class="kv" style="font-size:13px">
+        <div class="row">□ <b>CartItemRow</b>：checkbox 圆形？图 72px？步进器 32px？删除按钮是否已移除？</div>
+        <div class="row">□ <b>SmallProductCard</b>：商品卡图比/价格字号/标签</div>
+        <div class="row">□ <b>OrderCard</b>：订单号 12px？状态色块？</div>
+        <div class="row" style="color:var(--on-sv2);margin-top:8px">本任务为页面层未展开的组件内部核查，需逐个读组件源码对照各自原型规格</div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag layout">待办</span> 需单独展开：读 3 个组件源码 + 对应原型规格，再产出对比卡片</div>
+  </div>
+</div>
+
+<div class="foot">
+  第一批（V1-V7）· 6 项待修 + 1 项待展开 · 确认形式后批量做第二/三/四批 + D-V1~D-V4 拍板项<br>
+  对照基准：<b>P1/P2/P3 优化原型 HTML</b>（非原始旧原型）
+</div>
+
+</div>
+</body>
+</html>

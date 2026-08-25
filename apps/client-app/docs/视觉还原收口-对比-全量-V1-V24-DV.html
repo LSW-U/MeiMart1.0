@@ -1,0 +1,984 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>视觉还原收口 · 全量对比（V1-V24 + D-V 拍板）</title>
+<style>
+:root{
+  --primary:#961813; --primary-container:#ffdcd6; --on-primary-container:#93302a;
+  --tertiary:#634700; --tertiary-fixed:#e3d4a8;
+  --surface:#fff8f7; --surface-lowest:#fff; --surface-low:#fff5f4; --surface-c:#fff0ee; --surface-h:#fdecea; --surface-ch:#fce2df; --surface-variant:#f5e0dc;
+  --on-surface:#261816; --on-sv:#59413d; --on-sv2:#8d706c; --outline-v:#e1bfba; --outline:#fae8e6;
+  --positive:#16a34a; --warning:#F57C00; --error:#C62828; --info:#1d4ed8;
+  --shadow-sm:0 2px 8px rgba(68,31,24,.06); --shadow-md:0 6px 18px rgba(68,31,24,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#efe8e3;font:14px/1.5 Inter,ui-sans-serif,system-ui,sans-serif;color:var(--on-surface);padding:24px 16px}
+.page{max-width:1180px;margin:0 auto}
+header.hd{background:#fff;border-radius:14px;box-shadow:var(--shadow-md);padding:20px 24px;margin-bottom:24px;border-left:6px solid var(--primary)}
+header.hd h1{font-size:20px;font-weight:800;color:var(--primary);margin-bottom:4px}
+header.hd .sub{font-size:12px;color:var(--on-sv)}
+header.hd .meta{font-size:11px;color:var(--on-sv2);margin-top:8px;display:flex;gap:16px;flex-wrap:wrap}
+header.hd .meta b{color:var(--on-sv)}
+
+.task{background:#fff;border-radius:14px;box-shadow:var(--shadow-md);margin-bottom:20px;overflow:hidden;border:1px solid var(--outline-v)}
+.task-head{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--outline-v);background:var(--surface-lowest)}
+.tid{font:700 10px/1 monospace;color:#fff;background:var(--primary);padding:3px 8px;border-radius:4px;letter-spacing:.04em}
+.tpage{font:700 11px/1 sans-serif;color:var(--on-sv);background:var(--surface-h);padding:4px 8px;border-radius:4px}
+.ttitle{font:700 14px/1.3 var(--on-surface);flex:1}
+.tstat{font:700 10px/1 sans-serif;padding:4px 8px;border-radius:999px;letter-spacing:.04em}
+.tstat.todo{background:#fee2e2;color:var(--error)}
+.tstat.decide{background:#fef3c7;color:var(--warning)}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.col{padding:16px 20px}
+.col.cur{background:#fff5f4;border-right:1px solid var(--outline-v)}
+.col.opt{background:#fff}
+.col-label{font:700 10px/1 sans-serif;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.col.cur .col-label{color:var(--error)}
+.col.opt .col-label{color:var(--positive)}
+.col-label .dot{width:8px;height:8px;border-radius:999px}
+.col.cur .dot{background:var(--error)}
+.col.opt .dot{background:var(--positive)}
+
+.mock{background:var(--surface);border-radius:12px;padding:14px;border:1px solid var(--outline-v);margin-bottom:12px}
+.mock-title{font:700 9px/1 sans-serif;letter-spacing:.06em;color:var(--on-sv2);text-transform:uppercase;margin-bottom:8px;text-align:center}
+
+.kv{font-size:12px;line-height:1.9;color:var(--on-sv)}
+.kv .row{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.sw{display:inline-block;width:20px;height:20px;border-radius:4px;border:1px solid var(--outline-v);vertical-align:middle;flex:0 0 auto}
+.code{background:var(--surface-h);padding:1px 6px;border-radius:3px;font:11px/1.5 ui-monospace,monospace;color:var(--on-surface)}
+.kv .arrow{color:var(--on-sv2);font-weight:700}
+
+.szbar{display:flex;align-items:center;gap:6px;margin:4px 0}
+.szbar .bar{background:var(--primary);border-radius:2px}
+.szbar .bar.cur{background:var(--error)}
+.szbar .lbl{font:600 10px/1 monospace;color:var(--on-sv2)}
+
+.diff{padding:12px 20px;background:var(--surface-low);border-top:1px solid var(--outline-v)}
+.diff-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:13px;line-height:1.5}
+.diff-item:last-child{margin-bottom:0}
+.dtag{font:700 9px/1.6 monospace;color:#fff;padding:1px 6px;border-radius:3px;flex:0 0 auto;min-width:44px;text-align:center}
+.dtag.color{background:var(--primary)}
+.dtag.size{background:var(--tertiary)}
+.dtag.i18n{background:var(--info)}
+.dtag.miss{background:var(--error)}
+.dtag.new{background:var(--positive)}
+.dtag.layout{background:#7c3aed}
+
+.decide-box{padding:12px 20px;background:#fffbeb;border-top:1px solid #fde68a}
+.decide-box .q{font:700 12px/1.4 sans-serif;color:#92400e;margin-bottom:8px}
+.opt-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:6px;font-size:12px;color:var(--on-sv)}
+.opt-row .ok{font:700 10px/1 monospace;color:#fff;background:var(--positive);padding:2px 6px;border-radius:3px}
+.opt-row .ko{font:700 10px/1 monospace;color:#fff;background:var(--on-sv2);padding:2px 6px;border-radius:3px}
+
+.foot{text-align:center;padding:20px;font-size:12px;color:var(--on-sv2)}
+.foot b{color:var(--primary)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="hd">
+  <h1>视觉还原收口 · 全量对比（V1-V24 + D-V1~D-V4）</h1>
+  <div class="sub">四批全量：转化主链路（V1-V7）→ 装饰/状态屏（V8-V12）→ 小偏差（V13-V24）→ 拍板项（D-V）</div>
+  <div class="meta">
+    <span>来源：<b>视觉还原收口-任务清单-20260821.md</b></span>
+    <span>对照基准：<b>P1-P29 优化原型 HTML</b>（非原始旧原型）</span>
+    <span>现状值均经 RN 代码核实（行号标注）</span>
+    <span>2026-08-21</span>
+  </div>
+  <div style="margin-top:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;font-size:12px;line-height:1.8">
+    <b style="color:var(--positive)">✅ 已拍板（2026-08-21）：</b>
+    D-V2 购物车角标 <b>A. 维持统一</b> ·
+    D-V3 语言页图标 <b>B. 维持 language</b> ·
+    D-V4 轮播高度 <b>A. 对齐原型 380px</b> ·
+    D-V1 搜索头 <b style="color:var(--positive)">A. 维持 90px 紧凑头修锯齿</b>
+  </div>
+</header>
+
+<nav style="background:#fff;border-radius:10px;box-shadow:var(--shadow-sm);padding:10px 16px;margin-bottom:24px;font-size:12px;display:flex;gap:14px;flex-wrap:wrap;position:sticky;top:8px;z-index:50">
+  <b style="color:var(--on-sv)">目录：</b>
+  <a href="#b1" style="color:var(--primary);text-decoration:none;font-weight:700">一 · V1-V7 主链路</a>
+  <a href="#b2" style="color:var(--primary);text-decoration:none;font-weight:700">二 · V8-V12 状态屏</a>
+  <a href="#b3" style="color:var(--primary);text-decoration:none;font-weight:700">三 · V13-V24 小偏差</a>
+  <a href="#b4" style="color:var(--primary);text-decoration:none;font-weight:700">四 · D-V 拍板</a>
+</nav>
+
+<a id="b1"></a>
+<div style="font:800 16px/1 sans-serif;color:var(--primary);margin:8px 0 14px;padding-left:10px;border-left:4px solid var(--primary)">第一批 · 转化主链路（V1-V7）</div>
+
+<!-- ===== V1 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V1</span><span class="tpage">P1 商品详情</span>
+    <span class="ttitle">加购按钮配色映射修正：浅粉底+深红字 → 实心红+白字</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · app/product/[id].tsx:882-895</div>
+      <div class="mock">
+        <div class="mock-title">底部栏 · 加购按钮</div>
+        <div style="height:48px;background:#ffdcd6;color:#93302a;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:6px;font:700 13px/1 sans-serif">🛒 TAMA CART</div>
+      </div>
+      <div class="kv">
+        <div class="row"><span class="sw" style="background:#ffdcd6"></span> 底色：<span class="code">primary-container #ffdcd6</span> <span style="color:var(--error)">（浅粉）</span></div>
+        <div class="row"><span class="sw" style="background:#93302a"></span> 字色：<span class="code">on-primary-container #93302a</span> <span style="color:var(--error)">（深红）</span></div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · P1 .cart-btn</div>
+      <div class="mock">
+        <div class="mock-title">底部栏 · 加购按钮</div>
+        <div style="height:48px;background:#961813;color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:6px;font:700 13px/1 sans-serif">🛒 TAMA CART</div>
+      </div>
+      <div class="kv">
+        <div class="row"><span class="sw" style="background:#961813"></span> 底色：<span class="code">primary #961813</span> <span style="color:var(--positive)">（实心红）</span></div>
+        <div class="row"><span class="sw" style="background:#fff;border:1px solid #961813"></span> 字色：<span class="code">#ffffff</span> <span style="color:var(--positive)">（白字）</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag color">配色</span> CTA 主操作未突出：浅粉底+深红字对比不足，原型要求 <b>primary 实心红 + 白字</b>，与全站主按钮（PrimaryHeader/结算栏）一致</div>
+  </div>
+</div>
+
+<!-- ===== V2 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V2</span><span class="tpage">P1 商品详情</span>
+    <span class="ttitle">档位连锁修正：评分/分布条/标签/推荐卡 6 处尺寸偏差</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · [id].tsx:1225/1495/1521/1673 等</div>
+      <div class="mock">
+        <div class="mock-title">评分汇总 · 标签 · 推荐卡</div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="text-align:center">
+            <div style="font:700 36px/1 Georgia,serif;color:var(--on-surface)">4.8</div>
+            <div style="font:9px/1 sans-serif;color:var(--on-sv2)">ratingBig 48px</div>
+          </div>
+          <div style="flex:1">
+            <div style="display:flex;gap:4px;margin-bottom:6px">
+              <span style="font:700 12px/1 sans-serif;background:var(--tertiary-fixed);color:var(--tertiary);padding:5px 8px;border-radius:2px">PRODUTU LOKAL</span>
+            </div>
+            <div style="height:8px;background:var(--surface-c);border-radius:999px;overflow:hidden"><div style="height:100%;width:85%;background:var(--tertiary)"></div></div>
+            <div style="font:9px/1 sans-serif;color:var(--on-sv2);margin-top:2px">分布条 height:8</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <div style="width:160px;background:#fff;border:1px solid var(--outline-v);border-radius:10px;overflow:hidden">
+            <div style="height:128px;background:var(--surface-variant)"></div>
+            <div style="padding:8px">
+              <div style="height:28px;border:1px solid var(--primary);border-radius:2px;font:700 10px/28px sans-serif;color:var(--primary);text-align:center">TAMA CART</div>
+            </div>
+          </div>
+          <div style="font:9px/1.4 sans-serif;color:var(--on-sv2);align-self:center">related-card 160px<br>图高 128<br>add按钮 r2 直角</div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">ratingBig <span class="code">fontSize:48</span></div>
+        <div class="row">ratingBarTrack <span class="code">height:8</span></div>
+        <div class="row">tag <span class="code">fontSize:12 · borderRadius:2</span></div>
+        <div class="row">related-card <span class="code">宽160 · 图高128</span></div>
+        <div class="row">relatedAddBtn <span class="code">borderRadius:2</span></div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · .rating-big/.dist-bar/.tag/.related-card</div>
+      <div class="mock">
+        <div class="mock-title">评分汇总 · 标签 · 推荐卡</div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="text-align:center">
+            <div style="font:700 24px/1 Georgia,serif;color:var(--on-surface)">4.8</div>
+            <div style="font:9px/1 sans-serif;color:var(--on-sv2)">ratingBig 32px</div>
+          </div>
+          <div style="flex:1">
+            <div style="display:flex;gap:4px;margin-bottom:6px">
+              <span style="font:700 9px/1 sans-serif;background:var(--tertiary-fixed);color:var(--tertiary);padding:5px 8px;border-radius:4px;letter-spacing:.06em">PRODUTU LOKAL</span>
+            </div>
+            <div style="height:5px;background:var(--surface-c);border-radius:999px;overflow:hidden"><div style="height:100%;width:85%;background:var(--tertiary)"></div></div>
+            <div style="font:9px/1 sans-serif;color:var(--on-sv2);margin-top:2px">分布条 height:5</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <div style="width:140px;background:#fff;border:1px solid var(--outline-v);border-radius:10px;overflow:hidden">
+            <div style="height:140px;background:var(--surface-variant)"></div>
+            <div style="padding:8px">
+              <div style="height:24px;border:1px solid var(--primary);border-radius:999px;font:700 10px/24px sans-serif;color:var(--primary);text-align:center">TAMA CART</div>
+            </div>
+          </div>
+          <div style="font:9px/1.4 sans-serif;color:var(--on-sv2);align-self:center">related-card 140px<br>图高 140<br>add按钮 r999 胶囊</div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">ratingBig <span class="code">font:700 32px</span> <span class="arrow">←</span> <span style="color:var(--positive)">48→32</span></div>
+        <div class="row">ratingBarTrack <span class="code">height:5</span> <span class="arrow">←</span> <span style="color:var(--positive)">8→5</span></div>
+        <div class="row">tag <span class="code">9px · r4</span> <span class="arrow">←</span> <span style="color:var(--positive)">12px·r2→9px·r4</span></div>
+        <div class="row">related-card <span class="code">宽140 · 图高140</span> <span class="arrow">←</span> <span style="color:var(--positive)">160→140 / 128→140</span></div>
+        <div class="row">relatedAddBtn <span class="code">r999 胶囊</span> <span class="arrow">←</span> <span style="color:var(--positive)">r2直角→r999</span></div>
+        <div class="row">ratingSummary 底色 <span class="code">rgba(255,233,230,.3)</span> <span class="arrow">←</span> <span style="color:var(--positive)">surface-low→high档</span></div>
+      </div>
+    </div>
+  </div>
+  <!-- V2 页面定位示意：这些元素在 P1 商品详情页的哪里 -->
+  <div style="padding:16px 20px;background:#fff;border-top:1px solid var(--outline-v)">
+    <div style="font:700 10px/1 sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--info);margin-bottom:12px">📍 V2 涉及元素在 P1 商品详情页的位置（从上到下）</div>
+    <div style="display:flex;gap:16px;align-items:flex-start;justify-content:center">
+      <div style="width:150px;background:var(--surface);border:1px solid var(--outline-v);border-radius:12px;overflow:hidden;font-size:8px;color:var(--on-sv2)">
+        <div style="height:52px;background:var(--surface-variant);display:grid;place-items:center">轮播图 380px (D-V4)</div>
+        <div style="padding:6px 8px">
+          <div style="display:flex;gap:3px;margin-bottom:4px">
+            <span style="background:var(--tertiary-fixed);color:var(--tertiary);font:700 7px/1 sans-serif;padding:3px 5px;border-radius:4px">PRODUTU LOKAL</span>
+            <span style="background:var(--primary-container);color:var(--primary);font:700 7px/1 sans-serif;padding:3px 5px;border-radius:4px">BEST SELLER</span>
+          </div>
+          <div style="height:8px;background:var(--on-surface);opacity:.8;border-radius:2px;margin-bottom:3px;width:90%"></div>
+          <div style="font:700 13px/1 Georgia,serif;color:var(--primary);margin-bottom:6px">$8.50 <span style="font:400 8px sans-serif;color:var(--on-sv2);text-decoration:line-through">$12.00</span></div>
+          <div style="outline:2px dashed var(--info);outline-offset:2px;padding:4px;margin-bottom:6px;border-radius:4px">
+            <div style="font:700 7px/1 sans-serif;color:var(--info);margin-bottom:2px">② 商品标签 tag：12px·r2 → 9px·r4</div>
+            <div style="background:#ffe9e6;border-radius:6px;padding:5px">
+              <div style="display:flex;align-items:center;gap:5px">
+                <div style="font:700 20px/1 Georgia,serif;color:var(--on-surface)">4.8</div>
+                <div style="flex:1">
+                  <div style="height:4px;background:var(--surface-c);border-radius:99px;overflow:hidden;margin-bottom:2px"><div style="height:100%;width:85%;background:var(--tertiary)"></div></div>
+                  <div style="height:4px;background:var(--surface-c);border-radius:99px;overflow:hidden"><div style="height:100%;width:10%;background:var(--tertiary)"></div></div>
+                </div>
+              </div>
+              <div style="font:700 7px/1 sans-serif;color:var(--info);margin-top:2px">① 评分汇总：大数字 48→32 / 条 8→5 / 底色提档</div>
+            </div>
+          </div>
+          <div style="background:var(--surface-c);border-radius:6px;padding:5px;margin-bottom:6px">配送卡（V3 i18n）</div>
+          <div style="background:#fff;border:1px solid var(--outline-v);border-radius:6px;padding:5px;margin-bottom:6px">规格选择 pills</div>
+          <div style="outline:2px dashed var(--info);outline-offset:2px;padding:4px;margin-bottom:6px;border-radius:4px">
+            <div style="font:700 7px/1 sans-serif;color:var(--info);margin-bottom:3px">③ 推荐卡 related（横向滚动）</div>
+            <div style="display:flex;gap:4px">
+              <div style="width:64px;background:#fff;border:1px solid var(--outline-v);border-radius:6px;overflow:hidden">
+                <div style="height:52px;background:var(--surface-variant)"></div>
+                <div style="padding:3px"><div style="height:24px;border:1px solid var(--primary);border-radius:999px;font:700 6px/24px sans-serif;color:var(--primary);text-align:center">TAMA</div></div>
+              </div>
+              <div style="width:64px;background:#fff;border:1px solid var(--outline-v);border-radius:6px;overflow:hidden">
+                <div style="height:52px;background:var(--surface-variant)"></div>
+                <div style="padding:3px"><div style="height:24px;border:1px solid var(--primary);border-radius:999px;font:700 6px/24px sans-serif;color:var(--primary);text-align:center">TAMA</div></div>
+              </div>
+            </div>
+            <div style="font:700 7px/1 sans-serif;color:var(--info);margin-top:3px">卡宽 160→140 / 图高 128→140 / 加购 r2→r999</div>
+          </div>
+        </div>
+        <div style="height:22px;background:var(--surface-lowest);border-top:1px solid var(--outline-v);display:flex;align-items:center;justify-content:center;gap:6px">
+          <span>★</span><span style="border:2px solid var(--primary);color:var(--primary);border-radius:6px;padding:2px 8px">SASAN AGORA</span><span style="background:var(--primary);color:#fff;border-radius:6px;padding:3px 8px">🛒 TAMA CART (V1)</span>
+        </div>
+      </div>
+      <div style="font-size:11px;line-height:2;color:var(--on-sv);max-width:340px">
+        <div>① <b>评分汇总区</b>：评论模块顶部，评分大数字+分布条</div>
+        <div>② <b>商品标签行</b>：标题上方 tag-row（LOCAL/BEST SELLER）</div>
+        <div>③ <b>推荐卡区</b>：页面底部「Sai Diak Ho」横向滚动卡</div>
+        <div style="color:var(--on-sv2)">虚线蓝框 = V2 涉及的三块区域</div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag size">尺寸</span> 评分大数字 48→32（过大喧宾夺主）/ 分布条 8→5（视觉粗笨）/ 标签 12px·r2→9px·r4（原型更精致）</div>
+    <div class="diff-item"><span class="dtag layout">布局</span> 推荐卡宽 160→140 + 图高 128→140（接近正方形）/ 加购小按钮 r2 直角→r999 胶囊（与原型一致）</div>
+    <div class="diff-item"><span class="dtag color">底色</span> ratingSummary 底色需提到 surface-container-high 档（rgba(255,233,230,.3)）</div>
+  </div>
+</div>
+
+<!-- ===== V3 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V3</span><span class="tpage">P1 商品详情</span>
+    <span class="ttitle">配送卡 ETA / "Free over $10" 写死英文 → i18n</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · [id].tsx:473-481</div>
+      <div class="mock">
+        <div class="mock-title">配送卡</div>
+        <div style="background:var(--surface-c);border-radius:12px;padding:14px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px">
+            <div><div style="font:700 9px/1;color:var(--on-sv2)">ENTREGA BA</div><div style="color:var(--on-surface)">Dili, Cristo Rei</div></div>
+          </div>
+          <div style="display:flex;gap:16px;padding-top:10px;border-top:1px solid var(--outline-v)">
+            <div><div style="font:700 9px/1;color:var(--on-sv2)">ETA</div><div style="color:var(--error);font-weight:600">Arrives Today 6:00 PM</div></div>
+            <div><div style="font:700 9px/1;color:var(--on-sv2)">ENVIO</div><div style="color:var(--primary);font-weight:700">Free over $10</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">:473 <span class="code">Arrives Today 6:00 PM</span> <span style="color:var(--error)">写死英文</span></div>
+        <div class="row">:481 <span class="code">Free over $10</span> <span style="color:var(--error)">写死英文</span></div>
+        <div class="row" style="color:var(--on-sv2)">其余 label 已走 t()，仅这两行 value 写死</div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · P1 anno 配送 i18n</div>
+      <div class="mock">
+        <div class="mock-title">配送卡（三语言）</div>
+        <div style="background:var(--surface-c);border-radius:12px;padding:14px">
+          <div style="display:flex;gap:16px;padding-top:10px">
+            <div><div style="font:700 9px/1;color:var(--on-sv2)">ETA</div><div style="color:var(--positive);font-weight:600">Ohin 6:00 PM</div></div>
+            <div><div style="font:700 9px/1;color:var(--on-sv2)">ENVIO</div><div style="color:var(--primary);font-weight:700">Free over $10</div></div>
+          </div>
+          <div style="font:9px/1.4 sans-serif;color:var(--on-sv2);margin-top:8px">🌐 anno 标注：配送信息需 i18n</div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">需补 key：<span class="code">product.etaValue</span> / <span class="code">product.shippingFree</span></div>
+        <div class="row">三语言：en / zh / tet（tet 走 [TET] 占位）</div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag i18n">i18n</span> ETA 与免运费门槛文案写死英文，切语言不变化；需提 key 到 locales 三语言</div>
+  </div>
+</div>
+
+<!-- ===== V4 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V4</span><span class="tpage">P2 个人中心</span>
+    <span class="ttitle">Discover NEW 角标补渲染（数据/样式已存在，JSX 缺一行）</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · app/(main)/profile.tsx:363-378</div>
+      <div class="mock">
+        <div class="mock-title">Discover 宫格（Invite / Seller）</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--surface-lowest);padding:12px;border-radius:10px">
+          <div style="text-align:center;padding:10px;background:var(--surface-low);border-radius:8px">
+            <div style="font-size:22px;color:var(--primary)">👤</div>
+            <div style="font:600 11px/1 sans-serif;color:var(--on-sv)">Invite</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:var(--surface-low);border-radius:8px">
+            <div style="font-size:22px;color:var(--primary)">🏪</div>
+            <div style="font:600 11px/1 sans-serif;color:var(--on-sv)">Seller</div>
+          </div>
+        </div>
+        <div style="font:9px/1 sans-serif;color:var(--error);text-align:center;margin-top:6px">⚠ 无 NEW 角标输出</div>
+      </div>
+      <div class="kv">
+        <div class="row">:363 <span class="code">DISCOVER_ENTRIES.map</span> 渲染图标+标签</div>
+        <div class="row" style="color:var(--on-sv2)">isNew 数据 + newTag 样式（:868-872）已存在</div>
+        <div class="row" style="color:var(--error)">JSX 未输出 isNew 角标</div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · P2 .new-tag</div>
+      <div class="mock">
+        <div class="mock-title">Discover 宫格（Invite / Seller 带 NEW）</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--surface-lowest);padding:12px;border-radius:10px">
+          <div style="position:relative;text-align:center;padding:10px;background:var(--surface-low);border-radius:8px">
+            <div style="position:absolute;top:2px;right:4px;font:700 7px/1 sans-serif;color:var(--positive);background:#dcfce7;padding:2px 4px;border-radius:3px">NEW</div>
+            <div style="font-size:22px;color:var(--primary)">👤</div>
+            <div style="font:600 11px/1 sans-serif;color:var(--on-sv)">Invite</div>
+          </div>
+          <div style="position:relative;text-align:center;padding:10px;background:var(--surface-low);border-radius:8px">
+            <div style="position:absolute;top:2px;right:4px;font:700 7px/1 sans-serif;color:var(--positive);background:#dcfce7;padding:2px 4px;border-radius:3px">NEW</div>
+            <div style="font-size:22px;color:var(--primary)">🏪</div>
+            <div style="font:600 11px/1 sans-serif;color:var(--on-sv)">Seller</div>
+          </div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">补 JSX：<span class="code">{entry.isNew && &lt;Text style={styles.newTag}&gt;NEW&lt;/Text&gt;}</span></div>
+        <div class="row">newTag 样式：<span class="code">7px 绿字 + positive-c 底</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag miss">缺失</span> 数据/样式齐全，仅 JSX 缺一行输出；改动极小（补条件渲染）</div>
+  </div>
+</div>
+
+<!-- ===== V5 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V5</span><span class="tpage">P3 购物车</span>
+    <span class="ttitle">结算栏 DISCOUNT 行恢复：有券值时显示绿 pill，无值隐藏</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · app/(main)/cart.tsx:379-387</div>
+      <div class="mock">
+        <div class="mock-title">结算栏（DISCOUNT 行被砍）</div>
+        <div style="background:var(--surface-lowest);border-top:1px solid var(--outline-v);padding:12px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">
+            <span style="color:var(--on-sv)">已选合计</span><span style="font:700 16px/1 sans-serif;color:var(--primary)">$25.50</span>
+          </div>
+          <div style="background:#fce2df;color:var(--error);font:700 12px/1 sans-serif;text-align:center;padding:12px;border-radius:8px">CHECKOUT</div>
+        </div>
+        <div style="font:9px/1 sans-serif;color:var(--error);text-align:center;margin-top:6px">⚠ 无 DISCOUNT 行（整行砍掉）</div>
+      </div>
+      <div class="kv">
+        <div class="row">:379 注释 <span class="code">"去写死 discount，无优惠券接口隐藏折扣行"</span></div>
+        <div class="row" style="color:var(--error)">逻辑：无条件隐藏，有券也不显示</div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · P3 .checkout-bar DISCOUNT 行</div>
+      <div class="mock">
+        <div class="mock-title">结算栏（有券时显示 DISCOUNT）</div>
+        <div style="background:var(--surface-lowest);border-top:1px solid var(--outline-v);padding:12px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+            <span style="color:var(--on-sv)">已选合计</span><span style="color:var(--on-surface)">$25.50</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">
+            <span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:var(--positive);font:700 10px/1 sans-serif;padding:3px 8px;border-radius:999px">🏷 DISCOUNT</span>
+            <span style="color:var(--positive);font-weight:700">−$3.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px;padding-top:6px;border-top:1px dashed var(--outline-v)">
+            <span style="color:var(--on-sv)">小计</span><span style="font:700 16px/1 sans-serif;color:var(--primary)">$22.50</span>
+          </div>
+          <div style="background:#fce2df;color:var(--error);font:700 12px/1 sans-serif;text-align:center;padding:12px;border-radius:8px">CHECKOUT</div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">条件渲染：<span class="code">{couponValue &gt; 0 && &lt;DiscountRow/&gt;}</span></div>
+        <div class="row">绿 pill：<span class="code">positive-c 底 + positive 字</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag miss">缺失</span> 原型「接接口无值才隐藏」= 条件渲染；现状是无条件砍掉，有券时用户看不到优惠金额</div>
+  </div>
+</div>
+
+<!-- ===== V6 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V6</span><span class="tpage">P3 购物车</span>
+    <span class="ttitle">Manage 按钮色档修正：primary 边+primary 字 → outline-variant 边+on-sv 字</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · cart.tsx:230-241</div>
+      <div class="mock">
+        <div class="mock-title">Manage 按钮</div>
+        <div style="border:1.5px solid var(--primary);color:var(--primary);font:700 12px/1 sans-serif;padding:8px 14px;border-radius:8px;display:inline-block">Manage</div>
+      </div>
+      <div class="kv">
+        <div class="row"><span class="sw" style="background:#961813"></span> 边：<span class="code">borderColor: primary #961813</span> <span style="color:var(--error)">（过强）</span></div>
+        <div class="row"><span class="sw" style="background:#961813"></span> 字：<span class="code">color: primary #961813</span> <span style="color:var(--error)">（过强）</span></div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · P3 .manage-btn</div>
+      <div class="mock">
+        <div class="mock-title">Manage 按钮</div>
+        <div style="border:1.5px solid var(--outline-v);color:var(--on-sv);font:700 12px/1 sans-serif;padding:8px 14px;border-radius:8px;display:inline-block">Manage</div>
+      </div>
+      <div class="kv">
+        <div class="row"><span class="sw" style="background:#e1bfba"></span> 边：<span class="code">outline-variant #e1bfba</span> <span style="color:var(--positive)">（弱化）</span></div>
+        <div class="row"><span class="sw" style="background:#59413d"></span> 字：<span class="code">on-surface-variant #59413d</span> <span style="color:var(--positive)">（弱化）</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag color">色档</span> Manage 是次要操作（非主 CTA），原型用弱化色档；现状用 primary 过于抢眼，与 CHECKOUT 主按钮争夺视觉</div>
+  </div>
+</div>
+
+<!-- ===== V7 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V7</span><span class="tpage">P3/P12 组件</span>
+    <span class="ttitle">CartItemRow / SmallProductCard / OrderCard 组件内部样式核查（待展开）</span>
+    <span class="tstat todo">⬜ 待展开</span>
+  </div>
+  <div class="compare">
+    <div class="col cur" style="grid-column:1/-1;background:#fffbeb">
+      <div class="col-label" style="color:#92400e"><span class="dot" style="background:#F57C00"></span>待核查项 · src/components/business/ 相关组件</div>
+      <div class="kv" style="font-size:13px">
+        <div class="row">□ <b>CartItemRow</b>：checkbox 圆形？图 72px？步进器 32px？删除按钮是否已移除？</div>
+        <div class="row">□ <b>SmallProductCard</b>：商品卡图比/价格字号/标签</div>
+        <div class="row">□ <b>OrderCard</b>：订单号 12px？状态色块？</div>
+        <div class="row" style="color:var(--on-sv2);margin-top:8px">本任务为页面层未展开的组件内部核查，需逐个读组件源码对照各自原型规格</div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag layout">待办</span> 需单独展开：读 3 个组件源码 + 对应原型规格，再产出对比卡片</div>
+  </div>
+</div>
+
+<a id="b2"></a>
+<div style="font:800 16px/1 sans-serif;color:var(--primary);margin:28px 0 14px;padding-left:10px;border-left:4px solid var(--primary)">第二批 · 装饰/状态屏补全（V8-V12）</div>
+
+<!-- ===== V8 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V8</span><span class="tpage">P11 物流追踪</span>
+    <span class="ttitle">配送完成态整屏补做：done-hero 送达视觉 + redirect 提示卡</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · app/order/tracking.tsx:80-87</div>
+      <div class="mock">
+        <div class="mock-title">配送完成 · 直接跳走无视觉</div>
+        <div style="text-align:center;padding:30px 10px;background:var(--surface-low);border-radius:10px;border:1px dashed var(--error)">
+          <div style="font-size:30px">🚚💨</div>
+          <div style="font:600 12px/1.6 sans-serif;color:var(--error)">DELIVERED 状态触发</div>
+          <div style="font:700 18px/1 sans-serif;color:var(--error);margin:8px 0">↓ 1.5s 后</div>
+          <div style="font:600 12px/1 sans-serif;color:var(--on-sv)">自动 router 跳回 P10 订单详情</div>
+          <div style="font:600 10px/1.4 sans-serif;color:var(--on-sv2);margin-top:6px">用户看不到「已送达」的确认瞬间</div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">:87 <span class="code">setTimeout(() => {...}, 1500)</span> 直接跳转</div>
+        <div class="row" style="color:var(--error)">无 done-hero / 无 redirect-note</div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · P11 .done-hero / .redirect-note</div>
+      <div class="mock">
+        <div class="mock-title">配送完成态 · 整屏视觉</div>
+        <div style="text-align:center;padding:16px 10px 10px">
+          <div style="width:72px;height:72px;border-radius:36px;background:#f0fdf4;border:2px solid #86efac;display:inline-flex;align-items:center;justify-content:center;font-size:36px;color:#16a34a;margin-bottom:8px">✓</div>
+          <div style="font:700 18px/1 sans-serif;color:var(--on-surface)">订单已送达</div>
+          <div style="font:400 13px/1 sans-serif;color:var(--on-sv);margin-top:4px">Enjoy your order!</div>
+          <div style="font:400 12px/1 sans-serif;color:var(--on-sv2);margin-top:4px">2026-08-21 14:32</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface-low);border:1px solid var(--outline-v);border-radius:8px;font-size:11px;color:var(--on-sv)">
+          <span style="color:var(--primary);font-size:16px">ℹ</span>
+          <span>即将跳转订单详情，可查看<b style="color:var(--on-surface)">售后入口</b></span>
+        </div>
+        <div style="margin-top:8px;padding:8px 10px;background:var(--surface-low);border-radius:8px">
+          <div style="display:flex;gap:6px;align-items:center;font-size:10px;color:#16a34a"><span>●</span><span style="font-weight:700">已送达</span><span style="color:var(--on-sv2)">—— 时间线全绿终态</span></div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">done-hero：<span class="code">72px 绿环 + 40px check + 18px 标题</span></div>
+        <div class="row">redirect-note：<span class="code">surface-low 底 + outline-v 边 + r8</span></div>
+        <div class="row">时间线：<span class="code">全部节点绿终态</span> + 延迟跳转保留</div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag miss">缺失</span> 完成态整屏视觉缺失：绿环 hero + 提示卡 + 全绿时间线；跳转保留但先展示送达确认</div>
+  </div>
+</div>
+
+<!-- ===== V9 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V9</span><span class="tpage">P14 售后详情</span>
+    <span class="ttitle">TaisPattern 纹样层补做 + 商品卡 shadow↔border 反转</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · after-sales-detail.tsx（无 TaisPattern import）</div>
+      <div class="mock">
+        <div class="mock-title">状态块 + 商品主卡</div>
+        <div style="background:var(--surface-h);border-radius:10px;padding:12px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+          <div style="font:700 12px/1 sans-serif;color:var(--on-surface)">REFUND REVIEWING</div>
+          <div style="font:10px/1.4 sans-serif;color:var(--on-sv);margin-top:4px">审核中，预计 1-3 天</div>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);display:flex;gap:8px">
+          <div style="width:44px;height:44px;background:var(--surface-variant);border-radius:8px"></div>
+          <div><div style="font:600 11px/1 sans-serif">Ermera Coffee 250g</div><div style="font:700 12px/1 sans-serif;color:var(--primary);margin-top:3px">$8.50</div></div>
+        </div>
+        <div style="font:9px/1 sans-serif;color:var(--error);text-align:center;margin-top:6px">⚠ 无纹样层 · 卡片用 shadow（与原型相反）</div>
+      </div>
+      <div class="kv">
+        <div class="row">状态块：<span class="code">无 ::before 纹样</span></div>
+        <div class="row">商品卡：<span class="code">shadowPresets.sm</span> <span style="color:var(--error)">原型是 border</span></div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · .status-block::before 纹样</div>
+      <div class="mock">
+        <div class="mock-title">状态块 + 商品主卡（带纹样）</div>
+        <div style="position:relative;background:var(--surface-h);border-radius:10px;padding:12px;margin-bottom:8px;overflow:hidden">
+          <div style="position:absolute;inset:0;opacity:.15;background-image:repeating-linear-gradient(45deg,#961813 0 1px,transparent 1px 8px);pointer-events:none"></div>
+          <div style="position:relative;font:700 12px/1 sans-serif;color:var(--on-surface)">REFUND REVIEWING</div>
+          <div style="position:relative;font:10px/1.4 sans-serif;color:var(--on-sv);margin-top:4px">审核中，预计 1-3 天</div>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:10px;border:1px solid var(--outline-v);display:flex;gap:8px">
+          <div style="width:44px;height:44px;background:var(--surface-variant);border-radius:8px"></div>
+          <div><div style="font:600 11px/1 sans-serif">Ermera Coffee 250g</div><div style="font:700 12px/1 sans-serif;color:var(--primary);margin-top:3px">$8.50</div></div>
+        </div>
+        <div style="font:9px/1 sans-serif;color:var(--positive);text-align:center;margin-top:6px">✓ 纹样 opacity .15 · 卡片 hairline border</div>
+      </div>
+      <div class="kv">
+        <div class="row">纹样层：<span class="code">::before + opacity .15</span>（TaisPattern 组件已有）</div>
+        <div class="row">商品卡：<span class="code">border: outline-variant</span> <span style="color:var(--positive)">去 shadow</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag miss">缺失</span> 状态块 + 商品主卡缺 TaisPattern 纹样层（文化元素，项目 DNA）</div>
+    <div class="diff-item"><span class="dtag layout">反转</span> 商品卡卡片描边方式与原型相反：现状 shadow → 原型 border</div>
+  </div>
+</div>
+
+<!-- ===== V10 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V10</span><span class="tpage">P14 售后详情</span>
+    <span class="ttitle">右上 state-tag 小标签补做（REVIEWING/PICKUP/DONE 等）</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · 无 stateTag 样式（grep 零命中）</div>
+      <div class="mock">
+        <div class="mock-title">商品主卡右上角</div>
+        <div style="position:relative;background:#fff;border-radius:10px;padding:10px;border:1px solid var(--outline-v)">
+          <div style="display:flex;gap:8px"><div style="width:44px;height:44px;background:var(--surface-variant);border-radius:8px"></div><div><div style="font:600 11px/1 sans-serif">Ermera Coffee 250g</div><div style="font:700 12px/1 sans-serif;color:var(--primary);margin-top:3px">$8.50</div></div></div>
+        </div>
+        <div style="font:9px/1 sans-serif;color:var(--error);text-align:center;margin-top:6px">⚠ 右上角无状态小标签</div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · .state-tag</div>
+      <div class="mock">
+        <div class="mock-title">商品主卡右上角状态标签</div>
+        <div style="position:relative;background:#fff;border-radius:10px;padding:10px;border:1px solid var(--outline-v)">
+          <span style="position:absolute;top:8px;right:12px;font:700 9px/1.6 monospace;color:#fff;background:var(--warning);border-radius:4px;padding:2px 6px;z-index:10">REVIEWING</span>
+          <div style="display:flex;gap:8px"><div style="width:44px;height:44px;background:var(--surface-variant);border-radius:8px"></div><div><div style="font:600 11px/1 sans-serif">Ermera Coffee 250g</div><div style="font:700 12px/1 sans-serif;color:var(--primary);margin-top:3px">$8.50</div></div></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center">
+          <span style="font:700 8px/1.6 monospace;color:#fff;background:var(--warning);border-radius:4px;padding:2px 6px">REVIEWING</span>
+          <span style="font:700 8px/1.6 monospace;color:#fff;background:var(--info);border-radius:4px;padding:2px 6px">PICKUP</span>
+          <span style="font:700 8px/1.6 monospace;color:#fff;background:var(--positive);border-radius:4px;padding:2px 6px">DONE</span>
+          <span style="font:700 8px/1.6 monospace;color:#fff;background:var(--error);border-radius:4px;padding:2px 6px">REJECTED</span>
+          <span style="font:700 8px/1.6 monospace;color:#fff;background:var(--secondary);border-radius:4px;padding:2px 6px">CANCELLED</span>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">位置：<span class="code">absolute top:8 right:12</span> · 9px mono 白字 r4</div>
+        <div class="row">五态色：<span class="code">warning / info / positive / error / secondary</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag miss">缺失</span> 卡片右上状态小标签整体缺失，用户无法一眼识别售后阶段</div>
+  </div>
+</div>
+
+<!-- ===== V11 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V11</span><span class="tpage">P7 搜索</span>
+    <span class="ttitle">锯齿底边不可见：90px headerWrap 裁剪 polygon（与 D-V1 联动）</span>
+    <span class="tstat decide">🔗 联动 D-V1</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · app/search/index.tsx:444</div>
+      <div class="mock">
+        <div class="mock-title">搜索 header · 锯齿被裁剪</div>
+        <div style="background:var(--primary);border-radius:8px 8px 0 0;height:60px;position:relative;overflow:hidden">
+          <div style="position:absolute;inset:0;opacity:.1;background-image:repeating-linear-gradient(45deg,#f0e6c8 0 1px,transparent 1px 10px)"></div>
+          <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:8px 12px">
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:#fff;font-size:14px">←</span><span style="background:#fff;border-radius:8px;padding:7px 10px;font-size:10px;color:var(--on-sv2);width:120px">Search...</span></div>
+            <div style="display:flex;gap:2px"><span style="color:#fff;font-size:13px">🎧</span><span style="color:#fff;font-size:13px">🛒</span></div>
+          </div>
+        </div>
+        <div style="height:0;border-top:2px dashed var(--error);position:relative"><span style="position:absolute;top:4px;left:50%;transform:translateX(-50%);font:700 8px/1 sans-serif;color:var(--error);background:#fff;padding:1px 4px;border-radius:3px">UmaLulikCurve 锯齿超出 90px 被裁剪 → 不可见</span></div>
+        <div style="background:var(--surface);padding:8px;font-size:9px;color:var(--on-sv2)">Filter tags...</div>
+      </div>
+      <div class="kv">
+        <div class="row">:444 <span class="code">headerWrap: height: 90</span></div>
+        <div class="row">:183 注释写 <span class="code">"176px + uma-lulik-curve"</span> 但实际 90</div>
+        <div class="row" style="color:var(--error)">:48 UmaLulikCurve 组件存在但锯齿不可见</div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>原型目标 · 锯齿底边可见</div>
+      <div class="mock">
+        <div class="mock-title">搜索 header · 锯齿可见（B 方案 176px 示意）</div>
+        <div style="background:var(--primary);position:relative;padding:10px 12px 22px">
+          <div style="position:absolute;inset:0;opacity:.1;background-image:repeating-linear-gradient(45deg,#f0e6c8 0 1px,transparent 1px 10px)"></div>
+          <div style="position:relative;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="color:#fff;font-size:16px">←</span><span style="font:700 16px sans-serif;color:#fff">Search</span></div>
+            <div style="display:flex;gap:6px"><span style="color:#fff;font-size:16px">🎧</span><span style="color:#fff;font-size:16px">🛒</span></div>
+          </div>
+          <div style="position:relative;background:#fff;border-radius:10px;padding:9px 12px;display:flex;gap:8px;align-items:center;font-size:10px;color:var(--on-sv2)">🔍 Search household essentials... 🎤</div>
+        </div>
+        <div style="height:10px;background:linear-gradient(-45deg,var(--primary) 25%,transparent 25%) 0 0/12px 12px,linear-gradient(45deg,var(--primary) 25%,transparent 25%) 6px 0/12px 12px;background-color:var(--surface)"></div>
+        <div style="background:var(--surface);padding:8px;font-size:9px;color:var(--on-sv2)">Filter tags...</div>
+      </div>
+      <div class="kv">
+        <div class="row">锯齿：<span class="code">UmaLulikCurve polygon 完整显示</span></div>
+        <div class="row" style="color:var(--warning)">高度方案 A/B 见 D-V1 拍板卡片</div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag layout">裁剪</span> 文化元素锯齿底边完全不可见；修复依赖 D-V1 拍板（维持 90px 调锯齿高度 vs 回 176px）</div>
+  </div>
+</div>
+
+<!-- ===== V12 ===== -->
+<div class="task">
+  <div class="task-head">
+    <span class="tid">V12</span><span class="tpage">P22 反馈</span>
+    <span class="ttitle">提交链路接 useMutation 骨架（当前本地 setSubmitted 假成功）</span>
+    <span class="tstat todo">⬜ 待修</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · app/service/feedback.tsx:67/81</div>
+      <div class="mock">
+        <div class="mock-title">提交反馈流程</div>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:center;padding:12px;background:var(--surface-low);border-radius:10px">
+          <div style="background:#fff;border-radius:8px;padding:8px 14px;font-size:11px;border:1px solid var(--outline-v)">填写反馈 → 点提交</div>
+          <div style="font:700 14px/1 sans-serif;color:var(--error)">↓</div>
+          <div style="background:var(--surface-h);border-radius:8px;padding:8px 14px;font-size:11px;color:var(--error)">setSubmitted(true) 本地置位</div>
+          <div style="font:700 14px/1 sans-serif;color:var(--error)">↓</div>
+          <div style="background:#f0fdf4;border-radius:8px;padding:8px 14px;font-size:11px;color:var(--positive)">显示成功态 ✅（假成功）</div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">:67 <span class="code">useState(false)</span> · :81 <span class="code">setSubmitted(true)</span></div>
+        <div class="row" style="color:var(--error)">无网络请求 · 无失败分支 · 刷新即丢</div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>目标 · useMutation 骨架（后端 F1 就绪前）</div>
+      <div class="mock">
+        <div class="mock-title">提交反馈流程（mutation 结构）</div>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:center;padding:12px;background:var(--surface-low);border-radius:10px">
+          <div style="background:#fff;border-radius:8px;padding:8px 14px;font-size:11px;border:1px solid var(--outline-v)">填写反馈 → 点提交</div>
+          <div style="font:700 14px/1 sans-serif;color:var(--positive)">↓</div>
+          <div style="background:#eff6ff;border-radius:8px;padding:8px 14px;font-size:11px;color:var(--info)">useMutation: pending 态 + isSubmitting</div>
+          <div style="display:flex;gap:8px">
+            <div style="background:#f0fdf4;border-radius:8px;padding:8px 12px;font-size:10px;color:var(--positive)">成功 → 成功态</div>
+            <div style="background:#fee2e2;border-radius:8px;padding:8px 12px;font-size:10px;color:var(--error)">失败 → toast 重试</div>
+          </div>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="row">结构：<span class="code">useMutation + onError toast</span></div>
+        <div class="row">端点：<span class="code">F1 就绪后填 URL 即通</span>（后端依赖清单）</div>
+      </div>
+    </div>
+  </div>
+  <div class="diff">
+    <div class="diff-item"><span class="dtag new">骨架</span> 纯前端改造：搭 mutation 结构 + 失败 toast；端点就绪填 URL 即通，不动后端</div>
+  </div>
+</div>
+
+<a id="b3"></a>
+<div style="font:800 16px/1 sans-serif;color:var(--primary);margin:28px 0 14px;padding-left:10px;border-left:4px solid var(--primary)">第三批 · 小偏差（V13-V24）</div>
+
+<!-- V13-V24 紧凑卡片 -->
+<div class="task">
+  <div class="task-head"><span class="tid">V13</span><span class="tpage">P2 个人中心</span><span class="ttitle">会员卡渐变终止色 + points-strip 底色</span><span class="tstat todo">⬜ 待修</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag color">色值</span> 会员卡渐变终止色 <span class="code">#d4453a → #b53026</span>（原型值）· points-strip 底色 <span class="code">surface-container-low → rgba(255,233,230,.4)</span> 档</div>
+  </div>
+</div>
+
+<div class="task">
+  <div class="task-head"><span class="tid">V14</span><span class="tpage">P5 分类</span><span class="ttitle">子分类圆缩小</span><span class="tstat todo">⬜ 已核实</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag size">尺寸</span> 子分类圆 <span class="code">80 → 56px</span>（categories.tsx:540-541 现状 80 已核实）· 内图 <span class="code">56 → 40px</span>；圆更紧凑，一屏可容纳更多子类</div>
+  </div>
+</div>
+
+<div class="task">
+  <div class="task-head"><span class="tid">V15</span><span class="tpage">P6 首页</span><span class="ttitle">区块间距系统性偏松收回</span><span class="tstat todo">⬜ 待修</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag size">间距</span> 区块间距 24px 被误映射 <span class="code">spacing.xl(32)</span> → 收回 <span class="code">spacing.lg(24)</span>；⚠️ HTML 24px 应映射 lg，系统性偏松（可能影响多页，修时全仓 grep xl 使用点复核）</div>
+  </div>
+</div>
+
+<div class="task">
+  <div class="task-head"><span class="tid">V16</span><span class="tpage">P10 订单详情</span><span class="ttitle">Header 高度 + 复制按钮补做</span><span class="tstat todo">⬜ 待修</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag size">尺寸</span> Header <span class="code">64 → 56px</span> · 订单号旁补 <span class="code">content_copy</span> 复制小按钮（点击复制订单号）</div>
+  </div>
+</div>
+
+<div class="task">
+  <div class="task-head"><span class="tid">V17</span><span class="tpage">P12 订单列表</span><span class="ttitle">Tab 角标激活态变色</span><span class="tstat todo">⬜ 待修</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag color">色值</span> Tab 角标（如待付款 N）激活时变 <span class="code">primary</span>，非激活才用 error；当前恒 error 红，激活 tab 与角标撞色</div>
+  </div>
+</div>
+
+<div class="task">
+  <div class="task-head"><span class="tid">V18</span><span class="tpage">P15 售后评价</span><span class="ttitle">补显式进度提示</span><span class="tstat todo">⬜ 待修</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag new">新增</span> 补显式 <span class="code">「已完成 1/3」</span> 进度提示（当前 tab 横滑仅隐含进度，用户无感知）</div>
+  </div>
+</div>
+
+<div class="task">
+  <div class="task-head"><span class="tid">V19</span><span class="tpage">P16 收货地址</span><span class="ttitle">智能识别条配色 + chip 图标 + 左滑提示</span><span class="tstat todo">⬜ 待修</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag color">语义</span> 智能识别条配色回 <span class="code">info-c 蓝语义</span>（当前普通卡白底，识别功能无提示性）</div>
+    <div class="diff-item"><span class="dtag miss">缺失</span> 标签 chip 补内嵌小图标 · 补「左滑卡片可操作」提示文案（删除/默认操作不可发现）</div>
+  </div>
+</div>
+
+<div class="task">
+  <div class="task-head"><span class="tid">V20</span><span class="tpage">P17 设置</span><span class="ttitle">行右值补做</span><span class="tstat todo">⬜ 待修</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag new">新增</span> 「收货地址 N 个」计数（需接地址列表数据）+「缓存 点击清理」<span class="code">state-chip</span>（当前行右空白）</div>
+  </div>
+</div>
+
+<div class="task">
+  <div class="task-head"><span class="tid">V21</span><span class="tpage">P18 优惠券</span><span class="ttitle">降级卡描边 + banner 位置</span><span class="tstat todo">⬜ 待修</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag layout">布局</span> 领券中心降级卡 <span class="code">实线 → 虚线 primary 描边</span>（降级语义）· banner 位置对齐原型（券卡列表之后，当前在前）</div>
+  </div>
+</div>
+
+<div class="task">
+  <div class="task-head"><span class="tid">V22</span><span class="tpage">P23 通知</span><span class="ttitle">「全部已读」形态补全</span><span class="tstat todo">⬜ 待修</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag miss">缺失</span> 头部「全部已读」补 <span class="code">done_all 图标 + 文字</span> 形态（当前仅 check_circle + 角标，原型是明确操作入口）</div>
+  </div>
+</div>
+
+<div class="task">
+  <div class="task-head"><span class="tid">V23</span><span class="tpage">P25 关于</span><span class="ttitle">footer 构建号标签</span><span class="tstat todo">⬜ 待修</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag new">新增</span> footer 补 <span class="code">「build 2026.08」</span> ver-tag 小标签（版本可追溯）</div>
+  </div>
+</div>
+
+<div class="task">
+  <div class="task-head"><span class="tid">V24</span><span class="tpage">P3 购物车</span><span class="ttitle">CHECKOUT 按钮 padding + Total 字体</span><span class="tstat todo">⬜ 待修</span></div>
+  <div class="diff" style="border-top:none">
+    <div class="diff-item"><span class="dtag size">尺寸</span> CHECKOUT 按钮 padding 收正 <span class="code">14/24</span> · Total 字体对齐原型 <span class="code">Georgia 18px</span>（当前 sans-serif）</div>
+  </div>
+</div>
+
+<a id="b4"></a>
+<div style="font:800 16px/1 sans-serif;color:var(--primary);margin:28px 0 14px;padding-left:10px;border-left:4px solid var(--primary)">第四批 · 拍板项（D-V1~D-V4）</div>
+
+<!-- ===== D-V1 A/B 对比 ===== -->
+<div class="task" style="border:2px solid var(--positive)">
+  <div class="task-head">
+    <span class="tid" style="background:var(--positive)">D-V1</span><span class="tpage">P7 搜索</span>
+    <span class="ttitle">header 高度与锯齿：维持 90px 紧凑头 + 修锯齿显示（已拍板 A）</span>
+    <span class="tstat" style="background:#dcfce7;color:var(--positive)">✅ 已拍板 A</span>
+  </div>
+  <div class="compare">
+    <div class="col cur" style="background:#fffbeb;border-right:1px solid #fde68a">
+      <div class="col-label" style="color:var(--warning)"><span class="dot" style="background:var(--warning)"></span>方案 A · 维持现布局（90px 去标题）修锯齿</div>
+      <div class="mock">
+        <div class="mock-title">紧凑头 · 无标题 · 锯齿调 viewBox 适配</div>
+        <div style="background:var(--primary);position:relative;padding:12px 12px 16px">
+          <div style="position:absolute;inset:0;opacity:.1;background-image:repeating-linear-gradient(45deg,#f0e6c8 0 1px,transparent 1px 10px)"></div>
+          <div style="position:relative;display:flex;justify-content:space-between;align-items:center">
+            <span style="color:#fff;font-size:16px">←</span>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;font-size:10px;color:var(--on-sv2);width:170px">Search... 🎤</div>
+            <div style="display:flex;gap:6px"><span style="color:#fff;font-size:14px">🎧</span><span style="color:#fff;font-size:14px">🛒</span></div>
+          </div>
+        </div>
+        <div style="height:8px;background:linear-gradient(-45deg,var(--primary) 25%,transparent 25%) 0 0/10px 10px,linear-gradient(45deg,var(--primary) 25%,transparent 25%) 5px 0/10px 10px;background-color:var(--surface)"></div>
+        <div style="font:9px/1.4 sans-serif;color:var(--warning);text-align:center;margin-top:6px">⚠ 锯齿需缩小 viewBox 或压扁 polygon 才能塞进 90px，文化元素比例会失真</div>
+      </div>
+      <div class="kv">
+        <div class="row">保留：你之前定的去标题/客服紧凑头</div>
+        <div class="row">代价：锯齿 22 点 polygon 需重算高度，<span style="color:var(--warning)">视觉比例压缩</span></div>
+      </div>
+    </div>
+    <div class="col opt" style="background:#f0fdf4">
+      <div class="col-label"><span class="dot" style="background:var(--positive)"></span>方案 B · 回原型 176px（标题+客服+购物车）</div>
+      <div class="mock">
+        <div class="mock-title">完整 toolbar · 锯齿自然完整显示</div>
+        <div style="background:var(--primary);position:relative;padding:14px 16px 24px">
+          <div style="position:absolute;inset:0;opacity:.1;background-image:repeating-linear-gradient(45deg,#f0e6c8 0 1px,transparent 1px 10px)"></div>
+          <div style="position:relative;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:10px"><span style="color:#fff;font-size:18px">←</span><span style="font:700 20px sans-serif;color:#fff">Search</span></div>
+            <div style="display:flex;gap:8px"><span style="color:#fff;font-size:20px">🎧</span><span style="color:#fff;font-size:20px">🛒</span></div>
+          </div>
+          <div style="position:relative;background:#fff;border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:center;font-size:11px;color:var(--on-sv2);box-shadow:var(--shadow-sm)">🔍 Search household essentials... 🎤</div>
+        </div>
+        <div style="height:10px;background:linear-gradient(-45deg,var(--primary) 25%,transparent 25%) 0 0/12px 12px,linear-gradient(45deg,var(--primary) 25%,transparent 25%) 6px 0/12px 12px;background-color:var(--surface)"></div>
+        <div style="font:9px/1.4 sans-serif;color:var(--positive);text-align:center;margin-top:6px">✓ 锯齿 22 点完整比例 · 与 P6 首页/P5 分类同构（176px 家族）</div>
+      </div>
+      <div class="kv">
+        <div class="row">恢复：原型完整 toolbar（标题 20px + 双按钮 40px）</div>
+        <div class="row">收益：锯齿完整 + <span style="color:var(--positive)">与首页/分类头一致</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="decide-box" style="background:#f0fdf4;border-top:1px solid #bbf7d0">
+    <div class="q" style="color:var(--positive)">✅ 已拍板 A（2026-08-21）：维持现 90px 紧凑头（去标题/客服），调 headerWrap 高度或 UmaLulikCurve SVG viewBox 让锯齿底边显示出来。锯齿 22 点 polygon 可能需重算高度适配 90px，接受视觉比例压缩。与 P5/P6 的 176px 头部家族不统一（保留差异，因你此前已要求紧凑头）</div>
+  </div>
+</div>
+
+<!-- ===== D-V2 已拍板 ===== -->
+<div class="task" style="border:2px solid var(--positive)">
+  <div class="task-head">
+    <span class="tid" style="background:var(--positive)">D-V2</span><span class="tpage">P1/P8 购物车角标</span>
+    <span class="ttitle">角标配色：维持统一（白底红字）</span>
+    <span class="tstat" style="background:#dcfce7;color:var(--positive)">✅ 已拍板 A</span>
+  </div>
+  <div class="diff" style="background:#f0fdf4;border-top:1px solid #bbf7d0">
+    <div class="diff-item"><span class="dtag new" style="background:var(--positive)">拍板</span> <b>A. 维持统一</b>——全站购物车角标同一配色（白底红字），不按 P1（红底白字）/P8（金底红边白字）区分。<span style="color:var(--on-sv2)">此项目无改动，任务关闭。</span></div>
+  </div>
+</div>
+
+<!-- ===== D-V3 已拍板 ===== -->
+<div class="task" style="border:2px solid var(--positive)">
+  <div class="task-head">
+    <span class="tid" style="background:var(--positive)">D-V3</span><span class="tpage">P26 语言页</span>
+    <span class="ttitle">图标：维持 language（语义等同）</span>
+    <span class="tstat" style="background:#dcfce7;color:var(--positive)">✅ 已拍板 B</span>
+  </div>
+  <div class="diff" style="background:#f0fdf4;border-top:1px solid #bbf7d0">
+    <div class="diff-item"><span class="dtag new" style="background:var(--positive)">拍板</span> <b>B. 维持 language</b>——与 translate 语义等同，不做无意义的视觉变更。<span style="color:var(--on-sv2)">此项目无改动，任务关闭。</span></div>
+  </div>
+</div>
+
+<!-- ===== D-V4 已拍板 ===== -->
+<div class="task" style="border:2px solid var(--positive)">
+  <div class="task-head">
+    <span class="tid" style="background:var(--positive)">D-V4</span><span class="tpage">P1 商品详情</span>
+    <span class="ttitle">轮播高度：对齐原型 380px + dots bottom 12</span>
+    <span class="tstat" style="background:#dcfce7;color:var(--positive)">✅ 已拍板 A</span>
+  </div>
+  <div class="compare">
+    <div class="col cur">
+      <div class="col-label"><span class="dot"></span>现状 · 4:5 比例</div>
+      <div class="mock">
+        <div class="mock-title">轮播区</div>
+        <div style="width:100%;height:150px;background:var(--surface-variant);border-radius:8px;position:relative;display:grid;place-items:center">
+          <span style="font:600 10px sans-serif;color:var(--on-sv2)">≈487px (4:5) · dots 距底 48</span>
+          <div style="position:absolute;bottom:24px;left:0;right:0;display:flex;justify-content:center;gap:4px"><span style="width:14px;height:5px;background:var(--primary);border-radius:99px"></span><span style="width:5px;height:5px;background:rgba(255,255,255,.5);border-radius:99px"></span><span style="width:5px;height:5px;background:rgba(255,255,255,.5);border-radius:99px"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col opt">
+      <div class="col-label"><span class="dot"></span>目标 · 380px 满屏宽</div>
+      <div class="mock">
+        <div class="mock-title">轮播区</div>
+        <div style="width:100%;height:117px;background:var(--surface-variant);border-radius:8px;position:relative;display:grid;place-items:center">
+          <span style="font:600 10px sans-serif;color:var(--on-sv2)">380px (390 满宽) · dots 距底 12</span>
+          <div style="position:absolute;bottom:6px;left:0;right:0;display:flex;justify-content:center;gap:4px"><span style="width:14px;height:5px;background:var(--primary);border-radius:99px"></span><span style="width:5px;height:5px;background:rgba(255,255,255,.5);border-radius:99px"></span><span style="width:5px;height:5px;background:rgba(255,255,255,.5);border-radius:99px"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="diff" style="background:#f0fdf4;border-top:1px solid #bbf7d0">
+    <div class="diff-item"><span class="dtag new" style="background:var(--positive)">拍板</span> <b>A. 对齐原型 380px</b>——轮播改 380px 满屏宽 + dots bottom 12；首屏露出更多信息（价格/库存/配送卡提前可见）</div>
+  </div>
+</div>
+
+<div class="foot">
+  全量对比（V1-V24 + D-V1~D-V4）· 21 项待修 + 1 项待展开（V7）+ D-V 全部已拍板（D-V1 维持90px修锯齿待实施 / D-V4 对齐380px待实施 / D-V2·D-V3 关闭无改动）<br>
+  对照基准：<b>P1-P29 优化原型 HTML</b> · 现状值均经 RN 代码核实 · 拍板时间 2026-08-21
+</div>
+
+</div>
+</body>
+</html>
