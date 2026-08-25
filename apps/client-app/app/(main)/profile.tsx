@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: layout['container-margin'],
     paddingTop: spacing.md,
-    paddingBottom: spacing.xxl * 2,
+    paddingBottom: 24,
     gap: spacing.md,
   },
   // === usercard-new ===
@@ -920,7 +920,8 @@ const styles = StyleSheet.create({
   // === footer ===
   footerLogo: {
     alignItems: 'center',
-    paddingVertical: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingBottom: 0,
     opacity: 0.3,
     gap: 2,
   },

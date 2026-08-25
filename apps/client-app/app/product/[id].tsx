@@ -37,6 +37,8 @@ import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageE
 import type { Review } from '@/types';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
+// D-V4：轮播 slide 固定高（P1 优化原型 .carousel .slide height:380px）
+const CAROUSEL_HEIGHT = 380;
 
 const TABS = ['PRODUCT', 'REVIEWS', 'RECOMMENDED', 'DETAILS'] as const;
 type TabKey = (typeof TABS)[number];
@@ -229,7 +231,7 @@ export default function ProductDetailPage() {
       />
 
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-        {/* Image Carousel（4:5 比例 + 分页圆点 + play 按钮） */}
+        {/* Image Carousel（D-V4：对齐 P1 优化原型 slide 380px 满屏宽 + 分页圆点 + play 按钮） */}
         <View
           style={[styles.carousel, { backgroundColor: colors['surface-variant'], paddingTop: 0 }]}
         >
@@ -243,21 +245,15 @@ export default function ProductDetailPage() {
             }}
             scrollEventThrottle={16}
           >
-            <Image
-              source={{ uri: product.image }}
-              style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH * 1.25 }}
-              resizeMode="cover"
-            />
-            <Image
-              source={{ uri: product.image }}
-              style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH * 1.25 }}
-              resizeMode="cover"
-            />
-            <Image
-              source={{ uri: product.image }}
-              style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH * 1.25 }}
-              resizeMode="cover"
-            />
+            {/* D-V4：原型 .carousel .slide height:380px（不再 4:5 自适应） */}
+            {[0, 1, 2].map((i) => (
+              <Image
+                key={i}
+                source={{ uri: product.image }}
+                style={{ width: SCREEN_WIDTH, height: CAROUSEL_HEIGHT }}
+                resizeMode="cover"
+              />
+            ))}
           </ScrollView>
           {/* Pagination Dots */}
           <View style={styles.dotsWrap}>
@@ -470,7 +466,7 @@ export default function ProductDetailPage() {
                 <View style={styles.deliveryCell}>
                   <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>{t('product.eta')}</Text>
                   <Text style={[styles.deliveryValue, { color: colors['on-surface'] }]}>
-                    Arrives Today 6:00 PM
+                    {t('product.etaValue')}
                   </Text>
                 </View>
                 <View style={styles.deliveryCell}>
@@ -478,7 +474,7 @@ export default function ProductDetailPage() {
                   <Text
                     style={[styles.deliveryValue, { color: colors.primary, fontWeight: '700' }]}
                   >
-                    Free over $10
+                    {t('product.shippingFree')}
                   </Text>
                 </View>
               </View>
@@ -597,7 +593,7 @@ export default function ProductDetailPage() {
 
             {/* 加载态：评分区淡化 + 占位 */}
             {reviewsLoading && (
-              <View style={[styles.ratingSummary, { backgroundColor: colors['surface-container-low'], opacity: 0.6 }]}>
+              <View style={[styles.ratingSummary, { backgroundColor: colors['surface-container-high'], opacity: 0.6 }]}>
                 <View style={styles.ratingSummaryLeft}>
                   <Text style={[styles.ratingBig, { color: colors['outline-variant'] }]}>—</Text>
                 </View>
@@ -615,7 +611,7 @@ export default function ProductDetailPage() {
             {/* 有评论：评分汇总卡（avg + 星 + 5 档分布）+ 评论列表 */}
             {!reviewsLoading && reviewSummary && reviewSummary.count > 0 && (
               <>
-                <View style={[styles.ratingSummary, { backgroundColor: colors['surface-container-low'] }]}>
+                <View style={[styles.ratingSummary, { backgroundColor: colors['surface-container-high'] }]}>
                   <View style={styles.ratingSummaryLeft}>
                     <Text style={[styles.ratingBig, { color: colors['on-surface'] }]}>
                       {reviewSummary.avg.toFixed(1)}
@@ -881,7 +877,7 @@ export default function ProductDetailPage() {
             {
               backgroundColor: isSoldOut
                 ? colors['surface-container-low']
-                : colors['primary-container'],
+                : colors.primary,
             },
             pressed && !isSoldOut && { opacity: 0.85 },
           ]}
@@ -892,7 +888,7 @@ export default function ProductDetailPage() {
           <Text
             style={[
               styles.cartBtnText,
-              { color: isSoldOut ? colors['on-surface-variant'] : colors['on-primary-container'] },
+              { color: isSoldOut ? colors['on-surface-variant'] : colors['on-primary'] },
             ]}
           >
             {t('product.addToCart')}
@@ -1158,19 +1154,22 @@ const styles = StyleSheet.create({
   },
   dotsWrap: {
     position: 'absolute',
-    bottom: 48,
+    // D-V4：原型 .carousel .dots bottom:12px
+    bottom: 12,
     left: 0,
     right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 4,
+    // D-V4：原型 dots gap:6px
+    gap: 6,
   },
   dot: {
     height: 6,
     borderRadius: 999,
   },
   dotActive: {
-    width: 24,
+    // D-V4：原型 .dot.active width:18px
+    width: 18,
   },
   dotIdle: {
     width: 6,
@@ -1178,8 +1177,9 @@ const styles = StyleSheet.create({
   },
   playWrap: {
     position: 'absolute',
-    top: spacing.sm,
-    right: spacing.sm,
+    // D-V4：原型 .carousel .play top:12px right:12px
+    top: 12,
+    right: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1196,8 +1196,9 @@ const styles = StyleSheet.create({
   },
   imageCounter: {
     position: 'absolute',
-    bottom: spacing.sm,
-    right: spacing.sm,
+    // D-V4：原型 .carousel .img-count bottom:12px right:12px
+    bottom: 12,
+    right: 12,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: 999,
@@ -1225,20 +1226,20 @@ const styles = StyleSheet.create({
   tagTertiary: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
-    borderRadius: 2,
+    borderRadius: 4,
   },
   tagTertiaryText: {
     ...typography['label-caps'],
-    fontSize: 12,
+    fontSize: 9,
   },
   tagPrimary: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
-    borderRadius: 2,
+    borderRadius: 4,
   },
   tagPrimaryText: {
     ...typography['label-caps'],
-    fontSize: 12,
+    fontSize: 9,
   },
   h1: {
     ...typography.h1,
@@ -1493,7 +1494,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   ratingBig: {
-    fontSize: 48,
+    fontSize: 32,
     fontWeight: '700',
     fontFamily: 'Noto Serif',
   },
@@ -1519,7 +1520,7 @@ const styles = StyleSheet.create({
   },
   ratingBarTrack: {
     flex: 1,
-    height: 8,
+    height: 5,
     borderRadius: 999,
     overflow: 'hidden',
   },
@@ -1641,13 +1642,13 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   relatedCard: {
-    width: 160,
+    width: 140,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     overflow: 'hidden',
   },
   relatedImage: {
-    height: 128,
+    height: 140,
   },
   relatedImg: {
     width: '100%',
@@ -1672,7 +1673,7 @@ const styles = StyleSheet.create({
   },
   relatedAddBtn: {
     borderWidth: 1,
-    borderRadius: 2,
+    borderRadius: 999,
     paddingVertical: 6,
     alignItems: 'center',
     marginTop: 2,

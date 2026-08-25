@@ -567,12 +567,7 @@ const styles = StyleSheet.create({
   selectedLabel: {
     fontSize: 12,
   },
-  // V24：合计 Georgia 18px（原型 .checkout-bar .total）
-  totalPriceSerif: {
-    fontFamily: 'Georgia',
-    fontSize: 18,
-    lineHeight: 22,
-  },
+  
   // V5 DISCOUNT 行样式（有折扣时显示）
   discountPill: {
     fontSize: 10,
@@ -585,6 +580,12 @@ const styles = StyleSheet.create({
   discountAmount: {
     fontSize: 12,
     fontWeight: '700',
+  },
+  // V24：合计 Georgia 18px（原型 .checkout-bar .total）
+  totalPriceSerif: {
+    fontFamily: '',
+    fontSize: 16,
+    lineHeight: 22,
   },
   // §4.3 管理态删除栏
   barSpacer: {
