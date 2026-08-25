@@ -33,9 +33,9 @@ export function makeTask(status: TaskStatus, overrides: Partial<DeliveryTask> = 
     updatedAt: '',
     pickup: { title: '', address: '' },
     dropoff: { title: '', address: '' },
+    // P0-1/P6 #7 修复（2026-08-25）：fee 由 fromView 从 deliveryFee 映射；
+    // distanceKm/estimatedMinutes 后端已透传为 optional 顶层字段，fixture 不再硬填 0。
     fee: 0,
-    distanceKm: 0,
-    estimatedMinutes: 0,
     items: [],
     ...overrides,
   };

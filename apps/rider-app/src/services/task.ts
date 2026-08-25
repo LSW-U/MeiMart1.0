@@ -37,7 +37,7 @@ const initialTasks: DeliveryTask[] = [
     updatedAt: new Date().toISOString(),
     pickup: { title: 'Heritage Bakery (Dili Center)', address: 'Rua 15 de Outubro, Dili', contactName: 'Bakery Pickup Desk' },
     dropoff: { title: 'Hotel Timor - Lobby', address: 'Avenida Marechal Carmona, Dili', contactName: 'Concierge' },
-    fee: 9,
+    deliveryFee: 9,
     distanceKm: 1.8,
     estimatedMinutes: 30,
     items: ['Pastry box', '6 units'],
@@ -64,7 +64,7 @@ const initialTasks: DeliveryTask[] = [
     updatedAt: new Date().toISOString(),
     pickup: { title: 'Lita Store (Colmera)', address: 'Rua de Colmera, Dili', contactName: 'Lita Front Desk' },
     dropoff: { title: 'UNTL Campus - Faculty Office', address: 'Avenida Cidade de Lisboa, Dili', contactName: 'Faculty Reception', contactPhone: '+670 7755 4072' },
-    fee: 10,
+    deliveryFee: 10,
     distanceKm: 2.5,
     estimatedMinutes: 30,
     items: ['Matcha Latte', 'Seasonal Fruit Platter'],
@@ -93,7 +93,7 @@ const initialTasks: DeliveryTask[] = [
     updatedAt: new Date().toISOString(),
     pickup: { title: 'Customer (Return Pickup)', address: 'Avenida Bispo Medeiros, Dili', contactName: 'Customer', contactPhone: '+670 7744 1000' },
     dropoff: { title: 'Warehouse Return Center', address: 'Rua de Colmera, Dili', contactName: 'Warehouse Desk' },
-    fee: 8,
+    deliveryFee: 8,
     distanceKm: 3,
     estimatedMinutes: 35,
     items: ['Return Item A', '1 unit'],
@@ -148,14 +148,15 @@ function buildMockLists(): TaskLists {
 }
 
 // 后端 view → 骑手 App 内部兼容字段填充（real 模式专用）
-// 后端 DeliveryTaskView 字段精简（无 fee/distance/items/pickup.title 等），
-// 这里映射出旧 UI 期望的嵌套结构，缺失字段填默认空值避免组件 break。
+// 后端 DeliveryTaskView 已透传 contactPhone / deliveryFee / distanceKm / estimatedMinutes
+// （P0-1 / P6 #7 修复，2026-08-25）。这里映射出旧 UI 期望的嵌套结构 + fee 兼容字段。
 //
-// P14 ④：taskType / refundId 后端 DeliveryTaskView 已有，`...view` 直接透传，无需补默认值。
+// P14 ④：taskType / refundId 后端 DeliveryTaskView 已有，`...view` 直接透传。
 //
-// TODO(W6-backend): 后端 W6 在 DeliveryTaskView 补 fee / distanceKm /
-//   estimatedMinutes / items 四个字段后，删除下方 ?? 0 / ?? [] 默认值，
-//   改为直接透传（fee: view.fee）。默认值是假数据，会让 UI 显示 $0/0km/0min。
+// 字段缺失回退说明：
+//   - fee（=deliveryFee）、distanceKm、estimatedMinutes：后端真实数据，缺失（历史订单/无坐标）
+//     才回退 0。旧 UI 用 task.fee 展示配送费卡片、用 distanceKm/estimatedMinutes 展示 ETA。
+//   - items：后端 W6 暂未透传订单明细，仍回退 []，待后端补。
 function fromView(view: DeliveryTask): DeliveryTask {
   // 后端 view 字段精简，pickup/dropoff 嵌套结构由本地构造（缺失填默认空值避免组件 break）
   return {
@@ -177,12 +178,12 @@ function fromView(view: DeliveryTask): DeliveryTask {
       // 映射到 dropoff.contactPhone 供 TaskCard 联系按钮/尾号展示消费
       contactPhone: view.contactPhone,
     },
-    // TODO(W6-backend): 后端补 fee 字段后删 ?? 0
-    fee: view.fee ?? 0,
-    // TODO(W6-backend): 后端补 distanceKm 字段后删 ?? 0
-    distanceKm: view.distanceKm ?? 0,
-    // TODO(W6-backend): 后端补 estimatedMinutes 字段后删 ?? 0
-    estimatedMinutes: view.estimatedMinutes ?? 0,
+    // P0-1 修复（2026-08-25）：后端透传 deliveryFee（order.deliveryFee，单位分），
+    //   旧 UI 用 task.fee 展示配送费，此处映射；历史订单无 deliveryFee → 回退 0。
+    fee: view.deliveryFee ?? 0,
+    // P6 #7 修复（2026-08-25）：distanceKm / estimatedMinutes 后端已透传，
+    //   顶层 `...view` 已带，无需再映射；仅在缺失时保持 undefined 由组件降级隐藏。
+    //   （旧 UI 读 task.distanceKm / task.estimatedMinutes，顶层字段已满足。）
     // TODO(W6-backend): 后端补 items 字段后删 ?? []
     items: view.items ?? [],
   };

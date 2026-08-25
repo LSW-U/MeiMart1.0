@@ -55,13 +55,29 @@ export type DeliveryTask = {
   payableAmount?: number;
   /** T6 联系拨号：客户电话（后端从 order.deliveryAddress.phone 透传，历史订单可能无） */
   contactPhone?: string;
+  /**
+   * 配送费（单位：分，P0-1 修复 2026-08-25）
+   * 后端从 order.deliveryFee 透传；历史订单可能无 → undefined。
+   * fromView 映射到 fee 兼容字段（旧 UI 消费 task.fee）。
+   */
+  deliveryFee?: number;
+  /**
+   * 配送直线距离（km，P6 #7 2026-08-25）
+   * pickup → dropoff 的 Haversine 距离；任一坐标缺失 → undefined（前端降级隐藏）。
+   */
+  distanceKm?: number;
+  /**
+   * 预估配送时长（分钟，P6 #7 2026-08-25）
+   * 由 distanceKm ÷ 20km/h 推导，上限 45 分钟兜底；distanceKm 缺失 → undefined。
+   */
+  estimatedMinutes?: number;
   // ── 兼容字段（旧 UI 引用 task.pickup.title / task.fee 等） ──
-  // service 层 fromView() 保证 real 模式也填充这些字段（缺失时填默认空值）
+  // service 层 fromView() 保证 real 模式也填充这些字段。
+  // P0-1/P6 #7 修复（2026-08-25）：fee/distanceKm/estimatedMinutes 已由后端透传，
+  //   fromView 直接复用后端值（缺失才回退 0）；不再依赖 mock 假数据。
   pickup: TaskStop;
   dropoff: TaskStop;
   fee: number;
-  distanceKm: number;
-  estimatedMinutes: number;
   items: string[];
 };
 
