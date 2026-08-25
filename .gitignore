@@ -29,3 +29,6 @@ web-build/
 # logs
 *.log
 npm-debug.log*
+
+# WorkBuddy tool runtime data
+.workbuddy/
