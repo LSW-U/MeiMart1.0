@@ -37,10 +37,11 @@ const initialTasks: DeliveryTask[] = [
     updatedAt: new Date().toISOString(),
     pickup: { title: 'Heritage Bakery (Dili Center)', address: 'Rua 15 de Outubro, Dili', contactName: 'Bakery Pickup Desk' },
     dropoff: { title: 'Hotel Timor - Lobby', address: 'Avenida Marechal Carmona, Dili', contactName: 'Concierge' },
-    deliveryFee: 9,
+    deliveryFee: 900,
     distanceKm: 1.8,
     estimatedMinutes: 30,
     items: ['Pastry box', '6 units'],
+    fee: 900,
   },
   {
     id: '105',
@@ -64,10 +65,11 @@ const initialTasks: DeliveryTask[] = [
     updatedAt: new Date().toISOString(),
     pickup: { title: 'Lita Store (Colmera)', address: 'Rua de Colmera, Dili', contactName: 'Lita Front Desk' },
     dropoff: { title: 'UNTL Campus - Faculty Office', address: 'Avenida Cidade de Lisboa, Dili', contactName: 'Faculty Reception', contactPhone: '+670 7755 4072' },
-    deliveryFee: 10,
+    deliveryFee: 1000,
     distanceKm: 2.5,
     estimatedMinutes: 30,
     items: ['Matcha Latte', 'Seasonal Fruit Platter'],
+    fee: 1000,
   },
   // P14 ④ B1：return 任务三步流转示例（PICKED_UP 状态，进 pickups tab）
   // 用于 mock 下验证 return 流程：navigate 页点"开始配送"→startDelivering→DELIVERING→sign→deliver
@@ -93,10 +95,11 @@ const initialTasks: DeliveryTask[] = [
     updatedAt: new Date().toISOString(),
     pickup: { title: 'Customer (Return Pickup)', address: 'Avenida Bispo Medeiros, Dili', contactName: 'Customer', contactPhone: '+670 7744 1000' },
     dropoff: { title: 'Warehouse Return Center', address: 'Rua de Colmera, Dili', contactName: 'Warehouse Desk' },
-    deliveryFee: 8,
+    deliveryFee: 800,
     distanceKm: 3,
     estimatedMinutes: 35,
     items: ['Return Item A', '1 unit'],
+    fee: 800,
   },
 ];
 

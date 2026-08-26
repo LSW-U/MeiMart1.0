@@ -122,8 +122,8 @@ export const earningsApi = {
         category: 'wallet',
         titleKey: 'notification.template.walletWithdrawSuccess.title',
         messageKey: 'notification.template.walletWithdrawSuccess.message',
-        // A4：金额走 formatCurrency + 当前语言货币符号（原 `$${amount.toFixed(2)}` 硬编码 $，
-        // zh 用户看到 $ 而 earnings 页是 ¥）。服务层无 hook，translate 纯函数取 common.currency
+        // A4：金额走 formatCurrency + 当前语言货币符号（原 `$${amount.toFixed(2)}` 硬编码 $）。
+        // 货币符号由 i18n common.currency 提供（5 语言统一 $，对齐 USD 官方货币）。
         vars: {
           amount: formatCurrency(
             amount,

@@ -47,7 +47,7 @@ type OrderHistoryCardProps = {
   incomeLabel: string;
   income: string;
   // E3 §3.2: 高亮判定由调用方传 isPositive（基于 order.income > 0 数值，与货币符号无关），
-  // 替换原 income.startsWith('$') 字符串判定（zh currency='¥' 永远不高亮的 bug）。
+  // 替换原 income.startsWith('$') 字符串判定（货币符号变化时也能正确高亮）。
   isPositive: boolean;
   viewDetailsLabel: string;
   onPress?: () => void;

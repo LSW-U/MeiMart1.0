@@ -96,10 +96,10 @@ beforeEach(() => {
 });
 
 describe('统计区真实数据（P1 §3.1① + ⑥ 三态）', () => {
-  it('today-ok → 今日订单 15 / 今日收入 ¥245.50 / 总配送 128', () => {
+  it('today-ok → 今日订单 15 / 今日收入 $245.50 / 总配送 128', () => {
     const { getByText } = renderPage();
     expect(getByText('15')).toBeTruthy();
-    expect(getByText('¥245.50')).toBeTruthy();
+    expect(getByText('$245.50')).toBeTruthy();
     expect(getByText('128')).toBeTruthy();
   });
 

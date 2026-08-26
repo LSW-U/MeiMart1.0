@@ -1,5 +1,5 @@
 /**
- * 金额格式化（B6 收口）——货币符号由 i18n common.currency 提供（zh:¥ / en:$ / tet:$ ...），
+ * 金额格式化（B6 收口）——货币符号由 i18n common.currency 提供（zh/en/id/tet/pt 均为 $，USD 官方货币），
  * 调用方必传，从根上杜绝 USD/Intl locale 硬编码（资金敏感）。
  */
 export interface FormatCurrencyOptions {

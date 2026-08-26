@@ -14,7 +14,7 @@ import type { OrderHistoryItem } from '../../../src/types/order';
  * 覆盖拍板（E3 方案 §3）：
  *   §3.1 三态接入（orders QueryBoundary list 骨架 / error 重试 / empty 空态 / data 列表）
  *        + counts/todayStats 各自独立三态（底栏骨架 / — / data）
- *   §3.2 ¥ 高亮 bug 修复——isPositive prop（基于 order.income > 0 数值，与货币符号无关）
+ *   §3.2 $ 高亮 bug 修复——isPositive prop（基于 order.income > 0 数值，与货币符号无关）
  *   §3.3 CAL 日期行移除（无残留）
  *   §3.4 tab inactive bg-white→bg-surface（页面层色残留收口）
  *
@@ -173,10 +173,10 @@ describe('三态接入（E3 §3.1 orders QueryBoundary）', () => {
     // 两条订单号都在
     expect(getByText('#10239485')).toBeTruthy();
     expect(getByText('#10239486')).toBeTruthy();
-    // 有收入订单金额 ¥12.50 高亮 primary 色；无收入订单「无收入」灰
+    // 有收入订单金额 $12.50 高亮 primary 色；无收入订单「无收入」灰
     // 注：RN host mock 把 children 渲染为真实 DOM 文本（非 data-prop-children），
     // 故按 textContent 定位 Text 节点再取其 data-prop-classname。
-    const incomeVal = findTextByTextContent(container, '¥12.50');
+    const incomeVal = findTextByTextContent(container, '$12.50');
     expect(incomeVal).toBeTruthy();
     expect(incomeVal?.getAttribute('data-prop-classname') ?? '').toContain('text-primary');
     // 无收入文本存在且非 primary
@@ -184,10 +184,10 @@ describe('三态接入（E3 §3.1 orders QueryBoundary）', () => {
   });
 });
 
-describe('¥ 高亮 bug 修复（E3 §3.2 isPositive prop，货币无关判定）', () => {
-  it('有收入订单（income > 0）：金额 text-primary（zh ¥ 前缀也能高亮——回归原 startsWith("$") bug）', () => {
+describe('$ 高亮 bug 修复（E3 §3.2 isPositive prop，货币无关判定）', () => {
+  it('有收入订单（income > 0）：金额 text-primary（zh $ 前缀也能高亮——回归原 startsWith("$") bug）', () => {
     const { container } = renderPage();
-    const incomeVal = findTextByTextContent(container, '¥12.50');
+    const incomeVal = findTextByTextContent(container, '$12.50');
     expect(incomeVal?.getAttribute('data-prop-classname') ?? '').toContain('text-primary');
     expect(incomeVal?.getAttribute('data-prop-classname') ?? '').not.toContain('text-on-surface-variant');
   });
@@ -225,29 +225,29 @@ describe('tab 色残留收口（E3 §3.4 inactive bg-white→bg-surface）', () 
 });
 
 describe('底栏 counts/todayStats 三态（E3 §3.1 底栏兜底）', () => {
-  it('today loading：底栏金额区显骨架条（非 ¥0.00 误报）', () => {
+  it('today loading：底栏金额区显骨架条（非 $0.00 误报）', () => {
     mockTodayState = 'today-loading';
     const { container, queryByText } = renderPage();
 
     // 底栏有 Skeleton 节点
     const skeletons = container.querySelectorAll('[data-rn-host="View"]');
     expect(skeletons.length).toBeGreaterThan(0);
-    // 不应出现「0 · ¥0.00」误报
-    expect(queryByText(/0 · ¥0\.00/)).toBeNull();
+    // 不应出现「0 · $0.00」误报
+    expect(queryByText(/0 · \$0\.00/)).toBeNull();
   });
 
-  it('today error：底栏显示「—」兜底（非 0/¥0.00 静默误报）', () => {
+  it('today error：底栏显示「—」兜底（非 0/$0.00 静默误报）', () => {
     mockTodayState = 'today-error';
     const { getAllByText } = renderPage();
 
-    // 底栏 todayLabel 与 todayValue 两处均兜底为「—」（共 2 个），不出现「0 · ¥0.00」误报
+    // 底栏 todayLabel 与 todayValue 两处均兜底为「—」（共 2 个），不出现「0 · $0.00」误报
     expect(getAllByText('—').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('today data：底栏显示真实「N · ¥X.XX」', () => {
+  it('today data：底栏显示真实「N · $X.XX」', () => {
     // 2 条订单，1 条 completed income=12.5
     const { getByText } = renderPage();
-    expect(getByText(/· ¥12\.50/)).toBeTruthy();
+    expect(getByText(/· \$12\.50/)).toBeTruthy();
   });
 
   it('counts error：tab 数字显示「—」（非 0 误报）', () => {

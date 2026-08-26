@@ -12,7 +12,9 @@ export type DeliveryEvidence = {
 };
 
 const computeFare = (fee: number): number => {
-  const rounded = Math.round(fee * 100) / 100;
+  // P6 #7 配送费单位是分：换算到 dollar 再两位小数（对齐后端 contract 与 display 一致）。
+  const dollars = fee / 100;
+  const rounded = Math.round(dollars * 100) / 100;
   return rounded > 0 ? rounded : 0;
 };
 

@@ -129,7 +129,7 @@ export default function TasksPage() {
     <TaskCard
       key={task.id}
       actionLabel={t('tasks.accept')}
-      fee={formatCurrency(task.fee, currency, { decimals: task.fee % 1 === 0 ? 0 : 1 })}
+      fee={formatCurrency((task.fee ?? 0) / 100, currency, { decimals: (task.fee ?? 0) % 100 === 0 ? 0 : 1 })}
       items={task.items.length ? formatItems(task.items, t) : undefined}
       note={task.note ?? undefined}
       points={[

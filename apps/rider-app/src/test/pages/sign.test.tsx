@@ -213,7 +213,7 @@ describe('L4 COD 实时校验（T5 §3.5）', () => {
     const { getByText } = renderPage();
 
     expect(getByText('应收金额（货到付款）')).toBeTruthy();
-    expect(getByText('¥128.00')).toBeTruthy();
+    expect(getByText('$128.00')).toBeTruthy();
   });
 
   it('非 COD：不渲染 COD 卡', () => {

@@ -128,7 +128,7 @@ describe('三态接入（E1 §3.1）', () => {
     const { getByText, getAllByText } = renderPage();
 
     // 余额卡正常渲染（summary 独立成功），交易区显示错误
-    expect(getByText('¥128.50')).toBeTruthy();
+    expect(getByText('$128.50')).toBeTruthy();
     const retryBtns = getAllByText('重试');
     expect(retryBtns.length).toBe(1);
     fireEvent.click(retryBtns[0]);
@@ -216,11 +216,11 @@ describe('类型徽标 + i18n 描述（E1 §3.4 方案 A / §3.5）', () => {
 });
 
 describe('balanceLabel 修正（E1 §3.6）', () => {
-  it('余额标签不含「美元」（货币由 ¥ 前缀表达）', () => {
+  it('余额标签不含「美元」（货币由 $ 前缀表达）', () => {
     const { getByText, queryByText } = renderPage();
 
     expect(getByText('钱包余额')).toBeTruthy();
     expect(queryByText(/美元/)).toBeNull();
-    expect(getByText('¥128.50')).toBeTruthy();
+    expect(getByText('$128.50')).toBeTruthy();
   });
 });
