@@ -63,12 +63,10 @@ module.exports = {
       // 换成 src/test/react-native.mock.js 的最小 host 壳（组件测试只需可渲染可透传 props）
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
-        // 审查修复 P3-1：rider-app 声明 react@19.2.x，但根 workspace hoisted 后 react 会
-        // 解析到 client-app pin 的 19.2.3（rider 自己是 19.2.7）→ 与 react-dom（rider 本地
-        // 19.2.7）双 React dispatcher，Toast 报 Invalid hook call / react-dom 报
-        // "Incompatible React versions"。钉到 pnpm 虚拟布局里 react-dom 的同层 react，
-        // 保证 react 与 react-dom 精确同版本。
-        '^react$': '<rootDir>/../../node_modules/.pnpm/react-dom@19.2.7_react@19.2.7/node_modules/react',
+        // C3（批次2）：rider react 已与 client 统一 pin 19.2.3（根 hoisted 单一副本），
+        // 拆掉原「钉 pnpm 虚拟层 react-dom@19.2.7 同层 react」的 workaround——
+        // 该钉版在版本目录名里硬编码 19.2.7，升级 React 会静默断。现在 react/react-dom
+        // 精确同版本由 package.json 双 pin 保证，jest 走默认解析即可。
         '^react-native$': '<rootDir>/src/test/react-native.mock.js',
         // AppIcon 经 @expo/vector-icons 拉真图标集（ESM），组件测试只需要可渲染 host
         '^@expo/vector-icons$': '<rootDir>/src/test/expo-vector-icons.mock.js',
