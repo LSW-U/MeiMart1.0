@@ -9,8 +9,14 @@ import { tokenStorage } from './token-storage';
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? '';
 
-// mock 模式：API_BASE_URL 为空时，service 层走 mock 分支（不调 request()）
-export const isMockMode = API_BASE_URL.length === 0;
+// mock 模式开关（审查批次一 P2-1 修复，2026-08-28）：
+// 显式读 EXPO_PUBLIC_USE_MOCK（与 client-app api.ts 对齐），默认 '' → mock。
+// 原判据「URL 为空 → mock」的失败模式是：EAS/生产漏配 URL → 静默全量 mock 假数据，
+// 骑手长时间无感知。改为显式开关后，漏配 URL 时 URL 为空但 USE_MOCK 未开 →
+// 走 real 分支打空 baseURL 报错（显式失败），不再静默吞。
+// 想开 mock：.env 设 EXPO_PUBLIC_USE_MOCK=true（或不设=默认 mock，本地开发免配）。
+export const isMockMode =
+  (process.env.EXPO_PUBLIC_USE_MOCK ?? '') !== 'false' && API_BASE_URL.length === 0;
 
 export class ApiError extends Error {
   constructor(

@@ -1,8 +1,31 @@
 {
   "cli": { "version": ">= 13.0.0", "appVersionSource": "remote" },
   "build": {
-    "development": { "developmentClient": true, "distribution": "internal", "env": { "APP_ENV": "development" } },
-    "preview": { "distribution": "internal", "env": { "APP_ENV": "staging" }, "android": { "buildType": "apk" } },
-    "production": { "env": { "APP_ENV": "production" }, "autoIncrement": true }
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "development",
+        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:3000/api/v1",
+        "EXPO_PUBLIC_USE_MOCK": "false"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_API_BASE_URL": "https://staging-api.meimart.com/api/v1",
+        "EXPO_PUBLIC_USE_MOCK": "false"
+      },
+      "android": { "buildType": "apk" }
+    },
+    "production": {
+      "env": {
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "TODO-[需用户]",
+        "EXPO_PUBLIC_USE_MOCK": "false"
+      },
+      "autoIncrement": true
+    }
   }
 }
