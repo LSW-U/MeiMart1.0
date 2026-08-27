@@ -23,7 +23,7 @@
         "NSContactsUsageDescription": "MeiMart 可读取联系人以快速填充收货地址。",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "appStoreUrl": "https://apps.apple.com/app/meimart/id000000000"
+      "appStoreUrl": "TODO-[需用户]"
     },
     "android": {
       "package": "com.meimart.app",
@@ -54,7 +54,7 @@
       "USE_MOCK": "false",
       "SENTRY_DSN": "",
       "eas": {
-        "projectId": "your-eas-project-id"
+        "projectId": "TODO-[需用户]"
       }
     },
     "plugins": [
@@ -68,7 +68,7 @@
       [
         "expo-updates",
         {
-          "username": "your-expo-username"
+          "username": "TODO-[需用户]"
         }
       ],
       "@sentry/react-native",
@@ -80,15 +80,16 @@
       ]
     ],
     "updates": {
-      "url": "https://u.expo.dev/your-eas-project-id"
+      "url": "TODO-[需用户]"
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "owner": "your-expo-username",
+    "owner": "TODO-[需用户]",
     "privacy": "unlisted",
     "description": "MeiMart - Timor-Leste 本地电商应用",
-    "githubUrl": "https://github.com/your-org/mei-mart-app",
+    "githubUrl": "TODO-[需用户]",
     "primaryColor": "#961813"
-  }
+  },
+  "_comment": "占位符说明（M0-1.6）：所有 TODO-[需用户] 的值都等用户开通 EAS 账号 / App Store / Google Play 后提供，禁止编造假值。涉及字段：extra.eas.projectId、owner、updates.url、plugins[expo-updates].username、ios.appStoreUrl、githubUrl。extra 里的 APP_ENV/API_BASE_URL/USE_MOCK/SENTRY_DSN 会在构建时被 app.config.ts 用 EXPO_PUBLIC_* 环境变量覆盖。"
 }
