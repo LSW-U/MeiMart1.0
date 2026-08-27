@@ -162,9 +162,9 @@ export default function OrderResultScreen() {
   const goOrderDetail = () => {
     if (orderId) router.push({ pathname: '/order/[id]', params: { id: orderId } });
   };
-  const goCheckout = () => {
-    if (orderId) router.push({ pathname: '/order/[id]', params: { id: orderId } });
-  };
+  // #006 语义收口（批次2 拍板）：payNow/retryPay 与「查看订单」同为跳订单详情页——
+  // 详情页对 PENDING_PAYMENT 已渲染去支付按钮（order/[id].tsx order-pay）承接支付。
+  // 删掉与 goOrderDetail 实现完全重复的 goCheckout，按钮直连，行为不变。
   const goHome = () => router.replace('/(main)/home');
   const goSupport = () => router.push('/service/customer-service');
 
@@ -407,7 +407,7 @@ export default function OrderResultScreen() {
             />
             <Button
               label={t('result.payNow')}
-              onPress={goCheckout}
+              onPress={goOrderDetail}
               accessibilityHint={t('result.payNow')}
               style={styles.actionBtn}
             />
@@ -425,7 +425,7 @@ export default function OrderResultScreen() {
             />
             <Button
               label={t('result.retryPay')}
-              onPress={goCheckout}
+              onPress={goOrderDetail}
               accessibilityHint={t('result.retryPay')}
               style={styles.actionBtn}
             />
