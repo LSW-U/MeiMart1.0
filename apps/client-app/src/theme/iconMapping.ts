@@ -77,6 +77,7 @@ const SYMBOL_TO_MC_LITERAL = {
   confirmation_number: 'ticket-percent',
   credit_card: 'credit-card',
   grid_view: 'grid',
+  view_list: 'view-list',
   headset: 'headphones',
   headset_mic: 'headset',
   history: 'history',

@@ -101,16 +101,16 @@ const FUNCTION_ITEMS_EMPTY: FunctionItem[] = [
 ];
 
 // P2 §6: Discover 快捷功能宫格 - C1 仅 UI + toast 占位，功能后续按 F2->F1->F4->F3 实现
+// isNew 角标已下线（2026-08-27 用户手调移除两处使用，字段+渲染分支+样式连根清，审查 Q3）
 interface DiscoverEntry {
   id: string;
   labelKey: string;
   icon: Parameters<typeof Icon>[0]['symbol'];
-  isNew?: boolean;
 }
 const DISCOVER_ENTRIES: DiscoverEntry[] = [
-  { id: 'invite', labelKey: 'profile.invite', icon: 'group_add', isNew: true },
+  { id: 'invite', labelKey: 'profile.invite', icon: 'group_add' },
   { id: 'history', labelKey: 'profile.history', icon: 'history' },
-  { id: 'becomeSeller', labelKey: 'profile.becomeSeller', icon: 'storefront', isNew: true },
+  { id: 'becomeSeller', labelKey: 'profile.becomeSeller', icon: 'storefront' },
   { id: 'scan', labelKey: 'profile.scan', icon: 'qr_code_scanner' },
 ];
 
@@ -275,6 +275,7 @@ export default function ProfilePage() {
             </Pressable>
             <Pressable
               style={[styles.pointsCell, { borderLeftColor: colors['outline-variant'], borderLeftWidth: StyleSheet.hairlineWidth }]}
+              onPress={() => router.push('/coupons')}
               accessibilityRole="button"
               accessibilityLabel={t('profile.coupons')}
             >
@@ -288,6 +289,7 @@ export default function ProfilePage() {
             </Pressable>
             <Pressable
               style={[styles.pointsCell, { borderLeftColor: colors['outline-variant'], borderLeftWidth: StyleSheet.hairlineWidth }]}
+              onPress={() => router.push('/favorites')}
               accessibilityRole="button"
               accessibilityLabel={t('profile.favorites')}
             >
@@ -375,20 +377,6 @@ export default function ProfilePage() {
               <Text style={[styles.quickLabel, { color: colors['on-surface-variant'] }]}>
                 {t(entry.labelKey)}
               </Text>
-              {entry.isNew && (
-                <Text
-                  style={[
-                    styles.newTag,
-                    {
-                      color: colors.semantic.positive,
-                      backgroundColor: colors.semantic['positive-container'],
-                    },
-                  ]}
-                >
-                  {/* F5：走 common.badgeNew（resolveBadges 同 key），zh「新品」/tet 占位 */}
-                  {t('common.badgeNew')}
-                </Text>
-              )}
             </Pressable>
           ))}
         </View>
@@ -880,18 +868,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
-  },
-  newTag: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    fontSize: 8,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 3,
-    overflow: 'hidden',
   },
   // === funcs ===
   funcRow: {
