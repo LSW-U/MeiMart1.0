@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# H（批次2）：husky 从 apps/client-app 上移仓库根，hook 对全仓生效。
+# check:i18n 必须在 client-app 目录跑（scripts/ 是它的）；rider 无 i18n 检查。
+pnpm -F mei-mart-app run check:i18n
+# lint-staged 全仓跑（配置在 apps/client-app/package.json 的 lint-staged 段，
+# cwd 传文件路径相对根，用 --cwd 指向 client-app 让 glob 匹配其配置）
+npx lint-staged --cwd .
