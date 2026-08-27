@@ -44,10 +44,22 @@ jobs:
           pnpm -F mei-mart-app check:i18n
           pnpm -F mei-mart-app check:a11y
 
+  # 批次1 审查 P1-1 修复：原 job 不 install + 配置在 apps/client-app/ 子目录 +
+  # PR 时校验 feature branch 多条中间 commit，三重失效。squash-merge 工作流下
+  # 改为 push(master) 时校验刚落库的单条 squash commit；config-conventional
+  # 是 client-app 的 devDep，必须 install 后用 pnpm -w exec 跑（npx 临时拉 cli
+  # 解析不到 config 包）
   commitlint:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to HEAD
+        with: { fetch-depth: 2 }
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --config.node-linker=hoisted
+      - run: pnpm -w exec commitlint --from HEAD~1 --to HEAD
