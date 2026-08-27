@@ -1,9 +1,9 @@
 {
   "name": "meimart-frontend",
   "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
+  "engines": {
+    "node": ">=22 <23"
+  },
   "overrides": {
     "@tanstack/query-core": "5.101.1",
     "@tanstack/query-async-storage-persister": {

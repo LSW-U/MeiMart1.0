@@ -1,4 +1,5 @@
-node-linker: hoisted
+packages:
+  - 'apps/*'
 allowBuilds:
   '@sentry/cli': false
   unrs-resolver: false
