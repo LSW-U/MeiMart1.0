@@ -54,24 +54,35 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 // 夹具：3 条今天（1 未读配送中）+ 1 条昨天 + 1 条更早（富内容秒杀）
-function hoursAgo(h: number): string {
-  return new Date(Date.now() - h * 3600_000).toISOString();
+// D2 修复：hoursAgo(30) 在本地 00:00-06:00 跑测试时落在前天 → yesterday 断言必挂（flaky）。
+// 改用绝对时间构造：以真实「今天」为锚生成「今天 10 点 / 昨天 12 点 / 8 天前」，
+// 任何时刻跑都稳定落在目标分组。
+// ⚠️ 不能用 jest.useFakeTimers 钉「现在」：RNTL v13 的全局 afterEach 里
+// flushMicroTasks = setImmediate(resolve)，fake timers 接管 setImmediate 后
+// Promise 永挂 → hook 5s 超时死锁（jest 卡死不退出）。
+function localNoonOffsetDays(days: number, hour = 12): string {
+  const anchor = new Date();
+  const t = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() - days, hour, 0, 0);
+  return t.toISOString();
 }
 function seedNotifications() {
   mockNotifications = [
     {
       id: 'n001', title: '订单配送中', body: '骑手即将送达', type: 'order', read: false,
-      createdAt: hoursAgo(2),
+      // 今天 10 点（即使凌晨 0-10 点跑，也是今天的合法过去时刻）
+      createdAt: localNoonOffsetDays(0, 10),
       data: { orderId: 'o1', progress: 2, riderName: '陈师傅', riderPhone: '+67077000001', eta: '18:30' },
     },
     {
       id: 'n002', title: '优惠券到账', body: '20 元券', type: 'promotion', read: true,
-      createdAt: hoursAgo(30),
+      // 昨天 12 点（无论几点跑都稳定落在昨天）
+      createdAt: localNoonOffsetDays(1),
       data: { couponId: 'c1' },
     },
     {
       id: 'n003', title: '系统维护', body: '今晚维护', type: 'system', read: true,
-      createdAt: hoursAgo(24 * 7),
+      // 8 天前（稳定落在 earlier）
+      createdAt: localNoonOffsetDays(8),
     },
   ];
 }
@@ -86,34 +97,22 @@ beforeEach(() => {
 
 describe('NotificationsPage（P23：分组 + 富内容 + 空态 + 直达）', () => {
   it('时间分组：今天/昨天分组头渲染（含未读计数）；更早组经 dayGroupOf 边界单测覆盖', () => {
-    // D2 修复：本地 00:00-06:00 跑测试时「30h 前」落在前天 → yesterday 分组头不渲染。
-    // 钉「现在」到固定本地中午（实现走 new Date()/Date.now() 均被 fake timers 接管），
-    // 避开日期边界；其余用例不受影响（不依赖具体时刻）。
-    jest.useFakeTimers({ now: new Date(2026, 7, 26, 12, 0, 0) });
-    try {
-      const { getByText } = render(<NotificationsPage />, { wrapper });
-      // Why: earlier 组（第 3 屏外）在 RNTL 无布局环境下不渲染（真机滚动可见），
-      //      其归组正确性由下方 dayGroupOf 纯函数单测覆盖
-      expect(getByText('service.notifications.timeToday')).toBeTruthy();
-      expect(getByText('service.notifications.timeYesterday')).toBeTruthy();
-      // 今天组 1 未读
-      expect(getByText('service.notifications.unreadCount:1')).toBeTruthy();
-    } finally {
-      jest.useRealTimers();
-    }
+    const { getByText } = render(<NotificationsPage />, { wrapper });
+    // Why: earlier 组（第 3 屏外）在 RNTL 无布局环境下不渲染（真机滚动可见），
+    //      其归组正确性由下方 dayGroupOf 纯函数单测覆盖
+    expect(getByText('service.notifications.timeToday')).toBeTruthy();
+    expect(getByText('service.notifications.timeYesterday')).toBeTruthy();
+    // 今天组 1 未读
+    expect(getByText('service.notifications.unreadCount:1')).toBeTruthy();
   });
 
-  it('dayGroupOf 分组边界：2h 前今天 / 30h 前昨天 / 7d 前更早', () => {
-    // D2 修复：同上，钉「现在」到固定本地中午，30h 前稳定落在昨天
-    jest.useFakeTimers({ now: new Date(2026, 7, 26, 12, 0, 0) });
-    try {
-      expect(dayGroupOf(hoursAgo(2))).toBe('today');
-      expect(dayGroupOf(hoursAgo(30))).toBe('yesterday');
-      expect(dayGroupOf(hoursAgo(24 * 7))).toBe('earlier');
-      expect(dayGroupOf('not-a-date')).toBe('earlier');
-    } finally {
-      jest.useRealTimers();
-    }
+  it('dayGroupOf 分组边界：今天 10 点归今天 / 昨天中午归昨天 / 8 天前归更早', () => {
+    // D2 修复：用绝对时间锚（今天/昨天/8 天前的固定钟点）替代 hoursAgo 相对偏移，
+    // 不依赖运行时刻，任何时间跑都稳定
+    expect(dayGroupOf(localNoonOffsetDays(0, 10))).toBe('today');
+    expect(dayGroupOf(localNoonOffsetDays(1))).toBe('yesterday');
+    expect(dayGroupOf(localNoonOffsetDays(8))).toBe('earlier');
+    expect(dayGroupOf('not-a-date')).toBe('earlier');
   });
 
   it('D3 回归：全部已读按钮走 markAll 单次 mutate（非逐条循环）', () => {
