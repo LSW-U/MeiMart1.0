@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
+import { useLocalizer } from '@/i18n';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -46,6 +47,7 @@ export default function FavoritesPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const localize = useLocalizer();
   const { data: favorites, isLoading, isError, refetch } = useFavorites();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { isOffline } = useWeakNetworkUI();
@@ -221,69 +223,6 @@ export default function FavoritesPage() {
         rightActions={HeaderRight}
       />
 
-      {selectMode && (
-        <View
-          style={[
-            styles.manageBar,
-            {
-              backgroundColor: colors['surface-container-lowest'],
-              borderBottomColor: colors['outline-variant'],
-            },
-          ]}
-        >
-          <Pressable
-            onPress={() => {
-              if (!favorites) return;
-              const all = new Set(favorites.map((f) => f.id));
-              setSelected(selected.size === favorites.length ? new Set() : all);
-            }}
-            style={styles.manageBarBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.selectAll')}
-          >
-            <Icon
-              symbol={
-                favorites && selected.size === favorites.length
-                  ? 'check_circle'
-                  : 'radio_button_unchecked'
-              }
-              size={20}
-              color={colors.primary}
-            />
-            <Text style={[styles.manageBarText, { color: colors['on-surface'] }]}>
-              {t('common.all')}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={removeSelected}
-            disabled={selected.size === 0 || removeFavorites.isPending}
-            style={({ pressed }) => [
-              styles.manageBarDelete,
-              {
-                backgroundColor:
-                  selected.size === 0 || removeFavorites.isPending
-                    ? colors['outline-variant']
-                    : colors.error,
-                opacity: selected.size === 0 || removeFavorites.isPending ? 0.5 : 1,
-              },
-              pressed && { transform: [{ scale: 0.98 }] },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.delete')}
-            accessibilityState={
-              selected.size === 0 || removeFavorites.isPending ? { disabled: true } : undefined
-            }
-            testID="favorites-batch-delete"
-          >
-            <Icon symbol="delete" size={18} color={colors['on-primary']} />
-            <Text style={[styles.manageBarDeleteText, { color: colors['on-primary'] }]}>
-              {t('common.delete')} ({selected.size})
-            </Text>
-          </Pressable>
-        </View>
-      )}
-
       {/* Q5 stale 态（规则 10）：离线时 offlineFirst 返回缓存，用 OfflineBanner 提示数据可能过期 */}
       {isOffline && !isLoading && !isError && <OfflineBanner onRetry={() => refetch()} />}
 
@@ -372,7 +311,8 @@ export default function FavoritesPage() {
           key="manage-grid"
           numColumns={2}
           columnWrapperStyle={styles.row}
-          contentContainerStyle={styles.list}
+          // Why: 管理栏底部悬浮盖在列表上，底部留白防最后一行被遮挡
+          contentContainerStyle={[styles.list, styles.listManage]}
           renderItem={({ item }: { item: Product }) => {
             const isSelected = selected.has(item.id);
             return (
@@ -396,14 +336,18 @@ export default function FavoritesPage() {
                 <Pressable
                   onPress={() => toggleSelect(item.id)}
                   onLongPress={() => onLongPress(item.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${localize(item.name)}, ${t('favorites.a11y.manage')}`}
+                  accessibilityState={isSelected ? { selected: true } : undefined}
                   style={({ pressed }) => [
                     styles.cardWrapper,
                     isSelected && [styles.selectedCell, { borderColor: colors.primary }],
                     pressed && { transform: [{ scale: 0.98 }] },
                   ]}
                 >
+                  {/* interactive=false：点击交外层 toggleSelect（内层空 Pressable 在 Web 端吞事件） */}
                   <View style={shadowPresets.sm}>
-                    <ProductCard product={item} />
+                    <ProductCard product={item} interactive={false} />
                   </View>
                 </Pressable>
               </View>
@@ -466,6 +410,70 @@ export default function FavoritesPage() {
           </View>
         </ScrollView>
       )}
+
+      {/* 管理栏底部悬浮（原型 .manage-bar{position:sticky;bottom:0;border-top}）：全选 + 删除 */}
+      {selectMode && (
+        <View
+          style={[
+            styles.manageBar,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderTopColor: colors['outline-variant'],
+            },
+          ]}
+        >
+          <Pressable
+            onPress={() => {
+              if (!favorites) return;
+              const all = new Set(favorites.map((f) => f.id));
+              setSelected(selected.size === favorites.length ? new Set() : all);
+            }}
+            style={styles.manageBarBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.selectAll')}
+          >
+            <Icon
+              symbol={
+                favorites && selected.size === favorites.length
+                  ? 'check_circle'
+                  : 'radio_button_unchecked'
+              }
+              size={20}
+              color={colors.primary}
+            />
+            <Text style={[styles.manageBarText, { color: colors['on-surface'] }]}>
+              {t('common.all')}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={removeSelected}
+            disabled={selected.size === 0 || removeFavorites.isPending}
+            style={({ pressed }) => [
+              styles.manageBarDelete,
+              {
+                backgroundColor:
+                  selected.size === 0 || removeFavorites.isPending
+                    ? colors['outline-variant']
+                    : colors.error,
+                opacity: selected.size === 0 || removeFavorites.isPending ? 0.5 : 1,
+              },
+              pressed && { transform: [{ scale: 0.98 }] },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.delete')}
+            accessibilityState={
+              selected.size === 0 || removeFavorites.isPending ? { disabled: true } : undefined
+            }
+            testID="favorites-batch-delete"
+          >
+            <Icon symbol="delete" size={18} color={colors['on-primary']} />
+            <Text style={[styles.manageBarDeleteText, { color: colors['on-primary'] }]}>
+              {t('common.delete')} ({selected.size})
+            </Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaWrapper>
   );
 }
@@ -488,12 +496,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   manageBar: {
+    // Why: 底部悬浮（原型 .manage-bar position:sticky bottom:0）——absolute 挂 SafeAreaWrapper
+    //      （RN Web View 默认 relative），盖在列表上沿；bottom 0 落在 safe area 内（edges 含 bottom）
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: layout['container-margin'],
     paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   manageBarBtn: {
     flexDirection: 'row',
@@ -549,6 +563,10 @@ const styles = StyleSheet.create({
   list: {
     padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
+  },
+  // 管理态列表：底部悬浮管理栏 ~48px + 间距
+  listManage: {
+    paddingBottom: spacing.xxl * 2 + 48,
   },
   listStack: {
     padding: layout['container-margin'],

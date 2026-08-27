@@ -60,12 +60,45 @@ function ProductCardBase({
   isFavorite = false,
   onFavoritePress,
   testID,
+  interactive = true,
 }: ProductCardProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const badgeColors = useBadgeColors();
   const localize = useLocalizer();
   const name = localize(product.name);
+
+  // Why: interactive 双分支共享卡体（图片+信息区），仅外层交互壳不同（Pressable vs View）
+  const renderCardBody = () => (
+    <>
+      <View style={[styles.imageWrap, { backgroundColor: colors['surface-container-lowest'] }]}>
+        <SafeImage source={{ uri: product.image }} style={styles.image} accessible={false} />
+        {badge && <BadgeCorner badge={badge} entry={badgeColors[badge.variant]} />}
+      </View>
+      <View style={styles.info}>
+        <Text
+          style={[textStyle('body-sm'), { fontWeight: '700', color: colors['on-surface'] }]}
+          numberOfLines={2}
+        >
+          {name}
+        </Text>
+        <PriceText value={product.price} originalPrice={product.originalPrice} size="md" />
+        {typeof product.rating === 'number' && (
+          <View style={styles.metaRow}>
+            <MaterialCommunityIcons name="star" size={12} color={colors.tertiary} />
+            <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
+              {product.rating.toFixed(1)}
+            </Text>
+            {typeof product.salesCount === 'number' && (
+              <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
+                · {product.salesCount} {t('product.sold')}
+              </Text>
+            )}
+          </View>
+        )}
+      </View>
+    </>
+  );
 
   return (
     <View
@@ -80,40 +113,21 @@ function ProductCardBase({
       ]}
     >
       {/* Why: 外层用 View 而非 Pressable，避免 Pressable 嵌套 Pressable
-          （RN Web 渲染为 <button> 嵌套 <button>，违反 HTML 规范导致 hydration 错误） */}
-      <Pressable
-        style={({ pressed }) => [styles.clickableArea, pressed && styles.pressed]}
-        onPress={onPress ? () => onPress(product) : undefined}
-        accessibilityRole="button"
-        accessibilityLabel={`${name}, price ${formatPrice(product.price)}`}
-      >
-        <View style={[styles.imageWrap, { backgroundColor: colors['surface-container-lowest'] }]}>
-          <SafeImage source={{ uri: product.image }} style={styles.image} accessible={false} />
-          {badge && <BadgeCorner badge={badge} entry={badgeColors[badge.variant]} />}
-        </View>
-        <View style={styles.info}>
-          <Text
-            style={[textStyle('body-sm'), { fontWeight: '700', color: colors['on-surface'] }]}
-            numberOfLines={2}
-          >
-            {name}
-          </Text>
-          <PriceText value={product.price} originalPrice={product.originalPrice} size="md" />
-          {typeof product.rating === 'number' && (
-            <View style={styles.metaRow}>
-              <MaterialCommunityIcons name="star" size={12} color={colors.tertiary} />
-              <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-                {product.rating.toFixed(1)}
-              </Text>
-              {typeof product.salesCount === 'number' && (
-                <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-                  · {product.salesCount} {t('product.sold')}
-                </Text>
-              )}
-            </View>
-          )}
-        </View>
-      </Pressable>
+          （RN Web 渲染为 <button> 嵌套 <button>，违反 HTML 规范导致 hydration 错误）。
+          interactive=false 时同样降级为 View：内层空 Pressable 也会吞点击
+          （RNW PressResponder onClick 无条件 stopPropagation），外层 wrapper 接管 */}
+      {interactive ? (
+        <Pressable
+          style={({ pressed }) => [styles.clickableArea, pressed && styles.pressed]}
+          onPress={onPress ? () => onPress(product) : undefined}
+          accessibilityRole="button"
+          accessibilityLabel={`${name}, price ${formatPrice(product.price)}`}
+        >
+          {renderCardBody()}
+        </Pressable>
+      ) : (
+        <View style={styles.clickableArea}>{renderCardBody()}</View>
+      )}
 
       {showFavorite && (
         <Pressable
