@@ -6,6 +6,8 @@ export interface HorizontalProductCardProps {
   product: Product;
   onPress: () => void; // 点图/名跳详情
   onAddToCart: () => void; // 加购
+  /** 长按（favorites 列表态长按进管理；categories/product-list 不传无影响）—— 审查 Q4 对称补齐 */
+  onLongPress?: () => void;
   /** 左上角 badge（resolveBadges 派生，§9-5） */
   badge?: ProductBadge;
   /** 是否显示评分（categories 显，product/list 不显） */

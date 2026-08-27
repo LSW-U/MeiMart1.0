@@ -99,4 +99,20 @@ describe('HorizontalProductCard 管理态（favorites selectMode）', () => {
     fireEvent.press(getByText('Arabica Coffee'));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
+
+  it('onLongPress 可选 prop：常态图片区长按触发（favorites 列表态进管理，审查 Q4）', () => {
+    const onLongPress = jest.fn();
+    const { getByLabelText } = render(
+      <HorizontalProductCard
+        product={product}
+        onPress={() => {}}
+        onAddToCart={() => {}}
+        onLongPress={onLongPress}
+      />,
+      { wrapper },
+    );
+    // Why: RNTL fireEvent 直调 handler prop（Pressable 长按），事件名用 onLongPress
+    fireEvent(getByLabelText('View Arabica Coffee'), 'onLongPress');
+    expect(onLongPress).toHaveBeenCalledTimes(1);
+  });
 });

@@ -16,6 +16,7 @@ const ON_PRIMARY = '#ffffff';
 export function HorizontalProductCard({
   product,
   onPress,
+  onLongPress,
   onAddToCart,
   badge,
   showRating = false,
@@ -41,6 +42,7 @@ export function HorizontalProductCard({
       ) : (
         <Pressable
           onPress={onPress}
+          onLongPress={onLongPress}
           style={({ pressed }) => [pressed && { opacity: 0.85 }]}
           accessibilityRole="button"
           accessibilityLabel={t('product.viewItem', { name })}
@@ -132,6 +134,7 @@ export function HorizontalProductCard({
       <Pressable
         testID={testID}
         onPress={onPress}
+        onLongPress={onLongPress}
         style={({ pressed }) => [
           styles.card,
           {

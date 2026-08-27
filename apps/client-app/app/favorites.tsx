@@ -313,6 +313,8 @@ export default function FavoritesPage() {
               onPress={() =>
                 selectMode ? toggleSelect(item.id) : router.push(`/product/${item.id}`)
               }
+              // Why: 长按进管理态（D7），与网格态 Masonry 对称（审查 Q4）
+              onLongPress={() => onLongPress(item.id)}
               onAddToCart={() => handleQuickAdd(item)}
               badge={selectMode ? undefined : resolveBadges(item, t)[0]}
               selectMode={selectMode}
@@ -399,7 +401,8 @@ export default function FavoritesPage() {
               color={colors.primary}
             />
             <Text style={[styles.manageBarText, { color: colors['on-surface'] }]}>
-              {t('common.all')}
+              {/* Why: 审查 Q2 —— 可见文案与 a11y label（common.selectAll）对齐，原型 :138 是「全选」 */}
+              {t('common.selectAll')}
             </Text>
           </Pressable>
 
