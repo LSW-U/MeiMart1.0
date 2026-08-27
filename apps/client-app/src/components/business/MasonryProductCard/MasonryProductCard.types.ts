@@ -5,6 +5,8 @@ import type { ProductBadge } from '@/components/business/ProductCard/ProductCard
 export interface MasonryProductCardProps {
   product: Product;
   onPress: () => void;
+  /** 长按（favorites 长按进管理态用；home/search 不传无影响） */
+  onLongPress?: () => void;
   onAddToCart: () => void;
   badge?: ProductBadge;
   testID?: string;

@@ -1,11 +1,14 @@
 // FavoriteListPage — 收藏列表（P19：原型 第四梯队HTML原型设计/P18-P19 优化原型）
-// D.12: PrimaryHeader + 网格/列表视图切换 + 批量管理 + 空状态
+// D.12: PrimaryHeader + 视图切换 + 批量管理 + 空状态
+// 网格常态：两列瀑布流（MasonryProductCard，与 home/search 统一）；列表态：HorizontalProductCard；
+// 管理态：降级对齐网格 FlatList + ProductCard（选择徽章位）
 import { useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   FlatList,
+  ScrollView,
   ActivityIndicator,
   Pressable,
   Alert,
@@ -20,6 +23,7 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ProductCard } from '@/components/business/ProductCard';
+import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
 import { HorizontalProductCard } from '@/components/business/HorizontalProductCard/HorizontalProductCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -31,6 +35,7 @@ import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { OfflineBanner } from '@/components/feedback/OfflineBanner';
 import { toast } from '@/store/toastStore';
 import { getApiErrorMessage } from '@/utils/error';
+import { resolveBadges } from '@/utils/resolveBadges';
 import type { Product } from '@/types';
 
 // Why: 视图偏好持久化（P19 D2），键名对齐现有 meimart.recentSearches / meimart.locale 风格
@@ -352,7 +357,9 @@ export default function FavoritesPage() {
             onAction={() => router.push('/(main)/home')}
           />
         )
-      ) : (
+      ) : selectMode ? (
+        // 管理态降级：对齐网格 FlatList + ProductCard（选择徽章 + 勾选边框 + 长按进管理态仍在）；
+        // 瀑布流卡片无徽章位，管理交互优先于视觉统一 —— 同 P19「列表视图管理态降级」决策
         <FlatList
           data={favorites}
           // Why: 管理态勾选依赖 selected，不传 extraData 则已渲染 cell 不重执行 renderItem，
@@ -362,62 +369,39 @@ export default function FavoritesPage() {
           initialNumToRender={6}
           maxToRenderPerBatch={4}
           windowSize={5}
-          // Why: 网格 2 列 / 列表 1 列（P19 D2）—— 视图切换时 numColumns 变化需重建列表，
-          //      extraData 驱动 re-render（RN numColumns 不可运行时热切换 key 才稳妥）
-          key={view}
-          numColumns={view === 'grid' ? 2 : 1}
-          columnWrapperStyle={view === 'grid' ? styles.row : undefined}
-          contentContainerStyle={view === 'grid' ? styles.list : styles.listStack}
+          key="manage-grid"
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.list}
           renderItem={({ item }: { item: Product }) => {
             const isSelected = selected.has(item.id);
-            if (view === 'list' && !selectMode) {
-              // 列表常态（P19 D2）：复用 HorizontalProductCard —— 72px 图 + 名称/价格/销量 + 32px 圆形加购
-              return (
-                <HorizontalProductCard
-                  product={item}
-                  onPress={() => router.push(`/product/${item.id}`)}
-                  onAddToCart={() => handleQuickAdd(item)}
-                  // Q4：spinner 只在发起卡；单飞行期间其他卡 disabled（点按不再静默丢弃）
-                  addPending={addingId === item.id}
-                  addDisabled={addingId !== null && addingId !== item.id}
-                  testID={`favorites-hpc-${item.id}`}
-                />
-              );
-            }
             return (
-              <View style={view === 'grid' ? styles.cell : styles.listCell}>
-                {selectMode && (
-                  <View
-                    style={[
-                      styles.selectBadge,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors['surface-container-lowest'],
-                        borderColor: isSelected ? colors.primary : colors['outline-variant'],
-                      },
-                      shadowPresets.sm,
-                    ]}
-                  >
-                    <Icon
-                      symbol={isSelected ? 'check' : 'radio_button_unchecked'}
-                      size={14}
-                      color={isSelected ? colors['on-primary'] : colors['on-surface-variant']}
-                    />
-                  </View>
-                )}
+              <View style={styles.cell}>
+                <View
+                  style={[
+                    styles.selectBadge,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors['surface-container-lowest'],
+                      borderColor: isSelected ? colors.primary : colors['outline-variant'],
+                    },
+                    shadowPresets.sm,
+                  ]}
+                >
+                  <Icon
+                    symbol={isSelected ? 'check' : 'radio_button_unchecked'}
+                    size={14}
+                    color={isSelected ? colors['on-primary'] : colors['on-surface-variant']}
+                  />
+                </View>
                 <Pressable
-                  onPress={() =>
-                    selectMode ? toggleSelect(item.id) : router.push(`/product/${item.id}`)
-                  }
+                  onPress={() => toggleSelect(item.id)}
                   onLongPress={() => onLongPress(item.id)}
                   style={({ pressed }) => [
                     styles.cardWrapper,
-                    selectMode &&
-                      isSelected && [styles.selectedCell, { borderColor: colors.primary }],
+                    isSelected && [styles.selectedCell, { borderColor: colors.primary }],
                     pressed && { transform: [{ scale: 0.98 }] },
                   ]}
                 >
-                  {/* 管理态（含列表视图）统一降级 ProductCard：HPC 无选择徽章位、
-                      加购按钮在管理态无意义（P19 实施决策，非冗余分支） */}
                   <View style={shadowPresets.sm}>
                     <ProductCard product={item} />
                   </View>
@@ -426,6 +410,61 @@ export default function FavoritesPage() {
             );
           }}
         />
+      ) : view === 'list' ? (
+        // 列表态：单列 FlatList + HorizontalProductCard（P19 D2：72px 图 + 名称/价格/销量 + 32px 圆形加购）
+        <FlatList
+          data={favorites}
+          keyExtractor={(item) => item.id}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
+          key="list"
+          contentContainerStyle={styles.listStack}
+          renderItem={({ item }: { item: Product }) => (
+            <HorizontalProductCard
+              product={item}
+              onPress={() => router.push(`/product/${item.id}`)}
+              onAddToCart={() => handleQuickAdd(item)}
+              // Q4：spinner 只在发起卡；单飞行期间其他卡 disabled（点按不再静默丢弃）
+              addPending={addingId === item.id}
+              addDisabled={addingId !== null && addingId !== item.id}
+              testID={`favorites-hpc-${item.id}`}
+            />
+          )}
+        />
+      ) : (
+        // 网格常态：两列瀑布流（复用 home/search 的 MasonryProductCard 奇偶分列模式，高度档位错落）
+        // Why: 收藏数通常 < 100，ScrollView 全量渲染可接受（home/search 同款取舍）
+        <ScrollView contentContainerStyle={styles.masonryContent}>
+          <View style={styles.masonryRow}>
+            <View style={styles.masonryCol}>
+              {favorites.map((item, i) => i % 2 === 0 && (
+                <MasonryProductCard
+                  key={item.id}
+                  product={item}
+                  badge={resolveBadges(item, t)[0]}
+                  onPress={() => router.push(`/product/${item.id}`)}
+                  onLongPress={() => onLongPress(item.id)}
+                  onAddToCart={() => handleQuickAdd(item)}
+                  testID={`favorites-masonry-${item.id}`}
+                />
+              ))}
+            </View>
+            <View style={styles.masonryCol}>
+              {favorites.map((item, i) => i % 2 === 1 && (
+                <MasonryProductCard
+                  key={item.id}
+                  product={item}
+                  badge={resolveBadges(item, t)[0]}
+                  onPress={() => router.push(`/product/${item.id}`)}
+                  onLongPress={() => onLongPress(item.id)}
+                  onAddToCart={() => handleQuickAdd(item)}
+                  testID={`favorites-masonry-${item.id}`}
+                />
+              ))}
+            </View>
+          </View>
+        </ScrollView>
       )}
     </SafeAreaWrapper>
   );
@@ -521,11 +560,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   cell: {
-    flex: 1,
     position: 'relative',
   },
-  listCell: {
-    position: 'relative',
+  // 网格常态瀑布流容器（同 home.tsx masonryRow/masonryCol 模式）
+  masonryContent: {
+    padding: layout['container-margin'],
+    paddingBottom: spacing.xxl * 2,
+  },
+  masonryRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  masonryCol: {
+    flex: 1,
+    gap: spacing.md,
   },
   cardWrapper: {
     borderRadius: borderRadius.xl,

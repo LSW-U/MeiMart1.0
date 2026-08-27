@@ -19,6 +19,7 @@ const HEIGHT_VARIANTS = [140, 168, 120];
 export function MasonryProductCard({
   product,
   onPress,
+  onLongPress,
   onAddToCart,
   badge,
   testID,
@@ -45,6 +46,7 @@ export function MasonryProductCard({
     >
       <Pressable
         onPress={onPress}
+        onLongPress={onLongPress}
         style={({ pressed }) => [pressed && { opacity: 0.85 }]}
         accessibilityRole="button"
         accessibilityLabel={t('product.viewItem', { name })}

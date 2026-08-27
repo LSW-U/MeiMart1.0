@@ -75,10 +75,14 @@ describe('FavoritesPage（P19：视图切换 + 登录空态 + 无排序）', () 
     mockFavorites(products);
   });
 
-  it('默认网格视图（ProductCard 双列），可切列表（HorizontalProductCard）', async () => {
+  it('默认网格视图（MasonryProductCard 两列瀑布流），可切列表（HorizontalProductCard）', async () => {
     const { getByTestId, getByLabelText } = render(<FavoritesPage />, { wrapper });
-    // 默认网格：网格按钮 selected
+    // 默认网格：网格按钮 selected + 瀑布流卡片渲染（奇偶分列，p1 在列 1）
     expect(getByTestId('favorites-view-grid').props.accessibilityState?.selected).toBe(true);
+    expect(getByTestId('favorites-masonry-p1')).toBeTruthy();
+    expect(getByTestId('favorites-masonry-p2')).toBeTruthy();
+    // 瀑布流常态 a11y：卡片点按 label View {{name}}
+    expect(getByLabelText('product.viewItem:Apple')).toBeTruthy();
     // 切列表
     fireEvent.press(getByTestId('favorites-view-list'));
     expect(getByTestId('favorites-view-list').props.accessibilityState?.selected).toBe(true);
