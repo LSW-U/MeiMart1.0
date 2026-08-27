@@ -63,7 +63,9 @@ export default function OrdersPage() {
         if (order.status === 'PENDING_CONFIRM' || order.status === 'CONFIRMED') {
           router.push(`/order/${order.id}`);
         } else {
-          router.push(`/order/${order.id}/tracking`);
+          // #005 修复（批次2）：tracking 是平铺路由（app/order/tracking.tsx 读 params.id），
+          // 原插值 /order/${id}/tracking 匹配不到路由（会落进 [id].tsx 的子路径解析）
+          router.push({ pathname: '/order/tracking', params: { id: order.id } });
         }
         break;
       case 'review':
