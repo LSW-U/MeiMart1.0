@@ -4,17 +4,35 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "env": { "APP_ENV": "development" },
+      "env": {
+        "APP_ENV": "development",
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:3000/api/v1",
+        "EXPO_PUBLIC_USE_MOCK": "false",
+        "EXPO_PUBLIC_SENTRY_DSN": ""
+      },
       "ios": { "simulator": true },
       "android": { "buildType": "apk" }
     },
     "preview": {
       "distribution": "internal",
-      "env": { "APP_ENV": "staging" },
+      "env": {
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_APP_ENV": "staging",
+        "EXPO_PUBLIC_API_BASE_URL": "https://staging-api.meimart.com/api/v1",
+        "EXPO_PUBLIC_USE_MOCK": "false",
+        "EXPO_PUBLIC_SENTRY_DSN": ""
+      },
       "android": { "buildType": "apk" }
     },
     "production": {
-      "env": { "APP_ENV": "production" },
+      "env": {
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "TODO-[需用户]",
+        "EXPO_PUBLIC_USE_MOCK": "false",
+        "EXPO_PUBLIC_SENTRY_DSN": "TODO-[需用户]"
+      },
       "autoIncrement": true,
       "ios": {
         "applicationArchivePath": "build/MeiMart.ipa"
@@ -27,9 +45,9 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "your-apple-id@example.com",
-        "ascAppId": "your-app-store-connect-app-id",
-        "appleTeamId": "your-apple-team-id"
+        "appleId": "TODO-[需用户]",
+        "ascAppId": "TODO-[需用户]",
+        "appleTeamId": "TODO-[需用户]"
       },
       "android": {
         "serviceAccountKeyPath": "./credentials/google-service-account.json",

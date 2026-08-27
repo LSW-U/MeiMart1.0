@@ -50,7 +50,7 @@
     },
     "extra": {
       "APP_ENV": "development",
-      "API_BASE_URL": "http://localhost:3000/api/v1",
+      "API_BASE_URL": "",
       "USE_MOCK": "false",
       "SENTRY_DSN": "",
       "eas": {
@@ -91,5 +91,5 @@
     "githubUrl": "TODO-[需用户]",
     "primaryColor": "#961813"
   },
-  "_comment": "占位符说明（M0-1.6）：所有 TODO-[需用户] 的值都等用户开通 EAS 账号 / App Store / Google Play 后提供，禁止编造假值。涉及字段：extra.eas.projectId、owner、updates.url、plugins[expo-updates].username、ios.appStoreUrl、githubUrl。extra 里的 APP_ENV/API_BASE_URL/USE_MOCK/SENTRY_DSN 会在构建时被 app.config.ts 用 EXPO_PUBLIC_* 环境变量覆盖。"
+  "_comment": "占位符说明（M0-1.6）：所有 TODO-[需用户] 的值都等用户开通 EAS 账号 / App Store / Google Play 后提供，禁止编造假值。涉及字段：extra.eas.projectId、owner、updates.url、plugins[expo-updates].username、ios.appStoreUrl、githubUrl。extra.APP_ENV/USE_MOCK/SENTRY_DSN 会在构建时被 app.config.ts 用 EXPO_PUBLIC_* 环境变量覆盖。extra.API_BASE_URL 故意留空（审查 P1-2）：构建期由 eas.json env 的 EXPO_PUBLIC_API_BASE_URL 注入，漏配时落到空串（api.ts 走显式兜底）而非静默打 localhost。"
 }
