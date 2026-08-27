@@ -100,12 +100,14 @@ export const addressApi = {
     if (updates.lat !== undefined) body.lat = updates.lat;
     if (updates.lng !== undefined) body.lng = updates.lng;
     if (updates.province !== undefined || updates.city !== undefined || updates.district !== undefined) {
-      // Why: region 是整体更新，需要从老地址补全未传字段（避免部分更新丢失 province/city）
-      const existing = mockDb.addresses.find((a) => a.id === id);
+      // Why: region 是整体更新，需要补全未传字段（避免部分更新丢失 province/city）。
+      // #002 修复（批次2）：原实现读 mockDb.addresses 补全——real 模式读 mock 数据源是错的。
+      // 实际调用方（address/edit.tsx）payload 总是全量带三字段，未传场景仅理论存在，
+      // 兜底改为空串（与后端空 region 容忍一致），不再依赖 mockDb。
       body.region = {
-        province: updates.province ?? existing?.province ?? '',
-        city: updates.city ?? existing?.city ?? '',
-        ...((updates.district ?? existing?.district) ? { district: updates.district ?? existing?.district } : {}),
+        province: updates.province ?? '',
+        city: updates.city ?? '',
+        ...((updates.district) ? { district: updates.district } : {}),
       };
     }
     const res = await api.patch<AddressRaw>(`/client/addresses/${id}`, body);
