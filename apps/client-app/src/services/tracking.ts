@@ -1,12 +1,10 @@
 import { io, type Socket } from 'socket.io-client';
-import Constants from 'expo-constants';
+import { getExtra } from '@/config/app-config';
 
 // Why: 后端 WS 主通道（realtime.gateway.ts），客户端订阅 order room 后收到状态变更和骑手位置。
 // 5s 无 WS 消息时由 useTracking hook 降级到 HTTP 轮询（orders.getTracking）。
 
-const env = Constants.expoConfig?.extra as {
-  API_BASE_URL?: string;
-};
+const env = getExtra();
 
 // Why: API_BASE_URL 形如 http://localhost:3000/api/v1，WS 走同源去 /api/v1 加 /realtime
 function buildWsUrl(): string {

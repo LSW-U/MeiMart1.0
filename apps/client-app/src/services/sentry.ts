@@ -1,10 +1,7 @@
 import * as Sentry from '@sentry/react-native';
-import Constants from 'expo-constants';
+import { getExtra } from '@/config/app-config';
 
-const env = Constants.expoConfig?.extra as {
-  APP_ENV: 'development' | 'staging' | 'production';
-  SENTRY_DSN: string;
-};
+const env = getExtra();
 
 const SENTRY_DSN = env?.SENTRY_DSN ?? '';
 const SENTRY_ENABLED = Boolean(SENTRY_DSN) && env?.APP_ENV === 'production';

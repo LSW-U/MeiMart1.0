@@ -4,19 +4,14 @@ import {
   type AxiosRequestConfig,
   type InternalAxiosRequestConfig,
 } from 'axios';
-import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
 import { getCurrentLocale } from '@/i18n';
+import { getExtra } from '@/config/app-config';
 
-const env = Constants.expoConfig?.extra as {
-  APP_ENV: 'development' | 'staging' | 'production';
-  API_BASE_URL: string;
-  USE_MOCK?: string;
-  SENTRY_DSN: string;
-};
+const env = getExtra();
 
 const baseURL = env?.API_BASE_URL ?? 'https://api.meimart.example.com';
 if (env?.APP_ENV === 'production' && !baseURL.startsWith('https://')) {

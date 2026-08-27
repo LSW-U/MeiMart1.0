@@ -13,7 +13,7 @@
  * 不走 axios interceptor 的 401 refresh（上传场景 token 通常有效，401 极少；用户重新登录即可）
  */
 import { Platform } from 'react-native';
-import Constants from 'expo-constants';
+import { getExtra } from '@/config/app-config';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '@/store/authStore';
@@ -31,7 +31,7 @@ declare global {
   }
 }
 
-const env = Constants.expoConfig?.extra as { API_BASE_URL: string };
+const env = getExtra();
 const baseURL = env?.API_BASE_URL ?? 'https://api.meimart.example.com';
 const TOKEN_KEY = 'meimart.token';
 const isWeb = Platform.OS === 'web';
