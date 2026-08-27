@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [client-app, rider-app]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      # ⚠️ pnpm 11 workspace 模式不读根 .npmrc 的 node-linker（本地同款坑，见 README），
+      #    必须 CLI flag 显式传，否则 isolated 布局下 Expo/RN 解析链断
+      - run: pnpm install --frozen-lockfile --config.node-linker=hoisted
+      - run: pnpm -F ${{ matrix.app }} typecheck
+      - run: pnpm -F ${{ matrix.app }} lint
+      # 两个 app 的包名不是目录名（client=mei-mart-app / rider=mei-delivery-app），
+      # matrix 用目录名便于阅读，-F 需要映射
+      - name: Map app dir to package name
+        id: pkg
+        run: |
+          if [ "${{ matrix.app }}" = "client-app" ]; then
+            echo "name=mei-mart-app" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=mei-delivery-app" >> "$GITHUB_OUTPUT"
+          fi
+      - run: pnpm -F ${{ steps.pkg.outputs.name }} test -- --ci --coverage=false
+      - if: matrix.app == 'client-app'
+        run: |
+          pnpm -F mei-mart-app check:i18n
+          pnpm -F mei-mart-app check:a11y
+
+  commitlint:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to HEAD
