@@ -3504,51 +3504,12 @@ export interface paths {
                             warehouseId: string;
                             baseFee: number;
                             perKmFee: number;
-                            distance: number;
+                            freeKm: number;
+                            distanceKm: number | null;
+                            distanceFee: number;
                             deliveryFee: number;
                             /** @enum {string} */
                             currency: "USD";
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/client/pricing/min-order-check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description 起送价校验 */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description 校验结果 */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            ok: boolean;
-                            minOrderAmount: number;
-                            cartTotal: number;
-                            shortfall: number;
                         };
                     };
                 };
@@ -4291,6 +4252,211 @@ export interface paths {
                 };
             };
         };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/common/support/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 客服配置公开下发（phone + hours，help 页消费，无需登录） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 客服配置（phone 可拨号，hours 展示） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                phone: string;
+                                hours: string;
+                            };
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description SUPPORT_CONFIG_NOT_INITIALIZED */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/common/legal/{docType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 法律文档公开下发（TERMS 服务条款 / PRIVACY 隐私政策 / LICENSE 营业资质，按 Accept-Language 切片，无需登录） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description 文档类型：TERMS（服务条款）/ PRIVACY（隐私政策）/ LICENSE（营业资质） */
+                    docType: "TERMS" | "PRIVACY" | "LICENSE";
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 当前生效版本（按请求语言切片的单语言正文） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** @enum {string} */
+                                docType: "TERMS" | "PRIVACY" | "LICENSE";
+                                version: string;
+                                content: string;
+                                /** Format: date-time */
+                                effectiveAt: string;
+                            };
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description LEGAL_DOCUMENT_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/about/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 关于页可配置数据下发（stats 信任数据条 + socials 社交链接，无需登录，Redis 缓存 1h） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 信任数据条（regions/merchants/orders 原始数字）+ 社交链接列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                stats: {
+                                    regions: number;
+                                    merchants: number;
+                                    orders: number;
+                                };
+                                socials: {
+                                    /** @enum {string} */
+                                    type: "facebook" | "whatsapp" | "instagram";
+                                    /** Format: uri */
+                                    url: string;
+                                }[];
+                            };
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description ABOUT_PROFILE_NOT_INITIALIZED */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -6038,6 +6204,13 @@ export interface paths {
                                     createdAt: string;
                                     /** Format: date-time */
                                     updatedAt: string;
+                                    contactPhone?: string;
+                                    deliveryFee?: number;
+                                    baseFee?: number;
+                                    distanceFee?: number;
+                                    billingDistanceKm?: number;
+                                    distanceKm?: number;
+                                    estimatedMinutes?: number;
                                     /** Format: date-time */
                                     estimatedArrival: string | null;
                                     warehouseCode: string;
@@ -6134,6 +6307,13 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
+                                deliveryFee?: number;
+                                baseFee?: number;
+                                distanceFee?: number;
+                                billingDistanceKm?: number;
+                                distanceKm?: number;
+                                estimatedMinutes?: number;
                                 /** Format: date-time */
                                 estimatedArrival: string | null;
                                 warehouseCode: string;
@@ -6255,6 +6435,13 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
+                                deliveryFee?: number;
+                                baseFee?: number;
+                                distanceFee?: number;
+                                billingDistanceKm?: number;
+                                distanceKm?: number;
+                                estimatedMinutes?: number;
                                 /** Format: date-time */
                                 estimatedArrival: string | null;
                                 warehouseCode: string;
@@ -6372,6 +6559,13 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
+                                deliveryFee?: number;
+                                baseFee?: number;
+                                distanceFee?: number;
+                                billingDistanceKm?: number;
+                                distanceKm?: number;
+                                estimatedMinutes?: number;
                                 /** Format: date-time */
                                 estimatedArrival: string | null;
                                 warehouseCode: string;
@@ -6533,6 +6727,13 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                contactPhone?: string;
+                                deliveryFee?: number;
+                                baseFee?: number;
+                                distanceFee?: number;
+                                billingDistanceKm?: number;
+                                distanceKm?: number;
+                                estimatedMinutes?: number;
                                 /** Format: date-time */
                                 estimatedArrival: string | null;
                                 warehouseCode: string;
@@ -8396,8 +8597,22 @@ export interface paths {
                                     vehiclePlate: string | null;
                                     /** @enum {string} */
                                     status: "OFFLINE" | "ONLINE" | "BUSY";
+                                    /** @enum {string} */
+                                    applicationStatus: "PENDING" | "APPROVED" | "REJECTED";
                                     totalDeliveries: number;
                                     rating: number;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** Format: uri */
+                                    idCardImageUrl: string | null;
+                                    /** Format: uri */
+                                    licenseImageUrl: string | null;
+                                    points: number;
+                                    /** @enum {string} */
+                                    tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+                                    preferredWarehouseIds: string[];
+                                    isOnline: boolean;
+                                    maybeOffline: boolean;
                                     /** Format: date-time */
                                     createdAt: string;
                                     /** Format: date-time */
@@ -8505,8 +8720,22 @@ export interface paths {
                                 vehiclePlate: string | null;
                                 /** @enum {string} */
                                 status: "OFFLINE" | "ONLINE" | "BUSY";
+                                /** @enum {string} */
+                                applicationStatus: "PENDING" | "APPROVED" | "REJECTED";
                                 totalDeliveries: number;
                                 rating: number;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: uri */
+                                idCardImageUrl: string | null;
+                                /** Format: uri */
+                                licenseImageUrl: string | null;
+                                points: number;
+                                /** @enum {string} */
+                                tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+                                preferredWarehouseIds: string[];
+                                isOnline: boolean;
+                                maybeOffline: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -8605,8 +8834,22 @@ export interface paths {
                                 vehiclePlate: string | null;
                                 /** @enum {string} */
                                 status: "OFFLINE" | "ONLINE" | "BUSY";
+                                /** @enum {string} */
+                                applicationStatus: "PENDING" | "APPROVED" | "REJECTED";
                                 totalDeliveries: number;
                                 rating: number;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: uri */
+                                idCardImageUrl: string | null;
+                                /** Format: uri */
+                                licenseImageUrl: string | null;
+                                points: number;
+                                /** @enum {string} */
+                                tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+                                preferredWarehouseIds: string[];
+                                isOnline: boolean;
+                                maybeOffline: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -8703,8 +8946,22 @@ export interface paths {
                                 vehiclePlate: string | null;
                                 /** @enum {string} */
                                 status: "OFFLINE" | "ONLINE" | "BUSY";
+                                /** @enum {string} */
+                                applicationStatus: "PENDING" | "APPROVED" | "REJECTED";
                                 totalDeliveries: number;
                                 rating: number;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: uri */
+                                idCardImageUrl: string | null;
+                                /** Format: uri */
+                                licenseImageUrl: string | null;
+                                points: number;
+                                /** @enum {string} */
+                                tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+                                preferredWarehouseIds: string[];
+                                isOnline: boolean;
+                                maybeOffline: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -8781,8 +9038,22 @@ export interface paths {
                                 vehiclePlate: string | null;
                                 /** @enum {string} */
                                 status: "OFFLINE" | "ONLINE" | "BUSY";
+                                /** @enum {string} */
+                                applicationStatus: "PENDING" | "APPROVED" | "REJECTED";
                                 totalDeliveries: number;
                                 rating: number;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: uri */
+                                idCardImageUrl: string | null;
+                                /** Format: uri */
+                                licenseImageUrl: string | null;
+                                points: number;
+                                /** @enum {string} */
+                                tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+                                preferredWarehouseIds: string[];
+                                isOnline: boolean;
+                                maybeOffline: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -10164,7 +10435,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description 骑手入驻申请（创建 RiderProfile applicationStatus=PENDING） */
+        /** @description 骑手入驻申请（创建 RiderProfile applicationStatus=PENDING）。W3 骑手个人区（2026-08-24）：apply payload 改带 URL 字段（avatarUrl/idCardImageUrl/licenseImageUrl），前端先调 /common/rider/uploads/* 拿 URL 再提交；后端只存 URL 不收文件。 */
         post: {
             parameters: {
                 query?: never;
@@ -10178,9 +10449,16 @@ export interface paths {
                         riderName: string;
                         phone: string;
                         /** @enum {string} */
-                        vehicleType: "MOTORCYCLE" | "BICYCLE" | "CAR";
+                        vehicleType?: "MOTORCYCLE" | "BICYCLE" | "CAR";
                         vehiclePlate?: string;
                         idCardNumber: string;
+                        /** Format: uri */
+                        avatarUrl?: string | null;
+                        /** Format: uri */
+                        idCardImageUrl?: string | null;
+                        /** Format: uri */
+                        licenseImageUrl?: string | null;
+                        preferredWarehouseIds?: string[];
                     };
                 };
             };
@@ -10206,8 +10484,22 @@ export interface paths {
                                 vehiclePlate: string | null;
                                 /** @enum {string} */
                                 status: "OFFLINE" | "ONLINE" | "BUSY";
+                                /** @enum {string} */
+                                applicationStatus: "PENDING" | "APPROVED" | "REJECTED";
                                 totalDeliveries: number;
                                 rating: number;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: uri */
+                                idCardImageUrl: string | null;
+                                /** Format: uri */
+                                licenseImageUrl: string | null;
+                                points: number;
+                                /** @enum {string} */
+                                tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+                                preferredWarehouseIds: string[];
+                                isOnline: boolean;
+                                maybeOffline: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -10250,7 +10542,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description 获取当前骑手资料（含 applicationStatus + 在线状态） */
+        /** @description 获取当前骑手资料（含 applicationStatus + 在线状态 + avatarUrl/证件 URL + points/tier） */
         get: {
             parameters: {
                 query?: never;
@@ -10281,8 +10573,22 @@ export interface paths {
                                 vehiclePlate: string | null;
                                 /** @enum {string} */
                                 status: "OFFLINE" | "ONLINE" | "BUSY";
+                                /** @enum {string} */
+                                applicationStatus: "PENDING" | "APPROVED" | "REJECTED";
                                 totalDeliveries: number;
                                 rating: number;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: uri */
+                                idCardImageUrl: string | null;
+                                /** Format: uri */
+                                licenseImageUrl: string | null;
+                                points: number;
+                                /** @enum {string} */
+                                tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+                                preferredWarehouseIds: string[];
+                                isOnline: boolean;
+                                maybeOffline: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -10317,7 +10623,116 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** @description 骑手自助改资料（W3 骑手个人区 2026-08-24）。idCardNumber 不可改（换号应重新 apply）；支持改 riderName/phone/vehicleType/vehiclePlate/avatarUrl/idCardImageUrl/licenseImageUrl；URL 字段传 null 清除。仅 APPROVED 骑手可改。 */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        riderName?: string;
+                        /** @enum {string} */
+                        vehicleType?: "MOTORCYCLE" | "BICYCLE" | "CAR";
+                        vehiclePlate?: string | null;
+                        /** Format: uri */
+                        avatarUrl?: string | null;
+                        /** Format: uri */
+                        idCardImageUrl?: string | null;
+                        /** Format: uri */
+                        licenseImageUrl?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description 更新后的骑手资料 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                userId: string;
+                                riderName: string;
+                                phone: string;
+                                /** @enum {string} */
+                                vehicleType: "MOTORCYCLE" | "BICYCLE" | "CAR";
+                                vehiclePlate: string | null;
+                                /** @enum {string} */
+                                status: "OFFLINE" | "ONLINE" | "BUSY";
+                                /** @enum {string} */
+                                applicationStatus: "PENDING" | "APPROVED" | "REJECTED";
+                                totalDeliveries: number;
+                                rating: number;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: uri */
+                                idCardImageUrl: string | null;
+                                /** Format: uri */
+                                licenseImageUrl: string | null;
+                                points: number;
+                                /** @enum {string} */
+                                tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+                                preferredWarehouseIds: string[];
+                                isOnline: boolean;
+                                maybeOffline: boolean;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_APPROVED */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description PROFILE_NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/v1/rider/duty": {
@@ -10373,8 +10788,22 @@ export interface paths {
                                 vehiclePlate: string | null;
                                 /** @enum {string} */
                                 status: "OFFLINE" | "ONLINE" | "BUSY";
+                                /** @enum {string} */
+                                applicationStatus: "PENDING" | "APPROVED" | "REJECTED";
                                 totalDeliveries: number;
                                 rating: number;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: uri */
+                                idCardImageUrl: string | null;
+                                /** Format: uri */
+                                licenseImageUrl: string | null;
+                                points: number;
+                                /** @enum {string} */
+                                tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+                                preferredWarehouseIds: string[];
+                                isOnline: boolean;
+                                maybeOffline: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -10415,7 +10844,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description 心跳续期（Redis rider:online:{riderId} SETEX 60s，骑手 App 每 50s 调一次） */
+        /** @description 心跳续期（Redis rider:online:{riderId} SETEX 60s，骑手 App 每 50s 调一次）。P6 #6（2026-08-25）：返回 maybeOffline=false（刚续期 TTL=60s 远离 30s 宽限阈值）；profile 查询接口在 TTL≤30s 时返回 maybeOffline=true 供前端提示重连。 */
         post: {
             parameters: {
                 query?: never;
@@ -10425,7 +10854,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description 续期成功 */
+                /** @description 续期结果 */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -10436,6 +10865,7 @@ export interface paths {
                             success: true;
                             data: {
                                 renewed: boolean;
+                                maybeOffline: boolean;
                             };
                         };
                     };
@@ -10605,42 +11035,7 @@ export interface paths {
                             /** @enum {boolean} */
                             success: true;
                             data: {
-                                items: {
-                                    /** Format: uuid */
-                                    id: string;
-                                    /** Format: uuid */
-                                    orderId: string;
-                                    /** Format: uuid */
-                                    riderId: string | null;
-                                    /** Format: uuid */
-                                    warehouseId: string;
-                                    /** @enum {string} */
-                                    status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
-                                    /**
-                                     * @default delivery
-                                     * @enum {string}
-                                     */
-                                    taskType: "delivery" | "return";
-                                    /** Format: uuid */
-                                    refundId: string | null;
-                                    pickupAddress: string;
-                                    pickupLat: number;
-                                    pickupLng: number;
-                                    dropoffAddress: string;
-                                    dropoffLat: number;
-                                    dropoffLng: number;
-                                    /** Format: date-time */
-                                    assignedAt: string | null;
-                                    /** Format: date-time */
-                                    pickedUpAt: string | null;
-                                    /** Format: date-time */
-                                    deliveredAt: string | null;
-                                    note: string | null;
-                                    /** Format: date-time */
-                                    createdAt: string;
-                                    /** Format: date-time */
-                                    updatedAt: string;
-                                }[];
+                                items: components["schemas"]["DeliveryTask"][];
                             };
                         };
                     };
@@ -10682,42 +11077,7 @@ export interface paths {
                             /** @enum {boolean} */
                             success: true;
                             data: {
-                                items: {
-                                    /** Format: uuid */
-                                    id: string;
-                                    /** Format: uuid */
-                                    orderId: string;
-                                    /** Format: uuid */
-                                    riderId: string | null;
-                                    /** Format: uuid */
-                                    warehouseId: string;
-                                    /** @enum {string} */
-                                    status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
-                                    /**
-                                     * @default delivery
-                                     * @enum {string}
-                                     */
-                                    taskType: "delivery" | "return";
-                                    /** Format: uuid */
-                                    refundId: string | null;
-                                    pickupAddress: string;
-                                    pickupLat: number;
-                                    pickupLng: number;
-                                    dropoffAddress: string;
-                                    dropoffLat: number;
-                                    dropoffLng: number;
-                                    /** Format: date-time */
-                                    assignedAt: string | null;
-                                    /** Format: date-time */
-                                    pickedUpAt: string | null;
-                                    /** Format: date-time */
-                                    deliveredAt: string | null;
-                                    note: string | null;
-                                    /** Format: date-time */
-                                    createdAt: string;
-                                    /** Format: date-time */
-                                    updatedAt: string;
-                                }[];
+                                items: components["schemas"]["DeliveryTask"][];
                             };
                         };
                     };
@@ -10766,42 +11126,7 @@ export interface paths {
                         "application/json": {
                             /** @enum {boolean} */
                             success: true;
-                            data: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                orderId: string;
-                                /** Format: uuid */
-                                riderId: string | null;
-                                /** Format: uuid */
-                                warehouseId: string;
-                                /** @enum {string} */
-                                status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
-                                /**
-                                 * @default delivery
-                                 * @enum {string}
-                                 */
-                                taskType: "delivery" | "return";
-                                /** Format: uuid */
-                                refundId: string | null;
-                                pickupAddress: string;
-                                pickupLat: number;
-                                pickupLng: number;
-                                dropoffAddress: string;
-                                dropoffLat: number;
-                                dropoffLng: number;
-                                /** Format: date-time */
-                                assignedAt: string | null;
-                                /** Format: date-time */
-                                pickedUpAt: string | null;
-                                /** Format: date-time */
-                                deliveredAt: string | null;
-                                note: string | null;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** Format: date-time */
-                                updatedAt: string;
-                            };
+                            data: components["schemas"]["DeliveryTask"];
                         };
                     };
                 };
@@ -10868,42 +11193,7 @@ export interface paths {
                         "application/json": {
                             /** @enum {boolean} */
                             success: true;
-                            data: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                orderId: string;
-                                /** Format: uuid */
-                                riderId: string | null;
-                                /** Format: uuid */
-                                warehouseId: string;
-                                /** @enum {string} */
-                                status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
-                                /**
-                                 * @default delivery
-                                 * @enum {string}
-                                 */
-                                taskType: "delivery" | "return";
-                                /** Format: uuid */
-                                refundId: string | null;
-                                pickupAddress: string;
-                                pickupLat: number;
-                                pickupLng: number;
-                                dropoffAddress: string;
-                                dropoffLat: number;
-                                dropoffLng: number;
-                                /** Format: date-time */
-                                assignedAt: string | null;
-                                /** Format: date-time */
-                                pickedUpAt: string | null;
-                                /** Format: date-time */
-                                deliveredAt: string | null;
-                                note: string | null;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** Format: date-time */
-                                updatedAt: string;
-                            };
+                            data: components["schemas"]["DeliveryTask"];
                         };
                     };
                 };
@@ -10971,42 +11261,7 @@ export interface paths {
                         "application/json": {
                             /** @enum {boolean} */
                             success: true;
-                            data: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                orderId: string;
-                                /** Format: uuid */
-                                riderId: string | null;
-                                /** Format: uuid */
-                                warehouseId: string;
-                                /** @enum {string} */
-                                status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
-                                /**
-                                 * @default delivery
-                                 * @enum {string}
-                                 */
-                                taskType: "delivery" | "return";
-                                /** Format: uuid */
-                                refundId: string | null;
-                                pickupAddress: string;
-                                pickupLat: number;
-                                pickupLng: number;
-                                dropoffAddress: string;
-                                dropoffLat: number;
-                                dropoffLng: number;
-                                /** Format: date-time */
-                                assignedAt: string | null;
-                                /** Format: date-time */
-                                pickedUpAt: string | null;
-                                /** Format: date-time */
-                                deliveredAt: string | null;
-                                note: string | null;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** Format: date-time */
-                                updatedAt: string;
-                            };
+                            data: components["schemas"]["DeliveryTask"];
                         };
                     };
                 };
@@ -11075,42 +11330,7 @@ export interface paths {
                         "application/json": {
                             /** @enum {boolean} */
                             success: true;
-                            data: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                orderId: string;
-                                /** Format: uuid */
-                                riderId: string | null;
-                                /** Format: uuid */
-                                warehouseId: string;
-                                /** @enum {string} */
-                                status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
-                                /**
-                                 * @default delivery
-                                 * @enum {string}
-                                 */
-                                taskType: "delivery" | "return";
-                                /** Format: uuid */
-                                refundId: string | null;
-                                pickupAddress: string;
-                                pickupLat: number;
-                                pickupLng: number;
-                                dropoffAddress: string;
-                                dropoffLat: number;
-                                dropoffLng: number;
-                                /** Format: date-time */
-                                assignedAt: string | null;
-                                /** Format: date-time */
-                                pickedUpAt: string | null;
-                                /** Format: date-time */
-                                deliveredAt: string | null;
-                                note: string | null;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** Format: date-time */
-                                updatedAt: string;
-                            };
+                            data: components["schemas"]["DeliveryTask"];
                         };
                     };
                 };
@@ -11158,42 +11378,7 @@ export interface paths {
                         "application/json": {
                             /** @enum {boolean} */
                             success: true;
-                            data: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                orderId: string;
-                                /** Format: uuid */
-                                riderId: string | null;
-                                /** Format: uuid */
-                                warehouseId: string;
-                                /** @enum {string} */
-                                status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
-                                /**
-                                 * @default delivery
-                                 * @enum {string}
-                                 */
-                                taskType: "delivery" | "return";
-                                /** Format: uuid */
-                                refundId: string | null;
-                                pickupAddress: string;
-                                pickupLat: number;
-                                pickupLng: number;
-                                dropoffAddress: string;
-                                dropoffLat: number;
-                                dropoffLng: number;
-                                /** Format: date-time */
-                                assignedAt: string | null;
-                                /** Format: date-time */
-                                pickedUpAt: string | null;
-                                /** Format: date-time */
-                                deliveredAt: string | null;
-                                note: string | null;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** Format: date-time */
-                                updatedAt: string;
-                            };
+                            data: components["schemas"]["DeliveryTask"];
                         };
                     };
                 };
@@ -12126,42 +12311,7 @@ export interface paths {
                         "application/json": {
                             /** @enum {boolean} */
                             success: true;
-                            data: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                orderId: string;
-                                /** Format: uuid */
-                                riderId: string | null;
-                                /** Format: uuid */
-                                warehouseId: string;
-                                /** @enum {string} */
-                                status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
-                                /**
-                                 * @default delivery
-                                 * @enum {string}
-                                 */
-                                taskType: "delivery" | "return";
-                                /** Format: uuid */
-                                refundId: string | null;
-                                pickupAddress: string;
-                                pickupLat: number;
-                                pickupLng: number;
-                                dropoffAddress: string;
-                                dropoffLat: number;
-                                dropoffLng: number;
-                                /** Format: date-time */
-                                assignedAt: string | null;
-                                /** Format: date-time */
-                                pickedUpAt: string | null;
-                                /** Format: date-time */
-                                deliveredAt: string | null;
-                                note: string | null;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** Format: date-time */
-                                updatedAt: string;
-                            };
+                            data: components["schemas"]["DeliveryTask"];
                         };
                     };
                 };
@@ -12732,6 +12882,493 @@ export interface paths {
                 };
                 /** @description E-AUTH-001 跨端调用或 E-AUTH-012 非本人 */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description 文件超过 5MB 上限 */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-UPLOAD-001 存储服务错误（StorageError）/ E-UPLOAD-002 其他上传错误 */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/uploads/feedback-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 反馈截图上传（P22 F2 2026-08-19）。multipart/form-data，field name="file"。CUSTOMER 权限 + DeviceTypeGuard 自动校验 client_app deviceType。支持 jpg/png/webp，size ≤ 5MB，最小 100×100（无 1:1 约束，反馈截图任意比例），服务端校验 magic bytes（防 mime 伪造）。MinIO 路径前缀 feedbacks/（与 reviews/、refunds/ 区分，便于审计/清理）。止血用途：反馈页此前复用 review-image，real 模式上传 URL 无消费方 → 孤儿文件 + reviews/ 前缀语义污染。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 上传成功，返回公开 URL + key + size（前端拿到 URL 后提交 POST /client/feedback 的 images[]） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uri */
+                            url: string;
+                            key: string;
+                            size: number;
+                        };
+                    };
+                };
+                /** @description 不支持的 mime / 空文件 / magic bytes 不匹配 / 尺寸过小（< 100×100） */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-AUTH-003 未授权 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-AUTH-001 跨端调用或 E-AUTH-012 非本人 */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description 文件超过 5MB 上限 */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-UPLOAD-001 存储服务错误（StorageError）/ E-UPLOAD-002 其他上传错误 */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/common/rider/uploads/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 骑手头像上传（W3 骑手个人区 2026-08-24）。multipart/form-data，field name="file"。CUSTOMER 权限（apply 阶段用户）。支持 jpg/png/webp，size ≤ 5MB，最小 200×200，强制 1:1 正方形（容差 5%）。MinIO 路径前缀 riders/avatar-。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 上传成功，返回公开 URL + key + size（apply 阶段填入 avatarUrl） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uri */
+                            url: string;
+                            key: string;
+                            size: number;
+                        };
+                    };
+                };
+                /** @description 不支持的 mime / 空文件 / magic bytes 不匹配 / 尺寸过小（< 200×200）/ 非 1:1 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-AUTH-003 未授权 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description 文件超过 5MB 上限 */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-UPLOAD-001 存储服务错误（StorageError）/ E-UPLOAD-002 其他上传错误 */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/common/rider/uploads/id-card-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 骑手身份证图上传（W3 骑手个人区 2026-08-24）。multipart/form-data，field name="file"。CUSTOMER 权限（apply 阶段用户）。支持 jpg/png/webp，size ≤ 5MB，最小 300×200（任意比例，防模糊）。MinIO 路径前缀 riders/idcard-。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 上传成功，返回公开 URL + key + size（apply 阶段填入 idCardImageUrl） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uri */
+                            url: string;
+                            key: string;
+                            size: number;
+                        };
+                    };
+                };
+                /** @description 不支持的 mime / 空文件 / magic bytes 不匹配 / 尺寸过小（< 300×200） */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-AUTH-003 未授权 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description 文件超过 5MB 上限 */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-UPLOAD-001 存储服务错误（StorageError）/ E-UPLOAD-002 其他上传错误 */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/common/rider/uploads/license-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 骑手驾照/车辆证件图上传（W3 骑手个人区 2026-08-24）。multipart/form-data，field name="file"。CUSTOMER 权限（apply 阶段用户）。支持 jpg/png/webp，size ≤ 5MB，最小 300×200（任意比例，防模糊）。MinIO 路径前缀 riders/license-。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 上传成功，返回公开 URL + key + size（apply 阶段填入 licenseImageUrl） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uri */
+                            url: string;
+                            key: string;
+                            size: number;
+                        };
+                    };
+                };
+                /** @description 不支持的 mime / 空文件 / magic bytes 不匹配 / 尺寸过小（< 300×200） */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-AUTH-003 未授权 */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -13602,6 +14239,122 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/v1/client/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 客户提交反馈（P22 F1 2026-08-19）。category 六值纯枚举（feature/product/order/payment/shipping/other，前端 FEEDBACK_TYPE_KEYS 提交前 .split('.').pop() 转尾段）。content 10-500 字单语言原话。截图先调 POST /client/uploads/feedback-image 拿 URL 传 images[]（isOwnUrl 校验防外链）。限流：user 维度 5 次/小时 + ip 维度 20 次/小时。 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        category: "feature" | "product" | "order" | "payment" | "shipping" | "other";
+                        content: string;
+                        contact?: string;
+                        /** @default [] */
+                        images?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description 反馈创建成功，返回 feedbackId */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            userId: string;
+                            /** @enum {string} */
+                            category: "feature" | "product" | "order" | "payment" | "shipping" | "other";
+                            content: string;
+                            contact: string | null;
+                            images: string[];
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+                /** @description 校验失败（category 枚举外 / content 长度 / images > 9） */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description E-FEEDBACK-001 图片 URL 非本服务上传（防 SSRF/外链） */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description 限流（5 次/小时/用户） */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: {
+                                    [key: string]: unknown;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/settle/settlements": {
@@ -15749,6 +16502,13 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+            contactPhone?: string;
+            deliveryFee?: number;
+            baseFee?: number;
+            distanceFee?: number;
+            billingDistanceKm?: number;
+            distanceKm?: number;
+            estimatedMinutes?: number;
             /** Format: date-time */
             estimatedArrival: string | null;
             warehouseCode: string;
@@ -15804,6 +16564,13 @@ export interface components {
                     createdAt: string;
                     /** Format: date-time */
                     updatedAt: string;
+                    contactPhone?: string;
+                    deliveryFee?: number;
+                    baseFee?: number;
+                    distanceFee?: number;
+                    billingDistanceKm?: number;
+                    distanceKm?: number;
+                    estimatedMinutes?: number;
                     /** Format: date-time */
                     estimatedArrival: string | null;
                     warehouseCode: string;
@@ -15854,6 +16621,49 @@ export interface components {
             isOnline: boolean;
             totalDeliveries: number;
             rating: number;
+        };
+        DeliveryTask: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** Format: uuid */
+            riderId: string | null;
+            /** Format: uuid */
+            warehouseId: string;
+            /** @enum {string} */
+            status: "PENDING_ASSIGN" | "ASSIGNED" | "PICKED_UP" | "DELIVERING" | "DELIVERED" | "FAILED";
+            /**
+             * @default delivery
+             * @enum {string}
+             */
+            taskType: "delivery" | "return";
+            /** Format: uuid */
+            refundId: string | null;
+            pickupAddress: string;
+            pickupLat: number;
+            pickupLng: number;
+            dropoffAddress: string;
+            dropoffLat: number;
+            dropoffLng: number;
+            /** Format: date-time */
+            assignedAt: string | null;
+            /** Format: date-time */
+            pickedUpAt: string | null;
+            /** Format: date-time */
+            deliveredAt: string | null;
+            note: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            contactPhone?: string;
+            deliveryFee?: number;
+            baseFee?: number;
+            distanceFee?: number;
+            billingDistanceKm?: number;
+            distanceKm?: number;
+            estimatedMinutes?: number;
         };
         BatchAdjustRequest: {
             items: {
@@ -16028,6 +16838,46 @@ export interface components {
         UpdateSystemConfigRequest: {
             value: string;
             description?: string;
+        };
+        SupportConfig: {
+            phone: string;
+            hours: string;
+        };
+        /** @enum {string} */
+        LegalDocType: "TERMS" | "PRIVACY" | "LICENSE";
+        LegalDocument: {
+            /** @enum {string} */
+            docType: "TERMS" | "PRIVACY" | "LICENSE";
+            version: string;
+            content: string;
+            /** Format: date-time */
+            effectiveAt: string;
+        };
+        /** @enum {string} */
+        SocialLinkType: "facebook" | "whatsapp" | "instagram";
+        SocialLink: {
+            /** @enum {string} */
+            type: "facebook" | "whatsapp" | "instagram";
+            /** Format: uri */
+            url: string;
+        };
+        AboutStats: {
+            regions: number;
+            merchants: number;
+            orders: number;
+        };
+        AboutProfile: {
+            stats: {
+                regions: number;
+                merchants: number;
+                orders: number;
+            };
+            socials: {
+                /** @enum {string} */
+                type: "facebook" | "whatsapp" | "instagram";
+                /** Format: uri */
+                url: string;
+            }[];
         };
         ImSignature: {
             url: string;
@@ -16328,6 +17178,27 @@ export interface components {
             word: string;
             lang: string;
             count: number;
+        };
+        Feedback: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            userId: string;
+            /** @enum {string} */
+            category: "feature" | "product" | "order" | "payment" | "shipping" | "other";
+            content: string;
+            contact: string | null;
+            images: string[];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        CreateFeedbackRequest: {
+            /** @enum {string} */
+            category: "feature" | "product" | "order" | "payment" | "shipping" | "other";
+            content: string;
+            contact?: string;
+            /** @default [] */
+            images: string[];
         };
     };
     responses: never;

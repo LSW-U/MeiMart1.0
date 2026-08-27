@@ -13,6 +13,16 @@ type RoutePoint = {
   distance?: string;
 };
 
+/**
+ * 配送费明细（距离计费批次1 2026-08-27）
+ * base/distance 单位分；调用方传已格式化的字符串（如「Base $5.00」）。
+ * 二者皆 undefined → 卡片只显 fee 总额，不显明细行。
+ */
+type FeeBreakdown = {
+  base?: string;
+  distance?: string;
+};
+
 type TaskCardProps = {
   badge?: string;
   timeLabel: string;
@@ -20,6 +30,8 @@ type TaskCardProps = {
   timeTone?: 'default' | 'neutral' | 'error';
   fee?: string;
   feeNote?: string;
+  /** 距离计费批次1：配送费明细「基础 $X + 距离 $Y」展示在 fee 下方；缺失不显 */
+  feeBreakdown?: FeeBreakdown;
   orderId?: string;
   points: RoutePoint[];
   tags?: string[];
@@ -40,7 +52,7 @@ type TaskCardProps = {
 };
 
 // T6 §7.5 A：默认值收紧空字符串，强制调用方传 t() 本地化 label（英文默认值不再兜底）
-export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote, orderId, points, tags = [], items, note, actionLabel, actionPending = false, actionDisabled = false, chatLabel = '', contactLabel = '', contactSuffix, variant = 'new', onAction, onChat, onContact }: TaskCardProps) {
+export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote, feeBreakdown, orderId, points, tags = [], items, note, actionLabel, actionPending = false, actionDisabled = false, chatLabel = '', contactLabel = '', contactSuffix, variant = 'new', onAction, onChat, onContact }: TaskCardProps) {
   const { t } = useTranslation();
   // T6 §7.1 A：无电话时按钮可见但降级（描边灰 + opacity），点击 toast 提示原因
   const hasContact = contactSuffix !== undefined;
@@ -65,6 +77,14 @@ export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote,
         {fee ? (
           <View className="items-end">
             <Text className="text-xl font-bold text-primary">{fee}</Text>
+            {/* 距离计费批次1（2026-08-27）：明细「基础 $X + 距离 $Y」展示在总额下方。
+                breakdown 缺失（历史单/无坐标 fallback）→ 不渲染，仅显总额。 */}
+            {feeBreakdown?.base || feeBreakdown?.distance ? (
+              <View className="mt-1 flex-col items-end gap-0.5">
+                {feeBreakdown?.base ? <Text className="text-xs text-on-surface-variant">{feeBreakdown.base}</Text> : null}
+                {feeBreakdown?.distance ? <Text className="text-xs text-on-surface-variant">{feeBreakdown.distance}</Text> : null}
+              </View>
+            ) : null}
             {feeNote ? <Text className="mt-1 max-w-36 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">{feeNote}</Text> : null}
           </View>
         ) : null}

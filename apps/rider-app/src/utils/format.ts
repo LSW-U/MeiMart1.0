@@ -23,7 +23,14 @@ export function formatCurrency(
   return `${currency}${body}`;
 }
 
-/** 距离展示格式：`3.5km`（无空格，对齐页面内联现状） */
-export function formatDistance(kilometers: number): string {
+/**
+ * 距离展示格式：`3.5km`（无空格，对齐页面内联现状）
+ *
+ * 距离计费批次1 #5 收尾（2026-08-27）：参数放宽 number | undefined。
+ * undefined → 返回 undefined（调用方隐藏距离标签，而非渲染 `NaNkm`/`undefinedkm`）。
+ * 适用于 distanceKm / billingDistanceKm 任一缺失的历史订单降级场景。
+ */
+export function formatDistance(kilometers: number | undefined): string | undefined {
+  if (kilometers == null) return undefined;
   return `${kilometers.toFixed(1)}km`;
 }

@@ -38,6 +38,12 @@ const initialTasks: DeliveryTask[] = [
     pickup: { title: 'Heritage Bakery (Dili Center)', address: 'Rua 15 de Outubro, Dili', contactName: 'Bakery Pickup Desk' },
     dropoff: { title: 'Hotel Timor - Lobby', address: 'Avenida Marechal Carmona, Dili', contactName: 'Concierge' },
     deliveryFee: 900,
+    // 距离计费批次1（2026-08-27）mock 明细：base 500 + distance 400 = 900
+    //   billingDistanceKm=4.0（仓库→地址），freeKm=2，perKmFee=50 → (4-2)×50=100... mock 简化不严守公式，
+    //   仅验证 UI 能渲染明细；真实值由后端订单快照决定
+    baseFee: 500,
+    distanceFee: 400,
+    billingDistanceKm: 4.0,
     distanceKm: 1.8,
     estimatedMinutes: 30,
     items: ['Pastry box', '6 units'],
@@ -66,6 +72,9 @@ const initialTasks: DeliveryTask[] = [
     pickup: { title: 'Lita Store (Colmera)', address: 'Rua de Colmera, Dili', contactName: 'Lita Front Desk' },
     dropoff: { title: 'UNTL Campus - Faculty Office', address: 'Avenida Cidade de Lisboa, Dili', contactName: 'Faculty Reception', contactPhone: '+670 7755 4072' },
     deliveryFee: 1000,
+    baseFee: 600,
+    distanceFee: 400,
+    billingDistanceKm: 3.5,
     distanceKm: 2.5,
     estimatedMinutes: 30,
     items: ['Matcha Latte', 'Seasonal Fruit Platter'],
@@ -96,6 +105,9 @@ const initialTasks: DeliveryTask[] = [
     pickup: { title: 'Customer (Return Pickup)', address: 'Avenida Bispo Medeiros, Dili', contactName: 'Customer', contactPhone: '+670 7744 1000' },
     dropoff: { title: 'Warehouse Return Center', address: 'Rua de Colmera, Dili', contactName: 'Warehouse Desk' },
     deliveryFee: 800,
+    baseFee: 500,
+    distanceFee: 300,
+    billingDistanceKm: 5.0,
     distanceKm: 3,
     estimatedMinutes: 35,
     items: ['Return Item A', '1 unit'],
@@ -152,13 +164,17 @@ function buildMockLists(): TaskLists {
 
 // 后端 view → 骑手 App 内部兼容字段填充（real 模式专用）
 // 后端 DeliveryTaskView 已透传 contactPhone / deliveryFee / distanceKm / estimatedMinutes
-// （P0-1 / P6 #7 修复，2026-08-25）。这里映射出旧 UI 期望的嵌套结构 + fee 兼容字段。
+// （P0-1 / P6 #7 修复，2026-08-25）。距离计费批次1（2026-08-27）追加透传
+// baseFee / distanceFee / billingDistanceKm（从 order.delivery_fee_breakdown 订单快照），
+// 顶层 `...view` 直接带，无需额外映射；breakdown 缺失 → undefined 由组件降级隐藏明细。
 //
 // P14 ④：taskType / refundId 后端 DeliveryTaskView 已有，`...view` 直接透传。
 //
 // 字段缺失回退说明：
 //   - fee（=deliveryFee）、distanceKm、estimatedMinutes：后端真实数据，缺失（历史订单/无坐标）
 //     才回退 0。旧 UI 用 task.fee 展示配送费卡片、用 distanceKm/estimatedMinutes 展示 ETA。
+//   - baseFee/distanceFee/billingDistanceKm：订单快照字段，缺失保持 undefined（不回退 0），
+//     卡片只显总额 deliveryFee，不显「基础+距离」明细与「计费距离」。
 //   - items：后端 W6 暂未透传订单明细，仍回退 []，待后端补。
 function fromView(view: DeliveryTask): DeliveryTask {
   // 后端 view 字段精简，pickup/dropoff 嵌套结构由本地构造（缺失填默认空值避免组件 break）

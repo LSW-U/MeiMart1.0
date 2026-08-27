@@ -16,7 +16,7 @@ import type { DutyStatus } from '../../src/services/settings';
 import { getTaskAction } from '../../src/services/task-flow';
 import { colors } from '../../src/theme/colors';
 import type { DeliveryTask } from '../../src/types/task';
-import { formatDistance } from '../../src/utils/format';
+import { formatDistance, formatCurrency } from '../../src/utils/format';
 import { pickupDistance } from '../../src/utils/distance';
 
 // T2 §7.7 拍板 A：内联复制（与 tasks.tsx 同源，不抽共享避免碰列表页）
@@ -27,6 +27,32 @@ const dutyLabelKey: Record<DutyStatus, 'duty.onDuty' | 'duty.offDuty' | 'duty.bu
 };
 
 const formatItems = (items: string[], t: (key: TranslationKey, vars?: Record<string, string | number>) => string) => t('common.items', { items: items.join(' · ') });
+
+/**
+ * 距离计费批次1 #5 收尾（2026-08-27）：formatDistance 返回 string|undefined，
+ * t() 的 vars 不接受 undefined。先格式化，非空才套 i18n 模板（与 tasks.tsx 同源）。
+ */
+const withDistance = (
+  templateKey: 'common.fromHere' | 'common.fromPickup' | 'tasks.billingDistance',
+  km: number | undefined,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+): string | undefined => {
+  const dist = formatDistance(km);
+  return dist != null ? t(templateKey, { distance: dist }) : undefined;
+};
+
+/** 距离计费批次1（2026-08-27）：配送费明细「基础 $X + 距离 $Y」（与 tasks.tsx 同源） */
+const formatFeeBreakdown = (
+  task: DeliveryTask,
+  currency: string,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+): { base?: string; distance?: string } => {
+  const fmt = (cents: number) => formatCurrency(cents / 100, currency, { decimals: cents % 100 === 0 ? 0 : 1 });
+  return {
+    base: task.baseFee != null ? t('tasks.feeBreakdown.base', { fee: fmt(task.baseFee) }) : undefined,
+    distance: task.distanceFee != null ? t('tasks.feeBreakdown.distance', { fee: fmt(task.distanceFee) }) : undefined,
+  };
+};
 
 // S6: accept 失败按 ApiError.code 差异化提示
 // - E-DISPATCH-xxx（被抢/状态不对/类型错）/ 409 -> tasks.acceptFailed
@@ -151,9 +177,11 @@ export default function TaskDetailPage() {
                 items={detail.items.length ? formatItems(detail.items, t) : undefined}
                 note={detail.note ?? undefined}
                 orderId={detail.orderId}
+                fee={formatCurrency((detail.fee ?? 0) / 100, t('common.currency'), { decimals: (detail.fee ?? 0) % 100 === 0 ? 0 : 1 })}
+                feeBreakdown={formatFeeBreakdown(detail, t('common.currency'), t)}
                 points={[
-                  { label: 'P', title: detail.pickup.title, subtitle: detail.pickup.address, distance: t('common.fromHere', { distance: formatDistance(pickupDistance(detail.distanceKm)) }) },
-                  { label: 'D', title: detail.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(detail.distanceKm) }) },
+                  { label: 'P', title: detail.pickup.title, subtitle: detail.pickup.address, distance: withDistance('common.fromHere', pickupDistance(detail.distanceKm), t) },
+                  { label: 'D', title: detail.dropoff.title, distance: withDistance('common.fromPickup', detail.distanceKm, t), subtitle: withDistance('tasks.billingDistance', detail.billingDistanceKm, t) },
                 ]}
                 // T2 审查 P3-1：终态 time 显示状态文本 + 中性/错误色（原型 372/431 行），
                 // 非终态保持「剩余 N 分钟」+ clock 图标

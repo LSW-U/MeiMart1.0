@@ -33,6 +33,37 @@ const dutyLabelKey: Record<DutyStatus, 'duty.onDuty' | 'duty.offDuty' | 'duty.bu
 
 const formatItems = (items: string[], t: (key: TranslationKey, vars?: Record<string, string | number>) => string) => t('common.items', { items: items.join(' · ') });
 
+/**
+ * 距离计费批次1（2026-08-27）：配送费明细格式化。
+ * baseFee/distanceFee 单位分 → 转 $X.XX 字符串；缺失返回 undefined（卡片不显明细行）。
+ * 与 fee 总额一起构成「$9.00 / Base $5.00 / Distance $4.00」对账视图。
+ */
+const formatFeeBreakdown = (
+  task: DeliveryTask,
+  currency: string,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+): { base?: string; distance?: string } => {
+  const fmt = (cents: number) => formatCurrency(cents / 100, currency, { decimals: cents % 100 === 0 ? 0 : 1 });
+  return {
+    base: task.baseFee != null ? t('tasks.feeBreakdown.base', { fee: fmt(task.baseFee) }) : undefined,
+    distance: task.distanceFee != null ? t('tasks.feeBreakdown.distance', { fee: fmt(task.distanceFee) }) : undefined,
+  };
+};
+
+/**
+ * 距离计费批次1 #5 收尾（2026-08-27）：formatDistance 返回 string|undefined，
+ * t() 的 vars 不接受 undefined。本 helper 先格式化，仅在非空时套 i18n 模板，
+ * 避免历史订单无坐标时把 undefined 塞进 t() 触发 TS 报错 + 渲染「undefinedkm」。
+ */
+const withDistance = (
+  templateKey: 'common.fromHere' | 'common.fromPickup' | 'tasks.billingDistance',
+  km: number | undefined,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+): string | undefined => {
+  const dist = formatDistance(km);
+  return dist != null ? t(templateKey, { distance: dist }) : undefined;
+};
+
 // T6 §3.1: 联系按钮拨号回调工厂（tasks.tsx 3 处 active 卡共用；Linking 在调用方，组件不感知 task）
 const contactHandler = (task: DeliveryTask, t: (key: TranslationKey, vars?: Record<string, string | number>) => string) =>
   task.dropoff.contactPhone
@@ -130,11 +161,13 @@ export default function TasksPage() {
       key={task.id}
       actionLabel={t('tasks.accept')}
       fee={formatCurrency((task.fee ?? 0) / 100, currency, { decimals: (task.fee ?? 0) % 100 === 0 ? 0 : 1 })}
+      // 距离计费批次1（2026-08-27）：明细 + 计费距离（billingDistanceKm 与骑行 distanceKm 分开展示）
+      feeBreakdown={formatFeeBreakdown(task, currency, t)}
       items={task.items.length ? formatItems(task.items, t) : undefined}
       note={task.note ?? undefined}
       points={[
-        { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: formatDistance(pickupDistance(task.distanceKm)) },
-        { label: 'D', title: task.dropoff.title, distance: formatDistance(task.distanceKm) },
+        { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t) },
+        { label: 'D', title: task.dropoff.title, distance: withDistance('common.fromPickup', task.distanceKm, t) },
       ]}
       timeLabel={t('common.deliverWithin', { minutes: String(task.estimatedMinutes) })}
       onAction={() => router.push(`/task/${task.id}`)}
@@ -151,12 +184,14 @@ export default function TasksPage() {
         chatLabel={t('tasks.chat')}
         contactLabel={t('tasks.contact')}
         contactSuffix={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : undefined}
+        feeBreakdown={formatFeeBreakdown(task, currency, t)}
         items={task.items.length ? formatItems(task.items, t) : undefined}
         note={task.note ?? undefined}
         orderId={task.orderId}
         points={[
-          { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: t('common.fromHere', { distance: formatDistance(pickupDistance(task.distanceKm)) }) },
-          { label: 'D', title: task.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
+          { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t) },
+          // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
+          { label: 'D', title: task.dropoff.title, distance: withDistance('common.fromPickup', task.distanceKm, t), subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t) },
         ]}
         timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
         variant="active"
@@ -173,13 +208,15 @@ export default function TasksPage() {
       chatLabel={t('tasks.chat')}
       contactLabel={t('tasks.contact')}
       contactSuffix={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : undefined}
+      feeBreakdown={formatFeeBreakdown(task, currency, t)}
       // T6 审查 P1-1：note 只放真实客户备注（尾号已在联系按钮 contactSuffix 展示，
       // 原「有电话时 note 被尾号覆盖」会吞掉配送环节最关键的留言信息）
       note={task.note ?? undefined}
       orderId={task.orderId}
       points={[
-        { label: 'P', title: task.pickup.title, distance: t('common.fromHere', { distance: formatDistance(pickupDistance(task.distanceKm)) }) },
-        { label: 'D', title: task.dropoff.title, distance: t('common.fromPickup', { distance: formatDistance(task.distanceKm) }) },
+        { label: 'P', title: task.pickup.title, distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t) },
+        // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
+        { label: 'D', title: task.dropoff.title, distance: withDistance('common.fromPickup', task.distanceKm, t), subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t) },
       ]}
       timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
       variant="active"

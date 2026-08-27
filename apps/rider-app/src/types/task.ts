@@ -62,6 +62,26 @@ export type DeliveryTask = {
    */
   deliveryFee?: number;
   /**
+   * 配送费基础费（单位：分，距离计费批次1 2026-08-27）
+   * 从 order.delivery_fee_breakdown.baseFee 透传（订单快照）。
+   * breakdown 缺失（历史单/无坐标）→ undefined，卡片只显总额不显明细。
+   */
+  baseFee?: number;
+  /**
+   * 配送费距离加价（单位：分，距离计费批次1 2026-08-27）
+   * 从 order.delivery_fee_breakdown.distanceFee 透传（订单快照）。
+   * 与 baseFee 一起展示明细「基础 $X + 距离 $Y」。
+   */
+  distanceFee?: number;
+  /**
+   * 计费距离（km，距离计费批次1 2026-08-27 / P2-2 审查报告修复）
+   * 从 order.delivery_fee_breakdown.distanceKm 透传 = PostGIS ST_DistanceSphere(仓库中心→收货地址)。
+   * 与 distanceKm 语义不同：distanceKm = pickup→dropoff Haversine（骑行距离，ETA 用），
+   *                          billingDistanceKm = 仓库→地址 球面距离（距离费计算基准）。
+   * breakdown 缺失 → undefined（前端降级隐藏「计费距离」展示，仍显骑行距离）。
+   */
+  billingDistanceKm?: number;
+  /**
    * 配送直线距离（km，P6 #7 2026-08-25）
    * pickup → dropoff 的 Haversine 距离；任一坐标缺失 → undefined（前端降级隐藏）。
    */

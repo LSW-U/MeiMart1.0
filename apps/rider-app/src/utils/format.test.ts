@@ -22,6 +22,11 @@ describe('pickupDistance', () => {
   it('正常偏移：km=5 → 3.7', () => {
     expect(pickupDistance(5)).toBe(3.7);
   });
+
+  // 距离计费批次1 #5 收尾（2026-08-27）：参数放宽 number|undefined，undefined → 隐藏
+  it('km=undefined → undefined（历史订单无坐标降级）', () => {
+    expect(pickupDistance(undefined)).toBeUndefined();
+  });
 });
 
 describe('formatCurrency', () => {
@@ -57,5 +62,10 @@ describe('formatDistance', () => {
 
   it('保留 1 位小数', () => {
     expect(formatDistance(2.34)).toBe('2.3km');
+  });
+
+  // 距离计费批次1 #5 收尾（2026-08-27）：参数放宽 number|undefined，undefined → 隐藏
+  it('undefined → undefined（调用方隐藏距离标签，不渲染 NaNkm）', () => {
+    expect(formatDistance(undefined)).toBeUndefined();
   });
 });
