@@ -176,7 +176,9 @@ export default function CouponsPage() {
           testID="coupon-center"
         >
           <View style={[styles.centerIconWrap, { backgroundColor: colors['primary-container'] }]}>
-            <Icon symbol="local_offer" size={20} color={colors.primary} />
+            {/* Why: primary-container 红底上图标用纯白（用户拍板 2026-08-28，比 on-primary-container 更醒目）；
+                红底白字 dark 不变，同 ON_PRIMARY 固定白模式（E6 豁免） */}
+            <Icon symbol="local_offer" size={20} color="#ffffff" />
           </View>
           <View style={styles.centerTextBox}>
             <Text style={[styles.centerTitle, { color: colors['on-surface'] }]}>
