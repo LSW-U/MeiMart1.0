@@ -21,6 +21,8 @@ export function HorizontalProductCard({
   showRating = false,
   addPending = false,
   addDisabled = false,
+  selectMode = false,
+  isSelected = false,
   testID,
 }: HorizontalProductCardProps) {
   const { colors } = useTheme();
@@ -35,8 +37,9 @@ export function HorizontalProductCard({
         styles.card,
         {
           backgroundColor: colors['surface-container-lowest'],
-          borderColor: colors['outline-variant'],
+          borderColor: selectMode && isSelected ? colors.primary : colors['outline-variant'],
         },
+        selectMode && isSelected && styles.cardSelected,
         shadowPresets.sm,
       ]}
     >
@@ -45,14 +48,16 @@ export function HorizontalProductCard({
         style={({ pressed }) => [pressed && { opacity: 0.85 }]}
         accessibilityRole="button"
         accessibilityLabel={t('product.viewItem', { name })}
+        accessibilityState={isSelected ? { selected: true } : undefined}
       >
         <View style={styles.imageWrap}>
           <SafeImage source={{ uri: product.image }} style={styles.image} />
         </View>
       </Pressable>
       <View style={styles.info}>
-        {/* Why: badge inline 渲染（§9-5 统一为 resolveBadges 派生），primary tint 背景 */}
-        {badge && (
+        {/* Why: badge inline 渲染（§9-5 统一为 resolveBadges 派生），primary tint 背景；
+            管理态隐藏（选择优先，与 Masonry 管理态一致） */}
+        {badge && !selectMode && (
           <View style={[styles.badge, { backgroundColor: colors.primary + '1F' /* 原因：primary 12% tint 背景（8位 hex #RRGGBBAA，'1F'≈12% alpha，审查 Q3） */ }]}>
             <Text style={[styles.badgeText, { color: colors.primary }]}>{badge.label}</Text>
           </View>
@@ -77,28 +82,44 @@ export function HorizontalProductCard({
         )}
         <PriceText value={product.price} originalPrice={product.originalPrice} size="md" />
       </View>
-      <Pressable
-        onPress={onAddToCart}
-        disabled={addPending || addDisabled}
-        style={({ pressed }) => [
-          styles.addBtn,
-          { backgroundColor: colors.primary, opacity: addPending || addDisabled ? 0.6 : 1 },
-          pressed && { opacity: 0.85 },
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel={t('product.addToCartLabel', { name })}
-        accessibilityState={
-          addPending || addDisabled ? { disabled: true } : undefined
-        }
-      >
-        {addPending ? (
-          // P19 D4：加购进行中用 spinner 占位（复用 add 按钮位，尺寸与 icon 对齐）；
-          // addDisabled（他卡单飞行期）不转 spinner 只禁点（审查 Q4 拆分语义）
-          <ActivityIndicator size="small" color={ON_PRIMARY} />
-        ) : (
-          <Icon symbol="add" size={18} color={ON_PRIMARY} />
-        )}
-      </Pressable>
+      {selectMode ? (
+        // Why: 管理态加购位换选择圆圈（P19 原型 .select-circle；点按整卡走 onPress toggleSelect，
+        //      圆圈是状态展示非按钮，避免嵌套 Pressable）
+        <View
+          style={[
+            styles.selectCircle,
+            {
+              backgroundColor: isSelected ? colors.primary : colors['surface-container-lowest'],
+              borderColor: isSelected ? colors.primary : colors['outline-variant'],
+            },
+          ]}
+        >
+          {isSelected && <Icon symbol="check" size={14} color={colors['on-primary']} />}
+        </View>
+      ) : (
+        <Pressable
+          onPress={onAddToCart}
+          disabled={addPending || addDisabled}
+          style={({ pressed }) => [
+            styles.addBtn,
+            { backgroundColor: colors.primary, opacity: addPending || addDisabled ? 0.6 : 1 },
+            pressed && { opacity: 0.85 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t('product.addToCartLabel', { name })}
+          accessibilityState={
+            addPending || addDisabled ? { disabled: true } : undefined
+          }
+        >
+          {addPending ? (
+            // P19 D4：加购进行中用 spinner 占位（复用 add 按钮位，尺寸与 icon 对齐）；
+            // addDisabled（他卡单飞行期）不转 spinner 只禁点（审查 Q4 拆分语义）
+            <ActivityIndicator size="small" color={ON_PRIMARY} />
+          ) : (
+            <Icon symbol="add" size={18} color={ON_PRIMARY} />
+          )}
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -111,6 +132,10 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
+  },
+  // Why: 选中态 2px primary 边（与 Masonry 管理态一致，P19 .selected-card）
+  cardSelected: {
+    borderWidth: 2,
   },
   imageWrap: {
     width: 72,
@@ -136,6 +161,15 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Why: 管理态选择圆圈（P19 .select-circle 22²，与 Masonry 同款；占加购位保行高稳定）
+  selectCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },

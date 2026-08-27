@@ -9,5 +9,11 @@ export interface MasonryProductCardProps {
   onLongPress?: () => void;
   onAddToCart: () => void;
   badge?: ProductBadge;
+  /**
+   * Why: 选择态（favorites 管理态）—— 右上角 select-circle + 选中红边（P19 原型 .selected）；
+   * 传 selectMode 时加购钮换成选择圆圈，点按走 onPress（toggleSelect）
+   */
+  selectMode?: boolean;
+  isSelected?: boolean;
   testID?: string;
 }

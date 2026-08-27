@@ -63,3 +63,24 @@ describe('HorizontalProductCard', () => {
     expect(queryByText('4.5')).toBeNull();
   });
 });
+
+describe('HorizontalProductCard 管理态（favorites selectMode）', () => {
+  it('selectMode：加购位换选择圆圈（addToCartLabel 消失），点卡走 onPress', () => {
+    const onPress = jest.fn();
+    const onAddToCart = jest.fn();
+    const { getByLabelText, queryByLabelText } = render(
+      <HorizontalProductCard
+        product={product}
+        onPress={onPress}
+        onAddToCart={onAddToCart}
+        selectMode
+        isSelected={false}
+      />,
+      { wrapper },
+    );
+    expect(queryByLabelText('Add Arabica Coffee to cart')).toBeNull();
+    fireEvent.press(getByLabelText('View Arabica Coffee'));
+    expect(onPress).toHaveBeenCalled();
+    expect(onAddToCart).not.toHaveBeenCalled();
+  });
+});

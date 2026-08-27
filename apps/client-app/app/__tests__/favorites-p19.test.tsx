@@ -126,14 +126,29 @@ describe('FavoritesPage（P19：视图切换 + 登录空态 + 无排序）', () 
   it('管理态勾选刷新（审查 Q1 extraData 回归）：点卡后删除按钮计数 +1', () => {
     const { getByTestId, getByLabelText, getByText } = render(<FavoritesPage />, { wrapper });
     fireEvent.press(getByTestId('favorites-manage'));
-    // 管理态卡点击：外层 Pressable（a11y label "name, 管理收藏"）→ toggleSelect
-    // （ProductCard interactive=false 降级 View，Web 端内层 Pressable 吞点击的修复）
-    fireEvent.press(getByLabelText('Apple, favorites.a11y.manage'));
+    // 管理态卡片原地变选择态（D7 跟随视图）：点瀑布流卡（viewItem label）→ toggleSelect
+    fireEvent.press(getByLabelText('product.viewItem:Apple'));
     // extraData 修复前 FlatList cell 不重渲染，但 manageBar 删除按钮计数走 header 层
     // （selected 状态页级）——按钮文案 (1) 即勾选生效
     expect(getByText('common.delete (1)')).toBeTruthy();
     // 取消勾选 → 计数归 0
-    fireEvent.press(getByLabelText('Apple, favorites.a11y.manage'));
+    fireEvent.press(getByLabelText('product.viewItem:Apple'));
     expect(getByText('common.delete (0)')).toBeTruthy();
+  });
+
+  it('列表视图进管理：HPC 原地变选择态（不切卡片组件），点卡勾选', () => {
+    const { getByTestId, getByLabelText, getByText, queryByLabelText } = render(<FavoritesPage />, {
+      wrapper,
+    });
+    // 先切列表视图
+    fireEvent.press(getByTestId('favorites-view-list'));
+    expect(getByLabelText('product.addToCartLabel:Apple')).toBeTruthy();
+    // 进管理态：仍是 HPC（hpc testID 在），加购钮换选择圆圈（addToCartLabel 消失）
+    fireEvent.press(getByTestId('favorites-manage'));
+    expect(getByTestId('favorites-hpc-p1')).toBeTruthy();
+    expect(queryByLabelText('product.addToCartLabel:Apple')).toBeNull();
+    // 点卡勾选
+    fireEvent.press(getByLabelText('product.viewItem:Apple'));
+    expect(getByText('common.delete (1)')).toBeTruthy();
   });
 });

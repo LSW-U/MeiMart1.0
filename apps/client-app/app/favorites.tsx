@@ -1,7 +1,7 @@
 // FavoriteListPage — 收藏列表（P19：原型 第四梯队HTML原型设计/P18-P19 优化原型）
 // D.12: PrimaryHeader + 视图切换 + 批量管理 + 空状态
-// 网格常态：两列瀑布流（MasonryProductCard，与 home/search 统一）；列表态：HorizontalProductCard；
-// 管理态：降级对齐网格 FlatList + ProductCard（选择徽章位）
+// 网格态：两列瀑布流（MasonryProductCard，与 home/search 统一）；列表态：HorizontalProductCard；
+// 管理态跟随当前视图（D7）：卡片原地变选择态，不切换卡片组件
 import { useEffect, useState } from 'react';
 import {
   StyleSheet,
@@ -18,12 +18,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { useLocalizer } from '@/i18n';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { ProductCard } from '@/components/business/ProductCard';
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
 import { HorizontalProductCard } from '@/components/business/HorizontalProductCard/HorizontalProductCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
@@ -47,7 +45,6 @@ export default function FavoritesPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const localize = useLocalizer();
   const { data: favorites, isLoading, isError, refetch } = useFavorites();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { isOffline } = useWeakNetworkUI();
@@ -296,79 +293,30 @@ export default function FavoritesPage() {
             onAction={() => router.push('/(main)/home')}
           />
         )
-      ) : selectMode ? (
-        // 管理态降级：对齐网格 FlatList + ProductCard（选择徽章 + 勾选边框 + 长按进管理态仍在）；
-        // 瀑布流卡片无徽章位，管理交互优先于视觉统一 —— 同 P19「列表视图管理态降级」决策
+      ) : view === 'list' ? (
+        // 列表态：单列 FlatList + HorizontalProductCard（P19 D2：72px 图 + 名称/价格/销量 + 32px 圆形加购）
+        // 管理态跟随视图（D7「网格和列表都可进入管理」）：卡片原地变选择态（右侧加购位换选择圆圈）
         <FlatList
           data={favorites}
           // Why: 管理态勾选依赖 selected，不传 extraData 则已渲染 cell 不重执行 renderItem，
-          //      勾选对勾不刷新（审查 Q1 CONFIRMED，管理态核心交互失效）
+          //      勾选圆圈不刷新（审查 Q1 CONFIRMED，管理态核心交互失效）
           extraData={selected}
           keyExtractor={(item) => item.id}
           initialNumToRender={6}
           maxToRenderPerBatch={4}
           windowSize={5}
-          key="manage-grid"
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-          // Why: 管理栏底部悬浮盖在列表上，底部留白防最后一行被遮挡
-          contentContainerStyle={[styles.list, styles.listManage]}
-          renderItem={({ item }: { item: Product }) => {
-            const isSelected = selected.has(item.id);
-            return (
-              <View style={styles.cell}>
-                <View
-                  style={[
-                    styles.selectBadge,
-                    {
-                      backgroundColor: isSelected ? colors.primary : colors['surface-container-lowest'],
-                      borderColor: isSelected ? colors.primary : colors['outline-variant'],
-                    },
-                    shadowPresets.sm,
-                  ]}
-                >
-                  <Icon
-                    symbol={isSelected ? 'check' : 'radio_button_unchecked'}
-                    size={14}
-                    color={isSelected ? colors['on-primary'] : colors['on-surface-variant']}
-                  />
-                </View>
-                <Pressable
-                  onPress={() => toggleSelect(item.id)}
-                  onLongPress={() => onLongPress(item.id)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${localize(item.name)}, ${t('favorites.a11y.manage')}`}
-                  accessibilityState={isSelected ? { selected: true } : undefined}
-                  style={({ pressed }) => [
-                    styles.cardWrapper,
-                    isSelected && [styles.selectedCell, { borderColor: colors.primary }],
-                    pressed && { transform: [{ scale: 0.98 }] },
-                  ]}
-                >
-                  {/* interactive=false：点击交外层 toggleSelect（内层空 Pressable 在 Web 端吞事件） */}
-                  <View style={shadowPresets.sm}>
-                    <ProductCard product={item} interactive={false} />
-                  </View>
-                </Pressable>
-              </View>
-            );
-          }}
-        />
-      ) : view === 'list' ? (
-        // 列表态：单列 FlatList + HorizontalProductCard（P19 D2：72px 图 + 名称/价格/销量 + 32px 圆形加购）
-        <FlatList
-          data={favorites}
-          keyExtractor={(item) => item.id}
-          initialNumToRender={6}
-          maxToRenderPerBatch={4}
-          windowSize={5}
           key="list"
-          contentContainerStyle={styles.listStack}
+          contentContainerStyle={[styles.listStack, selectMode && styles.listManage]}
           renderItem={({ item }: { item: Product }) => (
             <HorizontalProductCard
               product={item}
-              onPress={() => router.push(`/product/${item.id}`)}
+              onPress={() =>
+                selectMode ? toggleSelect(item.id) : router.push(`/product/${item.id}`)
+              }
               onAddToCart={() => handleQuickAdd(item)}
+              badge={selectMode ? undefined : resolveBadges(item, t)[0]}
+              selectMode={selectMode}
+              isSelected={selected.has(item.id)}
               // Q4：spinner 只在发起卡；单飞行期间其他卡 disabled（点按不再静默丢弃）
               addPending={addingId === item.id}
               addDisabled={addingId !== null && addingId !== item.id}
@@ -377,19 +325,24 @@ export default function FavoritesPage() {
           )}
         />
       ) : (
-        // 网格常态：两列瀑布流（复用 home/search 的 MasonryProductCard 奇偶分列模式，高度档位错落）
-        // Why: 收藏数通常 < 100，ScrollView 全量渲染可接受（home/search 同款取舍）
-        <ScrollView contentContainerStyle={styles.masonryContent}>
+        // 网格态：两列瀑布流（复用 home/search 的 MasonryProductCard 奇偶分列模式，高度档位错落）
+        // Why: 收藏数通常 < 100，ScrollView 全量渲染可接受（home/search 同款取舍）；
+        //      管理态跟随视图原地变选择态（右上角 select-circle + 选中红边），不切换卡片组件
+        <ScrollView contentContainerStyle={[styles.masonryContent, selectMode && styles.listManage]}>
           <View style={styles.masonryRow}>
             <View style={styles.masonryCol}>
               {favorites.map((item, i) => i % 2 === 0 && (
                 <MasonryProductCard
                   key={item.id}
                   product={item}
-                  badge={resolveBadges(item, t)[0]}
-                  onPress={() => router.push(`/product/${item.id}`)}
+                  badge={selectMode ? undefined : resolveBadges(item, t)[0]}
+                  onPress={() =>
+                    selectMode ? toggleSelect(item.id) : router.push(`/product/${item.id}`)
+                  }
                   onLongPress={() => onLongPress(item.id)}
                   onAddToCart={() => handleQuickAdd(item)}
+                  selectMode={selectMode}
+                  isSelected={selected.has(item.id)}
                   testID={`favorites-masonry-${item.id}`}
                 />
               ))}
@@ -399,10 +352,14 @@ export default function FavoritesPage() {
                 <MasonryProductCard
                   key={item.id}
                   product={item}
-                  badge={resolveBadges(item, t)[0]}
-                  onPress={() => router.push(`/product/${item.id}`)}
+                  badge={selectMode ? undefined : resolveBadges(item, t)[0]}
+                  onPress={() =>
+                    selectMode ? toggleSelect(item.id) : router.push(`/product/${item.id}`)
+                  }
                   onLongPress={() => onLongPress(item.id)}
                   onAddToCart={() => handleQuickAdd(item)}
+                  selectMode={selectMode}
+                  isSelected={selected.has(item.id)}
                   testID={`favorites-masonry-${item.id}`}
                 />
               ))}
@@ -560,10 +517,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  list: {
-    padding: layout['container-margin'],
-    paddingBottom: spacing.xxl * 2,
-  },
   // 管理态列表：底部悬浮管理栏 ~48px + 间距
   listManage: {
     paddingBottom: spacing.xxl * 2 + 48,
@@ -573,14 +526,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm + 2,
     paddingBottom: spacing.xxl * 2,
   },
-  row: {
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  cell: {
-    position: 'relative',
-  },
-  // 网格常态瀑布流容器（同 home.tsx masonryRow/masonryCol 模式）
+  // 网格瀑布流容器（同 home.tsx masonryRow/masonryCol 模式）
   masonryContent: {
     padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
@@ -592,25 +538,6 @@ const styles = StyleSheet.create({
   masonryCol: {
     flex: 1,
     gap: spacing.md,
-  },
-  cardWrapper: {
-    borderRadius: borderRadius.xl,
-  },
-  selectedCell: {
-    borderWidth: 2,
-    borderRadius: borderRadius.xl,
-  },
-  selectBadge: {
-    position: 'absolute',
-    top: spacing.sm,
-    right: spacing.sm,
-    width: 22,
-    height: 22,
-    borderRadius: 999,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
   },
   center: {
     flex: 1,

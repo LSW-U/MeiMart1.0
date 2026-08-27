@@ -22,6 +22,8 @@ export function MasonryProductCard({
   onLongPress,
   onAddToCart,
   badge,
+  selectMode = false,
+  isSelected = false,
   testID,
 }: MasonryProductCardProps) {
   const { colors } = useTheme();
@@ -39,8 +41,9 @@ export function MasonryProductCard({
         styles.card,
         {
           backgroundColor: colors['surface-container-lowest'],
-          borderColor: colors['outline-variant'],
+          borderColor: selectMode && isSelected ? colors.primary : colors['outline-variant'],
         },
+        selectMode && isSelected && styles.cardSelected,
         shadowPresets.sm,
       ]}
     >
@@ -50,12 +53,27 @@ export function MasonryProductCard({
         style={({ pressed }) => [pressed && { opacity: 0.85 }]}
         accessibilityRole="button"
         accessibilityLabel={t('product.viewItem', { name })}
+        accessibilityState={isSelected ? { selected: true } : undefined}
       >
         <View style={[styles.imageWrap, { height: imageHeight, backgroundColor: colors['surface-container'] }]}>
           <SafeImage source={{ uri: product.image }} style={styles.image} />
-          {badge && (
+          {badge && !selectMode && (
             <View style={[styles.badge, { backgroundColor: colors.primary }]}>
               <Text style={styles.badgeText}>{badge.label}</Text>
+            </View>
+          )}
+          {/* Why: P19 原型 .select-circle —— 管理态右上角选择圆圈（选中 primary 底白勾） */}
+          {selectMode && (
+            <View
+              style={[
+                styles.selectCircle,
+                {
+                  backgroundColor: isSelected ? colors.primary : colors['surface-container-lowest'],
+                  borderColor: isSelected ? colors.primary : colors['outline-variant'],
+                },
+              ]}
+            >
+              {isSelected && <Icon symbol="check" size={13} color={colors['on-primary']} />}
             </View>
           )}
         </View>
@@ -68,18 +86,23 @@ export function MasonryProductCard({
         </Pressable>
         <View style={styles.bottomRow}>
           <PriceText value={product.price} originalPrice={product.originalPrice} size="sm" />
-          <Pressable
-            onPress={onAddToCart}
-            style={({ pressed }) => [
-              styles.addBtn,
-              { backgroundColor: colors.primary },
-              pressed && { opacity: 0.85 },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t('product.addToCartLabel', { name })}
-          >
-            <Icon symbol="add" size={18} color={ON_PRIMARY} />
-          </Pressable>
+          {selectMode ? (
+            // Why: 管理态右侧位保持布局稳定（32² 与加购钮同尺寸），不可点（点按整卡走 onPress）
+            <View style={styles.selectPlaceholder} />
+          ) : (
+            <Pressable
+              onPress={onAddToCart}
+              style={({ pressed }) => [
+                styles.addBtn,
+                { backgroundColor: colors.primary },
+                pressed && { opacity: 0.85 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t('product.addToCartLabel', { name })}
+            >
+              <Icon symbol="add" size={18} color={ON_PRIMARY} />
+            </Pressable>
+          )}
         </View>
       </View>
     </View>
@@ -91,6 +114,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     overflow: 'hidden',
+  },
+  // Why: P19 原型 .selected-card —— 选中态 2px primary 边（原型 .selected-card{border-color:var(--primary)}）
+  cardSelected: {
+    borderWidth: 2,
   },
   imageWrap: {
     width: '100%',
@@ -105,6 +132,23 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   badgeText: { ...typography['label-caps'], fontSize: 10, fontWeight: '700', color: '#ffffff' },
+  // Why: P19 原型 .select-circle —— 22² 圆圈右上角，白底 90% 透明 + outline 边；选中 primary 底
+  selectCircle: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Why: 管理态占位与加购钮同尺寸（32²），保 bottomRow 布局稳定
+  selectPlaceholder: {
+    width: 32,
+    height: 32,
+  },
   info: { padding: spacing.sm, gap: spacing.xs },
   name: { ...typography['body-sm'], fontWeight: '600', minHeight: 32 },
   bottomRow: {

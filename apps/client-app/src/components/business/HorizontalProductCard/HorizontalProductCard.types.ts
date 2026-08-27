@@ -14,5 +14,11 @@ export interface HorizontalProductCardProps {
   addPending?: boolean;
   /** 禁点加购但不转 spinner（P19 审查 Q4：他卡单飞行期间禁点所有卡，spinner 只在发起卡） */
   addDisabled?: boolean;
+  /**
+   * Why: 选择态（favorites 列表态进管理）—— 右侧加购位换 22² 选择圆圈，
+   * 点按走 onPress（toggleSelect）；badge 隐藏（与 Masonry 管理态一致）
+   */
+  selectMode?: boolean;
+  isSelected?: boolean;
   testID?: string;
 }

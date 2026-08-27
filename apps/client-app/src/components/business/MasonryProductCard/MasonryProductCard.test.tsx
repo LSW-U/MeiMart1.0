@@ -42,3 +42,29 @@ describe('MasonryProductCard', () => {
     expect(onAddToCart).toHaveBeenCalled();
   });
 });
+
+describe('MasonryProductCard 管理态（favorites selectMode）', () => {
+  it('selectMode：隐藏 badge 与加购钮，显示选择圆圈；选中态 primary 边', () => {
+    const onPress = jest.fn();
+    const onAddToCart = jest.fn();
+    const { getByLabelText, queryByLabelText, getByTestId } = render(
+      <MasonryProductCard
+        product={product}
+        onPress={onPress}
+        onAddToCart={onAddToCart}
+        badge={{ label: 'NEW', variant: 'new' }}
+        selectMode
+        isSelected={false}
+        testID="masonry-select"
+      />,
+      { wrapper },
+    );
+    // badge 与加购钮让位（选择优先）
+    expect(queryByLabelText('Add Arabica Coffee to cart')).toBeNull();
+    // 点卡走 onPress（favorites 传 toggleSelect）
+    fireEvent.press(getByLabelText('View Arabica Coffee'));
+    expect(onPress).toHaveBeenCalled();
+    expect(onAddToCart).not.toHaveBeenCalled();
+    expect(getByTestId('masonry-select')).toBeTruthy();
+  });
+});
