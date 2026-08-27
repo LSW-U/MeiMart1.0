@@ -20,8 +20,14 @@ module.exports = {
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
       },
+      // pnpm 布局兼容：依赖真身在 node_modules/.pnpm/<pkg>@<ver>/node_modules/<pkg>/ 深路径。
+      // (\.pnpm/)? 可选段让放行列表同时命中「包根」（.pnpm 目录名的 @scope+name@ver 前缀）
+      // 与「第二段 node_modules 里的真包路径」——@react-native/jest-preset 的 setup.js（ESM）
+      // 与 @react-native/js-polyfills 不放行会报 "Cannot use import statement outside a module"。
+      // 注意 @react-native(-community)? 后不加 /（scope 包靠前缀匹配，不加斜杠才能命中
+      // @react-native-community 与 .pnpm 目录名里的 @react-native+jest-preset@ver 两种形态）。
       transformIgnorePatterns: [
-        'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|nativewind|react-native-svg)',
+        'node_modules/(?!(.pnpm/)?((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|nativewind|react-native-svg))',
       ],
       // queries hooks + ui/feedback/layout 组件 + app 页面测试归 web project（jsdom），rn project 跳过
       // 注意：页面测试文件在 src/test/pages/（不放 app/——expo-router 会把 .test.tsx 当路由模块
@@ -57,10 +63,12 @@ module.exports = {
       // 换成 src/test/react-native.mock.js 的最小 host 壳（组件测试只需可渲染可透传 props）
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
-        // 审查修复 P3-1：rider-app 本地 react@19.2.8 而 react-dom/@testing-library 从
-        // root 解析（react-dom@19.2.7）→ 双 React dispatcher，Toast（首个值 import
-        // useReducer/useEffect 的被测组件）报 Invalid hook call。钉到 root 副本统一。
-        '^react$': '<rootDir>/../../node_modules/react',
+        // 审查修复 P3-1：rider-app 声明 react@19.2.x，但根 workspace hoisted 后 react 会
+        // 解析到 client-app pin 的 19.2.3（rider 自己是 19.2.7）→ 与 react-dom（rider 本地
+        // 19.2.7）双 React dispatcher，Toast 报 Invalid hook call / react-dom 报
+        // "Incompatible React versions"。钉到 pnpm 虚拟布局里 react-dom 的同层 react，
+        // 保证 react 与 react-dom 精确同版本。
+        '^react$': '<rootDir>/../../node_modules/.pnpm/react-dom@19.2.7_react@19.2.7/node_modules/react',
         '^react-native$': '<rootDir>/src/test/react-native.mock.js',
         // AppIcon 经 @expo/vector-icons 拉真图标集（ESM），组件测试只需要可渲染 host
         '^@expo/vector-icons$': '<rootDir>/src/test/expo-vector-icons.mock.js',
