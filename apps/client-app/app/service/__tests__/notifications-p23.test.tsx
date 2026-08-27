@@ -86,20 +86,34 @@ beforeEach(() => {
 
 describe('NotificationsPage（P23：分组 + 富内容 + 空态 + 直达）', () => {
   it('时间分组：今天/昨天分组头渲染（含未读计数）；更早组经 dayGroupOf 边界单测覆盖', () => {
-    const { getByText } = render(<NotificationsPage />, { wrapper });
-    // Why: earlier 组（第 3 屏外）在 RNTL 无布局环境下不渲染（真机滚动可见），
-    //      其归组正确性由下方 dayGroupOf 纯函数单测覆盖
-    expect(getByText('service.notifications.timeToday')).toBeTruthy();
-    expect(getByText('service.notifications.timeYesterday')).toBeTruthy();
-    // 今天组 1 未读
-    expect(getByText('service.notifications.unreadCount:1')).toBeTruthy();
+    // D2 修复：本地 00:00-06:00 跑测试时「30h 前」落在前天 → yesterday 分组头不渲染。
+    // 钉「现在」到固定本地中午（实现走 new Date()/Date.now() 均被 fake timers 接管），
+    // 避开日期边界；其余用例不受影响（不依赖具体时刻）。
+    jest.useFakeTimers({ now: new Date(2026, 7, 26, 12, 0, 0) });
+    try {
+      const { getByText } = render(<NotificationsPage />, { wrapper });
+      // Why: earlier 组（第 3 屏外）在 RNTL 无布局环境下不渲染（真机滚动可见），
+      //      其归组正确性由下方 dayGroupOf 纯函数单测覆盖
+      expect(getByText('service.notifications.timeToday')).toBeTruthy();
+      expect(getByText('service.notifications.timeYesterday')).toBeTruthy();
+      // 今天组 1 未读
+      expect(getByText('service.notifications.unreadCount:1')).toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('dayGroupOf 分组边界：2h 前今天 / 30h 前昨天 / 7d 前更早', () => {
-    expect(dayGroupOf(hoursAgo(2))).toBe('today');
-    expect(dayGroupOf(hoursAgo(30))).toBe('yesterday');
-    expect(dayGroupOf(hoursAgo(24 * 7))).toBe('earlier');
-    expect(dayGroupOf('not-a-date')).toBe('earlier');
+    // D2 修复：同上，钉「现在」到固定本地中午，30h 前稳定落在昨天
+    jest.useFakeTimers({ now: new Date(2026, 7, 26, 12, 0, 0) });
+    try {
+      expect(dayGroupOf(hoursAgo(2))).toBe('today');
+      expect(dayGroupOf(hoursAgo(30))).toBe('yesterday');
+      expect(dayGroupOf(hoursAgo(24 * 7))).toBe('earlier');
+      expect(dayGroupOf('not-a-date')).toBe('earlier');
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('D3 回归：全部已读按钮走 markAll 单次 mutate（非逐条循环）', () => {
