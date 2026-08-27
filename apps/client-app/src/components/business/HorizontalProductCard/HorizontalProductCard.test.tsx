@@ -83,4 +83,20 @@ describe('HorizontalProductCard 管理态（favorites selectMode）', () => {
     expect(onPress).toHaveBeenCalled();
     expect(onAddToCart).not.toHaveBeenCalled();
   });
+
+  it('selectMode 整卡可点：点击文字区（非图片/加购钮）也触发 onPress', () => {
+    // Why: 管理态整卡单 Pressable（修复「点按困难」——信息区空白处此前不可点）
+    const onPress = jest.fn();
+    const { getByText } = render(
+      <HorizontalProductCard
+        product={product}
+        onPress={onPress}
+        onAddToCart={() => {}}
+        selectMode
+      />,
+      { wrapper },
+    );
+    fireEvent.press(getByText('Arabica Coffee'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
 });

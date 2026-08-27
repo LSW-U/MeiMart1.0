@@ -30,30 +30,26 @@ export function HorizontalProductCard({
   const localize = useLocalizer();
   const name = localize(product.name);
 
-  return (
-    <View
-      testID={testID}
-      style={[
-        styles.card,
-        {
-          backgroundColor: colors['surface-container-lowest'],
-          borderColor: selectMode && isSelected ? colors.primary : colors['outline-variant'],
-        },
-        selectMode && isSelected && styles.cardSelected,
-        shadowPresets.sm,
-      ]}
-    >
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [pressed && { opacity: 0.85 }]}
-        accessibilityRole="button"
-        accessibilityLabel={t('product.viewItem', { name })}
-        accessibilityState={isSelected ? { selected: true } : undefined}
-      >
+  // Why: 管理态整卡单 Pressable（图片+信息+圆圈全可点，无嵌套：内层 image/name 均降级 View）；
+  //      常态保持分区可点（image/name 各自 Pressable 跳详情，add 独立——P0 模式）
+  const cardContent = (
+    <>
+      {selectMode ? (
         <View style={styles.imageWrap}>
           <SafeImage source={{ uri: product.image }} style={styles.image} />
         </View>
-      </Pressable>
+      ) : (
+        <Pressable
+          onPress={onPress}
+          style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('product.viewItem', { name })}
+        >
+          <View style={styles.imageWrap}>
+            <SafeImage source={{ uri: product.image }} style={styles.image} />
+          </View>
+        </Pressable>
+      )}
       <View style={styles.info}>
         {/* Why: badge inline 渲染（§9-5 统一为 resolveBadges 派生），primary tint 背景；
             管理态隐藏（选择优先，与 Masonry 管理态一致） */}
@@ -62,11 +58,19 @@ export function HorizontalProductCard({
             <Text style={[styles.badgeText, { color: colors.primary }]}>{badge.label}</Text>
           </View>
         )}
-        <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
-          <Text style={[styles.name, { color: colors['on-surface'] }]} numberOfLines={2}>
-            {name}
-          </Text>
-        </Pressable>
+        {selectMode ? (
+          <View>
+            <Text style={[styles.name, { color: colors['on-surface'] }]} numberOfLines={2}>
+              {name}
+            </Text>
+          </View>
+        ) : (
+          <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+            <Text style={[styles.name, { color: colors['on-surface'] }]} numberOfLines={2}>
+              {name}
+            </Text>
+          </Pressable>
+        )}
         {showRating && typeof product.rating === 'number' && (
           <View style={styles.ratingRow}>
             <Icon symbol="star" size={14} color={colors.tertiary} />
@@ -83,8 +87,8 @@ export function HorizontalProductCard({
         <PriceText value={product.price} originalPrice={product.originalPrice} size="md" />
       </View>
       {selectMode ? (
-        // Why: 管理态加购位换选择圆圈（P19 原型 .select-circle；点按整卡走 onPress toggleSelect，
-        //      圆圈是状态展示非按钮，避免嵌套 Pressable）
+        // Why: 管理态加购位换选择圆圈（P19 原型 .select-circle）——纯状态展示，
+        //      点击由整卡 Pressable 接管（toggleSelect）
         <View
           style={[
             styles.selectCircle,
@@ -120,6 +124,46 @@ export function HorizontalProductCard({
           )}
         </Pressable>
       )}
+    </>
+  );
+
+  if (selectMode) {
+    return (
+      <Pressable
+        testID={testID}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.card,
+          {
+            backgroundColor: colors['surface-container-lowest'],
+            borderColor: isSelected ? colors.primary : colors['outline-variant'],
+          },
+          isSelected && styles.cardSelected,
+          shadowPresets.sm,
+          pressed && { opacity: 0.85 },
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={t('product.viewItem', { name })}
+        accessibilityState={isSelected ? { selected: true } : undefined}
+      >
+        {cardContent}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View
+      testID={testID}
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors['surface-container-lowest'],
+          borderColor: colors['outline-variant'],
+        },
+        shadowPresets.sm,
+      ]}
+    >
+      {cardContent}
     </View>
   );
 }

@@ -34,56 +34,64 @@ export function MasonryProductCard({
   const heightIdx = product.id.charCodeAt(0) % HEIGHT_VARIANTS.length;
   const imageHeight = HEIGHT_VARIANTS[heightIdx];
 
-  return (
-    <View
-      testID={testID}
-      style={[
-        styles.card,
-        {
-          backgroundColor: colors['surface-container-lowest'],
-          borderColor: selectMode && isSelected ? colors.primary : colors['outline-variant'],
-        },
-        selectMode && isSelected && styles.cardSelected,
-        shadowPresets.sm,
-      ]}
-    >
-      <Pressable
-        onPress={onPress}
-        onLongPress={onLongPress}
-        style={({ pressed }) => [pressed && { opacity: 0.85 }]}
-        accessibilityRole="button"
-        accessibilityLabel={t('product.viewItem', { name })}
-        accessibilityState={isSelected ? { selected: true } : undefined}
-      >
-        <View style={[styles.imageWrap, { height: imageHeight, backgroundColor: colors['surface-container'] }]}>
-          <SafeImage source={{ uri: product.image }} style={styles.image} />
-          {badge && !selectMode && (
-            <View style={[styles.badge, { backgroundColor: colors.primary }]}>
-              <Text style={styles.badgeText}>{badge.label}</Text>
-            </View>
-          )}
-          {/* Why: P19 原型 .select-circle —— 管理态右上角选择圆圈（选中 primary 底白勾） */}
-          {selectMode && (
-            <View
-              style={[
-                styles.selectCircle,
-                {
-                  backgroundColor: isSelected ? colors.primary : colors['surface-container-lowest'],
-                  borderColor: isSelected ? colors.primary : colors['outline-variant'],
-                },
-              ]}
-            >
-              {isSelected && <Icon symbol="check" size={13} color={colors['on-primary']} />}
-            </View>
-          )}
+  // Why: 管理态整卡单 Pressable（图+信息区全可点，内层降级 View 无嵌套）；
+  //      常态保持分区可点（图/名各自跳详情，add 独立——P0 模式）
+  const renderImage = () => (
+    <View style={[styles.imageWrap, { height: imageHeight, backgroundColor: colors['surface-container'] }]}>
+      <SafeImage source={{ uri: product.image }} style={styles.image} />
+      {badge && !selectMode && (
+        <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+          <Text style={styles.badgeText}>{badge.label}</Text>
         </View>
-      </Pressable>
-      <View style={styles.info}>
-        <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
-          <Text style={[styles.name, { color: colors['on-surface'] }]} numberOfLines={2}>
-            {name}
-          </Text>
+      )}
+      {/* Why: P19 原型 .select-circle —— 管理态右上角选择圆圈（选中 primary 底白勾）；
+          纯状态展示，点击由外层整卡 Pressable 接管 */}
+      {selectMode && (
+        <View
+          style={[
+            styles.selectCircle,
+            {
+              backgroundColor: isSelected ? colors.primary : colors['surface-container-lowest'],
+              borderColor: isSelected ? colors.primary : colors['outline-variant'],
+            },
+          ]}
+        >
+          {isSelected && <Icon symbol="check" size={13} color={colors['on-primary']} />}
+        </View>
+      )}
+    </View>
+  );
+
+  const cardContent = (
+    <>
+      {selectMode ? (
+        renderImage()
+      ) : (
+        <Pressable
+          onPress={onPress}
+          onLongPress={onLongPress}
+          style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('product.viewItem', { name })}
+          accessibilityState={isSelected ? { selected: true } : undefined}
+        >
+          {renderImage()}
         </Pressable>
+      )}
+      <View style={styles.info}>
+        {selectMode ? (
+          <View>
+            <Text style={[styles.name, { color: colors['on-surface'] }]} numberOfLines={2}>
+              {name}
+            </Text>
+          </View>
+        ) : (
+          <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+            <Text style={[styles.name, { color: colors['on-surface'] }]} numberOfLines={2}>
+              {name}
+            </Text>
+          </Pressable>
+        )}
         <View style={styles.bottomRow}>
           <PriceText value={product.price} originalPrice={product.originalPrice} size="sm" />
           {selectMode ? (
@@ -105,6 +113,47 @@ export function MasonryProductCard({
           )}
         </View>
       </View>
+    </>
+  );
+
+  if (selectMode) {
+    return (
+      <Pressable
+        testID={testID}
+        onPress={onPress}
+        onLongPress={onLongPress}
+        style={({ pressed }) => [
+          styles.card,
+          {
+            backgroundColor: colors['surface-container-lowest'],
+            borderColor: isSelected ? colors.primary : colors['outline-variant'],
+          },
+          isSelected && styles.cardSelected,
+          shadowPresets.sm,
+          pressed && { opacity: 0.85 },
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={t('product.viewItem', { name })}
+        accessibilityState={isSelected ? { selected: true } : undefined}
+      >
+        {cardContent}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View
+      testID={testID}
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors['surface-container-lowest'],
+          borderColor: colors['outline-variant'],
+        },
+        shadowPresets.sm,
+      ]}
+    >
+      {cardContent}
     </View>
   );
 }

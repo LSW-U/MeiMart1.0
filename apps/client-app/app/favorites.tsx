@@ -210,9 +210,9 @@ export default function FavoritesPage() {
       <PrimaryHeader
         title={
           selectMode
-            ? t('favorites.selectedTitle', {
-                defaultValue: `Selected ${selected.size}`,
-              })
+            ? // Why: locales 已有 selectedTitle: "Selected {{count}}"，必须传 count 插值；
+              //      只传 defaultValue 会被忽略（key 存在时 defaultValue 不生效）→ 显示原始 {{count}}
+              t('favorites.selectedTitle', { count: selected.size })
             : t('favorites.title')
         }
         showBack
