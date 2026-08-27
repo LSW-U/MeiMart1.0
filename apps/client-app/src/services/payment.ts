@@ -7,6 +7,8 @@ import type { PaymentMethod } from '@/types';
 // getMethods 暂保留 mock（后端无"列出支付方式"端点，方法集是写死的 5 种 COD/BANK/WECHAT/PAYPAL/STRIPE）。
 export const paymentApi = {
   async getMethods(): Promise<PaymentMethod[]> {
+    // #003（批次2 拍板）：这不是 mock 泄漏，是固定 5 种支付方式的静态列表——保留现状，
+    // TODO: 后端补 GET /client/payments/methods 端点后替换为真实请求
     if (isMockMode) return mockResponse(mockDb.payments);
     // Why: 后端无 /payments/methods 端点，real 模式同样用 mock 数据（支付方式是前端固定 5 种）
     return mockResponse(mockDb.payments);
@@ -36,7 +38,9 @@ export const paymentApi = {
   },
 
   // Why: dev/staging 跳过真实支付流程的便利端点（仅 WECHAT/PAYPAL/STRIPE 可调，prod 后端拒绝）
+  // #004 守卫（批次2）：后端有 prod 拒绝兜底，但前端也拦——避免 prod 构建里发出注定失败的请求
   async mockPay(orderId: string): Promise<{ orderId: string; intentId: string }> {
+    if (!__DEV__) throw new Error('mockPay is dev-only');
     if (isMockMode) {
       return mockResponse({ orderId, intentId: `pi-mock-${Date.now()}` });
     }
@@ -60,7 +64,9 @@ export const paymentApi = {
   // Why: COD 订单确认（货到付款无需预付，商家接单即确认）。
   // 后端 POST /admin/orders/{id}/confirm 需 admin token，客户端无 admin 权限，
   // 开发环境用 mock-login 获取 admin token 调用。prod 应由 admin web 确认。
+  // #001 守卫（批次2）：mock-login 是 dev-only 端点，prod 调它要么 404 要么泄露调用意图
   async adminConfirmOrder(orderId: string): Promise<void> {
+    if (!__DEV__) throw new Error('adminConfirmOrder is dev-only');
     if (isMockMode) return;
     const baseURL = api.defaults.baseURL ?? '';
     // Why: 独立 axios 请求避免 client api 拦截器注入 customer token
