@@ -22,9 +22,8 @@ jobs:
           cache: pnpm
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      # ⚠️ pnpm 11 workspace 模式不读根 .npmrc 的 node-linker（本地同款坑，见 README），
-      #    必须 CLI flag 显式传，否则 isolated 布局下 Expo/RN 解析链断
-      - run: pnpm install --frozen-lockfile --config.node-linker=hoisted
+      # nodeLinker: hoisted 已迁入根 pnpm-workspace.yaml（批次2 G），无需 CLI flag
+      - run: pnpm install --frozen-lockfile
       # 两个 app 的包名不是目录名（client=mei-mart-app / rider=mei-delivery-app），
       # matrix 用目录名便于阅读；-F 必须用包名——按目录名匹配不到时 pnpm 打印
       # "No projects matched" 但 exit 0（假绿），映射步骤必须放在所有 -F 步骤之前
@@ -63,5 +62,5 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - run: pnpm install --frozen-lockfile --config.node-linker=hoisted
+      - run: pnpm install --frozen-lockfile
       - run: pnpm -w exec commitlint --from HEAD~1 --to HEAD

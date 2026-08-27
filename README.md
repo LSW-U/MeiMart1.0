@@ -19,10 +19,11 @@ MeiMart（东帝汶超市电商）前端仓库：**两个独立 App**，各自�
 ```bash
 git clone <本仓库>
 cd mei-mart-app
-pnpm install --config.node-linker=hoisted
+pnpm install
 ```
 
-> ⚠️ **必须带 `--config.node-linker=hoisted`**：pnpm 11 在 workspace 模式下**不读根 `.npmrc`** 的 `node-linker` 配置（已知坑，见 git log `686e582`）。不带此 flag 会装成 isolated 布局，hoisted 解析链断——client tsc 会报 `expo-constants` 等 5 处 TS2307。CI 里同款命令见 `.github/workflows/ci.yml`。
+> `nodeLinker: hoisted` 已配置在根 `pnpm-workspace.yaml`（pnpm 10+ 的标准位置），普通 `pnpm install` 即可。
+> 历史坑（已解决）：pnpm 11 workspace 模式不读根 `.npmrc` 的 `node-linker`（见 git log `686e582`），曾需 `--config.node-linker=hoisted` CLI flag；批次2 G 迁到 workspace.yaml 后 flag 已全部撤销、`.npmrc` 已删除。
 
 ## 常用命令
 
@@ -30,7 +31,7 @@ pnpm install --config.node-linker=hoisted
 
 ```bash
 # 安装 / 同步依赖
-pnpm install --config.node-linker=hoisted
+pnpm install
 
 # 类型检查
 pnpm -F mei-mart-app typecheck        # client
@@ -88,7 +89,6 @@ mei-mart-app/
 │   └── rider-app/         # 骑手端
 ├── scripts/
 │   └── sync-api.sh        # 后端契约同步
-├── pnpm-workspace.yaml    # 根 workspace（packages: apps/*）
-├── .npmrc                 # node-linker=hoisted（Expo/RN 需要；install 时仍需显式 flag）
+├── pnpm-workspace.yaml    # 根 workspace（packages: apps/* + nodeLinker: hoisted）
 └── package.json           # overrides + engines
 ```

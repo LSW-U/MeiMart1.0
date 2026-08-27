@@ -1,5 +1,9 @@
 packages:
   - 'apps/*'
+# C3 配套（批次2 G）：pnpm 10+ 支持 camelCase nodeLinker 键（workspace 模式下
+# 唯一生效位置——.npmrc 的 node-linker 在 workspace 模式不被读取，CLI flag
+# 又要求所有命令记忆负担）。hoisted 是 Expo/RN 的硬需求。
+nodeLinker: hoisted
 allowBuilds:
   '@sentry/cli': false
   unrs-resolver: false
