@@ -494,7 +494,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: layout['container-margin'],
-    paddingVertical: spacing.xs,
+    // Why: 距 PrimaryHeader 太近（用户反馈），xs(4) → 10（spacing.sm+2，listStack gap 同款先例）
+    paddingVertical: spacing.sm + 2,
   },
   toolsCount: {
     flexDirection: 'row',
