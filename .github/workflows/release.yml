@@ -48,11 +48,15 @@ jobs:
         env:
           # Sentry sourcemap 上传（@sentry/react-native 插件构建期读取）。
           # TODO-[需用户]：三个值在 Sentry 后台 Settings → Auth Tokens / 组织 / 项目页取，
-          # 配到 GitHub Secrets 后自动生效；缺省时插件跳过上传不阻塞构建。
+          # 配到 GitHub Secrets 后自动生效。当前 eas.json 已设 SENTRY_DISABLE_AUTO_UPLOAD=true
+          # 先跳过上传（否则缺 org 时 sentry.gradle 在 RUN_GRADLEW 阶段退出 1 构建失败，
+          # build 88c29ec2 实证）；secrets 配好后把 eas.json 该键改 "false" 或移除。
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        run: eas build --platform all --profile ${{ inputs.profile }} --non-interactive
+        # MVP 先只发安卓（2026-08-29 拍板）：iOS preview 需 ad-hoc 凭据，EAS 服务端
+        # 没有（首次生成交互式要 Apple 账号）。Apple Developer 账号就绪后恢复 --platform all。
+        run: eas build --platform android --profile ${{ inputs.profile }} --non-interactive
 
       # ── 提交商店（仅 production）────────────────────────────────────
       # secrets 未配时打印提示并跳过（build 已成功，submit 是独立可选步骤，不报错红）
