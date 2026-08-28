@@ -1,3 +1,4 @@
 #!/usr/bin/env sh
 # H（批次2）：commit-msg hook 上移仓库根，配合同步上移的根 commitlint.config.js
-npx --no -- commitlint --edit "$1"
+# P3-1（审查复核）：npx 改 pnpm exec（同 pre-commit，去远端查找）
+pnpm exec commitlint --edit "$1"

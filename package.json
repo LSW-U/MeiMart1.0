@@ -4,6 +4,13 @@
   "engines": {
     "node": ">=22 <23"
   },
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7"
+  },
   "overrides": {
     "@tanstack/query-core": "5.101.1",
     "@tanstack/query-async-storage-persister": {
