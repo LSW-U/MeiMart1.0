@@ -62,7 +62,7 @@ jobs:
         run: |
           missing=()
           [ -z "$ANDROID_KEY" ] && missing+=('ANDROID_SERVICE_ACCOUNT_KEY')
-          [ -z "$ASC_KEY" ] && missing+=('APP_STORE_API_KEY(+_ID/ISSUER_ID)')
+          [ -z "$APP_STORE_API_KEY" ] && missing+=('APP_STORE_API_KEY(+_ID/ISSUER_ID)')
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::warning::商店提交 secrets 未配（${missing[*]}），跳过 eas submit。构建产物在 EAS 后台手动提交。"
             exit 0
@@ -75,5 +75,7 @@ jobs:
           eas submit --platform ios --profile production --non-interactive --latest
         env:
           ANDROID_KEY: ${{ secrets.ANDROID_SERVICE_ACCOUNT_KEY }}
-          ASC_KEY: ${{ secrets.APP_STORE_API_KEY }}
+          APP_STORE_API_KEY: ${{ secrets.APP_STORE_API_KEY }}
+          APP_STORE_API_KEY_ID: ${{ secrets.APP_STORE_API_KEY_ID }}
+          APP_STORE_ISSUER_ID: ${{ secrets.APP_STORE_ISSUER_ID }}
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
