@@ -53,8 +53,9 @@
       "API_BASE_URL": "",
       "USE_MOCK": "false",
       "SENTRY_DSN": "",
+      "router": {},
       "eas": {
-        "projectId": "TODO-[需用户]"
+        "projectId": "3742f83e-6809-4fd4-b51b-0c425ececf97"
       }
     },
     "plugins": [
@@ -68,7 +69,7 @@
       [
         "expo-updates",
         {
-          "username": "TODO-[需用户]"
+          "username": "suweilin"
         }
       ],
       "@sentry/react-native",
@@ -80,16 +81,16 @@
       ]
     ],
     "updates": {
-      "url": "TODO-[需用户]"
+      "url": "https://u.expo.dev/3742f83e-6809-4fd4-b51b-0c425ececf97"
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "owner": "TODO-[需用户]",
+    "owner": "suweilin",
     "privacy": "unlisted",
     "description": "MeiMart - Timor-Leste 本地电商应用",
     "githubUrl": "TODO-[需用户]",
     "primaryColor": "#961813"
   },
-  "_comment": "占位符说明（M0-1.6）：所有 TODO-[需用户] 的值都等用户开通 EAS 账号 / App Store / Google Play 后提供，禁止编造假值。涉及字段：extra.eas.projectId、owner、updates.url、plugins[expo-updates].username、ios.appStoreUrl、githubUrl。extra.APP_ENV/USE_MOCK/SENTRY_DSN 会在构建时被 app.config.ts 用 EXPO_PUBLIC_* 环境变量覆盖。extra.API_BASE_URL 故意留空（审查 P1-2）：构建期由 eas.json env 的 EXPO_PUBLIC_API_BASE_URL 注入，漏配时落到空串（api.ts 走显式兜底）而非静默打 localhost。"
+  "_comment": "EAS 已配置（2026-08-28）：extra.eas.projectId / owner / updates.url / plugins[expo-updates].username 已填真实值（suweilin 账号）。剩余占位：ios.appStoreUrl、githubUrl（上架/仓库信息，等用户提供）。extra.APP_ENV/USE_MOCK/SENTRY_DSN 会在构建时被 app.config.ts 用 EXPO_PUBLIC_* 环境变量覆盖。extra.API_BASE_URL 故意留空（审查 P1-2）：构建期由 eas.json env 的 EXPO_PUBLIC_API_BASE_URL 注入，漏配时落到空串（api.ts 走显式兜底）而非静默打 localhost。"
 }
