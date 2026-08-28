@@ -1,0 +1,79 @@
+name: Release
+
+# M3（批次3）：EAS 构建/提交。手动触发（选 app + profile）。
+# 不自动触发（无 tag push 联动）——构建花 EAS 额度，保持纯手动。
+# 前置 secrets（见 README「发布流程」）：
+#   EXPO_TOKEN            —— EAS 访问令牌（必需，没有它 expo-github-action 直接失败）
+#   ANDROID_SERVICE_ACCOUNT_KEY —— Google Play service account JSON（production submit 用，可选）
+#   APP_STORE_API_KEY     —— App Store Connect API key .p8 内容（production submit 用，可选）
+#   APP_STORE_API_KEY_ID / APP_STORE_ISSUER_ID —— ASC key 三件套另两件（可选）
+#   SENTRY_AUTH_TOKEN / SENTRY_ORG / SENTRY_PROJECT —— sourcemap 上传（可选）
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: '构建哪个 app'
+        type: choice
+        options: [client-app, rider-app]
+        required: true
+        default: client-app
+      profile:
+        description: 'EAS build profile'
+        type: choice
+        options: [preview, production]
+        required: true
+        default: preview
+
+jobs:
+  eas-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # ── 构建（preview / production 都跑）────────────────────────────
+      - name: EAS Build
+        working-directory: apps/${{ inputs.app }}
+        env:
+          # Sentry sourcemap 上传（@sentry/react-native 插件构建期读取）。
+          # TODO-[需用户]：三个值在 Sentry 后台 Settings → Auth Tokens / 组织 / 项目页取，
+          # 配到 GitHub Secrets 后自动生效；缺省时插件跳过上传不阻塞构建。
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: eas build --platform all --profile ${{ inputs.profile }} --non-interactive
+
+      # ── 提交商店（仅 production）────────────────────────────────────
+      # secrets 未配时打印提示并跳过（build 已成功，submit 是独立可选步骤，不报错红）
+      - name: Submit to stores (production only)
+        if: inputs.profile == 'production'
+        working-directory: apps/${{ inputs.app }}
+        run: |
+          missing=()
+          [ -z "$ANDROID_KEY" ] && missing+=('ANDROID_SERVICE_ACCOUNT_KEY')
+          [ -z "$ASC_KEY" ] && missing+=('APP_STORE_API_KEY(+_ID/ISSUER_ID)')
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::warning::商店提交 secrets 未配（${missing[*]}），跳过 eas submit。构建产物在 EAS 后台手动提交。"
+            exit 0
+          fi
+          # Android：service account JSON 从 secret 写入 eas.json 指定的路径
+          mkdir -p credentials
+          printf '%s' "$ANDROID_KEY" > credentials/google-service-account.json
+          # iOS：ASC API key 三件套（expo-github-action 已内置支持）
+          eas submit --platform android --profile production --non-interactive --latest
+          eas submit --platform ios --profile production --non-interactive --latest
+        env:
+          ANDROID_KEY: ${{ secrets.ANDROID_SERVICE_ACCOUNT_KEY }}
+          ASC_KEY: ${{ secrets.APP_STORE_API_KEY }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
