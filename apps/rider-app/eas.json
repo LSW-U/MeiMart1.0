@@ -6,6 +6,7 @@
       "distribution": "internal",
       "env": {
         "APP_ENV": "development",
+        "EXPO_PUBLIC_APP_ENV": "development",
         "EXPO_PUBLIC_API_BASE_URL": "http://localhost:3000/api/v1",
         "EXPO_PUBLIC_USE_MOCK": "false"
       }
@@ -14,6 +15,7 @@
       "distribution": "internal",
       "env": {
         "APP_ENV": "staging",
+        "EXPO_PUBLIC_APP_ENV": "staging",
         "EXPO_PUBLIC_API_BASE_URL": "https://staging-api.meimart.com/api/v1",
         "EXPO_PUBLIC_USE_MOCK": "false"
       },
@@ -22,8 +24,10 @@
     "production": {
       "env": {
         "APP_ENV": "production",
-        "EXPO_PUBLIC_API_BASE_URL": "TODO-[需用户]",
-        "EXPO_PUBLIC_USE_MOCK": "false"
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.meimart.com/api/v1",
+        "EXPO_PUBLIC_USE_MOCK": "false",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://e2d7364dbecf6ff9899f3bcb495e1979@o4511989875736576.ingest.us.sentry.io/4511989917286400"
       },
       "autoIncrement": true
     }

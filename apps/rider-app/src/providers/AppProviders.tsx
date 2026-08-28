@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { initSentry } from '@/src/services/sentry';
+
+initSentry();
 
 const baseQueryClient = new QueryClient({
   defaultOptions: {
