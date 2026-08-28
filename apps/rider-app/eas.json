@@ -38,6 +38,5 @@
       },
       "autoIncrement": true
     }
-  },
-  "_comment": "SENTRY_DISABLE_AUTO_UPLOAD=true（2026-08-29）：Sentry sourcemap 组织/令牌（SENTRY_AUTH_TOKEN/ORG/PROJECT）未配前先跳过上传，否则 sentry.gradle 在 RUN_GRADLEW 阶段缺 org 直接退出 1 导致构建失败（build 88c29ec2 实证）。GitHub Secrets 配好后移除此键或改 \"false\"。"
+  }
 }
