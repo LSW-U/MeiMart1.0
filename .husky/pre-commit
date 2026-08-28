@@ -4,5 +4,8 @@
 # P3-1（审查复核）：npx 改 pnpm exec——去掉远端查找的脆弱性（本地未装时 npx
 # 会去 npm 查最新版，新 clone 首 commit 数秒延迟 + 网络依赖）。
 pnpm -F mei-mart-app run check:i18n
-# lint-staged 全仓跑（配置在 apps/client-app/package.json 的 lint-staged 段）
-pnpm exec lint-staged
+# lint-staged 按 app 分治（H 修复补）：eslint config 在各 app 目录，根目录没有——
+# 根级跑 eslint 会报 couldn't find eslint.config。按 staged 文件所属 app 分别跑，
+# 各 app 自己的 lint-staged 配置（client-app/package.json）+ eslint config 生效。
+pnpm exec lint-staged --cwd apps/client-app
+pnpm exec lint-staged --cwd apps/rider-app
