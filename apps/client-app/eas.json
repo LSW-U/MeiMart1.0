@@ -37,7 +37,7 @@
       "env": {
         "APP_ENV": "production",
         "EXPO_PUBLIC_APP_ENV": "production",
-        "EXPO_PUBLIC_API_BASE_URL": "https://api.meimart.com/api/v1",
+        "EXPO_PUBLIC_API_BASE_URL": "TODO-[需用户-真实后端域名]",
         "EXPO_PUBLIC_USE_MOCK": "false",
         "EXPO_PUBLIC_SENTRY_DSN": "https://7bb74ef460592f784dd93959160cb5b4@o4511989875736576.ingest.us.sentry.io/4511989895331840",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true"
