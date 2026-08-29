@@ -33,6 +33,19 @@
         "buildType": "apk"
       }
     },
+    "local": {
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_APP_ENV": "staging",
+        "EXPO_PUBLIC_API_BASE_URL": "http://10.0.2.2:3000/api/v1",
+        "EXPO_PUBLIC_USE_MOCK": "false",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "production": {
       "env": {
         "APP_ENV": "production",
