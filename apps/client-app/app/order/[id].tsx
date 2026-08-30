@@ -23,7 +23,16 @@ import { useTranslation } from 'react-i18next';
 import { formatDate, formatEta } from '@/utils/format';
 import { buildTimelineSteps, type TimelineStepData } from '@/utils/timeline';
 import { RiderCard, getRiderStatusTag } from '@/components/business/RiderCard';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, statusBannerPalettes, type StatusBannerPaletteKey } from '@/theme';
+import {
+  useTheme,
+  spacing,
+  layout,
+  typography,
+  borderRadius,
+  shadowPresets,
+  statusBannerPalettes,
+  type StatusBannerPaletteKey,
+} from '@/theme';
 import { useLocalizer } from '@/i18n';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -255,7 +264,10 @@ export default function OrderDetailPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.umaLulik,
           ]}
         >
@@ -296,7 +308,10 @@ export default function OrderDetailPage() {
                 {formatDate(order.createdAt, i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
               </Text>
             </View>
-            <StatusBadge text={t(visual.badgeTextKey).toUpperCase()} backgroundColor={statusTheme.badgeBg} />
+            <StatusBadge
+              text={t(visual.badgeTextKey).toUpperCase()}
+              backgroundColor={statusTheme.badgeBg}
+            />
           </View>
 
           {/* Delivery banner（HTML 第 168-174 行：状态色边浅底 + icon + 标签 + 描述） */}
@@ -326,7 +341,10 @@ export default function OrderDetailPage() {
           <View
             style={[
               styles.card,
-              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderColor: colors['outline-variant'],
+              },
               shadowPresets.umaLulik,
             ]}
           >
@@ -395,7 +413,10 @@ export default function OrderDetailPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.umaLulik,
           ]}
         >
@@ -433,23 +454,32 @@ export default function OrderDetailPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.umaLulik,
           ]}
         >
           {/* Payment Method */}
           <View style={styles.paymentSection}>
             <Text style={[styles.labelCaps, { color: colors['on-surface-variant'] }]}>
-              {t('checkout.payment', { defaultValue: 'PAYMENT METHOD' }).toUpperCase()}
+              {/* Why: checkout.payment 在 locales 里是对象（支付方式 id→文案映射），当字符串用会抛
+                  "RETURNED AN OBJECT INSTEAD OF STRING"；改用既有字符串 key order.paymentMethodLabel */}
+              {t('order.paymentMethodLabel', { defaultValue: 'PAYMENT METHOD' }).toUpperCase()}
             </Text>
             <View style={styles.paymentRow}>
               <View style={[styles.laisPayBadge, { backgroundColor: colors.primary }]}>
                 <Text style={styles.laisPayText}>
-                  {t(`order.paymentMethodShort.${(order.paymentMethod ?? 'cod').toLowerCase()}`, { defaultValue: order.paymentMethod ?? '-' })}
+                  {t(`order.paymentMethodShort.${(order.paymentMethod ?? 'cod').toLowerCase()}`, {
+                    defaultValue: order.paymentMethod ?? '-',
+                  })}
                 </Text>
               </View>
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
-                {t(`order.paymentMethod.${(order.paymentMethod ?? 'cod').toLowerCase()}`, { defaultValue: order.paymentMethod ?? '-' })}
+                {t(`order.paymentMethod.${(order.paymentMethod ?? 'cod').toLowerCase()}`, {
+                  defaultValue: order.paymentMethod ?? '-',
+                })}
               </Text>
             </View>
           </View>
@@ -566,7 +596,10 @@ function OrderItemRow({
         pressed && { transform: [{ scale: 0.98 }] },
       ]}
       accessibilityRole="button"
-      accessibilityLabel={t('order.viewProductA11y', { name: localize(item.product.name), defaultValue: 'View product: {{name}}' })}
+      accessibilityLabel={t('order.viewProductA11y', {
+        name: localize(item.product.name),
+        defaultValue: 'View product: {{name}}',
+      })}
     >
       <View style={[styles.itemImageWrap, { backgroundColor: colors['surface-variant'] }]}>
         <SafeImage source={{ uri: item.product.image }} style={styles.itemImage} />
@@ -802,7 +835,8 @@ function BottomActions({
         <>
           {outline(
             t('order.actions.afterSales', { defaultValue: 'After-Sales' }),
-            () => router.push({ pathname: '/order/after-sales-apply', params: { orderId: order.id } }),
+            () =>
+              router.push({ pathname: '/order/after-sales-apply', params: { orderId: order.id } }),
             'order-aftersales',
           )}
           {solid(
