@@ -22,8 +22,7 @@
         "NSLocationWhenInUseUsageDescription": "MeiMart 需要访问位置以推荐附近商品和地址自动填充。",
         "NSContactsUsageDescription": "MeiMart 可读取联系人以快速填充收货地址。",
         "ITSAppUsesNonExemptEncryption": false
-      },
-      "appStoreUrl": "TODO-[需用户]"
+      }
     },
     "android": {
       "package": "com.meimart.app",
@@ -89,7 +88,7 @@
     "owner": "suweilin",
     "privacy": "unlisted",
     "description": "MeiMart - Timor-Leste 本地电商应用",
-    "githubUrl": "TODO-[需用户]",
+    "githubUrl": "https://github.com/LSW-U/MeiMart1.0",
     "primaryColor": "#961813"
   },
   "_comment": "EAS 已配置（2026-08-28）：extra.eas.projectId / owner / updates.url / plugins[expo-updates].username 已填真实值（suweilin 账号）。剩余占位：ios.appStoreUrl、githubUrl（上架/仓库信息，等用户提供）。extra.APP_ENV/USE_MOCK/SENTRY_DSN 会在构建时被 app.config.ts 用 EXPO_PUBLIC_* 环境变量覆盖。extra.API_BASE_URL 故意留空（审查 P1-2）：构建期由 eas.json env 的 EXPO_PUBLIC_API_BASE_URL 注入，漏配时落到空串（api.ts 走显式兜底）而非静默打 localhost。"
