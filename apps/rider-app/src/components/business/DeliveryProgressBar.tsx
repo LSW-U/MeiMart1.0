@@ -37,21 +37,30 @@ export function DeliveryProgressBar({ step, labels, success = false }: DeliveryP
             ) : null}
             <View className="items-center gap-1">
               <View
-                className={'h-7 w-7 items-center justify-center rounded-full ' + (state === 'todo' ? 'bg-surface-container' : '')}
+                className={
+                  'h-7 w-7 items-center justify-center rounded-full ' +
+                  (state === 'todo' ? 'bg-surface-container' : '')
+                }
                 style={
                   state === 'done'
                     ? { backgroundColor: colors.success }
                     : state === 'active'
-                      ? { backgroundColor: colors.primary }
+                      ? { backgroundColor: 'transparent' }
                       : undefined
                 }
               >
-                {state === 'done' ? <AppIcon color={colors.surface} name="check" size={14} /> : null}
+                {state === 'done' ? (
+                  <AppIcon color={colors.surface} name="check" size={14} />
+                ) : null}
               </View>
               <Text
                 className={
                   'text-[10px] font-semibold ' +
-                  (success && n === 3 ? 'font-bold' : state === 'active' ? 'font-bold text-primary' : 'text-on-surface-variant')
+                  (success && n === 3
+                    ? 'font-bold'
+                    : state === 'active'
+                      ? 'font-bold text-primary'
+                      : 'text-on-surface-variant')
                 }
                 style={success && n === 3 ? { color: colors.success } : undefined}
               >

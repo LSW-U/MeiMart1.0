@@ -14,14 +14,17 @@ import { useNetworkStore } from '../src/hooks/useNetworkStore';
 
 function StoreInitializer({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
-  const { logout } = useAuth();
+  const { forceLogout } = useAuth();
 
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
 
+    // 被动登出：refresh 401（凭证彻底失效）时由 axios 拦截器触发，
+    // 走 forceLogout 轻量路径（清状态+跳登录），不走 logout mutation
+    // （refreshToken 已 401，后端 logout 必然也 401，多余且噪声）。
     setOnUnauthorized(() => {
-      void logout();
+      void forceLogout();
     });
 
     // useAuthStore.hydrate 拉 rider profile 填 store（B.2.2 已实现）
@@ -34,7 +37,7 @@ function StoreInitializer({ children }: { children: React.ReactNode }) {
     return () => {
       unsubscribeNetwork();
     };
-  }, [logout]);
+  }, [forceLogout]);
 
   return <>{children}</>;
 }

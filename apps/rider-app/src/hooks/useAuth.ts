@@ -45,31 +45,45 @@ export function useAuth() {
   // Why: 开发环境 mock-login，跳过密码验证直接登录
   // role: customer → 用于骑手申请（apply 要求 customer 角色）
   // role: rider → 用于骑手功能测试
-  const mockLogin = useCallback(async (role: 'customer' | 'rider' = 'rider') => {
-    const result = await authApi.mockLogin(role);
-    await tokenStorage.set(result.accessToken, result.refreshToken);
+  const mockLogin = useCallback(
+    async (role: 'customer' | 'rider' = 'rider') => {
+      const result = await authApi.mockLogin(role);
+      await tokenStorage.set(result.accessToken, result.refreshToken);
 
-    let rider = result.rider;
-    if (!rider && result.role === 'rider') {
-      try {
-        rider = await riderApi.getProfile();
-      } catch (e) {
-        console.error('[useAuth.mockLogin] getProfile failed:', e);
+      let rider = result.rider;
+      if (!rider && result.role === 'rider') {
+        try {
+          rider = await riderApi.getProfile();
+        } catch (e) {
+          console.error('[useAuth.mockLogin] getProfile failed:', e);
+        }
       }
-    }
-    if (rider) {
-      setRider(rider);
-    } else {
-      useAuthStore.setState({ isAuthenticated: true });
-    }
-    if (role === 'rider') {
-      router.replace('/(main)/tasks');
-    }
-    return result;
-  }, [setRider]);
+      if (rider) {
+        setRider(rider);
+      } else {
+        useAuthStore.setState({ isAuthenticated: true });
+      }
+      if (role === 'rider') {
+        router.replace('/(main)/tasks');
+      }
+      return result;
+    },
+    [setRider],
+  );
+
+  // 被动登出（凭证失效）：refresh 都 401 时由 axios 拦截器 onUnauthorized 回调触发。
+  // Why：refresh 401 已是「凭证彻底失效」最终信号，此时该静默清状态 + 跳登录页，
+  // 不走 logout()——logout() 语义是「用户主动登出」，会发后端 logout mutation，
+  // 而 refreshToken 本就 401 失效，后端 logout 必然也 401，多余且噪声。
+  // 顺序无关性：不依赖 tokenStorage 是否已被拦截器清过（幂等 clear + clearAuth）。
+  const forceLogout = useCallback(() => {
+    clearAuth();
+    void tokenStorage.clear().catch(() => {});
+    router.replace('/(auth)/login');
+  }, [clearAuth]);
 
   const logout = useCallback(async () => {
-    // 先调后端拉黑 refreshToken（CLAUDE.md rider 弱网规则：失败也清本地）
+    // 主动登出：先调后端拉黑 refreshToken（CLAUDE.md rider 弱网规则：失败也清本地）
     try {
       const refresh = await tokenStorage.getRefresh();
       if (refresh) await logoutMutation.mutateAsync(refresh);
@@ -93,6 +107,7 @@ export function useAuth() {
     login,
     mockLogin,
     logout,
+    forceLogout,
     sendSmsCode,
     isLoginPending: loginMutation.isPending,
     isLogoutPending: logoutMutation.isPending,
