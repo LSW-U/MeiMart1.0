@@ -83,7 +83,14 @@ export function localize(text: LocalizableText, locale: AppLocale): string {
 }
 
 export function useLocalizer(): (text: LocalizableText) => string {
-  const locale = useSyncExternalStore(
+  const locale = useLocale();
+  return (text) => localize(text, locale);
+}
+
+// Why: 语言变化需响应式参与的场景（queryKey 入 locale 等）——i18n.language 本身非响应式，
+//      useSyncExternalStore 订阅 languageChanged 保证切语言即重渲染（catalog 换语言缓存 bug 修复依赖此）
+export function useLocale(): AppLocale {
+  return useSyncExternalStore(
     (cb) => {
       const handler = () => cb();
       i18n.on('languageChanged', handler);
@@ -94,7 +101,6 @@ export function useLocalizer(): (text: LocalizableText) => string {
     () => (i18n.language as AppLocale) || DEFAULT_LOCALE,
     () => DEFAULT_LOCALE,
   );
-  return (text) => localize(text, locale);
 }
 
 export default i18n;

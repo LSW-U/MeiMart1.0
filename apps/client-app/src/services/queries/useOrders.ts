@@ -1,6 +1,7 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderApi } from '@/services/orders';
 import { useAuthStore } from '@/store/authStore';
+import { useLocale } from '@/i18n';
 import {
   ORDER_STATUS_GROUPS,
   tabStatuses,
@@ -13,12 +14,30 @@ export const ORDERS_QUERY_KEY = ['orders'] as const;
 
 const ORDERS_PAGE_SIZE = 20;
 
+// Why: 订单商品名在 service 层 pickLocalized 按语言烘焙（transformOrderItem），
+//      key 不含 locale 时切语言后 60s staleTime 内订单列表一直旧语言（同 categories 缓存 bug）。
+//      locale 入 key → 切语言即视为新查询重查；乐观更新走前缀 setQueriesData 天然兼容。
+export const ordersListKey = (locale: string, status: OrderStatus[] | 'all') =>
+  [...ORDERS_QUERY_KEY, locale, status ?? 'all'] as const;
+
+export const orderInfiniteKey = (locale: string, tab: OrderTabKey) =>
+  [...ORDERS_QUERY_KEY, 'infinite', locale, tab] as const;
+
+// Why: 详情 key 必须落在 ORDERS_QUERY_KEY 前缀下（审查报告 20260901 F1）——useCreateOrder/
+//      useCancelOrder 的 onSettled 只 invalidate ['orders'] 前缀，原 ['order', locale, id] 根是
+//      单数不在前缀内，取消订单后已打开的详情页不失效（预存在 bug，本次连根修）。
+//      挪入前缀后 onMutate 的 setQueriesData 也会前缀命中详情条目，但回调有 Array.isArray
+//      守卫（详情是单对象非数组）原样返回，安全。
+export const orderDetailKey = (locale: string, id: string) =>
+  [...ORDERS_QUERY_KEY, 'detail', locale, id] as const;
+
 // Why: 兼容不依赖分页的旧组件（如 useOrderCounts 派生计数），返回 Order[]，单页 limit=20。
 // P12 Commit 2: status 改成 OrderStatus[]（支持多状态过滤），'all' 表示不过滤。
 export function useOrders(status?: OrderStatus[] | 'all') {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const locale = useLocale();
   return useQuery({
-    queryKey: [...ORDERS_QUERY_KEY, status ?? 'all'],
+    queryKey: ordersListKey(locale, status ?? 'all'),
     queryFn: async () => {
       const res = await orderApi.getOrders(status);
       return res.items;
@@ -44,10 +63,7 @@ export function useOrderCounts(): Record<OrderGroupKey, number> {
   const rawCounts = data?.counts ?? {};
   const counts = {} as Record<OrderGroupKey, number>;
   for (const key of Object.keys(ORDER_STATUS_GROUPS) as OrderGroupKey[]) {
-    counts[key] = ORDER_STATUS_GROUPS[key].reduce(
-      (sum, s) => sum + (rawCounts[s] ?? 0),
-      0,
-    );
+    counts[key] = ORDER_STATUS_GROUPS[key].reduce((sum, s) => sum + (rawCounts[s] ?? 0), 0);
   }
   return counts;
 }
@@ -57,9 +73,10 @@ export function useOrderCounts(): Record<OrderGroupKey, number> {
 //      修复 B2：原单 status 漏 5 状态（待发货漏 PENDING_CONFIRM 等），现按 group 查状态集。
 export function useOrdersInfinite(tab: OrderTabKey = 'all') {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const locale = useLocale();
   const statuses = tabStatuses(tab);
   return useInfiniteQuery({
-    queryKey: [...ORDERS_QUERY_KEY, 'infinite', tab],
+    queryKey: orderInfiniteKey(locale, tab),
     queryFn: ({ pageParam }) => orderApi.getOrders(statuses, pageParam, ORDERS_PAGE_SIZE),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextCursor : undefined),
@@ -70,8 +87,9 @@ export function useOrdersInfinite(tab: OrderTabKey = 'all') {
 }
 
 export function useOrder(id: string | undefined) {
+  const locale = useLocale();
   return useQuery({
-    queryKey: ['order', id],
+    queryKey: orderDetailKey(locale, id ?? ''),
     queryFn: () => orderApi.getOrder(id as string),
     enabled: Boolean(id),
     networkMode: 'offlineFirst',

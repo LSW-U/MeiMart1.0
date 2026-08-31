@@ -2,8 +2,8 @@ import { act } from '@testing-library/react-native';
 import type { Notification } from '@/types';
 import { notificationsApi } from '@/services/notifications';
 import {
-  NOTIFICATIONS_QUERY_KEY,
   UNREAD_COUNT_QUERY_KEY,
+  notificationsListKey,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
 } from '../useNotifications';
@@ -11,8 +11,9 @@ import { createTestQueryClient, renderHookWithClient } from './testHarness';
 
 jest.mock('@/services/notifications');
 
-const ALL_KEY = [...NOTIFICATIONS_QUERY_KEY, 'all'] as const;
-const UNREAD_KEY = [...NOTIFICATIONS_QUERY_KEY, 'unread'] as const;
+// Why: 列表 key 含 locale 维度（i18n 缓存修复），测试环境 i18n 默认 en
+const ALL_KEY = notificationsListKey('en', false);
+const UNREAD_KEY = notificationsListKey('en', true);
 
 const baseNotifications: Notification[] = [
   {

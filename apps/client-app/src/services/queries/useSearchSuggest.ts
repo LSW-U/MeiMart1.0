@@ -1,6 +1,7 @@
 import { useQuery, keepPreviousData, type UseQueryResult } from '@tanstack/react-query';
 import { searchSuggestApi, type SuggestWord } from '@/services/searchSuggest';
 import { productApi } from '@/services/products';
+import { useLocale } from '@/i18n';
 import type { Product } from '@/types';
 
 /**
@@ -17,9 +18,15 @@ import type { Product } from '@/types';
  *   导致 suggestWords?.length 报 "Property 'length' does not exist on type 'never'"。
  *   显式返回类型 annotation 绕过 NoInfer 推断，data 正确为 SuggestWord[] | undefined。
  */
-export function useSearchSuggest(prefix: string, enabled = true): UseQueryResult<SuggestWord[], Error> {
+export function useSearchSuggest(
+  prefix: string,
+  enabled = true,
+): UseQueryResult<SuggestWord[], Error> {
+  // Why: 后端 suggest 按 Accept-Language 切片（search.controller.ts:68）；mock 分支也从商品名
+  //      按当前 locale 派生词。locale 入 key —— 切语言后按新语言重查（同 categories 缓存 bug 批量修复）
+  const locale = useLocale();
   return useQuery<SuggestWord[], Error>({
-    queryKey: ['search-suggest', prefix],
+    queryKey: ['search-suggest', locale, prefix],
     queryFn: () => searchSuggestApi.getSuggest(prefix, 5),
     enabled: enabled && prefix.trim().length >= 2,
     staleTime: 60 * 1000,
@@ -39,8 +46,11 @@ export function useSearchProductsSuggest(
   prefix: string,
   enabled = true,
 ): UseQueryResult<Product[], Error> {
+  // Why: 商品联想的商品名由组件层 useLocalizer 渲染（不烘焙），mock 搜索过滤才用 locale。
+  //      但 real/mock 语义一致起见仍入 key（mock 分支按 locale 过滤商品名）
+  const locale = useLocale();
   return useQuery<Product[], Error>({
-    queryKey: ['search-products-suggest', prefix],
+    queryKey: ['search-products-suggest', locale, prefix],
     queryFn: async () => {
       const res = await productApi.search(prefix, { pageSize: 3 });
       return res.items;

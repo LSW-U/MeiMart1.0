@@ -4,6 +4,7 @@ import { notificationsApi, type NotificationPreferences } from '@/services/notif
 import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
 import { getApiErrorMessage } from '@/utils/error';
+import { useLocale } from '@/i18n';
 import type { Notification } from '@/types';
 
 // Why: 从 useUser.ts 拆出来，notifications 模块自包含（service + hook 都在）
@@ -14,8 +15,11 @@ export const UNREAD_COUNT_QUERY_KEY = ['user', 'notifications', 'unread-count'] 
 // Why: 列表 queryKey 派生自 NOTIFICATIONS_QUERY_KEY 加 'all' / 'unread' 后缀。
 // 必须显式常量，不能用纯前缀 setQueriesData —— UNREAD_COUNT_QUERY_KEY 共享同一前缀，
 // 纯前缀匹配会把 number 类型的未读数也喂给 .map() 导致崩溃。
-const ALL_LIST_KEY = [...NOTIFICATIONS_QUERY_KEY, 'all'] as const;
-const UNREAD_LIST_KEY = [...NOTIFICATIONS_QUERY_KEY, 'unread'] as const;
+// locale 入 key（factory 函数）：通知 title/body 在 service 层 pickLocalized 按语言烘焙，
+// 不含 locale 时切语言后 staleTime 内一直旧语言（同 categories 缓存 bug）。
+// 偏好开关/未读数无多语言内容，不随 locale 分裂。
+export const notificationsListKey = (locale: string, onlyUnread: boolean) =>
+  [...NOTIFICATIONS_QUERY_KEY, locale, onlyUnread ? 'unread' : 'all'] as const;
 
 interface NotificationSnapshot {
   all?: Notification[];
@@ -23,26 +27,33 @@ interface NotificationSnapshot {
   count?: number;
 }
 
-function snapshotNotifications(qc: QueryClient): NotificationSnapshot {
+// Why: snapshot/restore 走前缀收集（非精确 key）——key 内含 locale 维度后无法静态枚举，
+//      且乐观更新的对象是「当前激活语言下的列表」，前缀恰好等价该集合
+function snapshotNotifications(qc: QueryClient, locale: string): NotificationSnapshot {
   return {
-    all: qc.getQueryData<Notification[]>(ALL_LIST_KEY),
-    unread: qc.getQueryData<Notification[]>(UNREAD_LIST_KEY),
+    all: qc.getQueryData<Notification[]>(notificationsListKey(locale, false)),
+    unread: qc.getQueryData<Notification[]>(notificationsListKey(locale, true)),
     count: qc.getQueryData<number>(UNREAD_COUNT_QUERY_KEY),
   };
 }
 
 // Why: 逐 key 还原 onMutate 快照；undefined 的跳过，避免误清尚未加载的 query
-function restoreNotificationSnapshot(qc: QueryClient, snap: NotificationSnapshot | undefined) {
+function restoreNotificationSnapshot(
+  qc: QueryClient,
+  locale: string,
+  snap: NotificationSnapshot | undefined,
+) {
   if (!snap) return;
-  if (snap.all !== undefined) qc.setQueryData(ALL_LIST_KEY, snap.all);
-  if (snap.unread !== undefined) qc.setQueryData(UNREAD_LIST_KEY, snap.unread);
+  if (snap.all !== undefined) qc.setQueryData(notificationsListKey(locale, false), snap.all);
+  if (snap.unread !== undefined) qc.setQueryData(notificationsListKey(locale, true), snap.unread);
   if (typeof snap.count === 'number') qc.setQueryData(UNREAD_COUNT_QUERY_KEY, snap.count);
 }
 
 export function useNotifications(onlyUnread = false) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const locale = useLocale();
   return useQuery({
-    queryKey: onlyUnread ? UNREAD_LIST_KEY : ALL_LIST_KEY,
+    queryKey: notificationsListKey(locale, onlyUnread),
     queryFn: () => notificationsApi.list(onlyUnread),
     staleTime: 30 * 1000,
     networkMode: 'offlineFirst',
@@ -63,19 +74,20 @@ export function useUnreadCount() {
 
 export function useMarkNotificationRead() {
   const qc = useQueryClient();
+  const locale = useLocale();
   return useMutation({
     mutationFn: (id: string) => notificationsApi.markRead(id),
     onMutate: async (id) => {
       await qc.cancelQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
-      const previous = snapshotNotifications(qc);
+      const previous = snapshotNotifications(qc, locale);
       // Why: all 列表标记 read=true；unread 列表按契约（仅未读，服务端 list(true) 过滤）移除已读项
       if (previous.all) {
-        qc.setQueryData<Notification[]>(ALL_LIST_KEY, (old) =>
+        qc.setQueryData<Notification[]>(notificationsListKey(locale, false), (old) =>
           old ? old.map((n) => (n.id === id ? { ...n, read: true } : n)) : old,
         );
       }
       if (previous.unread) {
-        qc.setQueryData<Notification[]>(UNREAD_LIST_KEY, (old) =>
+        qc.setQueryData<Notification[]>(notificationsListKey(locale, true), (old) =>
           old ? old.filter((n) => n.id !== id) : old,
         );
       }
@@ -86,10 +98,10 @@ export function useMarkNotificationRead() {
       return { previous };
     },
     onError: (_err, _id, ctx) => {
-      restoreNotificationSnapshot(qc, ctx?.previous);
+      restoreNotificationSnapshot(qc, locale, ctx?.previous);
     },
     onSettled: () => {
-      // Why: 前缀 invalidate 同时覆盖 all / unread 列表 + unread-count
+      // Why: 前缀 invalidate 同时覆盖 all / unread 列表（各语言）+ unread-count
       qc.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
     },
   });
@@ -97,19 +109,20 @@ export function useMarkNotificationRead() {
 
 export function useMarkAllNotificationsRead() {
   const qc = useQueryClient();
+  const locale = useLocale();
   return useMutation({
     mutationFn: () => notificationsApi.markAllRead(),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
-      const previous = snapshotNotifications(qc);
+      const previous = snapshotNotifications(qc, locale);
       // Why: all 列表全部标记 read；unread 列表清空（契约：仅未读）
       if (previous.all) {
-        qc.setQueryData<Notification[]>(ALL_LIST_KEY, (old) =>
+        qc.setQueryData<Notification[]>(notificationsListKey(locale, false), (old) =>
           old ? old.map((n) => ({ ...n, read: true })) : old,
         );
       }
       if (previous.unread) {
-        qc.setQueryData<Notification[]>(UNREAD_LIST_KEY, []);
+        qc.setQueryData<Notification[]>(notificationsListKey(locale, true), []);
       }
       if (typeof previous.count === 'number') {
         qc.setQueryData(UNREAD_COUNT_QUERY_KEY, 0);
@@ -117,7 +130,7 @@ export function useMarkAllNotificationsRead() {
       return { previous };
     },
     onError: (_err, _vars, ctx) => {
-      restoreNotificationSnapshot(qc, ctx?.previous);
+      restoreNotificationSnapshot(qc, locale, ctx?.previous);
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
@@ -163,7 +176,10 @@ export function useUpdateNotificationPreferences() {
       // 回滚开关位置 + toast 提示（页面层不重复 toast）
       if (ctx?.previous) qc.setQueryData(NOTIFICATION_PREFS_KEY, ctx.previous);
       toast.error(
-        getApiErrorMessage(error, t('settings.notifUpdateFailed', { defaultValue: 'Failed to update preferences' })),
+        getApiErrorMessage(
+          error,
+          t('settings.notifUpdateFailed', { defaultValue: 'Failed to update preferences' }),
+        ),
       );
     },
     onSuccess: (next) => {
