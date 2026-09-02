@@ -10,7 +10,8 @@ import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { QueryBoundary } from '../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../src/components/feedback/Toast';
-import { Button } from '../../src/components/ui';
+import { AppIcon, Button } from '../../src/components/ui';
+import { useDepositStatus } from '../../src/services/queries/useDeposit';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { useNetwork } from '../../src/hooks/useNetwork';
 import { useTaskLists } from '../../src/services/queries/useTask';
@@ -31,7 +32,10 @@ const dutyLabelKey: Record<DutyStatus, 'duty.onDuty' | 'duty.offDuty' | 'duty.bu
   busy: 'duty.busy',
 };
 
-const formatItems = (items: string[], t: (key: TranslationKey, vars?: Record<string, string | number>) => string) => t('common.items', { items: items.join(' · ') });
+const formatItems = (
+  items: string[],
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+) => t('common.items', { items: items.join(' · ') });
 
 /**
  * 距离计费批次1（2026-08-27）：配送费明细格式化。
@@ -43,10 +47,15 @@ const formatFeeBreakdown = (
   currency: string,
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
 ): { base?: string; distance?: string } => {
-  const fmt = (cents: number) => formatCurrency(cents / 100, currency, { decimals: cents % 100 === 0 ? 0 : 1 });
+  const fmt = (cents: number) =>
+    formatCurrency(cents / 100, currency, { decimals: cents % 100 === 0 ? 0 : 1 });
   return {
-    base: task.baseFee != null ? t('tasks.feeBreakdown.base', { fee: fmt(task.baseFee) }) : undefined,
-    distance: task.distanceFee != null ? t('tasks.feeBreakdown.distance', { fee: fmt(task.distanceFee) }) : undefined,
+    base:
+      task.baseFee != null ? t('tasks.feeBreakdown.base', { fee: fmt(task.baseFee) }) : undefined,
+    distance:
+      task.distanceFee != null
+        ? t('tasks.feeBreakdown.distance', { fee: fmt(task.distanceFee) })
+        : undefined,
   };
 };
 
@@ -65,7 +74,10 @@ const withDistance = (
 };
 
 // T6 §3.1: 联系按钮拨号回调工厂（tasks.tsx 3 处 active 卡共用；Linking 在调用方，组件不感知 task）
-const contactHandler = (task: DeliveryTask, t: (key: TranslationKey, vars?: Record<string, string | number>) => string) =>
+const contactHandler = (
+  task: DeliveryTask,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+) =>
   task.dropoff.contactPhone
     ? () => {
         void Linking.openURL(`tel:${task.dropoff.contactPhone}`).catch(() =>
@@ -78,7 +90,9 @@ export default function TasksPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
-  const [activeTab, setActiveTab] = useState<TaskTab>(tabParam === 'pickups' ? 'pickups' : tabParam === 'deliveries' ? 'deliveries' : 'new');
+  const [activeTab, setActiveTab] = useState<TaskTab>(
+    tabParam === 'pickups' ? 'pickups' : tabParam === 'deliveries' ? 'deliveries' : 'new',
+  );
   const [menuVisible, setMenuVisible] = useState(false);
   const [pending, setPending] = useState<DutyStatus | null>(null);
   const [blockVisible, setBlockVisible] = useState(false);
@@ -89,7 +103,11 @@ export default function TasksPage() {
   //   - settings 加载失败 → dutyStatus=null（保守不判离线，renderContent 走任务三态而非 offline 空态）
   //   - settings 成功 → 真实 dutyStatus（offDuty/onDuty/busy）
   // 原 `settings?.dutyStatus ?? 'offDuty'` 在 settings=undefined 时回退 offDuty → online=false → 误显「你已离线」（同 _layout 静默掉线根因）。
-  const dutyStatus: DutyStatus | null = settingsError ? null : settings ? settings.dutyStatus : null;
+  const dutyStatus: DutyStatus | null = settingsError
+    ? null
+    : settings
+      ? settings.dutyStatus
+      : null;
   // P6-1：UI 展示值——header/menu 的 prop 类型是 DutyStatus（非 null）。
   //   加载中/失败时用 offDuty 占位，但 dutyLoading=true 让 header 显「加载中」+ 中性灰点
   //   （而非 offDuty 灰点 +「已下班」文案——见 P6 §四.9，避免瞬时误导骑手）。
@@ -100,8 +118,18 @@ export default function TasksPage() {
   const dutyLoading = dutyStatus === null;
   // B3: 消费三态——loading 骨架替代闪空态，error 显式重试（不再误报"暂无任务"）
   // B5: isFetching 供底栏刷新 spinner 反馈
-  const { data: taskListsData, isLoading: taskListsLoading, isError: taskListsError, isFetching: taskListsFetching, refetch: refetchTasks } = useTaskLists();
-  const taskLists = taskListsData ?? { available: [] as DeliveryTask[], pickups: [] as DeliveryTask[], deliveries: [] as DeliveryTask[] };
+  const {
+    data: taskListsData,
+    isLoading: taskListsLoading,
+    isError: taskListsError,
+    isFetching: taskListsFetching,
+    refetch: refetchTasks,
+  } = useTaskLists();
+  const taskLists = taskListsData ?? {
+    available: [] as DeliveryTask[],
+    pickups: [] as DeliveryTask[],
+    deliveries: [] as DeliveryTask[],
+  };
   const rider = useAuthStore((s) => s.rider);
   // §7.2 拍板：下拉刷新离线守卫——onlineManager 未配置，Query 不会自动拦离线 refetch，
   // 不守卫会真发请求 reject 后 QueryBoundary 切 error 态覆盖已有缓存数据
@@ -109,9 +137,20 @@ export default function TasksPage() {
 
   // P6-1：null（settings 加载中/失败）→ online=null，renderContent 不走 offline 空态（保守不停派单展示）。
   const online: boolean | null = dutyStatus === null ? null : dutyStatus !== 'offDuty';
-  const bondPaid = rider?.bondPaid ?? true;
+  // 批 G（2026-09-03）：bondPaid 布尔遮罩 → deposit 三态（HTML 6.3：未缴/PENDING/已缴）
+  //   未缴 = depositAmount 0 且无 PENDING；PENDING = 有待确认申请；已缴 = 其余
+  const { data: depositStatus } = useDepositStatus();
+  const pendingDeposit = depositStatus?.recentRequests.find((r) => r.status === 'PENDING') ?? null;
+  const bondPaid = depositStatus ? depositStatus.depositAmount > 0 : (rider?.bondPaid ?? true);
+  const depositBlockReason: 'none' | 'unpaid' | 'pending' =
+    pendingDeposit !== null ? 'pending' : bondPaid ? 'none' : 'unpaid';
+  void rider; // rider 仅剩兜底（depositStatus 未加载时不拦截，保守可用）
   const activeTasksExist = taskLists.pickups.length + taskLists.deliveries.length > 0;
   const currency = t('common.currency');
+
+  // 批 G：拦截弹窗「稍后」置 true（本会话不再弹；切换 duty/重进页面重置）
+  const [depositDismissed, setDepositDismissed] = useState(false);
+  const depositBlocked = depositBlockReason !== 'none' && !depositDismissed;
 
   const openMenu = () => setMenuVisible(true);
 
@@ -160,14 +199,25 @@ export default function TasksPage() {
     <TaskCard
       key={task.id}
       actionLabel={t('tasks.accept')}
-      fee={formatCurrency((task.fee ?? 0) / 100, currency, { decimals: (task.fee ?? 0) % 100 === 0 ? 0 : 1 })}
+      fee={formatCurrency((task.fee ?? 0) / 100, currency, {
+        decimals: (task.fee ?? 0) % 100 === 0 ? 0 : 1,
+      })}
       // 距离计费批次1（2026-08-27）：明细 + 计费距离（billingDistanceKm 与骑行 distanceKm 分开展示）
       feeBreakdown={formatFeeBreakdown(task, currency, t)}
       items={task.items.length ? formatItems(task.items, t) : undefined}
       note={task.note ?? undefined}
       points={[
-        { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t) },
-        { label: 'D', title: task.dropoff.title, distance: withDistance('common.fromPickup', task.distanceKm, t) },
+        {
+          label: 'P',
+          title: task.pickup.title,
+          subtitle: task.pickup.address,
+          distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t),
+        },
+        {
+          label: 'D',
+          title: task.dropoff.title,
+          distance: withDistance('common.fromPickup', task.distanceKm, t),
+        },
       ]}
       timeLabel={t('common.deliverWithin', { minutes: String(task.estimatedMinutes) })}
       onAction={() => router.push(`/task/${task.id}`)}
@@ -183,15 +233,29 @@ export default function TasksPage() {
         actionLabel={action ? t(action.labelKey) : t('tasks.arrivedPickup')}
         chatLabel={t('tasks.chat')}
         contactLabel={t('tasks.contact')}
-        contactSuffix={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : undefined}
+        contactSuffix={
+          task.dropoff.contactPhone
+            ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}`
+            : undefined
+        }
         feeBreakdown={formatFeeBreakdown(task, currency, t)}
         items={task.items.length ? formatItems(task.items, t) : undefined}
         note={task.note ?? undefined}
         orderId={task.orderId}
         points={[
-          { label: 'P', title: task.pickup.title, subtitle: task.pickup.address, distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t) },
+          {
+            label: 'P',
+            title: task.pickup.title,
+            subtitle: task.pickup.address,
+            distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t),
+          },
           // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
-          { label: 'D', title: task.dropoff.title, distance: withDistance('common.fromPickup', task.distanceKm, t), subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t) },
+          {
+            label: 'D',
+            title: task.dropoff.title,
+            distance: withDistance('common.fromPickup', task.distanceKm, t),
+            subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t),
+          },
         ]}
         timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
         variant="active"
@@ -207,16 +271,29 @@ export default function TasksPage() {
       actionLabel={t('tasks.arrivedDelivery')}
       chatLabel={t('tasks.chat')}
       contactLabel={t('tasks.contact')}
-      contactSuffix={task.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}` : undefined}
+      contactSuffix={
+        task.dropoff.contactPhone
+          ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}`
+          : undefined
+      }
       feeBreakdown={formatFeeBreakdown(task, currency, t)}
       // T6 审查 P1-1：note 只放真实客户备注（尾号已在联系按钮 contactSuffix 展示，
       // 原「有电话时 note 被尾号覆盖」会吞掉配送环节最关键的留言信息）
       note={task.note ?? undefined}
       orderId={task.orderId}
       points={[
-        { label: 'P', title: task.pickup.title, distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t) },
+        {
+          label: 'P',
+          title: task.pickup.title,
+          distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t),
+        },
         // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
-        { label: 'D', title: task.dropoff.title, distance: withDistance('common.fromPickup', task.distanceKm, t), subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t) },
+        {
+          label: 'D',
+          title: task.dropoff.title,
+          distance: withDistance('common.fromPickup', task.distanceKm, t),
+          subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t),
+        },
       ]}
       timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
       variant="active"
@@ -269,12 +346,16 @@ export default function TasksPage() {
     <View className="flex-1 bg-background">
       <TaskDetailHeader
         activeTab={activeTab}
-        deliveriesLabel={taskLists.deliveries.length ? t('tasks.tabs.deliveries1') : t('tasks.tabs.deliveries0')}
+        deliveriesLabel={
+          taskLists.deliveries.length ? t('tasks.tabs.deliveries1') : t('tasks.tabs.deliveries0')
+        }
         dutyStatus={dutyStatusForUi}
         dutyLoading={dutyLoading}
         dutyStatusLabel={t(dutyLabelKey[dutyStatusForUi])}
         newTasksLabel={t('tasks.tabs.new')}
-        pickupsLabel={taskLists.pickups.length ? t('tasks.tabs.pickups1') : t('tasks.tabs.pickups0')}
+        pickupsLabel={
+          taskLists.pickups.length ? t('tasks.tabs.pickups1') : t('tasks.tabs.pickups0')
+        }
         onDutyPress={openMenu}
         onMenuPress={() => router.push('/(main)/profile')}
         onTabChange={setActiveTab}
@@ -300,14 +381,72 @@ export default function TasksPage() {
       >
         {renderContent()}
       </ScrollView>
-      {!bondPaid && (
+      {depositBlocked && (
         <View className="absolute inset-0 items-center justify-center bg-black/50 px-8">
-          <View className="gap-4 rounded-2xl bg-surface p-8 shadow-xl">
-            <Text className="text-center text-xl font-bold text-on-surface">{t('tasks.deposit.title')}</Text>
-            <Text className="text-center text-sm text-on-surface-variant">{t('tasks.deposit.message')}</Text>
-            <Button className="bg-primary-container" onPress={() => router.push('/settings')}>
-              {t('tasks.deposit.action')}
-            </Button>
+          <View className="w-full max-w-[280px] gap-4 rounded-3xl bg-surface p-6 shadow-xl">
+            {depositBlockReason === 'unpaid' ? (
+              // 三态①未缴（HTML：直跳缴纳页，非 settings；明示 ≥$1 可接单）
+              <>
+                <View className="bg-status-danger-bg mx-auto h-14 w-14 items-center justify-center rounded-full">
+                  <AppIcon
+                    accessibilityLabel={t('tasks.deposit.title')}
+                    color={colors.danger}
+                    name="deposit"
+                    size={28}
+                  />
+                </View>
+                <Text className="text-center text-lg font-bold text-on-surface">
+                  {t('tasks.deposit.title')}
+                </Text>
+                <Text className="text-center text-sm leading-6 text-on-surface-variant">
+                  {t('tasks.deposit.messageV2')}
+                </Text>
+                <Button
+                  className="bg-primary-container"
+                  onPress={() => router.push('/settings/deposit')}
+                >
+                  {t('tasks.deposit.goDeposit')}
+                </Button>
+                <Button
+                  className="border border-outline bg-transparent"
+                  onPress={() => setDepositDismissed(true)}
+                >
+                  {t('tasks.deposit.later')}
+                </Button>
+              </>
+            ) : (
+              // 三态②PENDING（HTML：已提交 $X 等待 admin 确认）
+              <>
+                <View className="bg-status-warning-bg mx-auto h-14 w-14 items-center justify-center rounded-full">
+                  <AppIcon
+                    accessibilityLabel={t('tasks.deposit.pendingTitle')}
+                    color={colors.warning}
+                    name="clock"
+                    size={28}
+                  />
+                </View>
+                <Text className="text-center text-lg font-bold text-on-surface">
+                  {t('tasks.deposit.pendingTitle')}
+                </Text>
+                <Text className="text-center text-sm leading-6 text-on-surface-variant">
+                  {t('tasks.deposit.pendingMessage', {
+                    amount: formatCurrency((pendingDeposit?.requestedAmount ?? 0) / 100, currency),
+                  })}
+                </Text>
+                <Button
+                  className="border-warning border bg-transparent"
+                  onPress={() => router.push('/settings/deposit/records')}
+                >
+                  {t('tasks.deposit.viewRequest')}
+                </Button>
+                <Button
+                  className="border border-outline bg-transparent"
+                  onPress={() => setDepositDismissed(true)}
+                >
+                  {t('tasks.deposit.gotIt')}
+                </Button>
+              </>
+            )}
           </View>
         </View>
       )}
@@ -329,7 +468,14 @@ export default function TasksPage() {
       />
       <ConfirmDialog
         cancelLabel={t('duty.confirm.cancel')}
-        message={pending ? t('duty.confirm.message', { from: t(dutyLabelKey[dutyStatusForUi]), to: t(dutyLabelKey[pending]) }) : ''}
+        message={
+          pending
+            ? t('duty.confirm.message', {
+                from: t(dutyLabelKey[dutyStatusForUi]),
+                to: t(dutyLabelKey[pending]),
+              })
+            : ''
+        }
         okLabel={t('duty.confirm.ok')}
         title={t('duty.confirm.title')}
         visible={pending !== null}

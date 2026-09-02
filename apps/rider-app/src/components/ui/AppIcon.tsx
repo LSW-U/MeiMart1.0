@@ -4,7 +4,48 @@ import type { StyleProp, TextStyle } from 'react-native';
 
 import { colors } from '../../theme/colors';
 
-export type AppIconName = 'menu' | 'notification' | 'settings' | 'refresh' | 'orders' | 'wallet' | 'upload' | 'camera' | 'profile' | 'document' | 'security' | 'bank' | 'rider' | 'help' | 'logout' | 'language' | 'shield' | 'bell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'check' | 'lock' | 'eye' | 'eyeOff' | 'sms' | 'chat' | 'account' | 'pin' | 'phone' | 'info' | 'pickup' | 'dropoff' | 'arrowUp' | 'arrowDown' | 'verified' | 'clock' | 'gift' | 'cash' | 'plus';
+export type AppIconName =
+  | 'menu'
+  | 'notification'
+  | 'settings'
+  | 'refresh'
+  | 'orders'
+  | 'wallet'
+  | 'upload'
+  | 'camera'
+  | 'profile'
+  | 'document'
+  | 'security'
+  | 'bank'
+  | 'rider'
+  | 'help'
+  | 'logout'
+  | 'language'
+  | 'deposit'
+  | 'shield'
+  | 'bell'
+  | 'chevronLeft'
+  | 'chevronRight'
+  | 'chevronDown'
+  | 'check'
+  | 'lock'
+  | 'eye'
+  | 'eyeOff'
+  | 'sms'
+  | 'chat'
+  | 'account'
+  | 'pin'
+  | 'phone'
+  | 'info'
+  | 'pickup'
+  | 'dropoff'
+  | 'arrowUp'
+  | 'arrowDown'
+  | 'verified'
+  | 'clock'
+  | 'gift'
+  | 'cash'
+  | 'plus';
 
 type MaterialIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -34,6 +75,8 @@ const icons: Record<AppIconName, MaterialIconName> = {
   help: 'help-circle-outline',
   logout: 'logout',
   language: 'translate',
+  // 批 G（2026-09-03）：settings 保证金项——盾+勾（HTML 原型 6.1），与 shield[账户安全=盾+人] 区分
+  deposit: 'shield-check-outline',
   shield: 'shield-account-outline',
   bell: 'bell-ring-outline',
   chevronLeft: 'chevron-left',
@@ -94,7 +137,14 @@ const sizeByClass = (className = '') => {
 // a11y：AppIcon 几乎总是装饰（在 labeled Pressable 内 / header·section 图标，含义由相邻 Text 说明）。
 // 无 accessibilityLabel 时隐藏（importantForAccessibility='no' + accessibilityElementsHidden），
 // 避免屏幕阅读器对无 label 的 image 发出无意义聚焦噪音；传 label 时作为带描述的 image 暴露。
-export function AppIcon({ name, className = '', color, size, style, accessibilityLabel }: AppIconProps) {
+export function AppIcon({
+  name,
+  className = '',
+  color,
+  size,
+  style,
+  accessibilityLabel,
+}: AppIconProps) {
   return (
     <MaterialCommunityIcons
       accessibilityLabel={accessibilityLabel}
