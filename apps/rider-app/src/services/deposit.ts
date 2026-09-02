@@ -146,7 +146,7 @@ function deriveMockTier(depositAmount: number): DepositTier | null {
   );
 }
 
-/** mock locations（供下拉演示；real 模式走 depositApi.getLocations → 当前抛不支持） */
+/** mock locations（Web dev 演示；real 走 /rider/deposit/locations 真端点，补端点批已接） */
 export const mockDepositLocations = MOCK_LOCATIONS;
 export const mockDepositTiers = MOCK_TIERS;
 
