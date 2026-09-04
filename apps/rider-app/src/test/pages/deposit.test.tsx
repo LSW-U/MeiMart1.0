@@ -104,6 +104,10 @@ let mockTiersQ: {
   refetch: () => void;
 } = { data: TIERS, isLoading: false, isError: false, refetch: jest.fn() };
 
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 20, left: 0, right: 0 }),
+}));
+
 jest.mock('expo-router', () => ({
   useRouter: () => ({
     push: mockRouterPush,

@@ -10,11 +10,15 @@
  *
  * 缴纳表单已拆至子页 /settings/deposit/pay（拍板 6），本页仅三态展示 + 入口。
  * 页头沿用 SimplePageHeader 白色页头，返回「‹ 设置」（拍板 7）。
+ * 视觉微调（2026-09-04 反馈）：两按钮固定屏幕底部悬浮条（不随内容滚动）、
+ * 金额与上限卡片间距拉开（原型 limit-box margin-top:12px）、升级提示加
+ * 原型 .tier-hint 底色（bg-surface-container-low）。
  *
  * 端点：GET /rider/deposit/status | /locations | /tiers（批 B/补端点批）
  */
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/src/components/ui';
 import { AppIcon } from '@/src/components/ui/AppIcon';
@@ -59,6 +63,7 @@ function heroVisual(state: 'paid' | 'unpaid' | 'pending') {
 
 export default function DepositPage() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const currency = t('common.currency');
 
@@ -106,7 +111,7 @@ export default function DepositPage() {
 
   function renderLimitBox() {
     return (
-      <View className="flex-row items-center justify-between rounded-xl bg-surface/60 px-3 py-2.5">
+      <View className="mt-3 flex-row items-center justify-between rounded-xl bg-surface/60 px-3 py-2.5">
         <View className="flex-1">
           <Text className="text-xs text-on-surface-variant">{t('deposit.hero.limitLabel')}</Text>
           {tierMissing ? (
@@ -203,7 +208,7 @@ export default function DepositPage() {
         fallbackHref="/settings"
         title={t('deposit.page.title')}
       />
-      <ScrollView contentContainerClassName="gap-4 px-4 py-5 pb-12">
+      <ScrollView contentContainerClassName="gap-4 px-4 py-5 pb-6">
         {isLoading ? (
           // 方案 §8.1：hero 骨架屏，避免页面空白跳变
           <>
@@ -245,8 +250,9 @@ export default function DepositPage() {
                     <Skeleton className="mt-3 h-4 w-56 rounded-md" />
                   ) : (
                     nextTier && (
-                      // 拍板 E：升级提示由 tiers 数据派生（E 拍板：不写死 i18n 文案）
-                      <Text className="mt-3 text-xs leading-5 text-on-surface-variant">
+                      // 拍板 E：升级提示由 tiers 数据派生（E 拍板：不写死 i18n 文案）；
+                      // 底色按原型 .tier-hint（bg-surface-container-low + 8px/10px 内边距）
+                      <Text className="mt-3 rounded-lg bg-surface-container-low px-2.5 py-2 text-xs leading-5 text-on-surface-variant">
                         {nextTier.maxOrderAmount === null
                           ? t('deposit.hint.topTier', {
                               amount: formatCurrency(nextTier.minAmount / 100, currency, {
@@ -272,34 +278,6 @@ export default function DepositPage() {
             {/* 已缴 + PENDING 并存（拍板 5）：绿 hero 展示当前余额/上限，banner 另起 */}
             {heroState === 'paid' && renderPendingHero()}
 
-            {/* 未缴态：去缴纳入口（缴纳表单在子页 /pay，拍板 6） */}
-            {heroState === 'unpaid' && (
-              <Button accessibilityLabel={t('deposit.unpaid.cta')} onPress={() => goPay(5000)}>
-                {t('deposit.unpaid.cta')}
-              </Button>
-            )}
-
-            {/* 已缴态：追加缴纳主行动（拍板 4），档位预设 = 下一档；顶档回落 max($50, 余额) */}
-            {heroState === 'paid' && (
-              <Button
-                accessibilityLabel={t('deposit.paid.addMore')}
-                onPress={() => goPay(nextTier?.minAmount ?? Math.max(5000, depositAmount))}
-              >
-                {t('deposit.paid.addMore')}
-              </Button>
-            )}
-
-            {/* 记录入口 —— 详情页仅此一个（拍板 4） */}
-            <Button
-              accessibilityLabel={t('deposit.records.title')}
-              className="border border-outline bg-transparent"
-              onPress={() => router.push('/settings/deposit/records')}
-            >
-              <Text className="text-sm font-semibold text-on-surface-variant">
-                {t('deposit.records.entry')}
-              </Text>
-            </Button>
-
             {/* 页脚状态提示（方案 §9.1：live region，状态切换可被读屏感知） */}
             <View accessibilityLiveRegion="polite" className="items-center py-1">
               <Text className="text-xs text-on-surface-variant">
@@ -313,6 +291,43 @@ export default function DepositPage() {
           </>
         )}
       </ScrollView>
+
+      {/* 底部悬浮行动区（视觉反馈 2026-09-04：按钮固定屏幕底部，不随内容滚动）；
+          loading/error 态无行动入口，不渲染底栏 */}
+      {!isLoading && !isError && (
+        <View
+          className="gap-2.5 border-t border-surface-variant bg-surface px-4 pt-3"
+          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+        >
+          {/* 未缴态：去缴纳入口（缴纳表单在子页 /pay，拍板 6） */}
+          {heroState === 'unpaid' && (
+            <Button accessibilityLabel={t('deposit.unpaid.cta')} onPress={() => goPay(5000)}>
+              {t('deposit.unpaid.cta')}
+            </Button>
+          )}
+
+          {/* 已缴态：追加缴纳主行动（拍板 4），档位预设 = 下一档；顶档回落 max($50, 余额) */}
+          {heroState === 'paid' && (
+            <Button
+              accessibilityLabel={t('deposit.paid.addMore')}
+              onPress={() => goPay(nextTier?.minAmount ?? Math.max(5000, depositAmount))}
+            >
+              {t('deposit.paid.addMore')}
+            </Button>
+          )}
+
+          {/* 记录入口 —— 详情页仅此一个（拍板 4） */}
+          <Button
+            accessibilityLabel={t('deposit.records.title')}
+            className="border border-outline bg-transparent"
+            onPress={() => router.push('/settings/deposit/records')}
+          >
+            <Text className="text-sm font-semibold text-on-surface-variant">
+              {t('deposit.records.entry')}
+            </Text>
+          </Button>
+        </View>
+      )}
     </View>
   );
 }
