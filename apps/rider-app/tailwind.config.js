@@ -60,6 +60,9 @@ module.exports = {
         'notification-task': '#ff9800',
         'surface-blush': '#ffe1dc',
         'blush-border': '#f1d4cf',
+        // 批 H 审查观察项根治：colors.statusDangerBg 同值补 token（records REJECTED 备注
+        // 原被 config 缺 token 逼成 className+inline style 混用）
+        'status-danger-bg': '#fde2df',
         'status-danger-text': '#a3322a',
         'danger-soft': '#ffdad6',
       },

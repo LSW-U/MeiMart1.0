@@ -1,11 +1,12 @@
 /**
- * 保证金缴存记录页 — /settings/deposit/records（批 G，2026-09-03）
+ * 保证金缴存记录页 — /settings/deposit/records（批 G；批 H 修幽灵 token + 重提跳 /pay）
  *
  * HTML 原型 6.4 逐屏还原：
  *   - 四态记录卡：PENDING（橙+骑手说明）/ CONFIRMED（绿+实收额，admin 修正时
  *     显示「申请 $X → 确认 $Y」）/ REJECTED（红+admin 备注+重新提交按钮）/ REFUNDED
  *   - 通道标识（线上 / 线下 COD）+ 缴纳点 + 时间
- *   - REJECTED「重新提交」→ 跳缴纳页预填原金额（拍板 ⑦）
+ *   - REJECTED「重新提交」→ 跳缴纳子页 /settings/deposit/pay 预填原金额
+ *     （批 G 跳详情页，批 H 拍板 6 拆页后改跳子页）
  *
  * 数据源：GET /rider/deposit/status 的 recentRequests（批 B 契约，take 10）
  */
@@ -59,14 +60,16 @@ export default function DepositRecordsPage() {
       <SimplePageHeader backLabel={t('common.back')} title={t('deposit.records.title')} />
       <ScrollView contentContainerClassName="px-4 py-5 pb-12">
         {isLoading ? (
-          <Text className="text-text-muted py-8 text-center text-sm">{t('duty.loading')}</Text>
+          <Text className="py-8 text-center text-sm text-on-surface-variant">
+            {t('duty.loading')}
+          </Text>
         ) : records.length === 0 ? (
           <EmptyState
             description={t('deposit.records.emptyDescription')}
             title={t('deposit.records.emptyTitle')}
           />
         ) : (
-          <View className="border-border overflow-hidden rounded-2xl border bg-surface">
+          <View className="overflow-hidden rounded-2xl border border-surface-variant bg-surface">
             {records.map((record, index) => {
               const visual = statusVisual(record.status);
               const locationName = locations.find((l) => l.id === record.locationId)?.name;
@@ -105,20 +108,20 @@ export default function DepositRecordsPage() {
                         </Text>
                       </View>
                       {/* meta：时间 + 缴纳点 */}
-                      <Text className="text-text-muted mt-1 text-xs">
+                      <Text className="mt-1 text-xs text-on-surface-variant">
                         {new Date(record.createdAt).toLocaleString()}
                         {locationName ? ` · ${locationName}` : ''}
                       </Text>
                       {/* 骑手说明（PENDING 保留显示，HTML change-card 13） */}
                       {record.note && (
-                        <Text className="text-text-muted mt-1 rounded-md bg-surface-container-low px-2 py-1 text-xs">
+                        <Text className="mt-1 rounded-md bg-surface-container-low px-2 py-1 text-xs text-on-surface-variant">
                           {t('deposit.records.riderNotePrefix')}
                           {record.note}
                         </Text>
                       )}
                       {/* admin 修正：申请 $X → 确认 $Y */}
                       {isModified && record.confirmedAmount !== null && (
-                        <Text className="text-text-muted mt-1 rounded-md bg-surface-container-low px-2 py-1 text-xs">
+                        <Text className="mt-1 rounded-md bg-surface-container-low px-2 py-1 text-xs text-on-surface-variant">
                           {t('deposit.records.modifiedAmount', {
                             requested: formatCurrency(record.requestedAmount / 100, currency),
                             confirmed: formatCurrency(record.confirmedAmount / 100, currency),
@@ -131,7 +134,7 @@ export default function DepositRecordsPage() {
                           className={`mt-1 rounded-md px-2 py-1 text-xs ${
                             record.status === 'REJECTED'
                               ? 'bg-status-danger-bg text-status-danger-text'
-                              : 'text-text-muted bg-surface-container-low'
+                              : 'bg-surface-container-low text-on-surface-variant'
                           }`}
                         >
                           {t('deposit.records.adminNotePrefix')}
@@ -146,7 +149,7 @@ export default function DepositRecordsPage() {
                           className="mt-1.5 self-start rounded-lg border border-primary px-3 py-1"
                           onPress={() =>
                             router.navigate({
-                              pathname: '/settings/deposit',
+                              pathname: '/settings/deposit/pay',
                               params: { resubmitAmount: String(record.requestedAmount) },
                             })
                           }
@@ -170,7 +173,9 @@ export default function DepositRecordsPage() {
             className="mt-4 items-center"
             onPress={() => void refetch()}
           >
-            <Text className="text-text-muted text-xs font-semibold">{t('common.retry')}</Text>
+            <Text className="text-xs font-semibold text-on-surface-variant">
+              {t('common.retry')}
+            </Text>
           </Pressable>
         )}
       </ScrollView>
