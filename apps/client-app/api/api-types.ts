@@ -1628,36 +1628,52 @@ export interface paths {
               address: string;
               operatingHours: {
                 mon?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 tue?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 wed?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 thu?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 fri?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sat?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sun?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
               } | null;
               /** @default 0 */
               deliveryFee: number;
+              /** @default 0 */
+              perKmFee: number;
+              /** @default 2 */
+              freeKm: number;
+              stockSummary?: {
+                skuCount: number;
+                totalQuantity: number;
+                sellableQuantity: number;
+              };
               /** @default true */
               isActive: boolean;
               /** Format: date-time */
@@ -1693,7 +1709,7 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description 后台仓库列表 */
+        /** @description 后台仓库列表（含 perKmFee/freeKm 配送费三字段 + stockSummary 库存聚合） */
         200: {
           headers: {
             [name: string]: unknown;
@@ -1721,36 +1737,52 @@ export interface paths {
               address: string;
               operatingHours: {
                 mon?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 tue?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 wed?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 thu?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 fri?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sat?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sun?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
               } | null;
               /** @default 0 */
               deliveryFee: number;
+              /** @default 0 */
+              perKmFee: number;
+              /** @default 2 */
+              freeKm: number;
+              stockSummary?: {
+                skuCount: number;
+                totalQuantity: number;
+                sellableQuantity: number;
+              };
               /** @default true */
               isActive: boolean;
               /** Format: date-time */
@@ -1788,35 +1820,44 @@ export interface paths {
             address: string;
             operatingHours: {
               mon?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               tue?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               wed?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               thu?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               fri?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               sat?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               sun?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
             } | null;
             deliveryFee: number;
+            perKmFee?: number;
+            freeKm?: number;
             isActive: boolean;
           };
         };
@@ -1850,36 +1891,52 @@ export interface paths {
               address: string;
               operatingHours: {
                 mon?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 tue?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 wed?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 thu?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 fri?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sat?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sun?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
               } | null;
               /** @default 0 */
               deliveryFee: number;
+              /** @default 0 */
+              perKmFee: number;
+              /** @default 2 */
+              freeKm: number;
+              stockSummary?: {
+                skuCount: number;
+                totalQuantity: number;
+                sellableQuantity: number;
+              };
               /** @default true */
               isActive: boolean;
               /** Format: date-time */
@@ -1932,7 +1989,7 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description 仓库详情（含 coverageArea GeoJSON） */
+        /** @description 仓库详情（含 coverageArea GeoJSON + 在编人员 staffList） */
         200: {
           headers: {
             [name: string]: unknown;
@@ -1960,42 +2017,66 @@ export interface paths {
               address: string;
               operatingHours: {
                 mon?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 tue?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 wed?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 thu?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 fri?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sat?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sun?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
               } | null;
               /** @default 0 */
               deliveryFee: number;
+              /** @default 0 */
+              perKmFee: number;
+              /** @default 2 */
+              freeKm: number;
+              stockSummary?: {
+                skuCount: number;
+                totalQuantity: number;
+                sellableQuantity: number;
+              };
               /** @default true */
               isActive: boolean;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+              staffList: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                userId: string;
+                name: string | null;
+                roles: string[];
+              }[];
             };
           };
         };
@@ -2061,7 +2142,7 @@ export interface paths {
     };
     options?: never;
     head?: never;
-    /** @description 更新仓库（普通字段 + 可选 PostGIS） */
+    /** @description 更新仓库（普通字段 + 可选 PostGIS；部分更新只动传入字段，UpdateWarehouseRequest 全可选） */
     patch: {
       parameters: {
         query?: never;
@@ -2073,49 +2154,58 @@ export interface paths {
         content: {
           'application/json': {
             code?: string;
-            name: {
+            name?: {
               [key: string]: string;
             };
-            coverageArea: {
+            coverageArea?: {
               /** @enum {string} */
               type: 'Polygon';
               coordinates: number[][][];
             } | null;
-            centerLat: number;
-            centerLng: number;
-            address: string;
-            operatingHours: {
+            centerLat?: number;
+            centerLng?: number;
+            address?: string;
+            operatingHours?: {
               mon?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               tue?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               wed?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               thu?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               fri?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               sat?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
               sun?: {
-                open: string;
-                close: string;
+                open: string | '';
+                close: string | '';
+                rest?: boolean;
               };
             } | null;
-            deliveryFee: number;
-            isActive: boolean;
+            deliveryFee?: number;
+            perKmFee?: number;
+            freeKm?: number;
+            isActive?: boolean;
           };
         };
       };
@@ -2148,36 +2238,52 @@ export interface paths {
               address: string;
               operatingHours: {
                 mon?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 tue?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 wed?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 thu?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 fri?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sat?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sun?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
               } | null;
               /** @default 0 */
               deliveryFee: number;
+              /** @default 0 */
+              perKmFee: number;
+              /** @default 2 */
+              freeKm: number;
+              stockSummary?: {
+                skuCount: number;
+                totalQuantity: number;
+                sellableQuantity: number;
+              };
               /** @default true */
               isActive: boolean;
               /** Format: date-time */
@@ -2289,36 +2395,52 @@ export interface paths {
               address: string;
               operatingHours: {
                 mon?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 tue?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 wed?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 thu?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 fri?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sat?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
                 sun?: {
-                  open: string;
-                  close: string;
+                  open: string | '';
+                  close: string | '';
+                  rest?: boolean;
                 };
               } | null;
               /** @default 0 */
               deliveryFee: number;
+              /** @default 0 */
+              perKmFee: number;
+              /** @default 2 */
+              freeKm: number;
+              stockSummary?: {
+                skuCount: number;
+                totalQuantity: number;
+                sellableQuantity: number;
+              };
               /** @default true */
               isActive: boolean;
               /** Format: date-time */
@@ -6488,6 +6610,113 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/dispatch/tasks/{id}/assign': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Admin 直接指派（批 F，派单中心「确认指派」消费）：PENDING_ASSIGN → ASSIGNED。保留保证金资格校验（E-DEPOSIT-201 未缴 / 202 超上限）；不校验工作仓（跨仓支援走此通道）。事务双写 delivery_tasks + order.riderId + note 留痕 [assign]。 */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            riderId: string;
+            reason?: string;
+          };
+        };
+      };
+      responses: {
+        /** @description 指派成功 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: components['schemas']['AdminDeliveryTaskView'];
+            };
+          };
+        };
+        /** @description E-DEPOSIT-201 未缴 / E-DEPOSIT-202 超档位上限 */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-DISPATCH-001 任务不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-DISPATCH-002 非 PENDING_ASSIGN / E-DISPATCH-008 骑手无效 */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/dispatch/tasks/{id}/cancel': {
     parameters: {
       query?: never;
@@ -8603,6 +8832,9 @@ export interface paths {
                   createdAt: string;
                   /** Format: date-time */
                   updatedAt: string;
+                  depositAmount?: number;
+                  maxOrderAmount?: number | null;
+                  todayDeliveries?: number;
                 }[];
               };
             };
@@ -8726,6 +8958,9 @@ export interface paths {
                 createdAt: string;
                 /** Format: date-time */
                 updatedAt: string;
+                depositAmount?: number;
+                maxOrderAmount?: number | null;
+                todayDeliveries?: number;
               };
             };
           };
@@ -8840,6 +9075,9 @@ export interface paths {
                 createdAt: string;
                 /** Format: date-time */
                 updatedAt: string;
+                depositAmount?: number;
+                maxOrderAmount?: number | null;
+                todayDeliveries?: number;
               }[];
             };
           };
@@ -8952,6 +9190,9 @@ export interface paths {
                 createdAt: string;
                 /** Format: date-time */
                 updatedAt: string;
+                depositAmount?: number;
+                maxOrderAmount?: number | null;
+                todayDeliveries?: number;
               };
             };
           };
@@ -9044,6 +9285,9 @@ export interface paths {
                 createdAt: string;
                 /** Format: date-time */
                 updatedAt: string;
+                depositAmount?: number;
+                maxOrderAmount?: number | null;
+                todayDeliveries?: number;
               };
             };
           };
@@ -10490,6 +10734,9 @@ export interface paths {
                 createdAt: string;
                 /** Format: date-time */
                 updatedAt: string;
+                depositAmount?: number;
+                maxOrderAmount?: number | null;
+                todayDeliveries?: number;
               };
             };
           };
@@ -10579,6 +10826,9 @@ export interface paths {
                 createdAt: string;
                 /** Format: date-time */
                 updatedAt: string;
+                depositAmount?: number;
+                maxOrderAmount?: number | null;
+                todayDeliveries?: number;
               };
             };
           };
@@ -10675,6 +10925,9 @@ export interface paths {
                 createdAt: string;
                 /** Format: date-time */
                 updatedAt: string;
+                depositAmount?: number;
+                maxOrderAmount?: number | null;
+                todayDeliveries?: number;
               };
             };
           };
@@ -10794,6 +11047,9 @@ export interface paths {
                 createdAt: string;
                 /** Format: date-time */
                 updatedAt: string;
+                depositAmount?: number;
+                maxOrderAmount?: number | null;
+                todayDeliveries?: number;
               };
             };
           };
@@ -10858,6 +11114,1548 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/rider/deposit/requests': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description 提交保证金缴纳申请（批 B 2026-09-02）。ONLINE_MOCK：创建 PENDING 待 pay-mock；OFFLINE_COD：必须带 locationId（且缴纳点 enabled=true），创建 PENDING 待 admin 确认。amount ≥ 100（分）。Role: RIDER。 */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          'application/json': {
+            /** @enum {string} */
+            channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+            amount: number;
+            /** Format: uuid */
+            locationId?: string;
+            note?: string;
+          };
+        };
+      };
+      responses: {
+        /** @description 申请创建成功（PENDING） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+                requestedAmount: number;
+                confirmedAmount: number | null;
+                /** @enum {string} */
+                status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+                /** Format: uuid */
+                locationId: string | null;
+                note: string | null;
+                adminNote: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                paidAt: string | null;
+                /** Format: date-time */
+                confirmedAt: string | null;
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-001 金额不足 | E-DEPOSIT-002 COD 缺缴纳点/缴纳点不可用 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-RIDER-001 骑手资料不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-007 已有进行中的 PENDING 申请（跨通道互斥，批 B 修正） */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/rider/deposit/requests/{id}/pay-mock': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description 线上模拟支付回调（批 B 2026-09-02）。仅 ONLINE_MOCK + PENDING 可用：置 CONFIRMED + confirmedAmount=requestedAmount + paidAt，事务内 RiderProfile.depositAmount 累加。幂等：已 CONFIRMED 直接返回成功不重复累加。Role: RIDER。 */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 支付成功（或已支付幂等返回） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                deposit: {
+                  /** Format: uuid */
+                  id: string;
+                  /** @enum {string} */
+                  channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+                  requestedAmount: number;
+                  confirmedAmount: number | null;
+                  /** @enum {string} */
+                  status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+                  /** Format: uuid */
+                  locationId: string | null;
+                  note: string | null;
+                  adminNote: string | null;
+                  /** Format: date-time */
+                  createdAt: string;
+                  /** Format: date-time */
+                  paidAt: string | null;
+                  /** Format: date-time */
+                  confirmedAt: string | null;
+                };
+                depositAmount: number;
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-003 非 ONLINE_MOCK 通道 | E-DEPOSIT-004 非法状态流转 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-005 非本人申请 */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-006 申请不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/rider/deposit/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 保证金状态查询（批 B 2026-09-02）：depositAmount（分）+ 命中档位（minAmount/maxOrderAmount，null 上限=不限；未缴 tier=null）+ 最近 10 条申请（含状态/adminNote）。Role: RIDER。 */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 保证金状态 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                depositAmount: number;
+                tier: {
+                  /** Format: uuid */
+                  id: string;
+                  minAmount: number;
+                  maxOrderAmount: number | null;
+                  sortOrder: number;
+                  enabled: boolean;
+                  /** Format: date-time */
+                  createdAt: string;
+                  /** Format: date-time */
+                  updatedAt: string;
+                } | null;
+                recentRequests: {
+                  /** Format: uuid */
+                  id: string;
+                  /** @enum {string} */
+                  channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+                  requestedAmount: number;
+                  confirmedAmount: number | null;
+                  /** @enum {string} */
+                  status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+                  /** Format: uuid */
+                  locationId: string | null;
+                  note: string | null;
+                  adminNote: string | null;
+                  /** Format: date-time */
+                  createdAt: string;
+                  /** Format: date-time */
+                  paidAt: string | null;
+                  /** Format: date-time */
+                  confirmedAt: string | null;
+                }[];
+              };
+            };
+          };
+        };
+        /** @description E-RIDER-001 骑手资料不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/rider/deposit/locations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 启用缴纳点列表（补端点批 2026-09-03）：线下 COD Tab 下拉数据源。admin 同源只读（deposit_locations）+ enabled 过滤；字段收窄 id/name/address/note。Role: RIDER. */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 启用缴纳点列表 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string;
+                note: string | null;
+              }[];
+            };
+          };
+        };
+        /** @description E-AUTH-002 未认证 */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/rider/deposit/tiers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 启用档位列表（补端点批 2026-09-03）：缴纳页「选 $X → 上限 $Y」提示数据源。与资格派生同口径（enabled 过滤，sortOrder 升序）。Role: RIDER. */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 启用档位列表 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                minAmount: number;
+                maxOrderAmount: number | null;
+                sortOrder: number;
+                enabled: boolean;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              }[];
+            };
+          };
+        };
+        /** @description E-AUTH-002 未认证 */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/deposit/tiers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 保证金档位列表（按 sortOrder 升序）。Role: SUPER_ADMIN。 */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 档位列表 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                minAmount: number;
+                maxOrderAmount: number | null;
+                sortOrder: number;
+                enabled: boolean;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    /** @description 新增档位（批 C）。校验：minAmount>0；maxOrderAmount null=不限 或 > minAmount；minAmount 唯一。修改档位不动 rider.depositAmount（上限派生自动生效）。Role: SUPER_ADMIN。 */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          'application/json': {
+            minAmount: number;
+            maxOrderAmount: number | null;
+            sortOrder: number;
+            enabled?: boolean;
+          };
+        };
+      };
+      responses: {
+        /** @description 创建成功 */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                minAmount: number;
+                maxOrderAmount: number | null;
+                sortOrder: number;
+                enabled: boolean;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              };
+            };
+          };
+        };
+        /** @description E-COMMON-001 校验失败（maxOrderAmount ≤ minAmount） */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-101 minAmount 已存在 */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/deposit/tiers/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** @description 删除档位（批 C）。软停用语义：enabled=false（保留历史档定义，派生查询只看 enabled 档）。Role: SUPER_ADMIN。 */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 已停用 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {boolean} */
+                enabled: false;
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-102 档位不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    /** @description 编辑档位（批 C）。局部更新；上限变化实时生效（派生查询，无数据回填）。Role: SUPER_ADMIN。 */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          'application/json': {
+            minAmount?: number;
+            maxOrderAmount?: number | null;
+            sortOrder?: number;
+            enabled?: boolean;
+          };
+        };
+      };
+      responses: {
+        /** @description 更新成功 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                minAmount: number;
+                maxOrderAmount: number | null;
+                sortOrder: number;
+                enabled: boolean;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-102 档位不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-101 minAmount 撞已有档 */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    trace?: never;
+  };
+  '/api/v1/admin/deposit/locations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 缴纳点列表（批 C）。Role: SUPER_ADMIN。 */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 缴纳点列表 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string;
+                note: string | null;
+                enabled: boolean;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    /** @description 新增缴纳点（批 C）。Role: SUPER_ADMIN。 */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          'application/json': {
+            name: string;
+            address: string;
+            note?: string | null;
+            enabled?: boolean;
+          };
+        };
+      };
+      responses: {
+        /** @description 创建成功 */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string;
+                note: string | null;
+                enabled: boolean;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              };
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/deposit/locations/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** @description 删除缴纳点（批 C）。软停用：enabled=false。已被流水引用的缴纳点不物理删（FK SET NULL 但保留历史名）。Role: SUPER_ADMIN。 */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 已停用 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {boolean} */
+                enabled: false;
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-103 缴纳点不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    /** @description 编辑缴纳点（批 C，含启停）。Role: SUPER_ADMIN。 */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          'application/json': {
+            name?: string;
+            address?: string;
+            note?: string | null;
+            enabled?: boolean;
+          };
+        };
+      };
+      responses: {
+        /** @description 更新成功 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string;
+                note: string | null;
+                enabled: boolean;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-103 缴纳点不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    trace?: never;
+  };
+  '/api/v1/admin/deposit/requests': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 保证金申请列表（批 C）。含骑手姓名/手机号/缴纳点名；status 过滤 + 分页（page/pageSize，默认 1/20）。Role: SUPER_ADMIN。 */
+    get: {
+      parameters: {
+        query?: {
+          status?: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+          page?: number;
+          pageSize?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 申请列表（分页） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                items: {
+                  /** Format: uuid */
+                  id: string;
+                  /** @enum {string} */
+                  channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+                  requestedAmount: number;
+                  confirmedAmount: number | null;
+                  /** @enum {string} */
+                  status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+                  /** Format: uuid */
+                  locationId: string | null;
+                  note: string | null;
+                  adminNote: string | null;
+                  /** Format: date-time */
+                  createdAt: string;
+                  /** Format: date-time */
+                  paidAt: string | null;
+                  /** Format: date-time */
+                  confirmedAt: string | null;
+                  riderName: string;
+                  riderPhone: string;
+                  locationName: string | null;
+                }[];
+                total: number;
+                page: number;
+                pageSize: number;
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/deposit/requests/{id}/confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description 确认收款（批 C）。仅 PENDING：事务内置 CONFIRMED + confirmedAt + RiderProfile.depositAmount += confirmedAmount ?? requestedAmount（increment 原子）。幂等：已 CONFIRMED → E-DEPOSIT-104 拒绝。Role: SUPER_ADMIN。 */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          'application/json': {
+            confirmedAmount?: number;
+            adminNote?: string;
+          };
+        };
+      };
+      responses: {
+        /** @description 确认成功（含累加后余额） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                deposit: {
+                  /** Format: uuid */
+                  id: string;
+                  /** @enum {string} */
+                  channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+                  requestedAmount: number;
+                  confirmedAmount: number | null;
+                  /** @enum {string} */
+                  status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+                  /** Format: uuid */
+                  locationId: string | null;
+                  note: string | null;
+                  adminNote: string | null;
+                  /** Format: date-time */
+                  createdAt: string;
+                  /** Format: date-time */
+                  paidAt: string | null;
+                  /** Format: date-time */
+                  confirmedAt: string | null;
+                  riderName: string;
+                  riderPhone: string;
+                  locationName: string | null;
+                };
+                depositAmount: number;
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-006 申请不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-104 非 PENDING（重复 confirm 拒绝） */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/deposit/requests/{id}/reject': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description 拒绝申请（批 C）。仅 PENDING；adminNote 必填（骑手端可见）。REJECTED 后骑手可重新提交（新流水）。Role: SUPER_ADMIN。 */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          'application/json': {
+            adminNote: string;
+          };
+        };
+      };
+      responses: {
+        /** @description 已拒绝 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+                requestedAmount: number;
+                confirmedAmount: number | null;
+                /** @enum {string} */
+                status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+                /** Format: uuid */
+                locationId: string | null;
+                note: string | null;
+                adminNote: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                paidAt: string | null;
+                /** Format: date-time */
+                confirmedAt: string | null;
+                riderName: string;
+                riderPhone: string;
+                locationName: string | null;
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-006 申请不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-DEPOSIT-104 非 PENDING */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/riders/{id}/detail': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 骑手聚合详情（批 C，方案 Q8 ①-⑤）：①基础资料 ②实时状态（在线/在途） ③业务统计（今日/累计/评分） ④财务（depositAmount/档位/上限/结算余额） ⑤缴存申请（最近 20 条）。注 :id = riderProfileId。Role: SUPER_ADMIN。 */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 聚合详情 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                basic: {
+                  /** Format: uuid */
+                  riderProfileId: string;
+                  /** Format: uuid */
+                  userId: string;
+                  riderName: string;
+                  phone: string;
+                  /** @enum {string} */
+                  vehicleType: 'MOTORCYCLE' | 'BICYCLE' | 'CAR';
+                  vehiclePlate: string | null;
+                  /** @enum {string} */
+                  applicationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+                  preferredWarehouseIds: string[];
+                };
+                realtime: {
+                  /** @enum {string} */
+                  status: 'OFFLINE' | 'ONLINE' | 'BUSY';
+                  isOnline: boolean;
+                  maybeOffline: boolean;
+                  activeTaskCount: number;
+                };
+                stats: {
+                  todayDeliveries: number;
+                  totalDeliveries: number;
+                  rating: number;
+                };
+                finance: {
+                  depositAmount: number;
+                  tier: {
+                    /** Format: uuid */
+                    id: string;
+                    minAmount: number;
+                    maxOrderAmount: number | null;
+                    sortOrder: number;
+                    enabled: boolean;
+                    /** Format: date-time */
+                    createdAt: string;
+                    /** Format: date-time */
+                    updatedAt: string;
+                  } | null;
+                  maxOrderAmount: number | null;
+                  settleBalance: number;
+                };
+                depositRequests: {
+                  /** Format: uuid */
+                  id: string;
+                  /** @enum {string} */
+                  channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+                  requestedAmount: number;
+                  confirmedAmount: number | null;
+                  /** @enum {string} */
+                  status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+                  /** Format: uuid */
+                  locationId: string | null;
+                  note: string | null;
+                  adminNote: string | null;
+                  /** Format: date-time */
+                  createdAt: string;
+                  /** Format: date-time */
+                  paidAt: string | null;
+                  /** Format: date-time */
+                  confirmedAt: string | null;
+                  riderName: string;
+                  riderPhone: string;
+                  locationName: string | null;
+                }[];
+              };
+            };
+          };
+        };
+        /** @description E-RIDER-001 骑手不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/dispatch/warehouse-load': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 各仓负载面板（批 C，方案 Q12）：每仓 { warehouseId, pendingTaskCount, availableRiderCount, estWaitMinutes }。可用骑手 = APPROVED + Redis 在线 + 工作仓（preferredWarehouseIds）含该仓；estWait = pending / max(available,1) × 30min 近似。Role: SUPER_ADMIN。 */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 各仓负载 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                warehouseId: string;
+                warehouseCode: string;
+                warehouseName: string | null;
+                pendingTaskCount: number;
+                availableRiderCount: number;
+                estWaitMinutes: number;
+              }[];
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/dispatch/tasks/{id}/candidates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 派单候选（批 D，方案 Q10 两段式）：资格过滤（金额≤档位上限 + 工作仓匹配）→ 排序 score=rating×0.5+距离近度×0.3−在途×0.2（平局 depositAmount 高优先）→ 资格标签（eligible/depositAmount/maxOrderAmount/requiredDeposit）。query：crossWarehouse=true 放宽工作仓（仅 admin 跨仓支援，金额资格保留）；includeIneligible=true 附带不合格候选（⛔需保证金提示）。Role: SUPER_ADMIN。 */
+    get: {
+      parameters: {
+        query?: {
+          crossWarehouse?: boolean | null;
+          includeIneligible?: boolean | null;
+        };
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 候选列表（按 score 降序） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                /** Format: uuid */
+                taskId: string;
+                orderAmount: number;
+                items: {
+                  /** Format: uuid */
+                  riderProfileId: string;
+                  riderName: string;
+                  phone: string;
+                  /** @enum {string} */
+                  vehicleType: 'MOTORCYCLE' | 'BICYCLE' | 'CAR';
+                  isOnline: boolean;
+                  rating: number;
+                  depositAmount: number;
+                  maxOrderAmount: number | null;
+                  inTransitTasks: number;
+                  distanceKm: number | null;
+                  eligibility: {
+                    eligible: boolean;
+                    depositAmount: number;
+                    maxOrderAmount: number | null;
+                    requiredDeposit?: number;
+                  };
+                  warehouseMatched: boolean;
+                  score: number;
+                }[];
+              };
+            };
+          };
+        };
+        /** @description E-DISPATCH-001 任务不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -15103,6 +16901,431 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/feedback': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 后台反馈列表（admin-web 优化方案 批次2 2026-08-29，Role: SUPER_ADMIN，只读）。category 筛选 + keyword 模糊 content/contact + 时间范围 startDate/endDate（均含边界）+ offset 分页（page/pageSize 默认 1/20，max 100）。返回 items 含 submitter 摘要（phone/name/avatarUrl，user 软删也保留）。MVP 无处理状态字段（后续增强需 migration）。 */
+    get: {
+      parameters: {
+        query?: {
+          category?: 'feature' | 'product' | 'order' | 'payment' | 'shipping' | 'other';
+          keyword?: string;
+          startDate?: string;
+          endDate?: string;
+          page?: number;
+          pageSize?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 反馈列表（offset 分页） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                userId: string;
+                /** @enum {string} */
+                category: 'feature' | 'product' | 'order' | 'payment' | 'shipping' | 'other';
+                content: string;
+                contact: string | null;
+                images: string[];
+                /** Format: date-time */
+                createdAt: string;
+                submitter: {
+                  /** Format: uuid */
+                  id: string;
+                  phone: string | null;
+                  name: string | null;
+                  avatarUrl: string | null;
+                } | null;
+              }[];
+              page: number;
+              pageSize: number;
+              total: number;
+              hasMore: boolean;
+            };
+          };
+        };
+        /** @description 未认证 */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description 非 SUPER_ADMIN */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/feedback/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 后台反馈详情（admin-web 优化方案 批次2 2026-08-29，Role: SUPER_ADMIN，只读）。含 images 截图 URL + submitter 扩展信息（email/role/status）。 */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 反馈详情 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              userId: string;
+              /** @enum {string} */
+              category: 'feature' | 'product' | 'order' | 'payment' | 'shipping' | 'other';
+              content: string;
+              contact: string | null;
+              images: string[];
+              /** Format: date-time */
+              createdAt: string;
+              submitter: {
+                /** Format: uuid */
+                id: string;
+                phone: string | null;
+                /** Format: email */
+                email: string | null;
+                name: string | null;
+                avatarUrl: string | null;
+                role: string;
+                status: string;
+              } | null;
+            };
+          };
+        };
+        /** @description 未认证 */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description 非 SUPER_ADMIN */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-FEEDBACK-002 反馈不存在 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/notifications': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 后台通知发送历史（admin-web 优化方案 批次2 2026-08-29，Role: SUPER_ADMIN）。offset 分页 + type/target 筛选。MVP 无「批次」表，按 Notification 行倒序展示，每条 deliveredCount=1（真正按批次聚合需建 NotificationBatch 表，列暂缓增强）。 */
+    get: {
+      parameters: {
+        query?: {
+          type?: 'ORDER_UPDATE' | 'PROMOTION' | 'SYSTEM';
+          page?: number;
+          pageSize?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 发送历史列表（offset 分页） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              items: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                type: 'ORDER_UPDATE' | 'PROMOTION' | 'SYSTEM';
+                deliveredCount: number;
+                title: {
+                  [key: string]: string;
+                };
+                content: {
+                  [key: string]: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+              page: number;
+              pageSize: number;
+              total: number;
+              hasMore: boolean;
+            };
+          };
+        };
+        /** @description 未认证 */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description 非 SUPER_ADMIN */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    /** @description 后台发送通知（admin-web 优化方案 批次2 2026-08-29，Role: SUPER_ADMIN）。target=ALL_CUSTOMERS/ALL_RIDERS（群发，超 50000 抛 E-ADMIN-NOTIF-002）/SPECIFIC_USERS（指定 userIds，缺失抛 E-ADMIN-NOTIF-001，最多 1000）。type=ORDER_UPDATE/PROMOTION/SYSTEM。title/content 多语言 JSON（至少 en）。MVP 真链路=写 Notification 表（前端 /client/notifications 拉取），PUSH 走 dev stub（mockFlag=true 提示未真实推送）。响应 deliveredCount + push 结果。 */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          'application/json': {
+            /** @enum {string} */
+            target: 'ALL_CUSTOMERS' | 'ALL_RIDERS' | 'SPECIFIC_USERS';
+            userIds?: string[];
+            /** @enum {string} */
+            type: 'ORDER_UPDATE' | 'PROMOTION' | 'SYSTEM';
+            title: {
+              [key: string]: string;
+            };
+            content: {
+              [key: string]: string;
+            };
+            data?: {
+              [key: string]: unknown;
+            } | null;
+          };
+        };
+      };
+      responses: {
+        /** @description 发送成功，返回投递计数 + PUSH stub 结果 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              deliveredCount: number;
+              push: {
+                success: boolean;
+                mockFlag: boolean;
+                error: string | null;
+              };
+            };
+          };
+        };
+        /** @description E-ADMIN-NOTIF-001 userIds 缺失/不存在 / E-ADMIN-NOTIF-002 群发超上限 / E-COMMON-001 校验失败 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description 未认证 */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description 非 SUPER_ADMIN */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/settle/settlements': {
     parameters: {
       query?: never;
@@ -16461,42 +18684,141 @@ export interface components {
       address: string;
       operatingHours: {
         mon?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         tue?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         wed?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         thu?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         fri?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         sat?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         sun?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
       } | null;
       /** @default 0 */
       deliveryFee: number;
+      /** @default 0 */
+      perKmFee: number;
+      /** @default 2 */
+      freeKm: number;
+      stockSummary?: {
+        skuCount: number;
+        totalQuantity: number;
+        sellableQuantity: number;
+      };
       /** @default true */
       isActive: boolean;
       /** Format: date-time */
       createdAt: string;
       /** Format: date-time */
       updatedAt: string;
+    };
+    WarehouseDetailResponse: {
+      /** Format: uuid */
+      id: string;
+      code: string;
+      name: {
+        [key: string]: string;
+      };
+      coverageArea: {
+        /** @enum {string} */
+        type: 'Polygon';
+        coordinates: number[][][];
+      } | null;
+      centerPoint: {
+        /** @enum {string} */
+        type: 'Point';
+        coordinates: number[];
+      } | null;
+      centerLat: number | null;
+      centerLng: number | null;
+      address: string;
+      operatingHours: {
+        mon?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        tue?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        wed?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        thu?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        fri?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        sat?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        sun?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+      } | null;
+      /** @default 0 */
+      deliveryFee: number;
+      /** @default 0 */
+      perKmFee: number;
+      /** @default 2 */
+      freeKm: number;
+      stockSummary?: {
+        skuCount: number;
+        totalQuantity: number;
+        sellableQuantity: number;
+      };
+      /** @default true */
+      isActive: boolean;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      staffList: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        userId: string;
+        name: string | null;
+        roles: string[];
+      }[];
     };
     UpsertWarehouseRequest: {
       code?: string;
@@ -16513,40 +18835,117 @@ export interface components {
       address: string;
       operatingHours: {
         mon?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         tue?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         wed?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         thu?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         fri?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         sat?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
         sun?: {
-          open: string;
-          close: string;
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
         };
       } | null;
       deliveryFee: number;
+      perKmFee?: number;
+      freeKm?: number;
       isActive: boolean;
+    };
+    UpdateWarehouseRequest: {
+      code?: string;
+      name?: {
+        [key: string]: string;
+      };
+      coverageArea?: {
+        /** @enum {string} */
+        type: 'Polygon';
+        coordinates: number[][][];
+      } | null;
+      centerLat?: number;
+      centerLng?: number;
+      address?: string;
+      operatingHours?: {
+        mon?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        tue?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        wed?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        thu?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        fri?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        sat?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+        sun?: {
+          open: string | '';
+          close: string | '';
+          rest?: boolean;
+        };
+      } | null;
+      deliveryFee?: number;
+      perKmFee?: number;
+      freeKm?: number;
+      isActive?: boolean;
     };
     MatchWarehouseRequest: {
       lat: number;
       lng: number;
+    };
+    StockSummary: {
+      skuCount: number;
+      totalQuantity: number;
+      sellableQuantity: number;
+    };
+    WarehouseStaffItem: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      userId: string;
+      name: string | null;
+      roles: string[];
     };
     Product: {
       /** Format: uuid */
@@ -17397,6 +19796,11 @@ export interface components {
       newRiderId: string;
       reason?: string;
     };
+    AssignTaskRequest: {
+      /** Format: uuid */
+      riderId: string;
+      reason?: string;
+    };
     CancelTaskRequest: {
       reason?: string;
     };
@@ -17867,6 +20271,337 @@ export interface components {
       /** Format: date-time */
       createdAt: string;
     };
+    RiderDepositTier: {
+      /** Format: uuid */
+      id: string;
+      minAmount: number;
+      maxOrderAmount: number | null;
+      sortOrder: number;
+      enabled: boolean;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    DepositLocation: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      address: string;
+      note: string | null;
+      enabled: boolean;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    RiderDepositRecord: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {string} */
+      channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+      requestedAmount: number;
+      confirmedAmount: number | null;
+      /** @enum {string} */
+      status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+      /** Format: uuid */
+      locationId: string | null;
+      note: string | null;
+      adminNote: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      paidAt: string | null;
+      /** Format: date-time */
+      confirmedAt: string | null;
+    };
+    CreateRiderDepositRequest: {
+      /** @enum {string} */
+      channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+      amount: number;
+      /** Format: uuid */
+      locationId?: string;
+      note?: string;
+    };
+    RiderDepositPayMockResult: {
+      deposit: {
+        /** Format: uuid */
+        id: string;
+        /** @enum {string} */
+        channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+        requestedAmount: number;
+        confirmedAmount: number | null;
+        /** @enum {string} */
+        status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+        /** Format: uuid */
+        locationId: string | null;
+        note: string | null;
+        adminNote: string | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        paidAt: string | null;
+        /** Format: date-time */
+        confirmedAt: string | null;
+      };
+      depositAmount: number;
+    };
+    RiderDepositStatusResponse: {
+      depositAmount: number;
+      tier: {
+        /** Format: uuid */
+        id: string;
+        minAmount: number;
+        maxOrderAmount: number | null;
+        sortOrder: number;
+        enabled: boolean;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+      } | null;
+      recentRequests: {
+        /** Format: uuid */
+        id: string;
+        /** @enum {string} */
+        channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+        requestedAmount: number;
+        confirmedAmount: number | null;
+        /** @enum {string} */
+        status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+        /** Format: uuid */
+        locationId: string | null;
+        note: string | null;
+        adminNote: string | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        paidAt: string | null;
+        /** Format: date-time */
+        confirmedAt: string | null;
+      }[];
+    };
+    RiderDepositLocationListResponse: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      address: string;
+      note: string | null;
+    }[];
+    AdminUpsertTierRequest: {
+      minAmount: number;
+      maxOrderAmount: number | null;
+      sortOrder: number;
+      enabled?: boolean;
+    };
+    AdminUpdateTierRequest: {
+      minAmount?: number;
+      maxOrderAmount?: number | null;
+      sortOrder?: number;
+      enabled?: boolean;
+    };
+    AdminUpsertLocationRequest: {
+      name: string;
+      address: string;
+      note?: string | null;
+      enabled?: boolean;
+    };
+    AdminDepositRequestItem: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {string} */
+      channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+      requestedAmount: number;
+      confirmedAmount: number | null;
+      /** @enum {string} */
+      status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+      /** Format: uuid */
+      locationId: string | null;
+      note: string | null;
+      adminNote: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      paidAt: string | null;
+      /** Format: date-time */
+      confirmedAt: string | null;
+      riderName: string;
+      riderPhone: string;
+      locationName: string | null;
+    };
+    AdminListDepositRequestsQuery: {
+      /** @enum {string} */
+      status?: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+      page?: number;
+      pageSize?: number;
+    };
+    AdminDepositRequestListResponse: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** @enum {string} */
+        channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+        requestedAmount: number;
+        confirmedAmount: number | null;
+        /** @enum {string} */
+        status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+        /** Format: uuid */
+        locationId: string | null;
+        note: string | null;
+        adminNote: string | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        paidAt: string | null;
+        /** Format: date-time */
+        confirmedAt: string | null;
+        riderName: string;
+        riderPhone: string;
+        locationName: string | null;
+      }[];
+      total: number;
+      page: number;
+      pageSize: number;
+    };
+    AdminConfirmDepositRequest: {
+      confirmedAmount?: number;
+      adminNote?: string;
+    };
+    AdminRejectDepositRequest: {
+      adminNote: string;
+    };
+    AdminRiderDepositDetail: {
+      basic: {
+        /** Format: uuid */
+        riderProfileId: string;
+        /** Format: uuid */
+        userId: string;
+        riderName: string;
+        phone: string;
+        /** @enum {string} */
+        vehicleType: 'MOTORCYCLE' | 'BICYCLE' | 'CAR';
+        vehiclePlate: string | null;
+        /** @enum {string} */
+        applicationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+        preferredWarehouseIds: string[];
+      };
+      realtime: {
+        /** @enum {string} */
+        status: 'OFFLINE' | 'ONLINE' | 'BUSY';
+        isOnline: boolean;
+        maybeOffline: boolean;
+        activeTaskCount: number;
+      };
+      stats: {
+        todayDeliveries: number;
+        totalDeliveries: number;
+        rating: number;
+      };
+      finance: {
+        depositAmount: number;
+        tier: {
+          /** Format: uuid */
+          id: string;
+          minAmount: number;
+          maxOrderAmount: number | null;
+          sortOrder: number;
+          enabled: boolean;
+          /** Format: date-time */
+          createdAt: string;
+          /** Format: date-time */
+          updatedAt: string;
+        } | null;
+        maxOrderAmount: number | null;
+        settleBalance: number;
+      };
+      depositRequests: {
+        /** Format: uuid */
+        id: string;
+        /** @enum {string} */
+        channel: 'ONLINE_MOCK' | 'OFFLINE_COD';
+        requestedAmount: number;
+        confirmedAmount: number | null;
+        /** @enum {string} */
+        status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'REFUNDED';
+        /** Format: uuid */
+        locationId: string | null;
+        note: string | null;
+        adminNote: string | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        paidAt: string | null;
+        /** Format: date-time */
+        confirmedAt: string | null;
+        riderName: string;
+        riderPhone: string;
+        locationName: string | null;
+      }[];
+    };
+    WarehouseLoadItem: {
+      /** Format: uuid */
+      warehouseId: string;
+      warehouseCode: string;
+      warehouseName: string | null;
+      pendingTaskCount: number;
+      availableRiderCount: number;
+      estWaitMinutes: number;
+    };
+    DispatchEligibilityLabel: {
+      eligible: boolean;
+      depositAmount: number;
+      maxOrderAmount: number | null;
+      requiredDeposit?: number;
+    };
+    DispatchCandidate: {
+      /** Format: uuid */
+      riderProfileId: string;
+      riderName: string;
+      phone: string;
+      /** @enum {string} */
+      vehicleType: 'MOTORCYCLE' | 'BICYCLE' | 'CAR';
+      isOnline: boolean;
+      rating: number;
+      depositAmount: number;
+      maxOrderAmount: number | null;
+      inTransitTasks: number;
+      distanceKm: number | null;
+      eligibility: {
+        eligible: boolean;
+        depositAmount: number;
+        maxOrderAmount: number | null;
+        requiredDeposit?: number;
+      };
+      warehouseMatched: boolean;
+      score: number;
+    };
+    DispatchCandidateList: {
+      /** Format: uuid */
+      taskId: string;
+      orderAmount: number;
+      items: {
+        /** Format: uuid */
+        riderProfileId: string;
+        riderName: string;
+        phone: string;
+        /** @enum {string} */
+        vehicleType: 'MOTORCYCLE' | 'BICYCLE' | 'CAR';
+        isOnline: boolean;
+        rating: number;
+        depositAmount: number;
+        maxOrderAmount: number | null;
+        inTransitTasks: number;
+        distanceKm: number | null;
+        eligibility: {
+          eligible: boolean;
+          depositAmount: number;
+          maxOrderAmount: number | null;
+          requiredDeposit?: number;
+        };
+        warehouseMatched: boolean;
+        score: number;
+      }[];
+    };
     CreateReviewRequest: {
       rating: number;
       content: {
@@ -17972,6 +20707,157 @@ export interface components {
       /** @default [] */
       images: string[];
     };
+    AdminFeedbackListItem: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      userId: string;
+      /** @enum {string} */
+      category: 'feature' | 'product' | 'order' | 'payment' | 'shipping' | 'other';
+      content: string;
+      contact: string | null;
+      images: string[];
+      /** Format: date-time */
+      createdAt: string;
+      submitter: {
+        /** Format: uuid */
+        id: string;
+        phone: string | null;
+        name: string | null;
+        avatarUrl: string | null;
+      } | null;
+    };
+    AdminFeedbackDetail: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      userId: string;
+      /** @enum {string} */
+      category: 'feature' | 'product' | 'order' | 'payment' | 'shipping' | 'other';
+      content: string;
+      contact: string | null;
+      images: string[];
+      /** Format: date-time */
+      createdAt: string;
+      submitter: {
+        /** Format: uuid */
+        id: string;
+        phone: string | null;
+        /** Format: email */
+        email: string | null;
+        name: string | null;
+        avatarUrl: string | null;
+        role: string;
+        status: string;
+      } | null;
+    };
+    AdminFeedbackListResponseData: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        userId: string;
+        /** @enum {string} */
+        category: 'feature' | 'product' | 'order' | 'payment' | 'shipping' | 'other';
+        content: string;
+        contact: string | null;
+        images: string[];
+        /** Format: date-time */
+        createdAt: string;
+        submitter: {
+          /** Format: uuid */
+          id: string;
+          phone: string | null;
+          name: string | null;
+          avatarUrl: string | null;
+        } | null;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      hasMore: boolean;
+    };
+    AdminListFeedbackQuery: {
+      /** @enum {string} */
+      category?: 'feature' | 'product' | 'order' | 'payment' | 'shipping' | 'other';
+      keyword?: string;
+      /** Format: date-time */
+      startDate?: string;
+      /** Format: date-time */
+      endDate?: string;
+      page?: number;
+      pageSize?: number;
+    };
+    AdminSendNotificationRequest: {
+      /** @enum {string} */
+      target: 'ALL_CUSTOMERS' | 'ALL_RIDERS' | 'SPECIFIC_USERS';
+      userIds?: string[];
+      /** @enum {string} */
+      type: 'ORDER_UPDATE' | 'PROMOTION' | 'SYSTEM';
+      title: {
+        [key: string]: string;
+      };
+      content: {
+        [key: string]: string;
+      };
+      data?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    AdminSendNotificationResponseData: {
+      deliveredCount: number;
+      push: {
+        success: boolean;
+        mockFlag: boolean;
+        error: string | null;
+      };
+    };
+    AdminNotificationHistoryItem: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {string} */
+      type: 'ORDER_UPDATE' | 'PROMOTION' | 'SYSTEM';
+      deliveredCount: number;
+      title: {
+        [key: string]: string;
+      };
+      content: {
+        [key: string]: string;
+      };
+      /** Format: date-time */
+      createdAt: string;
+    };
+    AdminNotificationHistoryListResponseData: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** @enum {string} */
+        type: 'ORDER_UPDATE' | 'PROMOTION' | 'SYSTEM';
+        deliveredCount: number;
+        title: {
+          [key: string]: string;
+        };
+        content: {
+          [key: string]: string;
+        };
+        /** Format: date-time */
+        createdAt: string;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      hasMore: boolean;
+    };
+    AdminListNotificationsQuery: {
+      /** @enum {string} */
+      type?: 'ORDER_UPDATE' | 'PROMOTION' | 'SYSTEM';
+      page?: number;
+      pageSize?: number;
+    };
+    /** @enum {string} */
+    NotificationTarget: 'ALL_CUSTOMERS' | 'ALL_RIDERS' | 'SPECIFIC_USERS';
+    /** @enum {string} */
+    AdminNotificationType: 'ORDER_UPDATE' | 'PROMOTION' | 'SYSTEM';
   };
   responses: never;
   parameters: never;
