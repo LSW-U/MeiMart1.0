@@ -78,6 +78,10 @@ module.exports = {
         // "Unexpected token 'export'"）。页面级测试经 TaskDetailHeader→api.ts 首次
         // 拉进该链。桩成 CJS env 透传 process.env（与真包语义一致）。
         '^expo/virtual/env$': '<rootDir>/src/test/expo-virtual-env.mock.js',
+        // 批C 设备跟随：settings.ts 顶层 import expo-localization（ESM 发布 + 原生宿主，
+        // jsdom 不 transform → "Cannot use import statement outside module"）。桩成
+        // CJS 可控 mock（__setDeviceLanguage 控制 detectDeviceLanguage），见 mock 文件头注。
+        '^expo-localization$': '<rootDir>/src/test/expo-localization.mock.js',
       },
     },
   ],

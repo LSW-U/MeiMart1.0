@@ -1,9 +1,15 @@
-import { colors } from "../../theme/colors";
+import { colors } from '../../theme/colors';
 import { Platform, Text, View } from 'react-native';
 
+import { useTranslation } from '../../i18n/useTranslation';
 import type { Coordinates } from '../../types/common';
 
-type Region = { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number };
+type Region = {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+};
 
 type MapViewProps = {
   pickup?: Coordinates & { title?: string };
@@ -17,7 +23,15 @@ type MapViewProps = {
 const DEFAULT_LAT = -8.5569;
 const DEFAULT_LNG = 125.5603;
 
-function MapViewNative({ pickup, delivery, rider, region, onRegionChange, children }: MapViewProps) {
+function MapViewNative({
+  pickup,
+  delivery,
+  rider,
+  region,
+  onRegionChange,
+  children,
+}: MapViewProps) {
+  const { t } = useTranslation();
   const { default: MapViewRN, Marker, PROVIDER_DEFAULT } = require('react-native-maps');
 
   const initialRegion = region ?? {
@@ -41,21 +55,21 @@ function MapViewNative({ pickup, delivery, rider, region, onRegionChange, childr
       {pickup && (
         <Marker
           coordinate={{ latitude: pickup.latitude, longitude: pickup.longitude }}
-          title={pickup.title ?? 'Pickup'}
+          title={pickup.title ?? t('map.markerPickup')}
           pinColor={colors.primary}
         />
       )}
       {delivery && (
         <Marker
           coordinate={{ latitude: delivery.latitude, longitude: delivery.longitude }}
-          title={delivery.title ?? 'Delivery'}
+          title={delivery.title ?? t('map.markerDelivery')}
           pinColor={colors.tertiary}
         />
       )}
       {rider && (
         <Marker
           coordinate={{ latitude: rider.latitude, longitude: rider.longitude }}
-          title="You"
+          title={t('map.markerYou')}
           pinColor={colors.text}
         />
       )}
@@ -65,14 +79,18 @@ function MapViewNative({ pickup, delivery, rider, region, onRegionChange, childr
 }
 
 function MapViewPlaceholder({ pickup, delivery }: MapViewProps) {
+  const { t } = useTranslation();
   return (
     <View className="w-full items-center justify-center bg-surface-frame" style={{ height: 320 }}>
       <View className="items-center gap-2">
-        <Text className="text-4xl text-primary/40">MAP</Text>
+        <Text className="text-4xl text-primary/40">{t('map.placeholderBadge')}</Text>
         <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-          {pickup && delivery ? `${pickup.title ?? 'P'} → ${delivery.title ?? 'D'}` : 'Map view'}
+          {/* Why: 'P'/'D' 是起终点单字母图例符号（地图 marker 惯例），不随语言变 */}
+          {pickup && delivery
+            ? `${pickup.title ?? 'P'} → ${delivery.title ?? 'D'}`
+            : t('map.placeholderTitle')}
         </Text>
-        <Text className="mt-1 text-[10px] text-outline">Available on iOS / Android</Text>
+        <Text className="mt-1 text-[10px] text-outline">{t('map.placeholderPlatform')}</Text>
       </View>
     </View>
   );

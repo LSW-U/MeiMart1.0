@@ -19,6 +19,7 @@ import { EmptyState } from '@/src/components/feedback/EmptyState';
 import { colors } from '@/src/theme/colors';
 import { useTranslation } from '@/src/i18n/useTranslation';
 import { formatCurrency } from '@/src/utils/format';
+import { localeTagFor } from '@/src/services/settings';
 import { useDepositStatus, useDepositLocations } from '@/src/services/queries/useDeposit';
 import type { DepositRecord } from '@/src/services/deposit';
 
@@ -38,7 +39,7 @@ function statusVisual(status: DepositRecord['status']) {
 
 export default function DepositRecordsPage() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const currency = t('common.currency');
 
   const { data: status, isLoading, refetch } = useDepositStatus();
@@ -109,7 +110,7 @@ export default function DepositRecordsPage() {
                       </View>
                       {/* meta：时间 + 缴纳点 */}
                       <Text className="mt-1 text-xs text-on-surface-variant">
-                        {new Date(record.createdAt).toLocaleString()}
+                        {new Date(record.createdAt).toLocaleString(localeTagFor(language))}
                         {locationName ? ` · ${locationName}` : ''}
                       </Text>
                       {/* 骑手说明（PENDING 保留显示，HTML change-card 13） */}

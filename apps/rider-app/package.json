@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "check:i18n": "python3 scripts/check-i18n-keys.py"
   },
   "dependencies": {
     "@expo/metro-runtime": "^56.0.14",
@@ -26,6 +27,7 @@
     "expo": "^56.0.9",
     "expo-camera": "~56.0.8",
     "expo-image-picker": "~56.0.17",
+    "expo-localization": "~56.0.6",
     "expo-location": "~56.0.17",
     "expo-router": "^56.2.9",
     "expo-secure-store": "~56.0.4",

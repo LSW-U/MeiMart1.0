@@ -264,6 +264,9 @@ importers:
       expo-image-picker:
         specifier: ~56.0.17
         version: 56.0.24(expo@56.0.20)
+      expo-localization:
+        specifier: ~56.0.6
+        version: 56.0.6(expo@56.0.20)(react@19.2.3)
       expo-location:
         specifier: ~56.0.17
         version: 56.0.24(expo@56.0.20)(supports-color@8.1.1)(typescript@6.0.3)

@@ -27,6 +27,7 @@ import { SimplePageHeader } from '@/src/components/layout/SimplePageHeader';
 import { colors } from '@/src/theme/colors';
 import { useTranslation } from '@/src/i18n/useTranslation';
 import { formatCurrency } from '@/src/utils/format';
+import { localeTagFor } from '@/src/services/settings';
 import {
   useDepositStatus,
   useDepositLocations,
@@ -64,7 +65,7 @@ function heroVisual(state: 'paid' | 'unpaid' | 'pending') {
 export default function DepositPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const currency = t('common.currency');
 
   const { data: status, isLoading, isError, refetch } = useDepositStatus();
@@ -178,7 +179,7 @@ export default function DepositPage() {
                 {t('deposit.hero.submittedAt')}
               </Text>
               <Text className="text-sm font-bold text-on-surface">
-                {new Date(pendingRequest.createdAt).toLocaleString()}
+                {new Date(pendingRequest.createdAt).toLocaleString(localeTagFor(language))}
               </Text>
             </View>
           </View>

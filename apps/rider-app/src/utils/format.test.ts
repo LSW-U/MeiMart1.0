@@ -53,6 +53,19 @@ describe('formatCurrency', () => {
   it('en 货币 $（locale 无关，符号由调用方传）', () => {
     expect(formatCurrency(12.5, '$')).toBe('$12.50');
   });
+
+  // 批C 语言优化：固定美式千分位（方案 v2 §2.6 金额跨语言一致），Intl.NumberFormat('en-US')
+  it('千分位：>=1000 美式逗号分隔（$1,234.56）', () => {
+    expect(formatCurrency(1234.56, '$')).toBe('$1,234.56');
+  });
+
+  it('千分位：decimals:0 整数千分位（tasks 运费场景）', () => {
+    expect(formatCurrency(1234567, '$', { decimals: 0 })).toBe('$1,234,567');
+  });
+
+  it('千分位：负值 sign:true 千分位位置正确（earnings 大额支出）', () => {
+    expect(formatCurrency(-12345.6, '$', { sign: true })).toBe('-$12,345.60');
+  });
 });
 
 describe('formatDistance', () => {

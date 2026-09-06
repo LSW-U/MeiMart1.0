@@ -1,6 +1,9 @@
 /**
  * 金额格式化（B6 收口）——货币符号由 i18n common.currency 提供（zh/en/id/tet/pt 均为 $，USD 官方货币），
  * 调用方必传，从根上杜绝 USD/Intl locale 硬编码（资金敏感）。
+ *
+ * 千分位（批C 语言优化）：固定美式千分位（方案 v2 §2.6 金额跨语言一致，`$1,234.56` 不随语言变），
+ * 走 Intl.NumberFormat（CLAUDE.md 数字格式用 Intl 规范）；按 decimals 缓存 formatter（列表高频渲染避免重复构造）。
  */
 export interface FormatCurrencyOptions {
   /** 小数位数，默认 2 */
@@ -9,13 +12,27 @@ export interface FormatCurrencyOptions {
   sign?: boolean;
 }
 
+const currencyFormatters = new Map<number, Intl.NumberFormat>();
+
+function getCurrencyFormatter(decimals: number): Intl.NumberFormat {
+  let fmt = currencyFormatters.get(decimals);
+  if (!fmt) {
+    fmt = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+    currencyFormatters.set(decimals, fmt);
+  }
+  return fmt;
+}
+
 export function formatCurrency(
   value: number,
   currency: string,
   opts?: FormatCurrencyOptions,
 ): string {
   const decimals = opts?.decimals ?? 2;
-  const body = Math.abs(value).toFixed(decimals);
+  const body = getCurrencyFormatter(decimals).format(Math.abs(value));
   if (opts?.sign) {
     const prefix = value >= 0 ? '+' : '-';
     return `${prefix}${currency}${body}`;

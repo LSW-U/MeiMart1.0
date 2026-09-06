@@ -11,6 +11,7 @@ import { colors } from '../../src/theme/colors';
 import type { EarningSummary, EarningTransaction } from '../../src/types/earnings';
 import { useEarningSummary, useEarningTransactions } from '../../src/services/queries/useEarnings';
 import { formatCurrency } from '../../src/utils/format';
+import { localeTagFor } from '../../src/services/settings';
 import { useState } from 'react';
 
 type BillingTab = 'today' | 'all';
@@ -27,20 +28,53 @@ type TxGroup = { key: 'today' | 'yesterday' | 'earlier'; items: EarningTransacti
  *   withdrawal  → bank 图标（底 surface-container-high / 图标 colors.textMuted）
  * 图标色走 AppIcon color prop（colorByClass 不含 status/warn 系 token）。
  */
-const txBadgeMeta: Record<EarningTransaction['type'], { icon: 'rider' | 'gift' | 'bank'; circleClass: string; iconColor: string; titleKey: TranslationKey }> = {
-  deliveryFee: { icon: 'rider', circleClass: 'bg-status-done-bg', iconColor: colors.statusDoneText, titleKey: 'earnings.tx.deliveryFee' },
-  bonus: { icon: 'gift', circleClass: 'bg-warn-bg', iconColor: colors.warnText, titleKey: 'earnings.tx.bonus' },
-  withdrawal: { icon: 'bank', circleClass: 'bg-surface-container-high', iconColor: colors.textMuted, titleKey: 'earnings.tx.withdrawal' },
+const txBadgeMeta: Record<
+  EarningTransaction['type'],
+  {
+    icon: 'rider' | 'gift' | 'bank';
+    circleClass: string;
+    iconColor: string;
+    titleKey: TranslationKey;
+  }
+> = {
+  deliveryFee: {
+    icon: 'rider',
+    circleClass: 'bg-status-done-bg',
+    iconColor: colors.statusDoneText,
+    titleKey: 'earnings.tx.deliveryFee',
+  },
+  bonus: {
+    icon: 'gift',
+    circleClass: 'bg-warn-bg',
+    iconColor: colors.warnText,
+    titleKey: 'earnings.tx.bonus',
+  },
+  withdrawal: {
+    icon: 'bank',
+    circleClass: 'bg-surface-container-high',
+    iconColor: colors.textMuted,
+    titleKey: 'earnings.tx.withdrawal',
+  },
 };
 
 export default function EarningsPage() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const goBack = useGoBack('/(main)/profile');
   // E1 §3.1 三态：移除 transactions `= []` 默认值（loading 与 empty 由 QueryBoundary 分流，
   // 不再混入「暂无交易」）
-  const { data: summary, isLoading: summaryLoading, isError: summaryError, refetch: refetchSummary } = useEarningSummary();
-  const { data: transactions, isLoading: txLoading, isError: txError, refetch: refetchTx } = useEarningTransactions();
+  const {
+    data: summary,
+    isLoading: summaryLoading,
+    isError: summaryError,
+    refetch: refetchSummary,
+  } = useEarningSummary();
+  const {
+    data: transactions,
+    isLoading: txLoading,
+    isError: txError,
+    refetch: refetchTx,
+  } = useEarningTransactions();
   const [billingTab, setBillingTab] = useState<BillingTab>('today');
 
   // TODO: 后端按时间过滤；当前前端按 createdAt 是否在今天内筛选
@@ -49,9 +83,10 @@ export default function EarningsPage() {
   const startOfYesterday = startOfDay - 24 * 60 * 60 * 1000;
   const currency = t('common.currency');
 
-  const visibleTransactions = billingTab === 'today'
-    ? (transactions ?? []).filter((tx) => new Date(tx.createdAt).getTime() >= startOfDay)
-    : transactions ?? [];
+  const visibleTransactions =
+    billingTab === 'today'
+      ? (transactions ?? []).filter((tx) => new Date(tx.createdAt).getTime() >= startOfDay)
+      : (transactions ?? []);
 
   /**
    * E1 §3.3 日期分组：「全部账单」按 今日/昨日/更早 分组；「今日账单」单组
@@ -95,7 +130,12 @@ export default function EarningsPage() {
   return (
     <View className="flex-1 bg-background">
       <View className="relative flex-row items-center justify-center px-5 pb-4 pt-6">
-        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="absolute left-5 h-10 w-10 items-center justify-center rounded-full active:bg-surface-variant" onPress={() => void goBack()}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back')}
+          className="absolute left-5 h-10 w-10 items-center justify-center rounded-full active:bg-surface-variant"
+          onPress={() => void goBack()}
+        >
           <AppIcon className="text-2xl text-on-surface" name="chevronLeft" size={28} />
         </Pressable>
         <Text className="text-2xl font-bold text-on-surface">{t('earnings.title')}</Text>
@@ -129,7 +169,10 @@ export default function EarningsPage() {
         </QueryBoundary>
 
         <View className="mt-6">
-          <Button className="h-12 bg-primary-container" onPress={() => router.push('/earnings/withdraw')}>
+          <Button
+            className="h-12 bg-primary-container"
+            onPress={() => router.push('/earnings/withdraw')}
+          >
             {t('earnings.withdraw')}
           </Button>
         </View>
@@ -143,7 +186,11 @@ export default function EarningsPage() {
               className={`border-b-2 px-1 pb-2 ${billingTab === 'today' ? 'border-primary' : 'border-transparent'}`}
               onPress={() => setBillingTab('today')}
             >
-              <Text className={`text-xl font-semibold ${billingTab === 'today' ? 'text-primary' : 'text-on-surface-variant'}`}>{t('earnings.todayBilling')}</Text>
+              <Text
+                className={`text-xl font-semibold ${billingTab === 'today' ? 'text-primary' : 'text-on-surface-variant'}`}
+              >
+                {t('earnings.todayBilling')}
+              </Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -152,7 +199,11 @@ export default function EarningsPage() {
               className={`ml-6 border-b-2 px-1 pb-2 ${billingTab === 'all' ? 'border-primary' : 'border-transparent'}`}
               onPress={() => setBillingTab('all')}
             >
-              <Text className={`text-xl font-semibold ${billingTab === 'all' ? 'text-primary' : 'text-on-surface-variant'}`}>{t('earnings.allBilling')}</Text>
+              <Text
+                className={`text-xl font-semibold ${billingTab === 'all' ? 'text-primary' : 'text-on-surface-variant'}`}
+              >
+                {t('earnings.allBilling')}
+              </Text>
             </Pressable>
           </View>
 
@@ -181,7 +232,9 @@ export default function EarningsPage() {
                     {/* 「全部账单」多分组时组头标注今日/昨日/更早；第一组头与区块标题
                         同文案（今日）会重复——单分组不叠头，多分组从第二组起显示组头 */}
                     {groups.length > 1 && groupIndex > 0 ? (
-                      <Text className="pb-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant">{group.label}</Text>
+                      <Text className="pb-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                        {group.label}
+                      </Text>
                     ) : null}
                     {group.items.map((tx) => {
                       const meta = txBadgeMeta[tx.type];
@@ -189,9 +242,17 @@ export default function EarningsPage() {
                         <HistoryItem
                           key={tx.id}
                           amount={formatCurrency(tx.amount, currency, { sign: true })}
-                          icon={{ name: meta.icon, circleClass: meta.circleClass, color: meta.iconColor, label: txTitle(tx) }}
+                          icon={{
+                            name: meta.icon,
+                            circleClass: meta.circleClass,
+                            color: meta.iconColor,
+                            label: txTitle(tx),
+                          }}
                           positive={tx.amount >= 0}
-                          time={new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          time={new Date(tx.createdAt).toLocaleTimeString(localeTagFor(language), {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                           title={txTitle(tx)}
                         />
                       );
