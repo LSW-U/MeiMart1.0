@@ -82,10 +82,9 @@ export default function CheckoutPage() {
   const finalTotal = preview?.payableAmount ?? Math.max(0, subtotal - discount + deliveryFee);
 
   // Why: B9 ETA —— 后端 CheckoutPreview.estimatedDeliveryTime（按仓库+地址 PostGIS 算的预估送达）。
-  //      real 模式才有（mock 不调 preview），按当前 locale 格式化「M月D日 HH:mm」。
-  const etaLocale = i18nInstance.language === 'zh' ? 'zh-CN' : 'en-US';
+  //      real 模式才有（mock 不调 preview），locale 映射收口在 format.ts toIntlLocale（tet→en-US 回退）。
   const etaText = preview?.estimatedDeliveryTime
-    ? formatEta(preview.estimatedDeliveryTime, etaLocale)
+    ? formatEta(preview.estimatedDeliveryTime, i18nInstance.language)
     : null;
 
   if (isLoading) {
@@ -209,159 +208,8 @@ export default function CheckoutPage() {
         }
       />
       <View style={styles.contentWrap}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>
-        {/* DELIVERY ADDRESS 卡 */}
-        <View
-          style={[
-            styles.card,
-            {
-              backgroundColor: colors['surface-container-lowest'],
-              borderColor: colors['outline-variant'],
-            },
-          ]}
-        >
-          <View style={styles.cardHeader}>
-            <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
-              {t('checkout.section.deliveryAddress')}
-            </Text>
-            {defaultAddress && (
-              <Pressable
-                onPress={() => router.push({ pathname: '/address/list', params: { from: 'checkout' } })}
-                hitSlop={8}
-                style={({ pressed }) => [
-                  styles.changeBtn,
-                  { borderColor: colors['outline-variant'] },
-                  pressed && { opacity: 0.7 },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t('checkout.address.changeA11y')}
-              >
-                <Icon symbol="edit" size={16} color={colors.primary} />
-              </Pressable>
-            )}
-          </View>
-          <Pressable
-            testID="checkout-address"
-            onPress={() => router.push({ pathname: '/address/list', params: { from: 'checkout' } })}
-            style={({ pressed }) => [pressed && { opacity: 0.7 }]}
-            accessibilityRole="button"
-            accessibilityLabel={
-              defaultAddress
-                ? `${defaultAddress.name}，${defaultAddress.district}${defaultAddress.detail}`
-                : t('checkout.selectAddress')
-            }
-          >
-            {defaultAddress ? (
-              <View style={styles.addressBody}>
-                <Icon symbol="location_on" size={20} color={colors.primary} />
-                <View style={styles.addressText}>
-                  <Text style={[styles.addrName, { color: colors['on-surface'] }]}>
-                    {defaultAddress.name}
-                  </Text>
-                  <Text style={[styles.addrDetail, { color: colors['on-surface-variant'] }]}>
-                    {defaultAddress.province}
-                    {defaultAddress.city}
-                    {defaultAddress.district}
-                    {defaultAddress.detail}
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              // U3 无地址态：图标 + 文字 + 箭头，引导点击
-              <View style={styles.noAddressRow}>
-                <Icon symbol="add_location_alt" size={20} color={colors['on-surface-variant']} />
-                <Text style={[styles.noAddress, { color: colors['on-surface-variant'] }]}>
-                  {t('checkout.selectAddress')}
-                </Text>
-                <Icon symbol="chevron_right" size={20} color={colors['on-surface-variant']} />
-              </View>
-            )}
-          </Pressable>
-          {/* B9 配送时效 ETA：real 模式 preview 返回的预估送达时间（mock 不展示） */}
-          {etaText && (
-            <View style={styles.etaRow}>
-              <Icon symbol="schedule" size={14} color={colors.semantic.positive} />
-              <Text style={[styles.etaText, { color: colors.semantic.positive }]}>
-                {t('checkout.estimatedDelivery', { time: etaText })}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* U6 支付 + 摘要紧凑分组（gap md），地址卡独立留 lg 间距 */}
-        <View style={styles.detailGroup}>
-        {/* PAYMENT METHOD 区 */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
-            {t('checkout.section.paymentMethod')}
-          </Text>
-          <View style={styles.paymentList}>
-            {paymentMethods?.map((m) => {
-              const selected = m.id === selectedMethod;
-              return (
-                <Pressable
-                  key={m.id}
-                  testID={`payment-${m.id}`}
-                  onPress={() => setSelectedMethod(m.id)}
-                  style={({ pressed }) => [
-                    styles.paymentCard,
-                    {
-                      backgroundColor: colors['surface-container-lowest'],
-                      borderColor: selected ? colors.primary : colors['outline-variant'],
-                      borderWidth: selected ? 2 : 1,
-                    },
-                    pressed && { opacity: 0.85 },
-                  ]}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={localize(m.name)}
-                >
-                  <View style={styles.paymentLeft}>
-                    <View
-                      style={[
-                        styles.paymentIconBox,
-                        {
-                          backgroundColor: selected
-                            ? colors.primary + '14' // 原因：选中态 8% primary tint（'14'=0x14≈8% alpha），dark 自适应
-                            : colors['surface-container'],
-                        },
-                      ]}
-                    >
-                      <Icon
-                        symbol={m.icon}
-                        size={20}
-                        color={selected ? colors.primary : colors.secondary}
-                      />
-                    </View>
-                    <View style={styles.paymentText}>
-                      <Text style={[styles.paymentName, { color: colors['on-surface'] }]}>
-                        {localize(m.name)}
-                      </Text>
-                      {m.subtitle && (
-                        <Text
-                          style={[styles.paymentSubtitle, { color: colors['on-surface-variant'] }]}
-                        >
-                          {localize(m.subtitle)}
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                  <Icon
-                    symbol={selected ? 'radio_button_checked' : 'radio_button_unchecked'}
-                    size={20}
-                    color={selected ? colors.primary : colors.outline}
-                  />
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* ORDER SUMMARY 区 */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
-            {t('checkout.section.orderSummary')}
-          </Text>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>
+          {/* DELIVERY ADDRESS 卡 */}
           <View
             style={[
               styles.card,
@@ -371,121 +219,298 @@ export default function CheckoutPage() {
               },
             ]}
           >
-            <View style={styles.summaryBody}>
-              {selectedItems.length === 0 ? (
-                <Text style={[styles.emptyText, { color: colors['on-surface-variant'] }]}>
-                  {t('checkout.noItems')}
-                </Text>
-              ) : (
-                selectedItems.map((item) => (
-                  <View key={item.id} style={styles.summaryItemRow}>
-                    {/* U2 加 40×40 缩略图 */}
-                    <Image
-                      source={{ uri: item.product.image }}
-                      style={styles.summaryThumb}
-                    />
-                    <View style={styles.summaryItemInfo}>
-                      <Text
-                        style={[styles.summaryItemName, { color: colors['on-surface'] }]}
-                        numberOfLines={1}
-                      >
-                        {localize(item.product.name)}
-                      </Text>
-                      <Text style={[styles.summaryItemQty, { color: colors['on-surface-variant'] }]}>
-                        × {item.quantity}
-                      </Text>
-                      {/* B1 库存提示：库存 ≤ 购买量时警告「仅剩 X 件」（避免下单后才报 STOCK_EXCEEDED） */}
-                      {item.product.stock != null &&
-                        item.product.stock > 0 &&
-                        item.product.stock <= item.quantity && (
-                          <Text style={[styles.stockWarn, { color: colors.semantic.warning }]}>
-                            {t('checkout.stockLow', { stock: item.product.stock })}
-                          </Text>
-                        )}
-                    </View>
-                    <Text style={[styles.summaryValueBold, { color: colors['on-surface'] }]}>
-                      ${(item.product.price * item.quantity).toFixed(2)}
+            <View style={styles.cardHeader}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
+                {t('checkout.section.deliveryAddress')}
+              </Text>
+              {defaultAddress && (
+                <Pressable
+                  onPress={() =>
+                    router.push({ pathname: '/address/list', params: { from: 'checkout' } })
+                  }
+                  hitSlop={8}
+                  style={({ pressed }) => [
+                    styles.changeBtn,
+                    { borderColor: colors['outline-variant'] },
+                    pressed && { opacity: 0.7 },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('checkout.address.changeA11y')}
+                >
+                  <Icon symbol="edit" size={16} color={colors.primary} />
+                </Pressable>
+              )}
+            </View>
+            <Pressable
+              testID="checkout-address"
+              onPress={() =>
+                router.push({ pathname: '/address/list', params: { from: 'checkout' } })
+              }
+              style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              accessibilityLabel={
+                defaultAddress
+                  ? `${defaultAddress.name}，${defaultAddress.district}${defaultAddress.detail}`
+                  : t('checkout.selectAddress')
+              }
+            >
+              {defaultAddress ? (
+                <View style={styles.addressBody}>
+                  <Icon symbol="location_on" size={20} color={colors.primary} />
+                  <View style={styles.addressText}>
+                    <Text style={[styles.addrName, { color: colors['on-surface'] }]}>
+                      {defaultAddress.name}
+                    </Text>
+                    <Text style={[styles.addrDetail, { color: colors['on-surface-variant'] }]}>
+                      {defaultAddress.province}
+                      {defaultAddress.city}
+                      {defaultAddress.district}
+                      {defaultAddress.detail}
                     </Text>
                   </View>
-                ))
-              )}
-              {/* U4 方案 F：SUMMARY 居中 + 两侧虚线（替 TaisDivider） */}
-              <View style={styles.summaryDivider}>
-                <View style={[styles.dashedLine, { borderBottomColor: colors['outline-variant'] }]} />
-                <Text style={[styles.summaryDividerLabel, { color: colors.outline }]}>SUMMARY</Text>
-                <View style={[styles.dashedLine, { borderBottomColor: colors['outline-variant'] }]} />
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, { color: colors['on-surface-variant'] }]}>
-                  {t('checkout.summary.subtotal')}
-                </Text>
-                <Text style={[styles.summaryValue, { color: colors['on-surface-variant'] }]}>
-                  ${subtotal.toFixed(2)}
-                </Text>
-              </View>
-              {/* Why: mock 纯展示 demo 折扣；real 模式整行可点 → 打开选券 Modal（preview 传 couponCode 聚合 discount） */}
-              {isMockMode ? (
-                <View style={styles.summaryRow}>
-                  <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>{t('checkout.summary.discount')}</Text>
-                  <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>-${discount.toFixed(2)}</Text>
                 </View>
               ) : (
-                <Pressable
-                  onPress={() => setShowCouponModal(true)}
-                  style={styles.summaryRow}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    selectedCouponCode ? t('checkout.coupon.change') : t('checkout.coupon.select')
-                  }
-                >
-                  <View style={styles.couponEntryLeft}>
-                    <Icon symbol="confirmation_number" size={16} color={colors.semantic.positive} />
-                    <Text
-                      style={[styles.discountLabel, { color: colors.semantic.positive }]}
-                      numberOfLines={1}
+                // U3 无地址态：图标 + 文字 + 箭头，引导点击
+                <View style={styles.noAddressRow}>
+                  <Icon symbol="add_location_alt" size={20} color={colors['on-surface-variant']} />
+                  <Text style={[styles.noAddress, { color: colors['on-surface-variant'] }]}>
+                    {t('checkout.selectAddress')}
+                  </Text>
+                  <Icon symbol="chevron_right" size={20} color={colors['on-surface-variant']} />
+                </View>
+              )}
+            </Pressable>
+            {/* B9 配送时效 ETA：real 模式 preview 返回的预估送达时间（mock 不展示） */}
+            {etaText && (
+              <View style={styles.etaRow}>
+                <Icon symbol="schedule" size={14} color={colors.semantic.positive} />
+                <Text style={[styles.etaText, { color: colors.semantic.positive }]}>
+                  {t('checkout.estimatedDelivery', { time: etaText })}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* U6 支付 + 摘要紧凑分组（gap md），地址卡独立留 lg 间距 */}
+          <View style={styles.detailGroup}>
+            {/* PAYMENT METHOD 区 */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
+                {t('checkout.section.paymentMethod')}
+              </Text>
+              <View style={styles.paymentList}>
+                {paymentMethods?.map((m) => {
+                  const selected = m.id === selectedMethod;
+                  return (
+                    <Pressable
+                      key={m.id}
+                      testID={`payment-${m.id}`}
+                      onPress={() => setSelectedMethod(m.id)}
+                      style={({ pressed }) => [
+                        styles.paymentCard,
+                        {
+                          backgroundColor: colors['surface-container-lowest'],
+                          borderColor: selected ? colors.primary : colors['outline-variant'],
+                          borderWidth: selected ? 2 : 1,
+                        },
+                        pressed && { opacity: 0.85 },
+                      ]}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected }}
+                      accessibilityLabel={localize(m.name)}
                     >
-                      {selectedCouponCode ?? t('checkout.coupon.select')}
+                      <View style={styles.paymentLeft}>
+                        <View
+                          style={[
+                            styles.paymentIconBox,
+                            {
+                              backgroundColor: selected
+                                ? colors.primary + '14' // 原因：选中态 8% primary tint（'14'=0x14≈8% alpha），dark 自适应
+                                : colors['surface-container'],
+                            },
+                          ]}
+                        >
+                          <Icon
+                            symbol={m.icon}
+                            size={20}
+                            color={selected ? colors.primary : colors.secondary}
+                          />
+                        </View>
+                        <View style={styles.paymentText}>
+                          <Text style={[styles.paymentName, { color: colors['on-surface'] }]}>
+                            {localize(m.name)}
+                          </Text>
+                          {m.subtitle && (
+                            <Text
+                              style={[
+                                styles.paymentSubtitle,
+                                { color: colors['on-surface-variant'] },
+                              ]}
+                            >
+                              {localize(m.subtitle)}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                      <Icon
+                        symbol={selected ? 'radio_button_checked' : 'radio_button_unchecked'}
+                        size={20}
+                        color={selected ? colors.primary : colors.outline}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* ORDER SUMMARY 区 */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
+                {t('checkout.section.orderSummary')}
+              </Text>
+              <View
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: colors['surface-container-lowest'],
+                    borderColor: colors['outline-variant'],
+                  },
+                ]}
+              >
+                <View style={styles.summaryBody}>
+                  {selectedItems.length === 0 ? (
+                    <Text style={[styles.emptyText, { color: colors['on-surface-variant'] }]}>
+                      {t('checkout.noItems')}
+                    </Text>
+                  ) : (
+                    selectedItems.map((item) => (
+                      <View key={item.id} style={styles.summaryItemRow}>
+                        {/* U2 加 40×40 缩略图 */}
+                        <Image source={{ uri: item.product.image }} style={styles.summaryThumb} />
+                        <View style={styles.summaryItemInfo}>
+                          <Text
+                            style={[styles.summaryItemName, { color: colors['on-surface'] }]}
+                            numberOfLines={1}
+                          >
+                            {localize(item.product.name)}
+                          </Text>
+                          <Text
+                            style={[styles.summaryItemQty, { color: colors['on-surface-variant'] }]}
+                          >
+                            × {item.quantity}
+                          </Text>
+                          {/* B1 库存提示：库存 ≤ 购买量时警告「仅剩 X 件」（避免下单后才报 STOCK_EXCEEDED） */}
+                          {item.product.stock != null &&
+                            item.product.stock > 0 &&
+                            item.product.stock <= item.quantity && (
+                              <Text style={[styles.stockWarn, { color: colors.semantic.warning }]}>
+                                {t('checkout.stockLow', { stock: item.product.stock })}
+                              </Text>
+                            )}
+                        </View>
+                        <Text style={[styles.summaryValueBold, { color: colors['on-surface'] }]}>
+                          ${(item.product.price * item.quantity).toFixed(2)}
+                        </Text>
+                      </View>
+                    ))
+                  )}
+                  {/* U4 方案 F：SUMMARY 居中 + 两侧虚线（替 TaisDivider） */}
+                  <View style={styles.summaryDivider}>
+                    <View
+                      style={[styles.dashedLine, { borderBottomColor: colors['outline-variant'] }]}
+                    />
+                    <Text style={[styles.summaryDividerLabel, { color: colors.outline }]}>
+                      SUMMARY
+                    </Text>
+                    <View
+                      style={[styles.dashedLine, { borderBottomColor: colors['outline-variant'] }]}
+                    />
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={[styles.summaryLabel, { color: colors['on-surface-variant'] }]}>
+                      {t('checkout.summary.subtotal')}
+                    </Text>
+                    <Text style={[styles.summaryValue, { color: colors['on-surface-variant'] }]}>
+                      ${subtotal.toFixed(2)}
                     </Text>
                   </View>
-                  <View style={styles.couponEntryRight}>
-                    {discount > 0 && (
+                  {/* Why: mock 纯展示 demo 折扣；real 模式整行可点 → 打开选券 Modal（preview 传 couponCode 聚合 discount） */}
+                  {isMockMode ? (
+                    <View style={styles.summaryRow}>
+                      <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>
+                        {t('checkout.summary.discount')}
+                      </Text>
                       <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>
                         -${discount.toFixed(2)}
                       </Text>
-                    )}
-                    <Icon symbol="chevron_right" size={16} color={colors['on-surface-variant']} />
+                    </View>
+                  ) : (
+                    <Pressable
+                      onPress={() => setShowCouponModal(true)}
+                      style={styles.summaryRow}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        selectedCouponCode
+                          ? t('checkout.coupon.change')
+                          : t('checkout.coupon.select')
+                      }
+                    >
+                      <View style={styles.couponEntryLeft}>
+                        <Icon
+                          symbol="confirmation_number"
+                          size={16}
+                          color={colors.semantic.positive}
+                        />
+                        <Text
+                          style={[styles.discountLabel, { color: colors.semantic.positive }]}
+                          numberOfLines={1}
+                        >
+                          {selectedCouponCode ?? t('checkout.coupon.select')}
+                        </Text>
+                      </View>
+                      <View style={styles.couponEntryRight}>
+                        {discount > 0 && (
+                          <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>
+                            -${discount.toFixed(2)}
+                          </Text>
+                        )}
+                        <Icon
+                          symbol="chevron_right"
+                          size={16}
+                          color={colors['on-surface-variant']}
+                        />
+                      </View>
+                    </Pressable>
+                  )}
+                  <View style={styles.summaryRow}>
+                    <Text style={[styles.summaryLabel, { color: colors['on-surface-variant'] }]}>
+                      {t('checkout.summary.deliveryFee')}
+                    </Text>
+                    <Text style={[styles.summaryValue, { color: colors['on-surface-variant'] }]}>
+                      ${deliveryFee.toFixed(2)}
+                    </Text>
                   </View>
-                </Pressable>
-              )}
-              <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, { color: colors['on-surface-variant'] }]}>
-                  {t('checkout.summary.deliveryFee')}
-                </Text>
-                <Text style={[styles.summaryValue, { color: colors['on-surface-variant'] }]}>
-                  ${deliveryFee.toFixed(2)}
-                </Text>
+                </View>
               </View>
             </View>
           </View>
-        </View>
-        </View>
-      </ScrollView>
-      {/* U5 submitting overlay：覆盖内容区，不挡底部栏（底部栏在 overlay 之后渲染，置顶可见） */}
-      {submitting && (
-        <View style={styles.submitOverlay}>
-          <View
-            style={[
-              styles.submitOverlayCard,
-              { backgroundColor: colors['surface-container-lowest'] },
-            ]}
-          >
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.submitOverlayText, { color: colors['on-surface-variant'] }]}>
-              {t('checkout.placingOrder')}
-            </Text>
+        </ScrollView>
+        {/* U5 submitting overlay：覆盖内容区，不挡底部栏（底部栏在 overlay 之后渲染，置顶可见） */}
+        {submitting && (
+          <View style={styles.submitOverlay}>
+            <View
+              style={[
+                styles.submitOverlayCard,
+                { backgroundColor: colors['surface-container-lowest'] },
+              ]}
+            >
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.submitOverlayText, { color: colors['on-surface-variant'] }]}>
+                {t('checkout.placingOrder')}
+              </Text>
+            </View>
           </View>
-        </View>
-      )}
+        )}
       </View>
 
       {/* 底部 bar：Secure Checkout + Final Total + 分隔线 + CONFIRM & PAY */}
@@ -502,7 +527,9 @@ export default function CheckoutPage() {
         <View style={styles.priceInfo}>
           <View style={styles.secureRow}>
             <Icon symbol="verified" size={14} color={colors.semantic.positive} />
-            <Text style={[styles.secureText, { color: colors.semantic.positive }]}>{t('checkout.secure')}</Text>
+            <Text style={[styles.secureText, { color: colors.semantic.positive }]}>
+              {t('checkout.secure')}
+            </Text>
           </View>
           <View style={styles.finalRow}>
             <Text style={[styles.finalLabel, { color: colors['on-surface-variant'] }]}>

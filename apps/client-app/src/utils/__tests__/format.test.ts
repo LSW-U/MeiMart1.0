@@ -1,4 +1,11 @@
-import { formatPrice, formatCompactNumber, formatDate, formatEta, maskPhone } from '../format';
+import {
+  formatPrice,
+  formatCompactNumber,
+  formatDate,
+  formatEta,
+  maskPhone,
+  toIntlLocale,
+} from '../format';
 
 describe('formatPrice', () => {
   it('formats USD with $ symbol', () => {
@@ -17,6 +24,27 @@ describe('formatPrice', () => {
   });
   it('falls back to empty symbol for unknown currency', () => {
     expect(formatPrice(5, 'EUR')).toBe('5.00');
+  });
+  it('adds US-style thousands separator (Q6: money fixed en-US across languages)', () => {
+    expect(formatPrice(1234567.89, 'USD')).toBe('$1,234,567.89');
+    expect(formatPrice(1234.5, 'USD')).toBe('$1,234.50');
+    expect(formatPrice(999.99, 'USD')).toBe('$999.99');
+  });
+});
+
+describe('toIntlLocale', () => {
+  it('maps UI language codes to Intl locales (v2 §2.5)', () => {
+    expect(toIntlLocale('zh')).toBe('zh-CN');
+    expect(toIntlLocale('pt')).toBe('pt');
+    expect(toIntlLocale('id')).toBe('id');
+    expect(toIntlLocale('en')).toBe('en-US');
+    // Why: Intl 无 Tetum，tet 回退 en-US
+    expect(toIntlLocale('tet')).toBe('en-US');
+  });
+  it('matches on base code for region-suffixed input', () => {
+    expect(toIntlLocale('zh-CN')).toBe('zh-CN');
+    expect(toIntlLocale('pt-BR')).toBe('pt');
+    expect(toIntlLocale('en-US')).toBe('en-US');
   });
 });
 
@@ -38,7 +66,7 @@ describe('formatDate', () => {
     expect(result).toMatch(/2026/);
   });
   it('passes through invalid input', () => {
-    expect(formatDate('not-a-date')).toBe('not-a-date');
+    expect(formatDate('not-a-date', 'en')).toBe('not-a-date');
   });
 });
 
@@ -50,7 +78,7 @@ describe('formatEta', () => {
     expect(result).not.toMatch(/2026/);
   });
   it('passes through invalid input', () => {
-    expect(formatEta('not-a-date')).toBe('not-a-date');
+    expect(formatEta('not-a-date', 'en')).toBe('not-a-date');
   });
 });
 

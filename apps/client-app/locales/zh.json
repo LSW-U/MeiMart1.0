@@ -416,7 +416,28 @@
     "tabWithCount": "{{label}},{{count}}",
     "cancelled": "订单已取消",
     "copied": "已复制",
-    "copyOrderNo": "复制订单号"
+    "copyOrderNo": "复制订单号",
+    "statusLabels": {
+      "PENDING_PAYMENT": "待付款",
+      "PENDING_CONFIRM": "待确认",
+      "CONFIRMED": "已确认",
+      "PICKED": "已拣货",
+      "OUT_FOR_DELIVERY": "配送中",
+      "DELIVERED_PAID": "已送达",
+      "DELIVERED_UNPAID": "已送达（货到付款）",
+      "DELIVERED": "已送达",
+      "COMPLETED": "已完成",
+      "CANCELLED": "已取消"
+    },
+    "actionLabels": {
+      "cancelOrder": "取消订单",
+      "payNow": "立即付款",
+      "viewDetails": "查看详情",
+      "trackShipment": "查看物流",
+      "afterSales": "申请售后",
+      "review": "评价",
+      "buyAgain": "再次购买"
+    }
   },
   "tracking": {
     "title": "订单追踪",
@@ -431,7 +452,8 @@
     "unknownRecipient": "收件人未知",
     "deliveredTitle": "订单已送达",
     "deliveredSub": "感谢您的惠顾！",
-    "redirectNote": "即将跳转订单详情，可查看售后入口"
+    "redirectNote": "即将跳转订单详情，可查看售后入口",
+    "orderSummary": "订单汇总"
   },
   "address": {
     "list": "收货地址",

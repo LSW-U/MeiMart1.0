@@ -18,7 +18,12 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 const product: Product = {
   id: 'p1',
-  name: { zh: '有机野蜂蜜', en: 'Organic Wild Honey', tet: 'Fuan Mensak' },
+  name: {
+    zh: '有机野蜂蜜',
+    en: 'Organic Wild Honey',
+    tet: 'Fuan Mensak',
+    pt: 'Mel Silvestre Orgânico',
+  },
   price: 18.5,
   originalPrice: 22,
   image: 'https://example.com/honey.jpg',

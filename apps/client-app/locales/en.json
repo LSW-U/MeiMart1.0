@@ -416,7 +416,28 @@
     "tabWithCount": "{{label}}, {{count}}",
     "cancelled": "Order cancelled",
     "copied": "Copied",
-    "copyOrderNo": "Copy order number"
+    "copyOrderNo": "Copy order number",
+    "statusLabels": {
+      "PENDING_PAYMENT": "Pending Payment",
+      "PENDING_CONFIRM": "Pending Confirm",
+      "CONFIRMED": "Confirmed",
+      "PICKED": "Picked",
+      "OUT_FOR_DELIVERY": "Out for Delivery",
+      "DELIVERED_PAID": "Delivered",
+      "DELIVERED_UNPAID": "Delivered (COD)",
+      "DELIVERED": "Delivered",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "actionLabels": {
+      "cancelOrder": "Cancel",
+      "payNow": "Pay Now",
+      "viewDetails": "Details",
+      "trackShipment": "Track",
+      "afterSales": "After-Sales",
+      "review": "Review",
+      "buyAgain": "Buy Again"
+    }
   },
   "tracking": {
     "title": "Order Tracking",
@@ -431,7 +452,8 @@
     "unknownRecipient": "Unknown recipient",
     "deliveredTitle": "Order Delivered",
     "deliveredSub": "Enjoy your order!",
-    "redirectNote": "Redirecting to order details for after-sales options"
+    "redirectNote": "Redirecting to order details for after-sales options",
+    "orderSummary": "Order Summary"
   },
   "address": {
     "list": "Shipping addresses",

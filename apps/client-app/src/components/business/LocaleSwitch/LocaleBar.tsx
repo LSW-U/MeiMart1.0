@@ -1,42 +1,36 @@
 // LocaleBar — auth 页底部的语言切换条
-// 严格还原 P29 HTML 原型 .locale-bar：三语言平铺链接（当前项 primary 高亮），
+// 严格还原 P29 HTML 原型 .locale-bar：语言平铺链接（当前项 primary 高亮），
 // 顶边细线分隔，替代原 LocaleSwitch 的单按钮循环切换（点击直达而非循环）
+// 语言项由 src/i18n LANGUAGE_REGISTRY 单一注册表驱动（批B 收敛），本组件只渲染 enabled 项
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme, typography } from '@/theme';
-import { changeLocale, SUPPORTED_LOCALES, type AppLocale } from '@/i18n';
-
-// 语言显示名（原生语言呈现，与 P26 语言页一致）
-const LOCALE_DISPLAY: Record<AppLocale, string> = {
-  zh: '中文',
-  en: 'English',
-  tet: 'Tetun',
-};
+import { changeLocale, ENABLED_LANGUAGES, type AppLocale } from '@/i18n';
 
 export function LocaleBar() {
   const { colors } = useTheme();
   const { i18n } = useTranslation();
 
-  const current = (SUPPORTED_LOCALES.includes(i18n.language as AppLocale)
-    ? i18n.language
-    : 'en') as AppLocale;
+  const current = (
+    ENABLED_LANGUAGES.some((l) => l.code === i18n.language) ? i18n.language : 'en'
+  ) as AppLocale;
 
   return (
     <View
       style={[styles.bar, { borderTopColor: colors['outline-variant'] }]}
       accessibilityRole="tablist"
     >
-      {SUPPORTED_LOCALES.map((loc) => {
-        const active = loc === current;
+      {ENABLED_LANGUAGES.map(({ code, label }) => {
+        const active = code === current;
         return (
           <Pressable
-            key={loc}
-            onPress={() => void changeLocale(loc)}
+            key={code}
+            onPress={() => void changeLocale(code)}
             hitSlop={8}
             disabled={active}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
-            testID={`locale-bar-${loc}`}
+            testID={`locale-bar-${code}`}
           >
             <Text
               style={[
@@ -47,7 +41,7 @@ export function LocaleBar() {
                 },
               ]}
             >
-              {LOCALE_DISPLAY[loc]}
+              {label}
             </Text>
           </Pressable>
         );

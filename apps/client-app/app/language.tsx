@@ -1,5 +1,6 @@
-// LanguagePage - 语言选择页（PrimaryHeader + 说明条 + 三语言卡 + toast 反馈 + 版本底栏，P26 优化）
-// 切换走 changeLocale（async）；tet 已启用（Q1=A 拍板，与 SUPPORTED_LOCALES 一致）
+// LanguagePage - 语言选择页（PrimaryHeader + 说明条 + 语言卡 + toast 反馈 + 版本底栏，P26 优化）
+// 切换走 changeLocale（async）；语言项由 src/i18n LANGUAGE_REGISTRY 单一注册表驱动（批B 收敛），
+// 本页只渲染 enabled 项，加语言不再改此页
 import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
@@ -9,23 +10,9 @@ import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Icon } from '@/components/ui/Icon';
 import { useAppStore } from '@/store/appStore';
-import { changeLocale, type AppLocale } from '@/i18n';
+import { changeLocale, ENABLED_LANGUAGES, type LanguageOption } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import { APP_VERSION } from '@/utils/appInfo';
-
-interface LanguageItem {
-  code: AppLocale;
-  label: string;
-  native: string;
-}
-
-// D1：图标语义统一 language（->translate），不再 per-language 配 icon
-// D2：tet 启用（Q1=A 拍板，翻译文件存在且持续补译）
-const LANGUAGES: LanguageItem[] = [
-  { code: 'zh', label: '中文', native: '中文（简体）' },
-  { code: 'en', label: 'English', native: 'English' },
-  { code: 'tet', label: 'Tetun', native: 'Tetun' },
-];
 
 export default function LanguagePage() {
   const handleBack = useSafeBack();
@@ -34,7 +21,7 @@ export default function LanguagePage() {
   const locale = useAppStore((s) => s.locale);
 
   // D6：await 切换完成后再取 t()（toast 用切换后语言文案）+ 500ms 延迟返回让用户看到 toast
-  const select = async (item: LanguageItem) => {
+  const select = async (item: LanguageOption) => {
     // 点当前已选语言：无操作静默返回（审查 F4——selected 项点击触发导航离开与选中语义不符）
     if (locale === item.code) return;
     await changeLocale(item.code);
@@ -64,8 +51,8 @@ export default function LanguagePage() {
           </Text>
         </View>
 
-        {/* D5：3 静态项 ScrollView + map（FlatList 杀鸡用牛刀已删） */}
-        {LANGUAGES.map((item) => {
+        {/* D5：静态项 ScrollView + map（FlatList 杀鸡用牛刀已删）；注册表 enabled 项驱动 */}
+        {ENABLED_LANGUAGES.map((item) => {
           const active = locale === item.code;
           return (
             <Pressable

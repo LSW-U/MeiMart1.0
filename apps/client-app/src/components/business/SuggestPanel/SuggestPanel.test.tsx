@@ -27,7 +27,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 const mockProduct = (id: string): Product => ({
   id,
-  name: { zh: `商品 ${id}`, en: `Product ${id}`, tet: `Product ${id}` },
+  name: { zh: `商品 ${id}`, en: `Product ${id}`, tet: `Product ${id}`, pt: `Produto ${id}` },
   price: 9.9,
   image: `https://example.com/${id}.jpg`,
   category: 'cat-1',

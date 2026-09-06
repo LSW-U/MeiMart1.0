@@ -43,7 +43,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
 import { useOrderEta } from '@/services/queries/useOrderEta';
 import { toast } from '@/store/toastStore';
-import type { OrderStatus, Order, CartItem } from '@/types';
+import type { OrderStatus, Order, CartItem, LocalizableText } from '@/types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 // 原因：红底白字 dark 不变（Header/done dot/solidBtn/laisPayBadge 都是 colors.primary 红底白字，与 P2-P7 ON_PRIMARY const 模式一致）
@@ -199,11 +199,10 @@ export default function OrderDetailPage() {
   const visual = STATUS_VISUAL[order.status];
   const statusTheme = statusBannerPalettes[visual.palette];
   // Why: OUT_FOR_DELIVERY 且拿到真实 ETA（DeliveryTask.estimatedArrival）→ 显示「Arriving <eta>」；
-  // 否则 fallback 到 STATUS_VISUAL 配置文案（formatEta 与结算页 B9 同款 locale 规则）
-  const etaLocale = i18n.language === 'zh' ? 'zh-CN' : 'en-US';
+  // 否则 fallback 到 STATUS_VISUAL 配置文案（formatEta locale 映射收口在 format.ts toIntlLocale）
   const bannerValue =
     order.status === 'OUT_FOR_DELIVERY' && eta
-      ? t('order.bannerValue.arrivingEta', { eta: formatEta(eta, etaLocale) })
+      ? t('order.bannerValue.arrivingEta', { eta: formatEta(eta, i18n.language) })
       : t(visual.bannerValueKey);
   // Why: P10 §8.1 D1 - 费用从 transformOrder 映射的字段读取，消除 2.0/5.0 写死（mock 无字段时降级 0）
   const shippingFee = order.deliveryFee ?? 0;
@@ -305,7 +304,7 @@ export default function OrderDetailPage() {
               </View>
               <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
                 {t('order.createdAt', { defaultValue: 'Placed' })}{' '}
-                {formatDate(order.createdAt, i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
+                {formatDate(order.createdAt, i18n.language)}
               </Text>
             </View>
             <StatusBadge
@@ -579,7 +578,7 @@ function OrderItemRow({
   onPress,
 }: {
   item: CartItem;
-  localize: (text: { zh: string; en: string; tet: string }) => string;
+  localize: (text: LocalizableText) => string;
   onPress: () => void;
 }) {
   const { t } = useTranslation();

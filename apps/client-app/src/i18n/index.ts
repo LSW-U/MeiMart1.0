@@ -9,8 +9,9 @@ import type { LocalizableText } from '@/types';
 import zh from '../../locales/zh.json';
 import en from '../../locales/en.json';
 import tet from '../../locales/tet.json';
+import pt from '../../locales/pt.json';
 
-export const SUPPORTED_LOCALES = ['zh', 'en', 'tet'] as const;
+export const SUPPORTED_LOCALES = ['zh', 'en', 'tet', 'pt'] as const;
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE: AppLocale = 'en';
 
@@ -20,7 +21,34 @@ const resources = {
   zh: { translation: zh },
   en: { translation: en },
   tet: { translation: tet },
+  pt: { translation: pt },
 } as const;
+
+/**
+ * 单一语言注册表（语言优化方案 v2 Q5/Q2：语言列表配置驱动，加语言=加一项）。
+ * Why: 原 3 处注册点（此处 SUPPORTED_LOCALES + language.tsx LANGUAGES + LocaleBar LOCALE_DISPLAY）
+ *      在 pt 接入时要改 3 遍，收敛到此处单一导出，消费方只渲染 enabled 项。
+ */
+export interface LanguageOption {
+  code: AppLocale;
+  /** 列表主标题（语言页 label / LocaleBar 链接文字，原生语言呈现） */
+  label: string;
+  /** 原生语言名（语言页副标题 + a11y label） */
+  native: string;
+  /** 翻译达标才启用（Q5：翻译达标一个开一个；未启用项不出现在语言页 / LocaleBar） */
+  enabled: boolean;
+}
+
+export const LANGUAGE_REGISTRY: LanguageOption[] = [
+  { code: 'zh', label: '中文', native: '中文（简体）', enabled: true },
+  { code: 'en', label: 'English', native: 'English', enabled: true },
+  { code: 'tet', label: 'Tetun', native: 'Tetun', enabled: true },
+  // Why: pt 本批全量真译完成（key 与 en 对齐、未译率 0），达标即启用
+  { code: 'pt', label: 'Português', native: 'Português', enabled: true },
+];
+
+/** 启用中的语言（语言页 / LocaleBar 渲染来源） */
+export const ENABLED_LANGUAGES = LANGUAGE_REGISTRY.filter((l) => l.enabled);
 
 async function loadInitialLocale(): Promise<AppLocale> {
   // Why: 优先从 AsyncStorage 读取用户主动选择的语言

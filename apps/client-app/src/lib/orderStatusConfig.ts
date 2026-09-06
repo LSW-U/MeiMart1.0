@@ -5,51 +5,51 @@ import type { AppColors } from '@/theme/colors';
 // 集中管理避免散落在 OrderCard / OrderDetailPage / OrderListPage 三处组件，改一处即生效。
 
 export interface OrderStatusVisual {
-  /** UI 显示文案（zh/en 双语，按当前 locale 取） */
-  label: { zh: string; en: string };
+  /** UI 显示文案 i18n key（order.statusLabels.*，zh/en/tet/pt 4 语齐） */
+  labelKey: string;
   /** MaterialCommunityIcons 图标名 */
   icon: IconName;
 }
 
 export const ORDER_STATUS_VISUAL: Record<OrderStatus, OrderStatusVisual> = {
   PENDING_PAYMENT: {
-    label: { zh: '待付款', en: 'Pending Payment' },
+    labelKey: 'order.statusLabels.PENDING_PAYMENT',
     icon: 'clock-outline' as IconName,
   },
   PENDING_CONFIRM: {
-    label: { zh: '待确认', en: 'Pending Confirm' },
+    labelKey: 'order.statusLabels.PENDING_CONFIRM',
     icon: 'clock-check-outline' as IconName,
   },
   CONFIRMED: {
-    label: { zh: '已确认', en: 'Confirmed' },
+    labelKey: 'order.statusLabels.CONFIRMED',
     icon: 'check-circle-outline' as IconName,
   },
   PICKED: {
-    label: { zh: '已拣货', en: 'Picked' },
+    labelKey: 'order.statusLabels.PICKED',
     icon: 'package-variant-closed' as IconName,
   },
   OUT_FOR_DELIVERY: {
-    label: { zh: '配送中', en: 'Out for Delivery' },
+    labelKey: 'order.statusLabels.OUT_FOR_DELIVERY',
     icon: 'truck-delivery-outline' as IconName,
   },
   DELIVERED_PAID: {
-    label: { zh: '已送达', en: 'Delivered' },
+    labelKey: 'order.statusLabels.DELIVERED_PAID',
     icon: 'check-circle-outline' as IconName,
   },
   DELIVERED_UNPAID: {
-    label: { zh: '已送达（货到付款）', en: 'Delivered (COD)' },
+    labelKey: 'order.statusLabels.DELIVERED_UNPAID',
     icon: 'check-circle-outline' as IconName,
   },
   DELIVERED: {
-    label: { zh: '已送达', en: 'Delivered' },
+    labelKey: 'order.statusLabels.DELIVERED',
     icon: 'check-circle-outline' as IconName,
   },
   COMPLETED: {
-    label: { zh: '已完成', en: 'Completed' },
+    labelKey: 'order.statusLabels.COMPLETED',
     icon: 'star-check-outline' as IconName,
   },
   CANCELLED: {
-    label: { zh: '已取消', en: 'Cancelled' },
+    labelKey: 'order.statusLabels.CANCELLED',
     icon: 'close-circle-outline' as IconName,
   },
 };
@@ -74,7 +74,14 @@ const STATUS_SEMANTIC: Record<OrderStatus, StatusSemanticRole> = {
 // Why: dot/fg 当前统一指向同一 semantic 主色（简化优先）。
 // 旧版 pill 的 dot 比 fg 更亮（如蓝 #3b82f6 vs #1d4ed8），统一后 dot 会变深一点；
 // 真机看效果，若层次感不足再在 SemanticColors 加 dot 变体（info-dot 等）。
-const SEMANTIC_PILL_KEYS: Record<StatusSemanticRole, { bg: keyof AppColors['semantic']; fg: keyof AppColors['semantic']; dot: keyof AppColors['semantic'] }> = {
+const SEMANTIC_PILL_KEYS: Record<
+  StatusSemanticRole,
+  {
+    bg: keyof AppColors['semantic'];
+    fg: keyof AppColors['semantic'];
+    dot: keyof AppColors['semantic'];
+  }
+> = {
   warning: { bg: 'warning-container', fg: 'warning', dot: 'warning' },
   info: { bg: 'info-container', fg: 'info', dot: 'info' },
   success: { bg: 'success-container', fg: 'success', dot: 'success' },
@@ -94,47 +101,42 @@ export function getStatusPill(
   };
 }
 
-export type OrderAction =
-  | 'pay'
-  | 'cancel'
-  | 'track'
-  | 'review'
-  | 'repurchase'
-  | 'after-sales';
+export type OrderAction = 'pay' | 'cancel' | 'track' | 'review' | 'repurchase' | 'after-sales';
 
 export interface OrderActionDescriptor {
-  label: { zh: string; en: string };
+  /** 按钮文案 i18n key（order.actionLabels.*，zh/en/tet/pt 4 语齐） */
+  labelKey: string;
   action: OrderAction;
   primary?: boolean;
 }
 
 // Why: 不同状态显示不同操作按钮，集中管理避免 OrderCard 散落 switch
+// Why: labelKey 按「按钮语义」而非 action 建（同一 action=track 在待确认态显示 Details、
+//      配送态显示 Track，文案不同），文案 4 语在 locales/*.json order.actionLabels.* 维护
 export function getOrderActions(status: OrderStatus): OrderActionDescriptor[] {
   switch (status) {
     case 'PENDING_PAYMENT':
       return [
-        { label: { zh: '取消订单', en: 'Cancel' }, action: 'cancel' },
-        { label: { zh: '立即付款', en: 'Pay Now' }, action: 'pay', primary: true },
+        { labelKey: 'order.actionLabels.cancelOrder', action: 'cancel' },
+        { labelKey: 'order.actionLabels.payNow', action: 'pay', primary: true },
       ];
     case 'PENDING_CONFIRM':
     case 'CONFIRMED':
-      return [{ label: { zh: '查看详情', en: 'Details' }, action: 'track' }];
+      return [{ labelKey: 'order.actionLabels.viewDetails', action: 'track' }];
     case 'PICKED':
     case 'OUT_FOR_DELIVERY':
-      return [{ label: { zh: '查看物流', en: 'Track' }, action: 'track', primary: true }];
+      return [{ labelKey: 'order.actionLabels.trackShipment', action: 'track', primary: true }];
     case 'DELIVERED_PAID':
     case 'DELIVERED_UNPAID':
     case 'DELIVERED':
       return [
-        { label: { zh: '申请售后', en: 'After-Sales' }, action: 'after-sales' },
-        { label: { zh: '评价', en: 'Review' }, action: 'review', primary: true },
+        { labelKey: 'order.actionLabels.afterSales', action: 'after-sales' },
+        { labelKey: 'order.actionLabels.review', action: 'review', primary: true },
       ];
     case 'COMPLETED':
-      return [
-        { label: { zh: '再次购买', en: 'Buy Again' }, action: 'repurchase', primary: true },
-      ];
+      return [{ labelKey: 'order.actionLabels.buyAgain', action: 'repurchase', primary: true }];
     case 'CANCELLED':
-      return [{ label: { zh: '再次购买', en: 'Buy Again' }, action: 'repurchase', primary: true }];
+      return [{ labelKey: 'order.actionLabels.buyAgain', action: 'repurchase', primary: true }];
   }
 }
 

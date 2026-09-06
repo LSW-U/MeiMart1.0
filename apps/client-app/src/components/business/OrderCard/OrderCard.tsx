@@ -2,18 +2,11 @@ import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
-import { useLocalizer, getCurrentLocale } from '@/i18n';
+import { useLocalizer } from '@/i18n';
 import { PriceText } from '@/components/ui/PriceText';
 import { Button } from '@/components/ui/Button';
 import { ORDER_STATUS_VISUAL, getStatusPill, getOrderActions } from '@/lib/orderStatusConfig';
 import type { OrderCardProps, OrderAction } from './OrderCard.types';
-
-// Why: orderStatusConfig 的 label 是 {zh, en}，按当前 locale 取 string（tet fallback 到 en）
-function pickLabel(label: { zh: string; en: string }): string {
-  const locale = getCurrentLocale();
-  const record = label as Record<string, string>;
-  return record[locale] ?? label.en;
-}
 
 function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
   const { t } = useTranslation();
@@ -21,7 +14,8 @@ function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
   const localize = useLocalizer();
   const visual = ORDER_STATUS_VISUAL[order.status];
   const pill = getStatusPill(order.status, colors);
-  const statusLabel = pickLabel(visual.label);
+  // Why: labelKey i18n 驱动（批B）——状态/动作文案 4 语在 locales/*.json 维护，配置不再内置 {zh,en}
+  const statusLabel = t(visual.labelKey);
   const thumbnails = order.items.slice(0, 2);
   const overflow = Math.max(0, order.items.length - 2);
 
@@ -46,7 +40,11 @@ function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
           onPress={onPress ? () => onPress(order) : undefined}
           style={({ pressed }) => [styles.headerLeft, pressed && styles.pressed]}
           accessibilityRole="button"
-          accessibilityLabel={t('order.cardHeaderA11y', { orderNo: order.orderNo, status: statusLabel, defaultValue: 'Order {{orderNo}}, status {{status}}' })}
+          accessibilityLabel={t('order.cardHeaderA11y', {
+            orderNo: order.orderNo,
+            status: statusLabel,
+            defaultValue: 'Order {{orderNo}}, status {{status}}',
+          })}
           disabled={!onPress}
         >
           <Text style={[textStyle('label-caps'), { color: colors.primary, fontSize: 12 }]}>
@@ -71,7 +69,14 @@ function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
           onPress={onPress ? () => onPress(order) : undefined}
           style={({ pressed }) => [styles.thumbRowWrap, pressed && styles.pressed]}
           accessibilityRole={onPress ? 'button' : undefined}
-          accessibilityLabel={onPress ? t('order.viewOrderA11y', { orderNo: order.orderNo, defaultValue: 'View order {{orderNo}} details' }) : undefined}
+          accessibilityLabel={
+            onPress
+              ? t('order.viewOrderA11y', {
+                  orderNo: order.orderNo,
+                  defaultValue: 'View order {{orderNo}} details',
+                })
+              : undefined
+          }
           disabled={!onPress}
         >
           <View style={styles.thumbRow}>
@@ -126,10 +131,10 @@ function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
           </View>
           {actions.length > 0 && onAction && (
             <View style={styles.actions}>
-              {actions.map(({ label, action, primary }) => (
+              {actions.map(({ labelKey, action, primary }) => (
                 <Button
                   key={action}
-                  label={pickLabel(label)}
+                  label={t(labelKey)}
                   variant={primary ? 'primary' : 'outline'}
                   size="sm"
                   onPress={() => onAction(action as OrderAction, order)}

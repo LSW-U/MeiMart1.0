@@ -21,7 +21,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 const product: Product = {
   id: 'p1',
-  name: { en: 'Arabica Coffee', zh: '咖啡', tet: 'Arabica Coffee' },
+  name: { en: 'Arabica Coffee', zh: '咖啡', tet: 'Arabica Coffee', pt: 'Café Arábica' },
   price: 6.5,
   originalPrice: 8.0,
   image: 'https://example.com/coffee.jpg',

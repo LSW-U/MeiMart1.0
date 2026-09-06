@@ -8,7 +8,7 @@ jest.mock('@/services/favorites');
 
 const mkProduct = (id: string): Product => ({
   id,
-  name: { zh: `商品${id}`, en: `Product ${id}`, tet: `Product ${id}` },
+  name: { zh: `商品${id}`, en: `Product ${id}`, tet: `Product ${id}`, pt: `Produto ${id}` },
   price: 5,
   image: '',
   category: 'x',

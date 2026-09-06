@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
+import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import { formatPrice } from '@/utils/format';
 import type { OrderStatus } from '@/types';
@@ -88,6 +89,7 @@ function formatCountdown(ms: number): string {
 
 export default function OrderResultScreen() {
   const { t } = useTranslation();
+  const localize = useLocalizer();
   const { colors } = useTheme();
   useSafeBack();
   const params = useLocalSearchParams<{ orderId?: string; orderNo?: string; status?: string }>();
@@ -204,7 +206,9 @@ export default function OrderResultScreen() {
         >
           {t(st.titleKey)}
         </Text>
-        <Text style={[typography['body-md'], { color: colors['on-surface-variant'] }, styles.heroDesc]}>
+        <Text
+          style={[typography['body-md'], { color: colors['on-surface-variant'] }, styles.heroDesc]}
+        >
           {t(st.descKey)}
         </Text>
 
@@ -234,9 +238,7 @@ export default function OrderResultScreen() {
                 {t('result.countdownLabel')}
               </Text>
               <Text style={[typography['body-md'], { color: colors['on-surface'] }]}>
-                {state === 'PENDING'
-                  ? formatCountdown(remaining)
-                  : t('result.countdownExpired')}
+                {state === 'PENDING' ? formatCountdown(remaining) : t('result.countdownExpired')}
               </Text>
             </View>
           </View>
@@ -266,7 +268,11 @@ export default function OrderResultScreen() {
         {/* 订单摘要卡（有订单数据才渲染） */}
         {order && (
           <View
-            style={[styles.summaryCard, { backgroundColor: colors['surface-container-lowest'] }, shadowPresets.md]}
+            style={[
+              styles.summaryCard,
+              { backgroundColor: colors['surface-container-lowest'] },
+              shadowPresets.md,
+            ]}
             accessibilityRole="summary"
           >
             <View style={styles.summaryHeader}>
@@ -282,16 +288,22 @@ export default function OrderResultScreen() {
             {items.length > 0 && (
               <View style={styles.itemsPreview}>
                 <Text style={[typography['body-sm'], { color: colors['on-surface-variant'] }]}>
-                  {t('result.itemsCount', { count: items.reduce((sum, it) => sum + it.quantity, 0) })}
+                  {t('result.itemsCount', {
+                    count: items.reduce((sum, it) => sum + it.quantity, 0),
+                  })}
                 </Text>
                 {items.slice(0, 2).map((it) => (
                   <View key={it.id} style={styles.itemRow} accessibilityRole="button">
                     <Icon symbol="shopping_cart" size={20} color={colors['on-surface-variant']} />
                     <Text
-                      style={[typography['body-md'], { color: colors['on-surface'] }, styles.itemName]}
+                      style={[
+                        typography['body-md'],
+                        { color: colors['on-surface'] },
+                        styles.itemName,
+                      ]}
                       numberOfLines={1}
                     >
-                      {it.product.name.en}
+                      {localize(it.product.name)}
                     </Text>
                     <Text style={[typography['body-sm'], { color: colors['on-surface-variant'] }]}>
                       ×{it.quantity}
@@ -370,7 +382,13 @@ export default function OrderResultScreen() {
         >
           <Icon symbol="headset_mic" size={20} color={colors.primary} />
           <Text style={[typography['body-md'], { color: colors.primary }, styles.supportText]}>
-            {t(state === 'PAY_FAIL' ? 'result.paySupport' : state === 'ORDER_FAIL' ? 'result.orderSupport' : 'result.contactSupport')}
+            {t(
+              state === 'PAY_FAIL'
+                ? 'result.paySupport'
+                : state === 'ORDER_FAIL'
+                  ? 'result.orderSupport'
+                  : 'result.contactSupport',
+            )}
           </Text>
           <Icon symbol="chevron_right" size={20} color={colors['on-surface-variant']} />
         </Pressable>

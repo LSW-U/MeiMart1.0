@@ -16,7 +16,15 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { formatDate } from '@/utils/format';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, getStatusBannerTheme } from '@/theme';
+import {
+  useTheme,
+  spacing,
+  layout,
+  typography,
+  borderRadius,
+  shadowPresets,
+  getStatusBannerTheme,
+} from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PriceText } from '@/components/ui/PriceText';
@@ -143,7 +151,11 @@ export default function DeliveryTrackingPage() {
         t('order.cancelConfirm', { defaultValue: 'Cancel this order?' }),
         [
           { text: t('common.no', { defaultValue: 'No' }), style: 'cancel' },
-          { text: t('common.yes', { defaultValue: 'Yes' }), style: 'destructive', onPress: () => cancelMutation.mutate(order.id, { onSuccess: onCancelSuccess }) },
+          {
+            text: t('common.yes', { defaultValue: 'Yes' }),
+            style: 'destructive',
+            onPress: () => cancelMutation.mutate(order.id, { onSuccess: onCancelSuccess }),
+          },
         ],
       );
     }
@@ -166,7 +178,8 @@ export default function DeliveryTrackingPage() {
     'local_shipping',
   );
   const timelineActiveIndex = timelineSteps.findIndex((s) => s.state === 'active');
-  const timelineProgress = timelineActiveIndex < 0 ? 1 : (timelineActiveIndex + 1) / timelineSteps.length;
+  const timelineProgress =
+    timelineActiveIndex < 0 ? 1 : (timelineActiveIndex + 1) / timelineSteps.length;
 
   return (
     <SafeAreaWrapper
@@ -174,7 +187,10 @@ export default function DeliveryTrackingPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <Header title={t('tracking.title', { defaultValue: 'Order Tracking' })} orderNo={order.orderNo} />
+      <Header
+        title={t('tracking.title', { defaultValue: 'Order Tracking' })}
+        orderNo={order.orderNo}
+      />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -223,7 +239,10 @@ export default function DeliveryTrackingPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.umaLulik,
           ]}
         >
@@ -236,10 +255,13 @@ export default function DeliveryTrackingPage() {
                 {trackingNo}
               </Text>
               <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
-                {formatDate(order.createdAt, i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
+                {formatDate(order.createdAt, i18n.language)}
               </Text>
             </View>
-            <StatusBadge text={t(getStatusBadgeKey(currentStatus), { defaultValue: currentStatus })} backgroundColor={statusTheme.badgeBg} />
+            <StatusBadge
+              text={t(getStatusBadgeKey(currentStatus), { defaultValue: currentStatus })}
+              backgroundColor={statusTheme.badgeBg}
+            />
           </View>
 
           {/* ESTIMATED DELIVERY（HTML 第 168-174 行 — blue-50/50 bg；复用 pending 色板）*/}
@@ -254,7 +276,11 @@ export default function DeliveryTrackingPage() {
           >
             <Icon symbol="local_shipping" size={20} color={statusTheme.bannerIcon} />
             <View style={styles.flex1}>
-              <Text style={[styles.etaLabel, { color: statusTheme.bannerLabelColor }]}>{t('tracking.estimatedDelivery', { defaultValue: 'Estimated delivery' }).toUpperCase()}</Text>
+              <Text style={[styles.etaLabel, { color: statusTheme.bannerLabelColor }]}>
+                {t('tracking.estimatedDelivery', {
+                  defaultValue: 'Estimated delivery',
+                }).toUpperCase()}
+              </Text>
               <Text style={[styles.etaValue, { color: statusTheme.bannerValueColor }]}>
                 {estimatedArrival
                   ? formatTimelineTime(estimatedArrival, i18n.language)
@@ -277,7 +303,10 @@ export default function DeliveryTrackingPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.umaLulik,
           ]}
         >
@@ -294,7 +323,9 @@ export default function DeliveryTrackingPage() {
               accessibilityRole="button"
               accessibilityLabel={t('checkout.address.change', { defaultValue: 'Change' })}
             >
-              <Text style={[styles.editText, { color: colors.primary }]}>{t('checkout.address.change', { defaultValue: 'Change' }).toUpperCase()}</Text>
+              <Text style={[styles.editText, { color: colors.primary }]}>
+                {t('checkout.address.change', { defaultValue: 'Change' }).toUpperCase()}
+              </Text>
             </Pressable>
           </View>
           <View style={styles.addressBody}>
@@ -307,7 +338,7 @@ export default function DeliveryTrackingPage() {
                 : t('tracking.unknownAddress', { defaultValue: 'Address not available' })}
             </Text>
             {address?.phone ? (
-              <Text style={[styles.bodySm, { color: colors['on-surface-variant' ]}]}>
+              <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
                 {address.phone}
               </Text>
             ) : null}
@@ -317,7 +348,9 @@ export default function DeliveryTrackingPage() {
         {/* Order Items 标题（HTML 第 191-196 行 — 渐变 divider） */}
         <View style={styles.sectionHeader}>
           <View style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]} />
-          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>{t('order.items', { defaultValue: 'Items' })}</Text>
+          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+            {t('order.items', { defaultValue: 'Items' })}
+          </Text>
           <View style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]} />
         </View>
 
@@ -359,17 +392,22 @@ export default function DeliveryTrackingPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.umaLulik,
           ]}
         >
           <Text style={[styles.labelCaps, { color: colors['on-surface-variant'] }]}>
-            ORDER SUMMARY
+            {t('tracking.orderSummary')}
           </Text>
           <View style={styles.summaryGap}>
             {/* TODO(长期): 后端订单返回 subtotal/deliveryFee/discount 字段后恢复分项显示 */}
             <View style={[styles.totalRow, { borderTopColor: colors['outline-variant'] }]}>
-              <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>{t('order.total', { defaultValue: 'Total' })}</Text>
+              <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
+                {t('order.total', { defaultValue: 'Total' })}
+              </Text>
               <PriceText value={order.totalPrice} size="lg" />
             </View>
           </View>
@@ -379,7 +417,10 @@ export default function DeliveryTrackingPage() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
             shadowPresets.umaLulik,
           ]}
         >
@@ -390,10 +431,16 @@ export default function DeliveryTrackingPage() {
             </Text>
             <View style={styles.paymentRow}>
               <View style={[styles.laisPayBadge, { backgroundColor: colors.primary }]}>
-                <Text style={styles.laisPayText}>{t(`order.paymentMethodShort.${(order.paymentMethod ?? 'cod').toLowerCase()}`, { defaultValue: order.paymentMethod ?? '-' })}</Text>
+                <Text style={styles.laisPayText}>
+                  {t(`order.paymentMethodShort.${(order.paymentMethod ?? 'cod').toLowerCase()}`, {
+                    defaultValue: order.paymentMethod ?? '-',
+                  })}
+                </Text>
               </View>
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
-                {t(`order.paymentMethod.${(order.paymentMethod ?? 'cod').toLowerCase()}`, { defaultValue: order.paymentMethod ?? '-' })}
+                {t(`order.paymentMethod.${(order.paymentMethod ?? 'cod').toLowerCase()}`, {
+                  defaultValue: order.paymentMethod ?? '-',
+                })}
               </Text>
             </View>
           </View>
@@ -424,7 +471,9 @@ export default function DeliveryTrackingPage() {
             accessibilityRole="button"
             accessibilityLabel={t('order.actions.cancel', { defaultValue: 'Cancel Order' })}
           >
-            <Text style={[styles.btnText, { color: colors.primary }]}>{t('order.actions.cancel', { defaultValue: 'Cancel Order' })}</Text>
+            <Text style={[styles.btnText, { color: colors.primary }]}>
+              {t('order.actions.cancel', { defaultValue: 'Cancel Order' })}
+            </Text>
           </Pressable>
         )}
         <Pressable
@@ -438,7 +487,9 @@ export default function DeliveryTrackingPage() {
           accessibilityRole="button"
           accessibilityLabel={t('order.actions.contactSeller', { defaultValue: 'Contact seller' })}
         >
-          <Text style={[styles.btnText, { color: ON_PRIMARY }]}>{t('order.actions.contactSeller', { defaultValue: 'Contact seller' })}</Text>
+          <Text style={[styles.btnText, { color: ON_PRIMARY }]}>
+            {t('order.actions.contactSeller', { defaultValue: 'Contact seller' })}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaWrapper>
@@ -480,7 +531,10 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
           </Pressable>
           <Pressable
             onPress={() => {
-              const message = t('order.shareMessage', { orderNo: orderNo ?? '', defaultValue: 'MeiMart order {{orderNo}}' });
+              const message = t('order.shareMessage', {
+                orderNo: orderNo ?? '',
+                defaultValue: 'MeiMart order {{orderNo}}',
+              });
               if (Platform.OS === 'web') {
                 if (typeof navigator !== 'undefined' && navigator.clipboard) {
                   navigator.clipboard.writeText(message).catch(() => {});
@@ -492,7 +546,10 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
             hitSlop={8}
             style={styles.headerBtn}
             accessibilityRole="button"
-            accessibilityLabel={t('order.shareA11y', { orderNo: orderNo ?? '', defaultValue: 'Share order {{orderNo}}' })}
+            accessibilityLabel={t('order.shareA11y', {
+              orderNo: orderNo ?? '',
+              defaultValue: 'Share order {{orderNo}}',
+            })}
           >
             <Icon symbol="share" size={24} color={ON_PRIMARY} />
           </Pressable>

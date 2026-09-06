@@ -37,7 +37,7 @@ jest.mock('@/hooks/useSafeBack', () => ({
 const products: Product[] = [
   {
     id: 'p1',
-    name: { zh: '苹果', en: 'Apple', tet: 'Apple' },
+    name: { zh: '苹果', en: 'Apple', tet: 'Apa', pt: 'Maçã' },
     price: 3.5,
     image: 'https://example.com/a.jpg',
     category: 'fruit',
@@ -46,7 +46,7 @@ const products: Product[] = [
   },
   {
     id: 'p2',
-    name: { zh: '牛奶', en: 'Milk', tet: 'Milk' },
+    name: { zh: '牛奶', en: 'Milk', tet: 'Milk', pt: 'Leite' },
     price: 2.8,
     image: 'https://example.com/m.jpg',
     category: 'dairy',

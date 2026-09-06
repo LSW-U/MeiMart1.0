@@ -59,12 +59,7 @@ export default function AfterSalesDetailPage() {
   const localize = useLocalizer();
   // Why: id 语义 = refund.id（P13 提交后传 refund.id 跳 detail，after-sales-apply.tsx:165）
   const { id } = useLocalSearchParams<{ id: string }>();
-  const {
-    data: refund,
-    isLoading,
-    isError,
-    refetch,
-  } = useRefundDetail(id);
+  const { data: refund, isLoading, isError, refetch } = useRefundDetail(id);
   // 副：拿商品图片（refund.items 无 image 字段）+ 整单退款时 fallback 商品（refund.items 整单退款为空）
   const { data: order } = useOrder(refund?.orderId);
   const cancelRefund = useCancelRefund();
@@ -76,11 +71,7 @@ export default function AfterSalesDetailPage() {
         style={{ backgroundColor: colors.background, flex: 1 }}
       >
         <StatusBarConfig />
-        <PrimaryHeader
-          title={t('afterSales.detailTitle')}
-          showBack
-          onBackPress={handleBack}
-        />
+        <PrimaryHeader title={t('afterSales.detailTitle')} showBack onBackPress={handleBack} />
         <LoadingOverlay visible />
       </SafeAreaWrapper>
     );
@@ -93,11 +84,7 @@ export default function AfterSalesDetailPage() {
         style={{ backgroundColor: colors.background, flex: 1 }}
       >
         <StatusBarConfig />
-        <PrimaryHeader
-          title={t('afterSales.detailTitle')}
-          showBack
-          onBackPress={handleBack}
-        />
+        <PrimaryHeader title={t('afterSales.detailTitle')} showBack onBackPress={handleBack} />
         <ErrorState
           message={t('errors.refundNotFound', { defaultValue: 'Refund not found' })}
           onRetry={() => refetch()}
@@ -153,10 +140,7 @@ export default function AfterSalesDetailPage() {
 
   // WM1-WM4 COD 退款区分（决策 9）：refundMethod === 'COD' 时骑手上门退现金（系统无钱包/余额基础设施）
   const isCash = refund.refundMethod === 'COD';
-  const applyTimeDisplay = formatDate(
-    refund.createdAt,
-    i18n.language === 'zh' ? 'zh-CN' : 'en-US',
-  );
+  const applyTimeDisplay = formatDate(refund.createdAt, i18n.language);
   const applyNoDisplay = `#${refund.id.slice(-8).toUpperCase()}`;
 
   // S1 状态色块多态化（决策 1，6 种色态：审核中琥珀 / 骑手取件蓝 / 退款处理绿 / 退款完成绿 / 拒绝红 / 取消灰）
@@ -253,24 +237,79 @@ export default function AfterSalesDetailPage() {
   })();
 
   // T1/T2/T3 时间轴动态化（决策 2）：按售后类型 4/6 步 + 真实时间戳 + currentIndex 推导
-  const formatTs = (iso: string | null) =>
-    iso ? formatDate(iso, i18n.language === 'zh' ? 'zh-CN' : 'en-US') : '';
+  const formatTs = (iso: string | null) => (iso ? formatDate(iso, i18n.language) : '');
   const steps = isReturnRefund
     ? [
         // 退货退款 6 步：submitted → approved → pickupArranging → picked → refundProcessing → completed
-        { status: t('afterSales.timeline.submitted'), description: t('afterSales.timeline.submittedDesc'), timestamp: formatTs(refund.createdAt) },
-        { status: t('afterSales.timeline.approved'), description: t('afterSales.timeline.approvedDesc'), timestamp: formatTs(refund.reviewedAt) },
-        { status: t('afterSales.timeline.pickupArranging'), description: t('afterSales.timeline.pickupArrangingDesc'), timestamp: formatTs(refund.pickupAt) },
-        { status: t('afterSales.timeline.picked'), description: t('afterSales.timeline.pickedDesc'), timestamp: formatTs(refund.pickedAt) },
-        { status: t(isCash ? 'afterSales.timeline.cashDelivering' : 'afterSales.timeline.refundProcessing'), description: t(isCash ? 'afterSales.timeline.cashDeliveringDesc' : 'afterSales.timeline.refundProcessingDesc'), timestamp: '' },
-        { status: t(isCash ? 'afterSales.timeline.cashDelivered' : 'afterSales.timeline.completed'), description: isCash ? t('afterSales.timeline.cashDeliveredDesc', { amount: refund.amount / 100 }) : t('afterSales.timeline.completedDesc'), timestamp: formatTs(refund.completedAt) },
+        {
+          status: t('afterSales.timeline.submitted'),
+          description: t('afterSales.timeline.submittedDesc'),
+          timestamp: formatTs(refund.createdAt),
+        },
+        {
+          status: t('afterSales.timeline.approved'),
+          description: t('afterSales.timeline.approvedDesc'),
+          timestamp: formatTs(refund.reviewedAt),
+        },
+        {
+          status: t('afterSales.timeline.pickupArranging'),
+          description: t('afterSales.timeline.pickupArrangingDesc'),
+          timestamp: formatTs(refund.pickupAt),
+        },
+        {
+          status: t('afterSales.timeline.picked'),
+          description: t('afterSales.timeline.pickedDesc'),
+          timestamp: formatTs(refund.pickedAt),
+        },
+        {
+          status: t(
+            isCash ? 'afterSales.timeline.cashDelivering' : 'afterSales.timeline.refundProcessing',
+          ),
+          description: t(
+            isCash
+              ? 'afterSales.timeline.cashDeliveringDesc'
+              : 'afterSales.timeline.refundProcessingDesc',
+          ),
+          timestamp: '',
+        },
+        {
+          status: t(isCash ? 'afterSales.timeline.cashDelivered' : 'afterSales.timeline.completed'),
+          description: isCash
+            ? t('afterSales.timeline.cashDeliveredDesc', { amount: refund.amount / 100 })
+            : t('afterSales.timeline.completedDesc'),
+          timestamp: formatTs(refund.completedAt),
+        },
       ]
     : [
         // 仅退款 4 步：submitted → approved → refundProcessing → completed
-        { status: t('afterSales.timeline.submitted'), description: t('afterSales.timeline.submittedDesc'), timestamp: formatTs(refund.createdAt) },
-        { status: t('afterSales.timeline.approved'), description: t('afterSales.timeline.approvedDesc'), timestamp: formatTs(refund.reviewedAt) },
-        { status: t(isCash ? 'afterSales.timeline.cashDelivering' : 'afterSales.timeline.refundProcessing'), description: t(isCash ? 'afterSales.timeline.cashDeliveringDesc' : 'afterSales.timeline.refundProcessingDesc'), timestamp: '' },
-        { status: t(isCash ? 'afterSales.timeline.cashDelivered' : 'afterSales.timeline.completed'), description: isCash ? t('afterSales.timeline.cashDeliveredDesc', { amount: refund.amount / 100 }) : t('afterSales.timeline.completedDesc'), timestamp: formatTs(refund.completedAt) },
+        {
+          status: t('afterSales.timeline.submitted'),
+          description: t('afterSales.timeline.submittedDesc'),
+          timestamp: formatTs(refund.createdAt),
+        },
+        {
+          status: t('afterSales.timeline.approved'),
+          description: t('afterSales.timeline.approvedDesc'),
+          timestamp: formatTs(refund.reviewedAt),
+        },
+        {
+          status: t(
+            isCash ? 'afterSales.timeline.cashDelivering' : 'afterSales.timeline.refundProcessing',
+          ),
+          description: t(
+            isCash
+              ? 'afterSales.timeline.cashDeliveringDesc'
+              : 'afterSales.timeline.refundProcessingDesc',
+          ),
+          timestamp: '',
+        },
+        {
+          status: t(isCash ? 'afterSales.timeline.cashDelivered' : 'afterSales.timeline.completed'),
+          description: isCash
+            ? t('afterSales.timeline.cashDeliveredDesc', { amount: refund.amount / 100 })
+            : t('afterSales.timeline.completedDesc'),
+          timestamp: formatTs(refund.completedAt),
+        },
       ];
   // T2 currentIndex 推导（当前进行中的步骤索引）
   const currentIndex = (() => {
@@ -304,11 +343,7 @@ export default function AfterSalesDetailPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <PrimaryHeader
-        title={t('afterSales.detailTitle')}
-        showBack
-        onBackPress={handleBack}
-      />
+      <PrimaryHeader title={t('afterSales.detailTitle')} showBack onBackPress={handleBack} />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -316,7 +351,17 @@ export default function AfterSalesDetailPage() {
         showsVerticalScrollIndicator={false}
       >
         {/* 状态色块 */}
-        <View style={[styles.statusBlock, { backgroundColor: statusAppearance.container, position: 'relative', overflow: 'hidden' }, shadowPresets.sm]}>
+        <View
+          style={[
+            styles.statusBlock,
+            {
+              backgroundColor: statusAppearance.container,
+              position: 'relative',
+              overflow: 'hidden',
+            },
+            shadowPresets.sm,
+          ]}
+        >
           <TaisPattern height={120} opacity={0.15} />
           {/* F1：state-tag 挂状态色块右上角（P14 原型 :210 五处都挂在 .status-block 内，V10 误挂商品卡） */}
           <View style={[styles.stateTag, { backgroundColor: stateTag.bg }]}>
@@ -328,7 +373,10 @@ export default function AfterSalesDetailPage() {
             </View>
           </View>
           <View style={styles.statusTextBox}>
-            <Text style={[styles.statusText, { color: statusAppearance.textColor }]} accessibilityRole="header">
+            <Text
+              style={[styles.statusText, { color: statusAppearance.textColor }]}
+              accessibilityRole="header"
+            >
               {t(statusAppearance.titleKey)}
             </Text>
             <Text style={[styles.statusDesc, { color: statusAppearance.textColor, opacity: 0.7 }]}>
@@ -363,7 +411,9 @@ export default function AfterSalesDetailPage() {
           </View>
           {displayItems.map((item) => (
             <View style={styles.productRow} key={item.key}>
-              <View style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}>
+              <View
+                style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}
+              >
                 {item.image && (
                   <Image
                     source={{ uri: item.image }}
@@ -373,7 +423,10 @@ export default function AfterSalesDetailPage() {
                 )}
               </View>
               <View style={styles.productTextBox}>
-                <Text style={[styles.productName, { color: colors['on-surface'] }]} numberOfLines={2}>
+                <Text
+                  style={[styles.productName, { color: colors['on-surface'] }]}
+                  numberOfLines={2}
+                >
                   {localize(item.name)}
                 </Text>
                 <View style={styles.productMetaRow}>

@@ -4,9 +4,27 @@
 //      会直接导致 B2 漏单 bug 复发。纯配置断言，零 hook 渲染，最快防漂移。
 import {
   ORDER_STATUS_GROUPS,
+  ORDER_STATUS_VISUAL,
   ORDER_TABS,
+  getOrderActions,
   tabStatuses,
 } from '../orderStatusConfig';
+
+describe('ORDER_STATUS_VISUAL / getOrderActions（批B labelKey i18n 化）', () => {
+  it('10 状态都有 order.statusLabels.* labelKey（防 key 拼错）', () => {
+    for (const visual of Object.values(ORDER_STATUS_VISUAL)) {
+      expect(visual.labelKey).toMatch(/^order\.statusLabels\.[A-Z_]+$/);
+    }
+  });
+
+  it('每状态的动作 labelKey 都在 order.actionLabels.* 段（防 key 拼错）', () => {
+    for (const status of Object.keys(ORDER_STATUS_VISUAL) as (keyof typeof ORDER_STATUS_VISUAL)[]) {
+      for (const action of getOrderActions(status)) {
+        expect(action.labelKey).toMatch(/^order\.actionLabels\.[a-zA-Z]+$/);
+      }
+    }
+  });
+});
 
 describe('ORDER_STATUS_GROUPS（P12 单一来源）', () => {
   it('review 组含所有已送达状态（含 DELIVERED_PAID/UNPAID 货到付款送达）', () => {
