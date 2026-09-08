@@ -1192,5 +1192,12 @@
       "title": "Licença Comercial"
     },
     "comingSoon": "Este conteúdo está a ser preparado e será fornecido pela nossa equipa jurídica. Não afeta a sua utilização atual da app."
+  },
+  "payment": {
+    "methods": {
+      "comingSoonTitle": "Brevemente disponível",
+      "comingSoonHint": "Este método de pagamento ainda não está disponível"
+    },
+    "estimatedCny": "≈ ¥{{amount}}"
   }
 }

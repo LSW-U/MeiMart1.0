@@ -69,6 +69,9 @@ interface OrderRaw {
   }[];
   // Why: P28 订单结果页 - 待支付倒计时截止（ISO），后端契约 createdAt + 15min（D11）
   payDeadline?: string | null;
+  // Why: 批A 汇率快照（批B ≈¥ 显示消费）：人民币通道下单锁定，非人民币通道 null
+  exchangeRate?: number | null;
+  estimatedCnyAmount?: number | null;
 }
 
 interface OrderListResponse {
@@ -97,7 +100,10 @@ function transformOrderItem(raw: OrderItemRaw): CartItem {
     id: raw.id ?? '',
     product: {
       id: raw.productId ?? '',
-      name: { zh: pickLocalized(raw.productName), en: pickLocalized(raw.productName) } as CartItem['product']['name'],
+      name: {
+        zh: pickLocalized(raw.productName),
+        en: pickLocalized(raw.productName),
+      } as CartItem['product']['name'],
       price: (raw.unitPrice ?? 0) / 100,
       image: raw.productImage ?? '',
       category: '',
@@ -151,6 +157,9 @@ function transformOrder(raw: OrderRaw): Order {
     })),
     // Why: P28 - 透传待支付截止时间，null 表示非待支付态（D11）
     payDeadline: raw.payDeadline ?? null,
+    // Why: 批B ≈¥ 显示 - 汇率快照（万分位）+ 人民币估算金额（分），非人民币通道 null
+    exchangeRate: raw.exchangeRate ?? null,
+    estimatedCnyAmount: raw.estimatedCnyAmount ?? null,
   };
 }
 
@@ -211,9 +220,13 @@ export const orderApi = {
       return mockResponse(newOrder);
     }
     const idempotencyKey = crypto.randomUUID();
-    const res = await api.post<OrderRaw>('/client/orders', { ...payload, items }, {
-      headers: { 'Idempotency-Key': idempotencyKey },
-    });
+    const res = await api.post<OrderRaw>(
+      '/client/orders',
+      { ...payload, items },
+      {
+        headers: { 'Idempotency-Key': idempotencyKey },
+      },
+    );
     return transformOrder(res.data);
   },
 

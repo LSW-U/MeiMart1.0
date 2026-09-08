@@ -90,6 +90,8 @@ export interface Cart {
 
 export interface PaymentMethod {
   id: string;
+  /** 后端大写枚举 code（real 模式 GET /client/payments/methods 返回；mock 数据 id 的大写形式） */
+  code?: string;
   /** 主标题，如 "LaisPay (Local Wallet)" */
   name: LocalizableText;
   /** 副标题，如 "Balance: $45.00" 或 "BNU / Mandiri" */
@@ -98,6 +100,16 @@ export interface PaymentMethod {
   icon: string;
   /** 是否默认选中 */
   isDefault?: boolean;
+  /** 是否启用（后端 enabled=false 不在列表下发，前端兜底字段） */
+  enabled?: boolean;
+  /**
+   * Why: 批B 支付枚举补位（微信支付预留）— false = 占位渠道（WECHAT_GLOBAL/ALIPAY_CN/LOCAL_PSP），
+   * 结算页渲染"即将上线"区且不可选中；后端 createOrder 同口径拒绝（E-PAYMENT-011）。
+   * undefined 视为可用（旧 mock 数据兼容）。
+   */
+  available?: boolean;
+  /** mock/stub 标识（WECHAT/PAYPAL/STRIPE/WECHAT_GLOBAL/ALIPAY_CN/LOCAL_PSP 为 true） */
+  mockFlag?: boolean;
 }
 
 export type OrderStatus =
@@ -159,6 +171,10 @@ export interface Order {
   // Why: P28 订单结果页 - 待支付倒计时截止（ISO，= createdAt + 15min）。仅 PENDING_PAYMENT 有值，其他状态 null；
   //     后端就绪前前端用 createdAt + 15min 兜底计算（D11）
   payDeadline?: string | null;
+  // Why: 批B ≈¥ 显示（微信支付预留）— 订单快照汇率（万分位，7.2345 → 72345）+ 人民币估算金额（分）。
+  //     人民币通道（WECHAT/WECHAT_GLOBAL/ALIPAY_CN）下单锁定，非人民币通道 null
+  exchangeRate?: number | null;
+  estimatedCnyAmount?: number | null;
 }
 
 export interface User {

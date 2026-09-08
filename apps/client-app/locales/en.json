@@ -1192,5 +1192,12 @@
       "title": "Business License"
     },
     "comingSoon": "This content is being prepared and will be provided by our legal team. It does not affect your current use of the app."
+  },
+  "payment": {
+    "methods": {
+      "comingSoonTitle": "Coming soon",
+      "comingSoonHint": "This payment method is not available yet"
+    },
+    "estimatedCny": "≈ ¥{{amount}}"
   }
 }

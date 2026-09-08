@@ -24,9 +24,10 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
-import { useLocalizer } from '@/i18n';
+import { useLocalizer, useLocale } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import { formatPrice } from '@/utils/format';
+import { shouldShowCnyEstimate, formatCnyAmount } from '@/utils/cnyDisplay';
 import type { OrderStatus } from '@/types';
 
 // S2 待支付倒计时基准：payDeadline 缺失时用 createdAt + 15min 兜底（D11，后端未就绪前前端计算）
@@ -90,6 +91,8 @@ function formatCountdown(ms: number): string {
 export default function OrderResultScreen() {
   const { t } = useTranslation();
   const localize = useLocalizer();
+  // P3-2（审查 20260908）：响应式 locale——useSyncExternalStore 订阅 languageChanged，挂载中切语言即时重渲染
+  const locale = useLocale();
   const { colors } = useTheme();
   useSafeBack();
   const params = useLocalSearchParams<{ orderId?: string; orderNo?: string; status?: string }>();
@@ -121,6 +124,13 @@ export default function OrderResultScreen() {
   const deliveryFee = order?.deliveryFee ?? 0;
   const discount = order?.discountAmount ?? 0;
   const amountDue = order?.totalPrice ?? totalGoods + deliveryFee - discount;
+  // Why: 批B ≈¥ 显示（微信支付预留，方案V2 §3.2 第 10 条）— 人民币通道（WECHAT/WECHAT_GLOBAL/
+  // ALIPAY_CN）+ locale=zh 时，应付金额旁显示订单快照人民币估算（estimatedCnyAmount，分）。
+  // 其余 locale/渠道不显示；Y 用快照值（批A 下单锁汇率，显示/结算/对账口径一致）。
+  // P3-2（审查 20260908）：locale 用 useLocale() 响应式（原 getCurrentLocale() 无订阅，切语言不重算）
+  const showCnyEstimate = order
+    ? shouldShowCnyEstimate(order.paymentMethod, locale, order.estimatedCnyAmount)
+    : false;
 
   const stateTheme: Record<ResultState, StateTheme> = {
     SUCCESS: {
@@ -354,6 +364,14 @@ export default function OrderResultScreen() {
                 </Text>
                 <Text style={[typography.h3, { color: colors.primary }]}>
                   {formatPrice(amountDue)}
+                  {showCnyEstimate && order?.estimatedCnyAmount != null && (
+                    <Text style={[typography['body-sm'], { color: colors['on-surface-variant'] }]}>
+                      {'  '}
+                      {t('payment.estimatedCny', {
+                        amount: formatCnyAmount(order.estimatedCnyAmount),
+                      })}
+                    </Text>
+                  )}
                 </Text>
               </View>
             </View>

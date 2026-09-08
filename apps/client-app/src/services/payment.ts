@@ -1,17 +1,65 @@
 import axios from 'axios';
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
-import type { PaymentMethod } from '@/types';
+import type { PaymentMethod, LocalizableText } from '@/types';
 
-// Why: 后端 PaymentIntent 字段扁平，前端 PaymentMethod 是 UI 卡片结构（icon/name/subtitle）。
-// getMethods 暂保留 mock（后端无"列出支付方式"端点，方法集是写死的 5 种 COD/BANK/WECHAT/PAYPAL/STRIPE）。
+// Why: 批B 支付枚举补位（微信支付预留 2026-09-08）— 后端 GET /client/payments/methods 已就位，
+// getMethods 切真实端点；icon 值是后端短 code（cod/bank/wechat/...），映射到 Material Symbols
+// 名再走 <Icon symbol>（与 mock 数据 icon 同一套 symbolToMc 查表），dev(mock)/prod(real) 渲染一致。
+const ICON_SYMBOL_BY_CODE: Record<string, string> = {
+  cod: 'payments',
+  bank: 'account_balance',
+  wechat: 'wechat',
+  paypal: 'paypal',
+  stripe: 'credit_card',
+  'wechat-global': 'wechat',
+  alipay: 'account_balance_wallet',
+  'local-psp': 'storefront',
+};
+
+/** 后端 PaymentMethodItem 视图（契约 schemas/payment.ts） */
+interface PaymentMethodApiItem {
+  code: string;
+  name: Record<string, string>;
+  subtitle: Record<string, string>;
+  icon: string;
+  isDefault: boolean;
+  enabled: boolean;
+  available: boolean;
+  mockFlag: boolean;
+}
+
+// Why: 后端多语言 JSON 是 5 语（en/zh/id/pt/tet），前端 LocalizableText 是 4 语（zh/en/tet/pt），
+// 收敛键集避免 'id' 键泄漏进 UI 层；缺键回退空串（localizer 会再 fallback en）
+function toLocalizable(record: Record<string, string>): LocalizableText {
+  return {
+    en: record.en ?? '',
+    zh: record.zh ?? '',
+    tet: record.tet ?? '',
+    pt: record.pt ?? '',
+  };
+}
+
+function toUiMethod(item: PaymentMethodApiItem): PaymentMethod {
+  return {
+    id: item.code,
+    code: item.code,
+    name: toLocalizable(item.name),
+    subtitle: toLocalizable(item.subtitle),
+    icon: ICON_SYMBOL_BY_CODE[item.icon] ?? 'credit_card',
+    isDefault: item.isDefault,
+    enabled: item.enabled,
+    available: item.available,
+    mockFlag: item.mockFlag,
+  };
+}
+
 export const paymentApi = {
   async getMethods(): Promise<PaymentMethod[]> {
-    // #003（批次2 拍板）：这不是 mock 泄漏，是固定 5 种支付方式的静态列表——保留现状，
-    // TODO: 后端补 GET /client/payments/methods 端点后替换为真实请求
-    if (isMockMode) return mockResponse(mockDb.payments);
-    // Why: 后端无 /payments/methods 端点，real 模式同样用 mock 数据（支付方式是前端固定 5 种）
-    return mockResponse(mockDb.payments);
+    if (isMockMode) return mockResponse(mockDb.payments as PaymentMethod[]);
+    // Why: 后端统一响应 { success, data } 壳由 api 拦截器剥掉，res.data 即 { items }
+    const res = await api.get<{ items: PaymentMethodApiItem[] }>('/client/payments/methods');
+    return res.data.items.map(toUiMethod);
   },
 
   // Why: 支付端点 URL 参数是 orderId 不是 paymentId。后端没有"创建 payment"端点，

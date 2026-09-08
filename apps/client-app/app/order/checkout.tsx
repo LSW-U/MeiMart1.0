@@ -73,6 +73,12 @@ export default function CheckoutPage() {
   // Why: 防止 submit 期间重复点击（Promise.all 查 SKU 时 createOrder.isPending 还是 false）
   const [submitting, setSubmitting] = useState(false);
 
+  // Why: 批B 支付枚举补位（微信支付预留）— available=false 为占位渠道（WECHAT_GLOBAL/ALIPAY_CN/
+  // LOCAL_PSP），渲染到"即将上线"区且不可选中（点击提示暂未开通）；后端 createOrder 同口径拒绝（R2）。
+  // available undefined 视为可用（旧 mock 数据兼容）。
+  const availableMethods = (paymentMethods ?? []).filter((m) => m.available !== false);
+  const comingSoonMethods = (paymentMethods ?? []).filter((m) => m.available === false);
+
   // Why: subtotal 用本地购物车算（line item 单价 × 数量，与商品行展示一致）。
   //      real 模式 payableAmount 后端已聚合（itemsSubtotal + deliveryFee - discount），直接用作实付；
   //      discount 用 preview.discount（传券时后端聚合）；mock/preview 未加载用 demo 常量。
@@ -299,7 +305,7 @@ export default function CheckoutPage() {
                 {t('checkout.section.paymentMethod')}
               </Text>
               <View style={styles.paymentList}>
-                {paymentMethods?.map((m) => {
+                {availableMethods.map((m) => {
                   const selected = m.id === selectedMethod;
                   return (
                     <Pressable
@@ -360,6 +366,58 @@ export default function CheckoutPage() {
                     </Pressable>
                   );
                 })}
+                {/* 批B 占位渠道"即将上线"区：可见不可选（点击提示暂未开通），与后端 R2 下单拒绝同口径 */}
+                {comingSoonMethods.length > 0 && (
+                  <View testID="coming-soon-block" style={styles.comingSoonBlock}>
+                    <Text style={[styles.comingSoonTitle, { color: colors.outline }]}>
+                      {t('payment.methods.comingSoonTitle')}
+                    </Text>
+                    {comingSoonMethods.map((m) => (
+                      <Pressable
+                        key={m.id}
+                        testID={`payment-${m.id}`}
+                        onPress={() => toast.info(t('payment.methods.comingSoonHint'))}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${localize(m.name)} — ${t('payment.methods.comingSoonHint')}`}
+                        style={({ pressed }) => [
+                          styles.paymentCard,
+                          styles.comingSoonCard,
+                          { backgroundColor: colors['surface-container-lowest'] },
+                          pressed && { opacity: 0.85 },
+                        ]}
+                      >
+                        <View style={styles.paymentLeft}>
+                          <View
+                            style={[
+                              styles.paymentIconBox,
+                              { backgroundColor: colors['surface-container'] },
+                            ]}
+                          >
+                            <Icon symbol={m.icon} size={20} color={colors.outline} />
+                          </View>
+                          <View style={styles.paymentText}>
+                            <Text
+                              style={[styles.paymentName, { color: colors['on-surface-variant'] }]}
+                            >
+                              {localize(m.name)}
+                            </Text>
+                            {m.subtitle && (
+                              <Text
+                                style={[
+                                  styles.paymentSubtitle,
+                                  { color: colors['on-surface-variant'] },
+                                ]}
+                              >
+                                {localize(m.subtitle)}
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                        <Icon symbol="hourglass_top" size={18} color={colors.outline} />
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
               </View>
             </View>
 
@@ -655,6 +713,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: spacing.md,
     borderRadius: borderRadius.xl,
+  },
+  // 批B 占位渠道"即将上线"区：整块降透明度 + 虚线边界（区别于可选中卡片）
+  comingSoonBlock: {
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1.5,
+    borderStyle: 'dashed',
+    borderTopColor: 'rgba(0,0,0,0.12)', // 原因：固定淡边框（outline-variant 会随主题翻色，这里 light/dark 统一弱化）
+  },
+  comingSoonTitle: {
+    ...typography['label-caps'],
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  comingSoonCard: {
+    borderWidth: 1,
+    borderColor: 'transparent',
+    opacity: 0.75,
   },
   paymentLeft: {
     flexDirection: 'row',

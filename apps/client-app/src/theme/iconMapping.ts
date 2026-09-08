@@ -131,6 +131,11 @@ const SYMBOL_TO_MC_LITERAL = {
   error_outline: 'alert-circle-outline',
   payments: 'credit-card',
 
+  // 批B 支付枚举补位（微信支付预留）：支付渠道图标（payments.json / services/payment.ts 用）
+  // MCI 自带 Wechat 品牌图标；PayPal 无对应图标用卡支付兜底；支付宝用钱包兜底
+  wechat: 'wechat',
+  paypal: 'credit-card',
+
   // 学习
   auto_stories: 'book-open-page-variant',
 

@@ -1192,5 +1192,12 @@
       "title": "营业资质"
     },
     "comingSoon": "本内容正在准备中，正式文案将由法务提供，不影响您当前使用 App 的功能。"
+  },
+  "payment": {
+    "methods": {
+      "comingSoonTitle": "即将上线",
+      "comingSoonHint": "该支付方式暂未开通，敬请期待"
+    },
+    "estimatedCny": "≈ ¥{{amount}}"
   }
 }

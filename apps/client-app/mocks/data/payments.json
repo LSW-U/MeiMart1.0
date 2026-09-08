@@ -1,45 +1,170 @@
 [
   {
     "id": "cod",
+    "code": "COD",
     "name": {
       "zh": "货到付款",
       "en": "Cash on Delivery",
-      "tet": "Paga Serbi Boot"
+      "tet": "Paga Serbi Boot",
+      "pt": "Pagamento na Entrega"
     },
     "subtitle": {
       "zh": "收货时支付现金",
       "en": "Pay cash when received",
-      "tet": "PagaoS konaba simu"
+      "tet": "PagaoS konaba simu",
+      "pt": "Pague em dinheiro ao receber"
     },
     "icon": "payments",
-    "isDefault": true
+    "isDefault": true,
+    "enabled": true,
+    "available": true,
+    "mockFlag": false
   },
   {
     "id": "bank_transfer",
+    "code": "BANK_TRANSFER",
     "name": {
       "zh": "银行转账",
       "en": "Bank Transfer",
-      "tet": "Transferensa Bankária"
+      "tet": "Transferensa Bankária",
+      "pt": "Transferência Bancária"
     },
     "subtitle": {
       "zh": "BNU / Mandiri",
       "en": "BNU / Mandiri",
-      "tet": "BNU / Mandiri"
+      "tet": "BNU / Mandiri",
+      "pt": "BNU / Mandiri"
     },
-    "icon": "account_balance"
+    "icon": "account_balance",
+    "isDefault": false,
+    "enabled": true,
+    "available": true,
+    "mockFlag": false
   },
   {
     "id": "stripe",
+    "code": "STRIPE",
     "name": {
       "zh": "信用卡 / 借记卡",
       "en": "Credit / Debit Card",
-      "tet": "Cartaun Kréditu / Débitu"
+      "tet": "Cartaun Kréditu / Débitu",
+      "pt": "Cartão de Crédito / Débito"
     },
     "subtitle": {
       "zh": "Visa / Mastercard",
       "en": "Visa / Mastercard",
-      "tet": "Visa / Mastercard"
+      "tet": "Visa / Mastercard",
+      "pt": "Visa / Mastercard"
     },
-    "icon": "credit_card"
+    "icon": "credit_card",
+    "isDefault": false,
+    "enabled": true,
+    "available": true,
+    "mockFlag": true
+  },
+  {
+    "id": "wechat",
+    "code": "WECHAT",
+    "name": {
+      "zh": "微信支付（国内）",
+      "en": "WeChat Pay",
+      "tet": "WeChat Pay",
+      "pt": "WeChat Pay"
+    },
+    "subtitle": {
+      "zh": "微信支付（国内，中国主体商户号，接口预留；当前为测试模式）",
+      "en": "WeChat Pay (mainland China merchant account, reserved; test mode)",
+      "tet": "Paga liu husi aplikasaun WeChat (merchant Xina, mode teste)",
+      "pt": "Pagar via aplicativo WeChat (merchant da China, em modo de teste)"
+    },
+    "icon": "wechat",
+    "isDefault": false,
+    "enabled": true,
+    "available": true,
+    "mockFlag": true
+  },
+  {
+    "id": "paypal",
+    "code": "PAYPAL",
+    "name": {
+      "zh": "PayPal",
+      "en": "PayPal",
+      "tet": "PayPal",
+      "pt": "PayPal"
+    },
+    "subtitle": {
+      "zh": "使用 PayPal 账户支付（当前为测试模式）",
+      "en": "Pay with your PayPal account (currently in test mode)",
+      "tet": "Paga ho konta PayPal (aga mode teste)",
+      "pt": "Pague com sua conta PayPal (em modo de teste)"
+    },
+    "icon": "paypal",
+    "isDefault": false,
+    "enabled": true,
+    "available": true,
+    "mockFlag": true
+  },
+  {
+    "id": "wechat_global",
+    "code": "WECHAT_GLOBAL",
+    "name": {
+      "zh": "微信支付（国际版）",
+      "en": "WeChat Pay (Global)",
+      "tet": "WeChat Pay (Global)",
+      "pt": "WeChat Pay (Global)"
+    },
+    "subtitle": {
+      "zh": "东帝汶不受理，仅占位（国际版微信预留）",
+      "en": "Not accepted in Timor-Leste — placeholder for future coverage",
+      "tet": "Seidauk aceita iha Timor-Leste — rezerva deit",
+      "pt": "Não aceito em Timor-Leste — espaço reservado"
+    },
+    "icon": "wechat",
+    "isDefault": false,
+    "enabled": true,
+    "available": false,
+    "mockFlag": true
+  },
+  {
+    "id": "alipay_cn",
+    "code": "ALIPAY_CN",
+    "name": {
+      "zh": "支付宝",
+      "en": "Alipay",
+      "tet": "Alipay",
+      "pt": "Alipay"
+    },
+    "subtitle": {
+      "zh": "支付宝（中国主体，接口预留）— 即将上线",
+      "en": "Alipay (China) — coming soon",
+      "tet": "Alipay (Xina) — sei mai kedas",
+      "pt": "Alipay (China) — brevemente disponível"
+    },
+    "icon": "account_balance_wallet",
+    "isDefault": false,
+    "enabled": true,
+    "available": false,
+    "mockFlag": true
+  },
+  {
+    "id": "local_psp",
+    "code": "LOCAL_PSP",
+    "name": {
+      "zh": "本地支付",
+      "en": "Local payment",
+      "tet": "Pagamentu lokal",
+      "pt": "Pagamento local"
+    },
+    "subtitle": {
+      "zh": "东帝汶本地支付服务商 — 即将上线",
+      "en": "Timor-Leste local payment provider — coming soon",
+      "tet": "Prestador pagamentu lokal Timor-Leste — sei mai kedas",
+      "pt": "Operador de pagamentos local de Timor-Leste — brevemente"
+    },
+    "icon": "storefront",
+    "isDefault": false,
+    "enabled": true,
+    "available": false,
+    "mockFlag": true
   }
 ]

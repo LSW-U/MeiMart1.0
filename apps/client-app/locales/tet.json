@@ -1192,5 +1192,12 @@
       "title": "Lisensa Komérsiu"
     },
     "comingSoon": "Konteudu ida ne'e prepara hela no sei fó husi ami-nia ekipa juridiku. La afeta ita-nia uza aplikasaun agora."
+  },
+  "payment": {
+    "methods": {
+      "comingSoonTitle": "Sei mai kedas",
+      "comingSoonHint": "Forma pagamentu nee seidauk disponivel, aguarda hamutuk"
+    },
+    "estimatedCny": "≈ ¥{{amount}}"
   }
 }
