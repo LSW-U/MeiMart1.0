@@ -7,7 +7,9 @@
     "city": "北京市",
     "district": "朝阳区",
     "detail": "建国路88号 SOHO 现代城 A 座 1801 室",
-    "isDefault": true
+    "isDefault": true,
+    "lat": -8.5569,
+    "lng": 125.5603
   },
   {
     "id": "a002",

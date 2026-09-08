@@ -20,6 +20,8 @@ export interface Product {
   price: number;
   originalPrice?: number;
   image: string;
+  // Why: 批D D1 多图轮播 — 详情接口返回 images[]（列表接口无此字段），空数组时 UI 兜底 mainImage 单图
+  images?: string[];
   category: string;
   rating?: number;
   salesCount?: number;
@@ -30,9 +32,26 @@ export interface Product {
   stock?: number;
   // Why: B11 商品分类名（多语言，后端 DTO 补充），UI 消费待第二梯队分类页/商品列表
   categoryName?: LocalizableText | null;
-  // Why: §9-5 badge 系统（模式 B 前端规则派生，resolveBadges 用）
+  // Why: §9-5 badge 系统（NEW/TOP RATED/LOCAL 为模式 B 前端派生，resolveBadges 用）
   createdAt?: string;
   isLocal?: boolean;
+  // Why: 批D D3 热销徽章切模式 A — 批B 聚合接口直出「同分类 ACTIVE salesCount Top3」，
+  //      前端不再按 salesCount>500 猜测（resolveBadges 的 500 阈值已删）。字段缺失（契约未同步/
+  //      列表接口未带）时不显示徽章，宁缺毋假。
+  isCategoryTop3?: boolean;
+}
+
+/**
+ * 批D D5/D11 就近仓可用性（GET /client/products/:id/warehouse-availability?lat&lng）。
+ * Why: 契约按方案 v2 摘录定义（匹配失败返 available:false 非 404）；端点 MeiMart 仓批B/D11
+ *      未部署，service 层挂门禁暂不发真实请求，端点上线后类型无需改动。@Public 只暴露仓
+ *      name + 有货态，不含坐标。
+ */
+export interface WarehouseAvailability {
+  matchedWarehouseId: string | null;
+  warehouseName: string | null;
+  quantity: number;
+  available: boolean;
 }
 
 export interface CartItem {

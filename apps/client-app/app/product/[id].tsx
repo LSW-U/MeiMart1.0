@@ -22,7 +22,7 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
-import { useProduct, useProducts } from '@/services/queries/useProducts';
+import { useProduct, useProducts, useWarehouseAvailability } from '@/services/queries/useProducts';
 import { isMockMode } from '@/services/api';
 import { useAddToCart, useCart } from '@/services/queries/useCart';
 import { useFavorites, useToggleFavorite } from '@/services/queries/useFavorites';
@@ -34,7 +34,7 @@ import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
-import type { Review } from '@/types';
+import type { Review, WarehouseAvailability } from '@/types';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 // D-V4：轮播 slide 固定高（P1 优化原型 .carousel .slide height:380px）
@@ -50,12 +50,26 @@ const PAIRS_WELL_WITH_IDS = ['p003', 'p005', 'p008'];
 const YOU_MAY_LIKE_IDS = ['p006', 'p009'];
 
 // §7 库存状态：充足 / 紧张 / 断货 / 未知（后端不返回 stock 时降级为「有货」绿点）
+// 批D D4：紧张阈值 1-20 → ≤5（仅剩 N 件提示、步进上限联动口径同步收窄）
 type StockState = 'plenty' | 'low' | 'out' | 'unknown';
 function computeStockState(stock: number | undefined): StockState {
   if (stock == null) return 'unknown';
   if (stock === 0) return 'out';
-  if (stock > 20) return 'plenty';
-  return 'low';
+  if (stock <= 5) return 'low';
+  return 'plenty';
+}
+
+// P2-2（批D 审查修复）D5 三态派生：有货 / 仓售罄 / 无货（无匹配仓），消费契约 matchedWarehouseId + quantity
+// - 有货：available && quantity>0 && 仓名（仓名插值展示）
+// - 仓售罄：匹配到仓（matchedWarehouseId 非空）但 quantity=0
+// - 无货：matchedWarehouseId=null（无匹配仓）
+// 仓名缺失降级为通用无货文案 —— 契约下 matched 必带 name，此分支仅防御
+// 「available=true 但 name=null」的语义反转（审查 P2-2 弱瑕疵）
+type WarehouseUiState = 'inStock' | 'soldOut' | 'noStock';
+function deriveWarehouseState(d: WarehouseAvailability): WarehouseUiState {
+  if (d.available && d.quantity > 0 && d.warehouseName) return 'inStock';
+  if (d.matchedWarehouseId != null && d.warehouseName) return 'soldOut';
+  return 'noStock';
 }
 
 // 星级行：按 rating 亮 N 颗星（评论卡按评分填充），默认全亮（评分汇总区装饰用）
@@ -91,12 +105,24 @@ export default function ProductDetailPage() {
   const toggleFavoriteMutation = useToggleFavorite();
   const addToCartMutation = useAddToCart();
 
+  // D5/D11 就近仓可用性：按默认地址坐标查询（hook 须无条件调用，defaultAddr 提前到早退分支前派生）
+  const defaultAddr = addresses?.find((a) => a.isDefault) ?? addresses?.[0];
+  const { data: warehouseData } = useWarehouseAvailability(
+    product?.id,
+    defaultAddr?.lat ?? null,
+    defaultAddr?.lng ?? null,
+  );
+
   // real 模式下商品 id 是 uuid（mock 的 p003/p006 等匹配不到），改为同类目优先 + 其他补足
   const pairsWellWith = isMockMode
     ? (allProducts ?? []).filter((p) => PAIRS_WELL_WITH_IDS.includes(p.id))
     : [
-        ...(allProducts ?? []).filter((p) => p.category === product?.category && p.id !== product?.id),
-        ...(allProducts ?? []).filter((p) => p.category !== product?.category && p.id !== product?.id),
+        ...(allProducts ?? []).filter(
+          (p) => p.category === product?.category && p.id !== product?.id,
+        ),
+        ...(allProducts ?? []).filter(
+          (p) => p.category !== product?.category && p.id !== product?.id,
+        ),
       ].slice(0, 3);
   const youMayLike = isMockMode
     ? (allProducts ?? []).filter((p) => YOU_MAY_LIKE_IDS.includes(p.id))
@@ -116,6 +142,15 @@ export default function ProductDetailPage() {
       if (submittedId) setHighlightReviewId(submittedId);
     }, []),
   );
+
+  // P3-2（批D 审查修复）：同实例换品（非 remount 路径）时重置轮播索引，防分页点残留/计数器错位。
+  // Why not useEffect: react-hooks/set-state-in-effect 禁止 effect 内同步 setState（级联渲染）；
+  // 改用 React 官方「prop 变化时调整 state」模式（渲染期 setState，提交前立即重渲，无级联）。
+  const [prevProductId, setPrevProductId] = useState<string | undefined>(product?.id);
+  if (prevProductId !== product?.id) {
+    setPrevProductId(product?.id);
+    setActiveImage(0);
+  }
 
   if (isLoading) {
     return (
@@ -142,9 +177,30 @@ export default function ProductDetailPage() {
   const stockState = computeStockState(product.stock);
   const isSoldOut = stockState === 'out';
   const variants = getVariantGroups(product.category);
-  const defaultAddr = addresses?.find((a) => a.isDefault) ?? addresses?.[0];
   const reviews = reviewData?.reviews ?? [];
   const reviewSummary = reviewData?.summary;
+
+  // D1 轮播图源：images[] 优先（mainImage 首图、去重前置），空数组兜底 mainImage 单图；
+  // 两者皆空为 []（轮播容器照常渲染防白屏，分页点/计数器隐藏）
+  const mainImageSrc = product.image;
+  const carouselImages = [
+    ...(mainImageSrc ? [mainImageSrc] : []),
+    ...(product.images ?? []).filter((u) => u && u !== mainImageSrc),
+  ];
+
+  // P2-2 三态文案/颜色派生（warehouseData 为 null → warehouseText 空 → 整块隐藏）
+  const warehouseState = warehouseData ? deriveWarehouseState(warehouseData) : null;
+  let warehouseText = '';
+  let warehouseColor = colors.semantic.warning;
+  if (warehouseData && warehouseState === 'inStock' && warehouseData.warehouseName) {
+    warehouseText = t('product.warehouseInStock', { name: warehouseData.warehouseName });
+    warehouseColor = colors.semantic.positive;
+  } else if (warehouseData && warehouseState === 'soldOut' && warehouseData.warehouseName) {
+    warehouseText = t('product.warehouseSoldOut', { name: warehouseData.warehouseName });
+  } else if (warehouseData) {
+    // 仓名缺失（契约下不可达，防御分支）：通用无货文案，不再显示「有货」反转
+    warehouseText = t('product.warehouseNoStock');
+  }
 
   // 步进器上限 = stock（stock 未知时不限）
   const qtyMax = product.stock != null ? product.stock : Number.MAX_SAFE_INTEGER;
@@ -211,512 +267,667 @@ export default function ProductDetailPage() {
   };
 
   const writeReview = () => {
-    toast.info(t('product.reviewAfterPurchase', { defaultValue: 'You can write a review after purchasing this product' }));
+    toast.info(
+      t('product.reviewAfterPurchase', {
+        defaultValue: 'You can write a review after purchasing this product',
+      }),
+    );
   };
 
   return (
     <PageErrorBoundary pageName="product-detail">
-    <SafeAreaWrapper
-      edges={['top', 'bottom']}
-      style={{ backgroundColor: colors.background, flex: 1 }}
-    >
-      <StatusBarConfig />
-      {/* Top Bar with 4-Tab Navigation */}
-      <TopBar
-        activeTab={activeTab}
-        onTabPress={(t) => setActiveTab(t)}
-        onBack={handleBack}
-        onShare={shareProduct}
-        cartCount={totalItems}
-      />
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
+        <StatusBarConfig />
+        {/* Top Bar with 4-Tab Navigation */}
+        <TopBar
+          activeTab={activeTab}
+          onTabPress={(t) => setActiveTab(t)}
+          onBack={handleBack}
+          onShare={shareProduct}
+          cartCount={totalItems}
+        />
 
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-        {/* Image Carousel（D-V4：对齐 P1 优化原型 slide 380px 满屏宽 + 分页圆点 + play 按钮） */}
-        <View
-          style={[styles.carousel, { backgroundColor: colors['surface-variant'], paddingTop: 0 }]}
-        >
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={(e) => {
-              const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-              if (idx !== activeImage) setActiveImage(idx);
-            }}
-            scrollEventThrottle={16}
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+          {/* Image Carousel（D-V4：对齐 P1 优化原型 slide 380px 满屏宽 + 分页圆点 + play 按钮） */}
+          <View
+            style={[styles.carousel, { backgroundColor: colors['surface-variant'], paddingTop: 0 }]}
           >
-            {/* D-V4：原型 .carousel .slide height:380px（不再 4:5 自适应） */}
-            {[0, 1, 2].map((i) => (
-              <Image
-                key={i}
-                source={{ uri: product.image }}
-                style={{ width: SCREEN_WIDTH, height: CAROUSEL_HEIGHT }}
-                resizeMode="cover"
-              />
-            ))}
-          </ScrollView>
-          {/* Pagination Dots */}
-          <View style={styles.dotsWrap}>
-            {[0, 1, 2].map((n) => (
-              <View
-                key={n}
-                style={[styles.dot, n === activeImage ? [styles.dotActive, { backgroundColor: colors.primary }] : styles.dotIdle]}
-              />
-            ))}
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={(e) => {
+                const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+                if (idx !== activeImage) setActiveImage(idx);
+              }}
+              scrollEventThrottle={16}
+            >
+              {/* D1 批D：真实多图轮播（images[]，mainImage 首图兜底）——替换假三图（同图×3 + 计数器 /3 硬编码） */}
+              {carouselImages.map((uri, i) => (
+                <Image
+                  key={i}
+                  source={{ uri }}
+                  style={{ width: SCREEN_WIDTH, height: CAROUSEL_HEIGHT }}
+                  resizeMode="cover"
+                />
+              ))}
+            </ScrollView>
+            {/* Pagination Dots（单图无可分页，不渲染） */}
+            {carouselImages.length > 1 && (
+              <View style={styles.dotsWrap}>
+                {carouselImages.map((_, n) => (
+                  <View
+                    key={n}
+                    style={[
+                      styles.dot,
+                      n === activeImage
+                        ? [styles.dotActive, { backgroundColor: colors.primary }]
+                        : styles.dotIdle,
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
+            {/* U5: 图片计数器 右下角（替原 play 按钮居中占位）——分母真实 = images 数，单图隐藏 */}
+            {carouselImages.length > 1 && (
+              <View style={styles.imageCounter} pointerEvents="none">
+                <Text style={styles.imageCounterText}>
+                  {Math.min(activeImage + 1, carouselImages.length)}/{carouselImages.length}
+                </Text>
+              </View>
+            )}
+            {/* U5: Play 按钮缩到右上小尺寸（视频入口保留但不抢眼） */}
+            <View style={styles.playWrap} pointerEvents="none">
+              <BlurView intensity={30} tint="light" style={styles.playBtn}>
+                <Icon symbol="play_arrow" size={20} color={colors['on-primary']} />
+              </BlurView>
+            </View>
           </View>
-          {/* U5: 图片计数器 右下角（替原 play 按钮居中占位） */}
-          <View style={styles.imageCounter} pointerEvents="none">
-            <Text style={styles.imageCounterText}>
-              {activeImage + 1}/3
-            </Text>
-          </View>
-          {/* U5: Play 按钮缩到右上小尺寸（视频入口保留但不抢眼） */}
-          <View style={styles.playWrap} pointerEvents="none">
-            <BlurView intensity={30} tint="light" style={styles.playBtn}>
-              <Icon symbol="play_arrow" size={20} color={colors['on-primary']} />
-            </BlurView>
-          </View>
-        </View>
 
-        {/* Content Canvas */}
-        <View style={styles.canvas}>
-          {/* Header Info：双标签 + 标题 + 价格 + IN STOCK */}
-          <View style={styles.headerInfo}>
-            <View style={styles.tagRow}>
-              <View style={[styles.tagTertiary, { backgroundColor: colors['tertiary-fixed'] }]}>
-                <Text
-                  style={[styles.tagTertiaryText, { color: colors['on-tertiary-fixed-variant'] }]}
-                >
-                  {t('product.tagLocal')}
-                </Text>
-              </View>
-              <View style={[styles.tagPrimary, { backgroundColor: colors['primary-fixed'] }]}>
-                <Text style={[styles.tagPrimaryText, { color: colors.primary }]}>{t('product.badgeBestSeller')}</Text>
-              </View>
-            </View>
-            <Text style={[styles.h1, { color: colors['on-surface'] }]}>
-              {localize(product.name)}
-            </Text>
-            <View style={styles.priceRow}>
-              <Text style={[styles.priceBig, { color: colors.primary }]}>
-                ${product.price.toFixed(2)}
-              </Text>
-              {product.originalPrice && (
-                <Text style={[styles.priceStrike, { color: colors.secondary }]}>
-                  ${product.originalPrice.toFixed(2)}
-                </Text>
-              )}
-            </View>
-            {/* §7 库存 3 态：充足/未知绿点「有货」，紧张橙点「库存紧张」+ 红字仅剩；断货整块隐藏改 banner */}
-            {!isSoldOut && (
-              <View>
-                <View
-                  style={[
-                    styles.stockRow,
-                    {
-                      borderBottomColor: colors['outline-variant'],
-                      borderTopColor: colors['outline-variant'],
-                    },
-                  ]}
-                >
-                  <View style={styles.stockLeft}>
-                    <View
-                      style={[
-                        styles.stockDot,
-                        {
-                          backgroundColor:
-                            stockState === 'low'
-                              ? colors.semantic.warning
-                              : colors.semantic.positive,
-                        },
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        styles.stockText,
-                        {
-                          color:
-                            stockState === 'low'
-                              ? colors.semantic.warning
-                              : colors.semantic.positive,
-                        },
-                      ]}
-                    >
-                      {stockState === 'low' ? t('product.lowStock') : t('product.inStock')}
-                    </Text>
-                  </View>
-                  {/* §9 Q3 销量：字段有值才显示，不再写死 1.2k */}
-                  {product.salesCount != null && (
-                    <Text style={[styles.stockSold, { color: colors['on-surface-variant'] }]}>
-                      {formatCompactNumber(product.salesCount)} {t('product.sold')}
-                    </Text>
-                  )}
+          {/* Content Canvas */}
+          <View style={styles.canvas}>
+            {/* Header Info：双标签 + 标题 + 价格 + IN STOCK */}
+            <View style={styles.headerInfo}>
+              <View style={styles.tagRow}>
+                <View style={[styles.tagTertiary, { backgroundColor: colors['tertiary-fixed'] }]}>
+                  <Text
+                    style={[styles.tagTertiaryText, { color: colors['on-tertiary-fixed-variant'] }]}
+                  >
+                    {t('product.tagLocal')}
+                  </Text>
                 </View>
-                {/* §11.1 紧张红字提示，放在步进器上方（与步进上限视觉关联） */}
-                {stockState === 'low' && (
-                  <View style={styles.lowStockTip}>
-                    <Text style={styles.lowStockTipIcon}>⚠</Text>
-                    <Text style={[styles.lowStockTipText, { color: colors.semantic.error }]}>
-                      {t('product.onlyLeft', { count: product.stock })}
+                {/* D3 批D：热销徽章消费批B isCategoryTop3（后端直出），替换原无条件硬编码展示；字段缺失不显示，宁缺毋假 */}
+                {product.isCategoryTop3 && (
+                  <View style={[styles.tagPrimary, { backgroundColor: colors['primary-fixed'] }]}>
+                    <Text style={[styles.tagPrimaryText, { color: colors.primary }]}>
+                      {t('product.badgeBestSeller')}
                     </Text>
                   </View>
                 )}
-                {/* 数量步进器：+ 达 stock 禁用（§11.1），紧张态显示 / max 上限 */}
-                <View style={styles.qtyRow}>
-                  <View style={styles.qtyLabelWrap}>
-                    <Text style={[styles.qtyLabel, { color: colors['on-surface'] }]}>
-                      {t('product.quantity')}
+              </View>
+              <Text style={[styles.h1, { color: colors['on-surface'] }]}>
+                {localize(product.name)}
+              </Text>
+              <View style={styles.priceRow}>
+                <Text style={[styles.priceBig, { color: colors.primary }]}>
+                  ${product.price.toFixed(2)}
+                </Text>
+                {product.originalPrice && (
+                  <Text style={[styles.priceStrike, { color: colors.secondary }]}>
+                    ${product.originalPrice.toFixed(2)}
+                  </Text>
+                )}
+                {/* P3-1（批D 审查修复）：头部评分位，消费 product.rating —— 样式对齐 ProductCard metaRow（star 12 + toFixed(1)） */}
+                {typeof product.rating === 'number' && (
+                  <View style={styles.ratingInline}>
+                    <Icon symbol="star" size={12} color={colors.tertiary} />
+                    <Text
+                      style={[styles.ratingInlineText, { color: colors['on-surface-variant'] }]}
+                    >
+                      {product.rating.toFixed(1)}
                     </Text>
-                    {stockState === 'low' && (
-                      <Text style={[styles.qtyMax, { color: colors['on-surface-variant'] }]}>
-                        / {t('product.stockMax', { max: product.stock })}
+                  </View>
+                )}
+              </View>
+              {/* §7 库存 3 态：充足/未知绿点「有货」，紧张橙点「库存紧张」+ 红字仅剩；断货整块隐藏改 banner */}
+              {!isSoldOut && (
+                <View>
+                  <View
+                    style={[
+                      styles.stockRow,
+                      {
+                        borderBottomColor: colors['outline-variant'],
+                        borderTopColor: colors['outline-variant'],
+                      },
+                    ]}
+                  >
+                    <View style={styles.stockLeft}>
+                      <View
+                        style={[
+                          styles.stockDot,
+                          {
+                            backgroundColor:
+                              stockState === 'low'
+                                ? colors.semantic.warning
+                                : colors.semantic.positive,
+                          },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.stockText,
+                          {
+                            color:
+                              stockState === 'low'
+                                ? colors.semantic.warning
+                                : colors.semantic.positive,
+                          },
+                        ]}
+                      >
+                        {stockState === 'low' ? t('product.lowStock') : t('product.inStock')}
+                      </Text>
+                    </View>
+                    {/* §9 Q3 销量：字段有值才显示，不再写死 1.2k */}
+                    {product.salesCount != null && (
+                      <Text style={[styles.stockSold, { color: colors['on-surface-variant'] }]}>
+                        {formatCompactNumber(product.salesCount)} {t('product.sold')}
                       </Text>
                     )}
                   </View>
-                  <View
-                    style={[
-                      styles.stepper,
-                      { borderColor: colors.outline, backgroundColor: colors['surface-container-lowest'] },
-                    ]}
-                  >
-                    <Pressable
-                      onPress={decQty}
-                      disabled={quantity <= 1}
-                      style={styles.stepperBtn}
-                      accessibilityRole="button"
-                      accessibilityLabel={t('cart.a11y.decreaseQty')}
-                    >
-                      <Text
-                        style={[
-                          styles.stepperBtnText,
-                          { color: quantity <= 1 ? colors.outline : colors['on-surface'] },
-                        ]}
-                      >
-                        −
+                  {/* D5/D11 就近仓可用性（P2-2 三态）：按默认地址坐标查询；无数据（端点未部署门禁/无坐标/失败）整块隐藏不阻塞 */}
+                  {warehouseData && warehouseText !== '' && (
+                    <View style={styles.warehouseRow}>
+                      <Icon symbol="storefront" size={14} color={warehouseColor} />
+                      <Text style={[styles.warehouseText, { color: warehouseColor }]}>
+                        {warehouseText}
                       </Text>
-                    </Pressable>
-                    <Text style={[styles.stepperVal, { color: colors['on-surface'] }]}>
-                      {quantity}
-                    </Text>
-                    <Pressable
-                      onPress={incQty}
-                      disabled={quantity >= qtyMax}
-                      style={styles.stepperBtn}
-                      accessibilityRole="button"
-                      accessibilityLabel={t('cart.a11y.increaseQty')}
-                    >
-                      <Text
-                        style={[
-                          styles.stepperBtnText,
-                          { color: quantity >= qtyMax ? colors.outline : colors['on-surface'] },
-                        ]}
-                      >
-                        +
+                    </View>
+                  )}
+                  {/* §11.1 紧张红字提示，放在步进器上方（与步进上限视觉关联） */}
+                  {stockState === 'low' && (
+                    <View style={styles.lowStockTip}>
+                      <Text style={styles.lowStockTipIcon}>⚠</Text>
+                      <Text style={[styles.lowStockTipText, { color: colors.semantic.error }]}>
+                        {t('product.onlyLeft', { count: product.stock })}
                       </Text>
-                    </Pressable>
-                  </View>
-                </View>
-              </View>
-            )}
-          </View>
-
-          {/* §11.1 断货 banner：替代库存行 + 步进器，底部栏两键同步禁用 */}
-          {isSoldOut && (
-            <View
-              style={[
-                styles.soldOutBanner,
-                { backgroundColor: colors.semantic['error-container'] },
-              ]}
-            >
-              <Text style={styles.soldOutIcon}>📦</Text>
-              <Text style={[styles.soldOutTitle, { color: colors.semantic.error }]}>
-                {t('product.soldOut')}
-              </Text>
-              <Text style={[styles.soldOutDesc, { color: colors['on-surface-variant'] }]}>
-                {t('product.soldOutDesc')}
-              </Text>
-            </View>
-          )}
-
-          {/* Delivery Section — §9 Q2 接入 useAddresses，取默认地址；无地址显示「选择地址」可点击跳列表 */}
-          <View style={styles.section}>
-            <Pressable
-              onPress={() => router.push('/address/list')}
-              style={[styles.deliveryCard, { backgroundColor: colors['surface-container'] }]}
-              accessibilityRole="button"
-              accessibilityLabel={t('product.selectAddress')}
-            >
-              <View style={styles.deliveryRow}>
-                <View style={styles.deliveryLeft}>
-                  <Icon symbol="local_shipping" size={24} color={colors.primary} />
-                  <View>
-                    <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>
-                      {t('product.deliverTo')}
-                    </Text>
-                    <Text style={[styles.deliveryAddress, { color: colors['on-surface'] }]}>
-                      {defaultAddr
-                        ? `${defaultAddr.detail}${defaultAddr.district ? `, ${defaultAddr.district}` : ''}`
-                        : t('product.selectAddress')}
-                    </Text>
-                  </View>
-                </View>
-                <Icon symbol="chevron_right" size={24} color={colors.outline} />
-              </View>
-              <View style={[styles.deliverySplit, { borderTopColor: colors['outline-variant'] }]}>
-                <View style={styles.deliveryCell}>
-                  <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>{t('product.eta')}</Text>
-                  <Text style={[styles.deliveryValue, { color: colors['on-surface'] }]}>
-                    {t('product.etaValue')}
-                  </Text>
-                </View>
-                <View style={styles.deliveryCell}>
-                  <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>{t('product.shipping')}</Text>
-                  <Text
-                    style={[styles.deliveryValue, { color: colors.primary, fontWeight: '700' }]}
-                  >
-                    {t('product.shippingFree')}
-                  </Text>
-                </View>
-              </View>
-            </Pressable>
-          </View>
-
-          {/* §9 Q1 规格选择器：按 category 从 variantTemplates 查；无规格则整体隐藏（§11.4） */}
-          {variants.length > 0 && (
-            <View style={styles.section}>
-              <View>
-                <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                  {t('product.selectVariant')}
-                </Text>
-              </View>
-              {variants.map((group) => {
-                const selectedLabel =
-                  variantSelection[group.name] ?? group.options.find((o) => !o.disabled)?.label;
-                return (
-                  <View key={group.name} style={styles.variantGroup}>
-                    <Text style={[styles.variantGroupName, { color: colors['on-surface-variant'] }]}>
-                      {group.name}
-                    </Text>
-                    <View style={styles.grindRow}>
-                      {group.options.map((opt) => {
-                        const active = opt.label === selectedLabel;
-                        return (
-                          <Pressable
-                            key={opt.label}
-                            onPress={() => !opt.disabled && selectVariant(group.name, opt.label)}
-                            disabled={opt.disabled}
-                            style={[
-                              styles.grindPill,
-                              {
-                                backgroundColor: active
-                                  ? colors.primary
-                                  : colors['surface-container-lowest'],
-                                borderColor: active ? colors.primary : colors.outline,
-                                opacity: opt.disabled ? 0.4 : 1,
-                              },
-                            ]}
-                            accessibilityRole="button"
-                            accessibilityState={{ selected: active, disabled: opt.disabled }}
-                            accessibilityLabel={`${group.name}: ${opt.label}`}
-                          >
-                            <Text
-                              style={[
-                                styles.grindText,
-                                {
-                                  color: active
-                                    ? colors['on-primary']
-                                    : colors['on-surface-variant'],
-                                  textDecorationLine: opt.disabled ? 'line-through' : 'none',
-                                },
-                              ]}
-                            >
-                              {opt.label}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
+                    </View>
+                  )}
+                  {/* 数量步进器：+ 达 stock 禁用（§11.1），紧张态显示 / max 上限 */}
+                  <View style={styles.qtyRow}>
+                    <View style={styles.qtyLabelWrap}>
+                      <Text style={[styles.qtyLabel, { color: colors['on-surface'] }]}>
+                        {t('product.quantity')}
+                      </Text>
+                      {stockState === 'low' && (
+                        <Text style={[styles.qtyMax, { color: colors['on-surface-variant'] }]}>
+                          / {t('product.stockMax', { max: product.stock })}
+                        </Text>
+                      )}
+                    </View>
+                    <View
+                      style={[
+                        styles.stepper,
+                        {
+                          borderColor: colors.outline,
+                          backgroundColor: colors['surface-container-lowest'],
+                        },
+                      ]}
+                    >
+                      <Pressable
+                        onPress={decQty}
+                        disabled={quantity <= 1}
+                        style={styles.stepperBtn}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('cart.a11y.decreaseQty')}
+                      >
+                        <Text
+                          style={[
+                            styles.stepperBtnText,
+                            { color: quantity <= 1 ? colors.outline : colors['on-surface'] },
+                          ]}
+                        >
+                          −
+                        </Text>
+                      </Pressable>
+                      <Text style={[styles.stepperVal, { color: colors['on-surface'] }]}>
+                        {quantity}
+                      </Text>
+                      <Pressable
+                        onPress={incQty}
+                        disabled={quantity >= qtyMax}
+                        style={styles.stepperBtn}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('cart.a11y.increaseQty')}
+                      >
+                        <Text
+                          style={[
+                            styles.stepperBtnText,
+                            { color: quantity >= qtyMax ? colors.outline : colors['on-surface'] },
+                          ]}
+                        >
+                          +
+                        </Text>
+                      </Pressable>
                     </View>
                   </View>
-                );
-              })}
-            </View>
-          )}
-
-          {/* {t('product.detailsTitle')} Section */}
-          <View style={styles.section} collapsable={false}>
-            <View
-              style={[
-            styles.detailHeader,
-                { backgroundColor: 'transparent' },
-              ]}
-            >
-              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                {t('product.detailsTitle')}
-              </Text>
-            </View>
-            <View style={[styles.detailVideo, shadowPresets.md]}>
-              <Image
-                source={{ uri: product.image }}
-                style={styles.detailVideoImg}
-                resizeMode="cover"
-              />
-            </View>
-            <View style={styles.detailTextWrap}>
-              <Text style={[styles.detailH2, { color: colors['on-surface'] }]}>
-                {localize(product.name)}
-              </Text>
-              <Text style={[styles.detailBody, { color: colors['on-surface-variant'] }]}>
-                {product.description
-                  ? localize(product.description)
-                  : t('product.noDescription')}
-              </Text>
-            </View>
-          </View>
-
-          {/* §8 评论模块 - useReviews 驱动：评分卡（count>0）/ 加载骨架 / 空态 */}
-          <View style={styles.section} collapsable={false}>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>{t('product.reviewsTitle')}</Text>
-              {!isSoldOut && (
-                <Pressable
-                  onPress={writeReview}
-                  style={[styles.writeReviewBtn, { borderBottomColor: colors.primary }]}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('product.writeReview')}
-                >
-                  <Text style={[styles.writeReviewText, { color: colors.primary }]}>
-                    {t('product.writeReview')}
-                  </Text>
-                </Pressable>
+                </View>
               )}
             </View>
 
-            {/* 加载态：评分区淡化 + 占位 */}
-            {reviewsLoading && (
-              <View style={[styles.ratingSummary, { backgroundColor: colors['surface-container-high'], opacity: 0.6 }]}>
-                <View style={styles.ratingSummaryLeft}>
-                  <Text style={[styles.ratingBig, { color: colors['outline-variant'] }]}>—</Text>
-                </View>
-                <View style={[styles.ratingBars, { borderLeftColor: colors['outline-variant'] }]}>
-                  {[5, 4, 3].map((s) => (
-                    <View key={s} style={styles.ratingBarRow}>
-                      <Text style={[styles.ratingBarLabel, { color: colors['outline-variant'] }]}>{s}</Text>
-                      <View style={[styles.ratingBarTrack, { backgroundColor: colors['surface-container'] }]} />
-                    </View>
-                  ))}
-                </View>
+            {/* §11.1 断货 banner：替代库存行 + 步进器，底部栏两键同步禁用 */}
+            {isSoldOut && (
+              <View
+                style={[
+                  styles.soldOutBanner,
+                  { backgroundColor: colors.semantic['error-container'] },
+                ]}
+              >
+                <Text style={styles.soldOutIcon}>📦</Text>
+                <Text style={[styles.soldOutTitle, { color: colors.semantic.error }]}>
+                  {t('product.soldOut')}
+                </Text>
+                <Text style={[styles.soldOutDesc, { color: colors['on-surface-variant'] }]}>
+                  {t('product.soldOutDesc')}
+                </Text>
               </View>
             )}
 
-            {/* 有评论：评分汇总卡（avg + 星 + 5 档分布）+ 评论列表 */}
-            {!reviewsLoading && reviewSummary && reviewSummary.count > 0 && (
-              <>
-                <View style={[styles.ratingSummary, { backgroundColor: colors['surface-container-high'] }]}>
-                  <View style={styles.ratingSummaryLeft}>
-                    <Text style={[styles.ratingBig, { color: colors['on-surface'] }]}>
-                      {reviewSummary.avg.toFixed(1)}
+            {/* Delivery Section — §9 Q2 接入 useAddresses，取默认地址；无地址显示「选择地址」可点击跳列表 */}
+            <View style={styles.section}>
+              <Pressable
+                onPress={() => router.push('/address/list')}
+                style={[styles.deliveryCard, { backgroundColor: colors['surface-container'] }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('product.selectAddress')}
+              >
+                <View style={styles.deliveryRow}>
+                  <View style={styles.deliveryLeft}>
+                    <Icon symbol="local_shipping" size={24} color={colors.primary} />
+                    <View>
+                      <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>
+                        {t('product.deliverTo')}
+                      </Text>
+                      <Text style={[styles.deliveryAddress, { color: colors['on-surface'] }]}>
+                        {defaultAddr
+                          ? `${defaultAddr.detail}${defaultAddr.district ? `, ${defaultAddr.district}` : ''}`
+                          : t('product.selectAddress')}
+                      </Text>
+                    </View>
+                  </View>
+                  <Icon symbol="chevron_right" size={24} color={colors.outline} />
+                </View>
+                <View style={[styles.deliverySplit, { borderTopColor: colors['outline-variant'] }]}>
+                  <View style={styles.deliveryCell}>
+                    <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>
+                      {t('product.eta')}
                     </Text>
-                    <StarsRow size={16} rating={Math.round(reviewSummary.avg)} />
-                    <Text style={[styles.ratingCount, { color: colors.secondary }]}>
-                      {reviewSummary.count} {t('product.reviews')}
+                    <Text style={[styles.deliveryValue, { color: colors['on-surface'] }]}>
+                      {t('product.etaValue')}
                     </Text>
                   </View>
+                  <View style={styles.deliveryCell}>
+                    <Text style={[styles.deliveryLabel, { color: colors.secondary }]}>
+                      {t('product.shipping')}
+                    </Text>
+                    <Text
+                      style={[styles.deliveryValue, { color: colors.primary, fontWeight: '700' }]}
+                    >
+                      {t('product.shippingFree')}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            </View>
+
+            {/* §9 Q1 规格选择器：按 category 从 variantTemplates 查；无规格则整体隐藏（§11.4） */}
+            {variants.length > 0 && (
+              <View style={styles.section}>
+                <View>
+                  <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                    {t('product.selectVariant')}
+                  </Text>
+                </View>
+                {variants.map((group) => {
+                  const selectedLabel =
+                    variantSelection[group.name] ?? group.options.find((o) => !o.disabled)?.label;
+                  return (
+                    <View key={group.name} style={styles.variantGroup}>
+                      <Text
+                        style={[styles.variantGroupName, { color: colors['on-surface-variant'] }]}
+                      >
+                        {group.name}
+                      </Text>
+                      <View style={styles.grindRow}>
+                        {group.options.map((opt) => {
+                          const active = opt.label === selectedLabel;
+                          return (
+                            <Pressable
+                              key={opt.label}
+                              onPress={() => !opt.disabled && selectVariant(group.name, opt.label)}
+                              disabled={opt.disabled}
+                              style={[
+                                styles.grindPill,
+                                {
+                                  backgroundColor: active
+                                    ? colors.primary
+                                    : colors['surface-container-lowest'],
+                                  borderColor: active ? colors.primary : colors.outline,
+                                  opacity: opt.disabled ? 0.4 : 1,
+                                },
+                              ]}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: active, disabled: opt.disabled }}
+                              accessibilityLabel={`${group.name}: ${opt.label}`}
+                            >
+                              <Text
+                                style={[
+                                  styles.grindText,
+                                  {
+                                    color: active
+                                      ? colors['on-primary']
+                                      : colors['on-surface-variant'],
+                                    textDecorationLine: opt.disabled ? 'line-through' : 'none',
+                                  },
+                                ]}
+                              >
+                                {opt.label}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            {/* {t('product.detailsTitle')} Section */}
+            <View style={styles.section} collapsable={false}>
+              <View style={[styles.detailHeader, { backgroundColor: 'transparent' }]}>
+                <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                  {t('product.detailsTitle')}
+                </Text>
+              </View>
+              <View style={[styles.detailVideo, shadowPresets.md]}>
+                <Image
+                  source={{ uri: product.image }}
+                  style={styles.detailVideoImg}
+                  resizeMode="cover"
+                />
+              </View>
+              <View style={styles.detailTextWrap}>
+                <Text style={[styles.detailH2, { color: colors['on-surface'] }]}>
+                  {localize(product.name)}
+                </Text>
+                <Text style={[styles.detailBody, { color: colors['on-surface-variant'] }]}>
+                  {product.description ? localize(product.description) : t('product.noDescription')}
+                </Text>
+              </View>
+            </View>
+
+            {/* §8 评论模块 - useReviews 驱动：评分卡（count>0）/ 加载骨架 / 空态 */}
+            <View style={styles.section} collapsable={false}>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                  {t('product.reviewsTitle')}
+                </Text>
+                {!isSoldOut && (
+                  <Pressable
+                    onPress={writeReview}
+                    style={[styles.writeReviewBtn, { borderBottomColor: colors.primary }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('product.writeReview')}
+                  >
+                    <Text style={[styles.writeReviewText, { color: colors.primary }]}>
+                      {t('product.writeReview')}
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+
+              {/* 加载态：评分区淡化 + 占位 */}
+              {reviewsLoading && (
+                <View
+                  style={[
+                    styles.ratingSummary,
+                    { backgroundColor: colors['surface-container-high'], opacity: 0.6 },
+                  ]}
+                >
+                  <View style={styles.ratingSummaryLeft}>
+                    <Text style={[styles.ratingBig, { color: colors['outline-variant'] }]}>—</Text>
+                  </View>
                   <View style={[styles.ratingBars, { borderLeftColor: colors['outline-variant'] }]}>
-                    {reviewSummary.distribution.map((r) => (
-                      <View key={r.stars} style={styles.ratingBarRow}>
-                        <Text style={[styles.ratingBarLabel, { color: colors['on-surface-variant'] }]}>
-                          {r.stars}
+                    {[5, 4, 3].map((s) => (
+                      <View key={s} style={styles.ratingBarRow}>
+                        <Text style={[styles.ratingBarLabel, { color: colors['outline-variant'] }]}>
+                          {s}
                         </Text>
                         <View
                           style={[
                             styles.ratingBarTrack,
                             { backgroundColor: colors['surface-container'] },
                           ]}
-                        >
-                          <View
-                            style={[
-                              styles.ratingBarFill,
-                              { backgroundColor: colors['tertiary-container'], width: `${r.percent}%` },
-                            ]}
-                          />
-                        </View>
-                        <Text style={[styles.ratingBarPercent, { color: colors['on-surface-variant'] }]}>
-                          {r.percent}%
-                        </Text>
+                        />
                       </View>
                     ))}
                   </View>
                 </View>
-                <View style={styles.reviewList}>
-                  {reviews.slice(0, 3).map((r) => {
-                    const isHighlighted = r.id === highlightReviewId;
-                    return (
-                      <ReviewCard
-                        key={r.id}
-                        review={r}
-                        highlighted={isHighlighted}
-                        dateText={formatRelTime(r.createdAt)}
-                      />
-                    );
-                  })}
-                </View>
-                {/* §8.7 首屏 3 条 + 查看全部（独立列表页属第二层，此处占位跳转） */}
-                {reviewSummary.count > 3 && (
-                  <Pressable
-                    onPress={() =>
-                      toast.info(
-                        t('product.viewAllReviews', { count: reviewSummary.count }),
-                      )
-                    }
-                    style={styles.viewAllReviewsBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('product.viewAllReviews', { count: reviewSummary.count })}
+              )}
+
+              {/* 有评论：评分汇总卡（avg + 星 + 5 档分布）+ 评论列表 */}
+              {!reviewsLoading && reviewSummary && reviewSummary.count > 0 && (
+                <>
+                  <View
+                    style={[
+                      styles.ratingSummary,
+                      { backgroundColor: colors['surface-container-high'] },
+                    ]}
                   >
-                    <Text style={[styles.viewAllReviewsText, { color: colors.primary }]}>
-                      {t('product.viewAllReviews', { count: reviewSummary.count })} →
-                    </Text>
-                  </Pressable>
-                )}
-              </>
-            )}
+                    <View style={styles.ratingSummaryLeft}>
+                      <Text style={[styles.ratingBig, { color: colors['on-surface'] }]}>
+                        {reviewSummary.avg.toFixed(1)}
+                      </Text>
+                      <StarsRow size={16} rating={Math.round(reviewSummary.avg)} />
+                      <Text style={[styles.ratingCount, { color: colors.secondary }]}>
+                        {reviewSummary.count} {t('product.reviews')}
+                      </Text>
+                    </View>
+                    <View
+                      style={[styles.ratingBars, { borderLeftColor: colors['outline-variant'] }]}
+                    >
+                      {reviewSummary.distribution.map((r) => (
+                        <View key={r.stars} style={styles.ratingBarRow}>
+                          <Text
+                            style={[styles.ratingBarLabel, { color: colors['on-surface-variant'] }]}
+                          >
+                            {r.stars}
+                          </Text>
+                          <View
+                            style={[
+                              styles.ratingBarTrack,
+                              { backgroundColor: colors['surface-container'] },
+                            ]}
+                          >
+                            <View
+                              style={[
+                                styles.ratingBarFill,
+                                {
+                                  backgroundColor: colors['tertiary-container'],
+                                  width: `${r.percent}%`,
+                                },
+                              ]}
+                            />
+                          </View>
+                          <Text
+                            style={[
+                              styles.ratingBarPercent,
+                              { color: colors['on-surface-variant'] },
+                            ]}
+                          >
+                            {r.percent}%
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                  <View style={styles.reviewList}>
+                    {reviews.slice(0, 3).map((r) => {
+                      const isHighlighted = r.id === highlightReviewId;
+                      return (
+                        <ReviewCard
+                          key={r.id}
+                          review={r}
+                          highlighted={isHighlighted}
+                          dateText={formatRelTime(r.createdAt)}
+                        />
+                      );
+                    })}
+                  </View>
+                  {/* §8.7 首屏 3 条 + 查看全部（独立列表页属第二层，此处占位跳转） */}
+                  {reviewSummary.count > 3 && (
+                    <Pressable
+                      onPress={() =>
+                        toast.info(t('product.viewAllReviews', { count: reviewSummary.count }))
+                      }
+                      style={styles.viewAllReviewsBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('product.viewAllReviews', {
+                        count: reviewSummary.count,
+                      })}
+                    >
+                      <Text style={[styles.viewAllReviewsText, { color: colors.primary }]}>
+                        {t('product.viewAllReviews', { count: reviewSummary.count })} →
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
 
-            {/* 空态：无评论引导 */}
-            {!reviewsLoading && (!reviewSummary || reviewSummary.count === 0) && (
-              <View style={[styles.reviewsEmpty, { backgroundColor: colors['surface-container-low'] }]}>
-                <Text style={styles.reviewsEmptyIcon}>💬</Text>
-                <Text style={[styles.reviewsEmptyTitle, { color: colors['on-surface-variant'] }]}>
-                  {t('product.noReviews')}
-                </Text>
-                <Text style={[styles.reviewsEmptyDesc, { color: colors.secondary }]}>
-                  {t('product.noReviewsDesc')}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* {t('product.pairsWellWith')} 横滑 */}
-          <View style={styles.section} collapsable={false}>
-            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              {t('product.pairsWellWith')}
-            </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.hScroll}
-            >
-              {pairsWellWith.map((p) => (
+              {/* 空态：无评论引导 */}
+              {!reviewsLoading && (!reviewSummary || reviewSummary.count === 0) && (
                 <View
-                  key={p.id}
                   style={[
-                    styles.relatedCard,
-                    { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+                    styles.reviewsEmpty,
+                    { backgroundColor: colors['surface-container-low'] },
                   ]}
                 >
-                  {/* Why: 外层 View 而非 Pressable，避免 Pressable 嵌套 Pressable
+                  <Text style={styles.reviewsEmptyIcon}>💬</Text>
+                  <Text style={[styles.reviewsEmptyTitle, { color: colors['on-surface-variant'] }]}>
+                    {t('product.noReviews')}
+                  </Text>
+                  <Text style={[styles.reviewsEmptyDesc, { color: colors.secondary }]}>
+                    {t('product.noReviewsDesc')}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* {t('product.pairsWellWith')} 横滑 */}
+            <View style={styles.section} collapsable={false}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                {t('product.pairsWellWith')}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.hScroll}
+              >
+                {pairsWellWith.map((p) => (
+                  <View
+                    key={p.id}
+                    style={[
+                      styles.relatedCard,
+                      {
+                        backgroundColor: colors['surface-container-lowest'],
+                        borderColor: colors['outline-variant'],
+                      },
+                    ]}
+                  >
+                    {/* Why: 外层 View 而非 Pressable，避免 Pressable 嵌套 Pressable
                       （RN Web 渲染为 button 套 button，违反 HTML 规范导致 hydration 错误） */}
+                    <Pressable
+                      onPress={() => router.push(`/product/${p.id}`)}
+                      style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`View ${p.name}`}
+                    >
+                      <View
+                        style={[
+                          styles.relatedImage,
+                          { backgroundColor: colors['surface-variant'] },
+                        ]}
+                      >
+                        <SafeImage source={{ uri: p.image }} style={styles.relatedImg} />
+                      </View>
+                      <View style={styles.relatedInfo}>
+                        <Text
+                          style={[styles.relatedName, { color: colors['on-surface'] }]}
+                          numberOfLines={1}
+                        >
+                          {localize(p.name)}
+                        </Text>
+                        <Text style={[styles.relatedPrice, { color: colors.primary }]}>
+                          ${p.price.toFixed(2)}
+                        </Text>
+                      </View>
+                    </Pressable>
+                    <View style={styles.relatedAddWrap}>
+                      <Pressable
+                        onPress={() => addRelatedToCart(p)}
+                        style={({ pressed }) => [
+                          styles.relatedAddBtn,
+                          { borderColor: colors.primary },
+                          pressed && { opacity: 0.85 },
+                        ]}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Add ${p.name} to cart`}
+                      >
+                        <Text style={[styles.relatedAddText, { color: colors.primary }]}>
+                          {t('product.addToCart')}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* {t('product.relatedProducts')} 横滑 */}
+            <View
+              style={[
+                styles.section,
+                {
+                  borderTopColor: colors['outline-variant'],
+                  borderTopWidth: StyleSheet.hairlineWidth,
+                },
+              ]}
+            >
+              <View>
+                <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                  {t('product.relatedProducts')}
+                </Text>
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.hScroll}
+              >
+                {youMayLike.map((p) => (
                   <Pressable
+                    key={p.id}
                     onPress={() => router.push(`/product/${p.id}`)}
-                    style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+                    style={({ pressed }) => [
+                      styles.relatedCard,
+                      {
+                        backgroundColor: colors['surface-container-lowest'],
+                        borderColor: colors['outline-variant'],
+                      },
+                      pressed && { opacity: 0.85 },
+                    ]}
                     accessibilityRole="button"
                     accessibilityLabel={`View ${p.name}`}
                   >
@@ -737,165 +948,96 @@ export default function ProductDetailPage() {
                       </Text>
                     </View>
                   </Pressable>
-                  <View style={styles.relatedAddWrap}>
-                    <Pressable
-                      onPress={() => addRelatedToCart(p)}
-                      style={({ pressed }) => [
-                        styles.relatedAddBtn,
-                        { borderColor: colors.primary },
-                        pressed && { opacity: 0.85 },
-                      ]}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Add ${p.name} to cart`}
-                    >
-                      <Text style={[styles.relatedAddText, { color: colors.primary }]}>
-                        {t('product.addToCart')}
-                      </Text>
-                    </Pressable>
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-
-          {/* {t('product.relatedProducts')} 横滑 */}
-          <View
-            style={[
-              styles.section,
-              { borderTopColor: colors['outline-variant'], borderTopWidth: StyleSheet.hairlineWidth },
-            ]}
-          >
-            <View>
-              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                {t('product.relatedProducts')}
-              </Text>
+                ))}
+              </ScrollView>
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.hScroll}
-            >
-              {youMayLike.map((p) => (
-                <Pressable
-                  key={p.id}
-                  onPress={() => router.push(`/product/${p.id}`)}
-                  style={({ pressed }) => [
-                    styles.relatedCard,
-                    { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
-                    pressed && { opacity: 0.85 },
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`View ${p.name}`}
-                >
-                  <View
-                    style={[styles.relatedImage, { backgroundColor: colors['surface-variant'] }]}
-                  >
-                    <SafeImage source={{ uri: p.image }} style={styles.relatedImg} />
-                  </View>
-                  <View style={styles.relatedInfo}>
-                    <Text
-                      style={[styles.relatedName, { color: colors['on-surface'] }]}
-                      numberOfLines={1}
-                    >
-                      {localize(p.name)}
-                    </Text>
-                    <Text style={[styles.relatedPrice, { color: colors.primary }]}>
-                      ${p.price.toFixed(2)}
-                    </Text>
-                  </View>
-                </Pressable>
-              ))}
-            </ScrollView>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
 
-      {/* Sticky Bottom Actions — U4 三键：收藏(48px) + 立即购买(flex:1描边) + 加购(flex:1) */}
-      <View
-        style={[
-          styles.bottomBar,
-          {
-            backgroundColor: colors['surface-container-lowest'],
-            borderTopColor: colors['outline-variant'],
-          },
-        ]}
-      >
-        <Pressable
-          onPress={toggleFavorite}
-          style={({ pressed }) => [styles.favoriteBtn, pressed && { opacity: 0.6 }]}
-          accessibilityRole="button"
-          accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-          accessibilityState={{ selected: isFavorite }}
-        >
-          <Icon
-            name={isFavorite ? 'star' : 'star-outline'}
-            size={32}
-            color={isFavorite ? colors.primary : colors['on-surface']}
-          />
-          <Text
-            style={[
-              styles.favoriteText,
-              { color: isFavorite ? colors.primary : colors['on-surface'] },
-            ]}
-          >
-            {t('product.favorite')}
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => {
-            // Why: 立即购买 = 加购该商品 + 跳结算（addToCart 乐观更新 cart 缓存，checkout 立即看到）
-            addToCart();
-            router.push('/order/checkout');
-          }}
-          disabled={isSoldOut}
-          style={({ pressed }) => [
-            styles.buyNowBtn,
+        {/* Sticky Bottom Actions — U4 三键：收藏(48px) + 立即购买(flex:1描边) + 加购(flex:1) */}
+        <View
+          style={[
+            styles.bottomBar,
             {
-              borderColor: isSoldOut ? colors['outline-variant'] : colors.primary,
-              backgroundColor: isSoldOut ? colors['surface-container-low'] : 'transparent',
+              backgroundColor: colors['surface-container-lowest'],
+              borderTopColor: colors['outline-variant'],
             },
-            pressed && !isSoldOut && { opacity: 0.85 },
           ]}
-          accessibilityRole="button"
-          accessibilityLabel={t('product.buyNow')}
-          accessibilityState={{ disabled: isSoldOut }}
         >
-          <Text
-            style={[
-              styles.buyNowText,
-              { color: isSoldOut ? colors['on-surface-variant'] : colors.primary },
-            ]}
+          <Pressable
+            onPress={toggleFavorite}
+            style={({ pressed }) => [styles.favoriteBtn, pressed && { opacity: 0.6 }]}
+            accessibilityRole="button"
+            accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            accessibilityState={{ selected: isFavorite }}
           >
-            {t('product.buyNow')}
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={addToCart}
-          disabled={isSoldOut}
-          style={({ pressed }) => [
-            styles.cartBtn,
-            {
-              backgroundColor: isSoldOut
-                ? colors['surface-container-low']
-                : colors.primary,
-            },
-            pressed && !isSoldOut && { opacity: 0.85 },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={t('product.addToCart')}
-          accessibilityState={{ disabled: isSoldOut }}
-        >
-          <Text
-            style={[
-              styles.cartBtnText,
-              { color: isSoldOut ? colors['on-surface-variant'] : colors['on-primary'] },
+            <Icon
+              name={isFavorite ? 'star' : 'star-outline'}
+              size={32}
+              color={isFavorite ? colors.primary : colors['on-surface']}
+            />
+            <Text
+              style={[
+                styles.favoriteText,
+                { color: isFavorite ? colors.primary : colors['on-surface'] },
+              ]}
+            >
+              {t('product.favorite')}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              // Why: 立即购买 = 加购该商品 + 跳结算（addToCart 乐观更新 cart 缓存，checkout 立即看到）
+              addToCart();
+              router.push('/order/checkout');
+            }}
+            disabled={isSoldOut}
+            style={({ pressed }) => [
+              styles.buyNowBtn,
+              {
+                borderColor: isSoldOut ? colors['outline-variant'] : colors.primary,
+                backgroundColor: isSoldOut ? colors['surface-container-low'] : 'transparent',
+              },
+              pressed && !isSoldOut && { opacity: 0.85 },
             ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('product.buyNow')}
+            accessibilityState={{ disabled: isSoldOut }}
           >
-            {t('product.addToCart')}
-          </Text>
-        </Pressable>
-      </View>
-    </SafeAreaWrapper>
+            <Text
+              style={[
+                styles.buyNowText,
+                { color: isSoldOut ? colors['on-surface-variant'] : colors.primary },
+              ]}
+            >
+              {t('product.buyNow')}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={addToCart}
+            disabled={isSoldOut}
+            style={({ pressed }) => [
+              styles.cartBtn,
+              {
+                backgroundColor: isSoldOut ? colors['surface-container-low'] : colors.primary,
+              },
+              pressed && !isSoldOut && { opacity: 0.85 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('product.addToCart')}
+            accessibilityState={{ disabled: isSoldOut }}
+          >
+            <Text
+              style={[
+                styles.cartBtnText,
+                { color: isSoldOut ? colors['on-surface-variant'] : colors['on-primary'] },
+              ]}
+            >
+              {t('product.addToCart')}
+            </Text>
+          </Pressable>
+        </View>
+      </SafeAreaWrapper>
     </PageErrorBoundary>
   );
 }
@@ -948,9 +1090,7 @@ function ReviewCard({
             </Text>
           </View>
           <View>
-            <Text style={[styles.reviewName, { color: colors['on-surface'] }]}>
-              {displayName}
-            </Text>
+            <Text style={[styles.reviewName, { color: colors['on-surface'] }]}>{displayName}</Text>
             <StarsRow size={12} rating={review.rating} />
           </View>
         </View>
@@ -1027,7 +1167,10 @@ function TopBar({
     <View
       style={[
         styles.topBar,
-        { backgroundColor: colors['surface-container-lowest'], borderBottomColor: colors['outline-variant'] },
+        {
+          backgroundColor: colors['surface-container-lowest'],
+          borderBottomColor: colors['outline-variant'],
+        },
       ]}
     >
       <Pressable
@@ -1260,6 +1403,16 @@ const styles = StyleSheet.create({
     ...typography['body-sm'],
     textDecorationLine: 'line-through',
   },
+  // P3-1 头部评分位（价格行内联，样式对齐 ProductCard metaRow）
+  ratingInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  ratingInlineText: {
+    ...typography['body-sm'],
+    fontWeight: '600',
+  },
   stockRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1284,6 +1437,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   stockSold: {
+    ...typography['body-sm'],
+  },
+  // D5 就近仓状态行（stockRow 下方，绿=就近仓有货 / 橙=仓售罄·无货）
+  warehouseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  warehouseText: {
     ...typography['body-sm'],
   },
   // §11.1 紧张提示（步进器上方）
