@@ -1,6 +1,7 @@
 import { getLocales } from 'expo-localization';
 
 import { api, isMockMode } from './api';
+import { storageAdapter } from './storage';
 import { riderApi } from './user';
 
 export type AppLanguage = 'zh' | 'en' | 'tet' | 'pt' | 'id';
@@ -29,7 +30,7 @@ export function localeTagFor(language: AppLanguage): string {
 
 /**
  * 首次设备跟随（方案 v2 Q1/Q8 批次 C）：取设备首选语言就近匹配，不支持回退 zh。
- * Why: 未手动选择过语言时（localStorage 无存量）defaultSettings.language 走本函数；
+ * Why: 未手动选择过语言时（持久化无存量）defaultSettings.language 走本函数；
  *      一旦用户手动切换即持久化覆盖，不再跟随系统。getLocales 在无原生宿主环境
  *      （jest node / 部分 web dev）可能抛错或返回空，try/catch 兜底回退 zh。
  */
@@ -99,38 +100,82 @@ export function getLanguageOptions(options?: { includeUpcoming?: boolean }): Lan
   return source.map((option) => ({ ...option }));
 }
 
-// ── Mock layer (localStorage for Web dev) ──────────────────────────
+// ── 语言运行时（后续批 N5H4）─────────────────────────────────────────
+
+/**
+ * 当前生效语言（i18n 运行时真实值，rider 无 react-i18next——useTranslation 的
+ * language 即本模块持久化值，故此模块态即运行时事实源）。
+ * Why 模块态而非每次手读持久化：native 无 localStorage 同步读（此前
+ * notification.ts/push-token.ts 手读 localStorage 在真机恒回退 en，审查 P3-2）；
+ * hydration 完成后内存态与持久化一致，同步读零开销且单点。
+ */
+let activeLanguage: AppLanguage | null = null;
+
+/** 当前语言（模块态优先，未水合时回退默认值链）——服务层同步读入口 */
+export function getCurrentLanguage(): AppLanguage {
+  if (activeLanguage) return activeLanguage;
+  return getMockSettings().language;
+}
+
+/**
+ * 启动水合：从持久化读 language/notificationsEnabled 覆盖内存默认值。
+ * 单例（Promise 缓存）——多调用方并发 get 只触发一次持久化读。
+ * detectDeviceLanguage 仅在持久化无存量（设备首次）时经 defaultSettings 生效。
+ */
+let hydrationPromise: Promise<void> | null = null;
+
+export function ensureSettingsHydrated(): Promise<void> {
+  if (!hydrationPromise) {
+    hydrationPromise = (async () => {
+      const stored = await storageAdapter.getItem(storageKey);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as Partial<RiderSettings>;
+          const settings = { ...getMockSettings(), ...parsed };
+          mockSettings = settings;
+          if (parsed.language) activeLanguage = parsed.language;
+        } catch {
+          // 持久化数据损坏 → 保持默认值链，下次写覆盖
+        }
+      }
+    })();
+  }
+  return hydrationPromise;
+}
+
+// ── Mock layer (storage adapter；web dev 落 localStorage，native 落 AsyncStorage) ──
 
 const storageKey = 'mei-delivery-app:rider-settings';
 
-const defaultSettings: RiderSettings = {
-  // Why: 默认值层设备跟随（任务书批C #3）——未选择过语言时按设备取；手动选择后 localStorage 覆盖
-  language: detectDeviceLanguage(),
-  notificationsEnabled: true,
-  dutyStatus: 'onDuty',
-};
+let defaultSettings: RiderSettings = buildDefaultSettings();
+
+/**
+ * Why 工厂而非常量：defaultSettings.language 在模块顶层固化 detectDeviceLanguage()
+ * 结果——__resetForTest 模拟重启时需按当前设备语言重建（测试 ⑥⑦ 先设设备语言再
+ * 重置模块态的顺序依赖此重建）。
+ */
+function buildDefaultSettings(): RiderSettings {
+  return {
+    // Why: 默认值层设备跟随（任务书批C #3）——未选择过语言时按设备取；手动选择后持久化覆盖
+    language: detectDeviceLanguage(),
+    notificationsEnabled: true,
+    dutyStatus: 'onDuty',
+  };
+}
 
 let mockSettings: RiderSettings | null = null;
 
 function getMockSettings(): RiderSettings {
   if (mockSettings) return mockSettings;
-  if (typeof localStorage !== 'undefined') {
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      const parsed = JSON.parse(stored) as Partial<RiderSettings>;
-      mockSettings = { ...defaultSettings, ...parsed };
-      return mockSettings;
-    }
-  }
   mockSettings = { ...defaultSettings };
-  saveMockSettings();
   return mockSettings;
 }
 
 function saveMockSettings(): void {
-  if (typeof localStorage !== 'undefined' && mockSettings) {
-    localStorage.setItem(storageKey, JSON.stringify(mockSettings));
-  }
+  // Why 同步内存态先行 + 异步落持久化：调用方（riderSettingsApi.get/update）
+  // 依赖同步 mock 语义；持久化经适配层（native AsyncStorage / web localStorage）。
+  if (!mockSettings) return;
+  void storageAdapter.setItem(storageKey, JSON.stringify(mockSettings));
 }
 
 // ── riderSettingsApi ───────────────────────────────────────────────
@@ -139,20 +184,23 @@ export const riderSettingsApi = {
   // Why: 后端没有 /rider/settings 路由，language/notificationsEnabled 本地存储，
   // dutyStatus 从 /rider/profile 的 status 字段获取（OFFLINE/ONLINE/BUSY）
   async get(): Promise<RiderSettings> {
+    // 启动链路（N5H4-c）：优先读持久化覆盖设备跟随，再返回
+    await ensureSettingsHydrated();
     if (isMockMode) return { ...getMockSettings() };
-    const localSettings = getMockSettings();
     // P6-1：失败直接 throw，让 useRiderSettings 的 isError 捕获——不再回退 offDuty。
     // 原回退 offDuty 会让 _layout 的 online=false 静默掉线（停 GPS/心跳/派单），是丢派单收入的根源。
     // 现在由调用方按 isError 判「加载失败」态（online=null 保守不停派单，见 _layout MainContent）。
     const profile = await riderApi.getProfile();
     const dutyStatus = dutyStatusReverseMap[profile.status] ?? 'offDuty';
-    return { ...localSettings, dutyStatus };
+    return { ...getMockSettings(), dutyStatus };
   },
 
   // Why: dutyStatus 调用 /rider/duty，language/notificationsEnabled 本地存储
   async update(patch: Partial<RiderSettings>): Promise<RiderSettings> {
+    await ensureSettingsHydrated();
     if (isMockMode) {
       mockSettings = { ...getMockSettings(), ...patch };
+      if (patch.language) activeLanguage = patch.language;
       saveMockSettings();
       return { ...mockSettings };
     }
@@ -160,6 +208,7 @@ export const riderSettingsApi = {
     // 本地设置（language/notificationsEnabled）更新
     if (patch.language || patch.notificationsEnabled) {
       mockSettings = { ...getMockSettings(), ...patch };
+      if (patch.language) activeLanguage = patch.language;
       saveMockSettings();
     }
 
@@ -174,6 +223,19 @@ export const riderSettingsApi = {
 };
 
 // ── 专用 duty API（供 tasks.tsx 直接调用） ──────────────────────────
+
+/**
+ * 测试专用：重置模块态（mockSettings/activeLanguage/hydrationPromise），
+ * 等价 resetModules 后重加载——jest-expo preset 全局链在 resetModules 下炸
+ * （react-native-css-interop 读 undefined，settings-language-storage.test 实证），
+ * 测试用本钩子模拟「进程重启」。生产路径不调用。
+ */
+export function __resetForTest(): void {
+  defaultSettings = buildDefaultSettings();
+  mockSettings = null;
+  activeLanguage = null;
+  hydrationPromise = null;
+}
 
 export const dutyApi = {
   // Why: 切换值班状态，调用后端 /rider/duty

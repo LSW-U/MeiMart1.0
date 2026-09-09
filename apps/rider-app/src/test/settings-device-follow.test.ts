@@ -7,7 +7,7 @@
  *   ② getLocales 抛错（无原生宿主）→ try/catch 兜底 zh
  *   ②b getLocales 返回空数组（无 locale 信息）→ 同样回退 zh
  *   ③ 手动选择覆盖设备跟随：update({ language }) 后 get 返回手动值；
- *      resetModules（模拟重启）后 localStorage 存量仍压过设备跟随
+ *      resetModules（模拟重启）后持久化存量（AsyncStorage mock）仍压过设备跟随
  *
  * 实现约束（Why）：
  * - defaultSettings 在 settings.ts 模块顶层固化 detectDeviceLanguage() 结果，
@@ -19,8 +19,8 @@
  * - rn project 无 expo-localization moduleNameMapper，靠 jest.mock 工厂
  *   （自包含闭包，与 src/test/expo-localization.mock.js 同语义）拦截 require，
  *   测试用 jest.requireMock 拿同一 factory 实例（requireActual 会绕过 mock）；
- * - node 环境无 localStorage（真机 AsyncStorage 缺口同源，见方案 v2 §5 后续
- *   批次），注入内存桩让「重启后记忆」持久化链路真实走通（web 存储层语义）；
+ * - node 环境持久化经 storage.ts 适配层走 AsyncStorage（N5H4 存储适配层，真机同源）；
+ *   jest.config rn project 映射官方 jest mock（内存态），测试按用例清空/种存量；
  * - 桩掉 services/api + services/user：isMockMode 强制 true，get/update 走
  *   纯本地 mock 层，不触 axios（dutyStatus 才走 api.patch，本组用例不涉及）。
  */
@@ -59,33 +59,20 @@ function loadSettingsModule(): typeof import('../services/settings') {
   return jest.requireActual('../services/settings');
 }
 
-// node env 无 localStorage——内存 Map 桩（getItem/setItem/removeItem 最小面，
-// settings.ts 的 typeof 守卫在桩存在时走真持久化分支）
-function installLocalStorageStub(): void {
-  const store = new Map<string, string>();
-  (globalThis as Record<string, unknown>).localStorage = {
-    getItem: (key: string) => (store.has(key) ? store.get(key) : null),
-    setItem: (key: string, value: string) => {
-      store.set(key, value);
-    },
-    removeItem: (key: string) => {
-      store.delete(key);
-    },
-    clear: () => {
-      store.clear();
-    },
-  };
-}
+// N5H4：持久化已切存储适配层（native AsyncStorage / web localStorage），node 环境
+// Platform.OS=ios → 走 AsyncStorage（jest.config 映射官方 mock），localStorage 桩不再
+// 参与持久化链路。保留 install 无害（仅 globalThis 挂载），但持久化断言全部走 adapter。
 
 describe('settings 设备跟随（批C 审查 P3#3）', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.restoreAllMocks();
-    installLocalStorageStub();
-  });
-
-  afterEach(() => {
-    delete (globalThis as { localStorage?: unknown }).localStorage;
+    // N5H4：持久化走 AsyncStorage 官方 mock（模块作用域），每用例清空等价新装设备
+    (
+      jest.requireMock('@react-native-async-storage/async-storage') as {
+        __INTERNAL_MOCK_STORAGE__: Record<string, string>;
+      }
+    ).__INTERNAL_MOCK_STORAGE__ = {};
   });
 
   it('① 设备语言 fr（不在支持列表）→ 默认回退 zh', () => {
@@ -123,8 +110,17 @@ describe('settings 设备跟随（批C 审查 P3#3）', () => {
     await settings.riderSettingsApi.update({ language: 'pt' });
     await expect(settings.riderSettingsApi.get()).resolves.toMatchObject({ language: 'pt' });
 
-    // 模拟重启：resetModules 重建模块，localStorage 存量仍压过设备跟随 id
+    // 模拟重启：持久化现走 AsyncStorage 官方 mock（N5H4 存储适配层），其存储是
+    // 模块实例作用域——resetModules 重建 registry 后 mock 是全新空实例；真机磁盘
+    // 跨进程存活，故「reset 前经旧模块 adapter 读出存量 → reset 后经新模块 adapter
+    // 种回」等价模拟磁盘存活（旧实现走全局 localStorage 天然存活，无需此步）。
+    const persisted = await jest
+      .requireActual('../services/storage')
+      .storageAdapter.getItem('mei-delivery-app:rider-settings');
     jest.resetModules();
+    await jest
+      .requireActual('../services/storage')
+      .storageAdapter.setItem('mei-delivery-app:rider-settings', persisted ?? '');
     const reloaded = loadSettingsModule();
     await expect(reloaded.riderSettingsApi.get()).resolves.toMatchObject({ language: 'pt' });
   });

@@ -23,6 +23,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { api, isMockMode } from './api';
+import { getCurrentLanguage } from './settings';
 import type { AppLanguage } from './settings';
 
 // rid 前缀 = FCM/APNs 设备 token（getDevicePushTokenAsync），非 Expo PushToken——
@@ -37,20 +38,9 @@ function platformOf(): 'ANDROID' | 'IOS' | 'WEB' {
   return 'WEB';
 }
 
-/** 当前语言（localStorage rider-settings，与 notification.ts currentLanguage 同源同步读） */
+/** 当前语言（N5：settings 语言运行时模块态——原 localStorage 手读真机恒 en，审查 P3-2 同源） */
 function currentLocale(): AppLanguage {
-  try {
-    if (typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem('mei-delivery-app:rider-settings');
-      if (stored) {
-        const parsed = JSON.parse(stored) as { language?: AppLanguage };
-        if (parsed.language) return parsed.language;
-      }
-    }
-  } catch {
-    // fallthrough to en
-  }
-  return 'en';
+  return getCurrentLanguage();
 }
 
 /** 已注册的 Expo token（登出 DELETE body 需要原 token；内存态，app 进程内有效） */

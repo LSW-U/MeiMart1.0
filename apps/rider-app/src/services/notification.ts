@@ -1,7 +1,7 @@
 import type { NotificationItem, NotificationCategory } from '@/src/types/notification';
 
 import { api, isMockMode } from './api';
-import { riderSettingsApi } from './settings';
+import { getCurrentLanguage, riderSettingsApi } from './settings';
 
 // ── 后端契约层（批C C1：isMockMode 开关接入，真模式走 /rider/notifications 四端点） ──
 
@@ -26,21 +26,10 @@ interface NotificationRaw {
 }
 
 // 多语言 pick：当前语言 → en → zh → 首值（方案v2 §3.5 rider，对齐 client-app pickLocalized 语义）
-// 当前语言从本地设置取（settings.ts：real 模式 language 也是本地存储，同步读取不落网络）
+// N5（后续批）：改接 settings 语言运行时（getCurrentLanguage 模块态）——原 localStorage
+// 手读在 native（无 localStorage）恒回退 en（审查 P3-2），真机通知标题语言错误。
 function currentLanguage(): string {
-  try {
-    // riderSettingsApi 同步 mock 读（localStorage），real 模式读同一份本地 language
-    if (typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem('mei-delivery-app:rider-settings');
-      if (stored) {
-        const parsed = JSON.parse(stored) as { language?: string };
-        if (parsed.language) return parsed.language;
-      }
-    }
-  } catch {
-    // fallthrough to en
-  }
-  return 'en';
+  return getCurrentLanguage();
 }
 
 function pickLocalized(raw: Record<string, string> | null | undefined): string {

@@ -191,10 +191,14 @@ describe('registerPushToken（批C C3 token 注册）', () => {
     expect(mockPost).toHaveBeenCalledTimes(1);
     const [url, body] = mockPost.mock.calls[0];
     expect(url).toBe('/rider/device-tokens');
+    // N5H4：locale 改走 settings 语言运行时 getCurrentLanguage()——默认链 =
+    // detectDeviceLanguage()（node 宿主 getLocales 'en' 不在支持列表 → 兜底 'zh'，
+    // 与 settings-device-follow.test ① 同链）。真实语言取值链路（hydrate/切语言）
+    // 由 settings-language-storage.test 覆盖。
     expect(body).toEqual({
       token: 'ExponentPushToken[abc123]',
       platform: 'ANDROID',
-      locale: 'en',
+      locale: 'zh',
     });
   });
 

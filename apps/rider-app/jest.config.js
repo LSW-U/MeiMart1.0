@@ -19,6 +19,11 @@ module.exports = {
       preset: 'jest-expo',
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
+        // N5H4 存储适配层：storage.ts native 分支 import AsyncStorage（原生宿主，
+        // node/jsdom 无 runtime → "window is not defined"）。双 project 统一映射官方
+        // jest mock（内存态实现，语义与真机一致）。路径走仓根 hoisted node_modules
+        // （rider-app 未本地声明该依赖，client-app 声明、根单副本）。
+        '^@react-native-async-storage/async-storage$': '<rootDir>/../../node_modules/@react-native-async-storage/async-storage/jest/async-storage-mock.js',
       },
       // pnpm 布局兼容：依赖真身在 node_modules/.pnpm/<pkg>@<ver>/node_modules/<pkg>/ 深路径。
       // (\.pnpm/)? 可选段让放行列表同时命中「包根」（.pnpm 目录名的 @scope+name@ver 前缀）
@@ -63,6 +68,9 @@ module.exports = {
       // 换成 src/test/react-native.mock.js 的最小 host 壳（组件测试只需可渲染可透传 props）
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
+        // N5H4 存储适配层（同 rn project——settings.ts 经 storage.ts 间接拉 AsyncStorage；
+        // 路径走仓根 hoisted node_modules，rider-app 未本地声明）
+        '^@react-native-async-storage/async-storage$': '<rootDir>/../../node_modules/@react-native-async-storage/async-storage/jest/async-storage-mock.js',
         // C3（批次2）：rider react 已与 client 统一 pin 19.2.3（根 hoisted 单一副本），
         // 拆掉原「钉 pnpm 虚拟层 react-dom@19.2.7 同层 react」的 workaround——
         // 该钉版在版本目录名里硬编码 19.2.7，升级 React 会静默断。现在 react/react-dom
