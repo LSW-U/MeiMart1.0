@@ -40,7 +40,12 @@ let mockTodayState = 'today-ok';
 let mockRiderShape = 'rider-full';
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace, back: jest.fn(), canGoBack: () => true }),
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    back: jest.fn(),
+    canGoBack: () => true,
+  }),
   useLocalSearchParams: () => ({}),
   useFocusEffect: (cb: () => unknown) => cb(),
 }));
@@ -55,18 +60,56 @@ jest.mock('../../../src/services/queries/useSettings', () => ({
 
 jest.mock('../../../src/services/queries/useOrder', () => ({
   useOrderTodayStats: () => {
-    if (mockTodayState === 'today-loading') return { data: undefined, isLoading: true, isError: false };
-    if (mockTodayState === 'today-error') return { data: undefined, isLoading: false, isError: true };
+    if (mockTodayState === 'today-loading')
+      return { data: undefined, isLoading: true, isError: false };
+    if (mockTodayState === 'today-error')
+      return { data: undefined, isLoading: false, isError: true };
     return { data: { count: 15, totalIncome: 245.5 }, isLoading: false, isError: false };
   },
 }));
 
 jest.mock('../../../src/store/useAuthStore', () => ({
-  useAuthStore: (selector: (s: { rider: RiderProfile | null; hydrate: () => Promise<void> }) => unknown) =>
+  useAuthStore: (
+    selector: (s: { rider: RiderProfile | null; hydrate: () => Promise<void> }) => unknown,
+  ) =>
     selector({
-      rider: mockRiderShape === 'rider-full'
-        ? { id: 'r-001', userId: 'u-1', riderName: 'Alex', phone: '+67077001234', vehicleType: 'MOTORCYCLE', vehiclePlate: null, status: 'ONLINE', applicationStatus: 'APPROVED', totalDeliveries: 128, rating: 4.9, preferredWarehouseIds: [], isOnline: true, createdAt: '', updatedAt: '', avatarUrl: 'https://example.com/a.png', name: 'Alex 骑手' }
-        : { id: 'r-001', userId: 'u-1', riderName: 'Alex', phone: '+67077001234', vehicleType: 'MOTORCYCLE', vehiclePlate: null, status: 'ONLINE', applicationStatus: 'APPROVED', totalDeliveries: 128, rating: 4.9, preferredWarehouseIds: [], isOnline: true, createdAt: '', updatedAt: '', name: 'Alex 骑手' },
+      rider:
+        mockRiderShape === 'rider-full'
+          ? {
+              id: 'r-001',
+              userId: 'u-1',
+              riderName: 'Alex',
+              phone: '+67077001234',
+              vehicleType: 'MOTORCYCLE',
+              vehiclePlate: null,
+              status: 'ONLINE',
+              applicationStatus: 'APPROVED',
+              totalDeliveries: 128,
+              rating: 4.9,
+              preferredWarehouseIds: [],
+              isOnline: true,
+              createdAt: '',
+              updatedAt: '',
+              avatarUrl: 'https://example.com/a.png',
+              name: 'Alex 骑手',
+            }
+          : {
+              id: 'r-001',
+              userId: 'u-1',
+              riderName: 'Alex',
+              phone: '+67077001234',
+              vehicleType: 'MOTORCYCLE',
+              vehiclePlate: null,
+              status: 'ONLINE',
+              applicationStatus: 'APPROVED',
+              totalDeliveries: 128,
+              rating: 4.9,
+              preferredWarehouseIds: [],
+              isOnline: true,
+              createdAt: '',
+              updatedAt: '',
+              name: 'Alex 骑手',
+            },
       hydrate: async () => {},
     }),
 }));
@@ -79,8 +122,17 @@ jest.mock('../../../src/hooks/useGoBack', () => ({
   useGoBack: () => mockGoBack,
 }));
 
+// 批C C2：通知入口角标——useUnreadCount 桩（mockUnread 控红点显隐），对齐 task-detail.test.tsx 先例
+let mockUnread = 0;
+
+jest.mock('../../../src/services/queries/useNotifications', () => ({
+  useUnreadCount: () => ({ data: mockUnread, isLoading: false, isError: false }),
+}));
+
 function renderPage() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
@@ -93,6 +145,7 @@ beforeEach(() => {
   mockGoBack.mockReset();
   mockTodayState = 'today-ok';
   mockRiderShape = 'rider-full';
+  mockUnread = 0;
 });
 
 describe('统计区真实数据（P1 §3.1① + ⑥ 三态）', () => {
@@ -107,8 +160,9 @@ describe('统计区真实数据（P1 §3.1① + ⑥ 三态）', () => {
     mockTodayState = 'today-loading';
     const { container } = renderPage();
     // 订单/收入栏「—」、总配送 128（统计区有两处「—」——订单栏数字 + 收入栏数字）
-    const dashes = Array.from(container.querySelectorAll('[data-rn-host="Text"]'))
-      .filter((el) => (el.textContent ?? '') === '—');
+    const dashes = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).filter(
+      (el) => (el.textContent ?? '') === '—',
+    );
     expect(dashes.length).toBeGreaterThanOrEqual(2);
     // 总配送栏仍显真实值 128（来自 rider.totalDeliveries，不依赖 todayStats）
     expect(container.textContent ?? '').toContain('128');
@@ -117,8 +171,9 @@ describe('统计区真实数据（P1 §3.1① + ⑥ 三态）', () => {
   it('today-error → 订单/收入显「—」', () => {
     mockTodayState = 'today-error';
     const { container } = renderPage();
-    const dashes = Array.from(container.querySelectorAll('[data-rn-host="Text"]'))
-      .filter((el) => (el.textContent ?? '') === '—');
+    const dashes = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).filter(
+      (el) => (el.textContent ?? '') === '—',
+    );
     expect(dashes.length).toBeGreaterThanOrEqual(2);
   });
 });
@@ -155,8 +210,9 @@ describe('页头 SimplePageHeader + goBack（P1 §3.4⑤ 拍板 A）', () => {
   it('页头返回走 useGoBack（fallbackHref=tasks），非 router.replace 硬跳', () => {
     const { container } = renderPage();
     // SimplePageHeader 返回 Pressable（accessibilityLabel=common.back「返回」）
-    const backBtn = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]'))
-      .find((el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '返回');
+    const backBtn = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]')).find(
+      (el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '返回',
+    );
     expect(backBtn).toBeTruthy();
     // host 壳 onPress 接到 onClick：fireEvent.click 触发等价于按下返回
     act(() => {
@@ -169,8 +225,9 @@ describe('页头 SimplePageHeader + goBack（P1 §3.4⑤ 拍板 A）', () => {
 
   it('「编辑」按钮 action 跳 /profile/edit', () => {
     const { container } = renderPage();
-    const editBtn = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]'))
-      .find((el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '编辑');
+    const editBtn = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]')).find(
+      (el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '编辑',
+    );
     expect(editBtn).toBeTruthy();
     act(() => {
       fireEvent.click(editBtn as Element);
@@ -182,8 +239,9 @@ describe('页头 SimplePageHeader + goBack（P1 §3.4⑤ 拍板 A）', () => {
 describe('重复入口治理（P1 §3.5④ 拍板 A）', () => {
   it('「收入明细」MenuItem 改跳 /order/history（非 /(main)/earnings）', () => {
     const { container } = renderPage();
-    const item = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]'))
-      .find((el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '收入明细');
+    const item = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]')).find(
+      (el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '收入明细',
+    );
     expect(item).toBeTruthy();
     act(() => {
       fireEvent.click(item as Element);
@@ -193,12 +251,46 @@ describe('重复入口治理（P1 §3.5④ 拍板 A）', () => {
 
   it('「我的钱包」卡片仍跳 /(main)/earnings', () => {
     const { container } = renderPage();
-    const item = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]'))
-      .find((el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '我的钱包');
+    const item = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]')).find(
+      (el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '我的钱包',
+    );
     expect(item).toBeTruthy();
     act(() => {
       fireEvent.click(item as Element);
     });
     expect(mockPush).toHaveBeenCalledWith('/(main)/earnings');
+  });
+});
+
+describe('通知中心入口（批C C2 角标挂载）', () => {
+  it('入口存在且跳 /notifications', () => {
+    const { container } = renderPage();
+    const item = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]')).find(
+      (el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '通知中心',
+    );
+    expect(item).toBeTruthy();
+    act(() => {
+      fireEvent.click(item as Element);
+    });
+    expect(mockPush).toHaveBeenCalledWith('/notifications');
+  });
+
+  it('unread=0 → 无红点（bg-dot-unread 不渲染）', () => {
+    mockUnread = 0;
+    const { container } = renderPage();
+    // host 壳把 className 序列化为 data-prop-className（小写化）
+    const dots = Array.from(container.querySelectorAll('[data-prop-classname*="bg-dot-unread"]'));
+    expect(dots.length).toBe(0);
+  });
+
+  it('unread>0 → 红点渲染且 accessibilityHint 报未读数', () => {
+    mockUnread = 3;
+    const { container } = renderPage();
+    const dots = Array.from(container.querySelectorAll('[data-prop-classname*="bg-dot-unread"]'));
+    expect(dots.length).toBe(1);
+    const item = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]')).find(
+      (el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '通知中心',
+    );
+    expect(item?.getAttribute('data-prop-accessibilityhint')).toBe('3 条未读');
   });
 });

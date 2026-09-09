@@ -11,10 +11,27 @@ import { useAuth } from '../src/hooks/useAuth';
 import { ToastHost } from '../src/components/feedback/Toast';
 import { useAuthStore } from '../src/store/useAuthStore';
 import { useNetworkStore } from '../src/hooks/useNetworkStore';
+import { registerPushToken, unregisterPushToken } from '../src/services/push-token';
+import { usePushDeepLink } from '../src/services/push-deep-link';
+
+function PushTokenRegistrar() {
+  // 批C C3：登录态驱动 token 注册/注销（真机跳过条件在 push-token.ts 内守卫）
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  useEffect(() => {
+    if (isAuthenticated) {
+      void registerPushToken();
+    } else {
+      void unregisterPushToken();
+    }
+  }, [isAuthenticated]);
+  return null;
+}
 
 function StoreInitializer({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
   const { forceLogout } = useAuth();
+  // 批C C3：推送点击深链三场景（前台/后台 listener + 冷启动 initial response）
+  usePushDeepLink();
 
   useEffect(() => {
     if (initialized.current) return;
@@ -47,6 +64,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AppProviders>
         <StoreInitializer>
+          <PushTokenRegistrar />
           <StatusBar style="dark" />
           <ToastHost />
           <Stack screenOptions={{ headerShown: false }} />
