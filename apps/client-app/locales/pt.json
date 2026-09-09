@@ -155,7 +155,8 @@
     "seeAllCategories": "Ver todas as categorias",
     "seeAllProducts": "Ver todos os produtos",
     "messagesLabel": "Mensagens",
-    "reorderLabel": "Reencomendar {{name}}"
+    "reorderLabel": "Reencomendar {{name}}",
+    "unreadBadge": "Você tem {{count}} notificações não lidas"
   },
   "promotion": {
     "flashDeals": "Ofertas Relâmpago",
@@ -558,7 +559,8 @@
     "becomeSeller": "Vendedor",
     "scan": "Digitalizar",
     "pointsUnit": "Pontos",
-    "featureComingSoon": "Funcionalidade em breve"
+    "featureComingSoon": "Funcionalidade em breve",
+    "unreadBadge": "Você tem {{count}} notificações não lidas"
   },
   "settings": {
     "title": "Definições",

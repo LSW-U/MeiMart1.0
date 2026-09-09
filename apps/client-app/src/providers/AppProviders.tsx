@@ -20,10 +20,19 @@ import { initI18n, default as i18n } from '@/i18n';
 import { initSentry } from '@/services/sentry';
 import { useAuthStore } from '@/store/authStore';
 import { ToastContainer } from '@/components/feedback/ToastContainer';
+// 批B B1/B2：push token 注册（登录/登出边沿）+ 推送点击深链（前台/后台/冷启动）
+import { usePushRegistration } from '@/hooks/usePushRegistration';
+import { PushDeepLinkDelegate } from '@/components/layout/PushDeepLinkDelegate';
 // T2-B: queryClient 抽到独立模块 —— 配置含 QueryCache 全局 401 → clearAuth（单测可直接 import）
 import { queryClient } from '@/providers/queryClient';
 
 initSentry();
+
+/** push 委托常驻组件（AppProviders 内单点挂载；mock/web 内部自短路） */
+function PushDelegate() {
+  usePushRegistration();
+  return <PushDeepLinkDelegate />;
+}
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [client] = useState(() => queryClient);
@@ -44,13 +53,16 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
     // Why: 先初始化 authStore（从 tokenStorage 恢复 token），再初始化 React Query persist
     // 避免 isAuthenticated 与 token 状态不一致导致 401
-    useAuthStore.getState().initFromStorage().then(() => {
-      if (mounted) {
-        setAuthReady(true);
-        // authStore 初始化后再初始化 React Query persist
-        void initPersist(client);
-      }
-    });
+    useAuthStore
+      .getState()
+      .initFromStorage()
+      .then(() => {
+        if (mounted) {
+          setAuthReady(true);
+          // authStore 初始化后再初始化 React Query persist
+          void initPersist(client);
+        }
+      });
 
     void initI18n().then(() => {
       if (mounted) setI18nReady(true);
@@ -69,7 +81,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={client}>
       <ThemeProvider>
-        <I18nextProvider i18n={i18n}>{children}</I18nextProvider>
+        <I18nextProvider i18n={i18n}>
+          {children}
+          <PushDelegate />
+        </I18nextProvider>
         <ToastContainer />
       </ThemeProvider>
     </QueryClientProvider>

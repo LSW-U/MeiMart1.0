@@ -155,7 +155,8 @@
     "seeAllCategories": "See all categories",
     "seeAllProducts": "See all products",
     "messagesLabel": "Messages",
-    "reorderLabel": "Reorder {{name}}"
+    "reorderLabel": "Reorder {{name}}",
+    "unreadBadge": "You have {{count}} unread notifications"
   },
   "promotion": {
     "flashDeals": "Flash Deals",
@@ -558,7 +559,8 @@
     "becomeSeller": "Seller",
     "scan": "Scan",
     "pointsUnit": "Points",
-    "featureComingSoon": "Feature coming soon"
+    "featureComingSoon": "Feature coming soon",
+    "unreadBadge": "You have {{count}} unread notifications"
   },
   "settings": {
     "title": "Settings",

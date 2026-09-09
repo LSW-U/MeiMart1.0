@@ -155,7 +155,8 @@
     "seeAllCategories": "查看全部分类",
     "seeAllProducts": "查看全部商品",
     "messagesLabel": "消息",
-    "reorderLabel": "再次购买 {{name}}"
+    "reorderLabel": "再次购买 {{name}}",
+    "unreadBadge": "你有 {{count}} 条未读消息"
   },
   "promotion": {
     "flashDeals": "限时特惠",
@@ -558,7 +559,8 @@
     "becomeSeller": "成为商家",
     "scan": "扫码",
     "pointsUnit": "积分",
-    "featureComingSoon": "功能即将上线"
+    "featureComingSoon": "功能即将上线",
+    "unreadBadge": "你有 {{count}} 条未读消息"
   },
   "settings": {
     "title": "设置",

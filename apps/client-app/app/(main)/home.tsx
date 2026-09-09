@@ -2,14 +2,7 @@
 // 还原自 HomePage.html（511 行）。HTML → RN 行数比：511 → ~480（含样式），
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 94%）。
 // P6: 间距微调 + 分类网格 C2/角标/溢出 + PromoShortcut→PromoDock（方案二色条）
-import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-  Pressable,
-} from 'react-native';
+import { StyleSheet, View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -41,6 +34,8 @@ import { useCategories, useBanners } from '@/services/queries/useCatalog';
 import { useRecommendations, useBuyAgain } from '@/services/queries/useProducts';
 import { usePromotions } from '@/services/queries/usePromotions';
 import { useAddToCart } from '@/services/queries/useCart';
+import { useUnreadCount } from '@/services/queries/useNotifications';
+import { Badge } from '@/components/ui/Badge';
 import { toast } from '@/store/toastStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
@@ -70,6 +65,9 @@ export default function HomePage() {
   // Why: P6 V3e - PromoDock 数据源由 usePromotions hook 驱动（后端控制数量/排序/时效）
   const { data: promotions } = usePromotions();
   const addToCartMutation = useAddToCart();
+  // 批B B3：mail 图标角标换真实未读数（原硬编码 2 是线上假数据，方案v2 风险#8）
+  // 未登录时 useUnreadCount 不请求（enabled: isAuthenticated）→ data undefined → 不显示角标
+  const { data: unreadCount } = useUnreadCount();
 
   // Why: Buy again 加购
   const handleBuyAgainAddToCart = (item: Product) => {
@@ -77,120 +75,172 @@ export default function HomePage() {
       { product: item, quantity: 1 },
       {
         onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
-        onError: () => toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+        onError: () =>
+          toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
       },
     );
   };
   return (
     <PageErrorBoundary pageName="home">
-    {/* Why: edges 仅 top —— header 红底需避状态栏。bottom 不需 edges：
+      {/* Why: edges 仅 top —— header 红底需避状态栏。bottom 不需 edges：
         ScrollView 的 scrollContent.paddingBottom(xxl*2=96px) 兜底浮动 BottomNav + 底部手势条
         （主 tab 是自定义 BottomNav 浮层非系统 TabBar，故 home 走 paddingBottom 而非 edges bottom，审查 Q3）*/}
-    <SafeAreaWrapper edges={['top']} style={{ backgroundColor: colors.primary, flex: 1 }}>
-      <LinearGradient
-        {...gradientPresets.brand}
-        colors={[colors.primary, colors['primary-container']]}
-        style={styles.headerBg}
-      >
-        <StatusBarConfig />
-        {/* Fix-9: header tais-pattern 叠加（HTML 第 128 行 opacity-20） */}
-        <View style={styles.headerPatternOverlay} pointerEvents="none">
-          <TaisPattern width={400} height={200} opacity={0.2} />
-        </View>
-        {/* Sticky Header — Logo + 定位 + 消息红点 */}
-        <View style={styles.headerRow}>
-          <View style={styles.brandCol}>
-            <Logo size={32} />
-            <Text style={styles.brandName} accessibilityRole="header">
-              {t('home.appName')}
-            </Text>
+      <SafeAreaWrapper edges={['top']} style={{ backgroundColor: colors.primary, flex: 1 }}>
+        <LinearGradient
+          {...gradientPresets.brand}
+          colors={[colors.primary, colors['primary-container']]}
+          style={styles.headerBg}
+        >
+          <StatusBarConfig />
+          {/* Fix-9: header tais-pattern 叠加（HTML 第 128 行 opacity-20） */}
+          <View style={styles.headerPatternOverlay} pointerEvents="none">
+            <TaisPattern width={400} height={200} opacity={0.2} />
           </View>
-          <Pressable
-            onPress={() => router.push('/address/map')}
-            style={styles.locationChip}
-            accessibilityRole="button"
-            accessibilityLabel={t('home.locationLabel')}
-          >
-            <Icon symbol="location_on" size={13} color={ON_PRIMARY} />
-            <Text style={styles.locationText} numberOfLines={1}>
-              {t('home.locationLabel')}
-            </Text>
-            <Icon symbol="expand_more" size={13} color={ON_PRIMARY} />
-          </Pressable>
-          <Pressable
-            testID="home-messages"
-            onPress={() => router.push('/service/notifications')}
-            style={styles.msgBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('home.messagesLabel')}
-          >
-            <Icon symbol="mail" size={24} color={ON_PRIMARY} />
-            <View style={[styles.msgBadge, { borderColor: colors.primary }]}>
-              <Text style={[styles.msgBadgeText, { color: colors.primary }]}>2</Text>
+          {/* Sticky Header — Logo + 定位 + 消息红点 */}
+          <View style={styles.headerRow}>
+            <View style={styles.brandCol}>
+              <Logo size={32} />
+              <Text style={styles.brandName} accessibilityRole="header">
+                {t('home.appName')}
+              </Text>
             </View>
-          </Pressable>
-        </View>
-        {/* Uma Lulik Skyline 过渡（header → body） */}
-        <View style={styles.skylineRow}>
-          <UmaLulikSkyline height={24} />
-        </View>
-      </LinearGradient>
-
-      {/* Delivery Tip — 黄色横条 */}
-      <View style={[styles.deliveryTip, { backgroundColor: colors.cultural.amber }]}>
-        <Icon symbol="local_shipping" size={18} color={ON_AMBER} />
-        <Text style={styles.deliveryTipText}>{t('home.deliveryTip')}</Text>
-      </View>
-
-      <ScrollView
-        style={[styles.scrollArea, { backgroundColor: colors.background }]}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* 搜索栏 */}
-        <View style={styles.searchSection}>
-          <Pressable
-            onPress={() => router.push('/search')}
-            style={({ pressed }) => [
-              styles.searchCard,
-              {
-                backgroundColor: colors['surface-container-lowest'],
-                borderColor: colors['outline-variant'],
-              },
-              shadowPresets.sm,
-              pressed && { opacity: 0.7 },
-            ]}
-            accessibilityRole="search"
-          >
-            <Icon symbol="search" size={22} color={colors.outline} />
-            <Text style={[styles.searchPlaceholder, { color: colors['on-surface-variant'] }]}>
-              {t('home.searchPlaceholder')}
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Banner 轮播（弱网降级：跳过） */}
-        {!shouldSkipNonEssential && banners && banners.length > 0 && (
-          <View style={styles.bannerSection}>
-            <BannerCarousel
-              banners={banners}
-              onBannerPress={(b) => b.link && router.push(b.link)}
-            />
+            <Pressable
+              onPress={() => router.push('/address/map')}
+              style={styles.locationChip}
+              accessibilityRole="button"
+              accessibilityLabel={t('home.locationLabel')}
+            >
+              <Icon symbol="location_on" size={13} color={ON_PRIMARY} />
+              <Text style={styles.locationText} numberOfLines={1}>
+                {t('home.locationLabel')}
+              </Text>
+              <Icon symbol="expand_more" size={13} color={ON_PRIMARY} />
+            </Pressable>
+            <Pressable
+              testID="home-messages"
+              onPress={() => router.push('/service/notifications')}
+              style={styles.msgBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('home.messagesLabel')}
+            >
+              <Icon symbol="mail" size={24} color={ON_PRIMARY} />
+              {(unreadCount ?? 0) > 0 && (
+                // 批B B3：真实未读数（原硬编码 2 已删）。
+                // P2-1 修复（方案a）：底色传语义 error 红（light #C62828 / dark #EF9A9A 深红），
+                // Badge label 恒用 colors['on-primary']（light 白 / dark 深红）→ 两主题均红字白底可读；
+                // 原传 ON_PRIMARY 白底在 light 下白字白底不可见（审查 P2-1）
+                <Badge
+                  count={unreadCount ?? 0}
+                  variant="number"
+                  color={colors.semantic.error}
+                  accessibilityLabel={t('home.unreadBadge', { count: unreadCount ?? 0 })}
+                  style={styles.msgBadgePosition}
+                />
+              )}
+            </Pressable>
           </View>
-        )}
+          {/* Uma Lulik Skyline 过渡（header → body） */}
+          <View style={styles.skylineRow}>
+            <UmaLulikSkyline height={24} />
+          </View>
+        </LinearGradient>
 
-        {/* 分类入口 */}
-        {categories && (
+        {/* Delivery Tip — 黄色横条 */}
+        <View style={[styles.deliveryTip, { backgroundColor: colors.cultural.amber }]}>
+          <Icon symbol="local_shipping" size={18} color={ON_AMBER} />
+          <Text style={styles.deliveryTipText}>{t('home.deliveryTip')}</Text>
+        </View>
+
+        <ScrollView
+          style={[styles.scrollArea, { backgroundColor: colors.background }]}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* 搜索栏 */}
+          <View style={styles.searchSection}>
+            <Pressable
+              onPress={() => router.push('/search')}
+              style={({ pressed }) => [
+                styles.searchCard,
+                {
+                  backgroundColor: colors['surface-container-lowest'],
+                  borderColor: colors['outline-variant'],
+                },
+                shadowPresets.sm,
+                pressed && { opacity: 0.7 },
+              ]}
+              accessibilityRole="search"
+            >
+              <Icon symbol="search" size={22} color={colors.outline} />
+              <Text style={[styles.searchPlaceholder, { color: colors['on-surface-variant'] }]}>
+                {t('home.searchPlaceholder')}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Banner 轮播（弱网降级：跳过） */}
+          {!shouldSkipNonEssential && banners && banners.length > 0 && (
+            <View style={styles.bannerSection}>
+              <BannerCarousel
+                banners={banners}
+                onBannerPress={(b) => b.link && router.push(b.link)}
+              />
+            </View>
+          )}
+
+          {/* 分类入口 */}
+          {categories && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                  {t('home.categories')}
+                </Text>
+                <Pressable
+                  onPress={() => router.push('/(main)/categories')}
+                  style={styles.seeAllBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('home.seeAllCategories')}
+                >
+                  <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                    {t('common.seeAll')}
+                  </Text>
+                  <Icon symbol="chevron_right" size={16} color={colors.primary} />
+                </Pressable>
+              </View>
+              <CategoryGrid
+                categories={categories}
+                onCategoryPress={(c) =>
+                  router.push({ pathname: '/(main)/categories', params: { categoryId: c.id } })
+                }
+                // Why: P6 V1f - 超 7 分类时第 8 格 More 跳全量分类页
+                onMorePress={() => router.push('/(main)/categories')}
+              />
+            </View>
+          )}
+
+          {/* Tais Divider（保留 HTML 装饰） */}
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
+            <TaisDivider />
+            <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
+          </View>
+
+          {/* PromoDock - 横排功能停靠栏（V3c 无标题，接 TaisDivider 下方） */}
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
+            <PromoDock promotions={promotions ?? []} onPress={(p) => router.push(p.link)} />
+          </View>
+
+          {/* 推荐商品标题 + 横滑卡片 */}
+          <View style={styles.recommendSection}>
+            <View style={[styles.sectionHeader, styles.recommendHeader]}>
               <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                {t('home.categories')}
+                {t('home.recommend')}
               </Text>
               <Pressable
-                onPress={() => router.push('/(main)/categories')}
+                onPress={() => router.push('/product/list')}
                 style={styles.seeAllBtn}
                 accessibilityRole="button"
-                accessibilityLabel={t('home.seeAllCategories')}
+                accessibilityLabel={t('home.seeAllProducts')}
               >
                 <Text style={[styles.seeAllText, { color: colors.primary }]}>
                   {t('common.seeAll')}
@@ -198,108 +248,64 @@ export default function HomePage() {
                 <Icon symbol="chevron_right" size={16} color={colors.primary} />
               </Pressable>
             </View>
-            <CategoryGrid
-              categories={categories}
-              onCategoryPress={(c) =>
-                router.push({ pathname: '/(main)/categories', params: { categoryId: c.id } })
-              }
-              // Why: P6 V1f - 超 7 分类时第 8 格 More 跳全量分类页
-              onMorePress={() => router.push('/(main)/categories')}
-            />
+            {isLoading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
+            {isError && <ErrorState message={t('errors.products')} onRetry={() => refetch()} />}
+            {!isLoading && !isError && recommendList.length > 0 && (
+              // Why: §9-4 - 横滑 ProductCard -> 两列瀑布流 MasonryProductCard（手动分发，方案 §9.4-B）
+              //      ⚠️ 无 HTML 原型（推荐横滑改瀑布流是方案改版），高度档位错落
+              <View style={styles.masonryRow}>
+                <View style={styles.masonryCol}>
+                  {masonryCol1.map((item) => (
+                    <MasonryProductCard
+                      key={item.id}
+                      product={item}
+                      badge={resolveBadges(item, t)[0]}
+                      onPress={() => router.push(`/product/${item.id}`)}
+                      onAddToCart={() => handleBuyAgainAddToCart(item)}
+                    />
+                  ))}
+                </View>
+                <View style={styles.masonryCol}>
+                  {masonryCol2.map((item) => (
+                    <MasonryProductCard
+                      key={item.id}
+                      product={item}
+                      badge={resolveBadges(item, t)[0]}
+                      onPress={() => router.push(`/product/${item.id}`)}
+                      onAddToCart={() => handleBuyAgainAddToCart(item)}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
           </View>
-        )}
 
-        {/* Tais Divider（保留 HTML 装饰） */}
-        <View style={styles.dividerRow}>
-          <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
-          <TaisDivider />
-          <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
-        </View>
-
-        {/* PromoDock - 横排功能停靠栏（V3c 无标题，接 TaisDivider 下方） */}
-        <View style={styles.section}>
-          <PromoDock
-            promotions={promotions ?? []}
-            onPress={(p) => router.push(p.link)}
-          />
-        </View>
-
-        {/* 推荐商品标题 + 横滑卡片 */}
-        <View style={styles.recommendSection}>
-          <View style={[styles.sectionHeader, styles.recommendHeader]}>
-            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              {t('home.recommend')}
-            </Text>
-            <Pressable
-              onPress={() => router.push('/product/list')}
-              style={styles.seeAllBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t('home.seeAllProducts')}
-            >
-              <Text style={[styles.seeAllText, { color: colors.primary }]}>
-                {t('common.seeAll')}
+          {/* Buy Again — 横滑小卡片（HTML 第 389-421 行） */}
+          <View style={styles.buyAgainSection}>
+            <View style={[styles.sectionHeader, styles.buyAgainHeader]}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                {t('order.actions.repurchase')}
               </Text>
-              <Icon symbol="chevron_right" size={16} color={colors.primary} />
-            </Pressable>
-          </View>
-          {isLoading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
-          {isError && <ErrorState message={t('errors.products')} onRetry={() => refetch()} />}
-          {!isLoading && !isError && recommendList.length > 0 && (
-            // Why: §9-4 - 横滑 ProductCard -> 两列瀑布流 MasonryProductCard（手动分发，方案 §9.4-B）
-            //      ⚠️ 无 HTML 原型（推荐横滑改瀑布流是方案改版），高度档位错落
-            <View style={styles.masonryRow}>
-              <View style={styles.masonryCol}>
-                {masonryCol1.map((item) => (
-                  <MasonryProductCard
-                    key={item.id}
-                    product={item}
-                    badge={resolveBadges(item, t)[0]}
-                    onPress={() => router.push(`/product/${item.id}`)}
-                    onAddToCart={() => handleBuyAgainAddToCart(item)}
-                  />
-                ))}
-              </View>
-              <View style={styles.masonryCol}>
-                {masonryCol2.map((item) => (
-                  <MasonryProductCard
-                    key={item.id}
-                    product={item}
-                    badge={resolveBadges(item, t)[0]}
-                    onPress={() => router.push(`/product/${item.id}`)}
-                    onAddToCart={() => handleBuyAgainAddToCart(item)}
-                  />
-                ))}
-              </View>
+              <Icon symbol="history" size={20} color={colors.outline} />
             </View>
-          )}
-        </View>
-
-        {/* Buy Again — 横滑小卡片（HTML 第 389-421 行） */}
-        <View style={styles.buyAgainSection}>
-          <View style={[styles.sectionHeader, styles.buyAgainHeader]}>
-            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              {t('order.actions.repurchase')}
-            </Text>
-            <Icon symbol="history" size={20} color={colors.outline} />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.hScroll}
+            >
+              {buyAgainList.map((item) => (
+                // Why: P1 - 替换内联 buyAgainCard 为统一 SmallProductCard（方案 §4）
+                <SmallProductCard
+                  key={item.id}
+                  product={item}
+                  onPress={() => router.push(`/product/${item.id}`)}
+                  onAddToCart={() => handleBuyAgainAddToCart(item)}
+                />
+              ))}
+            </ScrollView>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.hScroll}
-          >
-            {buyAgainList.map((item) => (
-              // Why: P1 - 替换内联 buyAgainCard 为统一 SmallProductCard（方案 §4）
-              <SmallProductCard
-                key={item.id}
-                product={item}
-                onPress={() => router.push(`/product/${item.id}`)}
-                onAddToCart={() => handleBuyAgainAddToCart(item)}
-              />
-            ))}
-          </ScrollView>
-        </View>
-      </ScrollView>
-    </SafeAreaWrapper>
+        </ScrollView>
+      </SafeAreaWrapper>
     </PageErrorBoundary>
   );
 }
@@ -368,21 +374,11 @@ const styles = StyleSheet.create({
     position: 'relative',
     padding: spacing.xs,
   },
-  msgBadge: {
+  // 批B B3：Badge absolute 定位（原 msgBadge/msgBadgeText 内联样式删，Badge 自带底色圆角）
+  msgBadgePosition: {
     position: 'absolute',
     top: -2,
     right: -2,
-    backgroundColor: ON_PRIMARY,
-    borderRadius: 999,
-    width: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  msgBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
   },
   skylineRow: {
     marginTop: -1,

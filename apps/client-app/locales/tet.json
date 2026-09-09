@@ -155,7 +155,8 @@
     "seeAllCategories": "Haree kategoria hotu",
     "seeAllProducts": "Haree sasan hotu",
     "messagesLabel": "Mensajen",
-    "reorderLabel": "Sosa fali {{name}}"
+    "reorderLabel": "Sosa fali {{name}}",
+    "unreadBadge": "Ita iha {{count}} notifikasaun seidauk lee"
   },
   "promotion": {
     "flashDeals": "Ofertas lais",
@@ -558,7 +559,8 @@
     "becomeSeller": "Vendór",
     "scan": "Skanea",
     "pointsUnit": "Ponto",
-    "featureComingSoon": "Funsaun sei mai kedas"
+    "featureComingSoon": "Funsaun sei mai kedas",
+    "unreadBadge": "Ita iha {{count}} notifikasaun seidauk lee"
   },
   "settings": {
     "title": "Konfigurasaun",

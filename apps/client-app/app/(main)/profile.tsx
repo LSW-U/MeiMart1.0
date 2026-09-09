@@ -2,13 +2,7 @@
 // HTML -> RN 行数比：306 -> ~520（含 P2 重构样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 170%）
 // P2 Commit 1: UI 布局重构（数据接入见 Commit 2，dark mode 收尾见 Commit 3）
-import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-} from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +18,8 @@ import { useProfile } from '@/services/queries/useUser';
 import { useCoupons } from '@/services/queries/usePromotion';
 import { useFavorites } from '@/services/queries/useFavorites';
 import { useOrderCounts } from '@/services/queries/useOrders';
+import { useUnreadCount } from '@/services/queries/useNotifications';
+import { Badge } from '@/components/ui/Badge';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -176,261 +172,299 @@ export default function ProfilePage() {
 
   return (
     <PageErrorBoundary pageName="profile">
-    <SafeAreaWrapper
-      edges={['top', 'bottom']}
-      style={{ backgroundColor: colors.background, flex: 1 }}
-    >
-      <StatusBarConfig />
-      <ProfileHeader />
-
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
       >
-        {/* usercard-new: 红底渐变 banner + 积分/优惠券/收藏三格统计条（§3.1 锁定） */}
-        <View style={[styles.userCardNew, shadowPresets.md]}>
-          {/* member-banner */}
-          <LinearGradient
-            colors={[colors.primary, '#b53026']} // V13：渐变终止色对齐原型 #b53026（原 #d4453a 偏亮一档）
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.memberBanner}
-          >
-            {/* 编织背景：TaisPattern 叠层（文化母题，用户要求补上），绝对定位铺在内容下层 */}
-            <View style={styles.bannerPattern} pointerEvents="none">
-              <TaisPattern height={140} opacity={0.2} />
-            </View>
-            <Pressable
-              onPress={() => router.push('/profile/edit')}
-              style={styles.memberRow}
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.edit')}
+        <StatusBarConfig />
+        <ProfileHeader />
+
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* usercard-new: 红底渐变 banner + 积分/优惠券/收藏三格统计条（§3.1 锁定） */}
+          <View style={[styles.userCardNew, shadowPresets.md]}>
+            {/* member-banner */}
+            <LinearGradient
+              colors={[colors.primary, '#b53026']} // V13：渐变终止色对齐原型 #b53026（原 #d4453a 偏亮一档）
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.memberBanner}
             >
-              <View style={styles.avatarNewWrap}>
-                <SafeImage source={{ uri: user.avatar ?? DEFAULT_AVATAR }} style={styles.avatarNew} />
+              {/* 编织背景：TaisPattern 叠层（文化母题，用户要求补上），绝对定位铺在内容下层 */}
+              <View style={styles.bannerPattern} pointerEvents="none">
+                <TaisPattern height={140} opacity={0.2} />
               </View>
-              <View style={styles.memberText}>
-                <View style={styles.memberNameRow}>
-                  <Text style={styles.memberName} numberOfLines={1}>{user.name}</Text>
-                  {/* GOLD 胶囊：半透明白底（§3.1）；非会员灰度显示（不隐藏，"待解锁"视觉） */}
-                  <View
-                    style={[
-                      styles.memberBadge,
-                      !hasMember && styles.memberBadgeMuted,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.memberBadgeText,
-                        !hasMember && styles.memberBadgeTextMuted,
-                      ]}
-                    >
-                      {memberBadgeText}
+              <Pressable
+                onPress={() => router.push('/profile/edit')}
+                style={styles.memberRow}
+                accessibilityRole="button"
+                accessibilityLabel={t('profile.edit')}
+              >
+                <View style={styles.avatarNewWrap}>
+                  <SafeImage
+                    source={{ uri: user.avatar ?? DEFAULT_AVATAR }}
+                    style={styles.avatarNew}
+                  />
+                </View>
+                <View style={styles.memberText}>
+                  <View style={styles.memberNameRow}>
+                    <Text style={styles.memberName} numberOfLines={1}>
+                      {user.name}
+                    </Text>
+                    {/* GOLD 胶囊：半透明白底（§3.1）；非会员灰度显示（不隐藏，"待解锁"视觉） */}
+                    <View style={[styles.memberBadge, !hasMember && styles.memberBadgeMuted]}>
+                      <Text
+                        style={[styles.memberBadgeText, !hasMember && styles.memberBadgeTextMuted]}
+                      >
+                        {memberBadgeText}
+                      </Text>
+                    </View>
+                  </View>
+                  {/* 会员等级行始终显示，非会员灰度（与胶囊同步） */}
+                  <View style={styles.memberTier}>
+                    <Icon
+                      symbol="workspace_premium"
+                      size={13}
+                      color={hasMember ? colors['tertiary-fixed-dim'] : 'rgba(255,255,255,0.3)'}
+                    />
+                    <Text style={[styles.memberTierText, !hasMember && styles.memberTierTextMuted]}>
+                      {t('profile.goldMember')}
                     </Text>
                   </View>
                 </View>
-                {/* 会员等级行始终显示，非会员灰度（与胶囊同步） */}
-                <View style={styles.memberTier}>
-                  <Icon
-                    symbol="workspace_premium"
-                    size={13}
-                    color={hasMember ? colors['tertiary-fixed-dim'] : 'rgba(255,255,255,0.3)'}
-                  />
-                  <Text
-                    style={[
-                      styles.memberTierText,
-                      !hasMember && styles.memberTierTextMuted,
-                    ]}
-                  >
-                    {t('profile.goldMember')}
-                  </Text>
+                <View style={styles.editBtnNew}>
+                  <Icon symbol="edit" size={18} color={ON_PRIMARY} />
                 </View>
-              </View>
-              <View style={styles.editBtnNew}>
-                <Icon symbol="edit" size={18} color={ON_PRIMARY} />
-              </View>
-            </Pressable>
-          </LinearGradient>
-          {/* points-strip 三格统计条 - §4.3 接 user.points / useCoupons(未用) / useFavorites(全量) */}
+              </Pressable>
+            </LinearGradient>
+            {/* points-strip 三格统计条 - §4.3 接 user.points / useCoupons(未用) / useFavorites(全量) */}
+            <View
+              style={[
+                styles.pointsStrip,
+                // V13：底色提一档对齐原型 rgba(255,233,230,.4)≈surface-container-high
+                {
+                  backgroundColor: colors['surface-container-high'],
+                  borderTopColor: colors['outline-variant'],
+                },
+              ]}
+            >
+              <Pressable
+                style={styles.pointsCell}
+                accessibilityRole="button"
+                accessibilityLabel={t('profile.pointsUnit')}
+              >
+                <Text style={[styles.pointsNum, { color: colors.primary }]}>
+                  {points.toLocaleString('en-US')}
+                </Text>
+                <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
+                  {t('profile.pointsUnit')}
+                </Text>
+                <Icon
+                  symbol="chevron_right"
+                  size={12}
+                  color={colors.outline}
+                  style={styles.pointsChevron}
+                />
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.pointsCell,
+                  {
+                    borderLeftColor: colors['outline-variant'],
+                    borderLeftWidth: StyleSheet.hairlineWidth,
+                  },
+                ]}
+                onPress={() => router.push('/coupons')}
+                accessibilityRole="button"
+                accessibilityLabel={t('profile.coupons')}
+              >
+                <Text style={[styles.pointsNumMuted, { color: colors['on-surface-variant'] }]}>
+                  {couponCount}
+                </Text>
+                <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
+                  {t('profile.coupons')}
+                </Text>
+                <Icon
+                  symbol="chevron_right"
+                  size={12}
+                  color={colors.outline}
+                  style={styles.pointsChevron}
+                />
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.pointsCell,
+                  {
+                    borderLeftColor: colors['outline-variant'],
+                    borderLeftWidth: StyleSheet.hairlineWidth,
+                  },
+                ]}
+                onPress={() => router.push('/favorites')}
+                accessibilityRole="button"
+                accessibilityLabel={t('profile.favorites')}
+              >
+                <Text style={[styles.pointsNumMuted, { color: colors['on-surface-variant'] }]}>
+                  {favoriteCount}
+                </Text>
+                <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
+                  {t('profile.favorites')}
+                </Text>
+                <Icon
+                  symbol="chevron_right"
+                  size={12}
+                  color={colors.outline}
+                  style={styles.pointsChevron}
+                />
+              </Pressable>
+            </View>
+          </View>
+
+          {/* 1. My Orders 订单宫格（透明底 primary 图标 + badge 白描边圈，§3.2） */}
           <View
             style={[
-              styles.pointsStrip,
-              // V13：底色提一档对齐原型 rgba(255,233,230,.4)≈surface-container-high
-              { backgroundColor: colors['surface-container-high'], borderTopColor: colors['outline-variant'] },
+              styles.card,
+              { backgroundColor: colors['surface-container-lowest'] },
+              shadowPresets.sm,
             ]}
           >
-            <Pressable
-              style={styles.pointsCell}
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.pointsUnit')}
-            >
-              <Text style={[styles.pointsNum, { color: colors.primary }]}>
-                {points.toLocaleString('en-US')}
+            <View style={styles.ordersHead}>
+              <Text style={[styles.ordersTitle, { color: colors['on-surface'] }]}>
+                {t('profile.orders')}
               </Text>
-              <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
-                {t('profile.pointsUnit')}
-              </Text>
-              <Icon symbol="chevron_right" size={12} color={colors.outline} style={styles.pointsChevron} />
-            </Pressable>
-            <Pressable
-              style={[styles.pointsCell, { borderLeftColor: colors['outline-variant'], borderLeftWidth: StyleSheet.hairlineWidth }]}
-              onPress={() => router.push('/coupons')}
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.coupons')}
-            >
-              <Text style={[styles.pointsNumMuted, { color: colors['on-surface-variant'] }]}>
-                {couponCount}
-              </Text>
-              <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
-                {t('profile.coupons')}
-              </Text>
-              <Icon symbol="chevron_right" size={12} color={colors.outline} style={styles.pointsChevron} />
-            </Pressable>
-            <Pressable
-              style={[styles.pointsCell, { borderLeftColor: colors['outline-variant'], borderLeftWidth: StyleSheet.hairlineWidth }]}
-              onPress={() => router.push('/favorites')}
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.favorites')}
-            >
-              <Text style={[styles.pointsNumMuted, { color: colors['on-surface-variant'] }]}>
-                {favoriteCount}
-              </Text>
-              <Text style={[styles.pointsLabel, { color: colors.secondary }]}>
-                {t('profile.favorites')}
-              </Text>
-              <Icon symbol="chevron_right" size={12} color={colors.outline} style={styles.pointsChevron} />
-            </Pressable>
+              <Pressable
+                onPress={() => router.push('/(main)/orders')}
+                style={styles.viewAllBtn}
+                accessibilityRole="button"
+                accessibilityLabel={t('profile.viewAllOrders')}
+              >
+                <Text style={[styles.viewAllText, { color: colors['on-surface-variant'] }]}>
+                  {t('common.viewAll')}
+                </Text>
+                <Icon symbol="chevron_right" size={14} color={colors['on-surface-variant']} />
+              </Pressable>
+            </View>
+            <View style={styles.ordersGrid}>
+              {ORDER_ENTRIES.map((entry) => (
+                <Pressable
+                  key={entry.id}
+                  onPress={() => entry.route && router.push(entry.route)}
+                  style={({ pressed }) => [styles.orderCell, pressed && { opacity: 0.7 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(entry.labelKey)}
+                >
+                  <View style={styles.orderTileNew}>
+                    <Icon symbol={entry.icon} size={26} color={colors.primary} />
+                    {/* §4.1 badge 接 useOrderCounts 派生计数，无值（0）隐藏不显示假数据 */}
+                    {getCount(entry.id) > 0 ? (
+                      <View
+                        style={[
+                          styles.orderBadge,
+                          {
+                            backgroundColor: colors.primary,
+                            borderColor: colors['surface-container-lowest'],
+                          },
+                        ]}
+                      >
+                        <Text style={styles.orderBadgeText}>{getCount(entry.id)}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={[styles.orderLabel, { color: colors['on-surface-variant'] }]}>
+                    {t(entry.labelKey)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
-        </View>
 
-        {/* 1. My Orders 订单宫格（透明底 primary 图标 + badge 白描边圈，§3.2） */}
-        <View style={[styles.card, { backgroundColor: colors['surface-container-lowest'] }, shadowPresets.sm]}>
-          <View style={styles.ordersHead}>
-            <Text style={[styles.ordersTitle, { color: colors['on-surface'] }]}>
-              {t('profile.orders')}
-            </Text>
-            <Pressable
-              onPress={() => router.push('/(main)/orders')}
-              style={styles.viewAllBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.viewAllOrders')}
-            >
-              <Text style={[styles.viewAllText, { color: colors['on-surface-variant'] }]}>
-                {t('common.viewAll')}
-              </Text>
-              <Icon symbol="chevron_right" size={14} color={colors['on-surface-variant']} />
-            </Pressable>
-          </View>
-          <View style={styles.ordersGrid}>
-            {ORDER_ENTRIES.map((entry) => (
+          {/* 2. Discover 快捷功能宫格（透明底 primary 图标，Invite/Seller 标 NEW，§3.3） */}
+          <Text style={[styles.sectionLabel, { color: colors.outline }]}>
+            {t('profile.sectionDiscover')}
+          </Text>
+          <View
+            style={[
+              styles.quickGrid,
+              { backgroundColor: colors['surface-container-lowest'] },
+              shadowPresets.sm,
+            ]}
+          >
+            {DISCOVER_ENTRIES.map((entry) => (
               <Pressable
                 key={entry.id}
-                onPress={() => entry.route && router.push(entry.route)}
-                style={({ pressed }) => [styles.orderCell, pressed && { opacity: 0.7 }]}
+                onPress={onDiscoverPress}
+                style={({ pressed }) => [styles.quickCell, pressed && { opacity: 0.7 }]}
                 accessibilityRole="button"
                 accessibilityLabel={t(entry.labelKey)}
               >
-                <View style={styles.orderTileNew}>
-                  <Icon symbol={entry.icon} size={26} color={colors.primary} />
-                  {/* §4.1 badge 接 useOrderCounts 派生计数，无值（0）隐藏不显示假数据 */}
-                  {getCount(entry.id) > 0 ? (
-                    <View
-                      style={[
-                        styles.orderBadge,
-                        {
-                          backgroundColor: colors.primary,
-                          borderColor: colors['surface-container-lowest'],
-                        },
-                      ]}
-                    >
-                      <Text style={styles.orderBadgeText}>{getCount(entry.id)}</Text>
-                    </View>
-                  ) : null}
+                <View style={styles.quickIcon}>
+                  <Icon symbol={entry.icon} size={22} color={colors.primary} />
                 </View>
-                <Text style={[styles.orderLabel, { color: colors['on-surface-variant'] }]}>
+                <Text style={[styles.quickLabel, { color: colors['on-surface-variant'] }]}>
                   {t(entry.labelKey)}
                 </Text>
               </Pressable>
             ))}
           </View>
-        </View>
 
-        {/* 2. Discover 快捷功能宫格（透明底 primary 图标，Invite/Seller 标 NEW，§3.3） */}
-        <Text style={[styles.sectionLabel, { color: colors.outline }]}>
-          {t('profile.sectionDiscover')}
-        </Text>
-        <View
-          style={[styles.quickGrid, { backgroundColor: colors['surface-container-lowest'] }, shadowPresets.sm]}
-        >
-          {DISCOVER_ENTRIES.map((entry) => (
-            <Pressable
-              key={entry.id}
-              onPress={onDiscoverPress}
-              style={({ pressed }) => [styles.quickCell, pressed && { opacity: 0.7 }]}
-              accessibilityRole="button"
-              accessibilityLabel={t(entry.labelKey)}
-            >
-              <View style={styles.quickIcon}>
-                <Icon symbol={entry.icon} size={22} color={colors.primary} />
-              </View>
-              <Text style={[styles.quickLabel, { color: colors['on-surface-variant'] }]}>
-                {t(entry.labelKey)}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* 3. Account & Service 单卡（圆角色块图标，§3.4） */}
-        <Text style={[styles.sectionLabel, { color: colors.outline }]}>
-          {t('profile.sectionAccount')}
-        </Text>
-        <View style={[styles.card, { backgroundColor: colors['surface-container-lowest'] }, shadowPresets.sm]}>
-          {FUNCTION_ITEMS.map((item, idx) => (
-            <Pressable
-              key={item.id}
-              testID={`menu-${item.id}`}
-              onPress={() => onItemPress(item)}
-              style={({ pressed }) => [
-                styles.funcRow,
-                idx > 0 && {
-                  borderTopColor: colors['outline-variant'],
-                  borderTopWidth: StyleSheet.hairlineWidth,
-                },
-                pressed && { opacity: 0.7 },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t(item.labelKey)}
-            >
-              <View style={styles.funcLeft}>
-                <View
-                  style={[styles.funcIconWrap, { backgroundColor: colors['surface-container'] }]}
-                >
-                  <Icon symbol={item.icon} size={20} color={colors.primary} />
-                </View>
-                <Text
-                  style={[
-                    styles.funcLabel,
-                    { color: item.isError ? colors.primary : colors['on-surface'] },
-                  ]}
-                >
-                  {t(item.labelKey)}
-                </Text>
-              </View>
-              <Icon symbol="chevron_right" size={20} color={colors.outline} />
-            </Pressable>
-          ))}
-        </View>
-
-        {/* Footer Logo / App Version */}
-        <View style={styles.footerLogo}>
-          <Text style={[styles.footerTitle, { color: colors.primary }]}>{t('home.appName')}</Text>
-          <Text style={[styles.footerVersion, { color: colors['on-surface-variant'] }]}>
-            {`v${APP_VERSION}`}
+          {/* 3. Account & Service 单卡（圆角色块图标，§3.4） */}
+          <Text style={[styles.sectionLabel, { color: colors.outline }]}>
+            {t('profile.sectionAccount')}
           </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaWrapper>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors['surface-container-lowest'] },
+              shadowPresets.sm,
+            ]}
+          >
+            {FUNCTION_ITEMS.map((item, idx) => (
+              <Pressable
+                key={item.id}
+                testID={`menu-${item.id}`}
+                onPress={() => onItemPress(item)}
+                style={({ pressed }) => [
+                  styles.funcRow,
+                  idx > 0 && {
+                    borderTopColor: colors['outline-variant'],
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                  },
+                  pressed && { opacity: 0.7 },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={t(item.labelKey)}
+              >
+                <View style={styles.funcLeft}>
+                  <View
+                    style={[styles.funcIconWrap, { backgroundColor: colors['surface-container'] }]}
+                  >
+                    <Icon symbol={item.icon} size={20} color={colors.primary} />
+                  </View>
+                  <Text
+                    style={[
+                      styles.funcLabel,
+                      { color: item.isError ? colors.primary : colors['on-surface'] },
+                    ]}
+                  >
+                    {t(item.labelKey)}
+                  </Text>
+                </View>
+                <Icon symbol="chevron_right" size={20} color={colors.outline} />
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Footer Logo / App Version */}
+          <View style={styles.footerLogo}>
+            <Text style={[styles.footerTitle, { color: colors.primary }]}>{t('home.appName')}</Text>
+            <Text style={[styles.footerVersion, { color: colors['on-surface-variant'] }]}>
+              {`v${APP_VERSION}`}
+            </Text>
+          </View>
+        </ScrollView>
+      </SafeAreaWrapper>
     </PageErrorBoundary>
   );
 }
@@ -440,6 +474,8 @@ export default function ProfilePage() {
 function ProfileHeader() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  // 批B B3：通知入口接真实未读数（现状无角标）；未登录 hook 内部不请求 → 不显示
+  const { data: unreadCount } = useUnreadCount();
   return (
     <View style={{ backgroundColor: colors.primary, ...shadowPresets.md }}>
       <PrimaryHeader
@@ -457,10 +493,23 @@ function ProfileHeader() {
             <Pressable
               onPress={() => router.push('/service/notifications')}
               hitSlop={8}
+              style={profileHeaderStyles.notifBtn}
               accessibilityRole="button"
               accessibilityLabel={t('profile.notifications')}
+              testID="profile-notifications"
             >
               <Icon symbol="notifications" size={24} color={ON_PRIMARY} />
+              {(unreadCount ?? 0) > 0 && (
+                // P2-1 修复（方案a）：底色传语义 error 红——Badge label 恒 colors['on-primary']
+                // （light 白字需红底才可读，原 ON_PRIMARY 白底在 light 下白字白底不可见）
+                <Badge
+                  count={unreadCount ?? 0}
+                  variant="number"
+                  color={colors.semantic.error}
+                  accessibilityLabel={t('profile.unreadBadge', { count: unreadCount ?? 0 })}
+                  style={profileHeaderStyles.notifBadge}
+                />
+              )}
             </Pressable>
           </View>
         }
@@ -474,6 +523,15 @@ const profileHeaderStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
+  },
+  // 批B B3：badge absolute 参考系（同 home msgBtn relative 惯例）
+  notifBtn: {
+    position: 'relative',
+  },
+  notifBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
   },
 });
 
@@ -505,7 +563,9 @@ function ProfileEmpty() {
           ]}
         >
           <View style={styles.emptyAvatarWrap}>
-            <View style={[styles.emptyAvatarCircle, { backgroundColor: colors['surface-container'] }]}>
+            <View
+              style={[styles.emptyAvatarCircle, { backgroundColor: colors['surface-container'] }]}
+            >
               <Icon symbol="account_circle" size={40} color={colors.primary} />
             </View>
           </View>
