@@ -7,6 +7,7 @@
  * 桩法：全局 fetch mock（与 rider upload.test.ts 同范式——upload-core 用 fetch + FormData）。
  */
 import { uploadImageFile, uploadImageFileWithRetry, UploadError } from '../src/index';
+import { appendUploadFile } from '../src/core';
 import {
   createSlot,
   slotToUploading,
@@ -121,8 +122,7 @@ describe('自动重试（U2：网络类 2 次指数退避，业务类不重试�
   });
 });
 
-describe('图片位状态机（U3 内联进度 + 手动重试兜底）', () => {
-  it('idle → uploading(60) → done(100, remoteUrl) 全程推进', () => {
+describe('图片位状态机（U3 内联进度 + 手动重试兜底）', () => {  it('idle → uploading(60) → done(100, remoteUrl) 全程推进', () => {
     let slot = createSlot('s1', 'file:///tmp/pick.jpg');
     expect(slot.state).toBe('uploading'); // 选图后即进入上传态（带本地预览）
     slot = slotToUploading(slot);
@@ -148,5 +148,64 @@ describe('图片位状态机（U3 内联进度 + 手动重试兜底）', () => {
     const failed = slotToError(slot, new Error('boom'));
     expect(failed.errorKind).toBe('network');
     expect(failed.errorCode).toBeUndefined();
+  });
+});
+
+describe('appendUploadFile web 分支（批C · 批B P3-3 移交账，2026-09-10）', () => {
+  // core.ts 判别 `typeof document !== 'undefined'` 走 web 分支：fetch(fileUri) →
+  // blob() → formData.append(field, blob, filename)。node 测试环境原本无 document，
+  // 此 describe 桩 document 触发分支，并 mock fetch 返回带 blob() 的响应。
+  const originalDocument = globalThis.document;
+
+  afterEach(() => {
+    // 还原桩：避免泄漏到其他 describe（node 环境 document 应为 undefined）
+    if (originalDocument === undefined) {
+      delete (globalThis as { document?: unknown }).document;
+    } else {
+      (globalThis as { document: unknown }).document = originalDocument;
+    }
+  });
+
+  const webEnv = () => {
+    (globalThis as { document?: unknown }).document = {} as Document;
+  };
+
+  it('web 分支：fetch(fileUri).blob() 后以 (field, blob, filename) append', async () => {
+    webEnv();
+    const blob = new Blob(['x'], { type: 'image/jpeg' });
+    const fileUri = 'blob:https://web.example/abc-123';
+    mockFetch.mockResolvedValueOnce({ blob: async () => blob });
+
+    // spy FormData.append：node 原生 append 不可内省，用记录式 fake 断言入参
+    const appended: Array<[string, ...unknown[]]> = [];
+    const formData = {
+      append: (...args: [string, unknown]) => {
+        appended.push(args);
+      },
+    } as unknown as FormData;
+    await appendUploadFile(formData, fileUri, 'image/jpeg', 'photo.jpg');
+
+    // 第一次 fetch 拉的是 blob:/data: 本地 URI（非上传端点）——参数逐字断言
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledWith(fileUri);
+    expect(appended[0]?.[0]).toBe('file');
+    expect(appended[0]?.[1]).toBe(blob);
+    expect(appended[0]?.[2]).toBe('photo.jpg');
+  });
+
+  it('native 分支（无 document）：append 收到 {uri,type,name} 描述符，不 fetch 本地 URI', async () => {
+    delete (globalThis as { document?: unknown }).document;
+    const appended: Array<[string, unknown]> = [];
+    const fakeFormData = {
+      append: (...args: [string, unknown]) => {
+        appended.push(args);
+      },
+    } as unknown as FormData;
+
+    await appendUploadFile(fakeFormData, 'file:///tmp/a.jpg', 'image/jpeg', 'a.jpg');
+
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(appended[0]?.[0]).toBe('file');
+    expect(appended[0]?.[1]).toMatchObject({ uri: 'file:///tmp/a.jpg', type: 'image/jpeg', name: 'a.jpg' });
   });
 });
