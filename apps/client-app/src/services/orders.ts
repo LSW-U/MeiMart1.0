@@ -72,6 +72,10 @@ interface OrderRaw {
   // Why: 批A 汇率快照（批B ≈¥ 显示消费）：人民币通道下单锁定，非人民币通道 null
   exchangeRate?: number | null;
   estimatedCnyAmount?: number | null;
+  // Why: 预约单标注（保证金批A T5-c / 批D D2）：scheduledFor 非空 = 走了预约（开门后可配送）。
+  //      批D 审查 P3-3：createOrder 响应虽另带 acceptingReservation，但语义等价于 scheduledFor 非 null
+  //      （order.service: acceptingReservation = scheduledFor !== null），前端统一以 scheduledFor 判定，不重复映射。
+  scheduledFor?: string | null;
 }
 
 interface OrderListResponse {
@@ -160,6 +164,8 @@ function transformOrder(raw: OrderRaw): Order {
     // Why: 批B ≈¥ 显示 - 汇率快照（万分位）+ 人民币估算金额（分），非人民币通道 null
     exchangeRate: raw.exchangeRate ?? null,
     estimatedCnyAmount: raw.estimatedCnyAmount ?? null,
+    // Why: 预约单标注（保证金批A T5-c / 批D D2）：scheduledFor 非空 = 走了预约（开门后可配送）
+    scheduledFor: raw.scheduledFor ?? null,
   };
 }
 

@@ -26,7 +26,7 @@ import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
 import { useLocalizer, useLocale } from '@/i18n';
 import { toast } from '@/store/toastStore';
-import { formatPrice } from '@/utils/format';
+import { formatPrice, formatEta } from '@/utils/format';
 import { shouldShowCnyEstimate, formatCnyAmount } from '@/utils/cnyDisplay';
 import type { OrderStatus } from '@/types';
 
@@ -131,6 +131,10 @@ export default function OrderResultScreen() {
   const showCnyEstimate = order
     ? shouldShowCnyEstimate(order.paymentMethod, locale, order.estimatedCnyAmount)
     : false;
+  // Why: 预约单标注（保证金批A T5-c / 批D D2）— scheduledFor 非空 = 打烊时段下单走了预约，
+  //      eta 条改展示"接受预约 · {time} 可配送"（替代"预计今日送达"，二者互斥）
+  const scheduledFor = order?.scheduledFor ?? null;
+  const scheduledText = scheduledFor ? formatEta(scheduledFor, locale) : null;
 
   const stateTheme: Record<ResultState, StateTheme> = {
     SUCCESS: {
@@ -378,15 +382,36 @@ export default function OrderResultScreen() {
           </View>
         )}
 
-        {/* ETA 条（成功态 + 有订单） */}
+        {/* ETA 条（成功态 + 有订单）：预约单展示"接受预约 · {time} 可配送"，即时单展示"预计今日送达" */}
         {state === 'SUCCESS' && order && (
           <View
-            style={[styles.etaBar, { backgroundColor: colors.semantic['info-container'] }]}
+            style={[
+              styles.etaBar,
+              {
+                backgroundColor: scheduledText
+                  ? colors.semantic['warning-container']
+                  : colors.semantic['info-container'],
+              },
+            ]}
             accessibilityRole="text"
+            accessibilityLabel={
+              scheduledText
+                ? t('result.acceptingReservation', { time: scheduledText })
+                : `${t('result.eta')}：${t('result.etaFallback')}`
+            }
           >
-            <Icon symbol="local_shipping" size={20} color={colors.semantic.info} />
-            <Text style={[typography['body-sm'], { color: colors['on-surface'] }]}>
-              {t('result.eta')}：{t('result.etaFallback')}
+            <Icon
+              symbol={scheduledText ? 'update' : 'local_shipping'}
+              size={20}
+              color={scheduledText ? colors.semantic.warning : colors.semantic.info}
+            />
+            <Text
+              style={[typography['body-sm'], { color: colors['on-surface'] }]}
+              testID="eta-bar-text"
+            >
+              {scheduledText
+                ? t('result.acceptingReservation', { time: scheduledText })
+                : `${t('result.eta')}：${t('result.etaFallback')}`}
             </Text>
           </View>
         )}

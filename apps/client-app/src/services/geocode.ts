@@ -1,10 +1,9 @@
-// Geocode service — OSM Nominatim/Overpass 免费直调（无 API key，决策 4）
-// Why: 后端 geocode 代理端点未建（方案 B1），先用 OSM 免费方案前端直调；
-//      Nominatim 使用政策要求带自定义 User-Agent（浏览器端自动降级为 Origin）。
-// 东帝汶 bounding box：lat -10.6~-7.9, lng 123.9~127.5（搜索限定，避免同名地点干扰）
-const NOMINATIM = 'https://nominatim.openstreetmap.org';
-const OVERPASS = 'https://overpass-api.de/api/interpreter';
-const TL_VIEWBOX = '123.9,-10.6,127.5,-7.9'; // left,top,right,bottom
+// Geocode service — 后端代理（保证金批A A7 + 批D D1，2026-09-11）
+// Why: Nominatim/Overpass 直调收进后端（UA 合规统一走服务端 + 5min 缓存 + 1/s+10/min rate limit），
+//      前端只调 GET /common/geo/suggest?q= 与 GET /common/geo/nearby?lat=&lng=。
+//      保留 GeoHit {lat,lng,label} / NearbyPlaceResult 形态，唯一消费点 app/address/map.tsx 零改动。
+//      后端失败/无结果返回空 items 不抛错（E-COMMON-004 超频除外，上层 catch 降级）。
+import { api } from './api';
 
 export interface GeoHit {
   lat: number;
@@ -20,74 +19,32 @@ export interface NearbyPlaceResult {
   lng: number;
 }
 
-function nominatimHeaders(): Record<string, string> {
-  return {
-    Accept: 'application/json',
-    // Why: Nominatim 政策要求可识别的 UA（Web 端 fetch 不允许自定义 UA，靠 Origin 识别）
-    'User-Agent': 'MeiMart-client/1.0 (delivery address picker)',
-  };
-}
-
-/** 关键词搜索地点（限东帝汶视野内），返回前 5 条 */
+/** 关键词搜索地点（后端 Nominatim 代理，viewbox 限东帝汶），返回 ≤5 条 */
 export async function searchPlaces(query: string): Promise<GeoHit[]> {
-  const url =
-    `${NOMINATIM}/search?format=jsonv2&limit=5&addressdetails=0` +
-    `&viewbox=${TL_VIEWBOX}&bounded=1&q=${encodeURIComponent(query)}`;
-  const res = await fetch(url, { headers: nominatimHeaders() });
-  if (!res.ok) throw new Error(`Nominatim search ${res.status}`);
-  const rows: unknown = await res.json();
-  if (!Array.isArray(rows)) return [];
-  return rows
-    .map((r) => {
-      const hit = r as { lat: string; lon: string; display_name?: string };
-      return { lat: Number(hit.lat), lng: Number(hit.lon), label: hit.display_name ?? '' };
-    })
-    .filter((h) => Number.isFinite(h.lat) && Number.isFinite(h.lng) && h.label);
+  // Why: 后端 zod 校验 q 长度 2-500（E-COMMON-001），短于 2 直接返回空（走「无结果」提示而非报错）
+  if (query.trim().length < 2) return [];
+  const res = await api.get<{ items: GeoHit[] }>('/common/geo/suggest', {
+    params: { q: query },
+  });
+  return res.data.items ?? [];
 }
 
-/** 反地理编码：坐标 → 地址文本 */
+/** 反地理编码：坐标 → 地址文本（后端无 reverse 端点，保留 Nominatim 直调） */
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {
   const res = await fetch(
-    `${NOMINATIM}/reverse?format=jsonv2&zoom=17&lat=${lat}&lon=${lng}`,
-    { headers: nominatimHeaders() },
+    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&lat=${lat}&lon=${lng}`,
+    // Why: Nominatim 使用政策要求可识别 UA（批D 审查 P3-1，删 nominatimHeaders 时连带误删，此处补回）
+    { headers: { 'User-Agent': 'MeiMart-client/1.0' } },
   );
   if (!res.ok) throw new Error(`Nominatim reverse ${res.status}`);
   const data = (await res.json()) as { display_name?: string };
   return data.display_name ?? '';
 }
 
-/** Haversine 距离（米） */
-function distanceMeters(aLat: number, aLng: number, bLat: number, bLng: number): number {
-  const R = 6371000;
-  const dLat = ((bLat - aLat) * Math.PI) / 180;
-  const dLng = ((bLng - aLng) * Math.PI) / 180;
-  const s =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
-  return Math.round(2 * R * Math.asin(Math.sqrt(s)));
-}
-
-/** 附近位置：Overpass 查坐标 2km 内带名称的节点，按距离取前 5（决策 4 附近位置真实化） */
+/** 附近位置（后端 Overpass 代理：2km 内带名称节点，Haversine 按距离升序前 5） */
 export async function fetchNearbyPlaces(lat: number, lng: number): Promise<NearbyPlaceResult[]> {
-  const query = `[out:json][timeout:10];node(around:2000,${lat},${lng})["name"];out center 20;`;
-  const res = await fetch(OVERPASS, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
-    body: `data=${encodeURIComponent(query)}`,
+  const res = await api.get<{ items: NearbyPlaceResult[] }>('/common/geo/nearby', {
+    params: { lat, lng },
   });
-  if (!res.ok) throw new Error(`Overpass ${res.status}`);
-  const data = (await res.json()) as {
-    elements?: { id: number; lat: number; lon: number; tags?: { name?: string } }[];
-  };
-  return (data.elements ?? [])
-    .filter((e) => e.tags?.name)
-    .map((e) => ({
-      id: `osm-${e.id}`,
-      name: e.tags?.name ?? '',
-      distanceM: distanceMeters(lat, lng, e.lat, e.lon),
-      lat: e.lat,
-      lng: e.lon,
-    }))
-    .sort((a, b) => a.distanceM - b.distanceM)
-    .slice(0, 5);
+  return res.data.items ?? [];
 }

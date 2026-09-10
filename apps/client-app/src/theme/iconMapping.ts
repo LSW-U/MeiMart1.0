@@ -136,6 +136,9 @@ const SYMBOL_TO_MC_LITERAL = {
   wechat: 'wechat',
   paypal: 'credit-card',
 
+  // 批D 预约单标注 —— 接受预约（保证金批A T5-c）：update 时钟箭头，MC 同名
+  update: 'update',
+
   // 学习
   auto_stories: 'book-open-page-variant',
 

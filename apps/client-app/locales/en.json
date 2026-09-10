@@ -726,6 +726,8 @@
       "freeDelivery": "FREE DELIVERY"
     },
     "estimatedDelivery": "Est. delivery {{time}}",
+    "acceptingReservation": "Reservation accepted · delivery from {{time}}",
+    "acceptingReservationGeneric": "Reservation accepted · delivery starts when the warehouse reopens",
     "stockLow": "Only {{stock}} left",
     "secure": "Secure Checkout",
     "confirmAndPay": "CONFIRM & PAY ${{amount}}",
@@ -770,6 +772,8 @@
     "viewAllItems": "View all items",
     "eta": "Estimated delivery",
     "etaFallback": "Estimated today",
+    "acceptingReservation": "Reservation accepted · delivery from {{time}}",
+    "acceptingReservationGeneric": "Reservation accepted · delivery starts when the warehouse reopens",
     "orderInfo": "Order info"
   },
   "favorites": {

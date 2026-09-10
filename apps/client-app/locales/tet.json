@@ -726,6 +726,8 @@
       "freeDelivery": "ENTREGA GRATIS"
     },
     "estimatedDelivery": "Previsaun entrega {{time}}",
+    "acceptingReservation": "Rezerva aseita · entrega hahú {{time}}",
+    "acceptingReservationGeneric": "Rezerva aseita · entrega hahú komesa kuando armazén loke fali",
     "stockLow": "Resta deit {{stock}}",
     "secure": "Paga ho Seguransa",
     "confirmAndPay": "KONFIRMA NO PAGA ${{amount}}",
@@ -770,6 +772,8 @@
     "viewAllItems": "Haree sasan hotu",
     "eta": "Previsaun entrega",
     "etaFallback": "Previsaun ohin",
+    "acceptingReservation": "Rezerva aseita · entrega hahú {{time}}",
+    "acceptingReservationGeneric": "Rezerva aseita · entrega hahú komesa kuando armazén loke fali",
     "orderInfo": "Informasaun pedidu"
   },
   "favorites": {

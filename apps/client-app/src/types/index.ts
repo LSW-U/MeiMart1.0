@@ -175,6 +175,9 @@ export interface Order {
   //     人民币通道（WECHAT/WECHAT_GLOBAL/ALIPAY_CN）下单锁定，非人民币通道 null
   exchangeRate?: number | null;
   estimatedCnyAmount?: number | null;
+  // Why: 预约单（保证金批A T5-c / 批D D2）— 打烊时段下单的该仓下一次开门时间 ISO；即时单 null。
+  //     result 页标注"接受预约 · {time} 可配送"
+  scheduledFor?: string | null;
 }
 
 export interface User {

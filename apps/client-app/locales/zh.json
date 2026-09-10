@@ -726,6 +726,8 @@
       "freeDelivery": "免运费"
     },
     "estimatedDelivery": "预计 {{time}} 送达",
+    "acceptingReservation": "接受预约 · {{time}} 可配送",
+    "acceptingReservationGeneric": "接受预约单 · 仓库开门后开始配送",
     "stockLow": "仅剩 {{stock}} 件",
     "secure": "安全支付",
     "confirmAndPay": "确认并支付 ${{amount}}",
@@ -770,6 +772,8 @@
     "viewAllItems": "查看全部商品",
     "eta": "预计送达",
     "etaFallback": "预计今日送达",
+    "acceptingReservation": "接受预约 · {{time}} 可配送",
+    "acceptingReservationGeneric": "接受预约单 · 仓库开门后开始配送",
     "orderInfo": "订单信息"
   },
   "favorites": {

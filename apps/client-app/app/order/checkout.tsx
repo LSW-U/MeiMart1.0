@@ -93,6 +93,15 @@ export default function CheckoutPage() {
     ? formatEta(preview.estimatedDeliveryTime, i18nInstance.language)
     : null;
 
+  // Why: 预约单标注（保证金批A T5-c / 批D D2）— preview.warehouseMatch.acceptingReservation=true
+  //      表示匹配仓当前打烊，下单将走预约（scheduledFor=nextOpenAt）；nextOpenAt ISO → formatEta 本地化。
+  //      批D 审查 P3-2：nextOpenAt 理论可为 null（营业时间数据异常），此时退泛化文案（checkout.acceptingReservationGeneric）
+  const acceptingReservation = preview?.warehouseMatch?.acceptingReservation === true;
+  const nextOpenAtText =
+    acceptingReservation && preview?.warehouseMatch?.nextOpenAt
+      ? formatEta(preview.warehouseMatch.nextOpenAt, i18nInstance.language)
+      : null;
+
   if (isLoading) {
     return (
       <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
@@ -287,11 +296,23 @@ export default function CheckoutPage() {
               )}
             </Pressable>
             {/* B9 配送时效 ETA：real 模式 preview 返回的预估送达时间（mock 不展示） */}
-            {etaText && (
-              <View style={styles.etaRow}>
+            {etaText && !acceptingReservation && (
+              <View style={styles.etaRow} testID="checkout-eta">
                 <Icon symbol="schedule" size={14} color={colors.semantic.positive} />
                 <Text style={[styles.etaText, { color: colors.semantic.positive }]}>
                   {t('checkout.estimatedDelivery', { time: etaText })}
+                </Text>
+              </View>
+            )}
+            {/* 预约单标注（保证金批A T5-c / 批D D2）：匹配仓打烊 → "接受预约 · {nextOpenAt} 可配送"。
+                打烊时段 ETA 无意义，与 etaText 互斥展示；nextOpenAt 异常为 null 时退泛化文案（P3-2） */}
+            {acceptingReservation && (
+              <View style={styles.etaRow} testID="reservation-badge">
+                <Icon symbol="update" size={14} color={colors.semantic.warning} />
+                <Text style={[styles.etaText, { color: colors.semantic.warning }]}>
+                  {nextOpenAtText
+                    ? t('checkout.acceptingReservation', { time: nextOpenAtText })
+                    : t('checkout.acceptingReservationGeneric')}
                 </Text>
               </View>
             )}

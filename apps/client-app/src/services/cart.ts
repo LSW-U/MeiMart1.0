@@ -45,7 +45,10 @@ function transformCartItem(raw: CartItemRaw): CartItem {
     id: raw.id ?? '',
     product: {
       id: raw.productId ?? '',
-      name: { zh: pickLocalized(raw.productName), en: pickLocalized(raw.productName) } as Product['name'],
+      name: {
+        zh: pickLocalized(raw.productName),
+        en: pickLocalized(raw.productName),
+      } as Product['name'],
       price: (raw.unitPrice ?? 0) / 100,
       image: raw.productImage ?? '',
       category: '',
@@ -171,9 +174,20 @@ export const cartApi = {
   // Why: checkout-preview 是结算页关键端点（B5 聚合 discount）：
   //   入参 addressId（查仓库算运费）+ couponCode?（传券码时后端聚合 discount + couponValid）。
   //   payableAmount 已减折扣 = itemsSubtotal + deliveryFee - discount，前端直接用作实付金额。
-  async checkoutPreview(addressId?: string, couponCode?: string): Promise<{
+  async checkoutPreview(
+    addressId?: string,
+    couponCode?: string,
+  ): Promise<{
     items: CartItemRaw[];
-    warehouseMatch: { id: string; code: string; deliveryFee: number } | null;
+    warehouseMatch: {
+      id: string;
+      code: string;
+      deliveryFee: number;
+      /** 预约单标注（保证金批A T5-c / 批D D2）：true = 匹配仓当前打烊，下单将走预约 */
+      acceptingReservation: boolean;
+      /** 打烊仓下一次开门时间 ISO；营业中 null */
+      nextOpenAt: string | null;
+    } | null;
     itemsSubtotal: number;
     deliveryFee: number;
     payableAmount: number;
@@ -211,7 +225,13 @@ export const cartApi = {
     // checkout.tsx toFixed 显示元，不转则 Delivery Fee/Discount/Final Total 100 倍）
     const raw = res.data as {
       items: CartItemRaw[];
-      warehouseMatch: { id: string; code: string; deliveryFee: number } | null;
+      warehouseMatch: {
+        id: string;
+        code: string;
+        deliveryFee: number;
+        acceptingReservation: boolean;
+        nextOpenAt: string | null;
+      } | null;
       itemsSubtotal: number;
       deliveryFee: number;
       payableAmount: number;
@@ -228,7 +248,10 @@ export const cartApi = {
       payableAmount: raw.payableAmount / 100,
       discount: raw.discount / 100,
       warehouseMatch: raw.warehouseMatch
-        ? { ...raw.warehouseMatch, deliveryFee: raw.warehouseMatch.deliveryFee / 100 }
+        ? {
+            ...raw.warehouseMatch,
+            deliveryFee: raw.warehouseMatch.deliveryFee / 100,
+          }
         : null,
     };
   },

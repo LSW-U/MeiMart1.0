@@ -726,6 +726,8 @@
       "freeDelivery": "FRETE GRÁTIS"
     },
     "estimatedDelivery": "Entrega prevista {{time}}",
+    "acceptingReservation": "Reserva aceite · entrega a partir de {{time}}",
+    "acceptingReservationGeneric": "Reserva aceite · entrega começa quando o armazém reabrir",
     "stockLow": "Só restam {{stock}}",
     "secure": "Pagamento Seguro",
     "confirmAndPay": "CONFIRMAR E PAGAR ${{amount}}",
@@ -770,6 +772,8 @@
     "viewAllItems": "Ver todos os artigos",
     "eta": "Entrega prevista",
     "etaFallback": "Previsto para hoje",
+    "acceptingReservation": "Reserva aceite · entrega a partir de {{time}}",
+    "acceptingReservationGeneric": "Reserva aceite · entrega começa quando o armazém reabrir",
     "orderInfo": "Informação do pedido"
   },
   "favorites": {
