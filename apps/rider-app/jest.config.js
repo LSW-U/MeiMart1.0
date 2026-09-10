@@ -71,6 +71,8 @@ module.exports = {
         // N5H4 存储适配层（同 rn project——settings.ts 经 storage.ts 间接拉 AsyncStorage；
         // 路径走仓根 hoisted node_modules，rider-app 未本地声明）
         '^@react-native-async-storage/async-storage$': '<rootDir>/../../node_modules/@react-native-async-storage/async-storage/jest/async-storage-mock.js',
+        // T8 hero 渐变二期（同 rn project 注释）
+        '^expo-linear-gradient$': '<rootDir>/src/test/expo-linear-gradient.mock.js',
         // C3（批次2）：rider react 已与 client 统一 pin 19.2.3（根 hoisted 单一副本），
         // 拆掉原「钉 pnpm 虚拟层 react-dom@19.2.7 同层 react」的 workaround——
         // 该钉版在版本目录名里硬编码 19.2.7，升级 React 会静默断。现在 react/react-dom

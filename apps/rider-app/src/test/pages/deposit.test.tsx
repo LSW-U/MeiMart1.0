@@ -160,7 +160,7 @@ beforeEach(() => {
 });
 
 describe('未缴纳态（拍板 3 + 8）', () => {
-  it('红 hero（bg-danger-soft）+ tier 缺失显示「—/暂不可用」+ 重试，不显示「不限」', () => {
+  it('红 hero（渐变 unpaid + border-blush-border）+ tier 缺失显示「—/暂不可用」+ 重试，不显示「不限」', () => {
     const { getByText, queryByText } = renderPage();
 
     expect(getByText('当前保证金')).toBeTruthy();
@@ -169,10 +169,12 @@ describe('未缴纳态（拍板 3 + 8）', () => {
     expect(getByText('—')).toBeTruthy();
     expect(getByText('暂不可用')).toBeTruthy();
     expect(queryByText('不限')).toBeNull();
-    // §2.2 token：未缴 hero 语义色（替换幽灵 status-danger 系背景 class）
-    const hero = getByText('当前保证金').closest('[data-rn-host="View"]');
-    expect(hero?.getAttribute('data-prop-className')).toContain('bg-danger-soft');
+    // §2.2 token + T8 渐变二期：hero 背景改 LinearGradient（原型 linear-gradient(135deg,#fff0ee,#ffe1dc)）
+    const hero = getByText('当前保证金').closest('[data-rn-host="LinearGradient"]');
     expect(hero?.getAttribute('data-prop-className')).toContain('border-blush-border');
+    expect(hero?.getAttribute('data-prop-colors')).toBe(JSON.stringify(['#fff0ee', '#ffe1dc']));
+    expect(hero?.getAttribute('data-prop-start')).toBe(JSON.stringify({ x: 0, y: 0 }));
+    expect(hero?.getAttribute('data-prop-end')).toBe(JSON.stringify({ x: 1, y: 1 }));
   });
 
   it('tier 缺失重试 → refetch status', () => {
@@ -216,18 +218,25 @@ describe('已缴纳态（拍板 3 + 4 + E）', () => {
     };
   });
 
-  it('绿 hero（bg-status-done-bg）+ 上限 $500 + badge「当前档位」', () => {
+  it('绿 hero（渐变 paid）+ 上限 $500 + badge「当前档位」（T8：badge 白底浮层）', () => {
     const { getByText } = renderPage();
 
     expect(getByText('已缴纳保证金')).toBeTruthy();
     expect(getByText('$50.00')).toBeTruthy();
     expect(getByText('$500.00')).toBeTruthy();
     expect(getByText('当前档位')).toBeTruthy();
-    const hero = getByText('已缴纳保证金').closest('[data-rn-host="View"]');
-    expect(hero?.getAttribute('data-prop-className')).toContain('bg-status-done-bg');
+    // T8 渐变二期：hero 背景改 LinearGradient（原型 linear-gradient(135deg,#e6f4ea,#dcf5e3)）
+    const hero = getByText('已缴纳保证金').closest('[data-rn-host="LinearGradient"]');
+    expect(hero?.getAttribute('data-prop-colors')).toBe(JSON.stringify(['#e6f4ea', '#dcf5e3']));
+    expect(hero?.getAttribute('data-prop-className')).toContain('border-[#b8e0c4]');
     // §2.2：金额 text-success-deep（替换幽灵 success 文字色 class）
     const amount = getByText('$50.00').closest('[data-rn-host="Text"]');
     expect(amount?.getAttribute('data-prop-className')).toContain('text-success-deep');
+    // T8 走查（批 H P3-5 落地）：badge 白底浮层 + 语义文字色，不再与 hero 同底色
+    const badge = getByText('当前档位').closest('[data-rn-host="View"]');
+    expect(badge?.getAttribute('data-prop-className')).toContain('bg-surface');
+    const badgeText = getByText('当前档位').closest('[data-rn-host="Text"]');
+    expect(badgeText?.getAttribute('data-prop-className')).toContain('text-status-done-text');
   });
 
   it('升级提示由 tiers 派生：余额 $50 → 下一档 $100（顶档封顶文案）', () => {
@@ -283,7 +292,7 @@ describe('已缴纳态（拍板 3 + 4 + E）', () => {
 });
 
 describe('PENDING 态（拍板 3 + 5）', () => {
-  it('未缴 + PENDING：橙 hero（bg-warn-bg）+ 引导 banner + 不渲染缴纳表单', () => {
+  it('未缴 + PENDING：橙 hero（渐变 pending + border-warn-border）+ 引导 banner + 不渲染缴纳表单', () => {
     mockStatusQ = {
       data: makeStatus({
         depositAmount: 0,
@@ -296,9 +305,13 @@ describe('PENDING 态（拍板 3 + 5）', () => {
     const { getByText, queryByText } = renderPage();
 
     expect(getByText('待确认保证金')).toBeTruthy();
-    const hero = getByText('待确认保证金').closest('[data-rn-host="View"]');
-    expect(hero?.getAttribute('data-prop-className')).toContain('bg-warn-bg');
+    // T8 渐变二期：hero 背景改 LinearGradient（原型 linear-gradient(135deg,#fff3e0,#ffe8cc)）
+    const hero = getByText('待确认保证金').closest('[data-rn-host="LinearGradient"]');
+    expect(hero?.getAttribute('data-prop-colors')).toBe(JSON.stringify(['#fff3e0', '#ffe8cc']));
     expect(hero?.getAttribute('data-prop-className')).toContain('border-warn-border');
+    // T8 走查：PENDING badge 白底浮层 + warn 文字色
+    const badge = getByText('待确认').closest('[data-rn-host="View"]');
+    expect(badge?.getAttribute('data-prop-className')).toContain('bg-surface');
     // 缴纳点来自 locations（不 fallback「所选缴纳点」）
     expect(getByText('Dili 服务中心')).toBeTruthy();
     expect(getByText('请前往 Dili 服务中心 缴纳 $50.00，admin 确认后即时生效。')).toBeTruthy();

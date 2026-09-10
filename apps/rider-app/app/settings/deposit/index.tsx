@@ -18,6 +18,7 @@
  */
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/src/components/ui';
@@ -25,6 +26,7 @@ import { AppIcon } from '@/src/components/ui/AppIcon';
 import { Skeleton } from '@/src/components/ui/Skeleton';
 import { SimplePageHeader } from '@/src/components/layout/SimplePageHeader';
 import { colors } from '@/src/theme/colors';
+import { depositHeroGradients } from '@/src/theme/gradients';
 import { useTranslation } from '@/src/i18n/useTranslation';
 import { formatCurrency } from '@/src/utils/format';
 import { localeTagFor } from '@/src/services/settings';
@@ -35,29 +37,41 @@ import {
 } from '@/src/services/queries/useDeposit';
 import type { DepositRecord } from '@/src/services/deposit';
 
-/** hero 语义 token（方案 §2.2 三态规范表，全部为 tailwind.config 既有 token） */
+/** badge 语义 token（方案 §2.2 规范表）——T8 走查 P3-5 落地：badge 改白底浮层（原型
+ * deposit-status 语义 = chip 浮在卡上；同底色被批 H 审查 P3-5 记「视觉走查后修订」） */
+function badgeVisual(state: 'paid' | 'unpaid' | 'pending') {
+  switch (state) {
+    case 'paid':
+      return { bg: 'bg-surface', text: 'text-status-done-text' };
+    case 'pending':
+      return { bg: 'bg-surface', text: 'text-warn-text' };
+    default:
+      return { bg: 'bg-surface', text: 'text-status-danger-text' };
+  }
+}
+
+/** hero 语义 token（方案 §2.2 三态规范表 + T8 渐变二期拍板 A2）：
+ * 文字/边框走 tailwind 语义 token；背景改 LinearGradient 还原原型
+ * linear-gradient(135deg,…)（配色翻译见 src/theme/gradients.ts depositHeroGradients） */
 function heroVisual(state: 'paid' | 'unpaid' | 'pending') {
   switch (state) {
     case 'paid':
       return {
-        card: 'border-status-done-text/20 bg-status-done-bg',
+        gradient: depositHeroGradients.paid,
+        border: 'border-[#b8e0c4]',
         amount: 'text-success-deep',
-        badge: 'bg-status-done-bg',
-        badgeText: 'text-status-done-text',
       };
     case 'pending':
       return {
-        card: 'border-warn-border bg-warn-bg',
+        gradient: depositHeroGradients.pending,
+        border: 'border-warn-border',
         amount: 'text-warn-text',
-        badge: 'bg-warn-bg',
-        badgeText: 'text-warn-text',
       };
     default:
       return {
-        card: 'border-blush-border bg-danger-soft',
+        gradient: depositHeroGradients.unpaid,
+        border: 'border-blush-border',
         amount: 'text-primary-container',
-        badge: 'bg-danger-soft',
-        badgeText: 'text-status-danger-text',
       };
   }
 }
@@ -137,9 +151,9 @@ export default function DepositPage() {
             accessibilityLabel={
               heroState === 'paid' ? t('deposit.badge.a11y.paid') : t('deposit.badge.a11y.pending')
             }
-            className={`rounded-lg px-2.5 py-1 ${visual.badge}`}
+            className={`rounded-lg px-2.5 py-1 ${badgeVisual(heroState).bg}`}
           >
-            <Text className={`text-xs font-bold ${visual.badgeText}`}>
+            <Text className={`text-xs font-bold ${badgeVisual(heroState).text}`}>
               {heroState === 'paid' ? t('deposit.badge.currentTier') : t('deposit.badge.pending')}
             </Text>
           </View>
@@ -153,7 +167,12 @@ export default function DepositPage() {
     const locationName = locations.find((l) => l.id === pendingRequest.locationId)?.name ?? null;
     return (
       <>
-        <View className={`rounded-3xl border p-5 ${heroVisual('pending').card}`}>
+        <LinearGradient
+          className={`rounded-3xl border p-5 ${heroVisual('pending').border}`}
+          colors={heroVisual('pending').gradient.colors}
+          end={heroVisual('pending').gradient.end}
+          start={heroVisual('pending').gradient.start}
+        >
           <Text className="text-sm text-on-surface-variant">{t('deposit.hero.pendingLabel')}</Text>
           <View className="mt-1 flex-row items-end justify-between">
             <Text className="text-4xl font-extrabold text-warn-text">
@@ -161,7 +180,7 @@ export default function DepositPage() {
             </Text>
             <View
               accessibilityLabel={t('deposit.badge.a11y.pending')}
-              className="rounded-lg bg-warn-bg px-2.5 py-0.5"
+              className="rounded-lg bg-surface px-2.5 py-0.5"
             >
               <Text className="text-xs font-bold text-warn-text">{t('deposit.badge.pending')}</Text>
             </View>
@@ -183,7 +202,7 @@ export default function DepositPage() {
               </Text>
             </View>
           </View>
-        </View>
+        </LinearGradient>
         {/* PENDING 引导 banner（HTML pending-banner；缺缴纳点降级文案，不渲染空位置名） */}
         <View className="flex-row items-start gap-2 rounded-xl border border-warn-border bg-warn-bg px-3.5 py-2.5">
           <AppIcon color={colors.warnText} name="info" size={16} />
@@ -236,7 +255,12 @@ export default function DepositPage() {
             {heroState === 'pending' ? (
               renderPendingHero()
             ) : (
-              <View className={`rounded-3xl border p-5 ${visual.card}`}>
+              <LinearGradient
+                className={`rounded-3xl border p-5 ${visual.border}`}
+                colors={visual.gradient.colors}
+                end={visual.gradient.end}
+                start={visual.gradient.start}
+              >
                 <Text className="text-sm text-on-surface-variant">
                   {heroState === 'paid'
                     ? t('deposit.hero.paidLabel')
@@ -273,7 +297,7 @@ export default function DepositPage() {
                       </Text>
                     )
                   ))}
-              </View>
+              </LinearGradient>
             )}
 
             {/* 已缴 + PENDING 并存（拍板 5）：绿 hero 展示当前余额/上限，banner 另起 */}
