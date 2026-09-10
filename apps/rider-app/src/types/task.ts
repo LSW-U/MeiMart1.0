@@ -2,12 +2,7 @@ import type { Coordinates } from './common';
 
 // 后端 DeliveryTaskView 真实字段（来源：api/api-types.ts 的 /rider/dispatch/tasks 端点）
 export type TaskStatus =
-  | 'PENDING_ASSIGN'
-  | 'ASSIGNED'
-  | 'PICKED_UP'
-  | 'DELIVERING'
-  | 'DELIVERED'
-  | 'FAILED';
+  'PENDING_ASSIGN' | 'ASSIGNED' | 'PICKED_UP' | 'DELIVERING' | 'DELIVERED' | 'FAILED';
 
 /**
  * P14 ④：任务类型
@@ -86,11 +81,19 @@ export type DeliveryTask = {
    * pickup → dropoff 的 Haversine 距离；任一坐标缺失 → undefined（前端降级隐藏）。
    */
   distanceKm?: number;
-  /**
-   * 预估配送时长（分钟，P6 #7 2026-08-25）
+  /** 预估配送时长（分钟，P6 #7 2026-08-25）
    * 由 distanceKm ÷ 20km/h 推导，上限 45 分钟兜底；distanceKm 缺失 → undefined。
    */
   estimatedMinutes?: number;
+  /**
+   * 批B B3（保证金批A T5-c 契约同步 2026-09-11）：预约单开门时间（打烊时段下单的
+   * 该仓下一次开门时间；即时单 null/undefined）。
+   * ⚠️ 本仓 api/api-types.ts 尚未同步批A 契约增量（rider DeliveryTaskView 未透传
+   * scheduledFor，后端大厅/候选已按开门时间过滤——预约单开门前本就不可见），此处
+   * 为**防御性可选字段**：后端未来透传时 UI 直接标注「预约单 {time} 后可接」，
+   * 无需再改类型。当前 real/mock 数据恒 undefined → 标注不渲染。
+   */
+  scheduledFor?: string | null;
   // ── 兼容字段（旧 UI 引用 task.pickup.title / task.fee 等） ──
   // service 层 fromView() 保证 real 模式也填充这些字段。
   // P0-1/P6 #7 修复（2026-08-25）：fee/distanceKm/estimatedMinutes 已由后端透传，
@@ -103,8 +106,4 @@ export type DeliveryTask = {
 
 // Report issue 端点的 reason 枚举
 export type ReportIssueReason =
-  | 'CUSTOMER_UNREACHABLE'
-  | 'CUSTOMER_REJECTED'
-  | 'ADDRESS_NOT_FOUND'
-  | 'TRAFFIC_ACCIDENT'
-  | 'OTHER';
+  'CUSTOMER_UNREACHABLE' | 'CUSTOMER_REJECTED' | 'ADDRESS_NOT_FOUND' | 'TRAFFIC_ACCIDENT' | 'OTHER';

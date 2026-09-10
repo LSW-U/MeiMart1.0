@@ -4,6 +4,7 @@ import { Button } from '../ui';
 import { AppIcon } from '../ui/AppIcon';
 import { showToast } from '../feedback/Toast';
 import { useTranslation } from '../../i18n/useTranslation';
+import { localeTagFor } from '../../services/settings';
 import { colors } from '../../theme/colors';
 
 type RoutePoint = {
@@ -45,6 +46,13 @@ type TaskCardProps = {
   contactLabel?: string;
   /** T6 §7.7：联系按钮尾号展示（如「尾号4072」，无电话不传 → 按钮降级描边灰 + toast） */
   contactSuffix?: string;
+  /**
+   * 批B B3（保证金批A T5-c 契约同步）：预约单标注——scheduledFor 非空时卡片显示
+   * 「预约单」badge + 「预约单，{time} 后可接」副文案。当前骑手大厅/候选已按
+   * 开门时间过滤（预约单开门前不可见），此为防御性展示：后端未来透传
+   * scheduledFor 或直链进入时标注即出现；undefined/null → 不渲染（零改动面）。
+   */
+  scheduledFor?: string | null;
   variant?: 'new' | 'active';
   onAction?: () => void;
   onChat?: () => void;
@@ -52,12 +60,52 @@ type TaskCardProps = {
 };
 
 // T6 §7.5 A：默认值收紧空字符串，强制调用方传 t() 本地化 label（英文默认值不再兜底）
-export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote, feeBreakdown, orderId, points, tags = [], items, note, actionLabel, actionPending = false, actionDisabled = false, chatLabel = '', contactLabel = '', contactSuffix, variant = 'new', onAction, onChat, onContact }: TaskCardProps) {
-  const { t } = useTranslation();
+export function TaskCard({
+  badge,
+  timeLabel,
+  timeTone = 'default',
+  fee,
+  feeNote,
+  feeBreakdown,
+  orderId,
+  points,
+  tags = [],
+  items,
+  note,
+  actionLabel,
+  actionPending = false,
+  actionDisabled = false,
+  chatLabel = '',
+  contactLabel = '',
+  contactSuffix,
+  scheduledFor,
+  variant = 'new',
+  onAction,
+  onChat,
+  onContact,
+}: TaskCardProps) {
+  const { t, language } = useTranslation();
+  // 批B B3：预约单防御标注（scheduledFor 非空才渲染；日期按当前语言 locale 格式化——
+  // Intl 不支持 Tetum → localeTagFor 回退 en-US，与 deposit 页同源规则）
+  // P3-2（审查 20260911）：补 Invalid Date 守卫——非空畸形串（半截 ISO）解析失败
+  // 不渲染预约标注，不抛错也不渲染字面「Invalid Date」
+  const scheduledDate = scheduledFor ? new Date(scheduledFor) : null;
+  const scheduledValid = scheduledDate !== null && !Number.isNaN(scheduledDate.getTime());
+  const scheduledLabel =
+    scheduledFor && scheduledValid
+      ? t('tasks.scheduledOpensAt', {
+          time: scheduledDate.toLocaleString(localeTagFor(language)),
+        })
+      : undefined;
   // T6 §7.1 A：无电话时按钮可见但降级（描边灰 + opacity），点击 toast 提示原因
   const hasContact = contactSuffix !== undefined;
   // T2 审查 P3-1：default=进行中（tertiary-container+clock）/ neutral=已送达（outline，原型 --neutral 同值）/ error=配送失败
-  const timeTextClass = timeTone === 'error' ? 'text-error' : timeTone === 'neutral' ? 'text-outline' : 'text-tertiary-container';
+  const timeTextClass =
+    timeTone === 'error'
+      ? 'text-error'
+      : timeTone === 'neutral'
+        ? 'text-outline'
+        : 'text-tertiary-container';
   return (
     <View className="relative gap-3 rounded-lg border border-surface-variant bg-surface p-4 shadow-sm">
       {badge ? (
@@ -69,10 +117,28 @@ export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote,
       <View className="flex-row items-start justify-between pt-1">
         <View className="flex-1 pr-3">
           <View className="flex-row items-center gap-1">
-            {timeTone === 'default' ? <AppIcon name="clock" className="text-lg text-tertiary-container" size={18} /> : null}
+            {timeTone === 'default' ? (
+              <AppIcon name="clock" className="text-lg text-tertiary-container" size={18} />
+            ) : null}
             <Text className={`text-lg font-semibold ${timeTextClass}`}>{timeLabel}</Text>
           </View>
-          {orderId ? <Text className="mt-1 self-start rounded bg-surface-container px-2 py-1 text-xs font-bold text-on-surface-variant">{orderId}</Text> : null}
+          {orderId ? (
+            <Text className="mt-1 self-start rounded bg-surface-container px-2 py-1 text-xs font-bold text-on-surface-variant">
+              {orderId}
+            </Text>
+          ) : null}
+          {/* 批B B3：预约单防御标注——badge（复用角标样式语义，行内小 tag）+ 「{time} 后可接」副文案
+              P3-2：解析失败（Invalid Date）同样整块不渲染 */}
+          {scheduledFor && scheduledValid ? (
+            <View className="mt-1 flex-row flex-wrap items-center gap-1">
+              <Text className="rounded border border-outline-variant px-2 py-1 text-[11px] font-bold text-neutral-muted">
+                {t('tasks.scheduledBadge')}
+              </Text>
+              {scheduledLabel ? (
+                <Text className="text-xs text-neutral-muted">{scheduledLabel}</Text>
+              ) : null}
+            </View>
+          ) : null}
         </View>
         {fee ? (
           <View className="items-end">
@@ -81,11 +147,19 @@ export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote,
                 breakdown 缺失（历史单/无坐标 fallback）→ 不渲染，仅显总额。 */}
             {feeBreakdown?.base || feeBreakdown?.distance ? (
               <View className="mt-1 flex-col items-end gap-0.5">
-                {feeBreakdown?.base ? <Text className="text-xs text-on-surface-variant">{feeBreakdown.base}</Text> : null}
-                {feeBreakdown?.distance ? <Text className="text-xs text-on-surface-variant">{feeBreakdown.distance}</Text> : null}
+                {feeBreakdown?.base ? (
+                  <Text className="text-xs text-on-surface-variant">{feeBreakdown.base}</Text>
+                ) : null}
+                {feeBreakdown?.distance ? (
+                  <Text className="text-xs text-on-surface-variant">{feeBreakdown.distance}</Text>
+                ) : null}
               </View>
             ) : null}
-            {feeNote ? <Text className="mt-1 max-w-36 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">{feeNote}</Text> : null}
+            {feeNote ? (
+              <Text className="mt-1 max-w-36 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                {feeNote}
+              </Text>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -96,15 +170,25 @@ export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote,
         <View className="absolute bottom-6 left-[11px] top-6 w-0.5 bg-surface-variant" />
         {points.map((point) => (
           <View className="relative z-10 flex-row gap-2" key={`${point.label}-${point.title}`}>
-            <View className={`mt-1 h-6 w-6 items-center justify-center rounded-full ${point.label === 'P' ? 'bg-neutral-bg' : 'bg-tertiary-container'}`}>
-              <Text className={`text-[10px] font-bold ${point.label === 'P' ? 'text-neutral' : 'text-tier-gold'}`}>{point.label}</Text>
+            <View
+              className={`mt-1 h-6 w-6 items-center justify-center rounded-full ${point.label === 'P' ? 'bg-neutral-bg' : 'bg-tertiary-container'}`}
+            >
+              <Text
+                className={`text-[10px] font-bold ${point.label === 'P' ? 'text-neutral' : 'text-tier-gold'}`}
+              >
+                {point.label}
+              </Text>
             </View>
             <View className="flex-1">
               <View className="flex-row items-start justify-between gap-2">
                 <Text className="flex-1 text-base font-bold text-on-surface">{point.title}</Text>
-                {point.distance ? <Text className="text-sm text-neutral-muted">{point.distance}</Text> : null}
+                {point.distance ? (
+                  <Text className="text-sm text-neutral-muted">{point.distance}</Text>
+                ) : null}
               </View>
-              {point.subtitle ? <Text className="mt-1 text-sm text-on-surface-variant">{point.subtitle}</Text> : null}
+              {point.subtitle ? (
+                <Text className="mt-1 text-sm text-on-surface-variant">{point.subtitle}</Text>
+              ) : null}
             </View>
           </View>
         ))}
@@ -113,7 +197,12 @@ export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote,
       {tags.length || items ? (
         <View className="flex-row flex-wrap gap-2">
           {tags.map((tag) => (
-            <Text className="rounded border border-outline-variant px-2 py-1 text-[11px] text-neutral-muted" key={tag}>{tag}</Text>
+            <Text
+              className="rounded border border-outline-variant px-2 py-1 text-[11px] text-neutral-muted"
+              key={tag}
+            >
+              {tag}
+            </Text>
           ))}
           {items ? (
             <Pressable
@@ -161,8 +250,14 @@ export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote,
               className={`flex-1 flex-row items-center justify-center gap-1 rounded-lg border py-2.5 ${hasContact ? 'border-primary-container bg-surface-container-low' : 'border-outline-variant opacity-50'}`}
               onPress={() => (onContact ? onContact() : showToast(t('tasks.noPhone'), 'info'))}
             >
-              <AppIcon name="phone" size={16} color={hasContact ? colors.primary : colors.textMuted} />
-              <Text className={`text-xs font-bold ${hasContact ? 'text-primary-container' : 'text-neutral-muted'}`}>
+              <AppIcon
+                name="phone"
+                size={16}
+                color={hasContact ? colors.primary : colors.textMuted}
+              />
+              <Text
+                className={`text-xs font-bold ${hasContact ? 'text-primary-container' : 'text-neutral-muted'}`}
+              >
                 {hasContact ? `${contactLabel} ${contactSuffix}` : contactLabel}
               </Text>
             </Pressable>
@@ -179,7 +274,9 @@ export function TaskCard({ badge, timeLabel, timeTone = 'default', fee, feeNote,
           </View>
         </View>
       ) : (
-        <Button className="mt-1 bg-primary-container" textClassName="text-xl" onPress={onAction}>{actionLabel}</Button>
+        <Button className="mt-1 bg-primary-container" textClassName="text-xl" onPress={onAction}>
+          {actionLabel}
+        </Button>
       )}
     </View>
   );

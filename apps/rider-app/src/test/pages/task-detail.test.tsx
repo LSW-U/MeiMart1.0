@@ -8,6 +8,7 @@ import { Linking } from 'react-native';
 
 import TaskDetailPage from '../../../app/task/[id]';
 import { showToast } from '../../../src/components/feedback/Toast';
+import { ApiError } from '../../../src/services/api';
 
 const showToastMock = showToast as jest.Mock;
 
@@ -26,6 +27,8 @@ const mockRefetch = jest.fn();
 const mockMutateAsync = jest.fn();
 const mockAccept = jest.fn();
 const mockBack = jest.fn();
+// 批B B2：router.push 捕获（拦截弹窗「前往缴纳」→ /settings/deposit/pay 跳转断言）
+const mockPush = jest.fn();
 let mockTaskStatus: string | null = 'DELIVERED';
 let mockDutyStatus = 'offDuty';
 // P6 §四.9：settings 就绪态切换（'ok' 真实班次 / 'loading' 未就绪 / 'error' 加载失败）。
@@ -37,7 +40,7 @@ let mockContactPhone: string | null = null;
 let mockLinkingOpenURL: jest.Mock;
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: mockBack, canGoBack: () => true }),
+  useRouter: () => ({ push: mockPush, replace: jest.fn(), back: mockBack, canGoBack: () => true }),
   useLocalSearchParams: () => ({ id: 'task-1' }),
 }));
 
@@ -58,7 +61,11 @@ jest.mock('../../../src/services/queries/useTask', () => ({
           status: mockTaskStatus,
           taskType: 'DELIVERY',
           pickup: { title: '乐购超市', address: '杨浦区' },
-          dropoff: { title: '久久公寓', address: '1 号楼', contactPhone: mockContactPhone ?? undefined },
+          dropoff: {
+            title: '久久公寓',
+            address: '1 号楼',
+            contactPhone: mockContactPhone ?? undefined,
+          },
           items: ['超市'],
           fee: 10,
           distanceKm: 3.7,
@@ -104,7 +111,9 @@ jest.mock('../../../src/components/feedback/Toast', () => ({
 }));
 
 function renderPage() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
@@ -116,6 +125,7 @@ beforeEach(() => {
   mockMutateAsync.mockReset();
   mockAccept.mockReset();
   mockBack.mockClear();
+  mockPush.mockClear();
   showToastMock.mockClear();
   mockTaskStatus = 'DELIVERED';
   mockDutyStatus = 'offDuty';
@@ -142,7 +152,9 @@ describe('终态 banner（T2 §3.4）', () => {
 
     // P3-1：time 区 text-lg（banner 标题是 text-sm，同文案用字号区分），neutral 色 + 无 clock 图标
     const timeText = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).find(
-      (el) => el.textContent === '已送达' && (el.getAttribute('data-prop-classname') ?? '').includes('text-lg'),
+      (el) =>
+        el.textContent === '已送达' &&
+        (el.getAttribute('data-prop-classname') ?? '').includes('text-lg'),
     );
     expect(timeText?.getAttribute('data-prop-classname')).toContain('text-outline');
     expect(container.querySelector('[data-testid="icon-clock-outline"]')).toBeNull();
@@ -153,7 +165,9 @@ describe('终态 banner（T2 §3.4）', () => {
     const { container } = renderPage();
 
     const timeText = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).find(
-      (el) => el.textContent === '配送失败' && (el.getAttribute('data-prop-classname') ?? '').includes('text-lg'),
+      (el) =>
+        el.textContent === '配送失败' &&
+        (el.getAttribute('data-prop-classname') ?? '').includes('text-lg'),
     );
     expect(timeText?.getAttribute('data-prop-classname')).toContain('text-error');
     expect(container.querySelector('[data-testid="icon-clock-outline"]')).toBeNull();
@@ -294,7 +308,9 @@ describe('联系拨号接线 + 按钮重排（T6 §3.1/§7.7）', () => {
     const { container, getByText } = renderPage();
 
     // 主行动：Button host（h-14 全宽）+ bg-primary；次要行 Pressable 不再有 bg-primary-container 主行动
-    const mainBtn = container.querySelector('[data-rn-host="Pressable"][data-prop-classname*="h-14"][data-prop-classname*="bg-primary"]');
+    const mainBtn = container.querySelector(
+      '[data-rn-host="Pressable"][data-prop-classname*="h-14"][data-prop-classname*="bg-primary"]',
+    );
     expect(mainBtn).not.toBeNull();
     expect(getByText('已到取货点')).toBeTruthy();
     // 次要行联系按钮描边红（有电话态 border-primary-container）
@@ -306,5 +322,81 @@ describe('联系拨号接线 + 按钮重排（T6 §3.1/§7.7）', () => {
 
     expect(container.querySelector('[data-testid="icon-information-outline"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="icon-chevron-down"]')).toBeNull();
+  });
+});
+
+describe('保证金拦截弹窗（批B B2：accept 失败 E-DEPOSIT-201/202 弹窗替代 networkError toast）', () => {
+  // B2 验收线「ApiError code 分支单测 ≥2」：PENDING_ASSIGN 态点接单 → mutateAsync reject
+  // ApiError(403, E-DEPOSIT-201/202) → 弹拦截弹窗且不走 networkError toast。
+  // P3-1：reason 按 code 分流——201→unpaid（「需要缴纳保证金」）/ 202→tierLimit（「当前档位上限不足」）。
+  beforeEach(() => {
+    mockTaskStatus = 'PENDING_ASSIGN';
+  });
+
+  it('E-DEPOSIT-201：弹 unpaid 分支「需要缴纳保证金」，无 networkError toast', async () => {
+    mockAccept.mockRejectedValueOnce(new ApiError(403, 'E-DEPOSIT-201', 'deposit required'));
+    const { getByText, queryByText } = renderPage();
+
+    fireEvent.click(getByText('接单'));
+    await act(async () => undefined);
+
+    // 201 未缴文案
+    expect(getByText('需要缴纳保证金')).toBeTruthy();
+    expect(queryByText('当前档位上限不足')).toBeNull();
+    expect(getByText('前往缴纳')).toBeTruthy();
+    // S6 原有 toast 分支被拦截分支短路：非 dispatch 冲突的错误不再走 networkError toast
+    expect(showToastMock).not.toHaveBeenCalledWith('网络异常，请重试', 'error');
+    expect(mockRefetch).toHaveBeenCalled();
+  });
+
+  it('E-DEPOSIT-202：弹 tierLimit 分支「当前档位上限不足」（P3-1 文案分流），无 toast', async () => {
+    mockAccept.mockRejectedValueOnce(new ApiError(403, 'E-DEPOSIT-202', 'deposit $50+ needed'));
+    const { getByText, queryByText } = renderPage();
+
+    fireEvent.click(getByText('接单'));
+    await act(async () => undefined);
+
+    // 202 已缴超档位文案（不再显「需要缴纳保证金」矛盾标题）
+    expect(getByText('当前档位上限不足')).toBeTruthy();
+    expect(queryByText('需要缴纳保证金')).toBeNull();
+    expect(getByText('前往缴纳')).toBeTruthy();
+    expect(showToastMock).not.toHaveBeenCalledWith('网络异常，请重试', 'error');
+    expect(mockRefetch).toHaveBeenCalled();
+  });
+
+  it('E-DEPOSIT-201：「前往缴纳」点击 → router.push /settings/deposit/pay（B2 核心跳转）', async () => {
+    mockAccept.mockRejectedValueOnce(new ApiError(403, 'E-DEPOSIT-201', 'deposit required'));
+    const { getByText } = renderPage();
+
+    fireEvent.click(getByText('接单'));
+    await act(async () => undefined);
+    fireEvent.click(getByText('前往缴纳'));
+
+    expect(mockPush).toHaveBeenCalledWith('/settings/deposit/pay');
+  });
+
+  it('非保证金错误（E-DISPATCH-003 被抢）：仍走 toast，不弹拦截弹窗', async () => {
+    mockAccept.mockRejectedValueOnce(new ApiError(409, 'E-DISPATCH-003', 'taken'));
+    const { getByText, queryByText } = renderPage();
+
+    fireEvent.click(getByText('接单'));
+    await act(async () => undefined);
+
+    // dispatch 冲突走 S6 原有 tasks.acceptFailed toast 分支
+    expect(showToastMock).toHaveBeenCalledWith('接单失败，请稍后重试', 'error');
+    expect(queryByText('需要缴纳保证金')).toBeNull();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('「稍后」关闭拦截弹窗（dismiss 后不跳转、不残留）', async () => {
+    mockAccept.mockRejectedValueOnce(new ApiError(403, 'E-DEPOSIT-201', 'deposit required'));
+    const { getByText, queryByText } = renderPage();
+
+    fireEvent.click(getByText('接单'));
+    await act(async () => undefined);
+    fireEvent.click(getByText('稍后'));
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(queryByText('需要缴纳保证金')).toBeNull();
   });
 });

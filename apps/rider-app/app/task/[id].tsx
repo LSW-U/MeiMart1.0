@@ -1,9 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Linking, ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
 
 import { TaskCard } from '../../src/components/business/TaskCard';
 import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader';
 import { BottomActionBar } from '../../src/components/layout/BottomActionBar';
+// 批B B2：接单失败 E-DEPOSIT-201/202 弹保证金拦截弹窗（复用 B1 公共组件，替代 networkError toast）
+import { DepositBlockDialog } from '../../src/components/feedback/DepositBlockDialog';
 import { QueryBoundary } from '../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../src/components/feedback/Toast';
 import { useGoBack } from '../../src/hooks/useGoBack';
@@ -26,7 +29,10 @@ const dutyLabelKey: Record<DutyStatus, 'duty.onDuty' | 'duty.offDuty' | 'duty.bu
   busy: 'duty.busy',
 };
 
-const formatItems = (items: string[], t: (key: TranslationKey, vars?: Record<string, string | number>) => string) => t('common.items', { items: items.join(' · ') });
+const formatItems = (
+  items: string[],
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+) => t('common.items', { items: items.join(' · ') });
 
 /**
  * 距离计费批次1 #5 收尾（2026-08-27）：formatDistance 返回 string|undefined，
@@ -47,19 +53,38 @@ const formatFeeBreakdown = (
   currency: string,
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
 ): { base?: string; distance?: string } => {
-  const fmt = (cents: number) => formatCurrency(cents / 100, currency, { decimals: cents % 100 === 0 ? 0 : 1 });
+  const fmt = (cents: number) =>
+    formatCurrency(cents / 100, currency, { decimals: cents % 100 === 0 ? 0 : 1 });
   return {
-    base: task.baseFee != null ? t('tasks.feeBreakdown.base', { fee: fmt(task.baseFee) }) : undefined,
-    distance: task.distanceFee != null ? t('tasks.feeBreakdown.distance', { fee: fmt(task.distanceFee) }) : undefined,
+    base:
+      task.baseFee != null ? t('tasks.feeBreakdown.base', { fee: fmt(task.baseFee) }) : undefined,
+    distance:
+      task.distanceFee != null
+        ? t('tasks.feeBreakdown.distance', { fee: fmt(task.distanceFee) })
+        : undefined,
   };
 };
 
 // S6: accept 失败按 ApiError.code 差异化提示
 // - E-DISPATCH-xxx（被抢/状态不对/类型错）/ 409 -> tasks.acceptFailed
+// - E-DEPOSIT-201/202（保证金未缴/超档位上限，403）-> 弹拦截弹窗（批B B2，不走 toast）
 // - 网络/超时/非 ApiError -> common.networkError
 function resolveAcceptErrorMessage(e: unknown, t: (key: TranslationKey) => string): string {
-  const isDispatchConflict = e instanceof ApiError && (e.code.startsWith('E-DISPATCH') || e.status === 409);
+  const isDispatchConflict =
+    e instanceof ApiError && (e.code.startsWith('E-DISPATCH') || e.status === 409);
   return isDispatchConflict ? t('tasks.acceptFailed') : t('common.networkError');
+}
+
+// 批B B2：保证金拦截 code（后端 deposit-eligibility.service assertCanAccept 抛 403 + code）
+// P3-1：返回命中 code 供弹窗 reason 分流——201=未缴 / 202=已缴但金额超档位上限（文案两码事）
+const DEPOSIT_BLOCK_CODES = ['E-DEPOSIT-201', 'E-DEPOSIT-202'] as const;
+
+function isDepositBlockError(e: unknown): 'E-DEPOSIT-201' | 'E-DEPOSIT-202' | null {
+  if (!(e instanceof ApiError)) return null;
+  for (const code of DEPOSIT_BLOCK_CODES) {
+    if (e.code === code) return code;
+  }
+  return null;
 }
 
 export default function TaskDetailPage() {
@@ -69,7 +94,13 @@ export default function TaskDetailPage() {
   const goBack = useGoBack('/(main)/tasks');
   // B3: 三态——loading 骨架 / error 重试（弱网不再误报"任务不存在"）/ null 才是未找到
   // B5: isFetching 供底栏刷新 spinner 反馈
-  const { data: task, isLoading: taskLoading, isError: taskError, isFetching: taskFetching, refetch } = useTask(id);
+  const {
+    data: task,
+    isLoading: taskLoading,
+    isError: taskError,
+    isFetching: taskFetching,
+    refetch,
+  } = useTask(id);
   const acceptTask = useAcceptTask();
   const { isOffline } = useNetwork();
   const taskData: DeliveryTask | null = task ?? null;
@@ -79,8 +110,18 @@ export default function TaskDetailPage() {
   const { data: settings, isError: settingsError } = useRiderSettings();
   // P6 §四.9：settings 加载中/失败时 duty 区显「加载中」而非「已下班」（与 tasks.tsx 同源）。
   //   dutyStatus 仅作 TaskDetailHeader 类型占位，dutyLoading 时视觉走 loading 分支。
-  const dutyStatus: DutyStatus = settingsError ? 'offDuty' : settings ? settings.dutyStatus : 'offDuty';
+  const dutyStatus: DutyStatus = settingsError
+    ? 'offDuty'
+    : settings
+      ? settings.dutyStatus
+      : 'offDuty';
   const dutyLoading = settingsError ? true : !settings;
+
+  // 批B B2：保证金拦截弹窗开关——accept 返回 E-DEPOSIT-201/202 时置 true，
+  // 弹 B1 公共 DepositBlockDialog（unpaid 分支），替代原 networkError toast
+  const [depositBlocked, setDepositBlocked] = useState(false);
+  // P3-1：拦截 reason 按 code 分流（201→unpaid 现文案 / 202→tierLimit 档位上限文案）
+  const [depositBlockReason, setDepositBlockReason] = useState<'unpaid' | 'tierLimit'>('unpaid');
 
   // Why: PENDING_ASSIGN 先 accept（接单）再跳；其他状态直接跳对应步骤页
   // T2 §3.4: 终态无 action → 返回列表（原 fallback 刷新当主 CTA 语义错位）
@@ -104,6 +145,16 @@ export default function TaskDetailPage() {
       try {
         await acceptTask.mutateAsync(id);
       } catch (e) {
+        // 批B B2：保证金资格拦截（未缴 E-DEPOSIT-201 / 超档位上限 E-DEPOSIT-202）→
+        // 弹拦截弹窗替代 networkError toast，「前往缴纳」直跳缴款页
+        // P3-1：按命中 code 分流 reason——201 未缴 vs 202 已缴但金额超档位上限（文案两码事）
+        const depositCode = isDepositBlockError(e);
+        if (depositCode) {
+          setDepositBlockReason(depositCode === 'E-DEPOSIT-202' ? 'tierLimit' : 'unpaid');
+          setDepositBlocked(true);
+          void refetch();
+          return;
+        }
         // S6: 按 ApiError.code 差异化提示（被抢/状态 vs 网络）
         showToast(resolveAcceptErrorMessage(e, t), 'error');
         void refetch();
@@ -160,11 +211,19 @@ export default function TaskDetailPage() {
                   className="mb-3 rounded-xl border p-3"
                   style={{ backgroundColor: terminalTone.bg, borderColor: terminalTone.border }}
                 >
-                  <Text accessibilityRole="header" className="text-sm font-bold" style={{ color: terminalTone.text }}>
-                    {detail.status === 'DELIVERED' ? t('tasks.terminalDelivered') : t('tasks.terminalFailed')}
+                  <Text
+                    accessibilityRole="header"
+                    className="text-sm font-bold"
+                    style={{ color: terminalTone.text }}
+                  >
+                    {detail.status === 'DELIVERED'
+                      ? t('tasks.terminalDelivered')
+                      : t('tasks.terminalFailed')}
                   </Text>
                   <Text className="mt-1 text-xs" style={{ color: terminalTone.text }}>
-                    {detail.status === 'DELIVERED' ? t('tasks.terminalDeliveredSub') : t('tasks.terminalFailedSub')}
+                    {detail.status === 'DELIVERED'
+                      ? t('tasks.terminalDeliveredSub')
+                      : t('tasks.terminalFailedSub')}
                   </Text>
                 </View>
               ) : null}
@@ -173,15 +232,31 @@ export default function TaskDetailPage() {
                 actionPending={acceptTask.isPending}
                 chatLabel={t('tasks.chat')}
                 contactLabel={t('tasks.contact')}
-                contactSuffix={detail.dropoff.contactPhone ? `${t('tasks.recipientSuffix')} ${detail.dropoff.contactPhone.slice(-4)}` : undefined}
+                contactSuffix={
+                  detail.dropoff.contactPhone
+                    ? `${t('tasks.recipientSuffix')} ${detail.dropoff.contactPhone.slice(-4)}`
+                    : undefined
+                }
                 items={detail.items.length ? formatItems(detail.items, t) : undefined}
                 note={detail.note ?? undefined}
                 orderId={detail.orderId}
-                fee={formatCurrency((detail.fee ?? 0) / 100, t('common.currency'), { decimals: (detail.fee ?? 0) % 100 === 0 ? 0 : 1 })}
+                fee={formatCurrency((detail.fee ?? 0) / 100, t('common.currency'), {
+                  decimals: (detail.fee ?? 0) % 100 === 0 ? 0 : 1,
+                })}
                 feeBreakdown={formatFeeBreakdown(detail, t('common.currency'), t)}
                 points={[
-                  { label: 'P', title: detail.pickup.title, subtitle: detail.pickup.address, distance: withDistance('common.fromHere', pickupDistance(detail.distanceKm), t) },
-                  { label: 'D', title: detail.dropoff.title, distance: withDistance('common.fromPickup', detail.distanceKm, t), subtitle: withDistance('tasks.billingDistance', detail.billingDistanceKm, t) },
+                  {
+                    label: 'P',
+                    title: detail.pickup.title,
+                    subtitle: detail.pickup.address,
+                    distance: withDistance('common.fromHere', pickupDistance(detail.distanceKm), t),
+                  },
+                  {
+                    label: 'D',
+                    title: detail.dropoff.title,
+                    distance: withDistance('common.fromPickup', detail.distanceKm, t),
+                    subtitle: withDistance('tasks.billingDistance', detail.billingDistanceKm, t),
+                  },
                 ]}
                 // T2 审查 P3-1：终态 time 显示状态文本 + 中性/错误色（原型 372/431 行），
                 // 非终态保持「剩余 N 分钟」+ clock 图标
@@ -192,7 +267,15 @@ export default function TaskDetailPage() {
                       : t('tasks.terminalFailed')
                     : t('common.remaining', { minutes: String(detail.estimatedMinutes) })
                 }
-                timeTone={detail.status === 'DELIVERED' ? 'neutral' : detail.status === 'FAILED' ? 'error' : 'default'}
+                timeTone={
+                  detail.status === 'DELIVERED'
+                    ? 'neutral'
+                    : detail.status === 'FAILED'
+                      ? 'error'
+                      : 'default'
+                }
+                // 批B B3：预约单防御标注（与列表卡同源；直链进入未到时预约单时可见）
+                scheduledFor={detail.scheduledFor}
                 variant="active"
                 // T6 §3.1: 联系按钮接线拨号（有电话 tel: 直拨，失败/无电话 toast；Linking 在调用方，组件不感知 task）
                 onContact={
@@ -218,6 +301,16 @@ export default function TaskDetailPage() {
         onPressSettings={() => router.push('/settings')}
         onRefresh={() => void refetch()}
       />
+      {depositBlocked && (
+        // 批B B2：保证金拦截弹窗——「前往缴纳」跳缴款页，「稍后」仅关弹窗
+        // P3-1：reason 按 code 分流（unpaid=未缴 / tierLimit=已缴但本单超档位上限）
+        <DepositBlockDialog
+          reason={depositBlockReason}
+          visible
+          onDismiss={() => setDepositBlocked(false)}
+          onGoDeposit={() => router.push('/settings/deposit/pay')}
+        />
+      )}
     </View>
   );
 }

@@ -34,9 +34,19 @@ const mockMutateAsync = jest.fn();
 let mockOffline = false;
 // P6-1：settings 加载态切换。'ok' | 'error'。'ok' → data.dutyStatus='onDuty'，'error' → isError=true。
 let mockSettingsState = 'ok';
+// 批B B1：保证金状态桩（'none' 不弹 / 'unpaid' 未缴 / 'pending' 待确认）——
+// 拦截弹窗两分支跳转断言的输入。
+let mockDepositBlock: 'none' | 'unpaid' | 'pending' = 'none';
+// 批B B1：router.push 捕获（跳转目标断言——未缴态改跳 /settings/deposit/pay）
+const mockPush = jest.fn();
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => false }),
+  useRouter: () => ({
+    push: mockPush,
+    replace: jest.fn(),
+    back: jest.fn(),
+    canGoBack: () => false,
+  }),
   useLocalSearchParams: () => ({}),
 }));
 
@@ -72,7 +82,29 @@ jest.mock('../../../src/hooks/useNetwork', () => ({
 }));
 
 jest.mock('../../../src/store/useAuthStore', () => ({
-  useAuthStore: (selector: (s: { rider: unknown }) => unknown) => selector({ rider: { bondPaid: true } }),
+  useAuthStore: (selector: (s: { rider: unknown }) => unknown) =>
+    selector({ rider: { bondPaid: true } }),
+}));
+
+// 批B B1：useDepositStatus 桩——mockDepositBlock 三态切 depositStatus 派生输入：
+//   unpaid → depositAmount=0 且无 PENDING；pending → recentRequests 带 PENDING 申请；
+//   none → depositAmount>0（已缴，不拦截）。
+jest.mock('../../../src/services/queries/useDeposit', () => ({
+  useDepositStatus: () => {
+    if (mockDepositBlock === 'pending') {
+      return {
+        data: {
+          depositAmount: 0,
+          tier: null,
+          recentRequests: [{ id: 'req-1', status: 'PENDING', requestedAmount: 500 }],
+        },
+      };
+    }
+    if (mockDepositBlock === 'unpaid') {
+      return { data: { depositAmount: 0, tier: null, recentRequests: [] } };
+    }
+    return { data: { depositAmount: 100, tier: null, recentRequests: [] } };
+  },
 }));
 
 jest.mock('../../../src/components/feedback/Toast', () => ({
@@ -82,7 +114,9 @@ jest.mock('../../../src/components/feedback/Toast', () => ({
 // dutyStatus 桩为 onDuty → online=true 走 QueryBoundary 数据态（空列表 → empty 分支，
 // 两分支断言都不依赖列表内容）
 function renderPage() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
@@ -93,7 +127,8 @@ function renderPage() {
  * DOM 节点 __fnProps（attribute 只能存字符串取不回函数），ScrollView wrapper 已把
  * refreshControl 透传为可查询的子节点 */
 function getOnRefresh(container: HTMLElement): () => void {
-  const rc = container.querySelector('[data-rn-host="RefreshControl"]') as (HTMLElement & { __fnProps?: Record<string, unknown> }) | null;
+  const rc = container.querySelector('[data-rn-host="RefreshControl"]') as
+    (HTMLElement & { __fnProps?: Record<string, unknown> }) | null;
   if (!rc) throw new Error('RefreshControl 未渲染');
   return rc.__fnProps?.onRefresh as () => void;
 }
@@ -103,6 +138,8 @@ beforeEach(() => {
   mockMutateAsync.mockReset();
   mockOffline = false;
   mockSettingsState = 'ok';
+  mockDepositBlock = 'none';
+  mockPush.mockClear();
   showToastMock.mockClear();
 });
 
@@ -203,5 +240,47 @@ describe('P6-1 三态 online（settings 加载失败保守不停派单）', () =
     expect(getByText('加载中…')).toBeTruthy();
     // 不显误导性的「已下班」（offDuty 占位仅作类型，视觉走 loading 分支）
     expect(queryByText('已下班')).toBeNull();
+  });
+});
+
+describe('保证金拦截弹窗（批B B1：抽公共 + 未缴态改跳 pay 缴款页）', () => {
+  it('未缴态：弹窗渲染「前往缴纳」，点击跳 /settings/deposit/pay（原 settings 首页已改）', () => {
+    mockDepositBlock = 'unpaid';
+    const { getByText } = renderPage();
+
+    expect(getByText('需要缴纳保证金')).toBeTruthy();
+    expect(getByText('前往缴纳')).toBeTruthy();
+
+    fireEvent.click(getByText('前往缴纳'));
+    expect(mockPush).toHaveBeenCalledWith('/settings/deposit/pay');
+  });
+
+  // P3-3（审查 20260911）：用例名与断言对齐——本用例只锁「dismiss 后卸载 + 不跳转」，
+  // 不承诺会话级不重弹（depositDismissed 语义由组件 state 门控，重渲染断言未覆盖）
+  it('未缴态：「稍后」关闭弹窗（dismiss 后弹窗卸载且不跳转）', () => {
+    mockDepositBlock = 'unpaid';
+    const { getByText, queryByText } = renderPage();
+
+    fireEvent.click(getByText('稍后'));
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(queryByText('需要缴纳保证金')).toBeNull();
+  });
+
+  it('pending 态：「查看申请」跳 /settings/deposit/records（维持原跳转），金额插值渲染', () => {
+    mockDepositBlock = 'pending';
+    const { getByText } = renderPage();
+
+    expect(getByText('保证金待确认')).toBeTruthy();
+    expect(getByText(/您已提交 \$5\.00 缴纳申请/)).toBeTruthy();
+
+    fireEvent.click(getByText('查看申请'));
+    expect(mockPush).toHaveBeenCalledWith('/settings/deposit/records');
+  });
+
+  it('已缴态（depositAmount>0）：不弹拦截弹窗', () => {
+    const { queryByText } = renderPage();
+
+    expect(queryByText('需要缴纳保证金')).toBeNull();
+    expect(queryByText('保证金待确认')).toBeNull();
   });
 });

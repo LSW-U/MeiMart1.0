@@ -1,16 +1,17 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Linking, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Linking, RefreshControl, ScrollView, View } from 'react-native';
 
 import { DutyStatusMenu } from '../../src/components/business/DutyStatusMenu';
 import { TaskCard } from '../../src/components/business/TaskCard';
 import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader';
 import { BottomActionBar } from '../../src/components/layout/BottomActionBar';
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
+// 批B B1：保证金拦截弹窗抽公共组件（task/[id].tsx B2 接单失败拦截复用同款）
+import { DepositBlockDialog } from '../../src/components/feedback/DepositBlockDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { QueryBoundary } from '../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../src/components/feedback/Toast';
-import { AppIcon, Button } from '../../src/components/ui';
 import { useDepositStatus } from '../../src/services/queries/useDeposit';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { useNetwork } from '../../src/hooks/useNetwork';
@@ -220,6 +221,8 @@ export default function TasksPage() {
         },
       ]}
       timeLabel={t('common.deliverWithin', { minutes: String(task.estimatedMinutes) })}
+      // 批B B3：预约单防御标注（scheduledFor 恒 undefined 时零渲染；后端未来透传即生效）
+      scheduledFor={task.scheduledFor}
       onAction={() => router.push(`/task/${task.id}`)}
     />
   );
@@ -382,73 +385,16 @@ export default function TasksPage() {
         {renderContent()}
       </ScrollView>
       {depositBlocked && (
-        <View className="absolute inset-0 items-center justify-center bg-black/50 px-8">
-          <View className="w-full max-w-[280px] gap-4 rounded-3xl bg-surface p-6 shadow-xl">
-            {depositBlockReason === 'unpaid' ? (
-              // 三态①未缴（HTML：直跳缴纳页，非 settings；明示 ≥$1 可接单）
-              <>
-                <View className="bg-status-danger-bg mx-auto h-14 w-14 items-center justify-center rounded-full">
-                  <AppIcon
-                    accessibilityLabel={t('tasks.deposit.title')}
-                    color={colors.danger}
-                    name="deposit"
-                    size={28}
-                  />
-                </View>
-                <Text className="text-center text-lg font-bold text-on-surface">
-                  {t('tasks.deposit.title')}
-                </Text>
-                <Text className="text-center text-sm leading-6 text-on-surface-variant">
-                  {t('tasks.deposit.messageV2')}
-                </Text>
-                <Button
-                  className="bg-primary-container"
-                  onPress={() => router.push('/settings/deposit')}
-                >
-                  {t('tasks.deposit.goDeposit')}
-                </Button>
-                <Button
-                  className="border border-outline bg-transparent"
-                  onPress={() => setDepositDismissed(true)}
-                >
-                  {t('tasks.deposit.later')}
-                </Button>
-              </>
-            ) : (
-              // 三态②PENDING（HTML：已提交 $X 等待 admin 确认）
-              <>
-                <View className="bg-status-warning-bg mx-auto h-14 w-14 items-center justify-center rounded-full">
-                  <AppIcon
-                    accessibilityLabel={t('tasks.deposit.pendingTitle')}
-                    color={colors.warning}
-                    name="clock"
-                    size={28}
-                  />
-                </View>
-                <Text className="text-center text-lg font-bold text-on-surface">
-                  {t('tasks.deposit.pendingTitle')}
-                </Text>
-                <Text className="text-center text-sm leading-6 text-on-surface-variant">
-                  {t('tasks.deposit.pendingMessage', {
-                    amount: formatCurrency((pendingDeposit?.requestedAmount ?? 0) / 100, currency),
-                  })}
-                </Text>
-                <Button
-                  className="border-warning border bg-transparent"
-                  onPress={() => router.push('/settings/deposit/records')}
-                >
-                  {t('tasks.deposit.viewRequest')}
-                </Button>
-                <Button
-                  className="border border-outline bg-transparent"
-                  onPress={() => setDepositDismissed(true)}
-                >
-                  {t('tasks.deposit.gotIt')}
-                </Button>
-              </>
-            )}
-          </View>
-        </View>
+        // 批B B1：抽公共 DepositBlockDialog——未缴态 CTA 改跳 /settings/deposit/pay 缴款页
+        //（原 /settings/deposit 首页）；pending 态维持跳 records。视觉与原内联实现一致。
+        <DepositBlockDialog
+          pendingAmount={formatCurrency((pendingDeposit?.requestedAmount ?? 0) / 100, currency)}
+          reason={depositBlockReason === 'pending' ? 'pending' : 'unpaid'}
+          visible
+          onDismiss={() => setDepositDismissed(true)}
+          onGoDeposit={() => router.push('/settings/deposit/pay')}
+          onViewRequest={() => router.push('/settings/deposit/records')}
+        />
       )}
       <BottomActionBar
         isRefreshing={taskListsFetching}
