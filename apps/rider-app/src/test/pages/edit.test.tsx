@@ -43,14 +43,31 @@ let mockModeState = 'mock';
 
 // 桩 rider 必须是稳定引用：useEffect dep=[rider]，若 selector 每次返回新对象会触发 setForm→rerender→新 rider→死循环（Maximum update depth）
 const mockRider: RiderProfile = {
-  id: 'r-001', userId: 'u-1', riderName: 'Alex 骑手', phone: '+670 77001234',
-  vehicleType: 'MOTORCYCLE', vehiclePlate: 'DL-1234', status: 'ONLINE', applicationStatus: 'APPROVED',
-  totalDeliveries: 128, rating: 4.9, preferredWarehouseIds: [], isOnline: true, createdAt: '', updatedAt: '',
-  name: 'Alex 骑手', licenseNumber: '1234567',
+  id: 'r-001',
+  userId: 'u-1',
+  riderName: 'Alex 骑手',
+  phone: '+670 77001234',
+  vehicleType: 'MOTORCYCLE',
+  vehiclePlate: 'DL-1234',
+  status: 'ONLINE',
+  applicationStatus: 'APPROVED',
+  totalDeliveries: 128,
+  rating: 4.9,
+  preferredWarehouseIds: [],
+  isOnline: true,
+  createdAt: '',
+  updatedAt: '',
+  name: 'Alex 骑手',
+  licenseNumber: '1234567',
 };
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace, back: jest.fn(), canGoBack: () => true }),
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    back: jest.fn(),
+    canGoBack: () => true,
+  }),
   useLocalSearchParams: () => ({}),
 }));
 
@@ -83,7 +100,9 @@ jest.mock('../../../src/services/queries/useRider', () => ({
 }));
 
 jest.mock('../../../src/store/useAuthStore', () => ({
-  useAuthStore: (selector: (s: { rider: RiderProfile | null; hydrate: () => Promise<void> }) => unknown) =>
+  useAuthStore: (
+    selector: (s: { rider: RiderProfile | null; hydrate: () => Promise<void> }) => unknown,
+  ) =>
     selector({
       rider: mockRider,
       hydrate: async () => {},
@@ -95,7 +114,9 @@ jest.mock('../../../src/components/feedback/Toast', () => ({
 }));
 
 function renderPage() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
@@ -113,14 +134,18 @@ function getInputChangeText(container: HTMLElement, index = 0): (v: string) => v
 /** 取 vehicleType 三选一某项（accessibilityLabel=摩托车/自行车/汽车）。 */
 function getVehicleOption(container: HTMLElement, label: string): Element {
   const buttons = container.querySelectorAll('[data-rn-host="Pressable"]');
-  const btn = Array.from(buttons).find((el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === label);
+  const btn = Array.from(buttons).find(
+    (el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === label,
+  );
   return btn!;
 }
 
 /** 取保存按钮（accessibilityLabel=「保存资料」）；real 只读态返回 undefined。 */
 function getSaveButton(container: HTMLElement): Element | undefined {
   const buttons = container.querySelectorAll('[data-rn-host="Pressable"]');
-  return Array.from(buttons).find((el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '保存资料');
+  return Array.from(buttons).find(
+    (el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '保存资料',
+  );
 }
 
 beforeEach(() => {
@@ -212,8 +237,9 @@ describe('手写校验（P2 §6⑥ mock 模式）', () => {
 
     expect(mockMutateAsync).not.toHaveBeenCalled();
     // errors.nameRequired 渲染为 error Text
-    const errorTexts = Array.from(container.querySelectorAll('[data-rn-host="Text"]'))
-      .map((el) => el.textContent ?? '');
+    const errorTexts = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).map(
+      (el) => el.textContent ?? '',
+    );
     expect(errorTexts).toContain('请输入姓名');
   });
 
@@ -231,8 +257,9 @@ describe('手写校验（P2 §6⑥ mock 模式）', () => {
     });
 
     expect(mockMutateAsync).not.toHaveBeenCalled();
-    const errorTexts = Array.from(container.querySelectorAll('[data-rn-host="Text"]'))
-      .map((el) => el.textContent ?? '');
+    const errorTexts = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).map(
+      (el) => el.textContent ?? '',
+    );
     expect(errorTexts).toContain('手机号格式不正确');
   });
 });
@@ -250,8 +277,9 @@ describe('idCardNumber 只读降级（P2-1 §6⑤A 路线 A）', () => {
     expect(idCardInput.getAttribute('data-prop-value')).toBe('1234567');
 
     // helperText「证件号注册后不可自行修改」渲染为 Text
-    const texts = Array.from(container.querySelectorAll('[data-rn-host="Text"]'))
-      .map((el) => el.textContent ?? '');
+    const texts = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).map(
+      (el) => el.textContent ?? '',
+    );
     expect(texts).toContain('证件号注册后不可自行修改');
   });
 
@@ -272,8 +300,9 @@ describe('idCardNumber 只读降级（P2-1 §6⑤A 路线 A）', () => {
     const payload = mockMutateAsync.mock.calls[0][0];
     expect(payload).not.toHaveProperty('idCardNumber');
     // 无 idCardNumber 校验红字
-    const errorTexts = Array.from(container.querySelectorAll('[data-rn-host="Text"]'))
-      .map((el) => el.textContent ?? '');
+    const errorTexts = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).map(
+      (el) => el.textContent ?? '',
+    );
     expect(errorTexts).not.toContain('请输入证件号');
     expect(errorTexts).not.toContain('证件号至少 6 位');
   });
@@ -289,8 +318,9 @@ describe('vehiclePlate label 修正（P2-2 label 改 profile.vehiclePlate）', (
     expect(plateInput.getAttribute('data-prop-placeholder')).toBe('车牌号');
 
     // label「车牌号」渲染为 Text；不再误用 vehicleTypePlaceholder「摩托车快递员」
-    const texts = Array.from(container.querySelectorAll('[data-rn-host="Text"]'))
-      .map((el) => el.textContent ?? '');
+    const texts = Array.from(container.querySelectorAll('[data-rn-host="Text"]')).map(
+      (el) => el.textContent ?? '',
+    );
     expect(texts).toContain('车牌号');
     expect(texts).not.toContain('摩托车快递员');
   });
@@ -326,33 +356,32 @@ describe('保存成功反馈（P2 §3.5 mock 模式）', () => {
   });
 });
 
-describe('real 只读降级（P2 §6① isMockMode 首次入 UI 层）', () => {
-  it('real 模式：显示说明条「资料修改即将开放」+ 客服入口，无保存按钮', () => {
+describe('编辑模式放开（upload 模块批A：updateProfile 接真 PATCH /rider/profile 后 mock/real 均可编辑）', () => {
+  it('real 模式：无「资料修改即将开放」只读说明条，有保存按钮（旧只读降级已删）', () => {
     mockModeState = 'real';
-    const { getByText, queryByText, container } = renderPage();
+    const { queryByText, container } = renderPage();
 
-    // 顶部说明条
-    expect(getByText('资料修改即将开放')).toBeTruthy();
-    expect(getByText('如需更新请联系客服')).toBeTruthy();
-    // 客服入口按钮（accessibilityLabel=「如需更新请联系客服」）
-    const contactBtn = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]'))
-      .find((el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '如需更新请联系客服');
-    expect(contactBtn).toBeTruthy();
-    // 无保存按钮
-    expect(getSaveButton(container)).toBeUndefined();
-    expect(queryByText('保存资料')).toBeNull();
+    // 旧只读说明条 + 客服入口不再渲染
+    expect(queryByText('资料修改即将开放')).toBeNull();
+    expect(queryByText('如需更新请联系客服')).toBeNull();
+    // 保存按钮在 real 模式同样渲染（real 提交走真端点）
+    expect(getSaveButton(container)).toBeTruthy();
   });
 
-  it('real 模式点客服入口跳 /help', () => {
+  it('real 模式保存 → mutateAsync 收到 payload（可编辑非只读）', async () => {
     mockModeState = 'real';
     const { container } = renderPage();
 
-    const contactBtn = Array.from(container.querySelectorAll('[data-rn-host="Pressable"]'))
-      .find((el) => (el.getAttribute('data-prop-accessibilitylabel') ?? '') === '如需更新请联系客服')!;
-    act(() => {
-      fireEvent.click(contactBtn);
+    const saveBtn = getSaveButton(container)!;
+    mockMutateAsync.mockResolvedValueOnce({});
+    await act(async () => {
+      fireEvent.click(saveBtn);
+      await Promise.resolve();
     });
-    expect(mockPush).toHaveBeenCalledWith('/help');
+
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    const payload = mockMutateAsync.mock.calls[0][0];
+    expect(payload).toHaveProperty('riderName', 'Alex 骑手');
   });
 
   it('mock 模式：无说明条，有保存按钮', () => {

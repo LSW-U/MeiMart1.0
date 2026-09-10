@@ -31,13 +31,17 @@ export type RiderProfile = {
   licenseNumber?: string;
 };
 
-// Apply 端点请求 body
+// Apply 端点请求 body（upload 模块批A：avatarUrl/idCardImageUrl/licenseImageUrl
+// 为先上传后申请的 URL 字段——前端先调 /common/rider/uploads/* 拿 URL 再提交）
 export type ApplyRiderPayload = {
   riderName: string;
   phone: string;
   vehicleType?: VehicleType;
   vehiclePlate?: string;
   idCardNumber: string;
+  avatarUrl?: string;
+  idCardImageUrl?: string;
+  licenseImageUrl?: string;
   preferredWarehouseIds?: string[];
 };
 

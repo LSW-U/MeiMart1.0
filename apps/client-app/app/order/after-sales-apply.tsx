@@ -8,7 +8,6 @@
 // 注：POST /client/refunds 已就绪（reason 8 值 + items[] 部分退款），Commit 7 接 useCreateRefund
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Image,
   Platform,
@@ -41,6 +40,16 @@ import { useOrder } from '@/services/queries/useOrders';
 import { useCreateRefund } from '@/services/queries/useRefunds';
 import { uploadsApi } from '@/services/uploads';
 import { REASON_KEY_TO_ENUM } from '@/services/refunds';
+import { PhotoUploadTile } from '@/components/ui/PhotoUploadTile';
+import {
+  createSlot,
+  slotToUploading,
+  slotToDone,
+  slotToError,
+  precheckImage,
+  PrecheckError,
+  type UploadSlot,
+} from '@meimart/upload-core';
 import { useLocalizer } from '@/i18n';
 import { afterSalesApplySchema, type AfterSalesApplyValues } from '@/forms/schemas/service';
 
@@ -56,8 +65,18 @@ const REFUND_REASON_KEYS = [
 ];
 
 const REFUND_TYPES = [
-  { id: 'refund-only', labelKey: 'afterSales.types.refundOnly', descKey: 'afterSales.types.refundOnlyDesc', icon: 'payments' },
-  { id: 'return-refund', labelKey: 'afterSales.types.returnRefund', descKey: 'afterSales.types.returnRefundDesc', icon: 'local_shipping' },
+  {
+    id: 'refund-only',
+    labelKey: 'afterSales.types.refundOnly',
+    descKey: 'afterSales.types.refundOnlyDesc',
+    icon: 'payments',
+  },
+  {
+    id: 'return-refund',
+    labelKey: 'afterSales.types.returnRefund',
+    descKey: 'afterSales.types.returnRefundDesc',
+    icon: 'local_shipping',
+  },
 ] as const;
 
 // F5 多商品选择 state（每商品 selected + refundQty，order 加载后初始化全选全数量）
@@ -90,12 +109,15 @@ export default function AfterSalesApplyPage() {
   // F5 多商品：itemStates 管理每商品勾选 + 退款数量，order 加载后初始化全选全数量
   const [itemStates, setItemStates] = useState<ItemState[]>([]);
   // P13 B2 售后凭证照片：URL 数组（upload 端点返回），最多 3 张；uploading 控制按钮 disable + loading
+  // 批B（U3/U4）：photos 改持 UploadSlot 状态机——内联拟真进度 + 失败保留本地预览可重试
   const [photos, setPhotos] = useState<string[]>([]);
+  const [slots, setSlots] = useState<UploadSlot[]>([]);
   const [uploading, setUploading] = useState(false);
   useEffect(() => {
     if (!order) return;
     // 原因：order 是 react-query 缓存（引用稳定），加载完成时初始化 items 全选全数量；非 derived（用户可改勾选/数量）
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // Why 无 disable 指令：插件规则对「useEffect 内多语句 setState」不触发（改动2 自审实测，
+    // 加指令反报 Unused eslint-disable）；规则升级若触发再按当时 lint 输出补
     setItemStates(
       order.items.map((it) => ({
         orderItemId: it.id,
@@ -123,11 +145,7 @@ export default function AfterSalesApplyPage() {
         style={{ backgroundColor: colors.background, flex: 1 }}
       >
         <StatusBarConfig />
-        <PrimaryHeader
-          title={t('afterSales.applyTitle')}
-          showBack
-          onBackPress={handleBack}
-        />
+        <PrimaryHeader title={t('afterSales.applyTitle')} showBack onBackPress={handleBack} />
         <LoadingOverlay visible />
       </SafeAreaWrapper>
     );
@@ -140,11 +158,7 @@ export default function AfterSalesApplyPage() {
         style={{ backgroundColor: colors.background, flex: 1 }}
       >
         <StatusBarConfig />
-        <PrimaryHeader
-          title={t('afterSales.applyTitle')}
-          showBack
-          onBackPress={handleBack}
-        />
+        <PrimaryHeader title={t('afterSales.applyTitle')} showBack onBackPress={handleBack} />
         <ErrorState
           message={t('errors.orderNotFound', { defaultValue: 'Order not found' })}
           onRetry={() => refetch()}
@@ -153,7 +167,9 @@ export default function AfterSalesApplyPage() {
     );
   }
 
-  // P13 B2 选图 + 上传：expo-image-picker → uploadsApi.refundEvidence → push URL（最多 3 张）
+  // P13 B2 选图 + 上传：expo-image-picker → 预校验（批B A4）→ uploadsApi.refundEvidence → push URL（最多 3 张）
+  // 批B（U3/U4）：选图即建 slot（本地预览立即可见）→ uploading 拟真进度 → done/error；
+  // 失败保留本地预览（slotToError），network 类给重试钮，business 类（校验拒绝）提示换一张
   const handleAddPhoto = async () => {
     if (photos.length >= 3) {
       toast.info(t('afterSales.photoLimitReached', { defaultValue: 'Up to 3 photos' }));
@@ -173,11 +189,34 @@ export default function AfterSalesApplyPage() {
     });
     if (result.canceled || !result.assets?.[0]) return;
     const asset = result.assets[0];
+    // 批B A4 前端预校验：100×100 下界（generic 场景）与后端同码，拦得住的不消耗弱网往返
+    try {
+      precheckImage('generic', {
+        mimeType: asset.mimeType,
+        sizeBytes: asset.fileSize ?? null,
+        width: asset.width ?? 0,
+        height: asset.height ?? 0,
+      });
+    } catch (err) {
+      if (err instanceof PrecheckError) {
+        toast.error(t(`errors.${err.code}`, { defaultValue: err.message }));
+        return;
+      }
+      throw err;
+    }
+    const slotId = `evidence-${Date.now()}`;
+    const slot = createSlot(slotId, asset.uri);
+    setSlots((prev) => [...prev, slot]);
     setUploading(true);
     try {
+      slotToUploading(slot);
+      setSlots((prev) => prev.map((s) => (s.id === slotId ? { ...slotToUploading(s) } : s)));
       const uploaded = await uploadsApi.refundEvidence(asset.uri, asset.mimeType ?? 'image/jpeg');
+      setSlots((prev) => prev.map((s) => (s.id === slotId ? slotToDone(s, uploaded.url) : s)));
       setPhotos((prev) => [...prev, uploaded.url]);
     } catch (err) {
+      // U4：失败保留本地预览；network 类重试由 slot 驱动，business 类提示换一张
+      setSlots((prev) => prev.map((s) => (s.id === slotId ? slotToError(s, err) : s)));
       // 原因：后端 E-UPLOAD-001/002（magic bytes/尺寸/MinIO 故障）
       // getApiErrorMessage 提取后端 message（如「文件内容不是有效的图片」），非 axios 技术文案
       toast.error(getApiErrorMessage(err, t('afterSales.uploadFailed')));
@@ -186,8 +225,41 @@ export default function AfterSalesApplyPage() {
     }
   };
 
+  // U4 手动重试：error 态 slot 重新走上传（slotToError 已保留 localUri）
+  const handleRetrySlot = async (slotId: string) => {
+    const target = slots.find((s) => s.id === slotId);
+    if (!target?.localUri || uploading) return;
+    setUploading(true);
+    try {
+      setSlots((prev) => prev.map((s) => (s.id === slotId ? slotToUploading(s) : s)));
+      const uploaded = await uploadsApi.refundEvidence(
+        target.localUri,
+        target.localUri.endsWith('.png') ? 'image/png' : 'image/jpeg',
+      );
+      setSlots((prev) => prev.map((s) => (s.id === slotId ? slotToDone(s, uploaded.url) : s)));
+      setPhotos((prev) => [...prev, uploaded.url]);
+    } catch (err) {
+      setSlots((prev) => prev.map((s) => (s.id === slotId ? slotToError(s, err) : s)));
+      toast.error(getApiErrorMessage(err, t('afterSales.uploadFailed')));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // 批B 修复 P2-1：error 态 slot 的删除只移除 slot 本身（放弃这张失败上传），
+  // 不动 photos（error slot 未入 photos，无对应下标可删）
+  const removeErrorSlot = (slotId: string) => {
+    setSlots((prev) => prev.filter((s) => s.id !== slotId));
+  };
+
   const handleDeletePhoto = (index: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+    // 同步移除对应 slot（photos 与 slots 按 push 顺序一一对应；error 态 slot 未入 photos，按下标对不齐时按剩余数裁剪）
+    setSlots((prev) => {
+      const doneSlots = prev.filter((s) => s.state === 'done');
+      const removed = doneSlots[index];
+      return prev.filter((s) => s.id !== removed?.id);
+    });
   };
 
   // Commit 7+8：接真实 POST /client/refunds（Commit 7 整单 / Commit 8 部分退款 items[]）
@@ -195,7 +267,9 @@ export default function AfterSalesApplyPage() {
   const submit = handleSubmit(async (values) => {
     const selected = itemStates.filter((st) => st.selected);
     if (selected.length === 0) {
-      toast.error(t('afterSales.selectItemPrompt', { defaultValue: 'Please select at least one item' }));
+      toast.error(
+        t('afterSales.selectItemPrompt', { defaultValue: 'Please select at least one item' }),
+      );
       return;
     }
     const reason = REASON_KEY_TO_ENUM[values.reason] ?? 'OTHER';
@@ -231,11 +305,7 @@ export default function AfterSalesApplyPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
-      <PrimaryHeader
-        title={t('afterSales.applyTitle')}
-        showBack
-        onBackPress={handleBack}
-      />
+      <PrimaryHeader title={t('afterSales.applyTitle')} showBack onBackPress={handleBack} />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -250,7 +320,10 @@ export default function AfterSalesApplyPage() {
           <View
             style={[
               styles.card,
-              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderColor: colors['outline-variant'],
+              },
             ]}
           >
             <View style={styles.cardPattern} pointerEvents="none">
@@ -293,7 +366,9 @@ export default function AfterSalesApplyPage() {
                   >
                     {selected ? <Icon symbol="check" size={15} color={ON_PRIMARY} /> : null}
                   </Pressable>
-                  <View style={[styles.itemThumb, { backgroundColor: colors['surface-container'] }]}>
+                  <View
+                    style={[styles.itemThumb, { backgroundColor: colors['surface-container'] }]}
+                  >
                     {it.product.image ? (
                       <Image
                         source={{ uri: it.product.image }}
@@ -303,28 +378,45 @@ export default function AfterSalesApplyPage() {
                     ) : null}
                   </View>
                   <View style={styles.itemText}>
-                    <Text style={[styles.itemName, { color: colors['on-surface'] }]} numberOfLines={2}>
+                    <Text
+                      style={[styles.itemName, { color: colors['on-surface'] }]}
+                      numberOfLines={2}
+                    >
                       {localize(it.product.name)}
                     </Text>
                     <PriceText value={it.product.price} size="sm" />
                   </View>
                   <View style={[styles.qtyStepper, { borderColor: colors['outline-variant'] }]}>
                     <Pressable
-                      onPress={() => updateItemState(idx, { refundQty: Math.max(1, refundQty - 1) })}
+                      onPress={() =>
+                        updateItemState(idx, { refundQty: Math.max(1, refundQty - 1) })
+                      }
                       style={styles.qtyBtn}
                       accessibilityRole="button"
-                      accessibilityLabel={t('afterSales.decreaseQty', { defaultValue: 'Decrease quantity' })}
+                      accessibilityLabel={t('afterSales.decreaseQty', {
+                        defaultValue: 'Decrease quantity',
+                      })}
                     >
-                      <Text style={[styles.qtyBtnText, { color: colors['on-surface-variant'] }]}>−</Text>
+                      <Text style={[styles.qtyBtnText, { color: colors['on-surface-variant'] }]}>
+                        −
+                      </Text>
                     </Pressable>
-                    <Text style={[styles.qtyVal, { color: colors['on-surface'] }]}>{refundQty}</Text>
+                    <Text style={[styles.qtyVal, { color: colors['on-surface'] }]}>
+                      {refundQty}
+                    </Text>
                     <Pressable
-                      onPress={() => updateItemState(idx, { refundQty: Math.min(it.quantity, refundQty + 1) })}
+                      onPress={() =>
+                        updateItemState(idx, { refundQty: Math.min(it.quantity, refundQty + 1) })
+                      }
                       style={styles.qtyBtn}
                       accessibilityRole="button"
-                      accessibilityLabel={t('afterSales.increaseQty', { defaultValue: 'Increase quantity' })}
+                      accessibilityLabel={t('afterSales.increaseQty', {
+                        defaultValue: 'Increase quantity',
+                      })}
                     >
-                      <Text style={[styles.qtyBtnText, { color: colors['on-surface-variant'] }]}>+</Text>
+                      <Text style={[styles.qtyBtnText, { color: colors['on-surface-variant'] }]}>
+                        +
+                      </Text>
                     </Pressable>
                   </View>
                 </View>
@@ -336,7 +428,10 @@ export default function AfterSalesApplyPage() {
           <View
             style={[
               styles.card,
-              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderColor: colors['outline-variant'],
+              },
             ]}
           >
             <Text style={[styles.label, { color: colors['on-surface'] }]}>
@@ -352,7 +447,9 @@ export default function AfterSalesApplyPage() {
                     style={[
                       styles.typeCard,
                       {
-                        backgroundColor: active ? colors['surface-container-high'] : colors['surface-container-low'],
+                        backgroundColor: active
+                          ? colors['surface-container-high']
+                          : colors['surface-container-low'],
                         borderColor: active ? colors.primary : colors['outline-variant'],
                         borderWidth: active ? 2 : StyleSheet.hairlineWidth,
                       },
@@ -392,7 +489,10 @@ export default function AfterSalesApplyPage() {
           <View
             style={[
               styles.card,
-              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderColor: colors['outline-variant'],
+              },
             ]}
           >
             <Text style={[styles.label, { color: colors['on-surface'] }]}>
@@ -447,7 +547,10 @@ export default function AfterSalesApplyPage() {
           <View
             style={[
               styles.card,
-              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderColor: colors['outline-variant'],
+              },
             ]}
           >
             <Text style={[styles.label, { color: colors['on-surface'] }]}>
@@ -495,62 +598,68 @@ export default function AfterSalesApplyPage() {
           <View
             style={[
               styles.card,
-              { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderColor: colors['outline-variant'],
+              },
             ]}
           >
             <Text style={[styles.label, { color: colors['on-surface'] }]}>
               {t('afterSales.evidenceLabel', { defaultValue: 'Upload evidence (optional)' })}
             </Text>
             <View style={styles.photosRow}>
-              <Pressable
-                onPress={handleAddPhoto}
-                style={[
-                  styles.photoAddBtn,
-                  {
-                    backgroundColor: colors['surface-container-low'],
-                    borderColor: colors['outline-variant'],
-                    opacity: uploading || photos.length >= 3 ? 0.5 : 1,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t('afterSales.addPhotoA11y', { defaultValue: 'Add evidence photo' })}
-                accessibilityState={{ disabled: uploading || photos.length >= 3 }}
-                testID="aftersales-add-photo"
-                disabled={uploading || photos.length >= 3}
-              >
-                {uploading ? (
-                  <ActivityIndicator size="small" color={colors['on-surface-variant']} />
-                ) : (
-                  <>
-                    <Icon symbol="photo_camera" size={22} color={colors['on-surface-variant']} />
-                    <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
-                      {t('afterSales.addPhoto', { defaultValue: 'Add' })}
-                    </Text>
-                  </>
-                )}
-              </Pressable>
-
-              {/* P13 B2 已选照片缩略图 + 删除按钮 */}
-              {photos.map((url, index) => (
-                <View key={url} style={[styles.photoThumb, { backgroundColor: colors['surface-container'] }]}>
-                  <Image source={{ uri: url }} style={styles.photoThumbImg} resizeMode="cover" />
-                  <Pressable
-                    onPress={() => handleDeletePhoto(index)}
-                    style={[styles.photoDeleteBtn, { backgroundColor: colors['error-container'] }]}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('afterSales.deletePhotoA11y', { defaultValue: 'Delete photo' })}
-                    testID={`aftersales-delete-photo-${index}`}
-                  >
-                    <Icon symbol="close" size={14} color={colors['on-primary']} />
-                  </Pressable>
-                </View>
-              ))}
+              {/* 批B U3/U4：统一图片位组件——空位添加 + done 删除 + error 重试（保留本地预览） */}
+              {slots.map((slot) => {
+                const idx = photos.indexOf(slot.remoteUrl ?? '');
+                return (
+                  <PhotoUploadTile
+                    key={slot.id}
+                    state={slot.state === 'idle' ? 'uploading' : slot.state}
+                    uri={slot.state === 'done' ? slot.remoteUrl : slot.localUri}
+                    progress={slot.progress}
+                    errorKind={slot.errorKind}
+                    errorCode={slot.errorCode}
+                    errorMessage={
+                      slot.errorCode
+                        ? t(`errors.${slot.errorCode}`, { defaultValue: slot.errorMessage })
+                        : slot.errorMessage
+                    }
+                    retryLabel={t('common.retry', { defaultValue: 'Retry' })}
+                    addA11yLabel={t('afterSales.addPhotoA11y', {
+                      defaultValue: 'Add evidence photo',
+                    })}
+                    retryA11yLabel={t('common.retry', { defaultValue: 'Retry' })}
+                    deleteA11yLabel={t('afterSales.deletePhotoA11y', {
+                      defaultValue: 'Delete photo',
+                    })}
+                    onRetry={() => void handleRetrySlot(slot.id)}
+                    // 批B 修复 P2-1：error slot 未入 photos（idx 恒 -1），走 handleDeletePhoto(0) 会误删
+                    // photos[0]；error 删除 = 放弃这张，只移除 slot 本身。done slot 才走下标路径。
+                    onDelete={() =>
+                      slot.state === 'error'
+                        ? removeErrorSlot(slot.id)
+                        : handleDeletePhoto(idx >= 0 ? idx : 0)
+                    }
+                    testID={`aftersales-photo-${slot.id}`}
+                  />
+                );
+              })}
+              {photos.length + slots.filter((s) => s.state === 'error').length < 3 && (
+                <PhotoUploadTile
+                  addLabel={t('afterSales.addPhoto', { defaultValue: 'Add' })}
+                  addA11yLabel={t('afterSales.addPhotoA11y', {
+                    defaultValue: 'Add evidence photo',
+                  })}
+                  onAdd={() => void handleAddPhoto()}
+                  disabled={uploading || photos.length >= 3}
+                  testID="aftersales-add-photo"
+                />
+              )}
             </View>
             <Text style={[styles.photoHint, { color: colors['on-surface-variant'] }]}>
               {t('afterSales.evidenceLimit', { defaultValue: 'Up to 3 photos, JPG / PNG' })}
             </Text>
           </View>
-
         </ScrollView>
 
         {/* 底部提交按钮栏（R1 加退款说明行；D1 删联系卡） */}

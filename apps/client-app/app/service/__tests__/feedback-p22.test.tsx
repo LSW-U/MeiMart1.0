@@ -31,7 +31,7 @@ jest.mock('@/hooks/useNetwork', () => ({
 }));
 
 jest.mock('@/services/uploads', () => ({
-  uploadsApi: { reviewImage: jest.fn() },
+  uploadsApi: { reviewImage: jest.fn(), feedbackImage: jest.fn() },
 }));
 
 // V12：提交链路 useMutation 骨架（并行改动的 hook，测试 mock 免 QueryClient）
@@ -59,8 +59,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 // photoCount Text 含 ` · ` 前缀拼接（label 行内），用正则尾部匹配（RNTL matcher 仅支持 string/RegExp）
-const byPhotoCount = (count: number) =>
-  new RegExp(`service\\.feedback\\.photoCount:${count}:3$`);
+const byPhotoCount = (count: number) => new RegExp(`service\\.feedback\\.photoCount:${count}:3$`);
 
 const pickType = (q: ReturnType<typeof render>) =>
   fireEvent.press(q.getByTestId('feedback-type-product'));
@@ -72,7 +71,7 @@ describe('FeedbackPage（P22：一体化表单 + 类型网格 + 照片上传 + �
   beforeEach(() => {
     (toast.info as jest.Mock).mockClear();
     (ImagePicker.launchImageLibraryAsync as jest.Mock).mockReset();
-    (uploadsApi.reviewImage as jest.Mock).mockReset();
+    (uploadsApi.feedbackImage as jest.Mock).mockReset();
     mockOffline = false;
   });
 
@@ -120,12 +119,12 @@ describe('FeedbackPage（P22：一体化表单 + 类型网格 + 照片上传 + �
     });
   });
 
-  it('D3 照片上传：选 1 张传 reviewImage 后计数 1/3 + 删除钮出现，删除后回到 0/3', async () => {
+  it('D3 照片上传：选 1 张传 feedbackImage 后计数 1/3 + 删除钮出现，删除后回到 0/3', async () => {
     (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValue({
       canceled: false,
       assets: [{ uri: 'file://photo1.jpg', mimeType: 'image/jpeg' }],
     });
-    (uploadsApi.reviewImage as jest.Mock).mockResolvedValue({
+    (uploadsApi.feedbackImage as jest.Mock).mockResolvedValue({
       url: 'https://mock-minio.local/1.jpg',
       key: 'reviews/1.jpg',
       size: 1024,
@@ -136,7 +135,7 @@ describe('FeedbackPage（P22：一体化表单 + 类型网格 + 照片上传 + �
       expect(getByText(byPhotoCount(1))).toBeTruthy();
       expect(getByTestId('feedback-remove-photo-0')).toBeTruthy();
     });
-    expect(uploadsApi.reviewImage).toHaveBeenCalledWith('file://photo1.jpg', 'image/jpeg');
+    expect(uploadsApi.feedbackImage).toHaveBeenCalledWith('file://photo1.jpg', 'image/jpeg');
     fireEvent.press(getByTestId('feedback-remove-photo-0'));
     await waitFor(() => {
       expect(queryByText(byPhotoCount(1))).toBeNull();
@@ -144,12 +143,12 @@ describe('FeedbackPage（P22：一体化表单 + 类型网格 + 照片上传 + �
     });
   });
 
-  it('D3 上传失败：reviewImage reject 时 toast.error(uploadFailed)', async () => {
+  it('D3 上传失败：feedbackImage reject 时 toast.error(uploadFailed)', async () => {
     (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValue({
       canceled: false,
       assets: [{ uri: 'file://photo2.jpg', mimeType: 'image/jpeg' }],
     });
-    (uploadsApi.reviewImage as jest.Mock).mockRejectedValue(new Error('boom'));
+    (uploadsApi.feedbackImage as jest.Mock).mockRejectedValue(new Error('boom'));
     const { getByTestId } = render(<FeedbackPage />, { wrapper });
     fireEvent.press(getByTestId('feedback-add-photo'));
     await waitFor(() => {

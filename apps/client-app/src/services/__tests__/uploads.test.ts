@@ -80,14 +80,17 @@ describe('uploadsApi 错误处理', () => {
     await expect(uploadsApi.reviewImage('file:///x.jpg', 'image/jpeg')).rejects.toThrow('文件过大');
   });
 
-  it('!res.ok 时 json 解析失败回退 status 文案', async () => {
-    fetchMock.mockResolvedValueOnce({
+  it('!res.ok 时 json 解析失败回退 status 文案（批B U2：500 属网络类，自动重试 2 次后仍失败透传）', async () => {
+    // uploadTo 已切 uploadImageFileWithRetry：500 → kind=network → 自动重试 2 次（真实退避 ~3s），
+    // 每轮都回 500 响应，最终抛最后一轮的 extractUploadErrorMessage 结果
+    fetchMock.mockImplementation(async () => ({
       ok: false,
       status: 500,
       json: () => Promise.reject(new Error('parse error')),
-    });
+    }));
     await expect(uploadsApi.refundEvidence('file:///x.jpg', 'image/jpeg')).rejects.toThrow(
       'Upload failed (500)',
     );
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });

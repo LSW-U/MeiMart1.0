@@ -1159,7 +1159,22 @@
     "E-AUTH-003": "No permission to access",
     "notFoundTitle": "Page not found",
     "notFoundDesc": "The page does not exist",
-    "openLinkFailed": "Could not open the app for this link"
+    "openLinkFailed": "Could not open the app for this link",
+    "E-UPLOAD-001": "Upload failed (storage service error)",
+    "E-UPLOAD-002": "Upload failed, please try again later",
+    "E-UPLOAD-010": "Unsupported image type, only jpg/png/webp are allowed",
+    "E-UPLOAD-011": "No file received (field name must be \"file\")",
+    "E-UPLOAD-012": "File is empty",
+    "E-UPLOAD-013": "File content is not a valid image (jpg/png/webp), the mime type may be forged",
+    "E-UPLOAD-014": "File content does not match the declared mime type",
+    "E-UPLOAD-015": "Unable to read image dimensions (file may be corrupted)",
+    "E-UPLOAD-016": "Image dimensions too small",
+    "E-UPLOAD-017": "Avatar must be a 1:1 square image, please crop and re-upload",
+    "E-UPLOAD-018": "Failed to read image dimensions",
+    "E-UPLOAD-019": "Avatar image too small (minimum 200x200)",
+    "E-UPLOAD-020": "Avatar must be a 1:1 square image, please crop and re-upload",
+    "E-UPLOAD-021": "Banner image width out of range (600-2000px)",
+    "E-UPLOAD-022": "Banner image aspect ratio out of range (1.5:1 - 3:1)"
   },
   "search": {
     "recent": "Recent Searches",

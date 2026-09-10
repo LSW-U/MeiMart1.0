@@ -1,4 +1,9 @@
-import type { ApplyRiderPayload, RiderProfile, RiderStatus, UpdateDutyPayload } from '@/src/types/rider';
+import type {
+  ApplyRiderPayload,
+  RiderProfile,
+  RiderStatus,
+  UpdateDutyPayload,
+} from '@/src/types/rider';
 
 import { api, isMockMode } from './api';
 import { tokenStorage } from './token-storage';
@@ -108,14 +113,18 @@ export const riderApi = {
     return res.data;
   },
 
-  // 后端无 rider 自助改资料端点（W6+ 才支持）。real 模式抛错让 UI onError 回滚。
+  // 骑手自助改资料（upload 模块批A 2026-09-09：删 throw——后端 PATCH /rider/profile 已就绪
+  //   （W3 骑手个人区 2026-08-24，@Roles RIDER），支持 riderName/vehicleType/vehiclePlate/
+  //   avatarUrl/idCardImageUrl/licenseImageUrl；idCardNumber/phone 不可改（后端 schema 不收）。
+  //   响应 { success, data } 由 api.ts 拦截器剥层。）
   async updateProfile(patch: Partial<RiderProfile>): Promise<RiderProfile> {
     if (isMockMode) {
       const next: RiderProfile = { ...getMockProfile(), ...patch };
       saveMockProfile(next);
       return mockDelay({ ...next }, 400);
     }
-    throw new Error('rider profile update not supported by backend (W6+)');
+    const res = await api.patch<RiderProfile>('/rider/profile', patch);
+    return res.data;
   },
 };
 

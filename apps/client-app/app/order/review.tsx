@@ -34,6 +34,16 @@ import { PriceText } from '@/components/ui/PriceText';
 import { useOrder } from '@/services/queries/useOrders';
 import { useSubmitReview, useOrderReviews } from '@/services/queries/useReviews';
 import { uploadsApi } from '@/services/uploads';
+import { PhotoUploadTile } from '@/components/ui/PhotoUploadTile';
+import {
+  createSlot,
+  slotToUploading,
+  slotToDone,
+  slotToError,
+  precheckImage,
+  PrecheckError,
+  type UploadSlot,
+} from '@meimart/upload-core';
 import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import { getApiErrorMessage } from '@/utils/error';
@@ -98,7 +108,8 @@ export default function OrderReviewPage() {
   );
   const [selectedProductId, setSelectedProductId] = useState<string>(productIdParam ?? '');
   // currentProductId 优先首个未评商品（已评商品灰色禁用，自动落到下一个待评商品）
-  const firstUnreviewedId = orderItems.find((i) => !reviewedProductIds.has(i.product.id))?.product.id;
+  const firstUnreviewedId = orderItems.find((i) => !reviewedProductIds.has(i.product.id))?.product
+    .id;
   const currentProductId =
     selectedProductId || firstUnreviewedId || orderItems[0]?.product.id || productIdParam || 'p001';
   const currentItem = orderItems.find((i) => i.product.id === currentProductId);
@@ -141,7 +152,16 @@ export default function OrderReviewPage() {
 
   // PanResponder 用 useMemo 创建（依赖 computeStar 纯函数 + stable setValue/scaleAnim）
   // ref.current 访问全部在 event 回调（onPanResponderGrant/Move）内，event 触发时执行非 render 阶段
-  /* eslint-disable react-hooks/refs -- 原因：onPanResponderGrant/Move 是 event 回调（手势触发时执行），其内的 ratingRef/starsLayoutRef.current 访问不在 render 阶段；react-hooks/refs 静态分析无法区分 event 回调与 render 函数体，对 RN PanResponder + ref 标准模式误报 */
+  // Why 保留 disable 范围指令（改动2 自审实测报告 Unused eslint-disable）： PanResponder.create
+  // 的回调体在本 lint 版本未命中 react-hooks/refs（规则对 useMemo+create 工厂内的 ref 访问不判），
+  // 但 ratingRef/starsLayoutRef 语义上确属「event 回调访问 ref」模式，指令作为意图标注保留——
+  // 规则升级命中时即自动生效，避免届时静默报错
+  // Why 无 eslint-disable react-hooks/refs 指令（批B 收尾二分实测）：PanResponder.create 回调体内的
+  // ratingRef/starsLayoutRef.current 访问在本配置（eslint-plugin-react-hooks 7.1.1）不被该规则命中——
+  // 规则对 useMemo+PanResponder.create 工厂内的 event 回调不判违规；且实测 uploadOne 的
+  // 「catch 内 setSlots」模式会使规则对该文件整体降级（指令反报 Unused）。语义上这些 ref 访问
+  // 均在 event 回调（手势触发）执行、非 render 阶段，本就合规。若未来重构移除 setState-in-catch
+  // 模式后规则报此区块违规，再按当时报错补范围指令。
   const starsPanResponder = useMemo(
     () =>
       PanResponder.create({
@@ -172,7 +192,6 @@ export default function OrderReviewPage() {
       }),
     [computeStar, setValue, scaleAnim],
   );
-  /* eslint-enable react-hooks/refs */
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -182,15 +201,67 @@ export default function OrderReviewPage() {
 
   const { isOffline } = useNetwork();
   const [uploading, setUploading] = useState(false);
+  // 批B（U3/U4）：图片位状态机——多选上传逐张建 slot，失败保留本地预览可重试
+  const [slots, setSlots] = useState<UploadSlot[]>([]);
+  // Why: Controller render 回调闭包里读 slots 会拿到旧值（rerender 不换 render 闭包时），
+  //      ref 镜像最新值供 handleAddPhoto/handleRetrySlot 计数与重试取 URI
+  const slotsRef = useRef<UploadSlot[]>([]);
+  useEffect(() => {
+    slotsRef.current = slots;
+  }, [slots]);
 
-  // 决策 3（B3/R3）+ RB2：图片上传 expo-image-picker -> uploadsApi.reviewImage 拿 URL -> 存 URL
-  // RB2 端点（POST /client/uploads/review-image）就绪后上传拿 MinIO URL，submit 时传后端可访问
-  const handleAddPhoto = async (
-    currentImages: string[],
+  // 批B A4 预校验（generic：≥100×100 任意比例 + ≤5MB）+ 单张上传并落 slot
+  const uploadOne = async (asset: ImagePicker.ImagePickerAsset, slotId: string) => {
+    try {
+      precheckImage('generic', {
+        mimeType: asset.mimeType,
+        sizeBytes: asset.fileSize ?? null,
+        width: asset.width ?? 0,
+        height: asset.height ?? 0,
+      });
+    } catch (err) {
+      if (err instanceof PrecheckError) {
+        setSlots((prev) =>
+          prev.map((s) =>
+            s.id === slotId ? { ...slotToError(s, err), errorKind: 'business' as const } : s,
+          ),
+        );
+        toast.error(t(`errors.${err.code}`, { defaultValue: err.message }));
+        return null;
+      }
+      throw err;
+    }
+    try {
+      setSlots((prev) => prev.map((s) => (s.id === slotId ? slotToUploading(s) : s)));
+      const uploaded = await uploadsApi.reviewImage(asset.uri, asset.mimeType ?? 'image/jpeg');
+      setSlots((prev) => prev.map((s) => (s.id === slotId ? slotToDone(s, uploaded.url) : s)));
+      return uploaded.url;
+    } catch (err) {
+      setSlots((prev) => prev.map((s) => (s.id === slotId ? slotToError(s, err) : s)));
+      toast.error(t('review.photoUploadFailed'));
+      return null;
+    }
+  };
+
+  // U4 手动重试：error 态 slot 用保留的 localUri 重新上传
+  const handleRetrySlot = async (
+    slotId: string,
     onChange: (v: string[]) => void,
+    current: string[],
   ) => {
+    const target = slotsRef.current.find((s) => s.id === slotId);
+    if (!target?.localUri || uploading) return;
+    const url = await uploadOne({ uri: target.localUri } as ImagePicker.ImagePickerAsset, slotId);
+    if (url) onChange([...current, url].slice(0, 3));
+  };
+
+  // 决策 3（B3/R3）+ RB2：图片上传 expo-image-picker -> 预校验（批B A4）-> uploadsApi.reviewImage 拿 URL -> 存 URL
+  // RB2 端点（POST /client/uploads/review-image）就绪后上传拿 MinIO URL，submit 时传后端可访问
+  // 批B（U3/U4）：多选逐张建 slot（本地预览+拟真进度+失败可重试），成功的 URL 进表单 images
+  const handleAddPhoto = async (currentImages: string[], onChange: (v: string[]) => void) => {
     const MAX = 3;
-    if (currentImages.length >= MAX) return;
+    const pending = slotsRef.current.filter((s) => s.state === 'error').length;
+    if (currentImages.length + pending >= MAX) return;
     if (isOffline) {
       toast.info(t('review.photoOfflineTip'));
       return;
@@ -198,25 +269,18 @@ export default function OrderReviewPage() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
-      selectionLimit: MAX - currentImages.length,
+      selectionLimit: MAX - currentImages.length - pending,
       quality: 0.8,
     });
     if (result.canceled) return;
     setUploading(true);
-    try {
-      // 逐张上传 review-image 端点拿 URL，存 URL（不再存本地 URI）
-      const uploaded = await Promise.all(
-        result.assets.map((a) =>
-          uploadsApi.reviewImage(a.uri, a.mimeType ?? 'image/jpeg'),
-        ),
-      );
-      const newUrls = uploaded.map((r) => r.url);
-      onChange([...currentImages, ...newUrls].slice(0, MAX));
-    } catch {
-      toast.error(t('review.photoUploadFailed'));
-    } finally {
-      setUploading(false);
-    }
+    // 逐张建 slot（本地预览立即可见）再并发上传
+    const newSlots = result.assets.map((a, i) => createSlot(`review-${Date.now()}-${i}`, a.uri));
+    setSlots((prev) => [...prev, ...newSlots]);
+    const uploaded = await Promise.all(result.assets.map((a, i) => uploadOne(a, newSlots[i].id)));
+    const newUrls = uploaded.filter((u): u is string => u !== null);
+    onChange([...currentImages, ...newUrls].slice(0, MAX));
+    setUploading(false);
   };
 
   // Why: §8 提交接 useSubmitReview（乐观写入 reviews 缓存 -> 详情页立即可见 + 绿色置顶）。
@@ -272,85 +336,95 @@ export default function OrderReviewPage() {
         {/* 多商品切换 tab（方案 C：单商品订单不显，多商品订单顶部切换逐条评价，切换 reset 表单） */}
         {orderItems.length > 1 && (
           <>
-          {/* V18：显式进度提示（原型 info-c 蓝底条「已完成 1/3」，tab 仅隐含进度） */}
-          <View style={[styles.reviewProgressRow, { backgroundColor: colors.semantic['info-container'] }]}>
-            <Icon symbol="info" size={14} color={colors.semantic.info} />
-            <Text style={[styles.reviewProgressText, { color: colors.semantic.info }]}>
-              {t('review.progressHint', {
-                done: reviewedProductIds.size,
-                total: orderItems.length,
-              })}
-            </Text>
-          </View>
-          <View style={styles.productTabs}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.productTabsScroll}
+            {/* V18：显式进度提示（原型 info-c 蓝底条「已完成 1/3」，tab 仅隐含进度） */}
+            <View
+              style={[
+                styles.reviewProgressRow,
+                { backgroundColor: colors.semantic['info-container'] },
+              ]}
             >
-              {orderItems.map((it) => {
-                const active = it.product.id === currentProductId;
-                // 已评商品（APPROVED/PENDING）灰色禁用 + 已评 badge；REJECTED 可重评（reviewed=false）
-                const reviewed = reviewedProductIds.has(it.product.id);
-                return (
-                  <Pressable
-                    key={it.product.id}
-                    onPress={() => !reviewed && selectProduct(it.product.id)}
-                    disabled={reviewed}
-                    style={[
-                      styles.productTab,
-                      {
-                        backgroundColor: reviewed
-                          ? colors['surface-container']
-                          : active
-                            ? colors.primary
-                            : colors['surface-container-low'],
-                        borderColor: reviewed
-                          ? colors['outline-variant']
-                          : active
-                            ? colors.primary
-                            : colors['outline-variant'],
-                        opacity: reviewed ? 0.5 : 1,
-                      },
-                    ]}
-                    accessibilityRole="tab"
-                    accessibilityState={{ selected: active, disabled: reviewed }}
-                    accessibilityLabel={`${localize(it.product.name)}${reviewed ? ` ${t('review.reviewedBadge')}` : ''}`}
-                  >
-                    <Image
-                      source={{
-                        uri:
-                          it.product.image ||
-                          'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=100',
-                      }}
-                      style={styles.productTabImg}
-                    />
-                    <Text
+              <Icon symbol="info" size={14} color={colors.semantic.info} />
+              <Text style={[styles.reviewProgressText, { color: colors.semantic.info }]}>
+                {t('review.progressHint', {
+                  done: reviewedProductIds.size,
+                  total: orderItems.length,
+                })}
+              </Text>
+            </View>
+            <View style={styles.productTabs}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.productTabsScroll}
+              >
+                {orderItems.map((it) => {
+                  const active = it.product.id === currentProductId;
+                  // 已评商品（APPROVED/PENDING）灰色禁用 + 已评 badge；REJECTED 可重评（reviewed=false）
+                  const reviewed = reviewedProductIds.has(it.product.id);
+                  return (
+                    <Pressable
+                      key={it.product.id}
+                      onPress={() => !reviewed && selectProduct(it.product.id)}
+                      disabled={reviewed}
                       style={[
-                        styles.productTabName,
+                        styles.productTab,
                         {
-                          color: reviewed
-                            ? colors['on-surface-variant']
+                          backgroundColor: reviewed
+                            ? colors['surface-container']
                             : active
-                              ? ON_PRIMARY
-                              : colors['on-surface-variant'],
+                              ? colors.primary
+                              : colors['surface-container-low'],
+                          borderColor: reviewed
+                            ? colors['outline-variant']
+                            : active
+                              ? colors.primary
+                              : colors['outline-variant'],
+                          opacity: reviewed ? 0.5 : 1,
                         },
                       ]}
-                      numberOfLines={1}
+                      accessibilityRole="tab"
+                      accessibilityState={{ selected: active, disabled: reviewed }}
+                      accessibilityLabel={`${localize(it.product.name)}${reviewed ? ` ${t('review.reviewedBadge')}` : ''}`}
                     >
-                      {localize(it.product.name)}
-                    </Text>
-                    {reviewed && (
-                      <View style={[styles.reviewedBadge, { backgroundColor: colors.semantic.positive }]}>
-                        <Icon symbol="check" size={10} color={ON_PRIMARY} />
-                        <Text style={styles.reviewedBadgeText}>{t('review.reviewedBadge')}</Text>
-                      </View>
-                    )}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
+                      <Image
+                        source={{
+                          uri:
+                            it.product.image ||
+                            'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=100',
+                        }}
+                        style={styles.productTabImg}
+                      />
+                      <Text
+                        style={[
+                          styles.productTabName,
+                          {
+                            color: reviewed
+                              ? colors['on-surface-variant']
+                              : active
+                                ? ON_PRIMARY
+                                : colors['on-surface-variant'],
+                          },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {localize(it.product.name)}
+                      </Text>
+                      {reviewed && (
+                        <View
+                          style={[
+                            styles.reviewedBadge,
+                            { backgroundColor: colors.semantic.positive },
+                          ]}
+                        >
+                          <Icon symbol="check" size={10} color={ON_PRIMARY} />
+                          <Text style={styles.reviewedBadgeText}>{t('review.reviewedBadge')}</Text>
+                        </View>
+                      )}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
           </>
         )}
 
@@ -369,7 +443,9 @@ export default function OrderReviewPage() {
             <View style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}>
               <Image
                 source={{
-                  uri: product?.image ?? 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=200',
+                  uri:
+                    product?.image ??
+                    'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=200',
                 }}
                 style={styles.productImg}
                 resizeMode="cover"
@@ -519,61 +595,50 @@ export default function OrderReviewPage() {
             name="images"
             render={({ field: { value, onChange } }) => {
               const imgs = value ?? [];
+              // 批B U3/U4：slot 三态渲染（uploading/done/error）+ 空位添加钮
+              // done slot 与 imgs 的 URL 一一对应；error slot 不入 imgs（重试成功后才进）
               return (
                 <View style={styles.photosRow}>
-                  {imgs.map((uri, index) => (
-                    <View key={uri} style={styles.photoThumb}>
-                      <Image
-                        source={{ uri }}
-                        style={styles.photoThumbImg}
-                        resizeMode="cover"
-                        accessibilityLabel={t('review.a11y.photoThumb', { count: index + 1 })}
+                  {/* 批B 修复 P2-2：render 直接读 slots state（slot 变化必须触发重渲染——
+                      读 slotsRef.current 会让新 slot 上传期间不可见、删除后幽灵残留）；
+                      ref 镜像仅供 handleAddPhoto/handleRetrySlot 等 event 回调闭包取最新值 */}
+                  {slots.map((slot) => {
+                    const idx = imgs.indexOf(slot.remoteUrl ?? '');
+                    if (slot.state === 'done' && idx < 0) return null; // 已被用户删除
+                    return (
+                      <PhotoUploadTile
+                        key={slot.id}
+                        state={slot.state === 'idle' ? 'uploading' : slot.state}
+                        uri={slot.state === 'done' ? slot.remoteUrl : slot.localUri}
+                        progress={slot.progress}
+                        errorKind={slot.errorKind}
+                        errorCode={slot.errorCode}
+                        errorMessage={
+                          slot.errorCode
+                            ? t(`errors.${slot.errorCode}`, { defaultValue: slot.errorMessage })
+                            : slot.errorMessage
+                        }
+                        retryLabel={t('common.retry', { defaultValue: 'Retry' })}
+                        addA11yLabel={t('review.a11y.addPhoto')}
+                        retryA11yLabel={t('common.retry', { defaultValue: 'Retry' })}
+                        deleteA11yLabel={t('review.a11y.removePhoto', { count: idx + 1 })}
+                        onRetry={() => void handleRetrySlot(slot.id, onChange, imgs)}
+                        onDelete={() => {
+                          setSlots((prev) => prev.filter((s) => s.id !== slot.id));
+                          if (idx >= 0) onChange(imgs.filter((_, i) => i !== idx));
+                        }}
+                        testID={`review-photo-${slot.id}`}
                       />
-                      <Pressable
-                        onPress={() => onChange(imgs.filter((_, i) => i !== index))}
-                        style={[
-                          styles.photoRemoveBtn,
-                          { backgroundColor: colors['surface-container-high'] },
-                        ]}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('review.a11y.removePhoto', { count: index + 1 })}
-                        hitSlop={8}
-                        testID={`review-remove-photo-${index}`}
-                      >
-                        <Icon symbol="close" size={14} color={colors['on-surface']} />
-                      </Pressable>
-                    </View>
-                  ))}
+                    );
+                  })}
                   {imgs.length < 3 && (
-                    <Pressable
-                      style={[
-                        styles.photoAddBtn,
-                        {
-                          backgroundColor: colors['surface-container-low'],
-                          borderColor: colors['outline-variant'],
-                          opacity: uploading ? 0.5 : 1,
-                        },
-                      ]}
-                      onPress={() => handleAddPhoto(imgs, onChange)}
+                    <PhotoUploadTile
+                      addLabel={`${imgs.length} / 3`}
+                      addA11yLabel={t('review.a11y.addPhoto')}
+                      onAdd={() => void handleAddPhoto(imgs, onChange)}
                       disabled={uploading}
-                      accessibilityRole="button"
-                      accessibilityLabel={t('review.a11y.addPhoto')}
-                      accessibilityState={{ disabled: uploading }}
                       testID="review-add-photo"
-                    >
-                      {uploading ? (
-                        <ActivityIndicator size="small" color={colors['on-surface-variant']} />
-                      ) : (
-                        <Icon
-                          symbol="photo_camera"
-                          size={22}
-                          color={colors['on-surface-variant']}
-                        />
-                      )}
-                      <Text style={[styles.photoAddText, { color: colors['on-surface-variant'] }]}>
-                        {imgs.length} / 3
-                      </Text>
-                    </Pressable>
+                    />
                   )}
                 </View>
               );
@@ -607,11 +672,7 @@ export default function OrderReviewPage() {
                   </Text>
                 </View>
               </View>
-              <Switch
-                value={value ?? false}
-                onValueChange={onChange}
-                testID="review-anonymous"
-              />
+              <Switch value={value ?? false} onValueChange={onChange} testID="review-anonymous" />
             </View>
           )}
         />

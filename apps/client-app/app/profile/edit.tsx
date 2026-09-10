@@ -2,7 +2,16 @@
 // 手机号是登录凭证只读展示（D2，改号单独立项后端 change-phone 已就绪本期不接）；
 // submit 排除 phone 字段（D5.1：UI disabled 不跳过 schema 校验，必排防阻断保存）
 import { useState } from 'react';
-import { StyleSheet, ScrollView, KeyboardAvoidingView, Platform, View, Text, Pressable, ActivityIndicator } from 'react-native';
+import {
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  View,
+  Text,
+  Pressable,
+  ActivityIndicator,
+} from 'react-native';
 import { router } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
@@ -20,6 +29,7 @@ import { SafeImage } from '@/components/ui/SafeImage';
 import { useProfile, useUpdateProfile, PROFILE_QUERY_KEY } from '@/services/queries/useUser';
 import { uploadsApi } from '@/services/uploads';
 import { toast } from '@/store/toastStore';
+import { precheckImage, PrecheckError } from '@meimart/upload-core';
 import type { User } from '@/types';
 import { FormInput } from '@/forms';
 import { profileEditSchema, type ProfileEditValues } from '@/forms/schemas/user';
@@ -35,7 +45,11 @@ export default function ProfileEditPage() {
   const updateMutation = useUpdateProfile();
   const [avatarUploading, setAvatarUploading] = useState(false);
 
-  const { control, handleSubmit, formState: { isDirty } } = useForm<ProfileEditValues>({
+  const {
+    control,
+    handleSubmit,
+    formState: { isDirty },
+  } = useForm<ProfileEditValues>({
     resolver: zodResolver(profileEditSchema),
     defaultValues: {
       name: user?.name ?? '',
@@ -91,6 +105,24 @@ export default function ProfileEditPage() {
       toast.error(t('profileEdit.avatarTooLarge'));
       return;
     }
+    // 批B A4 预校验（avatar-square：1:1 容差5% + ≥200×200，与后端同码）：
+    // 有尺寸元数据才校验（测试 mock asset 无 width/height 跳过，与后端兜底一致）
+    if ((asset.width ?? 0) > 0 && (asset.height ?? 0) > 0) {
+      try {
+        precheckImage('avatar-square', {
+          mimeType: asset.mimeType,
+          sizeBytes: asset.fileSize ?? null,
+          width: asset.width ?? 0,
+          height: asset.height ?? 0,
+        });
+      } catch (err) {
+        if (err instanceof PrecheckError) {
+          toast.error(t(`errors.${err.code}`, { defaultValue: err.message }));
+          return;
+        }
+        throw err;
+      }
+    }
     setAvatarUploading(true);
     // 头像乐观落地：上传成功立即合并到 user 缓存（本地，不触发 mutation onMutate 链）
     let previousUser: User | undefined;
@@ -116,10 +148,7 @@ export default function ProfileEditPage() {
   const avatarAlt = t('profileEdit.avatar');
 
   return (
-    <SafeAreaWrapper
-      edges={['top', 'bottom']}
-      style={{ backgroundColor: colors.background }}
-    >
+    <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
       <StatusBarConfig />
       <PrimaryHeader
         title={t('profileEdit.title')}
@@ -144,10 +173,7 @@ export default function ProfileEditPage() {
               testID="edit-avatar"
             >
               <View
-                style={[
-                  styles.avatarImg,
-                  { backgroundColor: colors['surface-container-high'] },
-                ]}
+                style={[styles.avatarImg, { backgroundColor: colors['surface-container-high'] }]}
               >
                 {/* F1：有 avatar URL 渲染图片（SafeImage 带加载失败兜底），无 URL 时首字母/icon fallback */}
                 {user?.avatar ? (
@@ -155,7 +181,9 @@ export default function ProfileEditPage() {
                     source={{ uri: user.avatar }}
                     style={styles.avatarImage}
                     resizeMode="cover"
-                    fallback={<Text style={styles.avatarFallbackText}>{displayName.slice(0, 1)}</Text>}
+                    fallback={
+                      <Text style={styles.avatarFallbackText}>{displayName.slice(0, 1)}</Text>
+                    }
                     accessibilityLabel={avatarAlt}
                   />
                 ) : (
@@ -166,7 +194,10 @@ export default function ProfileEditPage() {
               <View
                 style={[
                   styles.avatarCam,
-                  { backgroundColor: colors['surface-container-lowest'], borderColor: colors['primary-container'] },
+                  {
+                    backgroundColor: colors['surface-container-lowest'],
+                    borderColor: colors['primary-container'],
+                  },
                 ]}
               >
                 <Icon symbol="photo_camera" size={17} color={colors.primary} />
@@ -224,7 +255,12 @@ export default function ProfileEditPage() {
                     <Text
                       style={[
                         styles.charCount,
-                        { color: nameDraft.length >= 13 ? colors.semantic.warning : colors['on-surface-variant'] },
+                        {
+                          color:
+                            nameDraft.length >= 13
+                              ? colors.semantic.warning
+                              : colors['on-surface-variant'],
+                        },
                       ]}
                     >
                       {`${nameDraft.length}/15`}
@@ -304,7 +340,10 @@ export default function ProfileEditPage() {
 
         {/* 底部固定保存栏（D7）：dirty 检测未改动禁用（D5）；F7：禁用态显 noChanges 文案 */}
         <View
-          style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors['outline-variant'] }]}
+          style={[
+            styles.bottomBar,
+            { backgroundColor: colors.background, borderTopColor: colors['outline-variant'] },
+          ]}
         >
           <Button
             label={isDirty ? t('profileEdit.save') : t('profileEdit.noChanges')}
