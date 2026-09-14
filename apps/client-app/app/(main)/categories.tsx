@@ -38,8 +38,13 @@ export default function CategoriesPage() {
     isError: catError,
     refetch: catRefetch,
   } = useCategories();
-  // Why: activeId 优先用 URL 参数（从 home 跳转传入），否则用第一个分类
-  const [activeId, setActiveId] = useState<string>(urlCategoryId ?? '');
+  // Why: pickedId 只存"用户显式选择"，未选时回落到 URL 参数（同页复用 / 带新 categoryId 进入也能跟随），
+  //       再回落到第一个分类。旧 bug：直连时分类 id 为 ''，查询拿到 undefined 被 enabled:false 禁用 → 热门商品恒空态
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const requestedId = pickedId ?? urlCategoryId ?? null;
+  // Why: categories 加载后兜底 —— requestedId 为空或不在列表里则取第一个分类。
+  //       商品查询 / 侧栏高亮 / VIEW ALL 全部消费这一个值，保证三处永远一致
+  const activeId = categories?.find((c) => c.id === requestedId)?.id ?? categories?.[0]?.id ?? '';
   // Why: P3 - 子分类筛选：点击子分类时设 subActiveId，useProductsByCategory 查子分类商品；
   //      切大类时清空（侧栏 onPress），未选子分类时查大类（后端返所有子分类商品，§5）
   const [subActiveId, setSubActiveId] = useState<string | null>(null);
@@ -52,19 +57,17 @@ export default function CategoriesPage() {
   const { data: allProducts } = useProducts();
   const addToCartMutation = useAddToCart();
   // Why: P5 U4 筛选栏 - sortMode 驱动 sortedProducts（前端排序，HOT PRODUCTS 消费）
-  const [sortMode, setSortMode] = useState<
-    'popular' | 'discount' | 'price-asc' | 'price-desc'
-  >('popular');
+  const [sortMode, setSortMode] = useState<'popular' | 'discount' | 'price-asc' | 'price-desc'>(
+    'popular',
+  );
   const sortedProducts = useMemo(() => {
     if (!products) return [];
     const sorted = [...products];
     switch (sortMode) {
       case 'discount':
         return sorted.sort((a, b) => {
-          const da =
-            a.originalPrice && a.originalPrice > a.price ? a.originalPrice - a.price : 0;
-          const db =
-            b.originalPrice && b.originalPrice > b.price ? b.originalPrice - b.price : 0;
+          const da = a.originalPrice && a.originalPrice > a.price ? a.originalPrice - a.price : 0;
+          const db = b.originalPrice && b.originalPrice > b.price ? b.originalPrice - b.price : 0;
           return db - da;
         });
       case 'price-asc':
@@ -76,14 +79,8 @@ export default function CategoriesPage() {
     }
   }, [products, sortMode]);
 
-  // Why: categories 加载后，如果 activeId 为空或无效，设为第一个分类
-  const validActiveId =
-    activeId && categories?.some((c) => c.id === activeId)
-      ? activeId
-      : categories?.[0]?.id ?? '';
-
   // Why: P5 U3 - 子分类 hook 驱动，后端 children 未就绪时返空数组，整块隐藏
-  const subCategories = useSubCategories(validActiveId);
+  const subCategories = useSubCategories(activeId);
 
   // Why: "为你推荐"取所有商品的前 4 个（排除当前分类），丰富页面内容
   const recommended = (allProducts ?? [])
@@ -96,7 +93,8 @@ export default function CategoriesPage() {
       { product, quantity: 1 },
       {
         onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
-        onError: () => toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+        onError: () =>
+          toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
       },
     );
   };
@@ -130,15 +128,23 @@ export default function CategoriesPage() {
 
       <View style={styles.body}>
         {/* 侧栏 */}
-        <View style={[styles.sidebar, { backgroundColor: colors['surface-container-low'], borderRightColor: colors['outline-variant'] }]}>
+        <View
+          style={[
+            styles.sidebar,
+            {
+              backgroundColor: colors['surface-container-low'],
+              borderRightColor: colors['outline-variant'],
+            },
+          ]}
+        >
           <ScrollView showsVerticalScrollIndicator={false}>
             {categories.map((cat) => (
               <SidebarItem
                 key={cat.id}
                 category={cat}
-                active={cat.id === validActiveId}
+                active={cat.id === activeId}
                 onPress={() => {
-                  setActiveId(cat.id);
+                  setPickedId(cat.id);
                   // Why: P3 - 切大类时清空子分类筛选（避免旧大类子分类残留）
                   setSubActiveId(null);
                 }}
@@ -168,37 +174,37 @@ export default function CategoriesPage() {
                   {subCategories.map((sub) => {
                     const subActive = sub.id === subActiveId;
                     return (
-                    <Pressable
-                      key={sub.id}
-                      // Why: P3 - 点击子分类筛选商品（toggle：再点取消，返大类全部商品）
-                      onPress={() => setSubActiveId(subActive ? null : sub.id)}
-                      style={styles.subItem}
-                      accessibilityRole="button"
-                      accessibilityLabel={sub.name}
-                      accessibilityState={{ selected: subActive }}
-                    >
-                      <View
-                        style={[
-                          styles.subIcon,
-                          {
-                            backgroundColor: colors['surface-container-high'],
-                            // Why: P3 - 选中态边框高亮 primary
-                            borderColor: subActive ? colors.primary : colors['outline-variant'],
-                          },
-                        ]}
+                      <Pressable
+                        key={sub.id}
+                        // Why: P3 - 点击子分类筛选商品（toggle：再点取消，返大类全部商品）
+                        onPress={() => setSubActiveId(subActive ? null : sub.id)}
+                        style={styles.subItem}
+                        accessibilityRole="button"
+                        accessibilityLabel={sub.name}
+                        accessibilityState={{ selected: subActive }}
                       >
-                        <SafeImage source={{ uri: sub.image ?? '' }} style={styles.subImage} />
-                      </View>
-                      <Text
-                        style={[
-                          styles.subLabel,
-                          { color: subActive ? colors.primary : colors['on-surface'] },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {sub.name}
-                      </Text>
-                    </Pressable>
+                        <View
+                          style={[
+                            styles.subIcon,
+                            {
+                              backgroundColor: colors['surface-container-high'],
+                              // Why: P3 - 选中态边框高亮 primary
+                              borderColor: subActive ? colors.primary : colors['outline-variant'],
+                            },
+                          ]}
+                        >
+                          <SafeImage source={{ uri: sub.image ?? '' }} style={styles.subImage} />
+                        </View>
+                        <Text
+                          style={[
+                            styles.subLabel,
+                            { color: subActive ? colors.primary : colors['on-surface'] },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {sub.name}
+                        </Text>
+                      </Pressable>
                     );
                   })}
                 </ScrollView>
@@ -218,9 +224,7 @@ export default function CategoriesPage() {
                       styles.filterText,
                       {
                         color:
-                          sortMode === 'popular'
-                            ? colors.primary
-                            : colors['on-surface-variant'],
+                          sortMode === 'popular' ? colors.primary : colors['on-surface-variant'],
                       },
                     ]}
                   >
@@ -239,9 +243,7 @@ export default function CategoriesPage() {
                       styles.filterText,
                       {
                         color:
-                          sortMode === 'discount'
-                            ? colors.primary
-                            : colors['on-surface-variant'],
+                          sortMode === 'discount' ? colors.primary : colors['on-surface-variant'],
                       },
                     ]}
                   >
@@ -249,9 +251,7 @@ export default function CategoriesPage() {
                   </Text>
                 </Pressable>
                 <Pressable
-                  onPress={() =>
-                    setSortMode(sortMode === 'price-asc' ? 'price-desc' : 'price-asc')
-                  }
+                  onPress={() => setSortMode(sortMode === 'price-asc' ? 'price-desc' : 'price-asc')}
                   style={[styles.filterChip, styles.filterPrice]}
                   hitSlop={4}
                   accessibilityRole="button"
@@ -321,7 +321,9 @@ export default function CategoriesPage() {
                     <Text style={[styles.hotTitle, { color: colors['on-surface-variant'] }]}>
                       {t('category.recommendForYou', { defaultValue: 'Recommended For You' })}
                     </Text>
-                    <View style={[styles.hotLine, { backgroundColor: colors['outline-variant'] }]} />
+                    <View
+                      style={[styles.hotLine, { backgroundColor: colors['outline-variant'] }]}
+                    />
                   </View>
                   <View style={styles.hotListColumn}>
                     {recommended.map((p) => (
@@ -345,7 +347,10 @@ export default function CategoriesPage() {
                 style={({ pressed }) => [
                   styles.viewAllBtn,
                   { borderColor: colors.primary },
-                  pressed && { backgroundColor: colors.primary + '0D' /* 原因：pressed 5% tint（8位 hex '0D'≈5%）*/ },
+                  pressed && {
+                    backgroundColor:
+                      colors.primary + '0D' /* 原因：pressed 5% tint（8位 hex '0D'≈5%）*/,
+                  },
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel={t('category.viewAllProductsA11y')}
