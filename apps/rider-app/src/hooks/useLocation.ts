@@ -66,12 +66,17 @@ export function useLocation(options: UseLocationOptions) {
             setCoordinates(coords);
             useLocationStore.getState().setCoordinates(coords);
 
-            // 推送到后端：必须传 orderId（后端校验 Order.riderId 匹配）
-            // socket 或 orderId 缺一时跳过推送，本地 store 仍更新
+            // 推送到后端（真实环境接入批B，R12 准入：等单骑手是派单 candidates 主体）
+            //   - 带 orderId（配送中）：后端归属校验 + 广播 order:location + 落 Redis
+            //   - 无 orderId（等单前台）：后端走「仅落 rider:loc Redis」分支，不广播——
+            //     原实现无 orderId 不 emit 导致等单期距离分恒回退中点；仅前台亮屏上报（R22，
+            //     切后台/锁屏 RN 前台定位自动暂停，坐标过期由后端读侧新鲜度阈值回退中点兜底）
+            // socket 缺一跳过推送，本地 store 仍更新
             const oid = orderIdRef.current;
-            if (socket && socket.connected && oid) {
+            if (socket && socket.connected) {
               // payload 构造（speed/heading 单位换算）抽 buildLocationPayload 共享 helper；
-              // 后台 HTTP 通道（useBackgroundTask reportLocationHttp）复用同一 helper，避免逻辑漂移
+              // 后台 HTTP 通道（useBackgroundTask reportLocationHttp）复用同一 helper，避免逻辑漂移。
+              // 等单期（无 oid）后端 RiderLocationUpdate.orderId 为 optional，直接 emit 不带 orderId。
               socket.emit('location:update', buildLocationPayload(loc.coords, oid));
             }
           },

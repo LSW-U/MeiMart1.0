@@ -15,8 +15,8 @@
       "bundleIdentifier": "com.meimart.delivery",
       "buildNumber": "1",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "MeiMart 需要您的位置以在配送地图上显示骑手位置，并在配送期间持续追踪以确保订单准时送达。",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "App 切到后台或锁屏时仍需持续上报您的位置，以便客户实时看到配送进度。仅在配送中生效。",
+        "NSLocationWhenInUseUsageDescription": "MeiMart 需要您的位置以在配送地图上显示骑手位置；接单后的配送期间持续追踪确保准时送达；上线等单期间也会在前台获取位置用于就近派单（仅 App 在前台亮屏时，切后台即停止）。",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "App 切到后台或锁屏时仍需持续上报您的位置，以便客户实时看到配送进度。仅在配送中生效；等单期间后台不定位。",
         "UIBackgroundModes": ["location"]
       }
     },
@@ -45,8 +45,8 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "允许 MeiMart 获取您的位置以显示配送地图。",
-          "locationAlwaysAndWhenInUsePermission": "允许 MeiMart 在配送期间持续获取您的位置。",
+          "locationWhenInUsePermission": "允许 MeiMart 获取您的位置以显示配送地图；上线等单期间也会在前台获取位置用于就近派单（仅前台亮屏时，切后台即停止）。",
+          "locationAlwaysAndWhenInUsePermission": "允许 MeiMart 在配送期间持续获取您的位置（等单期间后台不定位）。",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true
         }

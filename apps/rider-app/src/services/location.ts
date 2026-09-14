@@ -17,7 +17,8 @@ import type { Coordinates } from '@/src/types/common';
 
 /** 骑手位置上报 payload（与后端 ReportLocationRequest + WS RiderLocationUpdate 对齐） */
 export interface RiderLocationPayload {
-  orderId: string;
+  /** 真实环境接入批B（R12）：可选——配送中必带；等单期前台 WS 上报缺省 */
+  orderId?: string;
   lat: number;
   lng: number;
   /** 速度 km/h（m/s → km/h 换算后） */
@@ -33,6 +34,9 @@ export interface RiderLocationPayload {
  * speed：expo-location coords.speed 是 m/s，后端要 km/h → Math.round(s*3.6*10)/10；
  *        iOS 静止时为 -1 视为无效省略字段；null/undefined 同样省略。
  * heading：coords.heading 直接传（度 0-360）；NaN / 超范围省略。
+ * orderId：真实环境接入批B（R12）可选——配送中必带；等单期前台 WS 上报缺省
+ *          （后端 location:update 无 orderId 分支仅落 rider:loc Redis，不广播）。
+ *          HTTP 通道（后台）调用方仍强校验 orderId，不受影响。
  *
  * WS 通道（useLocation socket.emit）和 HTTP 通道（reportLocationHttp fetch）共用，
  * 避免单位换算逻辑两处维护。
@@ -44,7 +48,7 @@ export function buildLocationPayload(
     speed?: number | null;
     heading?: number | null;
   },
-  orderId: string,
+  orderId?: string,
 ): RiderLocationPayload {
   const rawSpeed = coords.speed;
   const speed =
@@ -61,7 +65,7 @@ export function buildLocationPayload(
       : undefined;
 
   return {
-    orderId,
+    ...(orderId ? { orderId } : {}),
     lat: coords.latitude,
     lng: coords.longitude,
     timestamp: Date.now(),
@@ -79,6 +83,8 @@ export function buildLocationPayload(
  *     登出回调，后台 task 不能登出（后台 task 失败仅 warn，不弹 UI、不登出）
  *   - 失败仅 console.warn：弱网降级（规则 18「离线停止上报」）；不入队、不重试、不抛错
  *     到 task 框架（避免后台 task 被标记失败，下一个 5s 周期自然重试）
+ *   - 后台仅配送中启用（useBackgroundTask enabled 已含 Boolean(currentOrderId)），
+ *     R22「后台等单不上报」由启用条件保证，本函数不重复校验 orderId
  */
 export async function reportLocationHttp(
   payload: RiderLocationPayload,
