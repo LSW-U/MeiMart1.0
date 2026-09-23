@@ -17,6 +17,7 @@ import { AuthShell } from '@/components/business/AuthShell';
 import { useRegister, useSendSmsCode } from '@/services/queries/useAuth';
 import { useAuthStore } from '@/store/authStore';
 import { FormInput } from '@/forms';
+import { PHONE_PREFIX } from '@/components/ui/PhonePrefix';
 import { registerSchema, type RegisterValues } from '@/forms/schemas/auth';
 
 const COUNTDOWN = 60;
@@ -81,20 +82,23 @@ export default function RegisterPage() {
     setRegisterError(null);
     // Why: 必须传 scene='REGISTER'，后端按 scene 区分验证码用途
     // 不传 scene 会被当作 LOGIN，注册时验证码不匹配，返回 E-USER-003
-    sendMutation.mutate({ phone: phoneValue, scene: 'REGISTER' }, {
-      onSuccess: () => {
-        setCounter(COUNTDOWN);
-        setRegisterError(null);
+    sendMutation.mutate(
+      { phone: phoneValue, scene: 'REGISTER' },
+      {
+        onSuccess: () => {
+          setCounter(COUNTDOWN);
+          setRegisterError(null);
+        },
+        onError: (error: unknown) => {
+          const err = error as {
+            response?: { data?: { error?: { code?: string; message?: string } } };
+            message?: string;
+          };
+          const msg = err?.response?.data?.error?.message ?? err?.message ?? t('errors.generic');
+          setRegisterError(msg);
+        },
       },
-      onError: (error: unknown) => {
-        const err = error as {
-          response?: { data?: { error?: { code?: string; message?: string } } };
-          message?: string;
-        };
-        const msg = err?.response?.data?.error?.message ?? err?.message ?? t('errors.generic');
-        setRegisterError(msg);
-      },
-    });
+    );
   };
 
   const submit = (values: RegisterValues) => {
@@ -122,7 +126,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <AuthShell
         welcomeTitle={t('auth.registerTitle')}
@@ -141,9 +148,7 @@ export default function RegisterPage() {
               accessibilityRole="link"
               accessibilityLabel={t('auth.logIn')}
             >
-              <Text style={[styles.loginLink, { color: colors.primary }]}>
-                {t('auth.logIn')}
-              </Text>
+              <Text style={[styles.loginLink, { color: colors.primary }]}>{t('auth.logIn')}</Text>
             </Pressable>
           </View>
         }
@@ -154,9 +159,7 @@ export default function RegisterPage() {
             style={[styles.registerErrorBox, { backgroundColor: colors['error-container'] }]}
             accessibilityRole="alert"
           >
-            <Text style={[styles.registerErrorText, { color: colors.error }]}>
-              {registerError}
-            </Text>
+            <Text style={[styles.registerErrorText, { color: colors.error }]}>{registerError}</Text>
           </View>
         )}
         <FormInput
@@ -165,7 +168,7 @@ export default function RegisterPage() {
           label={t('auth.phoneNumber')}
           placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
-          prefix="+670"
+          prefix={PHONE_PREFIX}
           testID="register-phone"
         />
 
@@ -280,10 +283,12 @@ export default function RegisterPage() {
             {t('auth.agreePrefix')}{' '}
             <Text style={{ color: colors.primary, fontWeight: '700' }}>
               {t('auth.termsOfService')}
-            </Text> {t('auth.and')}{' '}
+            </Text>{' '}
+            {t('auth.and')}{' '}
             <Text style={{ color: colors.primary, fontWeight: '700' }}>
               {t('auth.privacyPolicy')}
-            </Text>.
+            </Text>
+            .
           </Text>
         </View>
         {agreedError && (

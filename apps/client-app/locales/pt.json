@@ -116,8 +116,7 @@
     "confirmPasswordLabel": "CONFIRMAR PALAVRA-PASSE",
     "notice": "Aviso",
     "enterPhone": "Introduza o número de telefone",
-    "smsSent": "Código SMS enviado (Mock: 123456)",
-    "smsSentShort": "Código SMS enviado",
+    "smsSent": "Código SMS enviado",
     "smsSignInFailed": "Código SMS inválido",
     "resetSuccess": "Palavra-passe redefinida, entre novamente",
     "resetFailed": "Tente novamente mais tarde",
@@ -140,7 +139,14 @@
     "pwdStrong": "Forte",
     "pwdHintWeak": "Pelo menos 8 caracteres com letras e números",
     "pwdHintMedium": "Adicione caracteres especiais para uma palavra-passe mais forte",
-    "pwdHintStrong": "Palavra-passe forte"
+    "pwdHintStrong": "Palavra-passe forte",
+    "accountBlocked": "Problema na conta. Contacte o serviço ao cliente.",
+    "captchaLabel": "Captcha gráfico",
+    "captchaPlaceholder": "Introduza 4 caracteres",
+    "captchaRefresh": "Não consegue ler? Atualizar",
+    "captchaRefreshA11y": "Atualizar captcha",
+    "captchaRequiredToast": "Introduza primeiro o captcha gráfico",
+    "captchaExpired": "Captcha expirado — toque para atualizar"
   },
   "home": {
     "search": "Pesquisar produtos",
@@ -1178,7 +1184,11 @@
     "E-UPLOAD-019": "Imagem de avatar demasiado pequena (mínimo 200x200)",
     "E-UPLOAD-020": "O avatar deve ser uma imagem quadrada 1:1, recorte e carregue novamente",
     "E-UPLOAD-021": "Largura da imagem de banner fora do intervalo (600-2000px)",
-    "E-UPLOAD-022": "Proporção da imagem de banner fora do intervalo (1.5:1 - 3:1)"
+    "E-UPLOAD-022": "Proporção da imagem de banner fora do intervalo (1.5:1 - 3:1)",
+    "E-CAPTCHA-001": "Captcha gráfico incorreto, tente novamente",
+    "E-RATELIMIT-001": "Muitas tentativas, tente mais tarde",
+    "E-SMS-001": "Serviço de SMS temporariamente indisponível",
+    "E-REGISTER-001": "Sessão de registo expirada, solicite um novo código"
   },
   "search": {
     "recent": "Pesquisas Recentes",

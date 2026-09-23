@@ -12,11 +12,8 @@ const passwordSchema = z
   .regex(/[a-zA-Z]/, 'Password must contain letters')
   .regex(/\d/, 'Password must contain numbers');
 
-const smsCodeSchema = z
-  .string()
-  .min(4, 'Code must be 4-6 digits')
-  .max(6, 'Code must be 4-6 digits')
-  .regex(/^\d+$/, 'Digits only');
+// Why: 后端 unified 契约 code 固定 6 位（UnifiedVerifySmsRequest: z.string().length(6)）
+const smsCodeSchema = z.string().length(6, 'Code must be 6 digits').regex(/^\d+$/, 'Digits only');
 
 // P29-D4: account(emailOrPhone) → phone-only——service loginPassword 只发 phone（auth.ts:81），
 // 邮箱输入通过校验却发给后端当 phone 必失败；东帝汶用户统一手机号登录

@@ -1,5 +1,8 @@
 appId: ${MAESTRO_APP_ID}
 ---
+# 批A2-3 任务书#2: 凭据不再硬编码——本 flow 走「密码登录」，跑前 env 注入：
+#   MAESTRO_APP_ID=<id> E2E_PHONE=<测试账号手机号> E2E_PASSWORD=<测试账号密码> \
+#   maestro test e2e/login-flow.yaml
 - launchApp:
     clearState: true
 - assertVisible: "MeiMart"
@@ -8,10 +11,10 @@ appId: ${MAESTRO_APP_ID}
     timeout: 5000
 - tapOn:
     id: "login-password-phone"
-- inputText: "77001234"
+- inputText: ${E2E_PHONE}
 - tapOn:
     id: "login-password-password"
-- inputText: "123456"
+- inputText: ${E2E_PASSWORD}
 - tapOn:
     id: "login-password-submit"
 - extendedWaitUntil:

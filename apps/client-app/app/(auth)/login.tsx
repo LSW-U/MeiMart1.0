@@ -18,6 +18,7 @@ import { AuthShell } from '@/components/business/AuthShell';
 import { useLoginPassword } from '@/services/queries/useAuth';
 import { useAuthStore } from '@/store/authStore';
 import { FormInput } from '@/forms';
+import { PHONE_PREFIX } from '@/components/ui/PhonePrefix';
 import { loginPasswordSchema, type LoginPasswordValues } from '@/forms/schemas/auth';
 
 export default function LoginPage() {
@@ -60,7 +61,10 @@ export default function LoginPage() {
   };
 
   return (
-    <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <AuthShell
         welcomeTitle={t('auth.welcomeBack')}
@@ -104,7 +108,7 @@ export default function LoginPage() {
           label={t('auth.phoneNumber')}
           placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
-          prefix="+670"
+          prefix={PHONE_PREFIX}
           testID="login-phone"
         />
 
@@ -155,10 +159,12 @@ export default function LoginPage() {
             {t('auth.agreePrefix')}{' '}
             <Text style={{ color: colors.primary, fontWeight: '700' }}>
               {t('auth.termsOfService')}
-            </Text> {t('auth.and')}{' '}
+            </Text>{' '}
+            {t('auth.and')}{' '}
             <Text style={{ color: colors.primary, fontWeight: '700' }}>
               {t('auth.privacyPolicy')}
-            </Text>.
+            </Text>
+            .
           </Text>
         </View>
         {agreedError && (

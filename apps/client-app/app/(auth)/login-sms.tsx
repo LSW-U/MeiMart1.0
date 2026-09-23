@@ -14,21 +14,56 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { AuthShell } from '@/components/business/AuthShell';
-import { useLoginSms, useSendSmsCode } from '@/services/queries/useAuth';
-import { useAuthStore } from '@/store/authStore';
+import { useAuth, BlockedError } from '@/hooks/useAuth';
+import { CaptchaInput } from '@/components/business/CaptchaInput';
+import type { CaptchaPayload } from '@/services/auth';
 import { toast } from '@/store/toastStore';
 import { FormInput } from '@/forms';
+import { PHONE_PREFIX } from '@/components/ui/PhonePrefix';
 import { loginSmsSchema, type LoginSmsValues } from '@/forms/schemas/auth';
 
+// 批A2-1: unified 入口——send 存 challengeId，verify 按 action 分流（LOGIN/REGISTER/BLOCKED）
 const COUNTDOWN = 60;
+
+// P2-2: 后端业务错误码 → errors ns 映射。后端全局异常信封是 response.data.error.{code,message}
+// （实证：all-exceptions.filter.ts:86-92 + register.tsx:95 先例），主读信封位；顶层 data.code
+// 作防御性兼容一并保留。命中 errors ns（E-* key 先例见 after-sales-apply.tsx）用四语文案，
+// 未命中回退 fallback（默认 errors.network）。getApiErrorMessage 只取 message 不取 code，故单写
+// Why: 导出仅供单测（真实信封形状锁行为，P1-1）；页面外无其他消费方
+export function toApiErrorText(
+  error: unknown,
+  t: (key: string) => string,
+  fallback?: string,
+): string {
+  if (error && typeof error === 'object') {
+    const err = error as {
+      response?: { data?: { code?: string; error?: { code?: string } }; status?: number };
+    };
+    // 主读信封 error.code，兜底读顶层 data.code（旧路径防御）
+    const code = err.response?.data?.error?.code ?? err.response?.data?.code;
+    if (typeof code === 'string' && code.startsWith('E-')) {
+      const text = t(`errors.${code}`);
+      // Why: i18n 缺 key 时 t() 原样返回 key 本身，用回退而非裸 key 展示
+      if (text !== `errors.${code}`) return text;
+    }
+    // 增补#1: 429 无 code 的兜底（网关/代理可能剥 body）——统一映射「操作频繁」
+    if (err.response?.status === 429) {
+      const text = t('errors.E-RATELIMIT-001');
+      if (text !== 'errors.E-RATELIMIT-001') return text;
+    }
+  }
+  return fallback ?? t('errors.network');
+}
 
 export default function LoginSmsPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [counter, setCounter] = useState(0);
-  const setAuth = useAuthStore((s) => s.setAuth);
-  const loginMutation = useLoginSms();
-  const sendMutation = useSendSmsCode();
+  const [sending, setSending] = useState(false);
+  const [smsError, setSmsError] = useState<string | null>(null);
+  // 批A2-2: 图形码凭证——输满 4 位且票据在期才非 null（禁发条件之一）
+  const [captcha, setCaptcha] = useState<CaptchaPayload | null>(null);
+  const { sendUnifiedSms, sendUnifiedPending, verify } = useAuth();
 
   const { control, handleSubmit, formState } = useForm<LoginSmsValues>({
     resolver: zodResolver(loginSmsSchema),
@@ -49,36 +84,57 @@ export default function LoginSmsPage() {
       toast.info(t('auth.enterPhone'));
       return;
     }
-    sendMutation.mutate({ phone: phoneValue, scene: 'LOGIN' }, {
-      onSuccess: () => {
+    // Why: 发码在途禁止再点（真实短信花真金白银，双击=两发；60s 频控是后端最后防线非前端本分）
+    if (sending) return;
+    // 批A2-2: 图形码未输满（或票据已焚）不发——后端 SMS_CAPTCHA_REQUIRED=true 时必校验
+    if (!captcha) {
+      toast.info(t('auth.captchaRequiredToast'));
+      return;
+    }
+    setSending(true);
+    sendUnifiedSms(phoneValue, captcha)
+      .then(() => {
         setCounter(COUNTDOWN);
-        toast.success(t('auth.smsSent'));
-      },
-    });
+        setSmsError(null);
+        // Why: 票据消费即焚——发码成功后旧 captchaId 已焚，强制重输新图
+        setCaptcha(null);
+      })
+      // P2-2: 读后端错误码映射 errors.*（E-CAPTCHA-001 / E-RATELIMIT-001 / E-SMS-001），
+      // 未命中回退网络错误——不再一律显示「网络错误」误导重试
+      .catch((error: unknown) => setSmsError(toApiErrorText(error, t)))
+      .finally(() => setSending(false));
   };
 
   const submit = (values: LoginSmsValues) => {
-    loginMutation.mutate(
-      { phone: values.phone, smsCode: values.code },
-      {
-        onSuccess: (data) => {
-          setAuth(data.accessToken, data.refreshToken);
-          router.replace('/(main)/home');
-        },
-        onError: () => toast.error(t('auth.smsSignInFailed')),
-      },
-    );
+    setSmsError(null);
+    verify({ phone: values.phone, code: values.code })
+      .then(() => {
+        // LOGIN/REGISTER 已在 useAuth.verify 内分流完成（存 token + replace 首页）
+        setSmsError(null);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof BlockedError) {
+          // BLOCKED：账号被禁用/冻结，禁止继续，引导联系客服
+          toast.error(t('auth.accountBlocked'));
+          return;
+        }
+        // P2-2: verify 失败同样走错误码映射（E-USER-003 码过期等），否则回退通用失败文案
+        setSmsError(toApiErrorText(error, t, t('auth.smsSignInFailed')));
+      });
   };
 
   return (
-    <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <AuthShell
         welcomeTitle={t('auth.welcomeBack')}
         welcomeSub={t('auth.welcomeSubSms')}
         actionLabel={t('auth.signIn')}
         onAction={handleSubmit(submit)}
-        loading={loginMutation.isPending}
+        loading={formState.isSubmitting}
         secondary={
           <View style={styles.registerRow}>
             <Text style={[styles.registerText, { color: colors.secondary }]}>
@@ -98,15 +154,26 @@ export default function LoginSmsPage() {
         }
         testID="login-sms-page"
       >
+        {smsError && (
+          <View
+            style={[styles.errorBox, { backgroundColor: colors['error-container'] }]}
+            accessibilityRole="alert"
+          >
+            <Text style={[styles.errorBoxText, { color: colors.error }]}>{smsError}</Text>
+          </View>
+        )}
         <FormInput
           control={control}
           name="phone"
           label={t('auth.phoneNumber')}
           placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
-          prefix="+670"
+          prefix={PHONE_PREFIX}
           testID="login-sms-phone"
         />
+
+        {/* 批A2-2: 图形验证码——发码前必输（后端开关 SMS_CAPTCHA_REQUIRED=true） */}
+        <CaptchaInput onChange={setCaptcha} />
 
         <View style={styles.codeRow}>
           <View style={styles.codeInput}>
@@ -124,7 +191,7 @@ export default function LoginSmsPage() {
           {/* .code-btn：50px 与输入框等高，1.5px primary 描边 13/700 红字白底（P29 原型） */}
           <Pressable
             onPress={sendCode}
-            disabled={counter > 0 || sendMutation.isPending}
+            disabled={counter > 0 || sending || sendUnifiedPending}
             style={({ pressed }) => [
               styles.codeBtn,
               { borderColor: colors.primary },
@@ -175,10 +242,12 @@ export default function LoginSmsPage() {
             {t('auth.agreePrefix')}{' '}
             <Text style={{ color: colors.primary, fontWeight: '700' }}>
               {t('auth.termsOfService')}
-            </Text> {t('auth.and')}{' '}
+            </Text>{' '}
+            {t('auth.and')}{' '}
             <Text style={{ color: colors.primary, fontWeight: '700' }}>
               {t('auth.privacyPolicy')}
-            </Text>.
+            </Text>
+            .
           </Text>
         </View>
         {agreedError && (
@@ -251,5 +320,15 @@ const styles = StyleSheet.create({
   errorText: {
     ...typography['body-sm'],
     marginTop: spacing.xs,
+  },
+  errorBox: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: 8,
+    marginBottom: spacing.xs,
+  },
+  errorBoxText: {
+    ...typography['body-sm'],
+    fontWeight: '600',
   },
 });

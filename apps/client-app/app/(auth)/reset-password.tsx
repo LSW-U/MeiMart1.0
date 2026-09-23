@@ -16,6 +16,7 @@ import { AuthShell } from '@/components/business/AuthShell';
 import { useResetPassword, useSendSmsCode } from '@/services/queries/useAuth';
 import { toast } from '@/store/toastStore';
 import { FormInput } from '@/forms';
+import { PHONE_PREFIX } from '@/components/ui/PhonePrefix';
 import { resetPasswordSchema, type ResetPasswordValues } from '@/forms/schemas/auth';
 
 const COUNTDOWN = 60;
@@ -48,12 +49,15 @@ export default function ResetPasswordPage() {
       toast.info(t('auth.enterPhone'));
       return;
     }
-    sendMutation.mutate({ phone: phoneValue, scene: 'RESET_PASSWORD' }, {
-      onSuccess: () => {
-        setCounter(COUNTDOWN);
-        toast.success(t('auth.smsSent'));
+    sendMutation.mutate(
+      { phone: phoneValue, scene: 'RESET_PASSWORD' },
+      {
+        onSuccess: () => {
+          setCounter(COUNTDOWN);
+          toast.success(t('auth.smsSent'));
+        },
       },
-    });
+    );
   };
 
   const submit = (values: ResetPasswordValues) => {
@@ -77,7 +81,10 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
+    <SafeAreaWrapper
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: colors.background, flex: 1 }}
+    >
       <StatusBarConfig />
       <AuthShell
         welcomeTitle={t('auth.forgotPasswordTitle')}
@@ -96,9 +103,7 @@ export default function ResetPasswordPage() {
               accessibilityRole="link"
               accessibilityLabel={t('auth.logIn')}
             >
-              <Text style={[styles.loginLink, { color: colors.primary }]}>
-                {t('auth.logIn')}
-              </Text>
+              <Text style={[styles.loginLink, { color: colors.primary }]}>{t('auth.logIn')}</Text>
             </Pressable>
           </View>
         }
@@ -110,7 +115,7 @@ export default function ResetPasswordPage() {
           label={t('auth.phoneNumber')}
           placeholder={t('auth.phonePlaceholder')}
           keyboardType="phone-pad"
-          prefix="+670"
+          prefix={PHONE_PREFIX}
           testID="reset-phone"
         />
 
