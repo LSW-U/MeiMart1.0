@@ -2,11 +2,7 @@ import { api, isMockMode } from './api';
 import { mockResponse } from './mockDb';
 
 export type UserRole =
-  | 'customer'
-  | 'rider'
-  | 'super_admin'
-  | 'warehouse_staff'
-  | 'customer_service';
+  'customer' | 'rider' | 'super_admin' | 'warehouse_staff' | 'customer_service';
 
 export type OtpScene = 'LOGIN' | 'REGISTER' | 'RESET_PASSWORD';
 
@@ -69,6 +65,35 @@ function buildMockAuthResult(role: UserRole = 'customer'): AuthResult {
   };
 }
 
+// Why: 图形验证码签发（批A2-2，GET /common/auth/captcha）——SMS_CAPTCHA_REQUIRED=true 时
+// 发码前必调；captchaId 60s 一次性票据，答案随 captchaText 携带（不区分大小写，消费即焚）
+export interface CaptchaResponse {
+  captchaId: string;
+  svg: string;
+  expireIn: number;
+}
+
+// 发码可选携带的图形码凭证（契约 UnifiedSendSmsRequest captchaId/captchaText optional）
+export interface CaptchaPayload {
+  captchaId: string;
+  captchaText: string;
+}
+
+// Why: unified 发码响应（POST /common/auth/sms/send，202 统一响应不暴露是否已注册）
+export interface SendUnifiedSmsResult {
+  challengeId: string;
+  expireIn: number;
+}
+
+// Why: unified verify 响应（POST /common/auth/sms/verify），按 action 分流；
+// LOGIN 时带 token 四件套，REGISTER 时带 registrationTicket（complete 时消费）
+export interface VerifySmsResult {
+  action: 'LOGIN' | 'REGISTER' | 'BLOCKED';
+  accessToken?: string;
+  refreshToken?: string;
+  registrationTicket?: string;
+}
+
 export const authApi = {
   async loginPassword(payload: LoginPayload): Promise<AuthResult> {
     if (!payload.password) {
@@ -81,20 +106,6 @@ export const authApi = {
     const res = await api.post<AuthResult>('/common/auth/login-password', {
       phone: payload.phone,
       password: payload.password,
-    });
-    return res.data;
-  },
-
-  async loginSms(payload: LoginPayload): Promise<AuthResult> {
-    if (!payload.smsCode) {
-      throw new Error('loginSms requires smsCode');
-    }
-    if (isMockMode) {
-      return mockResponse(buildMockAuthResult('customer'), 500);
-    }
-    const res = await api.post<AuthResult>('/common/auth/login-sms', {
-      phone: payload.phone,
-      smsCode: payload.smsCode,
     });
     return res.data;
   },
@@ -116,6 +127,9 @@ export const authApi = {
     return res.data;
   },
 
+  // Why: 旧发码端点（deprecated「切换后 2 周下线」）——register / reset-password 两页仍依赖
+  // scene 透传（'REGISTER'/'RESET_PASSWORD'），unified 发码固定 LOGIN 场景无 scene 字段，
+  // 两页迁 unified 前必须保留此方法（批A2-3 收口）；仅 login-sms 链已切 sendUnifiedSmsCode
   async sendSmsCode(payload: LoginPayload): Promise<{ expireIn: number }> {
     if (isMockMode) {
       return mockResponse({ expireIn: 300 }, 300);
@@ -123,6 +137,66 @@ export const authApi = {
     const res = await api.post<{ expireIn: number }>('/common/auth/sms-code', {
       phone: payload.phone,
       ...(payload.scene ? { scene: payload.scene } : {}),
+    });
+    return res.data;
+  },
+
+  async fetchCaptcha(): Promise<CaptchaResponse> {
+    if (isMockMode) {
+      return mockResponse(
+        {
+          captchaId: 'mock-captcha-id',
+          svg: '<svg xmlns="http://www.w3.org/2000/svg"/>',
+          expireIn: 60,
+        },
+        100,
+      );
+    }
+    const res = await api.get<CaptchaResponse>('/common/auth/captcha');
+    return res.data;
+  },
+
+  // Why: unified 发码入口（批A2-1）——POST /common/auth/sms/send，202 统一响应
+  // （防枚举）返回 challengeId，verify / register/complete 必须回传；契约无 scene/deviceId 必填。
+  // 批A2-2：后端开关 SMS_CAPTCHA_REQUIRED=true 时 captchaId/captchaText 必带（E-CAPTCHA-001）
+  async sendUnifiedSmsCode(phone: string, captcha?: CaptchaPayload): Promise<SendUnifiedSmsResult> {
+    if (isMockMode) {
+      return mockResponse({ challengeId: 'mock-challenge-id', expireIn: 300 }, 300);
+    }
+    const res = await api.post<SendUnifiedSmsResult>('/common/auth/sms/send', {
+      phone,
+      ...(captcha ? { captchaId: captcha.captchaId, captchaText: captcha.captchaText } : {}),
+    });
+    return res.data;
+  },
+
+  // Why: unified verify——后端按 action 分流（LOGIN/REGISTER/BLOCKED），
+  // 不暴露手机号是否已注册（防枚举）；challengeId 来自 sendSmsCode 响应
+  async verifySms(payload: {
+    phone: string;
+    code: string;
+    challengeId: string;
+  }): Promise<VerifySmsResult> {
+    if (isMockMode) {
+      return mockResponse({ action: 'LOGIN', ...buildMockAuthResult('customer') }, 500);
+    }
+    const res = await api.post<VerifySmsResult>('/common/auth/sms/verify', payload);
+    return res.data;
+  },
+
+  // Why: unified 完成注册——registrationTicket 原子消费（GETDEL），
+  // 契约要求 agreedToTerms 必须字面量 true；challengeId 与 ticket 绑定校验
+  async completeRegister(payload: {
+    registrationTicket: string;
+    challengeId: string;
+  }): Promise<AuthResult> {
+    if (isMockMode) {
+      return mockResponse(buildMockAuthResult('customer'), 800);
+    }
+    const res = await api.post<AuthResult>('/common/auth/register/complete', {
+      registrationTicket: payload.registrationTicket,
+      agreedToTerms: true as const,
+      challengeId: payload.challengeId,
     });
     return res.data;
   },

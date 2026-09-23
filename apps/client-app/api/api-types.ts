@@ -4863,6 +4863,9 @@ export interface paths {
                 code: string;
                 discountAmount: number;
               } | null;
+              /** Format: date-time */
+              scheduledFor: string | null;
+              acceptingReservation: boolean;
             }[];
           };
         };
@@ -4995,6 +4998,9 @@ export interface paths {
                 code: string;
                 discountAmount: number;
               } | null;
+              /** Format: date-time */
+              scheduledFor: string | null;
+              acceptingReservation: boolean;
             };
           };
         };
@@ -5465,6 +5471,541 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/statistics/products/top': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 商品销量排行（R9：OrderItem join Order 状态∈GMV_ORDER_STATUSES 区间聚合，groupBy productId；按 gmvAmount 降序、并列按 quantitySold；limit 默认 10 上限 50）。时间范围：range 预设三值 或 from+to（YYYY-MM-DD Dili 当地日期含头尾，跨期上限 366 天） */
+    get: {
+      parameters: {
+        query?: {
+          range?: 'today' | 'week' | 'month';
+          from?: string;
+          to?: string;
+          limit?: number;
+          lang?: 'en' | 'id' | 'zh' | 'pt' | 'tet';
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 商品排行列表（金额单位分） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                from: string;
+                to: string;
+                items: {
+                  /** Format: uuid */
+                  productId: string;
+                  productName: string;
+                  productImage: string | null;
+                  orderCount: number;
+                  quantitySold: number;
+                  gmvAmount: number;
+                }[];
+              };
+              message?: string;
+            };
+          };
+        };
+        /** @description E-STATISTICS-001 时间范围无效 / E-STATISTICS-002 跨期超 366 天 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/statistics/products/export': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 商品排行导出 CSV（列=页面表格列的 CSV 版，列名/商品名按 lang，缺语 fallback en；Content-Disposition attachment；lang 必须显式传——admin-web locale 在 cookie） */
+    get: {
+      parameters: {
+        query?: {
+          range?: 'today' | 'week' | 'month';
+          from?: string;
+          to?: string;
+          lang?: 'en' | 'id' | 'zh' | 'pt' | 'tet';
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description CSV 流（text/csv，attachment） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description E-STATISTICS-001 时间范围无效 / E-STATISTICS-002 跨期超 366 天 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/statistics/riders': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 骑手绩效（R5 修订：归属源=DeliveryTask(taskType=delivery).riderId，join 关联 Order 判定——完成单=Order ∈ (DELIVERED_PAID, DELIVERED, COMPLETED)；异常=Order ∈ (CANCELLED, DELIVERED_UNPAID)；超时未确认不归骑手。收入=Settlement(subjectType=RIDER) periodDate ∈ range 各 status 均计入（分）；rating 取 RiderProfile 快照。按 completedOrders 降序排序。时间范围：range 预设三值 或 from+to（YYYY-MM-DD Dili 当地日期含头尾，跨期上限 366 天） */
+    get: {
+      parameters: {
+        query?: {
+          range?: 'today' | 'week' | 'month';
+          from?: string;
+          to?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 骑手绩效列表（金额单位分） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                from: string;
+                to: string;
+                items: {
+                  /** Format: uuid */
+                  riderId: string;
+                  riderName: string;
+                  completedOrders: number;
+                  income: number;
+                  rating: number;
+                  abnormalCount: number;
+                }[];
+              };
+              message?: string;
+            };
+          };
+        };
+        /** @description E-STATISTICS-001 时间范围无效 / E-STATISTICS-002 跨期超 366 天 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/statistics/riders/export': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 骑手绩效导出 CSV（列=页面表格列的 CSV 版，列名按 lang；Content-Disposition attachment；lang 必须显式传——admin-web locale 在 cookie） */
+    get: {
+      parameters: {
+        query?: {
+          range?: 'today' | 'week' | 'month';
+          from?: string;
+          to?: string;
+          lang?: 'en' | 'id' | 'zh' | 'pt' | 'tet';
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description CSV 流（text/csv，attachment） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description E-STATISTICS-001 时间范围无效 / E-STATISTICS-002 跨期超 366 天 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/statistics/refunds': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 退款统计（口径见 数据口径.md §2：计入口径=Refund.status ∈ (APPROVED, COMPLETED)；refundCount/refundAmount 汇总；rate 分母=同期 GMV 状态订单数（GMV_ORDER_STATUSES + createdAt ∈ range），分母 0 → rate=null；reasonBreakdown=groupBy reason（reason TEXT 无 CHECK，约定外值归 OTHER 展示），按 amount 降序。时间范围：range 预设三值 或 from+to（YYYY-MM-DD Dili 当地日期含头尾，跨期上限 366 天） */
+    get: {
+      parameters: {
+        query?: {
+          range?: 'today' | 'week' | 'month';
+          from?: string;
+          to?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 退款统计汇总（金额单位分） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                from: string;
+                to: string;
+                refundCount: number;
+                refundAmount: number;
+                rate: number | null;
+                gmvOrderCount: number;
+                reasonBreakdown: {
+                  reason: string;
+                  count: number;
+                  amount: number;
+                }[];
+              };
+              message?: string;
+            };
+          };
+        };
+        /** @description E-STATISTICS-001 时间范围无效 / E-STATISTICS-002 跨期超 366 天 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/statistics/refunds/export': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 退款统计导出 CSV（列名按 lang；reason 展示枚举原文（OUT_OF_STOCK 等，约定外值归 OTHER），不做文案映射；Content-Disposition attachment；lang 必须显式传——admin-web locale 在 cookie） */
+    get: {
+      parameters: {
+        query?: {
+          range?: 'today' | 'week' | 'month';
+          from?: string;
+          to?: string;
+          lang?: 'en' | 'id' | 'zh' | 'pt' | 'tet';
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description CSV 流（text/csv，attachment） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description E-STATISTICS-001 时间范围无效 / E-STATISTICS-002 跨期超 366 天 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/statistics/customers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 客户分析（R4 MVP 三指标，口径见 方案v2 §3.2 customers 行）：newCustomers=全局首单（该用户全表 min(createdAt)）落在区间内的用户数；repeatCustomers=区间内下单 ≥2 单的用户数；repeatRate=repeatCustomers/orderUserCount（分母 0 → null）；avgOrderValue（AOV）=区间 GMV/区间订单数（非 ARPU，分母 0 → null）；基数 gmvOrderCount/orderUserCount 回显。数据源 Order（状态 ∈ GMV_ORDER_STATUSES，createdAt ∈ range）。时间范围：range 预设三值 或 from+to（YYYY-MM-DD Dili 当地日期含头尾，跨期上限 366 天） */
+    get: {
+      parameters: {
+        query?: {
+          range?: 'today' | 'week' | 'month';
+          from?: string;
+          to?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 客户分析三指标（avgOrderValue 金额单位分） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                from: string;
+                to: string;
+                newCustomers: number;
+                repeatCustomers: number;
+                repeatRate: number | null;
+                avgOrderValue: number | null;
+                gmvOrderCount: number;
+                orderUserCount: number;
+              };
+              message?: string;
+            };
+          };
+        };
+        /** @description E-STATISTICS-001 时间范围无效 / E-STATISTICS-002 跨期超 366 天 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/statistics/customers/export': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 客户分析导出 CSV（指标汇总型，键值两列式：指标名按 lang 列名 + 值；Content-Disposition attachment；lang 必须显式传——admin-web locale 在 cookie） */
+    get: {
+      parameters: {
+        query?: {
+          range?: 'today' | 'week' | 'month';
+          from?: string;
+          to?: string;
+          lang?: 'en' | 'id' | 'zh' | 'pt' | 'tet';
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description CSV 流（text/csv，attachment） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description E-STATISTICS-001 时间范围无效 / E-STATISTICS-002 跨期超 366 天 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/common/support/config': {
     parameters: {
       query?: never;
@@ -5778,6 +6319,9 @@ export interface paths {
                 code: string;
                 discountAmount: number;
               } | null;
+              /** Format: date-time */
+              scheduledFor: string | null;
+              acceptingReservation: boolean;
             };
           };
         };
@@ -6283,6 +6827,9 @@ export interface paths {
                 id: string;
                 code: string;
                 deliveryFee: number;
+                acceptingReservation: boolean;
+                /** Format: date-time */
+                nextOpenAt: string | null;
               } | null;
               itemsSubtotal: number;
               deliveryFee: number;
@@ -9770,6 +10317,9 @@ export interface paths {
                     code: string;
                     discountAmount: number;
                   } | null;
+                  /** Format: date-time */
+                  scheduledFor: string | null;
+                  acceptingReservation: boolean;
                 }[];
                 /** Format: uuid */
                 nextCursor: string | null;
@@ -9939,6 +10489,9 @@ export interface paths {
                   code: string;
                   discountAmount: number;
                 } | null;
+                /** Format: date-time */
+                scheduledFor: string | null;
+                acceptingReservation: boolean;
               };
             };
           };
@@ -10081,6 +10634,9 @@ export interface paths {
                   code: string;
                   discountAmount: number;
                 } | null;
+                /** Format: date-time */
+                scheduledFor: string | null;
+                acceptingReservation: boolean;
               };
             };
           };
@@ -11823,6 +12379,69 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/common/auth/captcha': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 批A2-2 图形验证码签发：SVG + captchaId（60s 一次性票据）。SMS_CAPTCHA_REQUIRED=true 时 POST /sms/send 前必调，答案随 captchaText 携带（不区分大小写，消费即焚）。 */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 图形验证码 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: true;
+              data: {
+                captchaId: string;
+                svg: string;
+                expireIn: number;
+              };
+            };
+          };
+        };
+        /** @description RATE_LIMIT */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/common/auth/sms/send': {
     parameters: {
       query?: never;
@@ -11832,7 +12451,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description 统一手机号入口：发送验证码。202 + challengeId（无论是否注册统一响应，防枚举）。仅 BUYER。 */
+    /** @description 统一手机号入口：发送验证码。202 + challengeId（无论是否注册统一响应，防枚举）。仅 BUYER。批A2-2：SMS_CAPTCHA_REQUIRED=true（prod 默认）须先 GET /captcha 并携带 captchaId/captchaText，校验失败 400 E-CAPTCHA-001。 */
     post: {
       parameters: {
         query?: never;
@@ -11845,6 +12464,8 @@ export interface paths {
           'application/json': {
             phone: string;
             deviceId?: string;
+            captchaId?: string;
+            captchaText?: string;
           };
         };
       };
@@ -11862,6 +12483,25 @@ export interface paths {
                 /** Format: uuid */
                 challengeId: string;
                 expireIn: number;
+              };
+            };
+          };
+        };
+        /** @description CAPTCHA_INVALID（图形码错答/过期/缺参，一次性票据已焚） */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
               };
             };
           };
@@ -12780,7 +13420,7 @@ export interface paths {
             };
           };
         };
-        /** @description E-DEPOSIT-005 非本人申请 */
+        /** @description E-DEPOSIT-005 非本人申请 | E-DEPOSIT-008 生产环境禁用 pay-mock（批A T1-a，2026-09-10：NODE_ENV=production 下 403） */
         403: {
           headers: {
             [name: string]: unknown;
@@ -14080,6 +14720,7 @@ export interface paths {
                   distanceKm: number | null;
                   eligibility: {
                     eligible: boolean;
+                    canAccept: boolean;
                     depositAmount: number;
                     maxOrderAmount: number | null;
                     requiredDeposit?: number;
@@ -15871,6 +16512,173 @@ export interface paths {
         };
         /** @description E-COMMON-001 校验失败（address 长度 2-500），details 含 zod 具体 message */
         400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/common/geo/suggest': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 地址输入多候选（A7）。Nominatim search limit=5，viewbox 限定东帝汶（bounded）。失败/无结果返回空 items（不抛错）。与 geocode 共享 rate limit（1/s + 10/min/IP → E-COMMON-004）。 */
+    get: {
+      parameters: {
+        query: {
+          q: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 候选列表（≤5 条） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              items: {
+                lat: number;
+                lng: number;
+                label: string;
+              }[];
+            };
+          };
+        };
+        /** @description E-COMMON-001 校验失败（q 长度 2-500） */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-COMMON-004 超频（1/s + 10/min/IP） */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/common/geo/nearby': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 坐标附近带名称地点（A7）。Overpass 2km 内 node["name"]，Haversine 按距离升序前 5。失败/无结果返回空 items（不抛错）。与 geocode 共享 rate limit。 */
+    get: {
+      parameters: {
+        query: {
+          lat: number;
+          lng: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 附近地点列表（≤5 条） */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              items: {
+                id: string;
+                name: string;
+                distanceM: number;
+                lat: number;
+                lng: number;
+              }[];
+            };
+          };
+        };
+        /** @description E-COMMON-001 校验失败（lat/lng 范围） */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              success: false;
+              error: {
+                code: string;
+                message: string;
+                details?: {
+                  [key: string]: unknown;
+                };
+              };
+            };
+          };
+        };
+        /** @description E-COMMON-004 超频（1/s + 10/min/IP） */
+        429: {
           headers: {
             [name: string]: unknown;
           };
@@ -21457,6 +22265,9 @@ export interface components {
         code: string;
         discountAmount: number;
       } | null;
+      /** Format: date-time */
+      scheduledFor: string | null;
+      acceptingReservation: boolean;
     };
     OrderItem: {
       /** Format: uuid */
@@ -21634,6 +22445,9 @@ export interface components {
         id: string;
         code: string;
         deliveryFee: number;
+        acceptingReservation: boolean;
+        /** Format: date-time */
+        nextOpenAt: string | null;
       } | null;
       itemsSubtotal: number;
       deliveryFee: number;
@@ -22456,6 +23270,195 @@ export interface components {
     };
     /** @enum {string} */
     DashboardTimeRange: 'today' | 'week' | 'month';
+    StatisticsRangeQuery: {
+      /** @enum {string} */
+      range?: 'today' | 'week' | 'month';
+      from?: string;
+      to?: string;
+    };
+    StatisticsTopProductsQuery: {
+      /** @enum {string} */
+      range?: 'today' | 'week' | 'month';
+      from?: string;
+      to?: string;
+      /** @default 10 */
+      limit: number;
+      /**
+       * @default en
+       * @enum {string}
+       */
+      lang: 'en' | 'id' | 'zh' | 'pt' | 'tet';
+    };
+    StatisticsTopProductItem: {
+      /** Format: uuid */
+      productId: string;
+      productName: string;
+      productImage: string | null;
+      orderCount: number;
+      quantitySold: number;
+      gmvAmount: number;
+    };
+    StatisticsTopProductsData: {
+      from: string;
+      to: string;
+      items: {
+        /** Format: uuid */
+        productId: string;
+        productName: string;
+        productImage: string | null;
+        orderCount: number;
+        quantitySold: number;
+        gmvAmount: number;
+      }[];
+    };
+    StatisticsTopProductsResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: {
+        from: string;
+        to: string;
+        items: {
+          /** Format: uuid */
+          productId: string;
+          productName: string;
+          productImage: string | null;
+          orderCount: number;
+          quantitySold: number;
+          gmvAmount: number;
+        }[];
+      };
+      message?: string;
+    };
+    StatisticsExportQuery: {
+      /** @enum {string} */
+      range?: 'today' | 'week' | 'month';
+      from?: string;
+      to?: string;
+      /**
+       * @default en
+       * @enum {string}
+       */
+      lang: 'en' | 'id' | 'zh' | 'pt' | 'tet';
+    };
+    StatisticsRidersQuery: {
+      /** @enum {string} */
+      range?: 'today' | 'week' | 'month';
+      from?: string;
+      to?: string;
+    };
+    StatisticsRidersResponseItem: {
+      /** Format: uuid */
+      riderId: string;
+      riderName: string;
+      completedOrders: number;
+      income: number;
+      rating: number;
+      abnormalCount: number;
+    };
+    StatisticsRidersData: {
+      from: string;
+      to: string;
+      items: {
+        /** Format: uuid */
+        riderId: string;
+        riderName: string;
+        completedOrders: number;
+        income: number;
+        rating: number;
+        abnormalCount: number;
+      }[];
+    };
+    StatisticsRidersResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: {
+        from: string;
+        to: string;
+        items: {
+          /** Format: uuid */
+          riderId: string;
+          riderName: string;
+          completedOrders: number;
+          income: number;
+          rating: number;
+          abnormalCount: number;
+        }[];
+      };
+      message?: string;
+    };
+    StatisticsRefundsQuery: {
+      /** @enum {string} */
+      range?: 'today' | 'week' | 'month';
+      from?: string;
+      to?: string;
+    };
+    StatisticsRefundReasonItem: {
+      reason: string;
+      count: number;
+      amount: number;
+    };
+    StatisticsRefundsData: {
+      from: string;
+      to: string;
+      refundCount: number;
+      refundAmount: number;
+      rate: number | null;
+      gmvOrderCount: number;
+      reasonBreakdown: {
+        reason: string;
+        count: number;
+        amount: number;
+      }[];
+    };
+    StatisticsRefundsResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: {
+        from: string;
+        to: string;
+        refundCount: number;
+        refundAmount: number;
+        rate: number | null;
+        gmvOrderCount: number;
+        reasonBreakdown: {
+          reason: string;
+          count: number;
+          amount: number;
+        }[];
+      };
+      message?: string;
+    };
+    StatisticsCustomersQuery: {
+      /** @enum {string} */
+      range?: 'today' | 'week' | 'month';
+      from?: string;
+      to?: string;
+    };
+    StatisticsCustomersData: {
+      from: string;
+      to: string;
+      newCustomers: number;
+      repeatCustomers: number;
+      repeatRate: number | null;
+      avgOrderValue: number | null;
+      gmvOrderCount: number;
+      orderUserCount: number;
+    };
+    StatisticsCustomersResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: {
+        from: string;
+        to: string;
+        newCustomers: number;
+        repeatCustomers: number;
+        repeatRate: number | null;
+        avgOrderValue: number | null;
+        gmvOrderCount: number;
+        orderUserCount: number;
+      };
+      message?: string;
+    };
     AuditLogListItem: {
       /** Format: uuid */
       id: string;
@@ -22730,6 +23733,11 @@ export interface components {
         phone: string;
       };
     };
+    CaptchaResponse: {
+      captchaId: string;
+      svg: string;
+      expireIn: number;
+    };
     GeocodeRequest: {
       address: string;
     };
@@ -22739,6 +23747,29 @@ export interface components {
       /** @enum {string} */
       source: 'nominatim' | 'fallback';
       formattedAddress: string | null;
+    };
+    GeoSuggestRequest: {
+      q: string;
+    };
+    GeoSuggestResponseData: {
+      items: {
+        lat: number;
+        lng: number;
+        label: string;
+      }[];
+    };
+    GeoNearbyRequest: {
+      lat: number;
+      lng: number;
+    };
+    GeoNearbyResponseData: {
+      items: {
+        id: string;
+        name: string;
+        distanceM: number;
+        lat: number;
+        lng: number;
+      }[];
     };
     UploadResponseData: {
       /** Format: uri */
@@ -23081,6 +24112,7 @@ export interface components {
     };
     DispatchEligibilityLabel: {
       eligible: boolean;
+      canAccept: boolean;
       depositAmount: number;
       maxOrderAmount: number | null;
       requiredDeposit?: number;
@@ -23100,6 +24132,7 @@ export interface components {
       distanceKm: number | null;
       eligibility: {
         eligible: boolean;
+        canAccept: boolean;
         depositAmount: number;
         maxOrderAmount: number | null;
         requiredDeposit?: number;
@@ -23126,6 +24159,7 @@ export interface components {
         distanceKm: number | null;
         eligibility: {
           eligible: boolean;
+          canAccept: boolean;
           depositAmount: number;
           maxOrderAmount: number | null;
           requiredDeposit?: number;

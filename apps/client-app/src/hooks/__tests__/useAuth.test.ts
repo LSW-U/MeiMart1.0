@@ -4,10 +4,14 @@ import { useAuth } from '../useAuth';
 // Mock 5 个 mutation hooks —— 它们不是 logout 的关注点
 jest.mock('@/services/queries/useAuth', () => ({
   useLoginPassword: () => ({ mutateAsync: jest.fn(), isPending: false }),
-  useLoginSms: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useRegister: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useSendSmsCode: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useResetPassword: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  // 批A2-1: useAuth 新增 unified 依赖，logout 测试不关注，给空实现
+  useVerifySms: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  useCompleteRegister: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  useSendUnifiedSmsCode: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  useFetchCaptcha: () => ({ mutateAsync: jest.fn(), isPending: false }),
 }));
 
 // jest.mock factory 不允许引用外部变量，用 mock 前缀让 Babel 视作 lazy reference
@@ -37,7 +41,9 @@ jest.mock('@/services/api', () => ({
   },
 }));
 
-jest.mock('expo-router', () => ({ router: { replace: (...args: unknown[]) => mockRouterReplace(...args) } }));
+jest.mock('expo-router', () => ({
+  router: { replace: (...args: unknown[]) => mockRouterReplace(...args) },
+}));
 
 describe('useAuth.logout', () => {
   beforeEach(() => {
