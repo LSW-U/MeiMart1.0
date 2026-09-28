@@ -4,7 +4,7 @@
  * 后端全局异常信封 response.data.error.{code,message}（all-exceptions.filter.ts:86-92），
  * 用真实信封形状锁「信封位主读 + 顶层 data.code 兼容 + 429 兜底 + 回退」四条路径
  */
-import { toApiErrorText } from '../../../app/(auth)/login-sms';
+import { toApiErrorText } from '@/utils/apiError';
 
 const t = (key: string) =>
   ({

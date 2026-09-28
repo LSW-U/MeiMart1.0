@@ -116,7 +116,6 @@
     "confirmPasswordLabel": "CONFIRM PASSWORD",
     "notice": "Notice",
     "enterPhone": "Please enter phone number",
-    "smsSent": "SMS code sent",
     "smsSignInFailed": "Invalid SMS code",
     "resetSuccess": "Password has been reset, please log in again",
     "resetFailed": "Please try again later",

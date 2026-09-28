@@ -3,20 +3,25 @@
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（外壳行数计入 AuthShell.tsx）
 // Fix-16: 替换 PageHeader 为 AuthShell + 手机号 + 验证码 + 新密码
 // CP-FIX-2.3: 表单迁移到 react-hook-form + zod（规则 9）
+// 批1：发码迁 unified（scene RESET_PASSWORD）+ challengeId 链 + 图形码 + toApiErrorText（U6/U8）
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, Alert, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { useTheme, typography } from '@/theme';
+import { useTheme, spacing, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { AuthShell } from '@/components/business/AuthShell';
-import { useResetPassword, useSendSmsCode } from '@/services/queries/useAuth';
+import { useResetPassword } from '@/services/queries/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/store/toastStore';
 import { FormInput } from '@/forms';
+import { toApiErrorText } from '@/utils/apiError';
 import { PHONE_PREFIX } from '@/components/ui/PhonePrefix';
+import { CaptchaInput } from '@/components/business/CaptchaInput';
+import type { CaptchaPayload } from '@/services/auth';
 import { resetPasswordSchema, type ResetPasswordValues } from '@/forms/schemas/auth';
 
 const COUNTDOWN = 60;
@@ -28,8 +33,12 @@ export default function ResetPasswordPage() {
   // P29 审查 F4：确认密码独立开关（与 register 对齐，不再与新密码共用导致双框同显）
   const [showConfirm, setShowConfirm] = useState(false);
   const [counter, setCounter] = useState(0);
+  const [sending, setSending] = useState(false);
+  const [smsError, setSmsError] = useState<string | null>(null);
+  // 批1: 图形码凭证——输满 4 位且票据在期才非 null（禁发条件之一，同 login-sms 批A2-2）
+  const [captcha, setCaptcha] = useState<CaptchaPayload | null>(null);
   const resetMutation = useResetPassword();
-  const sendMutation = useSendSmsCode();
+  const { sendUnifiedSms, sendUnifiedPending } = useAuth();
 
   const { control, handleSubmit } = useForm<ResetPasswordValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -49,20 +58,30 @@ export default function ResetPasswordPage() {
       toast.info(t('auth.enterPhone'));
       return;
     }
-    sendMutation.mutate(
-      { phone: phoneValue, scene: 'RESET_PASSWORD' },
-      {
-        onSuccess: () => {
-          setCounter(COUNTDOWN);
-          toast.success(t('auth.smsSent'));
-        },
-      },
-    );
+    // Why: 发码在途禁止再点（真实短信花真金白银，双击=两发）
+    if (sending) return;
+    // 批1: 图形码未输满（或票据已焚）不发——后端 SMS_CAPTCHA_REQUIRED=true 时必校验
+    if (!captcha) {
+      toast.info(t('auth.captchaRequiredToast'));
+      return;
+    }
+    setSending(true);
+    // 批1: 发码迁 unified（scene RESET_PASSWORD）——challengeId 由 useAuth 存 store
+    sendUnifiedSms(phoneValue, 'RESET_PASSWORD', captcha)
+      .then(() => {
+        setCounter(COUNTDOWN);
+        setSmsError(null);
+        // Why: 票据消费即焚——发码成功后旧 captchaId 已焚，强制重输新图
+        setCaptcha(null);
+      })
+      .catch((error: unknown) => setSmsError(toApiErrorText(error, t)))
+      .finally(() => setSending(false));
   };
 
   const submit = (values: ResetPasswordValues) => {
+    setSmsError(null);
     resetMutation.mutate(
-      { phone: values.phone, password: values.password, smsCode: values.code },
+      { phone: values.phone, smsCode: values.code, newPassword: values.password },
       {
         onSuccess: () => {
           // Why: Native 用 Alert 确认后跳转，Web 端 Alert 不显示，用 toast + 延迟跳转
@@ -75,7 +94,9 @@ export default function ResetPasswordPage() {
             ]);
           }
         },
-        onError: () => toast.error(t('auth.resetFailed')),
+        // 批1: 错误走 toApiErrorText 错误码映射（E-USER-003 码错/过期等），
+        // 未命中回退通用失败文案——不再一律「重置失败」误导
+        onError: (error: unknown) => toast.error(toApiErrorText(error, t, t('auth.resetFailed'))),
       },
     );
   };
@@ -109,6 +130,14 @@ export default function ResetPasswordPage() {
         }
         testID="reset-password-page"
       >
+        {smsError && (
+          <View
+            style={[styles.errorBox, { backgroundColor: colors['error-container'] }]}
+            accessibilityRole="alert"
+          >
+            <Text style={[styles.errorBoxText, { color: colors.error }]}>{smsError}</Text>
+          </View>
+        )}
         <FormInput
           control={control}
           name="phone"
@@ -118,6 +147,9 @@ export default function ResetPasswordPage() {
           prefix={PHONE_PREFIX}
           testID="reset-phone"
         />
+
+        {/* 批1: 图形验证码——发码前必输（后端开关 SMS_CAPTCHA_REQUIRED=true） */}
+        <CaptchaInput onChange={setCaptcha} />
 
         <View style={styles.codeRow}>
           <View style={styles.codeInput}>
@@ -135,7 +167,7 @@ export default function ResetPasswordPage() {
           {/* .code-btn：50px 与输入框等高，1.5px primary 描边 13/700 红字白底（P29 原型） */}
           <Pressable
             onPress={sendCode}
-            disabled={counter > 0 || sendMutation.isPending}
+            disabled={counter > 0 || sending || sendUnifiedPending}
             style={({ pressed }) => [
               styles.codeBtn,
               { borderColor: colors.primary },
@@ -189,7 +221,7 @@ const styles = StyleSheet.create({
   codeInput: {
     flex: 1,
   },
-  // .code-btn{height:50px;border:1.5px solid primary;圆角 12;padding 0 16;13/700 primary}
+  // .code-btn{height:50px;border:1.5px solid primary;圆角 12;padding 0 16;13/700 红字白底（P29 原型）}
   codeBtn: {
     minHeight: 50,
     borderWidth: 1.5,
@@ -212,5 +244,15 @@ const styles = StyleSheet.create({
   loginLink: {
     ...typography['body-md'],
     fontWeight: '700',
+  },
+  errorBox: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: 8,
+    marginBottom: spacing.xs,
+  },
+  errorBoxText: {
+    ...typography['body-sm'],
+    fontWeight: '600',
   },
 });

@@ -1,5 +1,5 @@
 // 豁免说明（CLAUDE.md 规则 #25）：
-// 本文件 mutation（loginPassword / register / sendSmsCode / resetPassword /
+// 本文件 mutation（loginPassword / resetPassword /
 // sendUnifiedSmsCode / fetchCaptcha / verifySms / completeRegister）
 // 全部为「纯异步操作」—— 提交后不立即更新任何列表，调用方在 onSuccess 后跳转或提示。
 // 因此不实现 onMutate 三件套，符合规则 #25 豁免条款。
@@ -12,29 +12,21 @@ export function useLoginPassword() {
 }
 
 // 批A2-3 增补#3: 旧 /common/auth/login-sms 链已删（login-sms 页切 unified verify，全仓零消费）；
-// useLoginSms mutation 一并移除，register/reset 仍留旧 sendSmsCode 等 scene 契约核实
-export function useRegister() {
-  return useMutation({
-    mutationFn: authApi.register,
-  });
-}
+// useLoginSms mutation 一并移除；批1：旧 sendSmsCode（/sms-code）已随两页迁 unified 删除；
+// 批1 P2-2（审查）: useRegister（旧 /register 链）已删——注册统一 unified verify→complete 链
 
-export function useSendSmsCode() {
-  return useMutation({
-    mutationFn: authApi.sendSmsCode,
-  });
-}
-
-// Why: unified 发码（challengeId 模式）仅 login-sms 链使用；register/reset 留旧 sendSmsCode 保 scene
+// Why: unified 发码（challengeId 模式）三页共用；scene 批1 起随请求透传（LOGIN 缺省）
 export function useSendUnifiedSmsCode() {
   return useMutation({
     mutationFn: ({
       phone,
+      scene,
       captcha,
     }: {
       phone: string;
+      scene?: 'LOGIN' | 'REGISTER' | 'RESET_PASSWORD';
       captcha?: { captchaId: string; captchaText: string };
-    }) => authApi.sendUnifiedSmsCode(phone, captcha),
+    }) => authApi.sendUnifiedSmsCode(phone, scene, captcha),
   });
 }
 

@@ -4,8 +4,8 @@ import { useAuth } from '../useAuth';
 // Mock 5 个 mutation hooks —— 它们不是 logout 的关注点
 jest.mock('@/services/queries/useAuth', () => ({
   useLoginPassword: () => ({ mutateAsync: jest.fn(), isPending: false }),
-  useRegister: () => ({ mutateAsync: jest.fn(), isPending: false }),
-  useSendSmsCode: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  // 批1 P2-2: useRegister（旧 /register 链）已删
+  // 批1: 旧 useSendSmsCode（/sms-code）已删——发码统一 useSendUnifiedSmsCode
   useResetPassword: () => ({ mutateAsync: jest.fn(), isPending: false }),
   // 批A2-1: useAuth 新增 unified 依赖，logout 测试不关注，给空实现
   useVerifySms: () => ({ mutateAsync: jest.fn(), isPending: false }),

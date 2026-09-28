@@ -12464,6 +12464,11 @@ export interface paths {
           'application/json': {
             phone: string;
             deviceId?: string;
+            /**
+             * @default LOGIN
+             * @enum {string}
+             */
+            scene?: 'LOGIN' | 'REGISTER' | 'RESET_PASSWORD';
             captchaId?: string;
             captchaText?: string;
           };
@@ -12661,6 +12666,7 @@ export interface paths {
             /** Format: uuid */
             challengeId: string;
             deviceId?: string;
+            password?: string;
           };
         };
       };
@@ -23720,6 +23726,7 @@ export interface components {
       /** Format: uuid */
       challengeId: string;
       deviceId?: string;
+      password?: string;
     };
     CompleteRegisterResponse: {
       accessToken: string;

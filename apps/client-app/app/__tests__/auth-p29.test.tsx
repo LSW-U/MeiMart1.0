@@ -29,18 +29,22 @@ jest.mock('react-i18next', () => ({
 
 jest.mock('@/services/queries/useAuth', () => ({
   useLoginPassword: () => ({ mutate: mockMutate, isPending: false }),
-  useRegister: () => ({ mutate: mockMutate, isPending: false }),
-  useSendSmsCode: () => ({ mutate: mockMutate, isPending: false }),
+  // 批1 P2-3（审查）: useRegister 僵尸 mock 已随旧 /register 链删除——register 页走 unified verify
   useResetPassword: () => ({ mutate: mockMutate, isPending: false }),
 }));
 
 // 批A2-1: login-sms 页已切 unified 入口（useAuth.verify 分流），渲染测试仍走 mock
 // 批A2-2: 页面新增 CaptchaInput（组件内部自带 mutation），页面测试 mock 掉整个组件
+// 批1: register/reset 两页也切 unified 发码（sendUnifiedSms）+ CaptchaInput，mock 同步
 jest.mock('@/components/business/CaptchaInput', () => ({
   CaptchaInput: () => null,
 }));
 jest.mock('@/hooks/useAuth', () => ({
-  useAuth: () => ({ sendUnifiedSms: mockMutate, sendUnifiedPending: false, verify: mockMutate }),
+  useAuth: () => ({
+    sendUnifiedSms: mockMutate,
+    sendUnifiedPending: false,
+    verify: mockMutate,
+  }),
   BlockedError: class BlockedError extends Error {},
 }));
 

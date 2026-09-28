@@ -116,7 +116,6 @@
     "confirmPasswordLabel": "CONFIRMAR PALAVRA-PASSE",
     "notice": "Aviso",
     "enterPhone": "Introduza o número de telefone",
-    "smsSent": "Código SMS enviado",
     "smsSignInFailed": "Código SMS inválido",
     "resetSuccess": "Palavra-passe redefinida, entre novamente",
     "resetFailed": "Tente novamente mais tarde",

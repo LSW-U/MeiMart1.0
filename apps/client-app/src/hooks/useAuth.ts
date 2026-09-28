@@ -1,8 +1,6 @@
 import { useCallback } from 'react';
 import {
   useLoginPassword,
-  useRegister,
-  useSendSmsCode,
   useResetPassword,
   useVerifySms,
   useCompleteRegister,
@@ -25,8 +23,6 @@ export function useAuth() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const loginPassword = useLoginPassword();
-  const register = useRegister();
-  const sendSms = useSendSmsCode();
   const resetPassword = useResetPassword();
 
   // 批A2-3 增补#3: 'sms' mode 已随 /common/auth/login-sms 链删除——login-sms 页切 unified
@@ -40,17 +36,6 @@ export function useAuth() {
       return result;
     },
     [loginPassword, setAuth],
-  );
-
-  const signUp = useCallback(
-    async (input: LoginInput) => {
-      const result = await register.mutateAsync(input);
-      setAuth(result.accessToken, result.refreshToken);
-      await tokenStorage.set(result.accessToken, result.refreshToken);
-      router.replace('/(main)/home');
-      return result;
-    },
-    [register, setAuth],
   );
 
   const logout = useCallback(async () => {
@@ -86,8 +71,12 @@ export function useAuth() {
   );
 
   const sendUnifiedSms = useCallback(
-    async (phone: string, captcha?: { captchaId: string; captchaText: string }) => {
-      const result = await sendUnifiedMutation.mutateAsync({ phone, captcha });
+    async (
+      phone: string,
+      scene?: 'LOGIN' | 'REGISTER' | 'RESET_PASSWORD',
+      captcha?: { captchaId: string; captchaText: string },
+    ) => {
+      const result = await sendUnifiedMutation.mutateAsync({ phone, scene, captcha });
       setChallenge(result.challengeId);
       return result;
     },
@@ -96,11 +85,13 @@ export function useAuth() {
 
   // Why: 三分支都在同一回调里收敛，调用方（login-sms 页）只管等结果 / 展示文案：
   //   LOGIN    → 直接进首页（token 由后端在 verify 响应里签发）
-  //   REGISTER → 暂存 registrationTicket → 立即 register/complete（agreedToTerms:true，
-  //              后端建号 password:null，「设密码」是后续独立能力）→ 进首页
+  //   REGISTER → 暂存 registrationTicket → register/complete（agreedToTerms:true）→ 进首页。
+  //              password（批1 R7 方案v3）：complete 步骤可选提交，register 页传表单密码
+  //              （后端 hash 入库）；login-sms 侧不传（后端建号 password:null，「设密码」
+  //              是后续独立能力/首次登录走 password-reset）
   //   BLOCKED  → 抛 BlockedError，调用方 toast「账号异常，请联系客服」，禁止继续
   const verify = useCallback(
-    async (input: { phone: string; code: string }): Promise<VerifySmsResult> => {
+    async (input: { phone: string; code: string; password?: string }): Promise<VerifySmsResult> => {
       const challengeId = useSmsChallengeStore.getState().challengeId;
       if (!challengeId) {
         throw new Error('challengeId missing — call sendSms first');
@@ -119,6 +110,7 @@ export function useAuth() {
         const authResult = await completeRegister.mutateAsync({
           registrationTicket: result.registrationTicket,
           challengeId,
+          ...(input.password ? { password: input.password } : {}),
         });
         clearChallenge();
         await applyLogin(authResult);
@@ -139,20 +131,15 @@ export function useAuth() {
 
   return {
     login,
-    signUp,
     logout,
-    sendSms: sendSms.mutateAsync,
+    // 批1：旧 sendSms（/sms-code）已删——发码统一走 sendUnifiedSms（scene 透传，LOGIN 缺省）
     resetPassword: resetPassword.mutateAsync,
-    // unified 入口：页面迁移用这两个，旧的 login/signUp 留给密码登录/旧注册页（批A2-3 收口）
+    // unified 入口：三 auth 页共用；旧的 login 留给密码登录页（批A2-3 收口）；
+    // signUp（旧 /register 链）批1 P2-2 已删——注册统一 unified verify→complete
     sendUnifiedSms,
     sendUnifiedPending: sendUnifiedMutation.isPending,
     verify,
-    isPending:
-      loginPassword.isPending ||
-      register.isPending ||
-      sendSms.isPending ||
-      verifySms.isPending ||
-      completeRegister.isPending,
+    isPending: loginPassword.isPending || verifySms.isPending || completeRegister.isPending,
   };
 }
 

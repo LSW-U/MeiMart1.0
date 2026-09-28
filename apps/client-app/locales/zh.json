@@ -116,7 +116,6 @@
     "confirmPasswordLabel": "确认密码",
     "notice": "提示",
     "enterPhone": "请输入手机号",
-    "smsSent": "验证码已发送",
     "smsSignInFailed": "验证码错误",
     "resetSuccess": "密码已重置，请重新登录",
     "resetFailed": "请稍后重试",

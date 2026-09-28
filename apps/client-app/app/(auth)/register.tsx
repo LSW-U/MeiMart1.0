@@ -14,10 +14,13 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { AuthShell } from '@/components/business/AuthShell';
-import { useRegister, useSendSmsCode } from '@/services/queries/useAuth';
-import { useAuthStore } from '@/store/authStore';
+import { useAuth, BlockedError } from '@/hooks/useAuth';
+import { toast } from '@/store/toastStore';
 import { FormInput } from '@/forms';
+import { toApiErrorText } from '@/utils/apiError';
 import { PHONE_PREFIX } from '@/components/ui/PhonePrefix';
+import { CaptchaInput } from '@/components/business/CaptchaInput';
+import type { CaptchaPayload } from '@/services/auth';
 import { registerSchema, type RegisterValues } from '@/forms/schemas/auth';
 
 const COUNTDOWN = 60;
@@ -46,10 +49,13 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [counter, setCounter] = useState(0);
+  const [sending, setSending] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
-  const setAuth = useAuthStore((s) => s.setAuth);
-  const registerMutation = useRegister();
-  const sendMutation = useSendSmsCode();
+  // 批1: 图形码凭证——输满 4 位且票据在期才非 null（禁发条件之一，同 login-sms 批A2-2）
+  const [captcha, setCaptcha] = useState<CaptchaPayload | null>(null);
+  // 批1: 注册链迁 unified——verify 按 user 存在性分流，REGISTER 分支在 useAuth.verify 内
+  // complete（R7：带表单密码，后端 hash 入库）→ token → 进首页
+  const { sendUnifiedSms, sendUnifiedPending, verify } = useAuth();
 
   const { control, handleSubmit, formState } = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
@@ -79,50 +85,47 @@ export default function RegisterPage() {
       setRegisterError(t('auth.enterPhone'));
       return;
     }
+    // Why: 发码在途禁止再点（真实短信花真金白银，双击=两发）
+    if (sending) return;
+    // 批1: 图形码未输满（或票据已焚）不发——后端 SMS_CAPTCHA_REQUIRED=true 时必校验
+    if (!captcha) {
+      toast.info(t('auth.captchaRequiredToast'));
+      return;
+    }
     setRegisterError(null);
-    // Why: 必须传 scene='REGISTER'，后端按 scene 区分验证码用途
-    // 不传 scene 会被当作 LOGIN，注册时验证码不匹配，返回 E-USER-003
-    sendMutation.mutate(
-      { phone: phoneValue, scene: 'REGISTER' },
-      {
-        onSuccess: () => {
-          setCounter(COUNTDOWN);
-          setRegisterError(null);
-        },
-        onError: (error: unknown) => {
-          const err = error as {
-            response?: { data?: { error?: { code?: string; message?: string } } };
-            message?: string;
-          };
-          const msg = err?.response?.data?.error?.message ?? err?.message ?? t('errors.generic');
-          setRegisterError(msg);
-        },
-      },
-    );
+    setSending(true);
+    // 批1: 发码迁 unified（scene REGISTER）——challengeId 由 useAuth 存 store
+    sendUnifiedSms(phoneValue, 'REGISTER', captcha)
+      .then(() => {
+        setCounter(COUNTDOWN);
+        setRegisterError(null);
+        // Why: 票据消费即焚——发码成功后旧 captchaId 已焚，强制重输新图
+        setCaptcha(null);
+      })
+      .catch((error: unknown) => setRegisterError(toApiErrorText(error, t)))
+      .finally(() => setSending(false));
   };
 
+  // P2-1（审查批1）: return promise 上交 handleSubmit——isSubmitting 才会覆盖整个 verify 链
+  // （按钮 loading/disabled 生效防双击）；catch 已兜底不会 unhandled rejection
   const submit = (values: RegisterValues) => {
     setRegisterError(null);
-    registerMutation.mutate(
-      { phone: values.phone, password: values.password, smsCode: values.code },
-      {
-        onSuccess: (data) => {
-          setAuth(data.accessToken, data.refreshToken);
-          router.replace('/(main)/home');
-        },
-        onError: (error: unknown) => {
-          // Why: 提取后端错误码，用 i18n 翻译，找不到时回退到 generic
-          const err = error as {
-            response?: { data?: { error?: { code?: string; message?: string } } };
-            message?: string;
-          };
-          const code = err?.response?.data?.error?.code;
-          const fallback = err?.response?.data?.error?.message ?? err?.message;
-          const translated = code ? t(`errors.${code}`, { defaultValue: fallback }) : fallback;
-          setRegisterError(translated ?? t('auth.registerFailed'));
-        },
-      },
-    );
+    // 批1: 验证链迁 unified——verify 分流（LOGIN/REGISTER/BLOCKED）收敛在 useAuth.verify；
+    // REGISTER 分支用 R7 通道把表单密码带进 register/complete（后端 hash 入库）后进首页
+    return verify({ phone: values.phone, code: values.code, password: values.password })
+      .then(() => {
+        setRegisterError(null);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof BlockedError) {
+          // BLOCKED：账号被禁用/冻结，禁止继续，引导联系客服
+          toast.error(t('auth.accountBlocked'));
+          return;
+        }
+        // 批1: 错误走 toApiErrorText 错误码映射（E-USER-003/E-REGISTER-001 等），
+        // 未命中回退通用失败文案——不再手写信封读取
+        setRegisterError(toApiErrorText(error, t, t('auth.registerFailed')));
+      });
   };
 
   return (
@@ -136,7 +139,7 @@ export default function RegisterPage() {
         welcomeSub={t('auth.registerSub')}
         actionLabel={t('auth.registerAction')}
         onAction={handleSubmit(submit)}
-        loading={registerMutation.isPending}
+        loading={formState.isSubmitting}
         secondary={
           <View style={styles.loginRow}>
             <Text style={[styles.loginText, { color: colors.secondary }]}>
@@ -172,6 +175,9 @@ export default function RegisterPage() {
           testID="register-phone"
         />
 
+        {/* 批1: 图形验证码——发码前必输（后端开关 SMS_CAPTCHA_REQUIRED=true） */}
+        <CaptchaInput onChange={setCaptcha} />
+
         <View style={styles.codeRow}>
           <View style={styles.codeInput}>
             <FormInput
@@ -188,7 +194,7 @@ export default function RegisterPage() {
           {/* .code-btn：50px 与输入框等高，1.5px primary 描边 13/700 红字白底（P29 原型） */}
           <Pressable
             onPress={sendCode}
-            disabled={counter > 0 || sendMutation.isPending}
+            disabled={counter > 0 || sending || sendUnifiedPending}
             style={({ pressed }) => [
               styles.codeBtn,
               { borderColor: colors.primary },

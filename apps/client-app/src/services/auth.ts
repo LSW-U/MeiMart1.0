@@ -20,15 +20,14 @@ export interface AuthResult {
   refreshExpiresAt: number;
 }
 
-// 调用方（useAuth.ts）传的 input 是 union 弱类型，service 内部按方法挑字段并校验
+// 调用方（useAuth.ts）传的 input 是 union 弱类型，service 内部按方法挑字段并校验。
+// 批1：scene 已从本 payload 移除——发码统一 sendUnifiedSmsCode(phone, scene, captcha)；
+// 批1 P2-2（审查）: email/name 字段随 useRegister（旧 /register 链）删除——已无消费方
 interface LoginPayload {
   phone: string;
   password?: string;
   smsCode?: string;
-  email?: string;
-  name?: string;
   newPassword?: string;
-  scene?: OtpScene;
 }
 
 interface MockLoginPayload {
@@ -110,37 +109,6 @@ export const authApi = {
     return res.data;
   },
 
-  async register(payload: LoginPayload): Promise<AuthResult> {
-    if (!payload.password || !payload.smsCode) {
-      throw new Error('register requires password + smsCode');
-    }
-    if (isMockMode) {
-      return mockResponse(buildMockAuthResult('customer'), 800);
-    }
-    const res = await api.post<AuthResult>('/common/auth/register', {
-      phone: payload.phone,
-      password: payload.password,
-      smsCode: payload.smsCode,
-      ...(payload.email ? { email: payload.email } : {}),
-      ...(payload.name ? { name: payload.name } : {}),
-    });
-    return res.data;
-  },
-
-  // Why: 旧发码端点（deprecated「切换后 2 周下线」）——register / reset-password 两页仍依赖
-  // scene 透传（'REGISTER'/'RESET_PASSWORD'），unified 发码固定 LOGIN 场景无 scene 字段，
-  // 两页迁 unified 前必须保留此方法（批A2-3 收口）；仅 login-sms 链已切 sendUnifiedSmsCode
-  async sendSmsCode(payload: LoginPayload): Promise<{ expireIn: number }> {
-    if (isMockMode) {
-      return mockResponse({ expireIn: 300 }, 300);
-    }
-    const res = await api.post<{ expireIn: number }>('/common/auth/sms-code', {
-      phone: payload.phone,
-      ...(payload.scene ? { scene: payload.scene } : {}),
-    });
-    return res.data;
-  },
-
   async fetchCaptcha(): Promise<CaptchaResponse> {
     if (isMockMode) {
       return mockResponse(
@@ -157,21 +125,27 @@ export const authApi = {
   },
 
   // Why: unified 发码入口（批A2-1）——POST /common/auth/sms/send，202 统一响应
-  // （防枚举）返回 challengeId，verify / register/complete 必须回传；契约无 scene/deviceId 必填。
+  // （防枚举）返回 challengeId，verify / register/complete 必须回传。
+  // 批1 scene 透传（R1）：scene 随请求携带（LOGIN 缺省；register/reset 两页传各自场景）。
   // 批A2-2：后端开关 SMS_CAPTCHA_REQUIRED=true 时 captchaId/captchaText 必带（E-CAPTCHA-001）
-  async sendUnifiedSmsCode(phone: string, captcha?: CaptchaPayload): Promise<SendUnifiedSmsResult> {
+  async sendUnifiedSmsCode(
+    phone: string,
+    scene?: OtpScene,
+    captcha?: CaptchaPayload,
+  ): Promise<SendUnifiedSmsResult> {
     if (isMockMode) {
       return mockResponse({ challengeId: 'mock-challenge-id', expireIn: 300 }, 300);
     }
     const res = await api.post<SendUnifiedSmsResult>('/common/auth/sms/send', {
       phone,
+      ...(scene ? { scene } : {}),
       ...(captcha ? { captchaId: captcha.captchaId, captchaText: captcha.captchaText } : {}),
     });
     return res.data;
   },
 
   // Why: unified verify——后端按 action 分流（LOGIN/REGISTER/BLOCKED），
-  // 不暴露手机号是否已注册（防枚举）；challengeId 来自 sendSmsCode 响应
+  // 不暴露手机号是否已注册（防枚举）；challengeId 来自 sendUnifiedSmsCode 响应
   async verifySms(payload: {
     phone: string;
     code: string;
@@ -185,10 +159,13 @@ export const authApi = {
   },
 
   // Why: unified 完成注册——registrationTicket 原子消费（GETDEL），
-  // 契约要求 agreedToTerms 必须字面量 true；challengeId 与 ticket 绑定校验
+  // 契约要求 agreedToTerms 必须字面量 true；challengeId 与 ticket 绑定校验。
+  // 批1 R7（方案v3）：password 可选——register 页提交表单密码（后端 hash 入库），
+  // login-sms 侧不传（后端建号 password:null，SMS-only 设计不破坏）
   async completeRegister(payload: {
     registrationTicket: string;
     challengeId: string;
+    password?: string;
   }): Promise<AuthResult> {
     if (isMockMode) {
       return mockResponse(buildMockAuthResult('customer'), 800);
@@ -197,6 +174,7 @@ export const authApi = {
       registrationTicket: payload.registrationTicket,
       agreedToTerms: true as const,
       challengeId: payload.challengeId,
+      ...(payload.password ? { password: payload.password } : {}),
     });
     return res.data;
   },

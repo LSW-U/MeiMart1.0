@@ -17,8 +17,8 @@ const mockRouterReplace = jest.fn();
 
 jest.mock('@/services/queries/useAuth', () => ({
   useLoginPassword: () => ({ mutateAsync: jest.fn(), isPending: false }),
-  useRegister: () => ({ mutateAsync: jest.fn(), isPending: false }),
-  useSendSmsCode: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  // 批1 P2-2: useRegister（旧 /register 链）已删
+  // 批1: 旧 useSendSmsCode（/sms-code）已删——发码统一 useSendUnifiedSmsCode
   useSendUnifiedSmsCode: () => ({
     mutateAsync: (...a: unknown[]) => mockSendMutate(...a),
     isPending: false,
@@ -119,6 +119,52 @@ describe('useAuth.verify unified 分流', () => {
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
     expect(mockTokenSet).toHaveBeenCalledWith('at-2', 'rt-2');
     expect(mockRouterReplace).toHaveBeenCalledWith('/(main)/home');
+  });
+
+  // 批1 R7（方案v3）：register 页经 verify 透传表单密码 → complete 带 password（后端 hash 入库）
+  it('REGISTER 带 password：complete 收到 password 字段（R7 通道）', async () => {
+    useSmsChallengeStore.getState().setChallenge('chal-4');
+    mockVerifyMutate.mockResolvedValue({
+      action: 'REGISTER',
+      registrationTicket: 'ticket-xyz',
+    });
+    mockCompleteMutate.mockResolvedValue({
+      accessToken: 'at-4',
+      refreshToken: 'rt-4',
+    });
+
+    const { result } = renderHook(() => useAuth());
+    await act(async () =>
+      result.current.verify({
+        phone: '+67077123456',
+        code: '123456',
+        password: 'Abc12345',
+      }),
+    );
+
+    expect(mockCompleteMutate).toHaveBeenCalledWith({
+      registrationTicket: 'ticket-xyz',
+      challengeId: 'chal-4',
+      password: 'Abc12345',
+    });
+  });
+
+  it('REGISTER 无 password：complete 不带 password 字段（login-sms 侧 SMS-only 兼容）', async () => {
+    useSmsChallengeStore.getState().setChallenge('chal-5');
+    mockVerifyMutate.mockResolvedValue({
+      action: 'REGISTER',
+      registrationTicket: 'ticket-nopwd',
+    });
+    mockCompleteMutate.mockResolvedValue({
+      accessToken: 'at-5',
+      refreshToken: 'rt-5',
+    });
+
+    const { result } = renderHook(() => useAuth());
+    await act(async () => result.current.verify({ phone: '+67077123456', code: '123456' }));
+
+    const arg = mockCompleteMutate.mock.calls[0][0] as Record<string, unknown>;
+    expect('password' in arg).toBe(false);
   });
 
   it('BLOCKED：抛 BlockedError，不存 token 不进首页', async () => {

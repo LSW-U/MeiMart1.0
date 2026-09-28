@@ -6050,6 +6050,10 @@ components:
           format: uuid
         deviceId:
           type: string
+        password:
+          type: string
+          minLength: 8
+          pattern: "[a-zA-Z]"
       required:
         - registrationTicket
         - agreedToTerms
@@ -24974,6 +24978,13 @@ paths:
                   pattern: ^\+[1-9]\d{1,14}$
                 deviceId:
                   type: string
+                scene:
+                  type: string
+                  enum:
+                    - LOGIN
+                    - REGISTER
+                    - RESET_PASSWORD
+                  default: LOGIN
                 captchaId:
                   type: string
                   minLength: 8
@@ -25223,6 +25234,10 @@ paths:
                   format: uuid
                 deviceId:
                   type: string
+                password:
+                  type: string
+                  minLength: 8
+                  pattern: "[a-zA-Z]"
               required:
                 - registrationTicket
                 - agreedToTerms
