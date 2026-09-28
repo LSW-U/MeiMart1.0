@@ -51,7 +51,9 @@ describe('CaptchaInput', () => {
     expect(mockMutate).toHaveBeenCalledTimes(1);
     resolveCaptcha('cap-1', SVG_A);
     await waitFor(() => {
-      expect(getByTestId('captcha-input-image')).toBeTruthy();
+      // 方案A: accessibilityElementsHidden 挂外层容器后子树对 RNTL 查询隐藏（读屏同语义），
+      // 查容器内节点须 includeHiddenElements
+      expect(getByTestId('captcha-input-image', { includeHiddenElements: true })).toBeTruthy();
     });
   });
 
@@ -77,7 +79,8 @@ describe('CaptchaInput', () => {
     opts.onError?.(new Error('network'));
     await waitFor(() => {
       expect(onChange).toHaveBeenLastCalledWith(null);
-      expect(getByText('errors.generic')).toBeTruthy();
+      // 方案A: 失败态 Text 在 accessibilityElementsHidden 容器内，查询须 includeHiddenElements
+      expect(getByText('errors.generic', { includeHiddenElements: true })).toBeTruthy();
     });
   });
 
@@ -96,7 +99,7 @@ describe('CaptchaInput', () => {
     expect(mockMutate.mock.calls.length).toBeGreaterThan(callsBeforeRefresh);
     resolveCaptcha('cap-new', SVG_B);
     await waitFor(() => {
-      expect(getByTestId('captcha-input-image')).toBeTruthy();
+      expect(getByTestId('captcha-input-image', { includeHiddenElements: true })).toBeTruthy();
     });
     // 旧输入已清空；重输后携带新票据
     fireEvent.changeText(field, 'xy9z');
@@ -124,7 +127,7 @@ describe('CaptchaInput', () => {
     // 不重输、等新图到达后父层仍是 null（fail-closed）
     resolveCaptcha('cap-new', SVG_B);
     await waitFor(() => {
-      expect(getByTestId('captcha-input-image')).toBeTruthy();
+      expect(getByTestId('captcha-input-image', { includeHiddenElements: true })).toBeTruthy();
     });
     expect(onChange).toHaveBeenLastCalledWith(null);
   });

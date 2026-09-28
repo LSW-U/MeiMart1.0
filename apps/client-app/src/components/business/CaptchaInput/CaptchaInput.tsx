@@ -106,6 +106,9 @@ export function CaptchaInput({ onChange, testID = 'captcha-input' }: CaptchaInpu
           onPress={handleRefresh}
           accessibilityRole="imagebutton"
           accessibilityLabel={t('auth.captchaRefreshA11y')}
+          // 方案A（调度拍板 20260928）: prop 挂外层容器——SvgXml（react-native-svg）不支持该
+          // prop 会 React 报 warning；语义=整块图形码（含点按行为）对读屏隐藏
+          accessibilityElementsHidden
           testID={`${testID}-image`}
           style={({ pressed }) => [
             styles.captchaBox,
@@ -116,7 +119,7 @@ export function CaptchaInput({ onChange, testID = 'captcha-input' }: CaptchaInpu
           {isPending ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : svg ? (
-            <SvgXml xml={svg} width={120} height={44} accessibilityElementsHidden />
+            <SvgXml xml={svg} width={120} height={44} />
           ) : (
             <Text style={[styles.failText, { color: colors.error }]}>{t('errors.generic')}</Text>
           )}
