@@ -7,4 +7,5 @@ packages:
 nodeLinker: hoisted
 allowBuilds:
   '@sentry/cli': false
+  better-sqlite3: true
   unrs-resolver: false
