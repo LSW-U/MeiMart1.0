@@ -19,3 +19,6 @@ expo-env.d.ts
 # AI tools
 .claude/
 .cursor/
+
+# rider prebuild 产物（批1冒烟副产物，可由 expo prebuild 重建；P2-2 审查项）
+ios/

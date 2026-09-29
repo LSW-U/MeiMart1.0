@@ -9,3 +9,5 @@ allowBuilds:
   '@sentry/cli': false
   better-sqlite3: true
   unrs-resolver: false
+minimumReleaseAgeExclude:
+  - expo-modules-jsi@56.0.14
