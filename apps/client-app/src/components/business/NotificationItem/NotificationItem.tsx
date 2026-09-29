@@ -161,18 +161,11 @@ export function NotificationItem({ notification, onPress, onCta, testID }: Notif
         </Text>
 
         {/* —— 配送进度条（D4：progress 0-3）—— */}
-        {typeof progress === 'number' && (
-          <ProgressSteps progress={progress} />
-        )}
+        {typeof progress === 'number' && <ProgressSteps progress={progress} />}
 
         {/* —— 骑手信息行（D4：riderName/riderPhone/eta）—— */}
         {(riderName || eta) && (
-          <View
-            style={[
-              styles.deliveryRow,
-              { backgroundColor: colors['surface-container'] },
-            ]}
-          >
+          <View style={[styles.deliveryRow, { backgroundColor: colors['surface-container'] }]}>
             {riderName && (
               <View style={[styles.riderAvatar, { backgroundColor: colors.primary }]}>
                 <Text style={[styles.riderAvatarText, { color: colors['on-primary'] }]}>
@@ -193,17 +186,29 @@ export function NotificationItem({ notification, onPress, onCta, testID }: Notif
               )}
             </View>
             {riderPhone && (
-              <Pressable
-                onPress={callRider}
-                style={[
-                  styles.callBtn,
-                  { backgroundColor: colors.semantic['positive-container'] },
-                ]}
+              // 方案A（nested Pressable 治理）：同 CTA 注释——外层卡片 Pressable 内禁再套
+              // Pressable；此钮是 32×32 圆形底+图标结构（Text 承载不了），改 View+responder
+              // 手势：内层子元素先于外层 Pressable 抢占，onResponderRelease 抬手触发
+              // （手感同 onPress），stopPropagation 断冒泡防外层卡片误触。
+              // P3-1（review）：release 用 locationX/Y 判在 32×32 界内才拨号——补回原
+              // Pressable 的「按住拖出即取消」语义（电话是外向动作，拖出误拨成本高）
+              <View
+                onStartShouldSetResponder={() => true}
+                onResponderRelease={(e) => {
+                  // Why: 可选链——fireEvent 构造的合成事件无 stopPropagation（测试先例兼容）
+                  e.stopPropagation?.();
+                  const { locationX, locationY } = e.nativeEvent;
+                  if (locationX >= 0 && locationX <= 32 && locationY >= 0 && locationY <= 32) {
+                    callRider();
+                  }
+                }}
+                style={[styles.callBtn, { backgroundColor: colors.semantic['positive-container'] }]}
                 accessibilityRole="button"
                 accessibilityLabel={t('service.notifications.cta.callRider')}
+                onAccessibilityTap={callRider}
               >
                 <MaterialCommunityIcons name="phone" size={16} color={colors.semantic.positive} />
-              </Pressable>
+              </View>
             )}
           </View>
         )}
@@ -214,30 +219,33 @@ export function NotificationItem({ notification, onPress, onCta, testID }: Notif
             <Text
               style={[
                 styles.countdownLabel,
-                deadline
-                  ? { color: colors.error }
-                  : { color: colors.semantic.warning },
+                deadline ? { color: colors.error } : { color: colors.semantic.warning },
               ]}
             >
               {t(deadline ? 'service.notifications.remaining' : 'service.notifications.endsIn')}
             </Text>
             <View style={styles.countdownBox}>
-              {countdown.parts.map((part, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.countNum,
-                    {
-                      backgroundColor: deadline ? colors.error : colors.semantic.warning,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.countNumText, { color: colors['on-primary'] }]}>{part}</Text>
-                </View>
-              )).reduce<React.ReactNode[]>(
-                (acc, el, i) => (i === 0 ? [el] : [...acc, <CountSep key={`s${i}`} deadline={!!deadline} />, el]),
-                [],
-              )}
+              {countdown.parts
+                .map((part, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.countNum,
+                      {
+                        backgroundColor: deadline ? colors.error : colors.semantic.warning,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.countNumText, { color: colors['on-primary'] }]}>
+                      {part}
+                    </Text>
+                  </View>
+                ))
+                .reduce<React.ReactNode[]>(
+                  (acc, el, i) =>
+                    i === 0 ? [el] : [...acc, <CountSep key={`s${i}`} deadline={!!deadline} />, el],
+                  [],
+                )}
             </View>
           </View>
         )}
@@ -249,15 +257,9 @@ export function NotificationItem({ notification, onPress, onCta, testID }: Notif
 
         {/* —— 商品缩略行（D5 秒杀/到货）—— */}
         {(productId || productName) && (
-          <View
-            style={[styles.prodRow, { backgroundColor: colors['surface-container'] }]}
-          >
+          <View style={[styles.prodRow, { backgroundColor: colors['surface-container'] }]}>
             <View style={[styles.prodThumb, { backgroundColor: colors['surface-container-high'] }]}>
-              <MaterialCommunityIcons
-                name="leaf"
-                size={20}
-                color={colors['outline-variant']}
-              />
+              <MaterialCommunityIcons name="leaf" size={20} color={colors['outline-variant']} />
             </View>
             <View style={styles.prodInfo}>
               {productName && (
@@ -271,12 +273,7 @@ export function NotificationItem({ notification, onPress, onCta, testID }: Notif
                     {formatPrice(salePrice)}
                   </Text>
                   {typeof originalPrice === 'number' && (
-                    <Text
-                      style={[
-                        styles.priceOld,
-                        { color: colors['on-surface-variant'] },
-                      ]}
-                    >
+                    <Text style={[styles.priceOld, { color: colors['on-surface-variant'] }]}>
                       {formatPrice(originalPrice)}
                     </Text>
                   )}
@@ -301,10 +298,7 @@ export function NotificationItem({ notification, onPress, onCta, testID }: Notif
         {/* —— 满减凑单进度（D5：cartAmount/threshold）—— */}
         {typeof cartAmount === 'number' && typeof threshold === 'number' && threshold > 0 && (
           <View
-            style={[
-              styles.fulfillRow,
-              { backgroundColor: colors.semantic['warning-container'] },
-            ]}
+            style={[styles.fulfillRow, { backgroundColor: colors.semantic['warning-container'] }]}
           >
             <View style={styles.fulfillBar}>
               <View
@@ -450,16 +444,21 @@ function CtaLinks({
     }
   }
   if (!action || !label) return null;
+  // 方案A（nested Pressable 治理）：外层卡片是 Pressable，内层再用 Pressable 会构成
+  // 嵌套 <button>（RN Web validateDOMNesting 报错 + 内层点击被外层吞风险）——
+  // CTA 本是链接视觉，改 Text 直挂 onPress（a11y 语义不变，RN Web 渲染 span 不触发校验）。
+  // Text 宿主上 flexDirection/gap 无效，chevron 间距用显式空格（styles.ctaRow 已删）
   return (
-    <Pressable
+    <Text
       onPress={() => onCta(action)}
-      style={styles.ctaRow}
+      style={[styles.ctaText, { color: colors.primary }]}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Text style={[styles.ctaText, { color: colors.primary }]}>{label}</Text>
+      {label}
+      {'  '}
       <MaterialCommunityIcons name="chevron-right" size={14} color={colors.primary} />
-    </Pressable>
+    </Text>
   );
 }
 
@@ -483,7 +482,7 @@ const styles = StyleSheet.create({
   dot: { width: 7, height: 7, borderRadius: 999 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 2 },
   timeText: { fontSize: 11, opacity: 0.8 },
-  ctaRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  // 方案A: ctaRow 已删——Text 宿主无 flexDirection/gap，间距由 JSX 显式空格承担
   ctaText: { fontSize: 11, fontWeight: '600' },
   // 配送进度条
   progressRow: {
