@@ -58,7 +58,6 @@
           "username": "suweilin"
         }
       ],
-      "expo-sqlite",
       "expo-image",
       [
         "expo-notifications",

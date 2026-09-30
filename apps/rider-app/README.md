@@ -4,16 +4,16 @@ MeiMart 配送骑手端 — 面向东帝汶骑手的任务接单、导航、取�
 
 ## 技术栈
 
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| React Native | 0.85 | New Architecture 已启用 |
-| Expo | SDK 56 | 路由、构建、OTA 更新 |
-| TypeScript | 6.0 | strict 模式 |
-| NativeWind | v4 | Tailwind 风格的样式系统 |
-| Zustand | v5 | 客户端状态管理（8 个 store） |
-| WatermelonDB | v0.28 | 离线数据库（Task/Order/OfflineQueue） |
-| expo-location | SDK 56 | GPS 定位追踪 |
-| react-native-maps | 1.27 | 地图与标记 |
+| 技术              | 版本   | 用途                                  |
+| ----------------- | ------ | ------------------------------------- |
+| React Native      | 0.85   | New Architecture 已启用               |
+| Expo              | SDK 56 | 路由、构建、OTA 更新                  |
+| TypeScript        | 6.0    | strict 模式                           |
+| NativeWind        | v4     | Tailwind 风格的样式系统               |
+| Zustand           | v5     | 客户端状态管理（8 个 store）          |
+| WatermelonDB      | v0.28  | 离线数据库（Task/Order/OfflineQueue） |
+| expo-location     | SDK 56 | GPS 定位追踪                          |
+| react-native-maps | 1.27   | 地图与标记                            |
 
 ## 当前能力
 
@@ -70,6 +70,20 @@ mei-delivery-app/
 └── assets/                 # 字体、图标、图片
 ```
 
+## iOS 构建步骤
+
+```bash
+cd apps/rider-app
+npx expo prebuild -p ios      # 首次（或 app.json plugins/native 配置变更后重新生成）
+cd ios && pod install
+cd ..
+SENTRY_DISABLE_AUTO_UPLOAD=true npx expo run:ios --device   # 或 xcodebuild
+```
+
+- `SENTRY_DISABLE_AUTO_UPLOAD=true`：本地构建跳过 Sentry symbol 上传（需凭证，CI/EAS 才跑）。
+- `ios/` 与 `Podfile.lock` 为 prebuild 产物，**不入库**；每次 prebuild 会重新生成，若手工改过
+  native 配置（如 pod 依赖），需人工核对 lock 漂移后再构建（挂账：暂无 lock 校验脚本）。
+
 ## 开发说明
 
 ### 环境变量
@@ -82,6 +96,7 @@ EXPO_PUBLIC_API_BASE_URL=https://your-api-url.com
 ### 后端对接
 
 当前使用 fetch 封装（`src/services/api.ts`），包含：
+
 - Auth token 自动注入（Bearer）
 - 401 自动登出处理
 - 统一错误处理（ApiError）
