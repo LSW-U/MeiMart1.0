@@ -488,6 +488,7 @@
     "repeatFailed": "Failed to add items to cart",
     "repeatPartial": "Some items added ({{ok}}/{{total}})",
     "payCodNoAction": "COD orders are paid on delivery",
+    "payOnlineUnavailable": "Online payment is unavailable, please contact customer service",
     "payAlreadyPaid": "Order already paid",
     "paySuccess": "Payment successful",
     "payFailed": "Payment failed, please try again"

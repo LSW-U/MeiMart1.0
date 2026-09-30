@@ -488,6 +488,7 @@
     "repeatFailed": "加购失败，请重试",
     "repeatPartial": "部分商品已加购（{{ok}}/{{total}}）",
     "payCodNoAction": "货到付款订单在送达时支付",
+    "payOnlineUnavailable": "线上支付暂不可用，请联系客服处理",
     "payAlreadyPaid": "订单已支付",
     "paySuccess": "支付成功",
     "payFailed": "支付失败，请重试"

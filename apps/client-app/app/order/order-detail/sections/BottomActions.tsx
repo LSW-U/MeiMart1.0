@@ -135,12 +135,22 @@ export function BottomActions({
             onCancel,
             'order-cancel',
           )}
-          {solid(
-            t('order.actions.pay', { defaultValue: 'Pay Now' }),
-            // C-P3-4（批4）：待支付订单不再跳 /order/checkout（会带入购物车+新建地址，
-            // 存在重复下单风险）——留在本详情页原位发起支付（见下方 handlePay）。
-            handlePay,
-            'order-pay',
+          {/* 批4 补丁（审查待确认-2 裁决）：__DEV__ 保留 mockPay 便利链路；prod 真实收银台
+              未接入前隐藏 Pay Now，原位展示不可用提示（勿让 prod 用户误触 mock 支付） */}
+          {__DEV__ ? (
+            solid(
+              t('order.actions.pay', { defaultValue: 'Pay Now' }),
+              // C-P3-4（批4）：待支付订单不再跳 /order/checkout（会带入购物车+新建地址，
+              // 存在重复下单风险）——留在本详情页原位发起支付（见下方 handlePay）。
+              handlePay,
+              'order-pay',
+            )
+          ) : (
+            <Text style={styles.payUnavailable} testID="order-pay-unavailable">
+              {t('order.payOnlineUnavailable', {
+                defaultValue: 'Online payment is unavailable, please pay via customer service',
+              })}
+            </Text>
           )}
         </>
       );
@@ -257,5 +267,12 @@ const styles = StyleSheet.create({
   btnText: {
     fontSize: 15,
     fontWeight: '700',
+  },
+  // 批4 补丁：prod 待支付态 Pay Now 隐藏后的原位提示（占 outline+solid 双按钮位）
+  payUnavailable: {
+    flex: 1,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontSize: 13,
   },
 });

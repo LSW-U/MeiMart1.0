@@ -488,6 +488,7 @@
     "repeatFailed": "Susaun sala, koalia fali",
     "repeatPartial": "Sasan balun tau ona ({{ok}}/{{total}})",
     "payCodNoAction": "Order COD selu iha uma",
+    "payOnlineUnavailable": "Selu online la disponivel, kontakta amizade servisu",
     "payAlreadyPaid": "Order selu ona",
     "paySuccess": "Selu ho susesu",
     "payFailed": "Selu la susesu, koalia fali"

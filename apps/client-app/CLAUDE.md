@@ -394,3 +394,7 @@ done
 
 echo "✅ CP5 全部通过"
 ```
+
+### app/ 目录拆分规范（批5 审查裁决）
+
+42. **app/ 下子目录仅允许页面 sections 拆分**（如 `app/product/product-detail/`、`app/order/order-detail/`、`app/(main)/profile-sections/`），用于承载超长页面的 sections/主文件拆分；**禁止任何 `.test` 文件放 `app/` 下**（expo-router 会把 `.test.tsx` 注册成路由，真机 hermes 启动即崩）。测试统一放 `app/__tests__/`（页面级）或 `src/**/__tests__/`（组件/hooks 级）。

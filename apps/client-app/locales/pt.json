@@ -488,6 +488,7 @@
     "repeatFailed": "Falha ao adicionar ao carrinho",
     "repeatPartial": "Alguns artigos adicionados ({{ok}}/{{total}})",
     "payCodNoAction": "Pedidos COD são pagos na entrega",
+    "payOnlineUnavailable": "O pagamento online não está disponível, entre em contato com o atendimento",
     "payAlreadyPaid": "Pedido já pago",
     "paySuccess": "Pagamento bem-sucedido",
     "payFailed": "Falha no pagamento, tente de novo"
