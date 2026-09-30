@@ -40,6 +40,20 @@ export const tokenStorage = {
     await secureStore.setItemAsync(TOKEN_KEY, token);
     await secureStore.setItemAsync(REFRESH_KEY, refreshToken);
   },
+  /**
+   * 只写 access token、不动 refreshToken（D6 批4 最小修）。
+   *
+   * Why：兼容层 setAuthToken 只有 access token，原实现走 set(token, '') 会把
+   * 已存的 refreshToken 覆盖成空串 → 401 刷新链断裂。本方法只覆盖 TOKEN_KEY。
+   */
+  async setAccess(token: string): Promise<void> {
+    if (isWeb) {
+      if (typeof localStorage !== 'undefined') localStorage.setItem(TOKEN_KEY, token);
+      return;
+    }
+    const secureStore = await getSecureStore();
+    await secureStore.setItemAsync(TOKEN_KEY, token);
+  },
   async getRefresh(): Promise<string | null> {
     try {
       if (isWeb) {

@@ -9,10 +9,17 @@ const WS_URL =
 export function connectRiderSocket(accessToken: string): Socket {
   return io(`${WS_URL}/realtime`, {
     auth: { token: `Bearer ${accessToken}` },
-    transports: ['websocket'],
+    // C7（R-P2-7）：开 polling 回退——弱网/受限代理下 websocket-only 可能永久连不上。
+    // socket.io 默认先 polling 握手再升级 websocket，`transports: ['websocket']` 把
+    // 回退路径禁死了；恢复默认（不传 transports）允许降档。
     reconnection: true,
-    reconnectionDelay: 3000,
-    reconnectionAttempts: Infinity,
+    // C7：指数退避（socket.io 内建 reconnectionDelay * 2^n，封顶 reconnectionDelayMax）
+    // + 有限次（10 次 ≈ 前几轮 1s/2s/4s/8s/16s/30s… 封顶 30s 共约 4 分钟）——
+    // 原 Infinity + 固定 3s 在后端长宕时高频空转重连耗电；耗尽后由 token 刷新/页面
+    // 重挂载重建 socket 通道（useRiderSocket 生命周期）。
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 30_000,
+    reconnectionAttempts: 10,
   });
 }
 

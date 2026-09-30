@@ -1,6 +1,8 @@
 import React from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 
+import { precheckImage } from '@meimart/upload-core';
+
 import { AppIcon } from '../ui/AppIcon';
 import { colors } from '../../theme/colors';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -27,7 +29,9 @@ export function EvidenceExample({ label, type }: EvidenceExampleProps) {
           {type === 'door' ? t('sign.doorExample') : t('sign.packageExample')}
         </Text>
       </View>
-      <Text className="text-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{label}</Text>
+      <Text className="text-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+        {label}
+      </Text>
     </View>
   );
 }
@@ -48,7 +52,18 @@ type EvidenceUploadProps = {
   onError?: () => void;
 };
 
-function EvidenceUploadNative({ title, actionLabel, capturedLabel, placeholderLabel = 'CAM', required = false, captured, photoUri, onPress, onPermissionDenied, onError }: EvidenceUploadProps) {
+function EvidenceUploadNative({
+  title,
+  actionLabel,
+  capturedLabel,
+  placeholderLabel = 'CAM',
+  required = false,
+  captured,
+  photoUri,
+  onPress,
+  onPermissionDenied,
+  onError,
+}: EvidenceUploadProps) {
   const ImagePicker = require('expo-image-picker');
   const { Image, Pressable } = require('react-native');
 
@@ -60,7 +75,20 @@ function EvidenceUploadNative({ title, actionLabel, capturedLabel, placeholderLa
         return;
       }
       const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 });
-      if (!result.canceled && result.assets[0]) onPress(result.assets[0].uri);
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        // D1 批4：取证图预校验（generic：≥100×100 任意比例 + ≤5MB，与后端 E-UPLOAD 对齐）——
+        // 拦得住的明显违规不消耗一次弱网上传；asset 无元数据（部分测试/特殊机型）跳过，后端兜底
+        if ((asset.width ?? 0) > 0 && (asset.height ?? 0) > 0) {
+          precheckImage('generic', {
+            mimeType: asset.mimeType,
+            sizeBytes: asset.fileSize ?? null,
+            width: asset.width ?? 0,
+            height: asset.height ?? 0,
+          });
+        }
+        onPress(asset.uri);
+      }
     } catch {
       onError?.();
     }
@@ -73,7 +101,7 @@ function EvidenceUploadNative({ title, actionLabel, capturedLabel, placeholderLa
         {required ? <Text className="font-bold text-primary">*</Text> : null}
       </View>
       <Pressable
-        className={`aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed overflow-hidden ${captured ? 'border-tertiary-container bg-tier-gold-soft/20' : 'border-outline bg-surface'}`}
+        className={`aspect-[16/9] items-center justify-center overflow-hidden rounded-lg border-2 border-dashed ${captured ? 'border-tertiary-container bg-tier-gold-soft/20' : 'border-outline bg-surface'}`}
         onPress={() => void takePhoto()}
       >
         {captured && photoUri ? (
@@ -81,23 +109,53 @@ function EvidenceUploadNative({ title, actionLabel, capturedLabel, placeholderLa
         ) : (
           <>
             <Text className="mb-1 text-4xl text-outline">{placeholderLabel}</Text>
-            <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{actionLabel}</Text>
+            <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+              {actionLabel}
+            </Text>
           </>
         )}
       </Pressable>
       {captured && (
-        <Text className="text-center text-xs font-bold text-tertiary-container">{capturedLabel}</Text>
+        <Text className="text-center text-xs font-bold text-tertiary-container">
+          {capturedLabel}
+        </Text>
       )}
     </View>
   );
 }
 
-function EvidenceUploadWeb({ title, actionLabel, capturedLabel, placeholderLabel = 'CAM', required = false, captured, photoUri, onPress, onError }: EvidenceUploadProps) {
+function EvidenceUploadWeb({
+  title,
+  actionLabel,
+  capturedLabel,
+  placeholderLabel = 'CAM',
+  required = false,
+  captured,
+  photoUri,
+  onPress,
+  onError,
+}: EvidenceUploadProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // D1 批4：Web 分支预校验（File 对象直接带 size/type；尺寸 web 拍照场景不做
+    // Image 解码——readAsDataURL 后无 naturalWidth 便捷点，尺寸交给后端 magic bytes 兜底）
+    try {
+      precheckImage('generic', {
+        mimeType: file.type || undefined,
+        sizeBytes: file.size,
+        // 占位尺寸：generic 规则无 square/ratio 约束，minEdge 依赖真实宽高——
+        // web 端宽高校验跳过（传 0 触发 E-UPLOAD-016 误报，故直接不解码不传维度），
+        // 类型/大小两项仍拦
+        width: 1,
+        height: 1,
+      });
+    } catch {
+      onError?.();
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') onPress(reader.result);
@@ -124,7 +182,7 @@ function EvidenceUploadWeb({ title, actionLabel, capturedLabel, placeholderLabel
         onChange={handleFile}
       />
       <Pressable
-        className={`aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed overflow-hidden ${captured ? 'border-tertiary-container bg-tier-gold-soft/20' : 'border-outline bg-surface'}`}
+        className={`aspect-[16/9] items-center justify-center overflow-hidden rounded-lg border-2 border-dashed ${captured ? 'border-tertiary-container bg-tier-gold-soft/20' : 'border-outline bg-surface'}`}
         onPress={() => inputRef.current?.click()}
       >
         {captured && photoUri ? (
@@ -132,12 +190,16 @@ function EvidenceUploadWeb({ title, actionLabel, capturedLabel, placeholderLabel
         ) : (
           <>
             <Text className="mb-1 text-4xl text-outline">{placeholderLabel}</Text>
-            <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{actionLabel}</Text>
+            <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+              {actionLabel}
+            </Text>
           </>
         )}
       </Pressable>
       {captured && (
-        <Text className="text-center text-xs font-bold text-tertiary-container">{capturedLabel}</Text>
+        <Text className="text-center text-xs font-bold text-tertiary-container">
+          {capturedLabel}
+        </Text>
       )}
     </View>
   );

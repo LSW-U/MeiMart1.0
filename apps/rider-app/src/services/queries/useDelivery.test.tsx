@@ -7,6 +7,7 @@ import { type ReactNode } from 'react';
 
 import type { DeliveryTask } from '@/src/types/task';
 import { deliveryApi } from '../delivery';
+import { persistEvidencePhoto } from '../../services/evidence';
 import { enqueue } from '../../database/sync';
 import { useNetwork } from '../../hooks/useNetwork';
 import { taskDetailKey, taskListsKey } from './useTask';
@@ -50,6 +51,13 @@ jest.mock('../../database/sync', () => ({
   enqueue: jest.fn(),
 }));
 
+// R-P1-2：离线入队前证据落盘走 evidence 服务，mock 掉 expo-file-system 依赖
+jest.mock('../../services/evidence', () => ({
+  persistEvidencePhoto: jest.fn(),
+}));
+
+const mockPersistEvidencePhoto = persistEvidencePhoto as jest.Mock;
+
 jest.mock('../../hooks/useNetwork', () => ({
   useNetwork: jest.fn(),
 }));
@@ -82,6 +90,7 @@ describe('useConfirmPickup — 离线入队（CLAUDE.md 规则 12）', () => {
     mockEnqueue.mockReset();
     mockConfirmPickup.mockReset();
     mockUseNetwork.mockReset();
+    mockPersistEvidencePhoto.mockReset();
   });
   afterEach(() => {
     qc.clear();
@@ -90,6 +99,7 @@ describe('useConfirmPickup — 离线入队（CLAUDE.md 规则 12）', () => {
   it('离线：enqueue({type:pickup}) 被调 + 真 API 不调 + 乐观 cache 保留 PICKED_UP', async () => {
     mockUseNetwork.mockReturnValue({ isOffline: true });
     mockEnqueue.mockResolvedValue(undefined);
+    mockPersistEvidencePhoto.mockResolvedValue('file://persisted/p1.jpg');
     const taskA = makeTask('ASSIGNED', { id: 'A' });
     qc.setQueryData(taskListsKey, { available: [], pickups: [taskA], deliveries: [] });
     qc.setQueryData(taskDetailKey('A'), taskA);
@@ -100,9 +110,11 @@ describe('useConfirmPickup — 离线入队（CLAUDE.md 规则 12）', () => {
       await result.current.mutateAsync({ taskId: 'A', evidence: { photoUri: 'p' } });
     });
 
+    // R-P1-2：photoUri 先落盘（persistEvidencePhoto），持久路径进 payload.evidence
+    expect(mockPersistEvidencePhoto).toHaveBeenCalledWith('p');
     expect(mockEnqueue).toHaveBeenCalledWith({
       type: 'pickup',
-      payload: { taskId: 'A', note: undefined },
+      payload: { taskId: 'A', evidence: { photoUri: 'file://persisted/p1.jpg' } },
     });
     expect(mockConfirmPickup).not.toHaveBeenCalled();
     // 乐观 cache 保留（onMutate 置 PICKED_UP，离线 resolve 不触发 onError rollback）
@@ -112,9 +124,10 @@ describe('useConfirmPickup — 离线入队（CLAUDE.md 规则 12）', () => {
     expect(detail?.status).toBe('PICKED_UP');
   });
 
-  it('离线 + doorUri：payload 只 taskId（后端 pickup 不收照片，审查 S5）', async () => {
+  it('离线 + doorUri：doorUri 也落盘并进 payload.evidence（R-P1-2：恢复后上传）', async () => {
     mockUseNetwork.mockReturnValue({ isOffline: true });
     mockEnqueue.mockResolvedValue(undefined);
+    mockPersistEvidencePhoto.mockResolvedValue('file://persisted/d1.jpg');
     const taskA = makeTask('ASSIGNED', { id: 'A' });
     qc.setQueryData(taskListsKey, { available: [], pickups: [taskA], deliveries: [] });
     qc.setQueryData(taskDetailKey('A'), taskA);
@@ -125,6 +138,26 @@ describe('useConfirmPickup — 离线入队（CLAUDE.md 规则 12）', () => {
       await result.current.mutateAsync({ taskId: 'A', evidence: { doorUri: 'd' } });
     });
 
+    expect(mockEnqueue).toHaveBeenCalledWith({
+      type: 'pickup',
+      payload: { taskId: 'A', evidence: { doorUri: 'file://persisted/d1.jpg' } },
+    });
+  });
+
+  it('离线 + 无 evidence：不调 persistEvidencePhoto，payload 不带 evidence 字段', async () => {
+    mockUseNetwork.mockReturnValue({ isOffline: true });
+    mockEnqueue.mockResolvedValue(undefined);
+    mockPersistEvidencePhoto.mockResolvedValue('file://persisted/x.jpg');
+    const taskA = makeTask('ASSIGNED', { id: 'A' });
+    qc.setQueryData(taskListsKey, { available: [], pickups: [taskA], deliveries: [] });
+
+    const { result } = renderHook(() => useConfirmPickup(), { wrapper: makeWrapper(qc) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ taskId: 'A' });
+    });
+
+    expect(mockPersistEvidencePhoto).not.toHaveBeenCalled();
     expect(mockEnqueue).toHaveBeenCalledWith({
       type: 'pickup',
       payload: { taskId: 'A' },
@@ -155,6 +188,7 @@ describe('useConfirmDelivery — 离线入队（CLAUDE.md 规则 12）', () => {
     mockEnqueue.mockReset();
     mockConfirmDelivery.mockReset();
     mockUseNetwork.mockReset();
+    mockPersistEvidencePhoto.mockReset();
   });
   afterEach(() => {
     qc.clear();
@@ -177,6 +211,7 @@ describe('useConfirmDelivery — 离线入队（CLAUDE.md 规则 12）', () => {
       type: 'deliver',
       payload: { taskId: 'A' },
     });
+    expect(mockPersistEvidencePhoto).not.toHaveBeenCalled();
     expect(mockConfirmDelivery).not.toHaveBeenCalled();
     // 乐观 cache 保留（onMutate 置 DELIVERED，离线 resolve 不触发 onError rollback）
     const detail = qc.getQueryData<DeliveryTask>(taskDetailKey('A'));

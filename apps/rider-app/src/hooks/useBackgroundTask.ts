@@ -3,7 +3,10 @@ import * as TaskManager from 'expo-task-manager';
 import { useEffect, useRef, useState } from 'react';
 
 import { buildLocationPayload, reportLocationHttp } from '../services/location';
+import { captureError } from '../services/sentry';
 import { tokenStorage } from '../services/token-storage';
+import { showToast } from '../components/feedback/Toast';
+import { useTranslation } from '../i18n/useTranslation';
 
 /**
  * 后台定位 hook（P0 技术债，CLAUDE.md 规则 16）
@@ -32,25 +35,33 @@ let currentOrderIdRef: string | undefined;
 /**
  * 模块顶层 defineTask（expo-task-manager 要求，模块加载时注册一次）。
  * task 由 startLocationUpdatesAsync 触发，回调里读 currentOrderIdRef + 上报。
+ * R-P1-7：回调内全量 try/catch + captureError——task 回调抛 rejection 在原生侧
+ *   只打 expo-task-manager 内部日志，JS 崩溃上报（Sentry）完全看不到。
  */
 TaskManager.defineTask(TASK_NAME, async ({ data, error }) => {
-  if (error) {
-    console.warn('[bg-location] task error:', error.message);
-    return;
+  try {
+    if (error) {
+      console.warn('[bg-location] task error:', error.message);
+      return;
+    }
+    const oid = currentOrderIdRef;
+    if (!oid) return; // 已无配送任务，等 unregister 生效
+
+    const loc = (data as { locations?: Location.LocationObject[] })?.locations?.[0];
+    if (!loc) return;
+
+    const token = await tokenStorage.get();
+    if (!token) {
+      console.warn('[bg-location] no token, skip');
+      return;
+    }
+
+    await reportLocationHttp(buildLocationPayload(loc.coords, oid), token);
+  } catch (e) {
+    // 失败策略不变（仅 warn 不重试），但必须 captureError 让崩溃上报可见
+    captureError(e instanceof Error ? e : new Error(String(e)), { source: 'bg-location-task' });
+    console.warn('[bg-location] task failed:', e);
   }
-  const oid = currentOrderIdRef;
-  if (!oid) return; // 已无配送任务，等 unregister 生效
-
-  const loc = (data as { locations?: Location.LocationObject[] })?.locations?.[0];
-  if (!loc) return;
-
-  const token = await tokenStorage.get();
-  if (!token) {
-    console.warn('[bg-location] no token, skip');
-    return;
-  }
-
-  await reportLocationHttp(buildLocationPayload(loc.coords, oid), token);
 });
 
 type UseBackgroundTaskOptions = {
@@ -62,13 +73,18 @@ type UseBackgroundTaskOptions = {
 
 export function useBackgroundTask(options: UseBackgroundTaskOptions) {
   const { enabled, currentOrderId } = options;
+  const { t } = useTranslation();
   const [isRegistered, setIsRegistered] = useState(false);
   // ref 持有注册状态，避免 effect 依赖 isRegistered 造成 start→setState→重跑循环
   const isRegisteredRef = useRef(false);
 
-  // 同步 orderId 到模块级 ref（task 回调读取最新值）
+  // 同步 orderId 到模块级 ref（task 回调读取最新值）；
+  // R-P2-3：cleanup 置空——卸载后 task 回调不得再用旧 orderId 上报（陈旧引用）
   useEffect(() => {
     currentOrderIdRef = currentOrderId;
+    return () => {
+      currentOrderIdRef = undefined;
+    };
   }, [currentOrderId]);
 
   useEffect(() => {
@@ -85,32 +101,47 @@ export function useBackgroundTask(options: UseBackgroundTaskOptions) {
 
     let cancelled = false;
     const start = async () => {
-      if (isRegisteredRef.current) return; // 已注册，避免重复 start
-      // 前台权限（useLocation 也请求；此处独立确保 granted）
-      const { status: fg } = await Location.requestForegroundPermissionsAsync();
-      if (cancelled || fg !== 'granted') {
-        console.warn('[bg-location] foreground permission denied');
-        return;
-      }
-      // 后台权限（iOS「始终允许」/ Android「后台定位」）
-      const { status: bg } = await Location.requestBackgroundPermissionsAsync();
-      if (cancelled || bg !== 'granted') {
-        console.warn('[bg-location] background permission denied');
-        return;
-      }
-      await Location.startLocationUpdatesAsync(TASK_NAME, {
-        accuracy: Location.Accuracy.High,
-        timeInterval: INTERVAL_MS,
-        distanceInterval: DISTANCE_M,
-        // iOS：顶部显示「后台定位中」指示器，告知用户被追踪
-        showsBackgroundLocationIndicator: true,
-      });
-      if (!cancelled) {
-        isRegisteredRef.current = true;
-        setIsRegistered(true);
+      try {
+        if (isRegisteredRef.current) return; // 已注册，避免重复 start
+        // 前台权限（useLocation 也请求；此处独立确保 granted）
+        const { status: fg } = await Location.requestForegroundPermissionsAsync();
+        if (cancelled || fg !== 'granted') {
+          // R-P1-7：权限拒绝给可操作提示（走系统设置），不只是 console.warn
+          captureError(new Error('bg-location foreground permission denied'), {
+            source: 'bg-location-task',
+          });
+          showToast(t('common.locationPermDenied'), 'error');
+          return;
+        }
+        // 后台权限（iOS「始终允许」/ Android「后台定位」）
+        const { status: bg } = await Location.requestBackgroundPermissionsAsync();
+        if (cancelled || bg !== 'granted') {
+          console.warn('[bg-location] background permission denied');
+          return;
+        }
+        await Location.startLocationUpdatesAsync(TASK_NAME, {
+          accuracy: Location.Accuracy.High,
+          timeInterval: INTERVAL_MS,
+          distanceInterval: DISTANCE_M,
+          // iOS：顶部显示「后台定位中」指示器，告知用户被追踪
+          showsBackgroundLocationIndicator: true,
+        });
+        if (!cancelled) {
+          isRegisteredRef.current = true;
+          setIsRegistered(true);
+        }
+      } catch (e) {
+        // R-P1-7：startLocationUpdatesAsync 可能 reject（系统限制/电量优化），不静默
+        captureError(e instanceof Error ? e : new Error(String(e)), {
+          source: 'bg-location-start',
+        });
+        console.warn('[bg-location] start failed:', e);
       }
     };
-    void start();
+    // R-P1-7：start 内部已全量 try/catch，但这里再兜一层防未来改动破坏约定
+    start().catch((e) => {
+      captureError(e instanceof Error ? e : new Error(String(e)), { source: 'bg-location-start' });
+    });
 
     return () => {
       cancelled = true;
@@ -120,7 +151,7 @@ export function useBackgroundTask(options: UseBackgroundTaskOptions) {
         setIsRegistered(false);
       }
     };
-  }, [enabled]);
+  }, [enabled, t]);
 
   return { isRegistered };
 }

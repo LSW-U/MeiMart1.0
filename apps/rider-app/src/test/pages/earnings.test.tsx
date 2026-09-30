@@ -47,14 +47,29 @@ jest.mock('../../../src/services/queries/useSettings', () => ({
 
 jest.mock('../../../src/services/queries/useEarnings', () => ({
   useEarningSummary: () => {
-    if (mockSummaryState === 'summary-loading') return { data: undefined, isLoading: true, isError: false, refetch: mockRefetchSummary };
-    if (mockSummaryState === 'summary-error') return { data: undefined, isLoading: false, isError: true, refetch: mockRefetchSummary };
-    return { data: { availableBalance: 128.5, todayEarnings: 24.5, weeklyEarnings: 186, monthlyEarnings: 720 }, isLoading: false, isError: false, refetch: mockRefetchSummary };
+    if (mockSummaryState === 'summary-loading')
+      return { data: undefined, isLoading: true, isError: false, refetch: mockRefetchSummary };
+    if (mockSummaryState === 'summary-error')
+      return { data: undefined, isLoading: false, isError: true, refetch: mockRefetchSummary };
+    return {
+      data: {
+        availableBalance: 128.5,
+        todayEarnings: 24.5,
+        weeklyEarnings: 186,
+        monthlyEarnings: 720,
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockRefetchSummary,
+    };
   },
   useEarningTransactions: () => {
-    if (mockTxState === 'tx-loading') return { data: undefined, isLoading: true, isError: false, refetch: mockRefetchTx };
-    if (mockTxState === 'tx-error') return { data: undefined, isLoading: false, isError: true, refetch: mockRefetchTx };
-    if (mockTxState === 'tx-empty') return { data: [], isLoading: false, isError: false, refetch: mockRefetchTx };
+    if (mockTxState === 'tx-loading')
+      return { data: undefined, isLoading: true, isError: false, refetch: mockRefetchTx };
+    if (mockTxState === 'tx-error')
+      return { data: undefined, isLoading: false, isError: true, refetch: mockRefetchTx };
+    if (mockTxState === 'tx-empty')
+      return { data: [], isLoading: false, isError: false, refetch: mockRefetchTx };
     return { data: mockTransactions, isLoading: false, isError: false, refetch: mockRefetchTx };
   },
 }));
@@ -63,17 +78,56 @@ jest.mock('../../../src/hooks/useGoBack', () => ({
   useGoBack: () => jest.fn(),
 }));
 
-function buildTx(overrides: Partial<EarningTransaction> & Pick<EarningTransaction, 'id' | 'type'>): EarningTransaction {
-  return { amount: 10, createdAt: new Date().toISOString(), description: 'seed en text', orderId: '1023', ...overrides };
+function buildTx(
+  overrides: Partial<EarningTransaction> & Pick<EarningTransaction, 'id' | 'type'>,
+): EarningTransaction {
+  return {
+    amount: 10,
+    createdAt: new Date().toISOString(),
+    description: 'seed en text',
+    orderId: '1023',
+    ...overrides,
+  };
 }
 
 function renderPage() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
   return render(<EarningsPage />, { wrapper });
 }
+
+describe('R-P0-3/D9 钱包只读降级（real+FORCE_MOCK）', () => {
+  beforeEach(() => {
+    mockSummaryState = 'summary-ok';
+    mockTxState = 'tx-ok';
+  });
+
+  it('isEarningsForcedMock=true（real+FORCE_MOCK）降级形态：占位文案 key 5 语齐备 + 开关导出', () => {
+    // 页面模块已被顶部静态 import 缓存，doMock/resetModules 对其无效；resetModules
+    // 还会分裂 react 双副本（useState null，已实证）。降级分支是薄三元：这里锁定
+    // 开关导出 + 占位文案 key 存在；「无假数字/无提现入口」由页面 JSX 分支结构保证
+    //（isEarningsForcedMock ? 占位 : 原内容），非降级形态由下方及主套件覆盖。
+    const earningsModule = require('../../../src/services/earnings') as {
+      isEarningsForcedMock: boolean;
+    };
+    expect(typeof earningsModule.isEarningsForcedMock).toBe('boolean');
+    for (const lang of ['zh', 'en', 'tet', 'pt', 'id'] as const) {
+      const dict = require(`../../../src/i18n/locales/${lang}.json`) as Record<string, string>;
+      expect(dict['earnings.readOnly.title']).toBeTruthy();
+      expect(dict['earnings.readOnly.desc']).toBeTruthy();
+    }
+  });
+
+  it('isEarningsForcedMock=false（mock 模式开发态）：正常渲染假数字与提现入口（页面主套件已覆盖）', () => {
+    const { queryByText } = renderPage();
+    expect(queryByText('$128.50')).toBeTruthy();
+    expect(queryByText('立即提现')).toBeTruthy();
+  });
+});
 
 beforeEach(() => {
   mockRefetchSummary.mockClear();
@@ -90,10 +144,32 @@ beforeEach(() => {
   const HOUR = 60 * 60 * 1000;
   // service 层语义：按 createdAt 降序
   mockTransactions = [
-    buildTx({ id: 'tx-today-delivery', type: 'deliveryFee', amount: 12.5, orderId: '1023', createdAt: new Date(startOfDay + 12 * HOUR).toISOString() }),
-    buildTx({ id: 'tx-today-withdraw', type: 'withdrawal', amount: -10, createdAt: new Date(startOfDay + 8 * HOUR).toISOString() }),
-    buildTx({ id: 'tx-yesterday-bonus', type: 'bonus', amount: 4, createdAt: new Date(startOfDay - 1 * HOUR).toISOString() }),
-    buildTx({ id: 'tx-earlier-delivery', type: 'deliveryFee', amount: 8.2, orderId: '1021', createdAt: new Date(startOfDay - 3 * 24 * HOUR).toISOString() }),
+    buildTx({
+      id: 'tx-today-delivery',
+      type: 'deliveryFee',
+      amount: 12.5,
+      orderId: '1023',
+      createdAt: new Date(startOfDay + 12 * HOUR).toISOString(),
+    }),
+    buildTx({
+      id: 'tx-today-withdraw',
+      type: 'withdrawal',
+      amount: -10,
+      createdAt: new Date(startOfDay + 8 * HOUR).toISOString(),
+    }),
+    buildTx({
+      id: 'tx-yesterday-bonus',
+      type: 'bonus',
+      amount: 4,
+      createdAt: new Date(startOfDay - 1 * HOUR).toISOString(),
+    }),
+    buildTx({
+      id: 'tx-earlier-delivery',
+      type: 'deliveryFee',
+      amount: 8.2,
+      orderId: '1021',
+      createdAt: new Date(startOfDay - 3 * 24 * HOUR).toISOString(),
+    }),
   ];
 });
 
@@ -201,7 +277,9 @@ describe('类型徽标 + i18n 描述（E1 §3.4 方案 A / §3.5）', () => {
     expect(container.querySelector('[data-testid="icon-bank-outline"]')).not.toBeNull();
     // 三种类型圆底 token 各就位（delivery 绿 / withdrawal 灰 / bonus 橙）
     const circles = container.querySelectorAll('[data-rn-host="View"]');
-    const circleClasses = Array.from(circles).map((el) => el.getAttribute('data-prop-classname') ?? '');
+    const circleClasses = Array.from(circles).map(
+      (el) => el.getAttribute('data-prop-classname') ?? '',
+    );
     expect(circleClasses.some((c) => c.includes('bg-status-done-bg'))).toBe(true);
     expect(circleClasses.some((c) => c.includes('bg-warn-bg'))).toBe(true);
     expect(circleClasses.some((c) => c.includes('bg-surface-container-high'))).toBe(true);

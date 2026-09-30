@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { setOnUnauthorized } from '../src/services/api';
 import { AppProviders } from '../src/providers/AppProviders';
 import { useAuth } from '../src/hooks/useAuth';
+import { LanguageProvider } from '../src/i18n/LanguageContext';
 import { ToastHost } from '../src/components/feedback/Toast';
 import { useAuthStore } from '../src/store/useAuthStore';
 import { useNetworkStore } from '../src/hooks/useNetworkStore';
@@ -63,12 +64,15 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AppProviders>
-        <StoreInitializer>
-          <PushTokenRegistrar />
-          <StatusBar style="dark" />
-          <ToastHost />
-          <Stack screenOptions={{ headerShown: false }} />
-        </StoreInitializer>
+        {/* C14：LanguageProvider 在 AppProviders 内——useTranslation 消费方拿 Context language */}
+        <LanguageProvider>
+          <StoreInitializer>
+            <PushTokenRegistrar />
+            <StatusBar style="dark" />
+            <ToastHost />
+            <Stack screenOptions={{ headerShown: false }} />
+          </StoreInitializer>
+        </LanguageProvider>
       </AppProviders>
     </SafeAreaProvider>
   );

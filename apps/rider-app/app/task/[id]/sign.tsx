@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 
-import { EvidenceExample, EvidenceUpload } from '../../../src/components/camera/SignaturePad';
+import { EvidenceExample, EvidenceUpload } from '../../../src/components/camera/EvidenceUpload';
 import { DeliveryProgressBar } from '../../../src/components/business/DeliveryProgressBar';
 import { QueryBoundary } from '../../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../../src/components/feedback/Toast';
@@ -57,7 +57,9 @@ export default function SignConfirmPage() {
   const canSubmit = doorCaptured && packageCaptured && status !== 'processing';
 
   // B1: COD 实收金额有效性（与提交时判定一致：parseFloat 非 NaN 且 ≥ 0）
-  const codAmountInvalid = isCod && !(Number.isFinite(Number.parseFloat(collectedInput)) && Number.parseFloat(collectedInput) >= 0);
+  const codAmountInvalid =
+    isCod &&
+    !(Number.isFinite(Number.parseFloat(collectedInput)) && Number.parseFloat(collectedInput) >= 0);
   const submitDisabled = !canSubmit || status === 'success' || codAmountInvalid;
 
   const handleConfirmDelivery = async () => {
@@ -80,7 +82,9 @@ export default function SignConfirmPage() {
       await confirmDelivery.mutateAsync({
         taskId: id,
         evidence: { doorUri, packageUri },
-        collectedAmount: codAtSubmit ? Math.round(Number.parseFloat(collectedInput) * 100) : undefined,
+        collectedAmount: codAtSubmit
+          ? Math.round(Number.parseFloat(collectedInput) * 100)
+          : undefined,
       });
       // CLAUDE.md 规则 12：离线入队成功提示（mutationFn resolve 不 reject，调用方按 isOffline 区分）。
       // T5 审查 P3-1：对齐 pickup 互斥模式——离线只 info（已入队将同步），在线才 success toast
@@ -122,7 +126,11 @@ export default function SignConfirmPage() {
           className="flex-row items-start gap-4 rounded-lg p-4 shadow-sm"
           style={{ backgroundColor: status === 'success' ? colors.success : colors.primary }}
         >
-          <AppIcon color={colors.surface} name={status === 'success' ? 'check' : 'info'} size={20} />
+          <AppIcon
+            color={colors.surface}
+            name={status === 'success' ? 'check' : 'info'}
+            size={20}
+          />
           <Text className="flex-1 font-semibold leading-5 text-white">
             {status === 'success' ? t('sign.confirmed') : t('sign.alert')}
           </Text>
@@ -165,10 +173,15 @@ export default function SignConfirmPage() {
                 {/* L1 送达地址卡 + 联系客人入口 */}
                 <View className="gap-3 rounded-xl border border-outline/10 bg-surface p-4 shadow-md">
                   <View className="flex-row items-center gap-2">
-                    <View className="h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: colors.tertiary }}>
+                    <View
+                      className="h-8 w-8 items-center justify-center rounded-full"
+                      style={{ backgroundColor: colors.tertiary }}
+                    >
                       <AppIcon color={colors.surface} name="dropoff" size={16} />
                     </View>
-                    <Text className="flex-1 font-bold leading-tight text-on-surface">{detail.dropoff.title}</Text>
+                    <Text className="flex-1 font-bold leading-tight text-on-surface">
+                      {detail.dropoff.title}
+                    </Text>
                   </View>
                   <Text className="text-sm text-on-surface-variant">{detail.dropoff.address}</Text>
                   {(detail.dropoff.contactName || detail.dropoff.contactPhone) && (
@@ -187,7 +200,9 @@ export default function SignConfirmPage() {
                       onPress={() => void handleCallCustomer()}
                     >
                       <AppIcon color={colors.surface} name="phone" size={14} />
-                      <Text className="text-xs font-bold uppercase tracking-wider text-white">{t('sign.contactCustomer')}</Text>
+                      <Text className="text-xs font-bold uppercase tracking-wider text-white">
+                        {t('sign.contactCustomer')}
+                      </Text>
                     </Pressable>
                   ) : null}
                 </View>
@@ -198,7 +213,10 @@ export default function SignConfirmPage() {
                   <View className="gap-1 rounded-lg border border-warn-border bg-warn-bg p-3">
                     <View className="flex-row items-center gap-1.5">
                       <AppIcon color={colors.warning} name="info" size={14} />
-                      <Text className="text-xs font-bold uppercase tracking-wider" style={{ color: colors.warning }}>
+                      <Text
+                        className="text-xs font-bold uppercase tracking-wider"
+                        style={{ color: colors.warning }}
+                      >
                         {t('flow.customerNote')}
                       </Text>
                     </View>
@@ -210,8 +228,12 @@ export default function SignConfirmPage() {
                 {detailIsCod ? (
                   <View className="gap-3 rounded-xl border border-outline-variant bg-surface-container-low p-4">
                     <View className="flex-row items-baseline justify-between">
-                      <Text className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t('sign.codPayable')}</Text>
-                      <Text className="text-2xl font-extrabold text-primary">{formatCurrency(detailPayable, t('common.currency'))}</Text>
+                      <Text className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                        {t('sign.codPayable')}
+                      </Text>
+                      <Text className="text-2xl font-extrabold text-primary">
+                        {formatCurrency(detailPayable, t('common.currency'))}
+                      </Text>
                     </View>
                     <Input
                       keyboardType="decimal-pad"
@@ -221,16 +243,22 @@ export default function SignConfirmPage() {
                       onChangeText={setCollectedInput}
                     />
                     {codAmountInvalid && collectedInput !== '' ? (
-                      <Text className="text-[11px] leading-4 text-error">{t('sign.codAmountInvalid')}</Text>
+                      <Text className="text-[11px] leading-4 text-error">
+                        {t('sign.codAmountInvalid')}
+                      </Text>
                     ) : (
-                      <Text className="text-[11px] leading-4 text-on-surface-variant opacity-80">{t('sign.codHint')}</Text>
+                      <Text className="text-[11px] leading-4 text-on-surface-variant opacity-80">
+                        {t('sign.codHint')}
+                      </Text>
                     )}
                   </View>
                 ) : null}
 
                 {/* L5 参考示例（本地图标占位，无外链） */}
                 <View className="gap-3">
-                  <Text className="px-1 text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t('sign.referenceExamples')}</Text>
+                  <Text className="px-1 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                    {t('sign.referenceExamples')}
+                  </Text>
                   <View className="flex-row gap-3">
                     <View className="flex-1">
                       <EvidenceExample label={t('sign.doorExample')} type="door" />
@@ -250,9 +278,14 @@ export default function SignConfirmPage() {
                     required
                     title={t('sign.doorNumber')}
                     photoUri={doorUri}
-                    onPermissionDenied={() => showToast(t('common.cameraPermissionDenied'), 'error')}
+                    onPermissionDenied={() =>
+                      showToast(t('common.cameraPermissionDenied'), 'error')
+                    }
                     onError={() => showToast(t('common.cameraError'), 'error')}
-                    onPress={(uri) => { setDoorCaptured(true); setDoorUri(uri); }}
+                    onPress={(uri) => {
+                      setDoorCaptured(true);
+                      setDoorUri(uri);
+                    }}
                   />
                   <EvidenceUpload
                     actionLabel={t('sign.tapPhoto')}
@@ -262,9 +295,14 @@ export default function SignConfirmPage() {
                     required
                     title={t('sign.packageImage')}
                     photoUri={packageUri}
-                    onPermissionDenied={() => showToast(t('common.cameraPermissionDenied'), 'error')}
+                    onPermissionDenied={() =>
+                      showToast(t('common.cameraPermissionDenied'), 'error')
+                    }
                     onError={() => showToast(t('common.cameraError'), 'error')}
-                    onPress={(uri) => { setPackageCaptured(true); setPackageUri(uri); }}
+                    onPress={(uri) => {
+                      setPackageCaptured(true);
+                      setPackageUri(uri);
+                    }}
                   />
                 </View>
               </>
@@ -276,16 +314,30 @@ export default function SignConfirmPage() {
       {/* 底栏：不进 QueryBoundary，loading 时 Button 因 canSubmit=false 禁用 */}
       <View className="absolute bottom-0 left-0 right-0 gap-2 bg-surface px-5 py-4 shadow-lg">
         <Button
-          className={status === 'success' ? '' : canSubmit && !codAmountInvalid ? 'bg-primary-container' : 'bg-neutral-muted'}
+          className={
+            status === 'success'
+              ? ''
+              : canSubmit && !codAmountInvalid
+                ? 'bg-primary-container'
+                : 'bg-neutral-muted'
+          }
           disabled={submitDisabled}
           loading={status === 'processing'}
           // T5 §3.4/§7.5: 成功态按钮变绿（审查修复 P1-1：tailwind 无 success key，
           //   经 Button style prop inline 注入——className 拼接无法表达，原实现没传导致仍是红底）
           style={status === 'success' ? { backgroundColor: colors.success } : undefined}
           onPress={() => void handleConfirmDelivery()}
-          icon={status === 'success' ? <AppIcon color={colors.surface} name="check" size={16} /> : undefined}
+          icon={
+            status === 'success' ? (
+              <AppIcon color={colors.surface} name="check" size={16} />
+            ) : undefined
+          }
         >
-          {status === 'processing' ? t('flow.processing') : status === 'success' ? t('sign.success') : t('sign.confirm')}
+          {status === 'processing'
+            ? t('flow.processing')
+            : status === 'success'
+              ? t('sign.success')
+              : t('sign.confirm')}
         </Button>
         <Text className="mx-auto max-w-[280px] text-center text-[11px] leading-5 text-on-surface-variant opacity-80">
           {status === 'success' ? t('sign.confirmed') : t('sign.disputeProof')}

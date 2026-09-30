@@ -65,7 +65,9 @@ let refreshPromise: Promise<string | null> | null = null;
 let isRefreshing = false;
 let pendingQueue: ((token: string | null) => void)[] = [];
 
-async function refreshAccessToken(): Promise<string | null> {
+/** C17（R-P2-15 拍板②）：显式刷新入口——离线队列 dispatch 收到 401 时先刷新重试一次，
+ * 仍失败才死信（sync.ts retryAfterTokenRefresh 消费）。单例去重逻辑与拦截器共享。 */
+export async function refreshAccessToken(): Promise<string | null> {
   if (refreshPromise) return refreshPromise;
   const refreshToken = await tokenStorage.getRefresh();
   if (!refreshToken) return null;
@@ -113,8 +115,7 @@ api.interceptors.response.use(
   },
   async (error: AxiosError) => {
     const original = error.config as
-      | (InternalAxiosRequestConfig & { _retry?: boolean })
-      | undefined;
+      (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
     const status = error.response?.status;
 
     if (status === 401 && original && !original._retry) {
@@ -150,8 +151,7 @@ api.interceptors.response.use(
     // 非 401 或重试失败 → 抛 ApiError（保持旧 request() 行为）
     // 后端业务错误格式：{ success: false, error: { code, message, details? } }
     const raw = error.response?.data as
-      | { code?: string; message?: string; error?: { code?: string; message?: string } }
-      | undefined;
+      { code?: string; message?: string; error?: { code?: string; message?: string } } | undefined;
     const code = raw?.error?.code ?? raw?.code ?? 'UNKNOWN';
     const message = raw?.error?.message ?? raw?.message ?? `Request failed: ${status ?? 'unknown'}`;
     throw new ApiError(status ?? 0, code, message);
@@ -171,7 +171,9 @@ export function setAuthToken(token: string | null) {
   authTokenMemory = token;
   // 同步到 SecureStore，让 axios 请求拦截器能从持久层读到 token
   if (token) {
-    void tokenStorage.set(token, '').catch(() => {});
+    // D6 批4 最小修（R-P3-6）：只写 access token，不覆盖 refreshToken
+    // （原 set(token, '') 会把已存 refreshToken 覆盖成空串，401 刷新链断裂）
+    void tokenStorage.setAccess(token).catch(() => {});
   } else {
     void tokenStorage.clear().catch(() => {});
   }
@@ -189,11 +191,21 @@ export function setOnUnauthorized(cb: (() => void) | null) {
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const method = (init?.method ?? 'GET').toUpperCase();
+  // D6 批4 最小修（R-P3-6）：body 非法 JSON 不再炸出 SyntaxError，按无 body 处理
+  // （兼容层调用方可能传非 JSON 文本/FormData，原 JSON.parse 直接抛错）
+  let data: unknown;
+  if (init?.body) {
+    try {
+      data = JSON.parse(init.body as string);
+    } catch {
+      data = init.body;
+    }
+  }
   const config: AxiosRequestConfig = {
     url: path,
     method: method as AxiosRequestConfig['method'],
     headers: init?.headers as Record<string, string> | undefined,
-    data: init?.body ? JSON.parse(init.body as string) : undefined,
+    data,
   };
   const res = await api.request<T>(config);
   if (res.status === 204) return undefined as T;

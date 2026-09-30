@@ -41,12 +41,14 @@ function MapViewNative({
     longitudeDelta: 0.05,
   };
 
+  // C8（R-P2-8）：只用 initialRegion（非受控）——受控 initialRegion+region 混用语义冲突，
+  // region prop 会逐帧钳制相机，用户拖动/缩放被回弹。本组件无外部 region 消费方
+  // （唯一调用点 navigate.tsx 不传 region），受控通道整体下线。
   return (
     <MapViewRN
       className="w-full"
       style={{ height: 320 }}
       initialRegion={initialRegion}
-      region={region}
       onRegionChange={onRegionChange}
       provider={PROVIDER_DEFAULT}
       showsUserLocation={!!rider}

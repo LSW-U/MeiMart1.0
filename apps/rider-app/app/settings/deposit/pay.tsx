@@ -33,6 +33,7 @@ import {
   usePayMockDeposit,
   useDepositLocations,
 } from '@/src/services/queries/useDeposit';
+import { isMockMode } from '@/src/services/api';
 
 /** HTML 原型：档位预设 chips（分） */
 const AMOUNT_CHIPS_CENTS = [100, 500, 1000, 5000, 10000];
@@ -57,7 +58,10 @@ export default function DepositPayPage() {
     return Number.isFinite(parsed) && parsed >= 100 ? parsed : 5000;
   }, [params.presetAmount, params.resubmitAmount]);
 
-  const [channel, setChannel] = useState<Channel>('ONLINE_MOCK'); // 默认线上（批 G 拍板 ③）
+  const [channel, setChannel] = useState<Channel>(
+    // R-P0-3：real 模式无 pay-mock 通道（后端白名单挂账），默认只开线下 COD
+    isMockMode ? 'ONLINE_MOCK' : 'OFFLINE_COD',
+  ); // 默认线上（批 G 拍板 ③；real 降级见下）
   // 预填额（chip 或自定义）≥ $1 已由 initialAmount 校验，初始即为有效金额；
   // 之后自定义输入非法时置 null（不保留旧值，§6.1）
   const [amountCents, setAmountCents] = useState<number | null>(initialAmount);
@@ -157,23 +161,25 @@ export default function DepositPayPage() {
         title={t('deposit.pay.title')}
       />
       <ScrollView contentContainerClassName="gap-4 px-4 py-5 pb-12">
-        {/* ── 双通道 Tab（HTML tab-bar）── */}
+        {/* ── 双通道 Tab（HTML tab-bar；R-P0-3：real 模式隐藏 ONLINE_MOCK 入口）── */}
         <View className="flex-row gap-1 rounded-xl bg-surface-container-low p-1">
-          {(['ONLINE_MOCK', 'OFFLINE_COD'] as const).map((c) => (
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{ selected: channel === c }}
-              className={`flex-1 items-center rounded-lg py-2 ${channel === c ? 'bg-surface shadow-sm' : ''}`}
-              key={c}
-              onPress={() => setChannel(c)}
-            >
-              <Text
-                className={`text-sm font-semibold ${channel === c ? 'text-primary' : 'text-on-surface-variant'}`}
+          {(['ONLINE_MOCK', 'OFFLINE_COD'] as const)
+            .filter((c) => c !== 'ONLINE_MOCK' || isMockMode)
+            .map((c) => (
+              <Pressable
+                accessibilityRole="tab"
+                accessibilityState={{ selected: channel === c }}
+                className={`flex-1 items-center rounded-lg py-2 ${channel === c ? 'bg-surface shadow-sm' : ''}`}
+                key={c}
+                onPress={() => setChannel(c)}
               >
-                {c === 'ONLINE_MOCK' ? t('deposit.tab.online') : t('deposit.tab.cod')}
-              </Text>
-            </Pressable>
-          ))}
+                <Text
+                  className={`text-sm font-semibold ${channel === c ? 'text-primary' : 'text-on-surface-variant'}`}
+                >
+                  {c === 'ONLINE_MOCK' ? t('deposit.tab.online') : t('deposit.tab.cod')}
+                </Text>
+              </Pressable>
+            ))}
         </View>
         {/* Tab summary（拍板 7：线上「即时生效」/ 线下「需 admin 确认」） */}
         <Text

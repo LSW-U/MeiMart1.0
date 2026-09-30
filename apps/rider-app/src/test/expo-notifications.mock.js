@@ -54,6 +54,7 @@ export function __reset() {
   requestPermissionsResult = { granted: true };
   requestPermissionsCalls = 0;
   listeners.length = 0;
+  channelCalls = [];
 }
 
 export async function getPermissionsAsync() {
@@ -84,4 +85,16 @@ export function addNotificationResponseReceivedListener(listener) {
 
 export async function getLastNotificationResponseAsync() {
   return lastResponse;
+}
+
+// R-P1-9：Android 通知渠道桩（push-token.ts ensureAndroidChannel 调用）
+export const AndroidImportance = { HIGH: 5, DEFAULT: 3, MIN: 0, LOW: 2, MAX: 5 };
+
+let channelCalls = [];
+export function __getChannelCalls() {
+  return channelCalls;
+}
+
+export async function setNotificationChannelAsync(id, settings) {
+  channelCalls.push({ id, ...settings });
 }

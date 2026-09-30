@@ -61,6 +61,16 @@ async function ensurePermissions(): Promise<boolean> {
   }
 }
 
+/** R-P1-9：Android 8+ 通知渠道（token 注册前建，否则高版本 Android 静默丢通知） */
+async function ensureAndroidChannel(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync('default', {
+    name: '默认通知',
+    importance: Notifications.AndroidImportance.HIGH,
+    lightColor: '#720003',
+  });
+}
+
 export async function registerPushToken(): Promise<void> {
   if (isMockMode || Platform.OS === 'web' || !Device.isDevice) return;
   try {
@@ -68,6 +78,8 @@ export async function registerPushToken(): Promise<void> {
       console.warn('[push-token] notification permission not granted, skip register');
       return;
     }
+    // R-P1-9：渠道必须在 getExpoPushTokenAsync 前建好（Android 8+ 静默丢弃无渠道通知）
+    await ensureAndroidChannel();
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
     const { data: token } = await Notifications.getExpoPushTokenAsync(
       projectId ? { projectId } : {},

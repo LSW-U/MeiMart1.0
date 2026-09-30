@@ -1,11 +1,12 @@
-import { useRouter, type Href } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '../src/components/ui';
 import { ErrorState } from '../src/components/feedback/ErrorState';
 import { SimplePageHeader } from '../src/components/layout/SimplePageHeader';
 import { showToast } from '../src/components/feedback/Toast';
+import { useMinuteTick } from '../src/hooks/useMinuteTick';
 import { useTranslation, type TranslationKey } from '../src/i18n/useTranslation';
 import {
   useNotifications,
@@ -14,11 +15,20 @@ import {
   useMarkAllAsRead,
 } from '../src/services/queries/useNotifications';
 import { colors } from '../src/theme/colors';
+import { safeDeepLink } from '../src/utils/safe-deep-link';
 import type { NotificationCategory, NotificationItem } from '../src/types/notification';
 
 type FilterKey = 'all' | NotificationCategory;
 
-const filters: { key: FilterKey; labelKey: 'notification.filter.all' | 'notification.filter.task' | 'notification.filter.order' | 'notification.filter.wallet' | 'notification.filter.system' }[] = [
+const filters: {
+  key: FilterKey;
+  labelKey:
+    | 'notification.filter.all'
+    | 'notification.filter.task'
+    | 'notification.filter.order'
+    | 'notification.filter.wallet'
+    | 'notification.filter.system';
+}[] = [
   { key: 'all', labelKey: 'notification.filter.all' },
   { key: 'task', labelKey: 'notification.filter.task' },
   { key: 'order', labelKey: 'notification.filter.order' },
@@ -26,7 +36,10 @@ const filters: { key: FilterKey; labelKey: 'notification.filter.all' | 'notifica
   { key: 'system', labelKey: 'notification.filter.system' },
 ];
 
-const categoryStyle: Record<NotificationCategory, { bg: string; icon: 'notification' | 'orders' | 'wallet' | 'settings' }> = {
+const categoryStyle: Record<
+  NotificationCategory,
+  { bg: string; icon: 'notification' | 'orders' | 'wallet' | 'settings' }
+> = {
   task: { bg: colors.notificationTask, icon: 'notification' },
   order: { bg: colors.notificationOrder, icon: 'orders' },
   wallet: { bg: colors.notificationWallet, icon: 'wallet' },
@@ -38,7 +51,10 @@ function NotificationSkeleton() {
   return (
     <View accessibilityRole="none" accessibilityLabel="loading" testID="notification-skeleton">
       {[0, 1, 2].map((i) => (
-        <View className="flex-row items-start gap-3 rounded-2xl border border-surface-variant bg-surface p-4" key={i}>
+        <View
+          className="flex-row items-start gap-3 rounded-2xl border border-surface-variant bg-surface p-4"
+          key={i}
+        >
           <View className="h-9 w-9 rounded-full bg-surface-variant" />
           <View className="flex-1 gap-2">
             <View className="h-4 w-2/3 rounded bg-surface-variant" />
@@ -52,7 +68,15 @@ function NotificationSkeleton() {
 }
 
 // P4-3 §3.3：空态增强——图标 + 标题 + 描述（分类空态文案区分）
-function EmptyStateView({ icon, title, description }: { icon: 'notification'; title: string; description: string }) {
+function EmptyStateView({
+  icon,
+  title,
+  description,
+}: {
+  icon: 'notification';
+  title: string;
+  description: string;
+}) {
   return (
     <View className="items-center rounded-3xl bg-surface p-8" testID="notification-empty">
       <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-surface-container-low">
@@ -64,6 +88,19 @@ function EmptyStateView({ icon, title, description }: { icon: 'notification'; ti
   );
 }
 
+// D7 批4（R-P3-7）：相对时间叶子组件——tick 状态只落在这里，每分钟仅重渲
+// 时间 Text 而非整张通知卡（原页面级 setTick 每分钟全列表重渲染）
+function NotificationTimeText({
+  timestamp,
+  formatTime,
+}: {
+  timestamp: number;
+  formatTime: (t: number) => string;
+}) {
+  useMinuteTick();
+  return <Text className="mt-2 text-xs text-outline">{formatTime(timestamp)}</Text>;
+}
+
 export default function NotificationsPage() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -73,13 +110,6 @@ export default function NotificationsPage() {
   const { data: unreadCount = 0 } = useUnreadCount();
   const markAsReadMutation = useMarkAsRead();
   const markAllAsReadMutation = useMarkAllAsRead();
-
-  // P4-4 §3.4：每分钟 tick 重渲染，formatTime 重算（最小显示单位是分钟，60s 够用）
-  const [, setTick] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setTick((n) => n + 1), 60_000);
-    return () => clearInterval(id);
-  }, []);
 
   const visibleItems = useMemo(() => {
     if (filter === 'all') return items;
@@ -93,7 +123,8 @@ export default function NotificationsPage() {
       const hour = 60 * minute;
       const day = 24 * hour;
       if (diff < minute) return t('notification.time.justNow');
-      if (diff < hour) return t('notification.time.minutesAgo', { minutes: Math.floor(diff / minute) });
+      if (diff < hour)
+        return t('notification.time.minutesAgo', { minutes: Math.floor(diff / minute) });
       if (diff < day) return t('notification.time.hoursAgo', { hours: Math.floor(diff / hour) });
       return t('notification.time.daysAgo', { days: Math.floor(diff / day) });
     },
@@ -103,9 +134,12 @@ export default function NotificationsPage() {
   // P4-2 §3.2：跳转优先，标记已读异步容错——失败 toast 不阻断跳转（依赖数组补 t）
   const onItemPress = useCallback(
     async (item: NotificationItem) => {
-      // item.link 是后端/mock 返回的动态路由 string（/(main)/earnings、/order/{id}），
-      // expo-router typed routes 无法静态窄化 runtime string，断言为 Href（合法路由联合）
-      if (item.link) router.push(item.link as Href);
+      // D8 批4（R-P3-8）：item.link 是服务端字符串，先过白名单校验再 push
+      // （非法 link 丢弃不跳，仍走下方标记已读降级）
+      if (item.link) {
+        const safeLink = safeDeepLink(item.link);
+        if (safeLink) router.push(safeLink);
+      }
       if (!item.read) {
         try {
           await markAsReadMutation.mutateAsync(item.id);
@@ -135,8 +169,17 @@ export default function NotificationsPage() {
       <SimplePageHeader
         action={
           unreadCount > 0 ? (
-            <Pressable accessibilityRole="button" accessibilityLabel={t('notification.markAllRead')} accessibilityState={markAllAsReadMutation.isPending ? { disabled: true } : undefined} disabled={markAllAsReadMutation.isPending} className="rounded-full bg-surface-container-low px-3 py-1.5 active:bg-surface-blush" onPress={() => void handleMarkAllRead()}>
-              <Text className="text-xs font-bold text-primary">{t('notification.markAllRead')}</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('notification.markAllRead')}
+              accessibilityState={markAllAsReadMutation.isPending ? { disabled: true } : undefined}
+              disabled={markAllAsReadMutation.isPending}
+              className="rounded-full bg-surface-container-low px-3 py-1.5 active:bg-surface-blush"
+              onPress={() => void handleMarkAllRead()}
+            >
+              <Text className="text-xs font-bold text-primary">
+                {t('notification.markAllRead')}
+              </Text>
             </Pressable>
           ) : undefined
         }
@@ -158,7 +201,9 @@ export default function NotificationsPage() {
               }`}
               onPress={() => setFilter(key)}
             >
-              <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-on-surface-variant'}`}>
+              <Text
+                className={`text-xs font-bold ${active ? 'text-white' : 'text-on-surface-variant'}`}
+              >
                 {t(labelKey)}
               </Text>
             </Pressable>
@@ -180,7 +225,9 @@ export default function NotificationsPage() {
         ) : visibleItems.length === 0 ? (
           // P4-3 §3.3：空态增强——图标+标题+描述，分类空态文案区分
           <EmptyStateView
-            description={filter === 'all' ? t('notification.empty.hint') : t('notification.empty.filtered')}
+            description={
+              filter === 'all' ? t('notification.empty.hint') : t('notification.empty.filtered')
+            }
             icon="notification"
             title={t('notification.empty')}
           />
@@ -195,7 +242,10 @@ export default function NotificationsPage() {
                 className={`flex-row items-start gap-3 rounded-2xl border p-4 ${item.read ? 'border-blush-border bg-surface' : 'border-outline-variant bg-surface-container-low'}`}
                 onPress={() => void onItemPress(item)}
               >
-                <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: style.bg }}>
+                <View
+                  className="h-9 w-9 items-center justify-center rounded-full"
+                  style={{ backgroundColor: style.bg }}
+                >
                   <AppIcon color={colors.surface} name={style.icon} size={20} />
                 </View>
                 <View className="flex-1">
@@ -203,12 +253,14 @@ export default function NotificationsPage() {
                     <Text className="flex-1 text-base font-bold text-on-surface" numberOfLines={1}>
                       {t(item.titleKey as TranslationKey)}
                     </Text>
-                    {!item.read ? <View className="ml-2 h-2.5 w-2.5 rounded-full bg-dot-unread" /> : null}
+                    {!item.read ? (
+                      <View className="ml-2 h-2.5 w-2.5 rounded-full bg-dot-unread" />
+                    ) : null}
                   </View>
                   <Text className="mt-1 text-sm leading-5 text-on-surface-variant">
                     {t(item.messageKey as TranslationKey, item.vars)}
                   </Text>
-                  <Text className="mt-2 text-xs text-outline">{formatTime(item.createdAt)}</Text>
+                  <NotificationTimeText formatTime={formatTime} timestamp={item.createdAt} />
                 </View>
               </Pressable>
             );

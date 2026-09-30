@@ -1,5 +1,7 @@
 import type { OrderHistoryItem, OrderHistoryStatus } from '@/src/types/order';
 
+import { isMockMode } from './api';
+
 // ── Mock layer (localStorage for Web dev) ──────────────────────────
 
 const storageKey = 'mei-delivery-app:orderHistory:v1';
@@ -119,20 +121,31 @@ function mockDelay<T>(value: T, ms = 300): Promise<T> {
 
 // ── orderApi 对象 ───────────────────────────────────────────────────
 
-// Why: 后端暂无骑手订单历史 API（W6+ 计划），所有模式下用本地存储
-// 后端实现后再切回真实 API 调用
+// R-P1-8（M5）：后端无骑手订单历史 / today-stats 端点（已实核 MeiMart rider.controller
+// 与 CAPABILITY-CONTRACT）。mock-only 显式化——mock 模式走本地存储；real 模式**抛错**，
+// 禁止静默返回假数据冒充真实业绩（消费方 history.tsx / profile.tsx 均有 isError 三态降级）。
+// add() 保留 mock 侧效应（delivery.ts writeMockSideEffects 用，mock 模式专属）。
+
+/** real 模式读路径统一抛出（后端补端点后替换为真实 API 调用） */
+function notImplemented(op: string): never {
+  throw new Error(`[orderApi] ${op}: rider order history API not implemented on backend yet`);
+}
 
 export const orderApi = {
   async getHistory(): Promise<OrderHistoryItem[]> {
+    // mock-only（R-P1-8）：real 模式不返回假历史
+    if (!isMockMode) notImplemented('getHistory');
     const items = getMockStore().slice();
     return mockDelay(items.sort((a, b) => b.completedAt - a.completedAt));
   },
 
   async getById(id: string): Promise<OrderHistoryItem | null> {
+    if (!isMockMode) notImplemented('getById');
     return mockDelay(getMockStore().find((item) => item.id === id) ?? null);
   },
 
   async countByStatus(): Promise<Record<OrderHistoryStatus | 'all', number>> {
+    if (!isMockMode) notImplemented('countByStatus');
     const items = getMockStore();
     return mockDelay({
       all: items.length,
@@ -143,6 +156,7 @@ export const orderApi = {
   },
 
   async getTodayStats(): Promise<{ count: number; totalIncome: number }> {
+    if (!isMockMode) notImplemented('getTodayStats');
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const items = getMockStore().filter(

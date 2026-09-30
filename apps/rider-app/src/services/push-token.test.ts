@@ -115,6 +115,9 @@ jest.mock('expo-notifications', () => {
     }),
     getPermissionsAsync: jest.fn(async () => ({ granted: true })),
     requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
+    // R-P1-9：Android 渠道桩（ensureAndroidChannel 在 token 注册前调用）
+    AndroidImportance: { HIGH: 5, DEFAULT: 3, LOW: 2, MIN: 0, MAX: 5 },
+    setNotificationChannelAsync: jest.fn(async () => undefined),
     __setExpoToken: (value: { data: string } | null) => {
       state.expoToken = value;
     },

@@ -1,18 +1,46 @@
-import { dispatchAction, enqueue, processQueue, type QueueAction } from './sync';
+import {
+  enqueue,
+  processQueue,
+  dispatchAction,
+  getQueueSize,
+  getDeadCount,
+  purgeFailedEntries,
+} from './sync';
+import { makeTestDatabase } from './test-utils';
+import * as indexModule from './index';
+import type { OfflineQueueEntry } from './models';
 
+import { ApiError, refreshAccessToken } from '../services/api';
 import { taskApi } from '../services/task';
+import {
+  uploadEvidence,
+  deleteEvidenceFile,
+  uploadEvidenceCached,
+  forgetUploadedUrl,
+  clearEvidenceDir,
+} from '../services/evidence';
 
 /**
- * sync 单测 —— CLAUDE.md 规则 12 离线队列消费器。
+ * sync 真库集成测试（批1 A1，D14 形态）——CLAUDE.md 规则 12 离线队列消费器。
  *
- * 覆盖：
- *   - dispatchAction 路由（bug 1：端点对齐 taskApi 真实方法，POST /rider/dispatch/tasks/{id}/{...}）
- *   - processQueue 消费（bug 2：失败 attempts 必须 entry.update 持久化，直接改属性不落盘；
- *     bug 3：FIFO 按 createdAt 升序，保证 pickup -> deliver 业务顺序）
+ * 旧测试 fake db（write: fn=>fn() + jest.Mock entry）掩盖了 R-P0-2：processQueue 的
+ * markAsDeleted/update 在 database.write 之外，WMB 0.28 writer 断言必抛，队列
+ * 「入得队、永远消费不了」。本文件全部用例跑 SQLite 真库（sqlite-node dispatcher +
+ * better-sqlite3，方案v2 N2），每用例独立 Database 实例（unique dbName 隔离），
+ * 禁 mock ./index、禁 write:fn=>fn()。
  *
- * fake database：mockFetch 让每个 test 动态配置 query().fetch() 返回值。
- * mock 前缀变量由 babel-plugin-jest-hoist 自动 hoist 到 jest.mock 之前，factory 内可安全引用。
+ * dispatchAction 仍 mock taskApi（网络层，非本批被测对象）。
+ * 批2 R-P1-2/R-P1-3：evidence 上传服务 mock（uploadEvidence 短路为已传状态）；
+ *   新增 permanent 分型立即死信 / getDeadCount / evidence 先传后报 用例。
  */
+
+// P2-5（C17 401 链）：部分 mock——保留真 ApiError（instanceof 分型依赖），仅 mock
+// refreshAccessToken（网络层，被测对象是 sync 的「401→刷新→重试」编排）
+jest.mock('../services/api', () => ({
+  __esModule: true,
+  ApiError: jest.requireActual('../services/api').ApiError,
+  refreshAccessToken: jest.fn(),
+}));
 
 jest.mock('../services/task', () => ({
   taskApi: {
@@ -22,219 +50,352 @@ jest.mock('../services/task', () => ({
   },
 }));
 
-// fake database：mockFetch 暴露给 processQueue test 配置 entries。
-// dispatchAction 不碰 db；processQueue 通过 fetch 拿 entries 消费。
-jest.mock('./index', () => ({
-  database: {
-    write: async (fn: () => Promise<void>) => fn(),
-    get: () => ({
-      create: mockCreate,
-      query: () => ({ fetch: mockFetch, fetchCount: async () => 0 }),
-    }),
-  },
+jest.mock('../services/evidence', () => ({
+  uploadEvidence: jest.fn(async () => ({})),
+  // uploadEvidenceCached：无缓存场景直透传底层 uploadEvidence（单文件用例语义一致）
+  uploadEvidenceCached: jest.fn(async (evidence?: Record<string, string>) => ({
+    ...evidence,
+    ...(evidence
+      ? Object.fromEntries(Object.keys(evidence).map((k) => [k, `https://mock-url/${k}.jpg`]))
+      : {}),
+  })),
+  deleteEvidenceFile: jest.fn(),
+  forgetUploadedUrl: jest.fn(),
+  clearEvidenceDir: jest.fn(),
 }));
 
-// mock 前缀 -> babel-plugin-jest-hoist 自动 hoist 到 jest.mock 之前，factory 可安全引用
-const mockFetch = jest.fn();
-const mockCreate = jest.fn().mockResolvedValue(undefined);
+const mockUploadEvidence = uploadEvidence as jest.Mock;
+const mockDeleteEvidenceFile = deleteEvidenceFile as jest.Mock;
+const mockUploadEvidenceCached = uploadEvidenceCached as jest.Mock;
+const mockForgetUploadedUrl = forgetUploadedUrl as jest.Mock;
+const mockClearEvidenceDir = clearEvidenceDir as jest.Mock;
+
+// D14 真库基座：不 mock write 语义，只把 ./index 的 database 导出重定向到每用例
+// 独立的真实 SQLite 实例（test-utils 造库）——sync.ts 的 enqueue/processQueue 全部
+// 跑在该真库上，writer 断言、软删、落盘全为真。getter 形态让 beforeEach 重绑生效。
+jest.mock('./index', () => {
+  const state = { database: null as unknown };
+  return {
+    __esModule: true,
+    set database(db: unknown) {
+      state.database = db;
+    },
+    get database() {
+      return state.database;
+    },
+  };
+});
+
+const mockRefreshAccessToken = refreshAccessToken as jest.Mock;
+
 const mockPickup = taskApi.pickup as jest.Mock;
 const mockStartDelivering = taskApi.startDelivering as jest.Mock;
 const mockDeliver = taskApi.deliver as jest.Mock;
 
-/** fake OfflineQueueEntry：processQueue 只读 action/payload/attempts/createdAt + 调 markAsDeleted/update */
-interface FakeEntry {
-  createdAt: number;
-  attempts: number;
-  action: string;
-  payload: string;
-  lastError?: string;
-  markAsDeleted: jest.Mock;
-  update: jest.Mock;
-}
+type Ctx = ReturnType<typeof makeTestDatabase>;
+let ctx: Ctx;
 
-function makeFakeEntry(opts: {
-  action: QueueAction['type'];
-  payload: QueueAction['payload'];
-  attempts?: number;
-  createdAt?: number;
-}): FakeEntry {
-  const entry: FakeEntry = {
-    createdAt: opts.createdAt ?? 0,
-    attempts: opts.attempts ?? 0,
-    action: opts.action,
-    payload: JSON.stringify(opts.payload),
-    markAsDeleted: jest.fn().mockResolvedValue(undefined),
-    // 模拟 WMB Model.update：执行回调，回调内改 record 属性即"落盘"
-    update: jest.fn(async (fn: (r: FakeEntry) => void) => {
-      fn(entry);
-    }),
-  };
-  return entry;
-}
-
-describe('dispatchAction 路由（bug 1：端点对齐 taskApi 真实方法）', () => {
-  beforeEach(() => {
-    mockFetch.mockReset();
-    mockPickup.mockReset();
-    mockStartDelivering.mockReset();
-    mockDeliver.mockReset();
-  });
-
-  it('pickup -> taskApi.pickup(taskId, note)', async () => {
-    mockPickup.mockResolvedValue(undefined);
-    const action: QueueAction = { type: 'pickup', payload: { taskId: 'T1', note: 'arrived' } };
-
-    await dispatchAction(action);
-
-    expect(mockPickup).toHaveBeenCalledWith('T1', 'arrived');
-    expect(mockStartDelivering).not.toHaveBeenCalled();
-    expect(mockDeliver).not.toHaveBeenCalled();
-  });
-
-  it('startDelivering -> taskApi.startDelivering(taskId, note)', async () => {
-    mockStartDelivering.mockResolvedValue(undefined);
-    const action: QueueAction = { type: 'startDelivering', payload: { taskId: 'T2' } };
-
-    await dispatchAction(action);
-
-    expect(mockStartDelivering).toHaveBeenCalledWith('T2', undefined);
-    expect(mockPickup).not.toHaveBeenCalled();
-  });
-
-  it('deliver -> taskApi.deliver(taskId, {collectedAmount, note})', async () => {
-    mockDeliver.mockResolvedValue(undefined);
-    const action: QueueAction = {
-      type: 'deliver',
-      payload: { taskId: 'T3', collectedAmount: 100, note: 'cash' },
-    };
-
-    await dispatchAction(action);
-
-    expect(mockDeliver).toHaveBeenCalledWith('T3', { collectedAmount: 100, note: 'cash' });
-    expect(mockPickup).not.toHaveBeenCalled();
-  });
+beforeEach(() => {
+  mockPickup.mockReset().mockResolvedValue(undefined);
+  mockStartDelivering.mockReset().mockResolvedValue(undefined);
+  mockDeliver.mockReset().mockResolvedValue(undefined);
+  mockUploadEvidence.mockReset().mockResolvedValue({});
+  mockUploadEvidenceCached
+    .mockReset()
+    .mockImplementation(async (evidence?: Record<string, string>) =>
+      Object.fromEntries(Object.keys(evidence ?? {}).map((k) => [k, `https://mock-url/${k}.jpg`])),
+    );
+  mockDeleteEvidenceFile.mockReset();
+  mockForgetUploadedUrl.mockReset();
+  mockClearEvidenceDir.mockReset();
+  mockRefreshAccessToken.mockReset().mockResolvedValue(undefined);
+  ctx = makeTestDatabase();
+  (indexModule as { database: unknown }).database = ctx.database;
 });
 
-describe('processQueue 消费（bug 2 attempts 持久化 + bug 3 FIFO）', () => {
-  beforeEach(() => {
-    mockFetch.mockReset();
-    mockPickup.mockReset();
-    mockStartDelivering.mockReset();
-    mockDeliver.mockReset();
-  });
+afterEach(() => {
+  ctx.cleanup();
+});
 
-  it('成功：dispatchAction 全过 -> 全 markAsDeleted，synced=N failed=0', async () => {
-    const e1 = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' } });
-    const e2 = makeFakeEntry({ action: 'startDelivering', payload: { taskId: 'B' } });
-    mockFetch.mockResolvedValue([e1, e2]);
-    mockPickup.mockResolvedValue(undefined);
-    mockStartDelivering.mockResolvedValue(undefined);
+async function fetchEntries(): Promise<OfflineQueueEntry[]> {
+  // fetch 含软删项需 query().fetch()；WMB 默认排除软删，这里直接取活条目
+  return ctx.database.get<OfflineQueueEntry>('offline_queue').query().fetch();
+}
+
+/** 先红后绿取证基座：processQueue 在未包 write 的旧实现下应抛 writer 断言 */
+describe('processQueue（真库）', () => {
+  it('R-P0-2 回归：成功消费 markAsDeleted 在 write 内——enqueue→processQueue→条目软删', async () => {
+    await enqueue({ type: 'pickup', payload: { taskId: 'T1' } });
+    await enqueue({ type: 'deliver', payload: { taskId: 'T1', collectedAmount: 50 } });
 
     const result = await processQueue();
 
     expect(result).toEqual({ synced: 2, failed: 0 });
-    expect(e1.markAsDeleted).toHaveBeenCalledTimes(1);
-    expect(e2.markAsDeleted).toHaveBeenCalledTimes(1);
+    expect(mockPickup).toHaveBeenCalledWith('T1', undefined);
+    expect(mockDeliver).toHaveBeenCalledWith('T1', { collectedAmount: 50, note: undefined });
+    expect(await getQueueSize()).toBe(0); // 软删后 query().fetch() 排除，活条目为 0
   });
 
-  it('bug 3 FIFO：query 返回乱序，按 createdAt 升序重放', async () => {
-    // 故意 createdAt 降序（A=3000, B=1000, C=2000），验证 sort 升序后才 for 循环
-    const eA = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' }, createdAt: 3000 });
-    const eB = makeFakeEntry({ action: 'pickup', payload: { taskId: 'B' }, createdAt: 1000 });
-    const eC = makeFakeEntry({ action: 'pickup', payload: { taskId: 'C' }, createdAt: 2000 });
-    mockFetch.mockResolvedValue([eA, eB, eC]);
-    mockPickup.mockResolvedValue(undefined);
+  it('R-P0-2 回归：失败 attempts/lastError 经 entry.update 在 write 内真实落盘', async () => {
+    mockPickup.mockRejectedValue(new Error('network down'));
+    await enqueue({ type: 'pickup', payload: { taskId: 'T2' } });
 
+    const result = await processQueue();
+
+    expect(result).toEqual({ synced: 0, failed: 1 });
+    const entries = await fetchEntries();
+    // 查询排除软删，但失败条目未删，仍可见且 attempts 落盘
+    expect(entries).toHaveLength(1);
+    expect(entries[0].attempts).toBe(1);
+    expect(entries[0].lastError).toBe('network down');
+  });
+
+  it('attempts 累计至死信：MAX_ATTEMPTS(5) 后不再 dispatch、计入 failed', async () => {
+    mockPickup.mockRejectedValue(new Error('still down'));
+    await enqueue({ type: 'pickup', payload: { taskId: 'T3' } });
+
+    // 连跑 5 轮失败 -> attempts=5（死信）
+    for (let i = 0; i < 5; i++) {
+      const r = await processQueue();
+      expect(r).toEqual({ synced: 0, failed: 1 });
+    }
+    // 第 6 轮：死信跳过（不 dispatch），仍计 failed
+    mockPickup.mockClear();
+    const r6 = await processQueue();
+    expect(r6).toEqual({ synced: 0, failed: 1 });
+    expect(mockPickup).not.toHaveBeenCalled();
+  });
+
+  it('重复 flush 幂等：空队列再跑 processQueue 返回 0/0，无副作用', async () => {
+    await enqueue({ type: 'pickup', payload: { taskId: 'T4' } });
     await processQueue();
 
-    // 期望重放顺序 B(1000) -> C(2000) -> A(3000)，保证 pickup -> deliver 业务顺序不乱
-    expect(mockPickup.mock.calls.map((c) => c[0])).toEqual(['B', 'C', 'A']);
+    const again = await processQueue();
+    expect(again).toEqual({ synced: 0, failed: 0 });
+    expect(mockPickup).toHaveBeenCalledTimes(1);
   });
 
-  it('bug 2：失败用 entry.update 持久化 attempts+1 + lastError', async () => {
-    const e1 = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' }, attempts: 0 });
-    mockFetch.mockResolvedValue([e1]);
-    mockPickup.mockRejectedValue(new Error('network down'));
-
-    const result = await processQueue();
-
-    expect(result).toEqual({ synced: 0, failed: 1 });
-    // bug 2 核心：必须 entry.update 才落盘（旧代码直接 entry.attempts += 1 不持久化）
-    expect(e1.update).toHaveBeenCalledTimes(1);
-    expect(e1.attempts).toBe(1);
-    expect(e1.lastError).toBe('network down');
-    expect(e1.markAsDeleted).not.toHaveBeenCalled();
-  });
-
-  it('超 MAX_ATTEMPTS(5) 跳过：不调 dispatchAction，计入 failed', async () => {
-    const e1 = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' }, attempts: 5 });
-    mockFetch.mockResolvedValue([e1]);
-    mockPickup.mockResolvedValue(undefined);
-
-    const result = await processQueue();
-
-    expect(result).toEqual({ synced: 0, failed: 1 });
-    expect(mockPickup).not.toHaveBeenCalled();
-    expect(e1.markAsDeleted).not.toHaveBeenCalled();
-  });
-
-  it('审查 S6：同 taskId 前序失败，后序本轮跳过（不 dispatch 不 attempts+1）', async () => {
-    // pickup(A) 失败 -> deliver(A) 本轮 skip（前序失败，后序不无效请求后端状态机报错）
-    const e1 = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' }, createdAt: 1000 });
-    const e2 = makeFakeEntry({ action: 'deliver', payload: { taskId: 'A' }, createdAt: 2000 });
-    mockFetch.mockResolvedValue([e1, e2]);
+  it('审查 S6 回归：同 taskId 前序失败，后序本轮跳过（真库条目顺序语义）', async () => {
     mockPickup.mockRejectedValue(new Error('pickup 500'));
-    mockDeliver.mockResolvedValue(undefined);
+    await enqueue({ type: 'pickup', payload: { taskId: 'T5' } });
+    await enqueue({ type: 'deliver', payload: { taskId: 'T5' } });
 
     const result = await processQueue();
 
-    // pickup(A) 失败 failed=1；deliver(A) S6 skip（不 dispatch，不计 failed，不 attempts+1）
     expect(result).toEqual({ synced: 0, failed: 1 });
-    expect(mockPickup).toHaveBeenCalledWith('A', undefined);
     expect(mockDeliver).not.toHaveBeenCalled();
-    expect(e2.markAsDeleted).not.toHaveBeenCalled();
-    expect(e2.update).not.toHaveBeenCalled();
   });
 
-  it('审查 S6：不同 taskId 互不影响（A 失败不阻断 B 成功）', async () => {
-    const e1 = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' }, createdAt: 1000 });
-    const e2 = makeFakeEntry({ action: 'pickup', payload: { taskId: 'B' }, createdAt: 2000 });
-    mockFetch.mockResolvedValue([e1, e2]);
-    mockPickup.mockRejectedValueOnce(new Error('A 500')).mockResolvedValueOnce(undefined);
+  it('R-P2-13 回归：损坏 payload 的历史条目被跳过不炸整轮（attempts+1 落盘）', async () => {
+    // 模拟旧版/Loki 时代写入的坏行：绕过 enqueue 直插 task_id 空串 + 损坏 payload
+    await ctx.database.write(async () => {
+      await ctx.database.get<OfflineQueueEntry>('offline_queue').create((entry) => {
+        entry.action = 'pickup';
+        entry.taskId = 'corrupted-legacy';
+        entry.payload = '{not-json';
+        entry.attempts = 0;
+      });
+    });
 
     const result = await processQueue();
 
-    // A 失败，B 成功（不同 taskId，S6 failedTaskIds 不阻断 B）
-    expect(result).toEqual({ synced: 1, failed: 1 });
-    expect(mockPickup).toHaveBeenCalledTimes(2);
-    expect(e1.markAsDeleted).not.toHaveBeenCalled();
-    expect(e2.markAsDeleted).toHaveBeenCalledTimes(1);
+    // 坏条目进 catch 计 failed，不阻断后续；本轮无其他条目 -> failed=1
+    expect(result).toEqual({ synced: 0, failed: 1 });
+    const entries = await fetchEntries();
+    expect(entries).toHaveLength(1);
+    expect(entries[0].attempts).toBe(1);
   });
 });
 
-describe('enqueue 去重（审查 M2）', () => {
-  beforeEach(() => {
-    mockFetch.mockReset();
-    mockCreate.mockReset().mockResolvedValue(undefined);
+describe('enqueue（真库）', () => {
+  it('正常入队：task_id 列写入 + FIFO createdAt', async () => {
+    await enqueue({ type: 'pickup', payload: { taskId: 'T6', note: 'n1' } });
+
+    const entries = await fetchEntries();
+    expect(entries).toHaveLength(1);
+    expect(entries[0].taskId).toBe('T6');
+    expect(entries[0].action).toBe('pickup');
+    expect(JSON.parse(entries[0].payload)).toEqual({ taskId: 'T6', note: 'n1' });
   });
 
-  it('无重复：队列为空 -> create 新 entry', async () => {
-    mockFetch.mockResolvedValue([]);
-    await enqueue({ type: 'pickup', payload: { taskId: 'A' } });
-    expect(mockCreate).toHaveBeenCalledTimes(1);
+  it('审查 M2 去重：同 taskId+action 未超限 -> 不重复 create', async () => {
+    await enqueue({ type: 'pickup', payload: { taskId: 'T7' } });
+    await enqueue({ type: 'pickup', payload: { taskId: 'T7' } });
+
+    expect(await getQueueSize()).toBe(1);
   });
 
-  it('有重复：同 taskId+action 未删未超限 entry -> 去重不 create', async () => {
-    const dup = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' }, attempts: 1 });
-    mockFetch.mockResolvedValue([dup]);
-    await enqueue({ type: 'pickup', payload: { taskId: 'A' } });
-    expect(mockCreate).not.toHaveBeenCalled();
+  it('去重例外：死信（attempts>=MAX）允许新建；不同 action 不互斥', async () => {
+    mockPickup.mockRejectedValue(new Error('x'));
+    await enqueue({ type: 'pickup', payload: { taskId: 'T8' } });
+    for (let i = 0; i < 5; i++) await processQueue(); // 打成死信
+    mockPickup.mockResolvedValue(undefined);
+
+    await enqueue({ type: 'pickup', payload: { taskId: 'T8' } });
+    expect(await getQueueSize()).toBe(2);
+
+    await enqueue({ type: 'deliver', payload: { taskId: 'T8' } });
+    expect(await getQueueSize()).toBe(3);
+  });
+});
+
+describe('dispatchAction 路由（保持旧覆盖，bug 1 端点对齐）', () => {
+  it('pickup/startDelivering/deliver 各路由到 taskApi 对应方法', async () => {
+    await dispatchAction({ type: 'pickup', payload: { taskId: 'A', note: 'arrived' } });
+    await dispatchAction({ type: 'startDelivering', payload: { taskId: 'B' } });
+    await dispatchAction({
+      type: 'deliver',
+      payload: { taskId: 'C', collectedAmount: 100, note: 'cash' },
+    });
+
+    expect(mockPickup).toHaveBeenCalledWith('A', 'arrived');
+    expect(mockStartDelivering).toHaveBeenCalledWith('B', undefined);
+    expect(mockDeliver).toHaveBeenCalledWith('C', { collectedAmount: 100, note: 'cash' });
+  });
+});
+
+describe('R-P1-2/R-P1-3：evidence 链 + permanent 分型', () => {
+  it('R-P1-2：带 evidence 的 pickup——先 uploadEvidenceCached 拿 URL 再报状态，成功后删本地文件+回收缓存', async () => {
+    mockUploadEvidenceCached.mockResolvedValue({ photoUri: 'https://cdn/x.jpg' });
+    await dispatchAction({
+      type: 'pickup',
+      payload: { taskId: 'A', evidence: { photoUri: 'file://p/1.jpg' } },
+    });
+
+    expect(mockUploadEvidenceCached).toHaveBeenCalledWith({ photoUri: 'file://p/1.jpg' });
+    expect(mockPickup).toHaveBeenCalledTimes(1);
+    expect(mockDeleteEvidenceFile).toHaveBeenCalledWith('file://p/1.jpg');
+    expect(mockForgetUploadedUrl).toHaveBeenCalledWith('file://p/1.jpg');
   });
 
-  it('死信例外：同 taskId+action 但 attempts >= MAX（死信）-> 允许新建给重试机会', async () => {
-    const dead = makeFakeEntry({ action: 'pickup', payload: { taskId: 'A' }, attempts: 5 });
-    mockFetch.mockResolvedValue([dead]);
-    await enqueue({ type: 'pickup', payload: { taskId: 'A' } });
-    expect(mockCreate).toHaveBeenCalledTimes(1);
+  it('R-P1-2：pickup 无 evidence——不调 uploadEvidenceCached、不删文件', async () => {
+    await dispatchAction({ type: 'pickup', payload: { taskId: 'A' } });
+    expect(mockUploadEvidenceCached).not.toHaveBeenCalled();
+    expect(mockDeleteEvidenceFile).not.toHaveBeenCalled();
+  });
+
+  it('R-P1-3：ApiError 422（业务拒绝）→ PermanentSyncError 立即死信（1 轮即 attempts=MAX）', async () => {
+    mockPickup.mockRejectedValue(new ApiError(422, 'STATE', 'task not in ASSIGNED'));
+    await enqueue({ type: 'pickup', payload: { taskId: 'T9' } });
+
+    const r = await processQueue();
+    expect(r).toEqual({ synced: 0, failed: 1 });
+
+    const entries = await fetchEntries();
+    expect(entries).toHaveLength(1);
+    expect(entries[0].attempts).toBe(5); // MAX_ATTEMPTS，不再重试
+    expect(entries[0].lastError).toContain('permanent: ');
+    expect(entries[0].lastError).toContain('422');
+
+    // 死信不重试：再跑一轮 taskApi 不被调
+    mockPickup.mockClear();
+    await processQueue();
+    expect(mockPickup).not.toHaveBeenCalled();
+  });
+
+  it('R-P1-3：4xx 例外——408/429/5xx/网络错误仍是 retryable（attempts+1）', async () => {
+    mockPickup.mockRejectedValueOnce(new ApiError(429, 'RATE', 'slow down'));
+    mockPickup.mockRejectedValueOnce(new ApiError(500, 'SRV', 'server error'));
+    mockPickup.mockRejectedValueOnce(new Error('network down'));
+    await enqueue({ type: 'pickup', payload: { taskId: 'T10' } });
+
+    await processQueue();
+    await processQueue();
+    await processQueue();
+
+    const entries = await fetchEntries();
+    expect(entries[0].attempts).toBe(3); // 非 permanent：逐轮 +1
+    expect(entries[0].lastError).toBe('network down'); // 无 permanent 前缀
+  });
+
+  it('R-P1-3：getDeadCount 统计 attempts>=MAX 的活条目', async () => {
+    expect(await getDeadCount()).toBe(0);
+    mockPickup.mockRejectedValue(new ApiError(409, 'RACE', 'conflict'));
+    await enqueue({ type: 'pickup', payload: { taskId: 'T11' } });
+    await processQueue(); // permanent → 立即死信
+    expect(await getDeadCount()).toBe(1);
+  });
+
+  it('P2-3/P2-6：purgeFailedEntries 放弃死信时逐条回收其证据文件，不误删活条目', async () => {
+    mockPickup.mockRejectedValue(new ApiError(422, 'STATE', 'rejected'));
+    await enqueue({
+      type: 'pickup',
+      payload: { taskId: 'T12', evidence: { photoUri: 'file://p/orphan.jpg' } },
+    });
+    await processQueue(); // 死信
+    expect(mockDeleteEvidenceFile).not.toHaveBeenCalled(); // 死信时不清（文件保留给重试视图）
+
+    const purged = await purgeFailedEntries();
+    expect(purged).toBe(1);
+    // P2-6：只删死信条目自己的文件（不再整目录 clearEvidenceDir——活条目文件不受影响）
+    expect(mockDeleteEvidenceFile).toHaveBeenCalledWith('file://p/orphan.jpg');
+    expect(mockForgetUploadedUrl).toHaveBeenCalledWith('file://p/orphan.jpg');
+    expect(mockClearEvidenceDir).not.toHaveBeenCalled();
+  });
+
+  it('P2-6：purge 死信与活条目共存——活条目的 evidence 文件不被回收', async () => {
+    // pickup 死信（422 permanent）
+    mockPickup.mockRejectedValueOnce(new ApiError(422, 'STATE', 'rejected'));
+    await enqueue({
+      type: 'pickup',
+      payload: { taskId: 'T13', evidence: { photoUri: 'file://p/dead.jpg' } },
+    });
+    await processQueue();
+
+    // deliver 活条目（网络错误，attempts=1 < MAX）
+    mockPickup.mockReset().mockRejectedValueOnce(new ApiError(422, 'STATE', 'rejected'));
+    mockDeliver.mockRejectedValue(new Error('network down'));
+    await enqueue({
+      type: 'deliver',
+      payload: { taskId: 'T13', evidence: { photoUri: 'file://p/alive.jpg' } },
+    });
+    await processQueue();
+
+    await purgeFailedEntries();
+    // 死信（pickup）文件回收；活条目（deliver）文件保留给重试
+    expect(mockDeleteEvidenceFile).toHaveBeenCalledWith('file://p/dead.jpg');
+    expect(mockDeleteEvidenceFile).not.toHaveBeenCalledWith('file://p/alive.jpg');
+  });
+});
+
+describe('P2-5（C17）：401 → token 刷新 → 重试链', () => {
+  it('401 先 refreshAccessToken 再重试——重试成功则消费成功（非死信）', async () => {
+    mockPickup.mockRejectedValueOnce(new ApiError(401, 'AUTH', 'token expired'));
+    await enqueue({ type: 'pickup', payload: { taskId: 'T14' } });
+
+    const result = await processQueue();
+
+    expect(result).toEqual({ synced: 1, failed: 0 });
+    expect(mockRefreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(mockPickup).toHaveBeenCalledTimes(2); // 首次 401 + 刷新后重试
+    expect(await getQueueSize()).toBe(0); // 重试成功，条目软删
+  });
+
+  it('D13 批4 收紧：401 刷新后重试仍 401 → PermanentSyncError 立即死信（新 token 下仍 401 = 重试无意义）', async () => {
+    mockPickup.mockRejectedValue(new ApiError(401, 'AUTH', 'still unauthorized'));
+    await enqueue({ type: 'pickup', payload: { taskId: 'T15' } });
+
+    await processQueue();
+
+    expect(mockRefreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(mockPickup).toHaveBeenCalledTimes(2);
+    const entries = await fetchEntries();
+    expect(entries).toHaveLength(1); // 死信保留（软删标记）
+    expect(entries[0].attempts).toBe(5); // attempts 拉满 MAX_ATTEMPTS = 不再重试
+    expect(entries[0].lastError).toContain('permanent'); // 死信前缀
+    expect(entries[0].lastError).toContain('token refreshed but still unauthorized');
+  });
+
+  it('refreshAccessToken 本身失败 → 原样抛错走 attempts 重试路径，不炸整轮', async () => {
+    mockPickup.mockRejectedValue(new ApiError(401, 'AUTH', 'token expired'));
+    mockRefreshAccessToken.mockRejectedValue(new Error('no refresh token'));
+    await enqueue({ type: 'pickup', payload: { taskId: 'T16' } });
+
+    const result = await processQueue();
+
+    expect(result).toEqual({ synced: 0, failed: 1 });
+    expect(mockPickup).toHaveBeenCalledTimes(1); // 刷新失败，重试未发起
+    const entries = await fetchEntries();
+    expect(entries[0].attempts).toBe(1); // 401 非 permanent，走重试路径
   });
 });

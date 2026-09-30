@@ -19,6 +19,10 @@ import { Platform } from 'react-native';
 
 import type { EventSubscription } from 'expo-modules-core';
 
+// D8 批4（R-P3-8）：推送 data 服务端字符串不可信，orderId 拼路由前过白名单。
+// P3-3：正则唯一定义点在 utils/safe-deep-link.ts（本处 import 复用，防双源漂移）
+import { SAFE_ID_PATTERN } from '../utils/safe-deep-link';
+
 type PushData = Record<string, unknown>;
 
 // 前台 iOS 默认静默：显式声明弹 banner + 响铃（Android 通道通知由系统管理）
@@ -46,7 +50,7 @@ function routeByPushData(data: PushData | null | undefined): void {
   } else if (taskId) {
     // RIDER_TASK 事件 data 双键 { taskId, orderId }——任务分配/失败优先进任务列表
     router.push('/(main)/tasks');
-  } else if (orderId) {
+  } else if (orderId && SAFE_ID_PATTERN.test(orderId)) {
     router.push(`/order/${orderId}`);
   } else {
     // 无 data/未匹配兜底进通知页（方案 v2 §3.5：不报错）

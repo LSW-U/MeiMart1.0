@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Linking, RefreshControl, ScrollView, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, Linking, Pressable, RefreshControl, Text, View } from 'react-native';
 
 import { DutyStatusMenu } from '../../src/components/business/DutyStatusMenu';
 import { TaskCard } from '../../src/components/business/TaskCard';
@@ -10,7 +10,6 @@ import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 // 批B B1：保证金拦截弹窗抽公共组件（task/[id].tsx B2 接单失败拦截复用同款）
 import { DepositBlockDialog } from '../../src/components/feedback/DepositBlockDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
-import { QueryBoundary } from '../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../src/components/feedback/Toast';
 import { useDepositStatus } from '../../src/services/queries/useDeposit';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
@@ -23,7 +22,6 @@ import { useAuthStore } from '../../src/store/useAuthStore';
 import { colors } from '../../src/theme/colors';
 import type { DeliveryTask } from '../../src/types/task';
 import { formatCurrency, formatDistance } from '../../src/utils/format';
-import { pickupDistance } from '../../src/utils/distance';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
 
@@ -66,7 +64,7 @@ const formatFeeBreakdown = (
  * 避免历史订单无坐标时把 undefined 塞进 t() 触发 TS 报错 + 渲染「undefinedkm」。
  */
 const withDistance = (
-  templateKey: 'common.fromHere' | 'common.fromPickup' | 'tasks.billingDistance',
+  templateKey: 'common.totalDistance' | 'common.fromPickup' | 'tasks.billingDistance',
   km: number | undefined,
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
 ): string | undefined => {
@@ -155,6 +153,18 @@ export default function TasksPage() {
 
   const openMenu = () => setMenuVisible(true);
 
+  // R-P1-4：FlatList 化——renderItem 改 useCallback 工厂（按 tab 一个稳定引用），
+  // 原三处 .map renderXxx 每次渲染都是新函数，配合 memo(TaskCard) 会全部失效。
+  const listData =
+    activeTab === 'new'
+      ? taskLists.available
+      : activeTab === 'pickups'
+        ? taskLists.pickups
+        : taskLists.deliveries;
+
+  // R-P1-4：keyExtractor 稳定引用（TaskCard id 稳定）
+  const keyTaskId = useCallback((task: DeliveryTask) => task.id, []);
+
   const handlePick = async (next: DutyStatus) => {
     if (next === dutyStatusForUi) {
       setMenuVisible(false);
@@ -212,7 +222,7 @@ export default function TasksPage() {
           label: 'P',
           title: task.pickup.title,
           subtitle: task.pickup.address,
-          distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t),
+          distance: withDistance('common.totalDistance', task.distanceKm, t),
         },
         {
           label: 'D',
@@ -250,7 +260,7 @@ export default function TasksPage() {
             label: 'P',
             title: task.pickup.title,
             subtitle: task.pickup.address,
-            distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t),
+            distance: withDistance('common.totalDistance', task.distanceKm, t),
           },
           // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
           {
@@ -288,7 +298,7 @@ export default function TasksPage() {
         {
           label: 'P',
           title: task.pickup.title,
-          distance: withDistance('common.fromHere', pickupDistance(task.distanceKm), t),
+          distance: withDistance('common.totalDistance', task.distanceKm, t),
         },
         // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
         {
@@ -305,43 +315,97 @@ export default function TasksPage() {
     />
   );
 
+  // R-P1-4：renderItem useCallback 工厂（按 tab 一个稳定引用，配合 memo(TaskCard) 不失效）。
+  // 置于三个 renderXxx 声明之后——闭包引用前向声明会触发 react-hooks/immutability
+  // 「Cannot access variable before it is declared」。
+  const renderTaskItem = useCallback(
+    ({ item }: { item: DeliveryTask }) =>
+      activeTab === 'new'
+        ? renderNewTask(item)
+        : activeTab === 'pickups'
+          ? renderPickupTask(item)
+          : renderDeliveryTask(item),
+    // renderXxx 是组件内闭包（依赖 t/router/currency 等），activeTab 切换或依赖变化时重建
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 原因：renderXxx 为组件体闭包，逐项列依赖会造成巨型数组且与下方实现强耦合
+    [activeTab, t, router, currency, taskLists],
+  );
+
   const emptyMeta: Record<TaskTab, { title: TranslationKey; desc: TranslationKey }> = {
     new: { title: 'common.noNewTasks', desc: 'common.noNewTasksDesc' },
     pickups: { title: 'common.noPickups', desc: 'common.noPickupsDesc' },
     deliveries: { title: 'common.noDeliveries', desc: 'common.noDeliveriesDesc' },
   };
 
-  const renderContent = () => {
+  // R-P1-4：三态边界移入 FlatList props——loading 骨架 / error 重试 / 空态 / 数据渲染
+  //   （原 ScrollView + QueryBoundary children .map 全量渲染；FlatList 回收屏外卡片）
+  const listContent = () => {
     // P6-1：仅 online===false（settings 明确 dutyStatus=offDuty）才走 offline 空态。
-    //   online=null（settings 加载中/失败）保守不停派单 → 落 QueryBoundary 三态，不误显「你已离线」。
-    //   原 `if (!online)` 把 null 当 falsy → settings 失败时误显离线空态（静默掉线根因），已修。
     if (online === false) {
       return <EmptyState title={t('common.offlineTitle')} description={t('common.offlineDesc')} />;
     }
-
-    // B3: 三态边界——loading 骨架 / error 重试 / 空态基于真实 data / 数据渲染
+    if (taskListsLoading) {
+      // 骨架直接渲染（对齐 QueryBoundary 内部 QuerySkeleton list 输出，testID 同款）
+      return (
+        <View testID="query-skeleton">
+          <View className="rounded-lg border border-surface-variant p-3.5">
+            <View className="h-3.5 w-1/2 rounded bg-surface-variant" />
+            <View className="mt-2.5 h-3.5 w-3/5 rounded bg-surface-variant" />
+            <View className="mt-2.5 h-3.5 w-2/5 rounded bg-surface-variant" />
+          </View>
+          <View className="mt-2.5 rounded-lg border border-surface-variant p-3.5">
+            <View className="h-3.5 w-1/2 rounded bg-surface-variant" />
+            <View className="mt-2.5 h-3.5 w-3/5 rounded bg-surface-variant" />
+          </View>
+        </View>
+      );
+    }
+    if (taskListsError) {
+      return (
+        <View className="items-center rounded-3xl bg-surface p-6" testID="query-error">
+          <Text className="text-lg font-bold text-on-surface">{t('common.loadError.title')}</Text>
+          <Text className="mt-2 text-center text-sm text-on-surface-variant">
+            {t('common.loadError.desc')}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('common.retry')}
+            className="mt-4 rounded-full bg-primary px-6 py-2"
+            onPress={() => void refetchTasks()}
+          >
+            <Text className="text-sm font-semibold text-white">{t('common.retry')}</Text>
+          </Pressable>
+        </View>
+      );
+    }
     return (
-      <QueryBoundary
-        data={taskListsData}
-        emptyDescription={t(emptyMeta[activeTab].desc)}
-        emptyTitle={t(emptyMeta[activeTab].title)}
-        errorMessage={t('common.loadError.desc')}
-        errorTitle={t('common.loadError.title')}
-        isEmpty={(lists) => lists[activeTab === 'new' ? 'available' : activeTab].length === 0}
-        isLoading={taskListsLoading}
-        isError={taskListsError}
-        retryLabel={t('common.retry')}
-        skeleton="list"
-        onRetry={() => void refetchTasks()}
-      >
-        {(lists) =>
-          activeTab === 'new'
-            ? lists.available.map(renderNewTask)
-            : activeTab === 'pickups'
-              ? lists.pickups.map(renderPickupTask)
-              : lists.deliveries.map(renderDeliveryTask)
+      <FlatList
+        className="flex-1"
+        contentContainerClassName="gap-6 px-3 py-6"
+        data={listData}
+        renderItem={renderTaskItem}
+        keyExtractor={keyTaskId}
+        ListEmptyComponent={
+          <EmptyState
+            title={t(emptyMeta[activeTab].title)}
+            description={t(emptyMeta[activeTab].desc)}
+          />
         }
-      </QueryBoundary>
+
+        refreshControl={
+          <RefreshControl
+            refreshing={taskListsFetching}
+            onRefresh={() => {
+              if (isOffline) {
+                showToast(t('common.networkError'), 'error');
+                return;
+              }
+              void refetchTasks();
+            }}
+            colors={[colors.danger]}
+            tintColor={colors.danger}
+          />
+        }
+      />
     );
   };
 
@@ -363,27 +427,7 @@ export default function TasksPage() {
         onMenuPress={() => router.push('/(main)/profile')}
         onTabChange={setActiveTab}
       />
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-6 px-3 py-6"
-        refreshControl={
-          // B5 同款 danger 刷新色；refreshing 与底栏 spinner 同源 isFetching（双向一致反馈）
-          <RefreshControl
-            refreshing={taskListsFetching}
-            onRefresh={() => {
-              if (isOffline) {
-                showToast(t('common.networkError'), 'error');
-                return;
-              }
-              void refetchTasks();
-            }}
-            colors={[colors.danger]}
-            tintColor={colors.danger}
-          />
-        }
-      >
-        {renderContent()}
-      </ScrollView>
+      {listContent()}
       {depositBlocked && (
         // 批B B1：抽公共 DepositBlockDialog——未缴态 CTA 改跳 /settings/deposit/pay 缴款页
         //（原 /settings/deposit 首页）；pending 态维持跳 records。视觉与原内联实现一致。

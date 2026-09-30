@@ -20,7 +20,6 @@ import { getTaskAction } from '../../src/services/task-flow';
 import { colors } from '../../src/theme/colors';
 import type { DeliveryTask } from '../../src/types/task';
 import { formatDistance, formatCurrency } from '../../src/utils/format';
-import { pickupDistance } from '../../src/utils/distance';
 
 // T2 §7.7 拍板 A：内联复制（与 tasks.tsx 同源，不抽共享避免碰列表页）
 const dutyLabelKey: Record<DutyStatus, 'duty.onDuty' | 'duty.offDuty' | 'duty.busy'> = {
@@ -39,7 +38,7 @@ const formatItems = (
  * t() 的 vars 不接受 undefined。先格式化，非空才套 i18n 模板（与 tasks.tsx 同源）。
  */
 const withDistance = (
-  templateKey: 'common.fromHere' | 'common.fromPickup' | 'tasks.billingDistance',
+  templateKey: 'common.totalDistance' | 'common.fromPickup' | 'tasks.billingDistance',
   km: number | undefined,
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
 ): string | undefined => {
@@ -249,7 +248,7 @@ export default function TaskDetailPage() {
                     label: 'P',
                     title: detail.pickup.title,
                     subtitle: detail.pickup.address,
-                    distance: withDistance('common.fromHere', pickupDistance(detail.distanceKm), t),
+                    distance: withDistance('common.totalDistance', detail.distanceKm, t),
                   },
                   {
                     label: 'D',

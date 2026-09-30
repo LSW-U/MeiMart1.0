@@ -13,6 +13,7 @@
  */
 import { uploadImageFileWithRetry, type UploadResult } from '@meimart/upload-core';
 import { API_BASE_URL, isMockMode } from './api';
+import { getCurrentLanguage } from './settings';
 import { tokenStorage } from './token-storage';
 
 export type { UploadResult };
@@ -27,20 +28,10 @@ function mockUploadResult(prefix: string): Promise<UploadResult> {
   return new Promise((resolve) => setTimeout(() => resolve(mock), 500));
 }
 
-/** 当前语言 → Accept-Language（设置本地存储同步读，读不到回退 en） */
+/** 当前语言 → Accept-Language（C6/R-P2-6：走 settings 模块态运行时事实源）。
+ * 原手读 localStorage 在 native 恒回退 'en'（notification.ts/push-token.ts 同款缺陷已修，此处疏漏）。 */
 function currentLocale(): string {
-  try {
-    if (typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem('mei-delivery-app:rider-settings');
-      if (stored) {
-        const parsed = JSON.parse(stored) as { language?: string };
-        if (parsed.language) return parsed.language;
-      }
-    }
-  } catch {
-    // 读设置失败不阻断上传，回退 en
-  }
-  return 'en';
+  return getCurrentLanguage();
 }
 
 /**

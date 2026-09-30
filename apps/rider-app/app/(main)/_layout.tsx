@@ -1,6 +1,6 @@
-import { colors } from "../../src/theme/colors";
+import { colors } from '../../src/theme/colors';
 import { Redirect, Stack } from 'expo-router';
-import { ActivityIndicator, AppState, Platform, View } from 'react-native';
+import { ActivityIndicator, AppState, View } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 
 import { useAuthStore } from '../../src/store/useAuthStore';
@@ -59,27 +59,27 @@ function MainContent() {
   // P6-4 路径 A：isOffline 改三态 null|boolean。null=NetInfo 首帧未确认（启动瞬态）。
   const isOffline = useNetworkStore((s) => s.isOffline);
   const { t } = useTranslation();
-  // P6-1：null 收敛为 false（useLocation/useHeartbeat 的 enabled/isOnline 是 boolean）。
-  //   null 时不停 GPS/心跳（保守不停派单），用 ?? false 把类型收窄，语义与 false 相同但来源不同。
-  useLocation({ socket, currentOrderId, enabled: online ?? false });
-  useHeartbeat(online ?? false);
+  // R-P1-1（D16）：online 三态保活语义——null（settings 加载失败/未就绪）必须**不停** GPS/心跳，
+  //   仅明确 offDuty（online===false）才停。原 `?? false` 把 null 压成 false 直接停，
+  //   settings 一次弱网失败 → Redis rider:online 60s TTL 失续 → 判离线丢派单。
+  //   （此行旧注释自称「null 时不停」，与代码相反——M2，注释随代码一起纠正。）
+  useLocation({ socket, currentOrderId, enabled: online !== false });
+  useHeartbeat(online !== false);
 
-  // P0 后台定位（CLAUDE.md 规则 16）：iOS 切后台 / Android foreground service 始终
-  // 仅「配送中」（有 currentOrderId）才启，固定 5s（规则 18 配送档）
+  // P0 后台定位（CLAUDE.md 规则 16）：iOS/Android 统一仅「切后台」才启 HTTP 后台任务
+  // （R-P1-4 单通道：前台靠 WS；Android foreground service 常驻注册由 AppState 触发即满足）
   const [isBackground, setIsBackground] = useState(false);
   useEffect(() => {
-    // Android foreground service 常驻不依赖 AppState；iOS 需监听切后台才启
-    if (Platform.OS !== 'ios') return;
     const sub = AppState.addEventListener('change', (next) => {
       setIsBackground(next === 'background' || next === 'inactive');
     });
     return () => sub.remove();
   }, []);
 
-  // 启用条件：在线 + 联网 + 有配送订单 + iOS 在后台（Android 始终）
-  // P6-4：isOffline===false（明确在线）才启，null 首帧未确认不启（保守不耗电）
+  // 启用条件：在线 + 联网 + 有配送订单 + 仅切后台（R-P1-4 单通道：Android 前台走 WS，
+  // 前后台都启 HTTP 会与 useLocation emit 双通道重复上报；iOS 本就仅后台）
   const bgEnabled =
-    (online ?? false) && isOffline === false && Boolean(currentOrderId) && (Platform.OS === 'android' || isBackground);
+    (online ?? false) && isOffline === false && Boolean(currentOrderId) && isBackground;
   useBackgroundTask({ enabled: bgEnabled, currentOrderId });
 
   // CLAUDE.md 规则 12：online 恢复 + 启动时 flush 离线队列（pickup/deliver/startDelivering 重放）

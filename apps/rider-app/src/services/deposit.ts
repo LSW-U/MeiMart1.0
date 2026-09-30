@@ -193,34 +193,35 @@ export const depositApi = {
 
   /** 线上模拟支付（ONLINE_MOCK + PENDING → CONFIRMED，余额即时累加；幂等） */
   async payMock(requestId: string): Promise<PayMockResult> {
-    if (isMockMode) {
-      const state = readMockState();
-      const record = state.records.find((r) => r.id === requestId);
-      if (!record) throw new Error('deposit request not found');
-      // 幂等：已 CONFIRMED 直接返回
-      if (record.status === 'CONFIRMED') {
-        return mockDelay({ deposit: record, depositAmount: state.depositAmount });
-      }
-      if (record.status !== 'PENDING') {
-        throw new Error(`cannot pay-mock a ${record.status} deposit`);
-      }
-      const now = new Date().toISOString();
-      const confirmed: DepositRecord = {
-        ...record,
-        status: 'CONFIRMED',
-        confirmedAmount: record.requestedAmount,
-        paidAt: now,
-        confirmedAt: now,
-      };
-      const depositAmount = state.depositAmount + record.requestedAmount;
-      writeMockState({
-        depositAmount,
-        records: state.records.map((r) => (r.id === requestId ? confirmed : r)),
-      });
-      return mockDelay({ deposit: confirmed, depositAmount });
+    // R-P0-3：real 分支守卫——pay-mock 是后端线上模拟支付端点（无真实资金流），
+    // real 模式下骑手端不得调用（依赖后端白名单，见 v1 §五挂账）。显式抛错而非静默。
+    if (!isMockMode) {
+      throw new Error('pay-mock is not available in real mode (backend whitelist pending)');
     }
-    const res = await api.post<PayMockResult>(`/rider/deposit/requests/${requestId}/pay-mock`);
-    return res.data;
+    const state = readMockState();
+    const record = state.records.find((r) => r.id === requestId);
+    if (!record) throw new Error('deposit request not found');
+    // 幂等：已 CONFIRMED 直接返回
+    if (record.status === 'CONFIRMED') {
+      return mockDelay({ deposit: record, depositAmount: state.depositAmount });
+    }
+    if (record.status !== 'PENDING') {
+      throw new Error(`cannot pay-mock a ${record.status} deposit`);
+    }
+    const now = new Date().toISOString();
+    const confirmed: DepositRecord = {
+      ...record,
+      status: 'CONFIRMED',
+      confirmedAmount: record.requestedAmount,
+      paidAt: now,
+      confirmedAt: now,
+    };
+    const depositAmount = state.depositAmount + record.requestedAmount;
+    writeMockState({
+      depositAmount,
+      records: state.records.map((r) => (r.id === requestId ? confirmed : r)),
+    });
+    return mockDelay({ deposit: confirmed, depositAmount });
   },
 
   /**
@@ -232,8 +233,11 @@ export const depositApi = {
       return mockDelay(MOCK_LOCATIONS.filter((l) => l.enabled));
     }
     const res = await api.get<RiderDepositLocationItem[]>('/rider/deposit/locations');
-    // 契约字段收窄无 enabled——补 enabled: true（与 admin 侧类型对齐，下游无感）
-    return res.data.map((l) => ({ ...l, enabled: true }));
+    // C10（R-P2-10）：保留 enabled 校验守卫——契约字段收窄暂无 enabled，此处显式
+    //   `!== false`（undefined 视为启用，向后兼容）；后端补 enabled 字段后停用点
+    //   即被过滤，无需改消费方。
+    // 上报项：后端语义挂账——停用点是否应下架由后端字段裁决（见批3 执行日志）。
+    return res.data.map((l) => ({ ...l, enabled: l.enabled !== false }));
   },
 
   /**
@@ -249,10 +253,12 @@ export const depositApi = {
   },
 };
 
-/** 骑手端缴纳点行（契约字段收窄：id/name/address/note） */
+/** 骑手端缴纳点行（契约字段收窄：id/name/address/note；C10：enabled 预留可选，
+ * 后端补字段后 getLocations 的 `!== false` 守卫自动生效） */
 export interface RiderDepositLocationItem {
   id: string;
   name: string;
   address: string;
   note: string | null;
+  enabled?: boolean;
 }

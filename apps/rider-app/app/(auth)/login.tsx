@@ -1,4 +1,4 @@
-import { colors } from "../../src/theme/colors";
+import { colors } from '../../src/theme/colors';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Switch, Text, View } from 'react-native';
@@ -12,6 +12,7 @@ import { isValidPhone } from '../../src/services/auth';
 import { ApiError } from '../../src/services/api';
 import { getLanguageOptions, type AppLanguage } from '../../src/services/settings';
 import { useUpdateRiderSettings } from '../../src/services/queries/useSettings';
+import { redactError } from '../../src/utils/redact';
 
 type LoginMode = 'password' | 'sms';
 type FieldErrors = {
@@ -118,7 +119,7 @@ export default function LoginPage() {
       );
       // router.replace('/(main)/tasks') 已在 useAuth.login 内部处理
     } catch (e) {
-      console.error('[login] handleLogin failed:', e);
+      console.error('[login] handleLogin failed:', redactError(e));
       // ApiError 业务失败（密码错/账号不存在）vs 网络异常，差异化 toast
       const msg = e instanceof ApiError ? t('auth.login.failed') : t('common.networkError');
       showToast(msg, 'error');
@@ -130,17 +131,22 @@ export default function LoginPage() {
     const next = enabledLanguages[(index + 1 + enabledLanguages.length) % enabledLanguages.length];
     return (next ?? enabledLanguages[0]).code;
   })();
-  const nextLanguageLabel = enabledLanguages.find((option) => option.code === nextLanguage)?.nativeLabel ?? '';
+  const nextLanguageLabel =
+    enabledLanguages.find((option) => option.code === nextLanguage)?.nativeLabel ?? '';
 
   const switchLanguage = () => {
     void updateSettings.mutateAsync({ language: nextLanguage });
   };
 
-  const sendCodeLabel = countdown > 0 ? t('auth.login.resend', { seconds: countdown }) : t('auth.login.sendCode');
+  const sendCodeLabel =
+    countdown > 0 ? t('auth.login.resend', { seconds: countdown }) : t('auth.login.sendCode');
   const sendCodeDisabled = countdown > 0 || isSmsPending;
 
   return (
-    <ScrollView className="flex-1 bg-background" contentContainerClassName="min-h-full items-center justify-center px-5 py-12">
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerClassName="min-h-full items-center justify-center px-5 py-12"
+    >
       <View className="mb-6 flex-row items-center gap-1">
         <Text className="text-3xl text-primary">▣</Text>
         <Text className="text-xl font-bold text-primary">{t('app.name')}</Text>
@@ -149,18 +155,36 @@ export default function LoginPage() {
       <Card className="w-full max-w-md gap-6 shadow-primary-container/5">
         <View className="items-center">
           <Text className="mb-1 text-3xl font-bold text-primary">{t('auth.login.title')}</Text>
-          <Text className="text-center text-sm text-on-surface-variant">{t('auth.login.subtitle')}</Text>
+          <Text className="text-center text-sm text-on-surface-variant">
+            {t('auth.login.subtitle')}
+          </Text>
         </View>
 
         <View className="flex-row border-b border-outline-variant">
-          <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.passwordTab')} accessibilityState={{ selected: isPassword }} className="flex-1 py-4" onPress={() => setMode('password')}>
-            <Text className={`text-center text-xs font-bold tracking-wider ${isPassword ? 'text-primary' : 'text-on-surface-variant'}`}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('auth.login.passwordTab')}
+            accessibilityState={{ selected: isPassword }}
+            className="flex-1 py-4"
+            onPress={() => setMode('password')}
+          >
+            <Text
+              className={`text-center text-xs font-bold tracking-wider ${isPassword ? 'text-primary' : 'text-on-surface-variant'}`}
+            >
               {t('auth.login.passwordTab')}
             </Text>
             {isPassword ? <View className="mt-3 h-[3px] rounded-full bg-primary" /> : null}
           </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.smsTab')} accessibilityState={{ selected: !isPassword }} className="flex-1 py-4" onPress={() => setMode('sms')}>
-            <Text className={`text-center text-xs font-bold tracking-wider ${!isPassword ? 'text-primary' : 'text-on-surface-variant'}`}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('auth.login.smsTab')}
+            accessibilityState={{ selected: !isPassword }}
+            className="flex-1 py-4"
+            onPress={() => setMode('sms')}
+          >
+            <Text
+              className={`text-center text-xs font-bold tracking-wider ${!isPassword ? 'text-primary' : 'text-on-surface-variant'}`}
+            >
               {t('auth.login.smsTab')}
             </Text>
             {!isPassword ? <View className="mt-3 h-[3px] rounded-full bg-primary" /> : null}
@@ -174,7 +198,10 @@ export default function LoginPage() {
             label={t('auth.login.phoneLabel')}
             placeholder={t('auth.login.phonePlaceholder')}
             value={phone}
-            onChangeText={(v) => { setPhone(v); clearFieldError('phone'); }}
+            onChangeText={(v) => {
+              setPhone(v);
+              clearFieldError('phone');
+            }}
           />
           {isPassword ? (
             <Input
@@ -183,13 +210,27 @@ export default function LoginPage() {
               leftSlot={<AppIcon color={colors.outline} name="lock" size={24} />}
               placeholder={t('auth.login.passwordPlaceholder')}
               rightSlot={
-                <Pressable accessibilityRole="button" accessibilityLabel={passwordVisible ? t('auth.login.hidePassword') : t('auth.login.showPassword')} className="p-3" onPress={() => setPasswordVisible((value) => !value)}>
-                  <AppIcon color={colors.outline} name={passwordVisible ? 'eye' : 'eyeOff'} size={24} />
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    passwordVisible ? t('auth.login.hidePassword') : t('auth.login.showPassword')
+                  }
+                  className="p-3"
+                  onPress={() => setPasswordVisible((value) => !value)}
+                >
+                  <AppIcon
+                    color={colors.outline}
+                    name={passwordVisible ? 'eye' : 'eyeOff'}
+                    size={24}
+                  />
                 </Pressable>
               }
               secureTextEntry={!passwordVisible}
               value={password}
-              onChangeText={(v) => { setPassword(v); clearFieldError('password'); }}
+              onChangeText={(v) => {
+                setPassword(v);
+                clearFieldError('password');
+              }}
             />
           ) : (
             <Input
@@ -202,43 +243,98 @@ export default function LoginPage() {
                   accessibilityRole="button"
                   accessibilityLabel={sendCodeLabel}
                   accessibilityState={{ disabled: sendCodeDisabled, busy: isSmsPending }}
-                  className={`self-stretch flex-row items-center justify-center rounded-lg px-3.5 ${sendCodeDisabled ? 'bg-outline-variant' : 'bg-primary'}`}
+                  className={`flex-row items-center justify-center self-stretch rounded-lg px-3.5 ${sendCodeDisabled ? 'bg-outline-variant' : 'bg-primary'}`}
                   disabled={sendCodeDisabled}
                   onPress={() => void handleSendCode()}
                 >
-                  {isSmsPending ? <ActivityIndicator color={colors.surface} size="small" /> : <Text className={`text-xs font-bold ${countdown > 0 ? 'text-outline' : 'text-white'}`}>{sendCodeLabel}</Text>}
+                  {isSmsPending ? (
+                    <ActivityIndicator color={colors.surface} size="small" />
+                  ) : (
+                    <Text
+                      className={`text-xs font-bold ${countdown > 0 ? 'text-outline' : 'text-white'}`}
+                    >
+                      {sendCodeLabel}
+                    </Text>
+                  )}
                 </Pressable>
               }
               value={code}
-              onChangeText={(v) => { setCode(v); clearFieldError('code'); }}
+              onChangeText={(v) => {
+                setCode(v);
+                clearFieldError('code');
+              }}
             />
           )}
         </View>
 
-        <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.forgotPassword')} className="items-end" onPress={() => setFeatureInProgressVisible(true)}>
-          <Text className="text-[11px] font-bold text-primary">{t('auth.login.forgotPassword')}</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('auth.login.forgotPassword')}
+          className="items-end"
+          onPress={() => setFeatureInProgressVisible(true)}
+        >
+          <Text className="text-[11px] font-bold text-primary">
+            {t('auth.login.forgotPassword')}
+          </Text>
         </Pressable>
 
         <View className="gap-4">
           <View className="gap-2">
             <View className="flex-row items-start gap-2">
-              <Switch accessibilityRole="switch" accessibilityLabel={t('auth.login.agreeTerms')} accessibilityState={{ checked: accepted }} onValueChange={(v) => { setAccepted(v); clearFieldError('terms'); }} value={accepted} />
+              <Switch
+                accessibilityRole="switch"
+                accessibilityLabel={t('auth.login.agreeTerms')}
+                accessibilityState={{ checked: accepted }}
+                onValueChange={(v) => {
+                  setAccepted(v);
+                  clearFieldError('terms');
+                }}
+                value={accepted}
+              />
               <Text className="flex-1 text-[13px] leading-5 text-on-surface-variant">
                 {t('auth.login.termsPrefix')}{' '}
-                <Text accessibilityRole="link" className="font-semibold text-primary" onPress={() => router.push('/terms')}>{t('auth.login.terms')}</Text>{' '}
+                <Text
+                  accessibilityRole="link"
+                  className="font-semibold text-primary"
+                  onPress={() => router.push('/terms')}
+                >
+                  {t('auth.login.terms')}
+                </Text>{' '}
                 {t('auth.login.privacyPrefix')}{' '}
-                <Text accessibilityRole="link" className="font-semibold text-primary" onPress={() => router.push('/privacy')}>{t('auth.login.privacy')}</Text>.
+                <Text
+                  accessibilityRole="link"
+                  className="font-semibold text-primary"
+                  onPress={() => router.push('/privacy')}
+                >
+                  {t('auth.login.privacy')}
+                </Text>
+                .
               </Text>
             </View>
             {/* A1 §5②：协议未勾选 inline 红字（与字段级错误范式一致） */}
-            {errors.terms ? <Text accessibilityRole="alert" className="ml-1 text-xs text-error">{errors.terms}</Text> : null}
+            {errors.terms ? (
+              <Text accessibilityRole="alert" className="ml-1 text-xs text-error">
+                {errors.terms}
+              </Text>
+            ) : null}
           </View>
 
-          <Button disabled={isLoginPending} loading={isLoginPending} onPress={() => void handleLogin()}>{t('auth.login.submit')}</Button>
+          <Button
+            disabled={isLoginPending}
+            loading={isLoginPending}
+            onPress={() => void handleLogin()}
+          >
+            {t('auth.login.submit')}
+          </Button>
 
           {/* Why: 开发环境 mock-login 按钮，跳过密码验证直接登录骑手账号 */}
           {isDev && (
-            <Pressable accessibilityRole="button" accessibilityLabel="[DEV] 快速登录骑手账号" className="mt-2 items-center" onPress={() => void mockLogin()}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="[DEV] 快速登录骑手账号"
+              className="mt-2 items-center"
+              onPress={() => void mockLogin()}
+            >
               <Text className="text-xs text-outline">[DEV] 快速登录骑手账号</Text>
             </Pressable>
           )}
@@ -246,20 +342,39 @@ export default function LoginPage() {
 
         <View className="items-center pt-1">
           <Text className="text-sm text-on-surface-variant">
-            {t('auth.login.newHere')} <Text accessibilityRole="link" className="font-bold text-primary" onPress={() => router.push('/(auth)/register')}>{t('auth.login.register')}</Text>
+            {t('auth.login.newHere')}{' '}
+            <Text
+              accessibilityRole="link"
+              className="font-bold text-primary"
+              onPress={() => router.push('/(auth)/register')}
+            >
+              {t('auth.login.register')}
+            </Text>
           </Text>
         </View>
       </Card>
 
       <View className="mt-8 flex-row items-center gap-6">
-        <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.help')} className="flex-row items-center gap-1.5" onPress={() => router.push('/help')}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('auth.login.help')}
+          className="flex-row items-center gap-1.5"
+          onPress={() => router.push('/help')}
+        >
           <AppIcon color={colors.outline} name="help" size={14} />
           <Text className="text-[11px] font-bold text-outline">{t('auth.login.help')}</Text>
         </Pressable>
         <View className="h-3 w-px bg-outline-variant" />
-        <Pressable accessibilityRole="button" accessibilityLabel={t('auth.login.languageSwitch', { language: nextLanguageLabel })} className="flex-row items-center gap-1.5" onPress={switchLanguage}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('auth.login.languageSwitch', { language: nextLanguageLabel })}
+          className="flex-row items-center gap-1.5"
+          onPress={switchLanguage}
+        >
           <AppIcon color={colors.outline} name="language" size={14} />
-          <Text className="text-[11px] font-bold text-outline">{t('auth.login.languageSwitch', { language: nextLanguageLabel })}</Text>
+          <Text className="text-[11px] font-bold text-outline">
+            {t('auth.login.languageSwitch', { language: nextLanguageLabel })}
+          </Text>
         </Pressable>
       </View>
 

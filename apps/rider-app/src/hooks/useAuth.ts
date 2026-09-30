@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { tokenStorage } from '../services/token-storage';
 import { riderApi } from '../services/user';
 import { authApi } from '../services/auth';
+import { redactError } from '../utils/redact';
 
 export function useAuth() {
   const setRider = useAuthStore((s) => s.setRider);
@@ -27,7 +28,7 @@ export function useAuth() {
           rider = await riderApi.getProfile();
         } catch (e) {
           // profile 拉取失败：仍设登录态，rider 留空（页面用 useRiderProfile 重试）
-          console.error('[useAuth.login] getProfile failed:', e);
+          console.error('[useAuth.login] getProfile failed:', redactError(e));
         }
       }
       if (rider) {
@@ -55,7 +56,7 @@ export function useAuth() {
         try {
           rider = await riderApi.getProfile();
         } catch (e) {
-          console.error('[useAuth.mockLogin] getProfile failed:', e);
+          console.error('[useAuth.mockLogin] getProfile failed:', redactError(e));
         }
       }
       if (rider) {

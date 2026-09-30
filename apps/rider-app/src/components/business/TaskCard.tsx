@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { Button } from '../ui';
@@ -60,7 +61,9 @@ type TaskCardProps = {
 };
 
 // T6 §7.5 A：默认值收紧空字符串，强制调用方传 t() 本地化 label（英文默认值不再兜底）
-export function TaskCard({
+// R-P1-4：memo 包装——tasks 列表渲染在 FlatList 内，父级 state 变化（toast/弹窗）不再
+//   重渲染全部卡片；props 全原始值 + 稳定回调，浅比较即可
+export const TaskCard = memo(function TaskCard({
   badge,
   timeLabel,
   timeTone = 'default',
@@ -169,7 +172,7 @@ export function TaskCard({
       <View className="relative gap-3">
         <View className="absolute bottom-6 left-[11px] top-6 w-0.5 bg-surface-variant" />
         {points.map((point) => (
-          <View className="relative z-10 flex-row gap-2" key={`${point.label}-${point.title}`}>
+          <View className="relative z-10 flex-row gap-2" key={point.label}>
             <View
               className={`mt-1 h-6 w-6 items-center justify-center rounded-full ${point.label === 'P' ? 'bg-neutral-bg' : 'bg-tertiary-container'}`}
             >
@@ -280,4 +283,4 @@ export function TaskCard({
       )}
     </View>
   );
-}
+});

@@ -93,6 +93,39 @@ module.exports = {
   },
   TextInput: makeHost('TextInput'),
   Switch: makeHost('Switch'),
+  // R-P1-4：tasks 页列表 FlatList——mock 为「直接渲染 renderItem 对每项结果」的最小壳：
+  // data 取数组，renderItem({item, index}) 直调出元素（children 语义），保持 __fnProps 机制。
+  FlatList: function FlatList(props) {
+    const { data, renderItem, keyExtractor, ListEmptyComponent, ListHeaderComponent, ListFooterComponent, ...rest } = props;
+    const items = Array.isArray(data) ? data : [];
+    const children = items.map((item, index) =>
+      React.createElement(
+        React.Fragment,
+        { key: keyExtractor ? keyExtractor(item, index) : index },
+        renderItem({ item, index, separators: { highlight: () => {}, unhighlight: () => {}, update: () => {} } }),
+      ),
+    );
+    // ListEmptyComponent 在 RN 里可传组件或 element：本仓调用方传的是 element
+    //（<EmptyState .../> JSX），instanceof 检测后原样渲染；函数则 createElement 实例化
+    const renderListSlot = (slot, key) => {
+      if (!slot) return null;
+      if (typeof slot === 'function' || (typeof slot === 'object' && slot.$$typeof === undefined)) {
+        return React.createElement(slot, { key });
+      }
+      return React.cloneElement(slot, { key });
+    };
+    const emptyNode = ListEmptyComponent && items.length === 0 ? renderListSlot(ListEmptyComponent, 'empty') : null;
+    const headerNode = renderListSlot(ListHeaderComponent, 'header');
+    const footerNode = renderListSlot(ListFooterComponent, 'footer');
+    // RN 真源码里 refreshControl prop 是「配置对象」不是 children——与 ScrollView wrapper
+    // 同款处理：渲染为首个子节点（带原 props），测试可经 __fnProps 取回 onRefresh
+    const refreshNode = rest.refreshControl ? React.cloneElement(rest.refreshControl, { key: 'rc' }) : null;
+    return React.createElement(
+      makeHost('FlatList'),
+      rest,
+      [refreshNode, headerNode, ...children, emptyNode, footerNode],
+    );
+  },
   // T1 审查 P3-1：tasks 页下拉刷新/切班弹窗测试需要。
   // - RefreshControl 走 makeHost（onRefresh 经 __fnProps 可取回直调）——但 RN 真源码里
   //   refreshControl prop 是 ScrollView 的「配置对象」不是 children，host 壳若不透传会

@@ -1,5 +1,7 @@
 import * as Sentry from '@sentry/react-native';
 
+import { redactError } from '../utils/redact';
+
 // 骑手端 Sentry（批次3 接入）：
 // 仅当构建期注入 EXPO_PUBLIC_SENTRY_DSN 且 APP_ENV=production 时启用。
 // 本地/开发不注入 DSN → 默认关闭，不打扰开发；生产 EAS 构建由 eas.json env 注入。
@@ -39,7 +41,9 @@ export function initSentry() {
 
 export function captureError(error: unknown, context?: Record<string, unknown>) {
   if (!SENTRY_ENABLED) {
-    console.warn('[Sentry] captureError (dev mode):', error);
+    // D11 批4（R-P1-10）：dev 直印改为脱敏摘要（原整 error 对象含 axios
+    // config.headers.Authorization/config.data 落控制台）
+    console.warn('[Sentry] captureError (dev mode):', redactError(error));
     return;
   }
   Sentry.captureException(error, { extra: context });

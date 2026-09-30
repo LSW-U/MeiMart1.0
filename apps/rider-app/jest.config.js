@@ -24,6 +24,12 @@ module.exports = {
         // jest mock（内存态实现，语义与真机一致）。路径走仓根 hoisted node_modules
         // （rider-app 未本地声明该依赖，client-app 声明、根单副本）。
         '^@react-native-async-storage/async-storage$': '<rootDir>/../../node_modules/@react-native-async-storage/async-storage/jest/async-storage-mock.js',
+        // 批1（D14）真库测试：jest-expo 的 haste 平台解析在 node testEnvironment 下
+        // 仍优先取 .native.js 变体 → WMB sqlite dispatcher 落到 makeDispatcher/index.native.js
+        // （要求 NativeModules.WMDatabaseBridge，node 无宿主必炸）。强制映射回 node 版
+        // index.js（better-sqlite3 通道，方案v2 N2 已验证），真库集成测试才可跑。
+        // 相对 require './makeDispatcher' 不带包前缀，按后缀匹配才能拦到
+        'makeDispatcher$': '<rootDir>/../../node_modules/@nozbe/watermelondb/adapters/sqlite/makeDispatcher/index.js',
       },
       // pnpm 布局兼容：依赖真身在 node_modules/.pnpm/<pkg>@<ver>/node_modules/<pkg>/ 深路径。
       // (\.pnpm/)? 可选段让放行列表同时命中「包根」（.pnpm 目录名的 @scope+name@ver 前缀）

@@ -1,84 +1,36 @@
 import { formatCurrency, formatDistance } from './format';
-import { pickupDistance } from './distance';
 
 /**
  * B6 格式化收口纯函数单测（rn project / node 环境，无需 jsdom/RN 壳）。
- * 方案 §4.5：pickupDistance 边界为核心，formatCurrency 补 decimals/sign。
+ * D3 批4：pickupDistance 推算值已停用（tasks/detail/navigate 三处改诚实
+ * 「全程 X km」文案，utils/distance.ts 整文件删除），本文件改测 formatDistance
+ * 降级链（原 pickupDistance 用例的测试语义由调用方诚实文案承接）。
  */
 
-describe('pickupDistance', () => {
-  it('下限保护：km=0 → 0.5', () => {
-    expect(pickupDistance(0)).toBe(0.5);
-  });
-
-  it('边界：km=1.3 → 0.5（恰好抵消）', () => {
-    expect(pickupDistance(1.3)).toBe(0.5);
-  });
-
-  it('正常偏移：km=2 → 0.7', () => {
-    expect(pickupDistance(2)).toBe(0.7);
-  });
-
-  it('正常偏移：km=5 → 3.7', () => {
-    expect(pickupDistance(5)).toBe(3.7);
-  });
-
-  // 距离计费批次1 #5 收尾（2026-08-27）：参数放宽 number|undefined，undefined → 隐藏
-  it('km=undefined → undefined（历史订单无坐标降级）', () => {
-    expect(pickupDistance(undefined)).toBeUndefined();
-  });
-});
-
-describe('formatCurrency', () => {
-  it('默认 2 位小数', () => {
-    expect(formatCurrency(8, '¥')).toBe('¥8.00');
-  });
-
-  it('decimals:0 整数展示（tasks 运费场景）', () => {
-    expect(formatCurrency(8, '¥', { decimals: 0 })).toBe('¥8');
-  });
-
-  it('decimals:1 保留 1 位（tasks 非整数运费场景）', () => {
-    expect(formatCurrency(8.5, '¥', { decimals: 1 })).toBe('¥8.5');
-  });
-
-  it('sign:true 正值带 +（earnings 收支场景）', () => {
-    expect(formatCurrency(8.5, '¥', { sign: true })).toBe('+¥8.50');
-  });
-
-  it('sign:true 负值带 -（earnings 支出场景）', () => {
-    expect(formatCurrency(-3, '¥', { sign: true })).toBe('-¥3.00');
-  });
-
-  it('en 货币 $（locale 无关，符号由调用方传）', () => {
-    expect(formatCurrency(12.5, '$')).toBe('$12.50');
-  });
-
-  // 批C 语言优化：固定美式千分位（方案 v2 §2.6 金额跨语言一致），Intl.NumberFormat('en-US')
-  it('千分位：>=1000 美式逗号分隔（$1,234.56）', () => {
-    expect(formatCurrency(1234.56, '$')).toBe('$1,234.56');
-  });
-
-  it('千分位：decimals:0 整数千分位（tasks 运费场景）', () => {
-    expect(formatCurrency(1234567, '$', { decimals: 0 })).toBe('$1,234,567');
-  });
-
-  it('千分位：负值 sign:true 千分位位置正确（earnings 大额支出）', () => {
-    expect(formatCurrency(-12345.6, '$', { sign: true })).toBe('-$12,345.60');
-  });
-});
-
 describe('formatDistance', () => {
-  it('输出无空格 km', () => {
-    expect(formatDistance(3.56)).toBe('3.6km');
+  it('正常值：5 → "5.0km"（toFixed(1) 一位小数）', () => {
+    expect(formatDistance(5)).toBe('5.0km');
   });
 
-  it('保留 1 位小数', () => {
-    expect(formatDistance(2.34)).toBe('2.3km');
+  it('小数：3.7 → "3.7km"', () => {
+    expect(formatDistance(3.7)).toBe('3.7km');
   });
 
-  // 距离计费批次1 #5 收尾（2026-08-27）：参数放宽 number|undefined，undefined → 隐藏
-  it('undefined → undefined（调用方隐藏距离标签，不渲染 NaNkm）', () => {
+  it('undefined → undefined（历史订单无坐标，调用方隐藏标签）', () => {
     expect(formatDistance(undefined)).toBeUndefined();
+  });
+
+  it('0 → "0.0km"（0 是合法值非缺失）', () => {
+    expect(formatDistance(0)).toBe('0.0km');
+  });
+});
+
+describe('formatCurrency（回归哨兵：distance 收口后确保未破坏）', () => {
+  it('整数分转美元无小数', () => {
+    expect(formatCurrency(12.5, '$', { decimals: 0 })).toBe('$13');
+  });
+
+  it('一位小数', () => {
+    expect(formatCurrency(12.34, '$', { decimals: 1 })).toBe('$12.3');
   });
 });

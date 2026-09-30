@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 
-import { EvidenceUpload } from '../../../src/components/camera/SignaturePad';
+import { EvidenceUpload } from '../../../src/components/camera/EvidenceUpload';
 import { StepPageHeader } from '../../../src/components/layout/StepPageHeader';
 import { QueryBoundary } from '../../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../../src/components/feedback/Toast';
@@ -73,7 +73,9 @@ export default function PickupConfirmPage() {
           loading 期无 task 不渲染编号区，由下方骨架承载整页三态 */}
       {taskOrNull ? (
         <View className="bg-surface-container-low px-5 py-4">
-          <Text className="mb-1 text-center text-xl font-semibold text-on-surface">{t('pickup.verifyReceipt')}</Text>
+          <Text className="mb-1 text-center text-xl font-semibold text-on-surface">
+            {t('pickup.verifyReceipt')}
+          </Text>
           <Text className="text-center text-base text-on-surface-variant">
             {t('pickup.instructionPrefix')}{' '}
             {/* A5：模板已带 # 前缀（订单 #{order}），orderId 值自带 #（mock 'TL Delivery #104'）
@@ -114,7 +116,10 @@ export default function PickupConfirmPage() {
                 photoUri={photoUri}
                 onPermissionDenied={() => showToast(t('common.cameraPermissionDenied'), 'error')}
                 onError={() => showToast(t('common.cameraError'), 'error')}
-                onPress={(uri) => { setCaptured(true); setPhotoUri(uri); }}
+                onPress={(uri) => {
+                  setCaptured(true);
+                  setPhotoUri(uri);
+                }}
               />
               {/* 取证提示（原 PhotoCapture 的 instruction，统一视觉后保留为说明文字） */}
               <Text className="text-center text-xs font-bold uppercase tracking-wider text-on-surface-variant">
@@ -128,7 +133,8 @@ export default function PickupConfirmPage() {
       <View className="bg-surface px-5 py-6">
         {/* T3 §7.2 拍板 A：processing 文案行删除（Button 已表达），原 pickup.verified
             （"订单 #102 已核对"语义错位 + #102 硬编码）改为上方成功 toast */}
-        <SwipeButton disabled={!captured || processing} onPress={() => void handleConfirmPickup()}>
+        {/* C15：直接传 async 函数（不 void 掉）——SwipeButton await settle 期间持幂等锁吞双击 */}
+        <SwipeButton disabled={!captured || processing} onPress={handleConfirmPickup}>
           {processing ? t('flow.processing') : t('pickup.confirm')}
         </SwipeButton>
       </View>

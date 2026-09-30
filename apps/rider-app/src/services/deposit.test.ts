@@ -118,10 +118,12 @@ describe('depositApi — real 模式（契约 URL/payload 透传）', () => {
     });
   });
 
-  it('payMock → POST /rider/deposit/requests/:id/pay-mock', async () => {
-    mockPost.mockResolvedValue({ data: { deposit: {}, depositAmount: 100 } });
-    await depositApi.payMock('dep-1');
-    expect(mockPost).toHaveBeenCalledWith('/rider/deposit/requests/dep-1/pay-mock');
+  // R-P0-3（批1）：real 分支加守卫后，pay-mock 的 real 透传路径不复存在——
+  // 旧用例「payMock → POST /rider/deposit/requests/:id/pay-mock」随之删除，
+  // 反向改写为守卫回归；mock 模式 pay-mock 语义仍由 mock 状态机 describe 覆盖
+  it('R-P0-3 回归：real 模式 payMock 守卫——不调 POST pay-mock，显式抛错', async () => {
+    await expect(depositApi.payMock('dep-1')).rejects.toThrow(/not available in real mode/);
+    expect(mockPost).not.toHaveBeenCalled();
   });
 
   it('getLocations → GET /rider/deposit/locations（补端点批：真端点 + enabled 补齐）', async () => {

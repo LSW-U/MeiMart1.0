@@ -8,6 +8,7 @@ import { AppIcon } from '../../src/components/ui';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { useEarningSummary, useCreateWithdrawal } from '../../src/services/queries/useEarnings';
+import { isEarningsForcedMock } from '../../src/services/earnings';
 import { formatCurrency } from '../../src/utils/format';
 
 export default function WithdrawalPage() {
@@ -45,8 +46,14 @@ export default function WithdrawalPage() {
   const parsedAmount = Number.parseFloat(amount);
   const amountValid = Number.isFinite(parsedAmount) && parsedAmount > 0;
   const exceedsBalance = summary != null && parsedAmount > summary.availableBalance;
-  const submitLabel = status === 'processing' ? t('withdraw.processing') : status === 'success' ? t('withdraw.success') : t('withdraw.submit');
-  const submitDisabled = status === 'processing' || status === 'success' || !amountValid || exceedsBalance;
+  const submitLabel =
+    status === 'processing'
+      ? t('withdraw.processing')
+      : status === 'success'
+        ? t('withdraw.success')
+        : t('withdraw.submit');
+  const submitDisabled =
+    status === 'processing' || status === 'success' || !amountValid || exceedsBalance;
 
   // E2 §3.2: 错误映射——createWithdrawal 抛裸 Error（非 ApiError，无 code/status），
   // 按 e.message 字符串匹配到 i18n key。W6+ 后端实现真实端点时应改抛 ApiError 带 code，
@@ -81,42 +88,68 @@ export default function WithdrawalPage() {
   return (
     <View className="flex-1 bg-background">
       <View className="flex-row items-center border-b border-surface-variant bg-surface px-5 py-4">
-        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-container" onPress={() => void goBack()}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back')}
+          className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-container"
+          onPress={() => void goBack()}
+        >
           <AppIcon className="text-2xl text-on-surface" name="chevronLeft" size={28} />
         </Pressable>
         <Text className="ml-2 text-xl font-semibold text-on-surface">{t('withdraw.title')}</Text>
       </View>
 
-      <ScrollView className="flex-1" contentContainerClassName="mx-auto w-full max-w-lg gap-6 px-5 py-6">
-        <View className="items-center justify-center rounded-xl border border-surface-container-high bg-surface-container p-6 shadow-sm">
-          <Text className="mb-1 text-sm text-on-surface-variant">{t('withdraw.availableBalance')}</Text>
-          <Text className="text-[32px] font-bold tracking-tight text-on-surface">
-            {summary ? formatCurrency(summary.availableBalance, t('common.currency')) : '—'}
-          </Text>
-        </View>
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="mx-auto w-full max-w-lg gap-6 px-5 py-6"
+      >
+        {/* R-P0-3/D9：real 模式 FORCE_MOCK → 提现整页只读占位（无假余额、无表单）；
+            FORCE_MOCK=false 后自动恢复 */}
+        {isEarningsForcedMock ? (
+          <View className="items-center gap-3 rounded-2xl border border-surface-variant bg-surface p-8">
+            <AppIcon className="text-4xl text-on-surface-variant" name="lock" size={40} />
+            <Text className="text-center text-base font-semibold text-on-surface">
+              {t('earnings.readOnly.title')}
+            </Text>
+            <Text className="text-center text-sm leading-5 text-on-surface-variant">
+              {t('earnings.readOnly.desc')}
+            </Text>
+          </View>
+        ) : (
+          <>
+            <View className="items-center justify-center rounded-xl border border-surface-container-high bg-surface-container p-6 shadow-sm">
+              <Text className="mb-1 text-sm text-on-surface-variant">
+                {t('withdraw.availableBalance')}
+              </Text>
+              <Text className="text-[32px] font-bold tracking-tight text-on-surface">
+                {summary ? formatCurrency(summary.availableBalance, t('common.currency')) : '—'}
+              </Text>
+            </View>
 
-        <WithdrawForm
-          amount={amount}
-          amountLabel={t('withdraw.amountLabel')}
-          amountPlaceholder={t('withdraw.amountPlaceholder')}
-          bankCardLabel={t('withdraw.bankCard')}
-          bindEntryLabel={t('withdraw.unboundCard')}
-          exceedsHint={exceedsBalance ? t('withdraw.exceedsBalance') : ''}
-          note={t('withdraw.note')}
-          selectedMethod={method}
-          servicePointLabel={t('withdraw.servicePoint')}
-          servicePointSub={t('withdraw.unboundServicePoint')}
-          submitDisabled={submitDisabled}
-          submitLabel={submitLabel}
-          submitLoading={status === 'processing'}
-          toLabel={t('withdraw.toLabel')}
-          withdrawAllLabel={t('withdraw.withdrawAll')}
-          onAmountChange={handleAmountChange}
-          onBindComingSoon={() => showToast(t('withdraw.bindComingSoon'), 'info')}
-          onSelectMethod={setMethod}
-          onSubmit={() => void submit()}
-          onWithdrawAll={() => void handleWithdrawAll()}
-        />
+            <WithdrawForm
+              amount={amount}
+              amountLabel={t('withdraw.amountLabel')}
+              amountPlaceholder={t('withdraw.amountPlaceholder')}
+              bankCardLabel={t('withdraw.bankCard')}
+              bindEntryLabel={t('withdraw.unboundCard')}
+              exceedsHint={exceedsBalance ? t('withdraw.exceedsBalance') : ''}
+              note={t('withdraw.note')}
+              selectedMethod={method}
+              servicePointLabel={t('withdraw.servicePoint')}
+              servicePointSub={t('withdraw.unboundServicePoint')}
+              submitDisabled={submitDisabled}
+              submitLabel={submitLabel}
+              submitLoading={status === 'processing'}
+              toLabel={t('withdraw.toLabel')}
+              withdrawAllLabel={t('withdraw.withdrawAll')}
+              onAmountChange={handleAmountChange}
+              onBindComingSoon={() => showToast(t('withdraw.bindComingSoon'), 'info')}
+              onSelectMethod={setMethod}
+              onSubmit={() => void submit()}
+              onWithdrawAll={() => void handleWithdrawAll()}
+            />
+          </>
+        )}
       </ScrollView>
     </View>
   );

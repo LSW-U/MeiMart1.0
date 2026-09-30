@@ -7,8 +7,15 @@ import { translate } from '../i18n/useTranslation';
 import { formatCurrency } from '../utils/format';
 
 // 后端无 rider earnings / withdraw 端点（W6+ 才实现），real 模式也强制走 mock。
-// W6+ 后端实现时把 FORCE_MOCK 改为 false 即可启用真实分支。
+// R-P0-3（D9）治理：FORCE_MOCK=true 时 real 模式钱包整页只读占位（假数字不得上屏），
+// 页面经 isEarningsForcedMock 判断降级；W6+ 后端实现后把本值改 false 即自动恢复，无页面改动。
 const FORCE_MOCK = true;
+
+/**
+ * 钱包只读降级开关（R-P0-3/D9）：real 模式（isMockMode=false）但 earnings 数据仍被
+ * FORCE_MOCK 接管 → 整页只读占位。mock 模式（本地开发）不降级，保留假数据演示。
+ */
+export const isEarningsForcedMock = !isMockMode && FORCE_MOCK;
 
 // ── Mock layer (localStorage for Web dev) ──────────────────────────
 
@@ -22,10 +29,37 @@ const defaultSummary: EarningSummary = {
 };
 
 const seedTransactions: EarningTransaction[] = [
-  { id: 'tx-1', orderId: '1023', amount: 12.5, type: 'deliveryFee', createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), description: 'Delivery #1023' },
-  { id: 'tx-2', amount: -10.0, type: 'withdrawal', createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), description: 'Withdrawal to bank' },
-  { id: 'tx-3', orderId: '1021', amount: 8.2, type: 'deliveryFee', createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), description: 'Delivery #1021' },
-  { id: 'tx-4', orderId: '1019', amount: 4.0, type: 'bonus', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), description: 'First order bonus' },
+  {
+    id: 'tx-1',
+    orderId: '1023',
+    amount: 12.5,
+    type: 'deliveryFee',
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    description: 'Delivery #1023',
+  },
+  {
+    id: 'tx-2',
+    amount: -10.0,
+    type: 'withdrawal',
+    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    description: 'Withdrawal to bank',
+  },
+  {
+    id: 'tx-3',
+    orderId: '1021',
+    amount: 8.2,
+    type: 'deliveryFee',
+    createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+    description: 'Delivery #1021',
+  },
+  {
+    id: 'tx-4',
+    orderId: '1019',
+    amount: 4.0,
+    type: 'bonus',
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    description: 'First order bonus',
+  },
 ];
 
 let mockSummary: EarningSummary | null = null;

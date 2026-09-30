@@ -8,6 +8,7 @@ import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { showToast } from '../../src/components/feedback/Toast';
 import { SimplePageHeader } from '../../src/components/layout/SimplePageHeader';
 import { useTranslation } from '../../src/i18n/useTranslation';
+import { useLanguageContext } from '../../src/i18n/LanguageContext';
 import { useRiderSettings, useUpdateRiderSettings } from '../../src/services/queries/useSettings';
 import { useDepositStatus } from '../../src/services/queries/useDeposit';
 import { formatCurrency } from '../../src/utils/format';
@@ -100,6 +101,8 @@ function SettingsItemSkeleton({
 export default function SettingsPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  // C14：语言切换写点（settings query cache 更新仍由 useUpdateRiderSettings 乐观更新负责）
+  const { setLanguage } = useLanguageContext();
   const { data: settings, isLoading, isError, refetch } = useRiderSettings();
   const updateSettings = useUpdateRiderSettings();
   const locale: AppLanguage = settings?.language ?? 'zh';
@@ -116,6 +119,8 @@ export default function SettingsPage() {
       languages[(index + 1 + languages.length) % languages.length] ?? languages[0];
     try {
       await updateSettings.mutateAsync({ language: nextLanguage });
+      // C14：同步 LanguageContext（useTranslation 消费方重渲染）；失败不 set，cache 已回滚
+      setLanguage(nextLanguage);
     } catch {
       // P3-③ 失败反馈：onError 已回滚 cache（UI 自动回退），此处仅提示用户
       showToast(t('settings.error.saveFailed'), 'error');

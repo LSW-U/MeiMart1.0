@@ -15,6 +15,7 @@ import { riderUploadApi } from '../../src/services/upload';
 import { precheckImage, PrecheckError } from '@meimart/upload-core';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import type { VehicleType } from '../../src/types/rider';
+import { redactError } from '../../src/utils/redact';
 
 type UploadKey = 'license' | 'biFront' | 'biBack' | 'vehicle';
 
@@ -201,7 +202,7 @@ export default function ProfileEditPage() {
       router.replace('/(main)/profile');
     } catch (e) {
       // B1 最小配套：保存失败留在本页保留输入可重试（real 只读降级后不会走到此分支）
-      console.error('[profile/edit] saveProfile failed:', e);
+      console.error('[profile/edit] saveProfile failed:', redactError(e));
       showToast(
         e instanceof ApiError ? t('profile.saveFailed') : t('common.networkError'),
         'error',

@@ -3,17 +3,14 @@ import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-q
 import { enqueue } from '@/src/database/sync';
 import { useNetwork } from '@/src/hooks/useNetwork';
 import { deliveryApi, type DeliveryEvidence } from '../delivery';
+import { persistEvidencePhoto, type PersistedEvidence } from '../../services/evidence';
 import type { DeliveryTask, TaskStatus } from '@/src/types/task';
 import { taskDetailKey, taskListsKey } from './useTask';
 import type { TaskLists } from '../task';
 
 // 乐观更新 taskLists + taskDetail cache 的 status（pickup/deliver 共用）
 // 返回 previous 供 onError rollback
-async function applyOptimisticStatus(
-  queryClient: QueryClient,
-  taskId: string,
-  status: TaskStatus,
-) {
+async function applyOptimisticStatus(queryClient: QueryClient, taskId: string, status: TaskStatus) {
   await queryClient.cancelQueries({ queryKey: taskListsKey });
   const previousLists = queryClient.getQueryData<TaskLists>(taskListsKey);
   if (previousLists) {
@@ -44,6 +41,21 @@ function rollbackOptimistic(
   }
 }
 
+// R-P1-2（A 方案）：离线入队前把 image-picker 临时 URI（cache 目录，重启即丢）复制到
+// Documents/evidence/ 持久区，返回的 file:// 路径记入队列 payload.evidence；
+// 恢复后 processQueue → dispatchAction 先 uploadEvidence 拿 URL 再报状态。
+// 仅对有值的字段落盘；落盘失败向上抛（宁可入队不带证据，也不入队死路径）。
+async function persistEvidence(
+  evidence?: DeliveryEvidence,
+): Promise<PersistedEvidence | undefined> {
+  if (!evidence) return undefined;
+  const persisted: PersistedEvidence = {};
+  if (evidence.photoUri) persisted.photoUri = await persistEvidencePhoto(evidence.photoUri);
+  if (evidence.doorUri) persisted.doorUri = await persistEvidencePhoto(evidence.doorUri);
+  if (evidence.packageUri) persisted.packageUri = await persistEvidencePhoto(evidence.packageUri);
+  return persisted;
+}
+
 // CLAUDE.md rider 弱网规则 #12：pickup 乐观更新（ASSIGNED→PICKED_UP），失败 rollback。
 // Why: 原仅 onSettled invalidate，pickup 成功后到 refetch 完成前 cache 仍是 ASSIGNED，
 //   detail/navigate 读到旧值 → 按钮显示 arrivedPickup + 跳 pickup 要求重新取货（06f5a9d5 实证）。
@@ -55,10 +67,12 @@ export function useConfirmPickup() {
       // CLAUDE.md 规则 12：离线入队，恢复后 processQueue 重放真 API。
       // resolve（不 reject）保留 onMutate 乐观，避免 onError rollback 撤销用户操作。
       if (isOffline) {
+        const evidence = await persistEvidence(params.evidence);
         await enqueue({
           type: 'pickup',
           payload: {
             taskId: params.taskId,
+            ...(evidence ? { evidence } : {}),
           },
         });
         return;
@@ -93,9 +107,15 @@ export function useConfirmDelivery() {
       // 审查 S1：离线直接 enqueue + return（对齐 pickup），不读 detail、不 throw。
       // enqueue 只需 taskId；detail 缺失 throw 会触发 onError rollback 撤销 onMutate 乐观、丢失操作。
       if (isOffline) {
+        // R-P1-2：同 pickup——先落盘证据再入队（payload 带 evidence 持久路径）
+        const evidence = await persistEvidence(params.evidence);
         await enqueue({
           type: 'deliver',
-          payload: { taskId: params.taskId, collectedAmount: params.collectedAmount },
+          payload: {
+            taskId: params.taskId,
+            collectedAmount: params.collectedAmount,
+            ...(evidence ? { evidence } : {}),
+          },
         });
         return;
       }

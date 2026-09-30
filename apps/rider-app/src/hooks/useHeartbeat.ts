@@ -30,8 +30,10 @@ export function useHeartbeat(isOnline: boolean): void {
         });
     };
 
-    // 首次 50s 后发（与原 setInterval 行为一致）
-    timer = setTimeout(tick, 50_000);
+    // C12（R-P2-12）：isOnline 变 true 立即 tick 一次——原固定先等 50s，抖动重挂 effect
+    //   会把 Redis 60s TTL 消耗到临界（50s+50s 窗口内两次失败即误判离线丢派单）。
+    //   立拍不改变成功 50s / 失败 5s 快重试节奏（S5 优点保留）。
+    tick();
 
     return () => {
       cancelled = true;

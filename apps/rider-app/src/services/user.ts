@@ -38,6 +38,12 @@ let mockProfileCache: RiderProfile | null = null;
 
 function getMockProfile(): RiderProfile {
   if (mockProfileCache) return mockProfileCache;
+  // D11 批4（R-P1-10）：profile mock 落 localStorage 含手机号/姓名明文——
+  // 生产构建禁用持久化（mock 层仅 dev 演示；真模式走 /rider/profile 不经此路径）
+  if (!isMockMode) {
+    mockProfileCache = { ...defaultProfile };
+    return mockProfileCache;
+  }
   if (typeof localStorage !== 'undefined') {
     const stored = localStorage.getItem(profileStorageKey);
     if (stored) {
@@ -51,7 +57,8 @@ function getMockProfile(): RiderProfile {
 
 function saveMockProfile(profile: RiderProfile): void {
   mockProfileCache = profile;
-  if (typeof localStorage !== 'undefined') {
+  // D11 批4（R-P1-10）：同 getMockProfile——生产构建不落明文 PII 到 localStorage
+  if (isMockMode && typeof localStorage !== 'undefined') {
     localStorage.setItem(profileStorageKey, JSON.stringify(profile));
   }
 }

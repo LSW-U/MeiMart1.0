@@ -58,7 +58,14 @@
           "username": "suweilin"
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-image",
+      [
+        "expo-notifications",
+        {
+          "color": "#720003"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { DeliveryProgressBar } from '../../../src/components/business/DeliveryProgressBar';
@@ -16,7 +16,6 @@ import { ApiError } from '../../../src/services/api';
 import { useStartDelivering, useTask } from '../../../src/services/queries/useTask';
 import type { DeliveryTask } from '../../../src/types/task';
 import { formatCurrency, formatDistance } from '../../../src/utils/format';
-import { pickupDistance } from '../../../src/utils/distance';
 
 export default function TaskNavigatePage() {
   const router = useRouter();
@@ -27,6 +26,24 @@ export default function TaskNavigatePage() {
   const task: DeliveryTask | null = data ?? null;
   const startDelivering = useStartDelivering();
   const { isOffline } = useNetwork();
+
+  // C8（R-P2-8）：坐标对象 memo 化——原每次 render 新建 { ...coordinates, title } 字面量
+  // 传给 MapView，Marker coordinate 引用随之变化（潜在重渲染/重排 marker）。
+  // task 数据本身引用稳定（RQ 缓存），memo 后仅数据变化才新建。
+  const pickupCoord = useMemo(
+    () =>
+      task?.pickup.coordinates
+        ? { ...task.pickup.coordinates, title: task.pickup.title }
+        : undefined,
+    [task],
+  );
+  const deliveryCoord = useMemo(
+    () =>
+      task?.dropoff.coordinates
+        ? { ...task.dropoff.coordinates, title: task.dropoff.title }
+        : undefined,
+    [task],
+  );
 
   // P14 ④ B1 + M1: 守卫按 taskType 理清
   // - delivery: 只允许 PICKED_UP（两步跳过 DELIVERING）
@@ -133,18 +150,7 @@ export default function TaskNavigatePage() {
           {(taskData) => (
             <View className="gap-3">
               <View className="relative">
-                <MapView
-                  pickup={
-                    taskData.pickup.coordinates
-                      ? { ...taskData.pickup.coordinates, title: taskData.pickup.title }
-                      : undefined
-                  }
-                  delivery={
-                    taskData.dropoff.coordinates
-                      ? { ...taskData.dropoff.coordinates, title: taskData.dropoff.title }
-                      : undefined
-                  }
-                />
+                <MapView pickup={pickupCoord} delivery={deliveryCoord} />
                 {/* T4 审查修复 P1-1（原型 .map-eta-card）：ETA 浮层卡叠地图底部，「地图即看板」；
                     收入 success 绿（原型 .map-eta-fee），副标题 = 距离 · 配送中 */}
                 <View className="absolute bottom-3 left-3 right-3 flex-row items-center justify-between rounded-xl bg-surface px-4 py-3 shadow-md">
@@ -215,7 +221,11 @@ export default function TaskNavigatePage() {
                         </Text>
                       </View>
                       <Text className="text-xs font-bold uppercase tracking-wider text-outline">
-                        {formatDistance(pickupDistance(taskData.distanceKm))}
+                        {/* D3（R-P3-3）：distanceKm 是 pickup→dropoff 全程推算值，展示诚实文案
+                            （原 pickupDistance 偏移伪装「距你 X km」已删） */}
+                        {t('common.totalDistance', {
+                          distance: formatDistance(taskData.distanceKm) ?? '',
+                        })}
                       </Text>
                     </View>
                     <View className="z-10 flex-row gap-4">

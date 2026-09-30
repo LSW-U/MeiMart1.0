@@ -1,5 +1,6 @@
 import type { NotificationItem, NotificationCategory } from '@/src/types/notification';
 
+import { SAFE_ID_PATTERN } from '../utils/safe-deep-link';
 import { api, isMockMode } from './api';
 import { getCurrentLanguage, riderSettingsApi } from './settings';
 
@@ -74,16 +75,19 @@ function transformNotification(raw: NotificationRaw): NotificationItem {
 }
 
 // 深链推导：task→/(main)/tasks、order→/order/:id、wallet→/(main)/earnings（方案v2 §3.5 rider）
+// D8 批4（R-P3-8）：orderId 先过白名单校验——服务端 data 不可信，非法 id 时降级
+// 跳订单历史页（不拼入路由）
 function deriveLink(
   category: NotificationCategory,
   data: Record<string, unknown>,
 ): string | undefined {
   const orderId = typeof data.orderId === 'string' ? data.orderId : undefined;
+  const safeOrderId = orderId && SAFE_ID_PATTERN.test(orderId) ? orderId : undefined;
   switch (category) {
     case 'task':
       return '/(main)/tasks';
     case 'order':
-      return orderId ? `/order/${orderId}` : '/order/history';
+      return safeOrderId ? `/order/${safeOrderId}` : '/order/history';
     case 'wallet':
       return '/(main)/earnings';
     default:

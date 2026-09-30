@@ -1,5 +1,4 @@
 import { API_BASE_URL } from './api';
-import type { Coordinates } from '@/src/types/common';
 
 /**
  * 骑手位置上报 service
@@ -109,15 +108,3 @@ export async function reportLocationHttp(
     console.warn('[reportLocationHttp] network error:', e);
   }
 }
-
-/**
- * @deprecated 历史残留 mock（useLocationStore.report + LocationTracker 调用）。
- * 后端从未提供「无 orderId 的坐标上报」端点，此 mock 仅 50ms 延迟模拟，未真正上报。
- * 真实位置上报走 buildLocationPayload + reportLocationHttp（后台）或 socket.emit（前台）。
- * 待 useLocationStore.report / LocationTracker 清理后可移除。
- */
-export const locationApi = {
-  async report(_coordinates: Coordinates): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, 50));
-  },
-};
