@@ -107,11 +107,22 @@ export async function processQueue(): Promise<{ synced: number; failed: number }
 
       try {
         const action = { type: entry.action, payload } as QueueAction;
-        await dispatchAction(action);
-        // R-P0-2（D15）：写段（软删 + 失败计数）必须包进 database.write——WMB 0.28
+        // 批3-裁决1（A）：dispatchAction 返回上报用的远端 evidenceUrls（无 evidence 时空对象），
+        // 成功后在同一 write 闭包内写回 entry payload 落盘——后端补 evidence 字段前 URL
+        // 不再随进程丢失（历史单可查）；写回与软删同段，writer 纪律一处满足
+        const evidenceUrls = await dispatchAction(action);
+        // R-P0-2（D15）：写段（URL 写回 + 软删 + 失败计数）必须包进 database.write——WMB 0.28
         // writer 断言要求写操作在 write 闭包内，否则原队列「入得队、永远消费不了」。
         // dispatchAction（网络调用）留 write 外，避免长网络请求占住 writer。
         await database.write(async () => {
+          if (Object.keys(evidenceUrls).length > 0) {
+            await entry.update((record) => {
+              record.payload = JSON.stringify({
+                ...(payload as Record<string, unknown>),
+                evidenceUrls,
+              });
+            });
+          }
           await entry.markAsDeleted();
         });
         synced++;
@@ -181,7 +192,8 @@ async function retryAfterTokenRefresh<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
-export async function dispatchAction(action: QueueAction): Promise<void> {
+/** 返回该 action 上报时用到的远端 evidenceUrls（批3-裁决1：供 processQueue 写回 payload 落盘） */
+export async function dispatchAction(action: QueueAction): Promise<Record<string, string>> {
   switch (action.type) {
     case 'pickup': {
       // R-P1-2（A 方案）：队列若带本地证据路径，先上传拿远端 URL 再报状态（证据与状态原子对应）。
@@ -211,11 +223,11 @@ export async function dispatchAction(action: QueueAction): Promise<void> {
         }
       }
       // C16（P2-1 修复，裁决①）：URL 挂起丢弃改 console.info 显式落日志——
-      // 后端补 evidence 字段前 URL 无持久化落点（进程重启即丢，接受丢弃），
-      // 日志至少留痕可排查；同时消除规则 31 对 void 语法的字面命中。
-      // 后端补字段时：删本行 + task.ts pickup/deliver body 并入 evidenceUrls（+ 后端 DTO 同步）。
+      // 后端补 evidence 字段前 URL 无请求落点；批3-裁决1（A）：改为写回队列 entry
+      // payload 落盘（processQueue 成功段），进程重启后历史单仍可读回 URL。
+      // 后端补字段时：删 processQueue 写回段 + task.ts pickup/deliver body 并入 evidenceUrls（+ 后端 DTO 同步）。
       console.info('[offline-queue] evidence urls pending backend field:', evidenceUrls);
-      return;
+      return evidenceUrls;
     }
     case 'startDelivering':
       try {
@@ -232,7 +244,7 @@ export async function dispatchAction(action: QueueAction): Promise<void> {
           throw e;
         }
       }
-      return;
+      return {};
     case 'deliver': {
       // P2-2：同 pickup——缓存上传 + 成功后回收文件与 URL 缓存
       const evidenceUrls = action.payload.evidence
@@ -264,13 +276,14 @@ export async function dispatchAction(action: QueueAction): Promise<void> {
           forgetUploadedUrl(uri);
         }
       }
-      // C16：同 pickup——URL 挂起落日志（后端补字段时并入 deliver body）
+      // C16：同 pickup——URL 挂起落日志（后端补字段时并入 deliver body）；写回由 processQueue 统一落盘
       console.info('[offline-queue] evidence urls pending backend field:', evidenceUrls);
-      return;
+      return evidenceUrls;
     }
     default: {
       const _exhaustive: never = action;
       console.warn('[offline-queue] Unknown action type:', _exhaustive);
+      return {};
     }
   }
 }

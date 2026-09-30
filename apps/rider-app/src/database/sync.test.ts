@@ -356,6 +356,59 @@ describe('R-P1-2/R-P1-3：evidence 链 + permanent 分型', () => {
     expect(mockDeleteEvidenceFile).toHaveBeenCalledWith('file://p/dead.jpg');
     expect(mockDeleteEvidenceFile).not.toHaveBeenCalledWith('file://p/alive.jpg');
   });
+
+  it('批3-裁决1：上报成功带 evidence -> evidenceUrls 写回 entry payload 落盘可读回', async () => {
+    mockUploadEvidenceCached.mockResolvedValue({
+      photoUri: 'https://cdn/pickup-back.jpg',
+      signUri: 'https://cdn/sign.png',
+    });
+    await enqueue({
+      type: 'deliver',
+      payload: {
+        taskId: 'T17',
+        collectedAmount: 30,
+        evidence: { photoUri: 'file://p/2.jpg', signUri: 'file://s/1.png' },
+      },
+    });
+
+    const result = await processQueue();
+
+    expect(result).toEqual({ synced: 1, failed: 0 });
+    // 软删后 query 默认排除；读回需含软删——直接用未过滤查询验证 URL 已持久化
+    const raw = await ctx.database.get<OfflineQueueEntry>('offline_queue').query().fetch();
+    expect(raw).toHaveLength(0);
+    // markAsDeleted 软删行仍在库（deleted_at 标记），用 raw SQL 通道读回 payload 验证落盘
+    const payloadRaw = await new Promise<string>((resolve) => {
+      const Database = require('better-sqlite3') as new (p: string) => {
+        prepare: (s: string) => { get: (...a: unknown[]) => { payload: string } | undefined };
+        close: () => void;
+      };
+      const sqlite = new Database(`${ctx.dbName}.db`);
+      try {
+        const row = sqlite.prepare('SELECT payload FROM offline_queue').get() as
+          { payload: string } | undefined;
+        resolve(row ? row.payload : '');
+      } finally {
+        sqlite.close();
+      }
+    });
+    expect(JSON.parse(payloadRaw)).toEqual({
+      taskId: 'T17',
+      collectedAmount: 30,
+      evidence: { photoUri: 'file://p/2.jpg', signUri: 'file://s/1.png' },
+      evidenceUrls: { photoUri: 'https://cdn/pickup-back.jpg', signUri: 'https://cdn/sign.png' },
+    });
+    // 本地文件与缓存回收保持现状（裁决1 只加 URL 持久化一层）
+    expect(mockDeleteEvidenceFile).toHaveBeenCalledWith('file://p/2.jpg');
+    expect(mockForgetUploadedUrl).toHaveBeenCalledWith('file://p/2.jpg');
+  });
+
+  it('批3-裁决1：无 evidence 的上报 -> payload 原样（不写 evidenceUrls 字段）', async () => {
+    await enqueue({ type: 'pickup', payload: { taskId: 'T18' } });
+    const result = await processQueue();
+    expect(result).toEqual({ synced: 1, failed: 0 });
+    expect(mockUploadEvidenceCached).not.toHaveBeenCalled();
+  });
 });
 
 describe('P2-5（C17）：401 → token 刷新 → 重试链', () => {
