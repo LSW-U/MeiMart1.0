@@ -8,6 +8,7 @@ import {
   useToggleCartItem,
   useUpdateCartItem,
   useRemoveCartItem,
+  useRemoveCartItems,
 } from '../useCart';
 import { createTestQueryClient, renderHookWithClient } from './testHarness';
 
@@ -111,5 +112,32 @@ describe('useCart 乐观更新', () => {
     const cart = qc.getQueryData<Cart>(CART_QUERY_KEY('en'));
     expect(cart?.items.find((i) => i.id === 'ci1')).toBeUndefined();
     expect(cart?.items).toHaveLength(1);
+  });
+
+  // C-P2-8: 批量删收敛单次 mutation —— 乐观移除 N 项，service 层单次调用
+  //（real 模式内 N 次 DELETE + 1 次 getCart 由 orders-cart-p2.test.ts 计数断言）
+  it('useRemoveCartItems 立即批量移除多项并重算', async () => {
+    (cartApi.removeItems as jest.Mock).mockResolvedValue(baseCart);
+    const qc = setup();
+    const { result } = renderHookWithClient(() => useRemoveCartItems(), qc);
+    await act(async () => {
+      await result.current.mutateAsync(['ci1', 'ci2']);
+    });
+    expect(cartApi.removeItems).toHaveBeenCalledTimes(1);
+    expect(cartApi.removeItems).toHaveBeenCalledWith(['ci1', 'ci2']);
+    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY('en'));
+    expect(cart?.items).toHaveLength(0);
+    expect(cart?.totalItems).toBe(0);
+  });
+
+  it('useRemoveCartItems 服务端失败时 rollback', async () => {
+    (cartApi.removeItems as jest.Mock).mockRejectedValue(new Error('fail'));
+    const qc = setup();
+    const { result } = renderHookWithClient(() => useRemoveCartItems(), qc);
+    await act(async () => {
+      await result.current.mutateAsync(['ci1']).catch(() => undefined);
+    });
+    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY('en'));
+    expect(cart?.items).toHaveLength(2); // 回滚回 baseCart
   });
 });

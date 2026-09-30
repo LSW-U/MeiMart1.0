@@ -19,7 +19,8 @@
       "tet": "Maçã Fuji vermella fresku, moruk no meten"
     },
     "createdAt": "2026-07-25T00:00:00Z",
-    "isLocal": true
+    "isLocal": true,
+    "defaultSkuId": "sku-p001"
   },
   {
     "id": "p002",
@@ -40,7 +41,8 @@
       "en": "Free-range farm eggs delivered fresh",
       "tet": "Tolun manu sirku livre, simu fresku"
     },
-    "createdAt": "2026-07-26T00:00:00Z"
+    "createdAt": "2026-07-26T00:00:00Z",
+    "defaultSkuId": "sku-p002"
   },
   {
     "id": "p003",
@@ -55,7 +57,8 @@
     "rating": 4.7,
     "salesCount": 890,
     "stock": 0,
-    "isLocal": true
+    "isLocal": true,
+    "defaultSkuId": "sku-p003"
   },
   {
     "id": "p004",
@@ -70,7 +73,8 @@
     "category": "oil",
     "rating": 4.6,
     "salesCount": 1560,
-    "stock": 50
+    "stock": 50,
+    "defaultSkuId": "sku-p004"
   },
   {
     "id": "p005",
@@ -85,7 +89,8 @@
     "rating": 4.8,
     "salesCount": 3200,
     "stock": 3,
-    "createdAt": "2026-07-24T00:00:00Z"
+    "createdAt": "2026-07-24T00:00:00Z",
+    "defaultSkuId": "sku-p005"
   },
   {
     "id": "p006",
@@ -100,7 +105,8 @@
     "category": "drinks",
     "rating": 4.7,
     "salesCount": 1890,
-    "stock": 40
+    "stock": 40,
+    "defaultSkuId": "sku-p006"
   },
   {
     "id": "p007",
@@ -114,7 +120,8 @@
     "category": "snacks",
     "rating": 4.5,
     "salesCount": 980,
-    "stock": 25
+    "stock": 25,
+    "defaultSkuId": "sku-p007"
   },
   {
     "id": "p008",
@@ -128,7 +135,8 @@
     "category": "household",
     "rating": 4.9,
     "salesCount": 4500,
-    "stock": 0
+    "stock": 0,
+    "defaultSkuId": "sku-p008"
   },
   {
     "id": "p009",
@@ -143,7 +151,8 @@
     "category": "household",
     "rating": 4.8,
     "salesCount": 5200,
-    "stock": 18
+    "stock": 18,
+    "defaultSkuId": "sku-p009"
   },
   {
     "id": "p010",
@@ -157,6 +166,7 @@
     "category": "seafood",
     "rating": 4.9,
     "salesCount": 670,
-    "stock": 60
+    "stock": 60,
+    "defaultSkuId": "sku-p010"
   }
 ]

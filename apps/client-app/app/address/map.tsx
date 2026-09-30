@@ -69,24 +69,33 @@ export default function MapPickPage() {
     !resolvedCoords || resolvedCoords.lat !== coords.lat || resolvedCoords.lng !== coords.lng;
 
   // 坐标变化 → 反地理编码（preview 卡片地址）+ 附近位置刷新
+  // C-P1-6（方案A）：连续 onRegionChangeComplete 会瞬间打满 Nominatim 1/s 限额，
+  // 这里对 reverse 请求做 ≥500ms debounce（拖动停稳才发）；fetchNearbyPlaces 走后端
+  // 代理（自身限流+缓存）不 debounce。in-flight 请求经 AbortController 取消，
+  // geoSeq 兜底保留（防 debounce 窗口外的过期响应写入）。
   useEffect(() => {
     const seq = ++geoSeq.current;
     let cancelled = false;
     const resolved = { lat: coords.lat, lng: coords.lng };
-    reverseGeocode(coords.lat, coords.lng)
-      .then((addr) => {
-        if (!cancelled && seq === geoSeq.current) {
-          setPreviewAddr(addr);
-          setResolvedCoords(resolved);
-        }
-      })
-      .catch(() => {
-        // 反地理失败不清空旧地址，preview 退化为只显示坐标提示
-        if (!cancelled && seq === geoSeq.current) {
-          setPreviewAddr('');
-          setResolvedCoords(resolved);
-        }
-      });
+    const reverseAbort = new AbortController();
+    // debounce：500ms 内连续坐标变化只让最后一次发 reverse（cleanup 清定时器/abort 已发请求）
+    let waitFor: ReturnType<typeof setTimeout> | undefined = setTimeout(() => {
+      waitFor = undefined;
+      reverseGeocode(coords.lat, coords.lng, reverseAbort.signal)
+        .then((addr) => {
+          if (!cancelled && seq === geoSeq.current) {
+            setPreviewAddr(addr);
+            setResolvedCoords(resolved);
+          }
+        })
+        .catch(() => {
+          // 反地理失败（含被 abort）不清空旧地址，preview 退化为只显示坐标提示
+          if (!cancelled && seq === geoSeq.current) {
+            setPreviewAddr('');
+            setResolvedCoords(resolved);
+          }
+        });
+    }, 500);
     fetchNearbyPlaces(coords.lat, coords.lng)
       .then((places) => {
         if (!cancelled && seq === geoSeq.current) setNearby(places);
@@ -97,6 +106,9 @@ export default function MapPickPage() {
       });
     return () => {
       cancelled = true;
+      // debounce 窗口内被替换：取消未发出的定时器；已发出的：abort in-flight 请求
+      if (waitFor) clearTimeout(waitFor);
+      else reverseAbort.abort();
     };
   }, [coords]);
 
@@ -329,7 +341,11 @@ export default function MapPickPage() {
                       {hit.label}
                     </Text>
                   </View>
-                  <Icon symbol="radio_button_unchecked" size={18} color={colors['outline-variant']} />
+                  <Icon
+                    symbol="radio_button_unchecked"
+                    size={18}
+                    color={colors['outline-variant']}
+                  />
                 </Pressable>
               ))}
             </View>
@@ -385,9 +401,7 @@ export default function MapPickPage() {
             <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
               {t('address.nearbyPlaces', { defaultValue: 'Nearby Places' })}
             </Text>
-            <View
-              style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]}
-            />
+            <View style={[styles.sectionDivider, { backgroundColor: colors['outline-variant'] }]} />
           </View>
 
           {nearby.length > 0 ? (
@@ -434,7 +448,11 @@ export default function MapPickPage() {
                       {formatDistance(place.distanceM)}
                     </Text>
                   </View>
-                  <Icon symbol="radio_button_unchecked" size={18} color={colors['outline-variant']} />
+                  <Icon
+                    symbol="radio_button_unchecked"
+                    size={18}
+                    color={colors['outline-variant']}
+                  />
                 </Pressable>
               ))}
             </View>

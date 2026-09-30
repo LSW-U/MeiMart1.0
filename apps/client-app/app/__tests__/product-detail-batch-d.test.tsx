@@ -16,6 +16,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { Dimensions } from 'react-native';
 import { ThemeProvider } from '@/theme';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProductDetailPage from '../product/[id]';
 import type { Product, WarehouseAvailability } from '@/types';
 import type { ReviewSummary } from '@/services/reviews';
@@ -131,7 +132,16 @@ const emptySummary: ReviewSummary = {
 };
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <ThemeProvider>{children}</ThemeProvider>
+  // P2-1: 商品详情页 buyNow 链新增 useQueryClient —— 页面需 QueryClientProvider
+  <QueryClientProvider
+    client={
+      new QueryClient({
+        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      })
+    }
+  >
+    <ThemeProvider>{children}</ThemeProvider>
+  </QueryClientProvider>
 );
 
 const setup = (

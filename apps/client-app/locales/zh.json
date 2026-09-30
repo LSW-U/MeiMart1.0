@@ -59,7 +59,14 @@
     "avatarImage": "头像图片",
     "youAreOffline": "您已离线",
     "weakNetwork": "网络连接较弱",
-    "resetApp": "重置应用状态"
+    "resetApp": "重置应用状态",
+    "a11y": {
+      "errorAlert": "错误：{{message}}",
+      "locationChip": "位置：{{location}}",
+      "selectField": "选择{{label}}，当前 {{value}}",
+      "selectOption": "选择{{option}}",
+      "none": "无"
+    }
   },
   "splash": {
     "welcome": "欢迎"
@@ -72,7 +79,10 @@
     "title3": "Tais 文化",
     "desc3": "传承东帝汶传统纹样",
     "start": "立即开始",
-    "skip": "跳过"
+    "skip": "跳过",
+    "a11y": {
+      "slide": "第 {{index}} 屏"
+    }
   },
   "auth": {
     "login": "登录",
@@ -161,7 +171,10 @@
     "seeAllProducts": "查看全部商品",
     "messagesLabel": "消息",
     "reorderLabel": "再次购买 {{name}}",
-    "unreadBadge": "你有 {{count}} 条未读消息"
+    "unreadBadge": "你有 {{count}} 条未读消息",
+    "a11y": {
+      "banner": "横幅：{{title}}"
+    }
   },
   "promotion": {
     "flashDeals": "限时特惠",
@@ -303,7 +316,26 @@
     "noProducts": "暂无商品",
     "noProductsDesc": "没有符合条件的商品",
     "addToFavorites": "加入收藏",
-    "removeFromFavorites": "取消收藏"
+    "removeFromFavorites": "取消收藏",
+    "a11y": {
+      "category": "分类 {{name}}",
+      "variantOption": "{{group}}：{{option}}",
+      "cardItem": "{{name}}，价格 {{price}}",
+      "price": "价格 {{price}}",
+      "priceOriginal": "原价 {{price}}"
+    },
+    "specGrind": "研磨度",
+    "specWeight": "重量",
+    "specFine": "细研磨",
+    "specMedium": "中度研磨",
+    "specCoarse": "粗研磨",
+    "specWholeBean": "原豆",
+    "spec100g": "100g",
+    "spec250g": "250g",
+    "spec500g": "500g",
+    "spec1kg": "1kg",
+    "spec5kg": "5kg",
+    "spec10kg": "10kg"
   },
   "order": {
     "status": {
@@ -446,7 +478,19 @@
       "afterSales": "申请售后",
       "review": "评价",
       "buyAgain": "再次购买"
-    }
+    },
+    "a11y": {
+      "productItem": "{{name}}，数量 {{quantity}}",
+      "countdown": "{{label}} {{time}}",
+      "reviewedTab": "{{name}} {{state}}"
+    },
+    "repeatEmpty": "没有可再买的商品",
+    "repeatFailed": "加购失败，请重试",
+    "repeatPartial": "部分商品已加购（{{ok}}/{{total}}）",
+    "payCodNoAction": "货到付款订单在送达时支付",
+    "payAlreadyPaid": "订单已支付",
+    "paySuccess": "支付成功",
+    "payFailed": "支付失败，请重试"
   },
   "tracking": {
     "title": "订单追踪",
@@ -493,7 +537,8 @@
       "addNew": "新增地址",
       "useCurrentLocation": "使用当前位置",
       "confirmSave": "确认并保存地址",
-      "mapArea": "地图"
+      "mapArea": "地图",
+      "addressCard": "{{name}} 的地址，{{address}}"
     },
     "savedAddresses": "已保存地址",
     "emptyDesc": "添加地址以加快结算",
@@ -515,6 +560,7 @@
     "searchNoResults": "无搜索结果",
     "searchResults": "搜索结果",
     "previewHint": "拖动地图或搜索以选择位置",
+    "pickLocationRequired": "请先在地图上选取位置",
     "nearbyEmpty": "附近没有命名地点",
     "webMapFallback": "交互地图请在 App 内使用，网页端请通过搜索选择位置。",
     "tagLabel": "标签",
@@ -654,7 +700,10 @@
     "notAvailable": "本单不可用",
     "saveThisOrder": "本单预计省 ${{amount}}",
     "usableThisOrder": "本单可用",
-    "unusableThisOrder": "本单不可用"
+    "unusableThisOrder": "本单不可用",
+    "a11y": {
+      "couponCard": "{{name}} {{code}}"
+    }
   },
   "claim": {
     "title": "领券中心",
@@ -696,6 +745,7 @@
     "offlineBlockDesc": "请检查网络后下单",
     "submit": "提交订单",
     "selectAddress": "请选择收货地址",
+    "selectPaymentMethod": "请选择支付方式",
     "noItems": "没有选中商品",
     "itemQty": "数量: {{count}}",
     "payment": {
@@ -897,7 +947,10 @@
     "mockReason": "商品质量问题",
     "mockProduct": "新鲜红富士苹果",
     "cancelNotSupported": "当前阶段不支持取消",
-    "cancelFailed": "取消失败"
+    "cancelFailed": "取消失败",
+    "a11y": {
+      "productItem": "{{label}}：{{name}}"
+    }
   },
   "review": {
     "title": "发表评价",
@@ -943,7 +996,8 @@
       "ratingSlider": "评分滑块，拖动选择 1 到 5 星",
       "charCount": "已输入 {{count}} / 最大 {{max}} 字",
       "photoThumb": "第 {{count}} 张照片",
-      "removePhoto": "删除第 {{count}} 张照片"
+      "removePhoto": "删除第 {{count}} 张照片",
+      "reviewItem": "{{name}} 的评价，评分 {{rating}}"
     },
     "progressHint": "已完成 {{done}}/{{total}} 条评价"
   },
@@ -1209,7 +1263,11 @@
     "suggestedProducts": "热销商品",
     "noSuggestion": "没有找到「{{q}}」的相关建议，回车查看搜索结果",
     "emptyKeyword": "请输入搜索关键词",
-    "searchTerm": "搜索 {{term}}"
+    "searchTerm": "搜索 {{term}}",
+    "a11y": {
+      "filterTag": "筛选：{{tag}}",
+      "removeRecent": "删除 {{term}}"
+    }
   },
   "legal": {
     "terms": {
@@ -1229,5 +1287,14 @@
       "comingSoonHint": "该支付方式暂未开通，敬请期待"
     },
     "estimatedCny": "≈ ¥{{amount}}"
+  },
+  "pageError": {
+    "title": "页面出错了",
+    "messageFallback": "页面渲染异常，请返回重试"
+  },
+  "notifications": {
+    "a11y": {
+      "notificationItem": "{{title}}，{{time}}"
+    }
   }
 }

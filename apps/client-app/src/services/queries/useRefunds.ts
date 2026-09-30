@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { refundApi, type CreateRefundPayload, type RefundRaw } from '@/services/refunds';
+import { useAuthStore } from '@/store/authStore';
 
 export const REFUNDS_QUERY_KEY = ['refunds'] as const;
 
@@ -16,11 +17,14 @@ export const refundDetailKey = (id: string) => ['refunds', id] as const;
  * 创建退款后返回列表自动看到新申请（PENDING），无需手动 invalidate。
  */
 export function useRefunds() {
+  // C-P2-2: 列表同为用户私有数据，未登录不发（401 噪音/缓存污染）
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: REFUNDS_QUERY_KEY,
     queryFn: () => refundApi.listUserRefunds(),
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',
+    enabled: isAuthenticated,
   });
 }
 
@@ -82,10 +86,12 @@ export function useCreateRefund() {
  * 后端 RefundView 字段全（items[] + 时间戳），P14 据此渲染多商品/状态色/时间轴/退款方式
  */
 export function useRefundDetail(id: string | undefined) {
+  // C-P2-2: 未登录不发请求（401 噪音/缓存污染；useNotifications 同款先例）
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: refundDetailKey(id ?? ''),
     queryFn: () => refundApi.getRefundDetail(id!),
-    enabled: !!id,
+    enabled: isAuthenticated && !!id,
     staleTime: 30_000,
   });
 }

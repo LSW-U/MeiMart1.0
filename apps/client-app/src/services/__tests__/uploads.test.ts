@@ -3,7 +3,11 @@ import { uploadsApi } from '../uploads';
 
 // jest.mock 被 jest（babel-plugin-jest）hoist 到 import 前执行，故虽写在 import 后，
 // 仍在 uploads.ts module load 前生效，控制 isMockMode=false + API_BASE_URL 含 /api/v1
-jest.mock('../api', () => ({ isMockMode: false }));
+jest.mock('../api', () => ({
+  isMockMode: false,
+  // C-P2-16: uploads 复用 tokenStorage 单一真值源，mock 同步补该导出
+  tokenStorage: { get: jest.fn().mockResolvedValue(null) },
+}));
 jest.mock('expo-constants', () => ({
   expoConfig: { extra: { API_BASE_URL: 'http://test.local/api/v1' } },
 }));

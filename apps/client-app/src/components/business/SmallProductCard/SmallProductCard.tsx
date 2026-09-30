@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Pressable, View, Text, StyleSheet } from 'react-native';
 import { useTheme, spacing, borderRadius, typography, shadowPresets } from '@/theme';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +14,13 @@ import type { SmallProductCardProps } from './SmallProductCard.types';
 // 原因：红底加购按钮上的固定白字，dark 不变（同 P2/P3 ON_PRIMARY 模式，不用 colors['on-primary']）
 const ON_PRIMARY = '#ffffff';
 
-export function SmallProductCard({ product, onPress, onAddToCart, testID }: SmallProductCardProps) {
+// C-P2-10: React.memo——列表/横滑项重渲隔离（props 浅比较；调用方需稳定回调 useCallback）
+export const SmallProductCard = memo(function SmallProductCard({
+  product,
+  onPress,
+  onAddToCart,
+  testID,
+}: SmallProductCardProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const localize = useLocalizer();
@@ -62,7 +69,7 @@ export function SmallProductCard({ product, onPress, onAddToCart, testID }: Smal
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

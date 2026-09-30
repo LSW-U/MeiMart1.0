@@ -29,28 +29,33 @@ export interface VariantGroup {
 export const variantTemplates: Record<string, VariantGroup[]> = {
   coffee: [
     {
-      name: 'Grind',
+      // C-P3-7（批4）：name 改 i18n key（原硬编码英文 'Grind' 直接渲染），渲染层 t() 解析
+      name: 'product.specGrind',
       options: [
-        { label: 'Fine' },
-        { label: 'Medium' },
-        { label: 'Coarse' },
-        { label: 'Whole Bean', disabled: true }, // 测试缺货规格（删除线 + 半透明）
+        { label: 'product.specFine' },
+        { label: 'product.specMedium' },
+        { label: 'product.specCoarse' },
+        { label: 'product.specWholeBean', disabled: true }, // 测试缺货规格（删除线 + 半透明）
       ],
     },
     {
-      name: 'Weight',
+      name: 'product.specWeight',
       options: [
-        { label: '100g' },
-        { label: '250g' },
-        { label: '500g' },
-        { label: '1kg', disabled: true },
+        { label: 'product.spec100g' },
+        { label: 'product.spec250g' },
+        { label: 'product.spec500g' },
+        { label: 'product.spec1kg', disabled: true },
       ],
     },
   ],
   rice: [
     {
-      name: 'Weight',
-      options: [{ label: '1kg' }, { label: '5kg' }, { label: '10kg' }],
+      name: 'product.specWeight',
+      options: [
+        { label: 'product.spec1kg' },
+        { label: 'product.spec5kg' },
+        { label: 'product.spec10kg' },
+      ],
     },
   ],
   // fruits / vegetables / meat 等单品：无规格（不在 map 里 → 选择器隐藏）

@@ -24,7 +24,9 @@ export function toIntlLocale(locale: string): string {
 }
 
 export function formatPrice(value: number, currency = 'USD', decimals = 2): string {
-  const symbol = CURRENCY_SYMBOLS[currency] ?? '';
+  // Why: C-P2-1 统一价格口径——两代入参兼容：ISO 代码（'USD'）查表映射符号；
+  //      单字符符号（'$'/'¥'）原样透传（PriceText 旧调用方传符号，一次收口不破调用方）
+  const symbol = CURRENCY_SYMBOLS[currency] ?? (/^[^A-Za-z0-9]$/.test(currency) ? currency : '');
   const safe = Number.isFinite(value) ? value : 0;
   // Why: Q6（语言优化 v2）金额跨语言固定美式千分位（$1,234.56），不随 UI 语言变；
   //      Intl.NumberFormat 替换 toFixed（参照 RiderCard.tsx Intl 先例）

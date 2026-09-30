@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { cartApi } from '@/services/cart';
+import { cartApi, businessError } from '@/services/cart';
 import { isMockMode } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { useLocale } from '@/i18n';
@@ -61,11 +61,14 @@ export function useAddToCart() {
     mutationFn: ({ product, quantity = 1 }: { product: Product; quantity?: number }) => {
       // Why: §7.3 加购前库存二次校验。读当前购物车缓存，断货/超限抛错触发组件 onError toast，防止超卖。
       //      错误 message 用稳定标识（SOLD_OUT / STOCK_EXCEEDED），组件层按文案映射 i18n。
+      //      批3#11（批2 转办 P2-2）：这类确定性业务失败抛 name==='BusinessError'——
+      //      useOfflineMutation 守卫不入队（重试也不会成功，入队只造成失败重放循环）。
+      //      message 仍以 'SOLD_OUT'/'STOCK_EXCEEDED' 结尾，组件层按 includes 匹配不变。
       if (product.stock != null) {
         const cart = qc.getQueryData<Cart>(CART_QUERY_KEY(locale));
         const existingQty = cart?.items.find((i) => i.product.id === product.id)?.quantity ?? 0;
-        if (product.stock === 0) throw new Error('SOLD_OUT');
-        if (existingQty + quantity > product.stock) throw new Error('STOCK_EXCEEDED');
+        if (product.stock === 0) throw businessError('SOLD_OUT');
+        if (existingQty + quantity > product.stock) throw businessError('STOCK_EXCEEDED');
       }
       return cartApi.addItem(product, quantity);
     },
@@ -125,6 +128,32 @@ export function useRemoveCartItem() {
       qc.setQueryData(CART_QUERY_KEY(locale), (old: Cart | undefined) => {
         if (!old) return old;
         const items = old.items.filter((i) => i.id !== itemId);
+        return recomputeTotals(old, items);
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(CART_QUERY_KEY(locale), ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: CART_ROOT_KEY }),
+  });
+}
+
+// C-P2-8（页面批量删收敛）：批量删除走 service 层 removeItems——N 个 id 单次 mutation、
+// 乐观删 N 项、仅一次 invalidate（原页面 forEach 逐 id mutate：N 次 DELETE + N 次 getCart +
+// N 次 invalidate 竞态）。单删仍用 useRemoveCartItem（语义不变）。
+export function useRemoveCartItems() {
+  const qc = useQueryClient();
+  const locale = useLocale();
+  return useMutation({
+    mutationFn: (itemIds: string[]) => cartApi.removeItems(itemIds),
+    onMutate: async (itemIds) => {
+      await qc.cancelQueries({ queryKey: CART_ROOT_KEY });
+      const previous = qc.getQueryData(CART_QUERY_KEY(locale));
+      qc.setQueryData(CART_QUERY_KEY(locale), (old: Cart | undefined) => {
+        if (!old) return old;
+        const ids = new Set(itemIds);
+        const items = old.items.filter((i) => !ids.has(i.id));
         return recomputeTotals(old, items);
       });
       return { previous };

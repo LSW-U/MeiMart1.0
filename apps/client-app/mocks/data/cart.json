@@ -12,7 +12,8 @@
         "price": 25.9,
         "originalPrice": 35.0,
         "image": "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400",
-        "category": "fruits"
+        "category": "fruits",
+        "defaultSkuId": "sku-p001"
       },
       "quantity": 2,
       "selected": true,
@@ -29,7 +30,8 @@
         },
         "price": 42.9,
         "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
-        "category": "dairy"
+        "category": "dairy",
+        "defaultSkuId": "sku-p005"
       },
       "quantity": 1,
       "selected": true,
@@ -47,7 +49,8 @@
         "price": 45.0,
         "originalPrice": 55.0,
         "image": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400",
-        "category": "household"
+        "category": "household",
+        "defaultSkuId": "sku-p009"
       },
       "quantity": 1,
       "selected": false

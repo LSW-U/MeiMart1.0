@@ -74,7 +74,7 @@ export function CouponPicker({
           },
         ]}
         accessibilityRole="button"
-        accessibilityLabel={`${coupon.name} ${coupon.code}`}
+        accessibilityLabel={t('coupons.a11y.couponCard', { name: coupon.name, code: coupon.code })}
         accessibilityState={disabled ? { disabled: true } : undefined}
       >
         {/* 左栏（原型 compact-left：折扣主值 + 门槛） */}
@@ -108,7 +108,10 @@ export function CouponPicker({
         {/* 右栏（原型 compact-body：券名 + 本单预计省 · 剩 N 天 / 不可用差额 chip） */}
         <View style={styles.body}>
           <Text
-            style={[styles.name, { color: disabled ? colors['on-surface-variant'] : colors['on-surface'] }]}
+            style={[
+              styles.name,
+              { color: disabled ? colors['on-surface-variant'] : colors['on-surface'] },
+            ]}
             numberOfLines={1}
           >
             {coupon.name}
@@ -117,10 +120,7 @@ export function CouponPicker({
             orderAmount < coupon.minOrderAmount ? (
               // MIN_NOT_MET：还差 $X 可用（唯一可前置判断的原因；scope 等后端字段）
               <View
-                style={[
-                  styles.chip,
-                  { backgroundColor: colors.semantic['warning-container'] },
-                ]}
+                style={[styles.chip, { backgroundColor: colors.semantic['warning-container'] }]}
               >
                 <Text style={[styles.chipText, { color: colors.semantic.warning }]}>
                   {t('coupons.needMore', {

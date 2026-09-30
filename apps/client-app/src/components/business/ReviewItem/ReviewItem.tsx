@@ -1,12 +1,15 @@
+import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { formatDate } from '@/utils/format';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
 import type { ReviewItemProps } from './ReviewItem.types';
 
-export function ReviewItem({ review, onPress, testID }: ReviewItemProps) {
+// C-P2-10: React.memo——评论列表项重渲隔离（props 浅比较）
+export const ReviewItem = memo(function ReviewItem({ review, onPress, testID }: ReviewItemProps) {
   const { colors } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // P15 RB1：anonymous=true 时展示「匿名用户」（后端返真实 userName + anonymous 标记，前端展示层隐藏）
   const displayName = review.anonymous ? t('review.anonymousDisplayName') : review.userName;
   const avatarLetter = review.anonymous ? '?' : displayName.slice(0, 1).toUpperCase();
@@ -20,7 +23,7 @@ export function ReviewItem({ review, onPress, testID }: ReviewItemProps) {
       ]}
       onPress={onPress ? () => onPress(review) : undefined}
       accessibilityRole="button"
-      accessibilityLabel={`Review by ${displayName}, rating ${review.rating}`}
+      accessibilityLabel={t('review.a11y.reviewItem', { name: displayName, rating: review.rating })}
     >
       <View style={styles.header}>
         <View style={[styles.avatar, { backgroundColor: colors['secondary-container'] }]}>
@@ -47,7 +50,8 @@ export function ReviewItem({ review, onPress, testID }: ReviewItemProps) {
               />
             ))}
             <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-              {new Date(review.createdAt).toLocaleDateString()}
+              {/* P2-2（批4 修复）：日期走 formatDate 带 UI locale（tet→en-US 回退） */}
+              {formatDate(review.createdAt, i18n.language)}
             </Text>
           </View>
         </View>
@@ -55,9 +59,9 @@ export function ReviewItem({ review, onPress, testID }: ReviewItemProps) {
       <Text style={[textStyle('body-md'), { color: colors['on-surface'] }]}>{review.content}</Text>
       {review.images && review.images.length > 0 && (
         <View style={styles.imageRow}>
-          {review.images.slice(0, 4).map((uri, i) => (
+          {review.images.slice(0, 4).map((uri) => (
             <Image
-              key={i}
+              key={uri}
               source={{ uri }}
               style={[styles.reviewImage, { borderRadius: borderRadius.sm }]}
               accessible={false}
@@ -67,7 +71,7 @@ export function ReviewItem({ review, onPress, testID }: ReviewItemProps) {
       )}
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: { padding: spacing.sm, gap: spacing.xs },

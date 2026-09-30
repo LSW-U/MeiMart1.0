@@ -7,7 +7,11 @@ import type { ClientCoupon } from '@/services/promotion';
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, opts?: { count?: number; amount?: number }) =>
-      opts?.amount !== undefined ? `${key}:${opts.amount}` : opts?.count !== undefined ? `${key}:${opts.count}` : key,
+      opts?.amount !== undefined
+        ? `${key}:${opts.amount}`
+        : opts?.count !== undefined
+          ? `${key}:${opts.count}`
+          : key,
   }),
 }));
 
@@ -48,7 +52,7 @@ describe('CouponPicker（模块方案 D4 归一：compact 卡 + orderAmount 分�
   it('calls onSelect with code + onClose when coupon pressed', () => {
     const onSelect = jest.fn();
     const onClose = jest.fn();
-    const { getByLabelText } = render(
+    const { getAllByLabelText } = render(
       <CouponPicker
         visible
         onClose={onClose}
@@ -58,13 +62,13 @@ describe('CouponPicker（模块方案 D4 归一：compact 卡 + orderAmount 分�
       />,
       { wrapper },
     );
-    fireEvent.press(getByLabelText('New User Discount NEWUSER'));
+    fireEvent.press(getAllByLabelText('coupons.a11y.couponCard')[0]);
     expect(onSelect).toHaveBeenCalledWith('NEWUSER');
     expect(onClose).toHaveBeenCalled();
   });
 
   it('marks selected coupon with active border (selectedCode match)', () => {
-    const { getByLabelText } = render(
+    const { getAllByLabelText } = render(
       <CouponPicker
         visible
         onClose={() => {}}
@@ -76,11 +80,11 @@ describe('CouponPicker（模块方案 D4 归一：compact 卡 + orderAmount 分�
       { wrapper },
     );
     // Why: 选中态 onPress 仍可触发（换券），accessibilityLabel 不变
-    expect(getByLabelText('New User Discount NEWUSER')).toBeTruthy();
+    expect(getAllByLabelText('coupons.a11y.couponCard')[0]).toBeTruthy();
   });
 
   it('orderAmount 门槛分组：达标进「本单可用」，未达标进「本单不可用」并显示差额', () => {
-    const { getByText, getByLabelText } = render(
+    const { getByText, getAllByLabelText } = render(
       <CouponPicker
         visible
         onClose={() => {}}
@@ -95,14 +99,14 @@ describe('CouponPicker（模块方案 D4 归一：compact 卡 + orderAmount 分�
     // c2 门槛 100 > 60 → 不可用组 + 差额 40
     expect(getByText('coupons.unusableThisOrder')).toBeTruthy();
     expect(getByText('coupons.needMore:40')).toBeTruthy();
-    // 不可用券 disabled a11y
-    const disabledRow = getByLabelText('Big Save BIGSAVE');
+    // 不可用券 disabled a11y（可用组 c1 在前，不可用组 c2 在后）
+    const disabledRow = getAllByLabelText('coupons.a11y.couponCard')[1];
     expect(disabledRow.props.accessibilityState).toEqual({ disabled: true });
   });
 
   it('不可用券禁点（onSelect 不触发，弱网防试错）', () => {
     const onSelect = jest.fn();
-    const { getByLabelText } = render(
+    const { getAllByLabelText } = render(
       <CouponPicker
         visible
         onClose={() => {}}
@@ -112,7 +116,8 @@ describe('CouponPicker（模块方案 D4 归一：compact 卡 + orderAmount 分�
       />,
       { wrapper },
     );
-    fireEvent.press(getByLabelText('Big Save BIGSAVE'));
+    // 不可用组在可用组之后 → 取 [1]（c2 门槛 100 > 60）
+    fireEvent.press(getAllByLabelText('coupons.a11y.couponCard')[1]);
     expect(onSelect).not.toHaveBeenCalled();
   });
 });

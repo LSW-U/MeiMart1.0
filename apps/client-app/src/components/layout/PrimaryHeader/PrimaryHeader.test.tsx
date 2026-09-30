@@ -33,7 +33,8 @@ describe('PrimaryHeader', () => {
       <PrimaryHeader title="Home" showLocation locationLabel="Dili, Christo Rei" />,
       { wrapper },
     );
-    expect(getByLabelText('Location: Dili, Christo Rei')).toBeTruthy();
+    // t mock 返 key（插值由 locales 对账门禁保证）：断言 label 取到 t()
+    expect(getByLabelText('common.a11y.locationChip')).toBeTruthy();
   });
 
   it('renders right actions', () => {

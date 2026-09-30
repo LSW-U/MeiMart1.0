@@ -7,7 +7,8 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { ThemeProvider } from '@/theme';
-import AfterSalesApplyPage from '../after-sales-apply';
+import AfterSalesApplyPage, { REFUND_REASON_KEYS } from '../after-sales-apply';
+import { REASON_KEY_TO_ENUM } from '@/services/refunds';
 
 jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({ orderId: 'o001' }),
@@ -80,6 +81,7 @@ jest.mock('@/store/toastStore', () => ({
 }));
 
 jest.mock('@/utils/format', () => ({
+  ...jest.requireActual('@/utils/format'), // C-P2-1: PriceText 现经 formatPriceUtil（utils/format），mock 需保留真实现
   formatDate: (iso: string) => iso,
 }));
 
@@ -96,5 +98,42 @@ describe('AfterSalesApplyPage', () => {
   it('photoAddBtn 渲染 + a11y label（afterSales.addPhotoA11y）', () => {
     const { getByLabelText } = render(<AfterSalesApplyPage />, { wrapper });
     expect(getByLabelText('afterSales.addPhotoA11y')).toBeTruthy();
+  });
+});
+
+// B 部分（批4 假绿测试改造）：申请页可提交 reason 与后端 enum 映射同源自证对账——
+// 逐 key 断言 REASON_KEY_TO_ENUM 有映射且指向真实 RefundReason enum 值，
+// 并列出 locales 中已存在但申请页未映射的 reason key（当前 5 个有意收窄，
+// 其余为 detail 页展示用 / 备用；映射扩面时本测试自动暴露遗漏）。
+describe('售后 reason i18n key ↔ 后端 enum 同源自证', () => {
+  it('REFUND_REASON_KEYS 每项都有 REASON_KEY_TO_ENUM 映射且值为合法 enum', () => {
+    const legalEnums = new Set([
+      'EXPIRED',
+      'QUALITY_ISSUE',
+      'WRONG_ITEM',
+      'SHORTAGE',
+      'DAMAGED',
+      'OUT_OF_STOCK',
+      'DELIVERY_TOO_SLOW',
+      'CUSTOMER_CHANGE_MIND',
+      'OTHER',
+    ]);
+    for (const key of REFUND_REASON_KEYS) {
+      const mapped = REASON_KEY_TO_ENUM[key];
+      expect(mapped).toBeDefined();
+      expect(legalEnums.has(mapped)).toBe(true);
+    }
+  });
+
+  it('locales 四语 afterSales.reasons 全 key 清单：申请页未映射项如实列出（不改行为，仅对账留痕）', () => {
+    const en = require('../../../locales/en.json');
+    const allKeys = Object.keys(en.afterSales.reasons);
+    const unmapped = allKeys.filter(
+      (k: string) => !(`afterSales.reasons.${k}` in REASON_KEY_TO_ENUM),
+    );
+    // 当前实况（申请页只开放 5 项）：qualityIssue/outOfStock/deliveryTooSlow/changeMind/other 未映射
+    expect([...unmapped].sort()).toEqual(
+      ['changeMind', 'deliveryTooSlow', 'other', 'outOfStock', 'qualityIssue'].sort(),
+    );
   });
 });

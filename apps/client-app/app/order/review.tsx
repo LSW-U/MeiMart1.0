@@ -384,7 +384,14 @@ export default function OrderReviewPage() {
                       ]}
                       accessibilityRole="tab"
                       accessibilityState={{ selected: active, disabled: reviewed }}
-                      accessibilityLabel={`${localize(it.product.name)}${reviewed ? ` ${t('review.reviewedBadge')}` : ''}`}
+                      accessibilityLabel={
+                        reviewed
+                          ? t('order.a11y.reviewedTab', {
+                              name: localize(it.product.name),
+                              state: t('review.reviewedBadge'),
+                            })
+                          : localize(it.product.name)
+                      }
                     >
                       <Image
                         source={{

@@ -33,4 +33,15 @@ describe('PriceText', () => {
     });
     expect(getByText('¥99.00')).toBeTruthy();
   });
+
+  // C-P2-1: 复用 utils/formatPrice 后千分位与 ISO 货币代码口径与 utils 一致
+  it('formats thousands separator via shared formatPrice (C-P2-1)', () => {
+    const { getByText } = render(<PriceText value={1234567.89} />, { wrapper });
+    expect(getByText('$1,234,567.89')).toBeTruthy();
+  });
+
+  it('accepts ISO currency code (C-P2-1 unified with utils/format)', () => {
+    const { getByText } = render(<PriceText value={12.5} currency="CNY" />, { wrapper });
+    expect(getByText('¥12.50')).toBeTruthy();
+  });
 });

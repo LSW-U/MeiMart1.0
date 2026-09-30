@@ -375,3 +375,19 @@ describe('paymentApi.getMethods real 模式 transform（批B）', () => {
     expect(mockApiGet).toHaveBeenCalledWith('/client/payments/methods');
   });
 });
+
+// B 部分（批4 假绿测试改造）：补 1 条少覆盖集成用例——isDefault=false 全列表时
+// 不自动选中（C-P1-1 回填只认 isDefault/首项？以实际行为为准取证），占位渠道
+// 混在可选列表中不阻断默认选中
+it('全列表无 isDefault（占位渠道在列）→ 自动回填首个可选渠道 COD，占位卡仍渲染', async () => {
+  const noDefault = makeMethods().map((m) => ({ ...m, isDefault: false }));
+  mockUsePaymentMethods.mockReturnValue({ data: noDefault });
+  render(<CheckoutPage />, { wrapper });
+  const cod = await screen.findByTestId('payment-COD', {}, { timeout: 2000 });
+  expect(cod.props.accessibilityState.selected).toBe(true);
+  expect(screen.getByTestId('coming-soon-block')).toBeTruthy();
+  // 提交按钮仍 disabled：本文件 useCart mock 返回空购物车（selectedItems.length===0 守卫），
+  // 与支付回填无关——本用例只取证回填（上方 COD selected=true），提交解锁已由
+  // checkout-payment-selection.test.tsx「列表就绪回填后提交按钮恢复可用」覆盖
+  expect(screen.getByTestId('checkout-submit').props.accessibilityState?.disabled).toBe(true);
+});

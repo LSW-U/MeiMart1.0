@@ -2,7 +2,16 @@
 // 还原自 HomePage.html（511 行）。HTML → RN 行数比：511 → ~480（含样式），
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 94%）。
 // P6: 间距微调 + 分类网格 C2/角标/溢出 + PromoShortcut→PromoDock（方案二色条）
-import { StyleSheet, View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  FlatList,
+  ScrollView,
+  ActivityIndicator,
+  Pressable,
+} from 'react-native';
+import { useCallback } from 'react';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -57,9 +66,7 @@ export default function HomePage() {
   const { data: categories } = useCategories();
   const { data: products, isLoading, isError, refetch } = useRecommendations();
   const recommendList = products ?? [];
-  // Why: §9-4 瀑布流两列分发（奇偶分列）；§9-5 badge 改 resolveBadges 派生（不按位置）
-  const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
-  const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
+  // Why: §9-4 瀑布流两列分发改 FlatList numColumns（C-P2-10，分发逻辑由列表承担）
   const { data: buyAgainProducts } = useBuyAgain();
   const buyAgainList = buyAgainProducts ?? [];
   // Why: P6 V3e - PromoDock 数据源由 usePromotions hook 驱动（后端控制数量/排序/时效）
@@ -70,16 +77,40 @@ export default function HomePage() {
   const { data: unreadCount } = useUnreadCount();
 
   // Why: Buy again 加购
-  const handleBuyAgainAddToCart = (item: Product) => {
-    addToCartMutation.mutate(
-      { product: item, quantity: 1 },
-      {
-        onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
-        onError: () =>
-          toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
-      },
-    );
-  };
+  // C-P2-10: useCallback 稳定化——memo 化的 MasonryProductCard/SmallProductCard props 浅比较，
+  //   回调不稳定会让 memo 失效（每渲染全列表重渲）
+  const handleBuyAgainAddToCart = useCallback(
+    (item: Product) => {
+      addToCartMutation.mutate(
+        { product: item, quantity: 1 },
+        {
+          onSuccess: () =>
+            toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
+          onError: () =>
+            toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+        },
+      );
+    },
+    [addToCartMutation, t],
+  );
+
+  // C-P2-10: 瀑布流改 FlatList(numColumns=2)——替代手动两列 filter 分发（虚拟化渲染
+  //   仅可见项）。行为零变更：odd/even 分列顺序一致（numColumns 按索引取模分列，等价原
+  //   i%2===0→col1 / i%2===1→col2）；高度档位错落在 MasonryProductCard 内部（按 id 档位），
+  //   FlatList 网格行内等高但列间仍错落（卡片图高不同 + info 自适应），视觉语义保持。
+  const renderMasonryItem = useCallback(
+    ({ item }: { item: Product }) => (
+      <View style={styles.masonryCell}>
+        <MasonryProductCard
+          product={item}
+          badge={resolveBadges(item, t)[0]}
+          onPress={() => router.push(`/product/${item.id}`)}
+          onAddToCart={() => handleBuyAgainAddToCart(item)}
+        />
+      </View>
+    ),
+    [t, handleBuyAgainAddToCart],
+  );
   return (
     <PageErrorBoundary pageName="home">
       {/* Why: edges 仅 top —— header 红底需避状态栏。bottom 不需 edges：
@@ -251,32 +282,23 @@ export default function HomePage() {
             {isLoading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
             {isError && <ErrorState message={t('errors.products')} onRetry={() => refetch()} />}
             {!isLoading && !isError && recommendList.length > 0 && (
-              // Why: §9-4 - 横滑 ProductCard -> 两列瀑布流 MasonryProductCard（手动分发，方案 §9.4-B）
+              // Why: §9-4 - 横滑 ProductCard -> 两列瀑布流 MasonryProductCard（方案 §9.4-B）
               //      ⚠️ 无 HTML 原型（推荐横滑改瀑布流是方案改版），高度档位错落
-              <View style={styles.masonryRow}>
-                <View style={styles.masonryCol}>
-                  {masonryCol1.map((item) => (
-                    <MasonryProductCard
-                      key={item.id}
-                      product={item}
-                      badge={resolveBadges(item, t)[0]}
-                      onPress={() => router.push(`/product/${item.id}`)}
-                      onAddToCart={() => handleBuyAgainAddToCart(item)}
-                    />
-                  ))}
-                </View>
-                <View style={styles.masonryCol}>
-                  {masonryCol2.map((item) => (
-                    <MasonryProductCard
-                      key={item.id}
-                      product={item}
-                      badge={resolveBadges(item, t)[0]}
-                      onPress={() => router.push(`/product/${item.id}`)}
-                      onAddToCart={() => handleBuyAgainAddToCart(item)}
-                    />
-                  ))}
-                </View>
-              </View>
+              // C-P2-10: 改 FlatList(numColumns=2) 虚拟化（原手动两列 View+map 全量渲染）；
+              //   columnWrapperStyle 承接原 masonryRow 的横向 padding + gap
+              <FlatList
+                data={recommendList}
+                keyExtractor={(item) => item.id}
+                numColumns={2}
+                columnWrapperStyle={styles.masonryRow}
+                contentContainerStyle={styles.masonryContent}
+                renderItem={renderMasonryItem}
+                scrollEnabled={false}
+                initialNumToRender={6}
+                maxToRenderPerBatch={4}
+                windowSize={5}
+                showsVerticalScrollIndicator={false}
+              />
             )}
           </View>
 
@@ -476,13 +498,19 @@ const styles = StyleSheet.create({
   },
   // Why: §9-4 瀑布流两列容器（替 recommendCard 横滑）
   masonryRow: {
+    // FlatList numColumns=2 行容器（C-P2-10）：承接原两列布局的横向 padding + 列间距
+    flex: 1,
     flexDirection: 'row',
     gap: spacing.md,
     paddingHorizontal: layout['container-margin'],
   },
-  masonryCol: {
+  masonryContent: {
+    // 列表整体下间距（原 masonryCol 间 gap 的纵向等价）
+    rowGap: spacing.md,
+  },
+  masonryCell: {
+    // 每列等宽（numColumns 均分，flex:1 + gap 已由行容器控制）
     flex: 1,
-    gap: spacing.md,
   },
   buyAgainSection: {
     // Why: P6 S5 - Buy Again marginTop xl(32) -> lg(24)，页尾区块视觉收束

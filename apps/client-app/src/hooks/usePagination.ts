@@ -5,7 +5,6 @@ interface PaginationOptions<T> {
   queryKey: QueryKey;
   queryFn: (page: number) => Promise<{ items: T[]; hasMore: boolean }>;
   enabled?: boolean;
-  pageSize?: number;
 }
 
 export function usePagination<T>({ queryKey, queryFn, enabled = true }: PaginationOptions<T>) {

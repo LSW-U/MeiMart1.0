@@ -38,9 +38,23 @@ function pickLocalized(raw: unknown, fallback = ''): string {
   return record[locale] ?? record.en ?? record.zh ?? Object.values(record)[0] ?? fallback;
 }
 
+/**
+ * 批3 第11项（批2 转办 P2-2）：确定性业务 4xx 抛 name==='BusinessError'。
+ * useOfflineMutation 守卫（err.name === 'BusinessError'）对这类失败不入队——
+ * 库存不足/已售罄等重试也不会成功，入队只会造成失败重放循环。
+ * 复用稳定错误标识（SOLD_OUT / STOCK_EXCEEDED / NO_SKU）作 message，组件层按文案映射不变。
+ */
+export function businessError(message: string): Error {
+  const err = new Error(message);
+  err.name = 'BusinessError';
+  return err;
+}
+
 function transformCartItem(raw: CartItemRaw): CartItem {
   // Why: 后端 CartItemView 扁平结构，前端 CartItem 需嵌套 Product；构造最小 Product 避免再 fetch
   // 兜底：字段缺失时用默认值，防 NaN/undefined 渲染崩溃
+  // C-P2-9: 透传 skuId（CartItemView 自带，结算 createOrder 直接用）——原 checkout 提交时
+  //   对每个选中项额外 getProduct 查 defaultSkuId（N 次详情请求），现从购物车数据直接取。
   return {
     id: raw.id ?? '',
     product: {
@@ -52,6 +66,7 @@ function transformCartItem(raw: CartItemRaw): CartItem {
       price: (raw.unitPrice ?? 0) / 100,
       image: raw.productImage ?? '',
       category: '',
+      defaultSkuId: raw.skuId ?? undefined,
     } as Product,
     quantity: raw.quantity ?? 1,
     selected: raw.isSelected ?? false,
@@ -104,17 +119,20 @@ export const cartApi = {
     // Why: real 模式需查详情获取 SKU ID
     const detail = await productApi.getProduct(productId);
     const skuId = detail?.defaultSkuId;
-    if (!skuId) throw new Error('No SKU available for product ' + productId);
+    if (!skuId) throw businessError('NO_SKU: ' + productId); // 批3#11: 确定性业务失败，不入离线队列
     await api.post('/client/cart/items', { skuId, quantity });
     return this.getCart();
   },
 
-  // Why: 列表接口不返回 skus，需查详情获取第一个 ACTIVE SKU ID
+  // Why: 列表接口不返回 skus，需查详情获取第一个 ACTIVE SKU ID。
+  // C-P2-7（排查结论）：cart.ts 各方法内 this 全部保留具名引用（无 `const { getCart } = this`
+  //   解构丢绑定）；唯一风险是外部解构 cartApi.xxx 再调用，当前无此调用点。具名引用模式
+  //   保持不变，此注释锁定约定：本对象方法间互调一律走 this.xxx 具名引用。
   async resolveSkuId(product: Product): Promise<string> {
     if (product.defaultSkuId) return product.defaultSkuId;
     const detail = await productApi.getProduct(product.id);
     if (!detail?.defaultSkuId) {
-      throw new Error('No SKU available for product ' + product.id);
+      throw businessError('NO_SKU: ' + product.id); // 批3#11
     }
     return detail.defaultSkuId;
   },
@@ -144,6 +162,21 @@ export const cartApi = {
     return this.getCart();
   },
 
+  // C-P2-8: 批量删除收敛——逐删顺序化，仅最后一次 getCart 收口（原 N 次 DELETE 各带一次
+  //   getCart 会拉到中间态；mock 本地直删天然一致）。id 顺序去重防重复 DELETE。
+  async removeItems(itemIds: string[]): Promise<Cart> {
+    if (isMockMode) {
+      const ids = new Set(itemIds);
+      mockDb.cart.items = mockDb.cart.items.filter((i) => !ids.has(i.id));
+      recalculateCart();
+      return mockResponse(mockDb.cart);
+    }
+    for (const id of [...new Set(itemIds)]) {
+      await api.delete(`/client/cart/items/${id}`);
+    }
+    return this.getCart();
+  },
+
   async toggleSelect(itemId: string, selected: boolean): Promise<Cart> {
     if (isMockMode) {
       const item = mockDb.cart.items.find((i) => i.id === itemId);
@@ -155,8 +188,36 @@ export const cartApi = {
     return this.getCart();
   },
 
+  // Why: C-P1-2 Buy Now「显式只选本商品」——结算页只结算 selected 项，跳转前必须保证
+  // 选中集合 = {本商品}：取消其它已选中项，本商品置选中。mock 直改本地；real 走
+  // PATCH isSelected（同 toggleSelect），最后 getCart 拉最终状态。
+  // C-P2-8: 逐 PATCH 顺序化 + 最后仅一次 getCart（同 clearSelected 竞态治理）。
+  async selectOnly(productId: string): Promise<Cart> {
+    if (isMockMode) {
+      for (const item of mockDb.cart.items) {
+        item.selected = item.product.id === productId;
+      }
+      recalculateCart();
+      return mockResponse(mockDb.cart);
+    }
+    const current = await this.getCart();
+    const others = current.items.filter((i) => i.selected && i.product.id !== productId);
+    for (const i of others) {
+      await api.patch(`/client/cart/items/${i.id}`, { isSelected: false });
+    }
+    const target = current.items.find((i) => i.product.id === productId);
+    // 本商品已在购物车且未选中 → 置选中；不在购物车（addItem 后 onSettled invalidate 拉回前/
+    // 或本来就没加过）无需 toggle——addItem 乐观更新已把它置 selected:true 入缓存
+    if (target && !target.selected) {
+      await api.patch(`/client/cart/items/${target.id}`, { isSelected: true });
+    }
+    return this.getCart();
+  },
+
   // Why: 下单成功后清掉「已选中（即本次下单）」的购物车项，未选中项保留。
-  // 后端无批量删除端点，real 模式并行逐个 delete + 最后一次 getCart 拉干净状态。
+  // 后端无批量删除端点，real 模式逐个 delete。
+  // C-P2-8: 顺序化（原 Promise.all 并行）——逐删之间后端购物车状态单调演进，最后仅一次
+  //   getCart 收口（原并行竞态：某 DELETE 尚未落库时 getCart 已拉回含该项的旧状态）。
   async clearSelected(): Promise<Cart> {
     if (isMockMode) {
       mockDb.cart.items = mockDb.cart.items.filter((i) => !i.selected);
@@ -165,10 +226,11 @@ export const cartApi = {
     }
     const current = await this.getCart();
     const selectedIds = current.items.filter((i) => i.selected).map((i) => i.id);
-    if (selectedIds.length > 0) {
-      await Promise.all(selectedIds.map((id) => api.delete(`/client/cart/items/${id}`)));
+    for (const id of selectedIds) {
+      await api.delete(`/client/cart/items/${id}`);
     }
-    return this.getCart();
+    // 仅在确有删除时拉一次终态；无选中项直接返回 current（省一次 GET）
+    return selectedIds.length > 0 ? this.getCart() : current;
   },
 
   // Why: checkout-preview 是结算页关键端点（B5 聚合 discount）：

@@ -25,6 +25,11 @@ describe('formatPrice', () => {
   it('falls back to empty symbol for unknown currency', () => {
     expect(formatPrice(5, 'EUR')).toBe('5.00');
   });
+  // C-P2-1: 单字符符号原样透传（PriceText 旧调用方 currency='$'/'¥'，一次收口不破调用方）
+  it('passes through single-char currency symbol (PriceText legacy callers)', () => {
+    expect(formatPrice(3.5, '$')).toBe('$3.50');
+    expect(formatPrice(3.5, '¥')).toBe('¥3.50');
+  });
   it('adds US-style thousands separator (Q6: money fixed en-US across languages)', () => {
     expect(formatPrice(1234567.89, 'USD')).toBe('$1,234,567.89');
     expect(formatPrice(1234.5, 'USD')).toBe('$1,234.50');

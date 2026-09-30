@@ -59,7 +59,14 @@
     "avatarImage": "Avatar image",
     "youAreOffline": "You are offline",
     "weakNetwork": "Weak network connection",
-    "resetApp": "Reset app state"
+    "resetApp": "Reset app state",
+    "a11y": {
+      "errorAlert": "Error: {{message}}",
+      "locationChip": "Location: {{location}}",
+      "selectField": "Select {{label}}, current {{value}}",
+      "selectOption": "Select {{option}}",
+      "none": "none"
+    }
   },
   "splash": {
     "welcome": "Welcome"
@@ -72,7 +79,10 @@
     "title3": "Tais culture",
     "desc3": "Traditional Timor-Leste patterns",
     "start": "Get started",
-    "skip": "Skip"
+    "skip": "Skip",
+    "a11y": {
+      "slide": "Slide {{index}}"
+    }
   },
   "auth": {
     "login": "Log in",
@@ -161,7 +171,10 @@
     "seeAllProducts": "See all products",
     "messagesLabel": "Messages",
     "reorderLabel": "Reorder {{name}}",
-    "unreadBadge": "You have {{count}} unread notifications"
+    "unreadBadge": "You have {{count}} unread notifications",
+    "a11y": {
+      "banner": "Banner: {{title}}"
+    }
   },
   "promotion": {
     "flashDeals": "Flash Deals",
@@ -303,7 +316,26 @@
     "noProducts": "No products",
     "noProductsDesc": "No items match this filter",
     "addToFavorites": "Add to favorites",
-    "removeFromFavorites": "Remove from favorites"
+    "removeFromFavorites": "Remove from favorites",
+    "a11y": {
+      "category": "Category {{name}}",
+      "variantOption": "{{group}}: {{option}}",
+      "cardItem": "{{name}}, price {{price}}",
+      "price": "Price {{price}}",
+      "priceOriginal": "original price {{price}}"
+    },
+    "specGrind": "Grind",
+    "specWeight": "Weight",
+    "specFine": "Fine",
+    "specMedium": "Medium",
+    "specCoarse": "Coarse",
+    "specWholeBean": "Whole Bean",
+    "spec100g": "100g",
+    "spec250g": "250g",
+    "spec500g": "500g",
+    "spec1kg": "1kg",
+    "spec5kg": "5kg",
+    "spec10kg": "10kg"
   },
   "order": {
     "status": {
@@ -446,7 +478,19 @@
       "afterSales": "After-Sales",
       "review": "Review",
       "buyAgain": "Buy Again"
-    }
+    },
+    "a11y": {
+      "productItem": "{{name}}, quantity {{quantity}}",
+      "countdown": "{{label}} {{time}}",
+      "reviewedTab": "{{name}} {{state}}"
+    },
+    "repeatEmpty": "No items to repeat",
+    "repeatFailed": "Failed to add items to cart",
+    "repeatPartial": "Some items added ({{ok}}/{{total}})",
+    "payCodNoAction": "COD orders are paid on delivery",
+    "payAlreadyPaid": "Order already paid",
+    "paySuccess": "Payment successful",
+    "payFailed": "Payment failed, please try again"
   },
   "tracking": {
     "title": "Order Tracking",
@@ -493,7 +537,8 @@
       "addNew": "Add new address",
       "useCurrentLocation": "Use current location",
       "confirmSave": "Confirm and save address",
-      "mapArea": "Map"
+      "mapArea": "Map",
+      "addressCard": "Address for {{name}}, {{address}}"
     },
     "savedAddresses": "Saved Addresses",
     "emptyDesc": "Add an address to speed up checkout",
@@ -515,6 +560,7 @@
     "searchNoResults": "No results",
     "searchResults": "Search Results",
     "previewHint": "Drag the map or search to pick a location",
+    "pickLocationRequired": "Please pick the location on the map first",
     "nearbyEmpty": "No named places nearby",
     "webMapFallback": "Interactive map is available in the app. Use search to pick a location.",
     "tagLabel": "TAG",
@@ -654,7 +700,10 @@
     "notAvailable": "Not available for this order",
     "saveThisOrder": "Save ${{amount}} on this order",
     "usableThisOrder": "Usable",
-    "unusableThisOrder": "Not usable"
+    "unusableThisOrder": "Not usable",
+    "a11y": {
+      "couponCard": "{{name}} {{code}}"
+    }
   },
   "claim": {
     "title": "Coupon Center",
@@ -696,6 +745,7 @@
     "offlineBlockDesc": "Check your network and try again",
     "submit": "Place order",
     "selectAddress": "Select shipping address",
+    "selectPaymentMethod": "Please select a payment method",
     "noItems": "No items selected",
     "itemQty": "Qty: {{count}}",
     "payment": {
@@ -897,7 +947,10 @@
     "mockReason": "Product quality issue",
     "mockProduct": "Fresh Red Fuji Apple",
     "cancelNotSupported": "Cancellation is not supported at this stage",
-    "cancelFailed": "Cancel failed"
+    "cancelFailed": "Cancel failed",
+    "a11y": {
+      "productItem": "{{label}}: {{name}}"
+    }
   },
   "review": {
     "title": "Write a review",
@@ -943,7 +996,8 @@
       "ratingSlider": "Rating slider, drag to select 1 to 5 stars",
       "charCount": "{{count}} of {{max}} characters",
       "photoThumb": "Photo {{count}}",
-      "removePhoto": "Remove photo {{count}}"
+      "removePhoto": "Remove photo {{count}}",
+      "reviewItem": "Review by {{name}}, rating {{rating}}"
     },
     "progressHint": "Completed {{done}}/{{total}} reviews"
   },
@@ -1209,7 +1263,11 @@
     "suggestedProducts": "Popular Products",
     "noSuggestion": "No suggestions for \"{{q}}\". Press search to see results.",
     "emptyKeyword": "Please enter a search keyword",
-    "searchTerm": "Search {{term}}"
+    "searchTerm": "Search {{term}}",
+    "a11y": {
+      "filterTag": "Filter: {{tag}}",
+      "removeRecent": "Remove {{term}}"
+    }
   },
   "legal": {
     "terms": {
@@ -1229,5 +1287,14 @@
       "comingSoonHint": "This payment method is not available yet"
     },
     "estimatedCny": "≈ ¥{{amount}}"
+  },
+  "pageError": {
+    "title": "Something went wrong",
+    "messageFallback": "An unexpected error occurred. Go back and try again."
+  },
+  "notifications": {
+    "a11y": {
+      "notificationItem": "{{title}}, {{time}}"
+    }
   }
 }

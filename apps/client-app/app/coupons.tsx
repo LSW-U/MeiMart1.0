@@ -37,11 +37,12 @@ export default function CouponsPage() {
   const [tab, setTab] = useState<TabKey>('available');
   // P18 D6：未登录 → 登录/注册空态（useCoupons enabled=isAuth，未登录 data 空命中空态）
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  // Why: 三 tab 并行各调 useCoupons(status) —— 后端 ?status= 端点已就绪（6dc4c81），
-  //      各 status 独立缓存（COUPONS_QUERY_KEY 含 status），tab 切换瞬时（数据已拉）
+  // C-P2-19: 按 tab 懒加载——used/expired 仅切到该 tab 才 enabled 发请求
+  //（原三 query 并行挂载即 3 请求）；各 status 独立缓存（COUPONS_QUERY_KEY 含 status），
+  // 回切命中缓存。available 常驻 enabled（初始 tab + P18 D3 过期提醒条数据源）。
   const availableQ = useCoupons('available');
-  const usedQ = useCoupons('used');
-  const expiredQ = useCoupons('expired');
+  const usedQ = useCoupons('used', { enabled: isAuthenticated && tab === 'used' });
+  const expiredQ = useCoupons('expired', { enabled: isAuthenticated && tab === 'expired' });
 
   // P18 D3：available 中 3 天内过期的券数（提醒条只在此 tab 且 count>0 显示）
   const expiringCount = useMemo(() => {

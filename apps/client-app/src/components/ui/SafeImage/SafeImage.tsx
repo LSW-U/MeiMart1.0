@@ -43,6 +43,15 @@ export function SafeImage({
 }: SafeImageProps) {
   const { colors } = useTheme();
   const [hasError, setHasError] = useState(false);
+  // C-P2-3: 同实例换图（列表复用/轮播切换）必须重置 hasError——否则上一张图的失败状态
+  // 会卡在新图上永远显示占位。React 官方「prop 变化时调整 state」模式（渲染期 setState，
+  // 提交前立即重渲，无级联；useEffect 会撞 react-hooks/set-state-in-effect，product/[id].tsx:148 同款先例）。
+  const [prevUri, setPrevUri] = useState(typeof source === 'string' ? source : source.uri);
+  const currentUri = typeof source === 'string' ? source : source.uri;
+  if (prevUri !== currentUri) {
+    setPrevUri(currentUri);
+    setHasError(false);
+  }
 
   if (hasError) {
     return (

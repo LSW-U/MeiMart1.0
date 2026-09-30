@@ -17,6 +17,9 @@ import { Component, type ReactNode } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { captureError } from '@/services/sentry';
+// C-P2-17: 页面级 ErrorBoundary 在 Provider 崩溃时也要能渲染文案，不能走 ThemeProvider/
+// useTranslation hook（class 组件 + 崩溃态下 Provider 可能不可用）——直接用 i18n 单例 t()。
+import i18n from '@/i18n';
 
 interface Props {
   children: ReactNode;
@@ -37,7 +40,10 @@ export class PageErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    captureError(error, { componentStack: errorInfo.componentStack, extra: { page: this.props.pageName } });
+    captureError(error, {
+      componentStack: errorInfo.componentStack,
+      extra: { page: this.props.pageName },
+    });
     console.error('[PageErrorBoundary]', this.props.pageName, error, errorInfo.componentStack);
   }
 
@@ -52,15 +58,28 @@ export class PageErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      // C-P2-17: 硬编码中文改 i18n（pageError.*，四语同步）；i18n.isInitialized 兜底
+      // Provider 崩溃时 i18n 未初始化的场景——退回英文文案，保证可读
+      const t = (key: string, fallback: string): string =>
+        i18n.isInitialized ? (i18n.t(key) as string) : fallback;
       return (
         <View style={styles.container}>
           <Text style={styles.emoji}>😵</Text>
-          <Text style={styles.title}>页面出错了</Text>
+          <Text style={styles.title}>{t('pageError.title', 'Something went wrong')}</Text>
           <Text style={styles.message} numberOfLines={3}>
-            {this.state.error?.message ?? '页面渲染异常，请返回重试'}
+            {this.state.error?.message ??
+              t(
+                'pageError.messageFallback',
+                'An unexpected error occurred. Go back and try again.',
+              )}
           </Text>
-          <Pressable style={styles.button} onPress={this.handleBack}>
-            <Text style={styles.buttonText}>返回</Text>
+          <Pressable
+            style={styles.button}
+            onPress={this.handleBack}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back', 'Back')}
+          >
+            <Text style={styles.buttonText}>{t('common.back', 'Back')}</Text>
           </Pressable>
         </View>
       );

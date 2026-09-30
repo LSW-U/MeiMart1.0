@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import { formatDate } from '@/utils/format';
 import { useTheme, textStyle, spacing } from '@/theme';
 import type { TimelineStepProps } from './TimelineStep.types';
 
@@ -9,6 +11,8 @@ export function TimelineStep({
   testID,
 }: TimelineStepProps) {
   const { colors } = useTheme();
+  // P2-2（批4 修复）：时间戳走 formatDate 带 UI locale（tet→en-US 回退）
+  const { i18n } = useTranslation();
   return (
     <View testID={testID} style={styles.container} accessibilityRole="list">
       {steps.map((step, i) => {
@@ -70,7 +74,7 @@ export function TimelineStep({
                 </Text>
               ) : null}
               <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
-                {new Date(step.timestamp).toLocaleString()}
+                {formatDate(step.timestamp, i18n.language)}
               </Text>
             </View>
           </View>

@@ -59,7 +59,14 @@
     "avatarImage": "Imagem de avatar",
     "youAreOffline": "Está offline",
     "weakNetwork": "Ligação de rede fraca",
-    "resetApp": "Reiniciar estado da aplicação"
+    "resetApp": "Reiniciar estado da aplicação",
+    "a11y": {
+      "errorAlert": "Erro: {{message}}",
+      "locationChip": "Localização: {{location}}",
+      "selectField": "Selecionar {{label}}, atual {{value}}",
+      "selectOption": "Selecionar {{option}}",
+      "none": "nenhum"
+    }
   },
   "splash": {
     "welcome": "Bem-vindo"
@@ -72,7 +79,10 @@
     "title3": "Cultura Tais",
     "desc3": "Padrões tradicionais do Timor-Leste",
     "start": "Começar",
-    "skip": "Ignorar"
+    "skip": "Ignorar",
+    "a11y": {
+      "slide": "Slide {{index}}"
+    }
   },
   "auth": {
     "login": "Entrar",
@@ -161,7 +171,10 @@
     "seeAllProducts": "Ver todos os produtos",
     "messagesLabel": "Mensagens",
     "reorderLabel": "Reencomendar {{name}}",
-    "unreadBadge": "Você tem {{count}} notificações não lidas"
+    "unreadBadge": "Você tem {{count}} notificações não lidas",
+    "a11y": {
+      "banner": "Banner: {{title}}"
+    }
   },
   "promotion": {
     "flashDeals": "Ofertas Relâmpago",
@@ -303,7 +316,26 @@
     "noProducts": "Sem produtos",
     "noProductsDesc": "Nenhum artigo corresponde a este filtro",
     "addToFavorites": "Adicionar aos favoritos",
-    "removeFromFavorites": "Remover dos favoritos"
+    "removeFromFavorites": "Remover dos favoritos",
+    "a11y": {
+      "category": "Categoria {{name}}",
+      "variantOption": "{{group}}: {{option}}",
+      "cardItem": "{{name}}, preço {{price}}",
+      "price": "Preço {{price}}",
+      "priceOriginal": "preço original {{price}}"
+    },
+    "specGrind": "Moagem",
+    "specWeight": "Peso",
+    "specFine": "Fina",
+    "specMedium": "Média",
+    "specCoarse": "Grossa",
+    "specWholeBean": "Grão inteiro",
+    "spec100g": "100g",
+    "spec250g": "250g",
+    "spec500g": "500g",
+    "spec1kg": "1kg",
+    "spec5kg": "5kg",
+    "spec10kg": "10kg"
   },
   "order": {
     "status": {
@@ -446,7 +478,19 @@
     "tabWithCount": "{{label}}, {{count}}",
     "cancelled": "Pedido cancelado",
     "copied": "Copiado",
-    "copyOrderNo": "Copiar número do pedido"
+    "copyOrderNo": "Copiar número do pedido",
+    "a11y": {
+      "productItem": "{{name}}, quantidade {{quantity}}",
+      "countdown": "{{label}} {{time}}",
+      "reviewedTab": "{{name}} {{state}}"
+    },
+    "repeatEmpty": "Nada para comprar de novo",
+    "repeatFailed": "Falha ao adicionar ao carrinho",
+    "repeatPartial": "Alguns artigos adicionados ({{ok}}/{{total}})",
+    "payCodNoAction": "Pedidos COD são pagos na entrega",
+    "payAlreadyPaid": "Pedido já pago",
+    "paySuccess": "Pagamento bem-sucedido",
+    "payFailed": "Falha no pagamento, tente de novo"
   },
   "tracking": {
     "title": "Rastreio do pedido",
@@ -493,7 +537,8 @@
       "addNew": "Adicionar novo endereço",
       "useCurrentLocation": "Usar localização atual",
       "confirmSave": "Confirmar e guardar endereço",
-      "mapArea": "Mapa"
+      "mapArea": "Mapa",
+      "addressCard": "Endereço de {{name}}, {{address}}"
     },
     "savedAddresses": "Endereços Guardados",
     "emptyDesc": "Adicione um endereço para finalizar a compra mais depressa",
@@ -515,6 +560,7 @@
     "searchNoResults": "Sem resultados",
     "searchResults": "Resultados da Pesquisa",
     "previewHint": "Arraste o mapa ou pesquise para escolher uma localização",
+    "pickLocationRequired": "Selecione primeiro a localização no mapa",
     "nearbyEmpty": "Sem locais com nome próximos",
     "webMapFallback": "O mapa interativo está disponível na app. Use a pesquisa para escolher uma localização.",
     "tagLabel": "ETIQUETA",
@@ -654,7 +700,10 @@
     "notAvailable": "Não disponível para este pedido",
     "saveThisOrder": "Economize ${{amount}} neste pedido",
     "usableThisOrder": "Utilizável",
-    "unusableThisOrder": "Não utilizável"
+    "unusableThisOrder": "Não utilizável",
+    "a11y": {
+      "couponCard": "{{name}} {{code}}"
+    }
   },
   "claim": {
     "title": "Central de Cupões",
@@ -696,6 +745,7 @@
     "offlineBlockDesc": "Verifique a rede e tente novamente",
     "submit": "Fazer pedido",
     "selectAddress": "Selecionar endereço de entrega",
+    "selectPaymentMethod": "Selecione um método de pagamento",
     "noItems": "Nenhum artigo selecionado",
     "itemQty": "Qtd: {{count}}",
     "payment": {
@@ -897,7 +947,10 @@
     "mockReason": "Problema de qualidade do produto",
     "mockProduct": "Maçã Fresca Red Fuji",
     "cancelNotSupported": "O cancelamento não é suportado nesta fase",
-    "cancelFailed": "Falha ao cancelar"
+    "cancelFailed": "Falha ao cancelar",
+    "a11y": {
+      "productItem": "{{label}}: {{name}}"
+    }
   },
   "review": {
     "title": "Escrever avaliação",
@@ -943,7 +996,8 @@
       "ratingSlider": "Slider de avaliação, arraste para escolher de 1 a 5 estrelas",
       "charCount": "{{count}} de {{max}} caracteres",
       "photoThumb": "Foto {{count}}",
-      "removePhoto": "Remover foto {{count}}"
+      "removePhoto": "Remover foto {{count}}",
+      "reviewItem": "Avaliação de {{name}}, classificação {{rating}}"
     },
     "progressHint": "{{done}}/{{total}} avaliações concluídas"
   },
@@ -1209,7 +1263,11 @@
     "suggestedProducts": "Produtos Populares",
     "noSuggestion": "Sem sugestões para \"{{q}}\". Prima pesquisar para ver resultados.",
     "emptyKeyword": "Introduza uma palavra-chave de pesquisa",
-    "searchTerm": "Pesquisar {{term}}"
+    "searchTerm": "Pesquisar {{term}}",
+    "a11y": {
+      "filterTag": "Filtro: {{tag}}",
+      "removeRecent": "Remover {{term}}"
+    }
   },
   "legal": {
     "terms": {
@@ -1229,5 +1287,14 @@
       "comingSoonHint": "Este método de pagamento ainda não está disponível"
     },
     "estimatedCny": "≈ ¥{{amount}}"
+  },
+  "pageError": {
+    "title": "Algo deu errado",
+    "messageFallback": "Ocorreu um erro inesperado. Volte e tente novamente."
+  },
+  "notifications": {
+    "a11y": {
+      "notificationItem": "{{title}}, {{time}}"
+    }
   }
 }

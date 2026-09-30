@@ -40,6 +40,11 @@ export function MapPlaceholder({ riderLocation, estimatedArrival }: MapPlacehold
       : minAway > 0
         ? t('tracking.minAway', { count: minAway, defaultValue: '{{count}} min away' })
         : t('tracking.arrivingNow', { defaultValue: 'Arriving now' });
+  // C-P3-1（批4）：a11y 骨架 i18n 化——骨架走 tracking.mapA11y，ETA 片段拼装提为变量
+  const a11yLabel =
+    minAway !== null
+      ? `${t('tracking.mapA11y', { defaultValue: 'Map showing delivery route' })}, ${etaText}`
+      : t('tracking.mapA11y', { defaultValue: 'Map showing delivery route' });
   return (
     <View
       style={[
@@ -50,16 +55,46 @@ export function MapPlaceholder({ riderLocation, estimatedArrival }: MapPlacehold
         },
       ]}
       accessibilityRole="image"
-      accessibilityLabel={`${t('tracking.mapA11y', { defaultValue: 'Map showing delivery route' })}${minAway !== null ? `, ${etaText}` : ''}`}
+      accessibilityLabel={a11yLabel}
     >
       {/* 装饰性街道网（HTML L405-412 — 2 主路横 + 2 次路竖 + 2 小路） */}
       <View style={styles.mapLayer} pointerEvents="none">
-        <View style={[styles.streetMajor, { top: '20%', backgroundColor: colors.outline, opacity: 0.28 }]} />
-        <View style={[styles.streetMajor, { top: '65%', backgroundColor: colors.outline, opacity: 0.28 }]} />
-        <View style={[styles.streetMinorV, { left: '25%', backgroundColor: colors.outline, opacity: 0.15 }]} />
-        <View style={[styles.streetMinorV, { left: '70%', backgroundColor: colors.outline, opacity: 0.15 }]} />
-        <View style={[styles.streetMinorH, { top: '45%', backgroundColor: colors.outline, opacity: 0.15 }]} />
-        <View style={[styles.streetMinorVThin, { left: '45%', backgroundColor: colors.outline, opacity: 0.15 }]} />
+        <View
+          style={[
+            styles.streetMajor,
+            { top: '20%', backgroundColor: colors.outline, opacity: 0.28 },
+          ]}
+        />
+        <View
+          style={[
+            styles.streetMajor,
+            { top: '65%', backgroundColor: colors.outline, opacity: 0.28 },
+          ]}
+        />
+        <View
+          style={[
+            styles.streetMinorV,
+            { left: '25%', backgroundColor: colors.outline, opacity: 0.15 },
+          ]}
+        />
+        <View
+          style={[
+            styles.streetMinorV,
+            { left: '70%', backgroundColor: colors.outline, opacity: 0.15 },
+          ]}
+        />
+        <View
+          style={[
+            styles.streetMinorH,
+            { top: '45%', backgroundColor: colors.outline, opacity: 0.15 },
+          ]}
+        />
+        <View
+          style={[
+            styles.streetMinorVThin,
+            { left: '45%', backgroundColor: colors.outline, opacity: 0.15 },
+          ]}
+        />
       </View>
 
       {/* 路线（HTML L413 + L83-85 — 60% 宽旋转 18deg + 起终点 pin） */}
@@ -67,8 +102,15 @@ export function MapPlaceholder({ riderLocation, estimatedArrival }: MapPlacehold
         style={[styles.routeLine, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
         pointerEvents="none"
       >
-        <View style={[styles.routePinStart, { backgroundColor: '#ffffff', borderColor: colors.primary }]} />
-        <View style={[styles.routePinEnd, { backgroundColor: colors.primary, borderColor: ON_PRIMARY }]} />
+        <View
+          style={[
+            styles.routePinStart,
+            { backgroundColor: '#ffffff', borderColor: colors.primary },
+          ]}
+        />
+        <View
+          style={[styles.routePinEnd, { backgroundColor: colors.primary, borderColor: ON_PRIMARY }]}
+        />
       </View>
 
       {/* 骑手定位（HTML L414-415 — 静态 pulse 光晕 + primary 底白 icon，riderLocation 有值才显示） */}

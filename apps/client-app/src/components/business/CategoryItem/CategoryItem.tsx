@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -15,13 +15,26 @@ export const SIZE_MAP = {
   lg: { box: 72, icon: 36, fontSize: 14 },
 } as const;
 
-export function CategoryItem({ category, size = 'md', onPress, testID }: CategoryItemProps) {
+// C-P2-10: React.memo——分类网格项重渲隔离（props 浅比较）
+export const CategoryItem = memo(function CategoryItem({
+  category,
+  size = 'md',
+  onPress,
+  testID,
+}: CategoryItemProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const dims = SIZE_MAP[size];
   // Why: C2b - 图标盒白底（替代 secondary-container / category.color），无图时图标用 primary 色
   const bgColor = colors['surface-container-lowest'];
   const borderColor = category.borderColor ?? 'transparent';
   const [imageError, setImageError] = useState(false);
+  // C-P2-3: 同实例换图（列表复用）重置错误态——上一张失败不卡新图（SafeImage 同款渲染期 setState 先例）
+  const [prevImage, setPrevImage] = useState(category.image);
+  if (prevImage !== category.image) {
+    setPrevImage(category.image);
+    setImageError(false);
+  }
   const hasImage = Boolean(category.image) && !imageError;
   const iconColor = colors.primary;
   const badgeColor = category.badge === 'hot' ? colors.primary : colors.semantic.positive;
@@ -32,7 +45,7 @@ export function CategoryItem({ category, size = 'md', onPress, testID }: Categor
       style={({ pressed }) => [styles.container, pressed && styles.pressed]}
       onPress={onPress ? () => onPress(category) : undefined}
       accessibilityRole="button"
-      accessibilityLabel={`Category ${category.name}`}
+      accessibilityLabel={t('product.a11y.category', { name: category.name })}
     >
       <View
         style={[
@@ -53,6 +66,7 @@ export function CategoryItem({ category, size = 'md', onPress, testID }: Categor
             source={{ uri: category.image }}
             style={styles.image}
             accessible={false}
+            testID={testID ? `${testID}-image` : 'category-item-image'}
             onError={() => setImageError(true)}
           />
         ) : (
@@ -91,7 +105,7 @@ export function CategoryItem({ category, size = 'md', onPress, testID }: Categor
       </Text>
     </Pressable>
   );
-}
+});
 
 // Why: P6 V1f 溢出 - MoreItem 与 CategoryItem 同尺寸（复用 SIZE_MAP），不消费 category 数据
 export function MoreItem({

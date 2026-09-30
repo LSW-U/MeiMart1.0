@@ -37,15 +37,8 @@ export default function OrdersPage() {
   const { t } = useTranslation();
   const [active, setActive] = useState<OrderTabKey>('all');
   const counts = useOrderCounts();
-  const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useOrdersInfinite(active);
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useOrdersInfinite(active);
   // Why: useInfiniteQuery 返回 InfiniteData<{items,...}[]>，拍平多页 items 为 Order[]
   const orders: Order[] = data?.pages.flatMap((p) => p.items) ?? [];
 
@@ -55,8 +48,9 @@ export default function OrdersPage() {
   const handleAction = (action: OrderAction, order: Order) => {
     switch (action) {
       case 'pay':
-        // 与 P10 详情页 [id].tsx:702 一致（checkout 页内部走 createOrder，pay 的订单支付入口待支付模块）
-        router.push('/order/checkout');
+        // C-P3-4（批4）：待支付订单跳详情页原位支付（详情页 BottomActions handlePay），
+        // 不经 checkout（checkout 内部走 createOrder，会重复下单）
+        router.push({ pathname: '/order/[id]', params: { id: order.id } });
         break;
       case 'track':
         // PENDING_CONFIRM/CONFIRMED 未发货 → 详情页；PICKED 及之后 → 物流追踪页
@@ -105,145 +99,148 @@ export default function OrdersPage() {
 
   return (
     <PageErrorBoundary pageName="orders">
-    <SafeAreaWrapper
-      edges={['top', 'bottom']}
-      style={{ backgroundColor: colors.background, flex: 1 }}
-    >
-      <StatusBarConfig />
-      <PrimaryHeader
-        title={t('profile.orders')}
-        rightActions={
-          <Pressable
-            onPress={() => router.push('/service/help')}
-            hitSlop={8}
-            style={styles.headerBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('profile.help')}
-          >
-            <Icon symbol="help" size={24} color={ON_PRIMARY} />
-          </Pressable>
-        }
-      />
-
-      {/* Tab 栏（HTML 第 ? 行：border-b border-outline-variant/30，激活态 primary） */}
-      <View
-        style={[
-          styles.tabBar,
-          {
-            backgroundColor: colors['surface-container-lowest'],
-            borderBottomColor: colors['outline-variant'],
-          },
-        ]}
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
       >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.tabRow}>
-            {ORDER_TABS.map((tab) => {
-              const isActive = tab.key === active;
-              // Why: 业务 Tab 显示角标计数（to-pay/ship/receive/review），all 不显示；count>0 才渲染避免假 0
-              const count = tab.countable && tab.key !== 'all' ? counts[tab.key] : 0;
-              return (
-                <Pressable
-                  key={tab.key}
-                  onPress={() => setActive(tab.key)}
-                  style={styles.tabBtn}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: isActive }}
-                  accessibilityLabel={
-                    count > 0
-                      ? t('order.tabWithCount', {
-                          label: t(tab.labelKey),
-                          count,
-                          defaultValue: '{{label}}, {{count}}',
-                        })
-                      : t(tab.labelKey)
-                  }
-                >
-                  <View style={styles.tabContent}>
-                    <Text
-                      style={[
-                        styles.tabText,
-                        {
-                          color: isActive ? colors.primary : colors['on-surface-variant'],
-                        },
-                      ]}
-                    >
-                      {t(tab.labelKey)}
-                    </Text>
-                    {count > 0 && (
-                      <View
+        <StatusBarConfig />
+        <PrimaryHeader
+          title={t('profile.orders')}
+          rightActions={
+            <Pressable
+              onPress={() => router.push('/service/help')}
+              hitSlop={8}
+              style={styles.headerBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.help')}
+            >
+              <Icon symbol="help" size={24} color={ON_PRIMARY} />
+            </Pressable>
+          }
+        />
+
+        {/* Tab 栏（HTML 第 ? 行：border-b border-outline-variant/30，激活态 primary） */}
+        <View
+          style={[
+            styles.tabBar,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderBottomColor: colors['outline-variant'],
+            },
+          ]}
+        >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.tabRow}>
+              {ORDER_TABS.map((tab) => {
+                const isActive = tab.key === active;
+                // Why: 业务 Tab 显示角标计数（to-pay/ship/receive/review），all 不显示；count>0 才渲染避免假 0
+                const count = tab.countable && tab.key !== 'all' ? counts[tab.key] : 0;
+                return (
+                  <Pressable
+                    key={tab.key}
+                    onPress={() => setActive(tab.key)}
+                    style={styles.tabBtn}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: isActive }}
+                    accessibilityLabel={
+                      count > 0
+                        ? t('order.tabWithCount', {
+                            label: t(tab.labelKey),
+                            count,
+                            defaultValue: '{{label}}, {{count}}',
+                          })
+                        : t(tab.labelKey)
+                    }
+                  >
+                    <View style={styles.tabContent}>
+                      <Text
                         style={[
-                          styles.tabBadge,
-                          // V17：激活 Tab 角标变 primary（与 tab 文字同色系），非激活才 error
-                          { backgroundColor: isActive ? colors.primary : colors.error },
+                          styles.tabText,
+                          {
+                            color: isActive ? colors.primary : colors['on-surface-variant'],
+                          },
                         ]}
-                        accessible={false}
                       >
-                        <Text
-                          // F3：文字色随底色走 theme（暗色 primary/error 是浅红，恒白对比度不足）
-                          style={[styles.tabBadgeText, { color: isActive ? colors['on-primary'] : colors['on-error'] }]}
+                        {t(tab.labelKey)}
+                      </Text>
+                      {count > 0 && (
+                        <View
+                          style={[
+                            styles.tabBadge,
+                            // V17：激活 Tab 角标变 primary（与 tab 文字同色系），非激活才 error
+                            { backgroundColor: isActive ? colors.primary : colors.error },
+                          ]}
                           accessible={false}
                         >
-                          {count}
-                        </Text>
-                      </View>
+                          <Text
+                            // F3：文字色随底色走 theme（暗色 primary/error 是浅红，恒白对比度不足）
+                            style={[
+                              styles.tabBadgeText,
+                              { color: isActive ? colors['on-primary'] : colors['on-error'] },
+                            ]}
+                            accessible={false}
+                          >
+                            {count}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    {isActive && (
+                      <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />
                     )}
-                  </View>
-                  {isActive && (
-                    <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />
-                  )}
-                </Pressable>
-              );
-            })}
-          </View>
-        </ScrollView>
-      </View>
-
-      {isLoading ? (
-        <PageSkeleton variant="list" rows={5} />
-      ) : isError ? (
-        <ErrorState message={t('errors.orders')} onRetry={() => refetch()} />
-      ) : !orders || orders.length === 0 ? (
-        <EmptyState
-          title={t('order.emptyTitle')}
-          description={t('order.emptyDesc')}
-          icon="clipboard-text-outline"
-          actionLabel={t('favorites.goBrowse')}
-          onAction={() => router.push('/(main)/home')}
-        />
-      ) : (
-        <FlatList
-          data={orders}
-          keyExtractor={(item) => item.id}
-          initialNumToRender={6}
-          maxToRenderPerBatch={4}
-          windowSize={5}
-          contentContainerStyle={styles.list}
-          onEndReached={() => {
-            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-          }}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={
-            isFetchingNextPage ? (
-              <View style={styles.footerLoading}>
-                <ActivityIndicator size="small" color={colors.primary} />
-              </View>
-            ) : null
-          }
-          ItemSeparatorComponent={() => (
-            <View style={styles.dividerWrap}>
-              <TaisDivider />
+                  </Pressable>
+                );
+              })}
             </View>
-          )}
-          renderItem={({ item }: { item: Order }) => (
-            <OrderCard
-              order={item}
-              onPress={() => router.push(`/order/${item.id}`)}
-              onAction={handleAction}
-            />
-          )}
-        />
-      )}
-    </SafeAreaWrapper>
+          </ScrollView>
+        </View>
+
+        {isLoading ? (
+          <PageSkeleton variant="list" rows={5} />
+        ) : isError ? (
+          <ErrorState message={t('errors.orders')} onRetry={() => refetch()} />
+        ) : !orders || orders.length === 0 ? (
+          <EmptyState
+            title={t('order.emptyTitle')}
+            description={t('order.emptyDesc')}
+            icon="clipboard-text-outline"
+            actionLabel={t('favorites.goBrowse')}
+            onAction={() => router.push('/(main)/home')}
+          />
+        ) : (
+          <FlatList
+            data={orders}
+            keyExtractor={(item) => item.id}
+            initialNumToRender={6}
+            maxToRenderPerBatch={4}
+            windowSize={5}
+            contentContainerStyle={styles.list}
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+            }}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View style={styles.footerLoading}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+              ) : null
+            }
+            ItemSeparatorComponent={() => (
+              <View style={styles.dividerWrap}>
+                <TaisDivider />
+              </View>
+            )}
+            renderItem={({ item }: { item: Order }) => (
+              <OrderCard
+                order={item}
+                onPress={() => router.push(`/order/${item.id}`)}
+                onAction={handleAction}
+              />
+            )}
+          />
+        )}
+      </SafeAreaWrapper>
     </PageErrorBoundary>
   );
 }

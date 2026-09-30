@@ -14,7 +14,7 @@ export function TabBar({ tabs, activeIndex, onTabChange, testID }: TabBarProps) 
         const isActive = i === activeIndex;
         return (
           <Pressable
-            key={i}
+            key={tab}
             style={[
               styles.tab,
               isActive && {

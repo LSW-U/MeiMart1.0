@@ -19,28 +19,20 @@
  * 不走 axios interceptor 的 401 refresh（上传场景 token 通常有效，401 极少；用户重新登录即可）
  */
 import { getExtra } from '@/config/app-config';
-import * as SecureStore from 'expo-secure-store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '@/store/authStore';
 import { getCurrentLocale } from '@/i18n';
 import { uploadImageFileWithRetry, type UploadResult } from '@meimart/upload-core';
-import { isMockMode } from './api';
+import { isMockMode, tokenStorage } from './api';
 
 const env = getExtra();
 const baseURL = env?.API_BASE_URL ?? 'https://api.meimart.example.com';
-const TOKEN_KEY = 'meimart.token';
 
+// C-P2-16: 删除自维护 TOKEN_KEY——复用 api.ts tokenStorage 单一真值源（平台分支/存储 key/
+// 异常兜底都在一处维护，此前两份拷贝会漂移：改 api.ts key 时 uploads 静默读不到 token）。
 async function getToken(): Promise<string | null> {
   const authState = useAuthStore.getState();
   if (authState.accessToken) return authState.accessToken;
-  try {
-    const isWeb = typeof document !== 'undefined';
-    return isWeb
-      ? await AsyncStorage.getItem(TOKEN_KEY)
-      : await SecureStore.getItemAsync(TOKEN_KEY);
-  } catch {
-    return null;
-  }
+  return tokenStorage.get();
 }
 
 export type { UploadResult };

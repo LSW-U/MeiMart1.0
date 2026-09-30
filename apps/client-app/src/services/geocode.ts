@@ -29,12 +29,20 @@ export async function searchPlaces(query: string): Promise<GeoHit[]> {
   return res.data.items ?? [];
 }
 
-/** 反地理编码：坐标 → 地址文本（后端无 reverse 端点，保留 Nominatim 直调） */
-export async function reverseGeocode(lat: number, lng: number): Promise<string> {
+/**
+ * 反地理编码：坐标 → 地址文本（后端无 reverse 端点，保留 Nominatim 直调）
+ * C-P1-6: 可选 AbortSignal——调用方（map.tsx）debounce 后仍可能被新一轮拖动打断，
+ * in-flight 请求经 signal 取消（而非仅丢弃过期响应），省流量也省 Nominatim 1/s 限额。
+ */
+export async function reverseGeocode(
+  lat: number,
+  lng: number,
+  signal?: AbortSignal,
+): Promise<string> {
   const res = await fetch(
     `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&lat=${lat}&lon=${lng}`,
     // Why: Nominatim 使用政策要求可识别 UA（批D 审查 P3-1，删 nominatimHeaders 时连带误删，此处补回）
-    { headers: { 'User-Agent': 'MeiMart-client/1.0' } },
+    { headers: { 'User-Agent': 'MeiMart-client/1.0' }, signal },
   );
   if (!res.ok) throw new Error(`Nominatim reverse ${res.status}`);
   const data = (await res.json()) as { display_name?: string };

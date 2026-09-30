@@ -7,7 +7,7 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { ThemeProvider } from '@/theme';
-import { CaptchaInput } from './CaptchaInput';
+import { CaptchaInput, sanitizeCaptchaSvg } from './CaptchaInput';
 
 const mockMutate = jest.fn();
 
@@ -158,5 +158,55 @@ describe('CaptchaInput', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+});
+
+// ===== C-P1-5: SVG 净化白名单（审查修复批1）=====
+// sanitizeCaptchaSvg 导出直测（渲染态对 SvgXml 内部不感知，净化是纯函数语义）
+describe('C-P1-5 sanitizeCaptchaSvg（SVG 净化白名单）', () => {
+  it.each([
+    ['<image> 外联图', '<svg><image xlink:href="http://evil/x"/></svg>'],
+    ['<script> 注入', '<svg><script>alert(1)</script></svg>'],
+    ['<foreignObject> 嵌 HTML', '<svg><foreignObject><body>x</body></foreignObject></svg>'],
+    ['<use> 外部实体引用', '<svg><use href="//evil/sprite#x"/></svg>'],
+    ['<animate> SMIL', '<svg><rect><animate attributeName="x"/></rect></svg>'],
+    ['<set> SMIL', '<svg><rect><set attributeName="x"/></rect></svg>'],
+    ['>8KB 超长', `<svg>${'x'.repeat(9000)}</svg>`],
+    ['非 <svg 开头', '<div>svg?</div>'],
+    ['空/空串', ''],
+  ])('拒绝非法 SVG：%s', (_name, bad) => {
+    expect(sanitizeCaptchaSvg(bad)).toBeNull();
+  });
+
+  it('合法验证码 SVG（rect/text 常规标签）放行原样', () => {
+    const good =
+      '<svg xmlns="http://www.w3.org/2000/svg"><rect width="120" height="44"/><text>7</text></svg>';
+    expect(sanitizeCaptchaSvg(good)).toBe(good);
+  });
+
+  it('null/undefined → null（防御后端异常响应）', () => {
+    expect(sanitizeCaptchaSvg(null)).toBeNull();
+    expect(sanitizeCaptchaSvg(undefined)).toBeNull();
+  });
+});
+
+describe('C-P1-5 CaptchaInput 渲染层：非法 SVG 走失败态', () => {
+  // 报告 §5 A5：非法样本经 useFetchCaptcha onSuccess 注入后不得渲染（image 测试节点仍挂载，
+  // 但 SvgXml 分支被失败态 Text 替代——以失败文案出现 + onChange(null) 为准）
+  it.each([
+    '<svg><image xlink:href="http://evil/x"/></svg>',
+    '<svg><script>alert(1)</script></svg>',
+    `x${'x'.repeat(9000)}`,
+  ])('非法 SVG %s → 渲染 errors.generic 失败态', async (bad) => {
+    const onChange = jest.fn();
+    const { getByText, queryByText } = render(<CaptchaInput onChange={onChange} />, {
+      wrapper: ThemeProvider,
+    });
+    resolveCaptcha('cap-bad', bad);
+    await waitFor(() => {
+      expect(getByText('errors.generic', { includeHiddenElements: true })).toBeTruthy();
+    });
+    // 失败态出现即证明未走 SvgXml 分支
+    expect(queryByText('auth.captchaLabel', { includeHiddenElements: true })).toBeTruthy();
   });
 });

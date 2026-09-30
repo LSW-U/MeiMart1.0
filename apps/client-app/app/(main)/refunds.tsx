@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { formatDate } from '@/utils/format';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -64,7 +65,7 @@ function statusColor(status: string, colors: AppColors): string {
 
 export default function RefundsPage() {
   const { colors } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isOffline } = useWeakNetworkUI();
   const [active, setActive] = useState<RefundTabKey>('all');
   const { data: refunds, isLoading, isError, refetch } = useRefunds();
@@ -87,7 +88,11 @@ export default function RefundsPage() {
 
         {/* 状态筛选 tab（全部 / 进行中 / 已完成） */}
         <View style={[styles.tabRow, { borderBottomColor: colors['outline-variant'] }]}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScroll}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabScroll}
+          >
             {REFUND_TABS.map((tab) => {
               const activeTab = tab.key === active;
               return (
@@ -164,8 +169,15 @@ export default function RefundsPage() {
                   <Text style={[styles.orderNo, { color: colors['on-surface-variant'] }]}>
                     {t('refunds.orderPrefix')} #{item.orderId.slice(-8)}
                   </Text>
-                  <View style={[styles.statusBadge, { backgroundColor: statusColor(item.status, colors) }]}>
-                    <Text style={styles.statusText}>{t(`refunds.status.${item.status}`, { defaultValue: item.status })}</Text>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      { backgroundColor: statusColor(item.status, colors) },
+                    ]}
+                  >
+                    <Text style={styles.statusText}>
+                      {t(`refunds.status.${item.status}`, { defaultValue: item.status })}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.cardBody}>
@@ -181,13 +193,15 @@ export default function RefundsPage() {
                       {t('refunds.methodLabel')}
                     </Text>
                     <Text style={[styles.methodText, { color: colors['on-surface'] }]}>
-                      {t(`refunds.method.${item.refundMethod}`, { defaultValue: item.refundMethod })}
+                      {t(`refunds.method.${item.refundMethod}`, {
+                        defaultValue: item.refundMethod,
+                      })}
                     </Text>
                   </View>
                 </View>
                 <View style={styles.cardFooter}>
                   <Text style={[styles.timeText, { color: colors['on-surface-variant'] }]}>
-                    {new Date(item.createdAt).toLocaleDateString()}
+                    {formatDate(item.createdAt, i18n.language)}
                   </Text>
                   <Icon symbol="chevron_right" size={20} color={colors['on-surface-variant']} />
                 </View>

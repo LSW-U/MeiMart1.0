@@ -12,23 +12,24 @@ import { useAuthStore } from '@/store/authStore';
 // Why: 按 status 分 key（available/used/expired 各自缓存独立，tab 切换不互相覆盖）
 export const COUPONS_QUERY_KEY = (status: string) => ['coupons', status] as const;
 
-export function useCoupons(status: 'available' | 'used' | 'expired' = 'available') {
+export function useCoupons(
+  status: 'available' | 'used' | 'expired' = 'available',
+  // C-P2-19: 可选 enabled 覆盖（coupons 页按 tab 懒加载用）；默认 undefined = 仅受登录态控制
+  opts?: { enabled?: boolean },
+) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: COUPONS_QUERY_KEY(status),
     queryFn: () => promotionApi.listCoupons(status),
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',
-    enabled: isAuthenticated, // 未登录不请求，避免 401
+    enabled: opts?.enabled !== undefined ? opts.enabled : isAuthenticated, // 未登录不请求，避免 401
   });
 }
 
 // Why: validate 按 code+orderAmount 分 key（金额变/换券自动重查）；deliveryFee 进 key 避免免运券脏缓存
-export const VALIDATE_COUPON_KEY = (
-  code: string,
-  orderAmount: number,
-  deliveryFee: number,
-) => ['coupon-validate', code, orderAmount, deliveryFee] as const;
+export const VALIDATE_COUPON_KEY = (code: string, orderAmount: number, deliveryFee: number) =>
+  ['coupon-validate', code, orderAmount, deliveryFee] as const;
 
 /**
  * 校验券码算折扣。input 为 null 时不请求（无选中券）。

@@ -5,13 +5,19 @@ import { processQueue } from './queue';
 let initialized = false;
 let wasOffline = false;
 
+// C-P2-12: isInternetReachable null（探测中/无法探测）是「未知」非「不可达」，按可达处理
+// （与 useNetwork.ts reachableOrUnknown 同口径）。isConnected 仍是离线硬判据。
+function reachableOrUnknown(value: boolean | null | undefined): boolean {
+  return value !== false;
+}
+
 export function initNetworkListener() {
   if (initialized) return () => {};
   initialized = true;
 
   const unsubscribe = NetInfo.addEventListener((state) => {
     const isConnected = Boolean(state.isConnected);
-    const isInternetReachable = Boolean(state.isInternetReachable);
+    const isInternetReachable = reachableOrUnknown(state.isInternetReachable);
     const details = (state as { details?: { effectiveType?: string } }).details ?? {};
     const effectiveType = ((): 'fast' | 'cellular' | 'slow' => {
       const t = details.effectiveType;

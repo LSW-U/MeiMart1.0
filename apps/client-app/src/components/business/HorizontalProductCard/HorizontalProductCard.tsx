@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { ActivityIndicator, Pressable, View, Text, StyleSheet } from 'react-native';
 import { useTheme, spacing, borderRadius, typography, shadowPresets } from '@/theme';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +14,8 @@ import type { HorizontalProductCardProps } from './HorizontalProductCard.types';
 // 原因：红底加购按钮上的固定白字，dark 不变（同 ON_PRIMARY 模式）
 const ON_PRIMARY = '#ffffff';
 
-export function HorizontalProductCard({
+// C-P2-10: React.memo——列表/横滑项重渲隔离（props 浅比较；调用方需稳定回调 useCallback）
+export const HorizontalProductCard = memo(function HorizontalProductCard({
   product,
   onPress,
   onLongPress,
@@ -56,7 +58,16 @@ export function HorizontalProductCard({
         {/* Why: badge inline 渲染（§9-5 统一为 resolveBadges 派生），primary tint 背景；
             管理态隐藏（选择优先，与 Masonry 管理态一致） */}
         {badge && !selectMode && (
-          <View style={[styles.badge, { backgroundColor: colors.primary + '1F' /* 原因：primary 12% tint 背景（8位 hex #RRGGBBAA，'1F'≈12% alpha，审查 Q3） */ }]}>
+          <View
+            style={[
+              styles.badge,
+              {
+                backgroundColor:
+                  colors.primary +
+                  '1F' /* 原因：primary 12% tint 背景（8位 hex #RRGGBBAA，'1F'≈12% alpha，审查 Q3） */,
+              },
+            ]}
+          >
             <Text style={[styles.badgeText, { color: colors.primary }]}>{badge.label}</Text>
           </View>
         )}
@@ -113,9 +124,7 @@ export function HorizontalProductCard({
           ]}
           accessibilityRole="button"
           accessibilityLabel={t('product.addToCartLabel', { name })}
-          accessibilityState={
-            addPending || addDisabled ? { disabled: true } : undefined
-          }
+          accessibilityState={addPending || addDisabled ? { disabled: true } : undefined}
         >
           {addPending ? (
             // P19 D4：加购进行中用 spinner 占位（复用 add 按钮位，尺寸与 icon 对齐）；
@@ -169,7 +178,7 @@ export function HorizontalProductCard({
       {cardContent}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

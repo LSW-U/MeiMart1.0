@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { connectOrderTracking, type RiderLocation, type WsConnectionState } from '@/services/tracking';
+import {
+  connectOrderTracking,
+  type RiderLocation,
+  type WsConnectionState,
+} from '@/services/tracking';
 import { orderApi } from '@/services/orders';
 import { useAuthStore } from '@/store/authStore';
 import type { OrderStatus } from '@/types';
@@ -74,10 +78,15 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
     socket.on('order:location', handleLocation);
     socket.on('order:status-changed', handleStatusChanged);
 
+    // C-P2-14: unmount/依赖变化后的 setState 守卫——getTracking().then 与 30s 轮询回调
+    //   都可能落在 cleanup 之后（慢网响应迟到/轮询 in-flight），无守卫会对已卸载组件 setState。
+    let cancelled = false;
+
     // P11 ETA:初始拿一次 eta（task.estimatedArrival 是静态值，WS 不推，只在 getTracking 返回）
     orderApi
       .getTracking(orderId)
       .then((tracking) => {
+        if (cancelled) return;
         setState((s) => ({ ...s, estimatedArrival: tracking.task?.estimatedArrival ?? null }));
       })
       .catch(() => {
@@ -92,6 +101,7 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
         pollTimer = setInterval(async () => {
           try {
             const tracking = await orderApi.getTracking(orderId);
+            if (cancelled) return;
             setState((s) => ({
               ...s,
               lastOrderStatus: tracking.orderStatus,
@@ -109,6 +119,7 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
     }, WS_TIMEOUT_MS);
 
     return () => {
+      cancelled = true;
       clearInterval(checkTimer);
       if (pollTimer) clearInterval(pollTimer);
       socket.off('connect', handleConnect);

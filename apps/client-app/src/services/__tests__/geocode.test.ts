@@ -1,4 +1,4 @@
-import { fetchNearbyPlaces, searchPlaces } from '@/services/geocode';
+import { fetchNearbyPlaces, reverseGeocode, searchPlaces } from '@/services/geocode';
 import { api } from '@/services/api';
 
 // Why: 批D D1 — searchPlaces/fetchNearbyPlaces 切后端代理（/common/geo/suggest、/common/geo/nearby），
@@ -64,5 +64,55 @@ describe('geocode service（后端代理）', () => {
     mockGet.mockResolvedValueOnce({ data: {} });
     const places = await fetchNearbyPlaces(-8.5569, 125.5603);
     expect(places).toEqual([]);
+  });
+
+  // B 部分（批4）：reverseGeocode 保留 Nominatim 直调（后端无 reverse 端点），
+  // 走全局 fetch 而非 axios api.get —— 用 global.fetch mock 验证
+  describe('reverseGeocode（Nominatim 直调）', () => {
+    const mockFetch = jest.fn();
+
+    beforeAll(() => {
+      globalThis.fetch = mockFetch as unknown as typeof fetch;
+    });
+
+    afterEach(() => {
+      mockFetch.mockReset();
+    });
+
+    it('拼 reverse URL + 带 UA 头，返回 display_name', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ display_name: 'Rua 12 de Novembro, Dili, Timor-Leste' }),
+      });
+      const label = await reverseGeocode(-8.5569, 125.5603);
+      expect(label).toBe('Rua 12 de Novembro, Dili, Timor-Leste');
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&lat=-8.5569&lon=125.5603',
+        expect.objectContaining({ headers: { 'User-Agent': 'MeiMart-client/1.0' } }),
+      );
+    });
+
+    it('display_name 缺失兜底空串', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
+      expect(await reverseGeocode(-8.5569, 125.5603)).toBe('');
+    });
+
+    it('res 非 ok 抛 Nominatim reverse {status}', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 429 });
+      await expect(reverseGeocode(-8.5569, 125.5603)).rejects.toThrow('Nominatim reverse 429');
+    });
+
+    it('C-P1-6: signal 透传给 fetch（拖动打断 in-flight 请求）', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ display_name: 'x' }),
+      });
+      const controller = new AbortController();
+      await reverseGeocode(-8.5569, 125.5603, controller.signal);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ signal: controller.signal }),
+      );
+    });
   });
 });

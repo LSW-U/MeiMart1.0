@@ -243,8 +243,12 @@ export const orderApi = {
       return mockResponse(order as Order);
     }
     await api.post(`/client/orders/${id}/cancel`, { reason: reason ?? DEFAULT_CANCEL_REASON });
-    // Why: cancel 接口返回 {id, status}，没有完整 Order，重新拉详情避免类型不匹配
-    return this.getOrder(id) as Promise<Order>;
+    // Why: cancel 接口返回 {id, status}，没有完整 Order，重新拉详情避免类型不匹配。
+    // C-P2-7: getOrder 返回 Order | undefined——未定义（已取消单被并发删除等）显式抛错，
+    //   不再 `as Promise<Order>` 强转谎报类型（undefined 流入调用方触发运行时崩）。
+    const order = await this.getOrder(id);
+    if (!order) throw new Error(`Order ${id} not found after cancel`);
+    return order;
   },
 
   // Why: tracking 端点返回 {orderId, orderNo, orderStatus, paymentStatus, task}

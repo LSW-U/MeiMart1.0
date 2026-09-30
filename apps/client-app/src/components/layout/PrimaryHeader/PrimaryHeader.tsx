@@ -50,7 +50,11 @@ export function PrimaryHeader({
           style={centerTitle ? styles.titleWrapCentered : styles.titleWrap}
           pointerEvents={centerTitle ? 'none' : 'auto'}
         >
-          <Text style={[styles.title, { color: colors['on-primary'] }]} numberOfLines={1} accessibilityRole="header">
+          <Text
+            style={[styles.title, { color: colors['on-primary'] }]}
+            numberOfLines={1}
+            accessibilityRole="header"
+          >
             {title}
           </Text>
         </View>
@@ -61,7 +65,7 @@ export function PrimaryHeader({
             onPress={onLocationPress}
             style={styles.locationChip}
             accessibilityRole="button"
-            accessibilityLabel={`Location: ${locationLabel}`}
+            accessibilityLabel={t('common.a11y.locationChip', { location: locationLabel })}
           >
             <Icon symbol="location_on" size={13} color={colors['on-primary']} />
             <Text style={[styles.locationText, { color: colors['on-primary'] }]} numberOfLines={1}>

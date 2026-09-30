@@ -1,7 +1,17 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
 import { getCurrentLocale } from '@/i18n';
+import { getExtra } from '@/config/app-config';
 import type { Product, WarehouseAvailability } from '@/types';
+
+// C-P2-5: 404 判定（同 reviews.ts 口径——axios 错误带 response.status；非 HTTP 错误非 404）
+function isNotFoundError(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    (err as { response?: { status?: number } }).response?.status === 404
+  );
+}
 
 // Why: 后端 Product 字段名/单位与前端类型有差异，service 层做转换避免改组件代码。
 // 后端金额单位是「分」（整数），前端 Product.price 用「元」，转换时 /100。
@@ -44,6 +54,9 @@ interface ProductListResponse {
   total: number;
   hasMore: boolean;
 }
+
+// C-P1-7 能力开关（见 getProduct 注释）：默认开（批B 部署后自动生效），env 可强制关
+const PRODUCT_DETAIL_ENDPOINT_ENABLED = getExtra()?.USE_PRODUCT_DETAIL !== 'false';
 
 // Why: mock 数据 price 已是元，real 数据 priceMin 是分，转换函数只在 real 分支调用，避免双倍转换
 // 兜底：字段缺失时用默认值，防 NaN/undefined 渲染崩溃
@@ -122,11 +135,25 @@ export const productApi = {
       const found = withMockCategoryTop3(mockDb.products).find((p) => p.id === id);
       return mockResponse(found);
     }
-    // P1-1（批D 审查修复）：切批B /detail 聚合端点 —— 普通 /{id} 详情响应无 isCategoryTop3，
-    //   ProductDetail（超集：stocks/totalStock/ratingCount/isCategoryTop3/skus）required 含 isCategoryTop3。
-    //   real 徽章数据等 MeiMart 仓批B 部署后自动通；⚠️ 部署前 real 详情会 404，需与批B 排期对齐。
-    const res = await api.get<ProductRaw & { skus: unknown[] }>(`/client/products/${id}/detail`);
-    // Why: /detail 聚合端点额外返回 skus，前端 Product 类型暂未消费，忽略以保持兼容
+    // C-P1-7（能力开关降级）：优先批B /detail 聚合端点（带 isCategoryTop3/skus 等）；
+    //   /detail 404（批B 未部署）或网络失败时回退普通 /{id}——回退响应无 isCategoryTop3，
+    //   Product.isCategoryTop3 本就 optional（types/index.ts:41），transformProduct 透传 undefined，
+    //   徽章 resolveBadges 降级隐藏，不崩。开关：PRODUCT_DETAIL_ENDPOINT_ENABLED 常量 +
+    //   EXPO_PUBLIC_USE_PRODUCT_DETAIL env 覆盖（'false' 关）；批B 部署验证后无需改代码（默认开，
+    //   部署失败回退已兜底）；如需彻底关掉新端点，在 .env 加 EXPO_PUBLIC_USE_PRODUCT_DETAIL=false。
+    if (PRODUCT_DETAIL_ENDPOINT_ENABLED) {
+      try {
+        const res = await api.get<ProductRaw & { skus: unknown[] }>(
+          `/client/products/${id}/detail`,
+        );
+        // Why: /detail 聚合端点额外返回 skus，前端 Product 类型暂未消费，忽略以保持兼容
+        return transformProduct(res.data);
+      } catch {
+        // C-P1-7 回退：/detail 失败（404 批B 未部署 / 网络错误）→ 回退普通详情端点，不让详情页白屏。
+        //   C-P2-5: 回退端点本身的错误原样抛出（最外层不再 try 吞），RQ 可重试、监控不丢。
+      }
+    }
+    const res = await api.get<ProductRaw>(`/client/products/${id}`);
     return transformProduct(res.data);
   },
 
@@ -230,9 +257,11 @@ export const productApi = {
         { params: { lat, lng } },
       );
       return res.data;
-    } catch {
-      // Why: 展示增强非主流程 — 端点异常/未部署降级 null（UI 隐藏该区块），不弹错不阻塞
-      return null;
+    } catch (err) {
+      // C-P2-5: 仅 404（端点未部署/仓不存在）降级 null（UI 隐藏该区块，不弹错不阻塞）；
+      // 其余错误（500/网络）rethrow——RQ 可重试，全吞会让断网时假「无仓」且无法重试。
+      if (isNotFoundError(err)) return null;
+      throw err;
     }
   },
 };

@@ -16,11 +16,50 @@ interface CaptchaInputProps {
   testID?: string;
 }
 
+// C-P1-5: SVG 净化白名单——后端返回的 SVG 未经消毒直接 SvgXml 渲染是注入面
+// （SVG 可内嵌 <image xlink:href> 外联、<script>、<foreignObject>、<use href> 引用外部实体、
+// SMIL <animate> 等）。渲染前校验：必须是 <svg 开头 + 尺寸上限 + 黑名单标签/外联 href；
+// 不合法走既有 svg=null 失败态（errors.generic），不渲染。
+const SVG_MAX_BYTES = 8 * 1024;
+const SVG_FORBIDDEN_TAGS = [
+  'image',
+  'foreignObject',
+  'script',
+  'use',
+  'animate',
+  'animateTransform',
+  'animateMotion',
+  'set',
+] as const;
+// 外联引用：xlink:href / href 指向 http(s) 或协议相对（data: 的 image 已被标签黑名单挡住，
+// 但 href 外联在任何标签上都拒）
+const SVG_EXTERNAL_HREF = /(?:xlink:)?href\s*=\s*["']\s*(?:https?:)?\/\//i;
+
+/**
+ * 校验后端返回的验证码 SVG 是否安全可渲染；不合法返回 null（调用方走失败态）。
+ * 导出仅供单测直测（渲染态断言对 RNTL 不感知 SvgXml 内部）。
+ */
+export function sanitizeCaptchaSvg(svg: string | null | undefined): string | null {
+  if (!svg) return null;
+  const trimmed = svg.trimStart();
+  if (!trimmed.startsWith('<svg')) return null;
+  // 长度按 UTF-16 code units 近似字节上限（验证码 SVG 均为 ASCII/BMP，偏差可忽略）
+  if (svg.length > SVG_MAX_BYTES) return null;
+  for (const tag of SVG_FORBIDDEN_TAGS) {
+    // <tag 与 </tag 两种形态都拒（自闭合/带属性由 < 覆盖）
+    if (new RegExp(`<${tag}[\\s>/]|</${tag}\\s*>`, 'i').test(svg)) return null;
+  }
+  if (SVG_EXTERNAL_HREF.test(svg)) return null;
+  return svg;
+}
+
 export function CaptchaInput({ onChange, testID = 'captcha-input' }: CaptchaInputProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { mutate: mutateFetch, isPending } = useFetchCaptcha();
-  const [svg, setSvg] = useState<string | null>(null);
+  const [rawSvg, setRawSvg] = useState<string | null>(null);
+  // C-P1-5: 渲染前净化——不合法 SVG 直接走失败态（svg=null），绝不进 SvgXml
+  const svg = sanitizeCaptchaSvg(rawSvg);
   const [captchaId, setCaptchaId] = useState<string | null>(null);
   const [text, setText] = useState('');
   // P3-1: expired 不再是死状态——按签发响应 expireIn 起定时器置 true（票据 60s 一次性），
@@ -46,13 +85,13 @@ export function CaptchaInput({ onChange, testID = 'captcha-input' }: CaptchaInpu
       setText('');
       mutateFetch(undefined, {
         onSuccess: (res) => {
-          setSvg(res.svg);
+          setRawSvg(res.svg);
           setCaptchaId(res.captchaId);
           setExpireIn(res.expireIn);
           opts?.onSuccess?.(res);
         },
         onError: () => {
-          setSvg(null);
+          setRawSvg(null);
           setCaptchaId(null);
           onChangeRef.current(null);
           opts?.onError?.();
@@ -62,14 +101,17 @@ export function CaptchaInput({ onChange, testID = 'captcha-input' }: CaptchaInpu
     // Why: onChangeRef.current 读取发生在事件/异步回调（非 render 期），refresh 无需依赖 onChange
     [mutateFetch, onChangeRef],
   );
+  // C-P2-4: 定时器必须按票据重置——依赖仅 expireIn 时，刷新返回同值（60s）不触发 effect，
+  // 旧票据的定时器继续走 → 新票据刚签发就被误判过期。依赖 captchaId（每张票据唯一）+
+  // expireIn，刷新即拆旧建新计时。
   useEffect(() => {
-    if (expireIn == null) return;
+    if (captchaId == null || expireIn == null) return;
     const timer = setTimeout(() => {
       setExpired(true);
       onChangeRef.current(null);
     }, expireIn * 1000);
     return () => clearTimeout(timer);
-  }, [expireIn]);
+  }, [captchaId, expireIn]);
 
   // 挂载即拉一张；父层无需手动触发首次加载
   // Why: setState 实际全部在 mutation 异步回调内执行（非 effect body 同步 setState），

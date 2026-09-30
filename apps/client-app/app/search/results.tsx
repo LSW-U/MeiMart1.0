@@ -2,8 +2,16 @@
 // HTML → RN 行数比：319 → ~370（含样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 116%）
 // Fix-11: Primary tais-pattern Header + 内嵌只读搜索 + 排序栏 + 结果计数 + Load More
-import { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, ScrollView, type NativeScrollEvent } from 'react-native';
+import { useCallback, useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  ScrollView,
+  type NativeScrollEvent,
+} from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -12,7 +20,6 @@ import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } fr
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ProductCard } from '@/components/business/ProductCard';
-import type { ProductBadge } from '@/components/business/ProductCard/ProductCard.types';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
@@ -41,14 +48,6 @@ const SORT_OPTIONS: { key: ProductSortKey; labelKey: string }[] = [
   { key: 'newArrivals', labelKey: 'search.sort.newArrivals' },
 ];
 
-// 4 个商品角标轮转：FRESH / TOP RATED / 无 / NEW（HTML 第 199 / 215 / 230 / 246 行）
-function getResultBadge(idx: number): ProductBadge | undefined {
-  if (idx === 0) return { label: 'Fresh', variant: 'fresh' };
-  if (idx === 1) return { label: 'Top Rated', variant: 'top-rated' };
-  if (idx === 3) return { label: 'New', variant: 'new' };
-  return undefined;
-}
-
 export default function SearchResultsPage() {
   const { colors } = useTheme();
   const params = useLocalSearchParams<{ q: string }>();
@@ -56,15 +55,8 @@ export default function SearchResultsPage() {
   const { t } = useTranslation();
   const [activeSort, setActiveSort] = useState<ProductSortKey>('all');
   // P8-5 F2+F3：sortBy 变重查第一页（决策 2-B），onEndReached 触发 fetchNextPage（决策 3-B）
-  const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useProductSearch(keyword, activeSort);
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useProductSearch(keyword, activeSort);
   // Why: pages.flatMap 拼接所有已加载页；total 取首页（搜索结果总数，非累计已加载数）
   const results = data?.pages.flatMap((p) => p.items) ?? [];
   const count = data?.pages[0]?.total ?? 0;
@@ -72,8 +64,7 @@ export default function SearchResultsPage() {
   // P8-5 F3：ScrollView 触底加载下一页（distanceFromBottom < 200）
   const handleScroll = ({ nativeEvent }: { nativeEvent: NativeScrollEvent }) => {
     const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-    const distanceFromBottom =
-      contentSize.height - layoutMeasurement.height - contentOffset.y;
+    const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
     if (distanceFromBottom < 200 && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
@@ -85,17 +76,38 @@ export default function SearchResultsPage() {
   const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
   const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
   const addToCartMutation = useAddToCart();
-  const handleAddToCart = (item: Product) => {
-    addToCartMutation.mutate(
-      { product: item, quantity: 1 },
-      {
-        onSuccess: () =>
-          toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
-        onError: () =>
-          toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
-      },
-    );
-  };
+  // C-P2-10: useCallback 稳定化（memo 化卡片 props 浅比较，回调稳定才生效）
+  const handleAddToCart = useCallback(
+    (item: Product) => {
+      addToCartMutation.mutate(
+        { product: item, quantity: 1 },
+        {
+          onSuccess: () =>
+            toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
+          onError: () =>
+            toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+        },
+      );
+    },
+    [addToCartMutation, t],
+  );
+
+  // C-P2-10: 结果网格改 FlatList(numColumns=2)——替代 View+map 全量渲染（虚拟化）。
+  //   行为零变更：行容器样式承接原 grid/gridCell（半 gutter 列 padding + 行距）；
+  //   ProductCard onPress 签名是 (product) => void（非 () => void），直接传稳定 router 跳转。
+  const renderResultItem = useCallback(
+    ({ item }: { item: Product }) => (
+      <View style={styles.gridCell}>
+        {/* C-P3-10（批4 修复）：徽章走 resolveBadges 真实口径（Recommended 区同款），宁缺毋假 */}
+        <ProductCard
+          product={item}
+          badge={resolveBadges(item, t)[0]}
+          onPress={(p: Product) => router.push(`/product/${p.id}`)}
+        />
+      </View>
+    ),
+    [t],
+  );
 
   // P8-7: 顶部搜索框可编辑（同 P7 SearchBar + 麦克风）
   // Why: Header 用 key={params.q} 重挂载同步搜索词，避免 effect setState（react-hooks 规则）
@@ -233,18 +245,19 @@ export default function SearchResultsPage() {
             {t('search.resultCount', { count })}
           </Text>
 
-          {/* Product Grid 2 列 */}
-          <View style={styles.grid}>
-            {results.map((item: Product, idx: number) => (
-              <View key={item.id} style={styles.gridCell}>
-                <ProductCard
-                  product={item}
-                  badge={getResultBadge(idx)}
-                  onPress={() => router.push(`/product/${item.id}`)}
-                />
-              </View>
-            ))}
-          </View>
+          {/* Product Grid 2 列 —— C-P2-10: FlatList(numColumns) 虚拟化（原 View+map 全量渲染） */}
+          <FlatList
+            data={results}
+            keyExtractor={(item: Product) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.grid}
+            contentContainerStyle={styles.gridContent}
+            renderItem={renderResultItem}
+            scrollEnabled={false}
+            initialNumToRender={6}
+            maxToRenderPerBatch={4}
+            windowSize={5}
+          />
 
           {/* P8-5 F3 真实分页：hasNextPage 时显示 Load More + 触底加载，无更多隐藏（替假 spinner） */}
           {(hasNextPage || isFetchingNextPage) && (
@@ -431,14 +444,18 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   grid: {
+    // FlatList numColumns=2 行容器（C-P2-10）：原 grid 负 margin + gridCell 半 gutter 组合
+    flex: 1,
     flexDirection: 'row',
-    flexWrap: 'wrap',
     marginHorizontal: -layout.gutter / 2,
   },
+  gridContent: {
+    // 纵向行距（原 gridCell marginBottom）
+    rowGap: spacing.lg,
+  },
   gridCell: {
-    width: '50%',
+    flex: 1,
     paddingHorizontal: layout.gutter / 2,
-    marginBottom: spacing.lg,
   },
   loadMore: {
     paddingVertical: spacing.xl * 1.5,

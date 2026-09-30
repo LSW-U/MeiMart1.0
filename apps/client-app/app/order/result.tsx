@@ -94,7 +94,9 @@ export default function OrderResultScreen() {
   // P3-2（审查 20260908）：响应式 locale——useSyncExternalStore 订阅 languageChanged，挂载中切语言即时重渲染
   const locale = useLocale();
   const { colors } = useTheme();
-  useSafeBack();
+  // C-P3-8（批4）：useSafeBack 的兜底返回回调接到 header showBack（原裸调用返回值丢弃，
+  // 深链进入时 back 不可用无兜底）
+  const safeBack = useSafeBack();
   const params = useLocalSearchParams<{ orderId?: string; orderNo?: string; status?: string }>();
 
   const orderId = params.orderId;
@@ -175,14 +177,15 @@ export default function OrderResultScreen() {
   };
   const st = stateTheme[state];
 
+  // C-P3-4（批4）：Pay Now/Retry Pay 收口到订单详情页（详情页 order-pay 按钮承接支付动作），
+  // 不再经 checkout 重复下单。#006 语义收口（批次2 拍板）延续。
   const goOrderDetail = () => {
     if (orderId) router.push({ pathname: '/order/[id]', params: { id: orderId } });
   };
-  // #006 语义收口（批次2 拍板）：payNow/retryPay 与「查看订单」同为跳订单详情页——
-  // 详情页对 PENDING_PAYMENT 已渲染去支付按钮（order/[id].tsx order-pay）承接支付。
-  // 删掉与 goOrderDetail 实现完全重复的 goCheckout，按钮直连，行为不变。
   const goHome = () => router.replace('/(main)/home');
-  const goSupport = () => router.push('/service/customer-service');
+  // C-P3-2（批4）：/service/customer-service 路由不存在（app/service/ 仅 index/help/feedback/
+  // notifications），改跳既有客服入口 /service（order/[id].tsx contactSeller 同款）。
+  const goSupport = () => router.push('/service');
 
   const handleCancel = () => {
     if (!orderId) return;
@@ -208,7 +211,7 @@ export default function OrderResultScreen() {
   return (
     <SafeAreaWrapper edges={['top', 'bottom']} style={styles.screen}>
       <StatusBarConfig />
-      <PrimaryHeader title={t('result.titleUnified')} showBack onBackPress={goHome} />
+      <PrimaryHeader title={t('result.titleUnified')} showBack onBackPress={safeBack} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Hero 状态图标 + 标题 + 描述 */}
         <View style={[styles.heroIcon, { backgroundColor: st.iconBg }]} accessibilityRole="image">
@@ -240,7 +243,10 @@ export default function OrderResultScreen() {
               },
             ]}
             accessibilityRole="timer"
-            accessibilityLabel={`${t('result.countdownLabel')} ${formatCountdown(remaining)}`}
+            accessibilityLabel={t('order.a11y.countdown', {
+              label: t('result.countdownLabel'),
+              time: formatCountdown(remaining),
+            })}
           >
             <Icon
               symbol={state === 'PENDING' ? 'hourglass_top' : 'timer_off'}

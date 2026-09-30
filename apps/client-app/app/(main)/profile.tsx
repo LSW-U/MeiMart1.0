@@ -2,6 +2,10 @@
 // HTML -> RN 行数比：306 -> ~520（含 P2 重构样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 170%）
 // P2 Commit 1: UI 布局重构（数据接入见 Commit 2，dark mode 收尾见 Commit 3）
+// 批5 拆分（C-P3-14）：常量/配置数组抽到 profile-sections/shared.ts，
+//   ProfileHeader / ProfileEmpty 抽到 profile-sections/。主文件保留路由壳 + 登录态
+//   组装（usercard-new banner + points-strip + 订单宫格 + Discover + 功能菜单 + footer），
+//   行为零变更（纯搬移；本组件用到的样式留在主文件）。
 import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,7 +13,6 @@ import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography, shadowPresets, borderRadius } from '@/theme';
 import { APP_VERSION } from '@/utils/appInfo';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
-import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
@@ -18,97 +21,22 @@ import { useProfile } from '@/services/queries/useUser';
 import { useCoupons } from '@/services/queries/usePromotion';
 import { useFavorites } from '@/services/queries/useFavorites';
 import { useOrderCounts } from '@/services/queries/useOrders';
-import { useUnreadCount } from '@/services/queries/useNotifications';
-import { Badge } from '@/components/ui/Badge';
 import { useAuthStore } from '@/store/authStore';
+import { clearPersistedQueryCache } from '@/services/offline/persist';
 import { toast } from '@/store/toastStore';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
-
-// 默认头像 mock（HTML 第 150 行）
-const DEFAULT_AVATAR =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuDTkRvY5IQj5crQ9J0WxeHh9B2lcLBNp6NrIk8FZoL0iBqr3sNYwIAnUgGA9a2lhDAGKNs0Y9WP7AFn3BXuHbbNV7ChtSLtV93tdcfLwqA5V1EEjiStXWYL7QF3KOaH2l2PSyl5nStpLu1j2Cein2M6_AQtoHf00DN0oQPQOhhyzWkt_l5Oaz_nW5Iw9W39bkQ1JLpw4LUIxhhdXtyzNK92y_yuLRTLO2aeZVgFGYM2UUOHzMkK6ya9RMSg3S47jxi0Fx098Wwl';
-
-// 原因：红底 banner / primary header / 主按钮上的固定白字。两种模式都是品牌红底，白字正确不变。
-// 不可用 colors['on-primary']：dark 模式下 on-primary 翻为 #690005（暗红），叠红底会裂色。
-const ON_PRIMARY = '#ffffff';
-
-interface OrderEntry {
-  // id: OrderGroupKey | 'after-sales'（退款售后非订单状态，放宽 string 让其可加；badge 查 orderCounts 时 'after-sales' 无值不显示）
-  id: string;
-  labelKey:
-    | 'order.statusToPay'
-    | 'order.statusToShip'
-    | 'order.statusToReceive'
-    | 'order.actions.review'
-    | 'profile.afterSales';
-  icon: Parameters<typeof Icon>[0]['symbol'];
-  route?: string;
-}
-
-// 订单入口宫格（HTML 第 170-197 行）- badge 由 useOrderCounts 派生（id 对应 ORDER_COUNT_MAP）
-// 用户要求：去掉「待发货」+ 最后加「退款售后」入口（跳 /refunds 列表页）
-const ORDER_ENTRIES: OrderEntry[] = [
-  {
-    id: 'to-pay',
-    labelKey: 'order.statusToPay',
-    icon: 'account_balance_wallet',
-    route: '/(main)/orders',
-  },
-  {
-    id: 'to-receive',
-    labelKey: 'order.statusToReceive',
-    icon: 'local_shipping',
-    route: '/(main)/orders',
-  },
-  { id: 'review', labelKey: 'order.actions.review', icon: 'star_rate', route: '/(main)/orders' },
-  {
-    id: 'after-sales',
-    labelKey: 'profile.afterSales',
-    icon: 'support_agent',
-    route: '/(main)/refunds',
-  },
-];
-
-interface FunctionItem {
-  id: string;
-  labelKey: string;
-  icon: Parameters<typeof Icon>[0]['symbol'];
-  route?: string;
-  isError?: boolean;
-}
-
-// P2 §3.4: 登录态功能菜单只留 地址/帮助/设置/退出（收藏/优惠券已合并到 usercard 统计条）
-const FUNCTION_ITEMS: FunctionItem[] = [
-  { id: 'address', labelKey: 'address.list', icon: 'location_on', route: '/address/list' },
-  { id: 'help', labelKey: 'profile.help', icon: 'help', route: '/service/help' },
-  { id: 'settings', labelKey: 'profile.settings', icon: 'settings', route: '/settings' },
-  { id: 'logout', labelKey: 'profile.logout', icon: 'logout', isError: true },
-];
-
-// P2 §8: 未登录态无 usercard 统计条 -> 收藏/优惠券入口必须留在功能菜单里
-const FUNCTION_ITEMS_EMPTY: FunctionItem[] = [
-  { id: 'favorites', labelKey: 'profile.favorites', icon: 'favorite', route: '/favorites' },
-  { id: 'coupons', labelKey: 'profile.coupons', icon: 'confirmation_number', route: '/coupons' },
-  { id: 'address', labelKey: 'address.list', icon: 'location_on', route: '/address/list' },
-  { id: 'help', labelKey: 'profile.help', icon: 'help', route: '/service/help' },
-  { id: 'settings', labelKey: 'profile.settings', icon: 'settings', route: '/settings' },
-];
-
-// P2 §6: Discover 快捷功能宫格 - C1 仅 UI + toast 占位，功能后续按 F2->F1->F4->F3 实现
-// isNew 角标已下线（2026-08-27 用户手调移除两处使用，字段+渲染分支+样式连根清，审查 Q3）
-interface DiscoverEntry {
-  id: string;
-  labelKey: string;
-  icon: Parameters<typeof Icon>[0]['symbol'];
-}
-const DISCOVER_ENTRIES: DiscoverEntry[] = [
-  { id: 'invite', labelKey: 'profile.invite', icon: 'group_add' },
-  { id: 'history', labelKey: 'profile.history', icon: 'history' },
-  { id: 'becomeSeller', labelKey: 'profile.becomeSeller', icon: 'storefront' },
-  { id: 'scan', labelKey: 'profile.scan', icon: 'qr_code_scanner' },
-];
+import {
+  DEFAULT_AVATAR,
+  ON_PRIMARY,
+  ORDER_ENTRIES,
+  FUNCTION_ITEMS,
+  DISCOVER_ENTRIES,
+  type FunctionItem,
+} from './profile-sections/shared';
+import { ProfileHeader } from './profile-sections/ProfileHeader';
+import { ProfileEmpty } from './profile-sections/ProfileEmpty';
 
 export default function ProfilePage() {
   const { colors } = useTheme();
@@ -158,6 +86,9 @@ export default function ProfilePage() {
 
   const onItemPress = (item: FunctionItem) => {
     if (item.id === 'logout') {
+      // C-P1-4: 登出显式清持久化缓存（PII）——只 clearAuth 会留下 AsyncStorage 落盘的
+      // profile/notifications 等用户数据；内存缓存同步清，防 staleTime 内仍渲染旧数据
+      void clearPersistedQueryCache();
       clearAuth();
       router.replace('/(auth)/login');
       return;
@@ -469,218 +400,6 @@ export default function ProfilePage() {
   );
 }
 
-// Primary tais-pattern Header（HTML 第 142-144 行：h-14 顶栏 + h-48 tais-pattern 底色）
-// 已迁移到 PrimaryHeader 组件（CP-FIX P1-3），PrimaryHeader 内置 TaisPattern absolute 叠层（§3.5）
-function ProfileHeader() {
-  const { colors } = useTheme();
-  const { t } = useTranslation();
-  // 批B B3：通知入口接真实未读数（现状无角标）；未登录 hook 内部不请求 → 不显示
-  const { data: unreadCount } = useUnreadCount();
-  return (
-    <View style={{ backgroundColor: colors.primary, ...shadowPresets.md }}>
-      <PrimaryHeader
-        title={t('profile.title')}
-        rightActions={
-          <View style={profileHeaderStyles.actions}>
-            <Pressable
-              onPress={() => router.push('/service')}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.customerService')}
-            >
-              <Icon symbol="headset" size={24} color={ON_PRIMARY} />
-            </Pressable>
-            <Pressable
-              onPress={() => router.push('/service/notifications')}
-              hitSlop={8}
-              style={profileHeaderStyles.notifBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.notifications')}
-              testID="profile-notifications"
-            >
-              <Icon symbol="notifications" size={24} color={ON_PRIMARY} />
-              {(unreadCount ?? 0) > 0 && (
-                // P2-1 修复（方案a）：底色传语义 error 红——Badge label 恒 colors['on-primary']
-                // （light 白字需红底才可读，原 ON_PRIMARY 白底在 light 下白字白底不可见）
-                <Badge
-                  count={unreadCount ?? 0}
-                  variant="number"
-                  color={colors.semantic.error}
-                  accessibilityLabel={t('profile.unreadBadge', { count: unreadCount ?? 0 })}
-                  style={profileHeaderStyles.notifBadge}
-                />
-              )}
-            </Pressable>
-          </View>
-        }
-      />
-    </View>
-  );
-}
-
-const profileHeaderStyles = StyleSheet.create({
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  // 批B B3：badge absolute 参考系（同 home msgBtn relative 惯例）
-  notifBtn: {
-    position: 'relative',
-  },
-  notifBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -6,
-  },
-});
-
-// ProfileEmpty - 未登录状态（Fix-18：还原 ProfileEmptyPage.html）
-// P2 §8: 不展示 Discover（无个人化功能）；功能菜单保留收藏/优惠券（无统计条）；图标灰、无 badge
-function ProfileEmpty() {
-  const { colors } = useTheme();
-  const { t } = useTranslation();
-  const onRequireLogin = () => {
-    router.replace('/(auth)/login');
-  };
-  return (
-    <SafeAreaWrapper
-      edges={['top', 'bottom']}
-      style={{ backgroundColor: colors.background, flex: 1 }}
-    >
-      <StatusBarConfig />
-      <ProfileHeader />
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* User Info Card - 未登录（HTML 第 149-160 行） */}
-        <View
-          style={[
-            styles.userCard,
-            { backgroundColor: colors['surface-container-lowest'], ...shadowPresets.sm },
-          ]}
-        >
-          <View style={styles.emptyAvatarWrap}>
-            <View
-              style={[styles.emptyAvatarCircle, { backgroundColor: colors['surface-container'] }]}
-            >
-              <Icon symbol="account_circle" size={40} color={colors.primary} />
-            </View>
-          </View>
-          <Text style={[styles.emptyHint, { color: colors['on-surface-variant'] }]}>
-            {t('profile.loginHint')}
-          </Text>
-          <Pressable
-            onPress={onRequireLogin}
-            style={({ pressed }) => [
-              styles.loginBtn,
-              { backgroundColor: colors.primary },
-              pressed && { transform: [{ scale: 0.98 }] },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t('profile.loginOrRegister')}
-          >
-            <Text style={styles.loginBtnText}>{t('profile.loginRegister')}</Text>
-          </Pressable>
-        </View>
-
-        {/* My Orders 4 宫格（无 badge，图标灰，点击触发登录） */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'], ...shadowPresets.sm },
-          ]}
-        >
-          <View style={styles.ordersHead}>
-            <Text style={[styles.ordersTitle, { color: colors['on-surface'] }]}>
-              {t('profile.orders')}
-            </Text>
-            <Pressable
-              onPress={onRequireLogin}
-              style={styles.viewAllBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.viewAllOrdersLogin')}
-            >
-              <Text style={[styles.viewAllText, { color: colors['on-surface-variant'] }]}>
-                {t('common.viewAll')}
-              </Text>
-              <Icon symbol="chevron_right" size={14} color={colors['on-surface-variant']} />
-            </Pressable>
-          </View>
-          <View style={styles.ordersGrid}>
-            {ORDER_ENTRIES.map((entry) => (
-              <Pressable
-                key={entry.id}
-                onPress={onRequireLogin}
-                style={({ pressed }) => [styles.orderCell, pressed && { opacity: 0.7 }]}
-                accessibilityRole="button"
-                accessibilityLabel={t('profile.loginRequiredSuffix', {
-                  label: t(entry.labelKey),
-                })}
-              >
-                <View style={styles.orderTileNew}>
-                  <Icon symbol={entry.icon} size={26} color={colors['on-surface-variant']} />
-                </View>
-                <Text style={[styles.orderLabel, { color: colors['on-surface-variant'] }]}>
-                  {t(entry.labelKey)}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        {/* Function Menus（保留 收藏/优惠券 + 地址/帮助/设置，无 Log Out） */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors['surface-container-lowest'], ...shadowPresets.sm },
-          ]}
-        >
-          {FUNCTION_ITEMS_EMPTY.map((item, idx) => (
-            <Pressable
-              key={item.id}
-              testID={`empty-menu-${item.id}`}
-              onPress={onRequireLogin}
-              style={({ pressed }) => [
-                styles.funcRow,
-                idx > 0 && {
-                  borderTopColor: colors['outline-variant'],
-                  borderTopWidth: StyleSheet.hairlineWidth,
-                },
-                pressed && { opacity: 0.7 },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.loginRequiredSuffix', { label: t(item.labelKey) })}
-            >
-              <View style={styles.funcLeft}>
-                <View
-                  style={[styles.funcIconWrap, { backgroundColor: colors['surface-container'] }]}
-                >
-                  <Icon symbol={item.icon} size={20} color={colors.primary} />
-                </View>
-                <Text style={[styles.funcLabel, { color: colors['on-surface'] }]}>
-                  {t(item.labelKey)}
-                </Text>
-              </View>
-              <Icon symbol="chevron_right" size={20} color={colors.outline} />
-            </Pressable>
-          ))}
-        </View>
-
-        {/* Footer Logo */}
-        <View style={styles.footerLogo}>
-          <Text style={[styles.footerTitle, { color: colors.primary }]}>{t('home.appName')}</Text>
-          <Text style={[styles.footerVersion, { color: colors['on-surface-variant'] }]}>
-            {`v${APP_VERSION}`}
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaWrapper>
-  );
-}
-
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: layout['container-margin'],
@@ -915,15 +634,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-  badgeDot: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 8,
-    height: 8,
-    borderRadius: 999,
-    borderWidth: 2,
-  },
   quickLabel: {
     fontSize: 12,
     fontWeight: '600',
@@ -969,43 +679,5 @@ const styles = StyleSheet.create({
   footerVersion: {
     ...typography['label-caps'],
     fontSize: 10,
-  },
-  // === ProfileEmpty ===
-  userCard: {
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    alignItems: 'center',
-  },
-  emptyAvatarWrap: {
-    width: 96,
-    height: 96,
-    marginBottom: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyAvatarCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyHint: {
-    ...typography['body-sm'],
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  loginBtn: {
-    width: '100%',
-    height: 56,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadowPresets.md,
-  },
-  loginBtnText: {
-    color: ON_PRIMARY,
-    ...typography['label-caps'],
-    letterSpacing: 1.5,
   },
 });

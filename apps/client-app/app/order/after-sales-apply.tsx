@@ -56,7 +56,8 @@ import { afterSalesApplySchema, type AfterSalesApplyValues } from '@/forms/schem
 // Why: styles 在模块级无法访问 useTheme 的 colors，per-file const 模式（同 P10/P11/P12 跨梯队 E6）
 const ON_PRIMARY = '#ffffff';
 
-const REFUND_REASON_KEYS = [
+// 导出供测试同源自证对账（B 部分 批4：key ↔ enum 映射 + locales 对账）
+export const REFUND_REASON_KEYS = [
   'afterSales.reasons.expired',
   'afterSales.reasons.damaged',
   'afterSales.reasons.wrongItem',
@@ -361,7 +362,10 @@ export default function AfterSalesApplyPage() {
                     ]}
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked: selected }}
-                    accessibilityLabel={`${t('afterSales.productLabel', { defaultValue: 'Product' })}: ${localize(it.product.name)}`}
+                    accessibilityLabel={t('afterSales.a11y.productItem', {
+                      label: t('afterSales.productLabel', { defaultValue: 'Product' }),
+                      name: localize(it.product.name),
+                    })}
                     testID={`item-check-${it.id}`}
                   >
                     {selected ? <Icon symbol="check" size={15} color={ON_PRIMARY} /> : null}

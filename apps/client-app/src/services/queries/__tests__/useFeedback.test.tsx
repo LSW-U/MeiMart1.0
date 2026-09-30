@@ -4,6 +4,9 @@
  *
  * 当前骨架阶段：mutationFn 恒抛 FEEDBACK_ENDPOINT_NOT_READY → onError toast。
  * 后端 F1 端点就绪后：把 mutationFn 改为 api.post 后补成功路径测试（见 useFeedback.ts TODO 就绪清单）。
+ *
+ * B 部分（批4 假绿测试改造）：三用例均为「端点未就绪」语义的占位覆盖，
+ * 统一 EXPECTED_UNAVAILABLE 标记——端点 F1 上线时改写为成功路径真实断言。
  */
 import { act } from '@testing-library/react-native';
 import { renderHookWithClient, createTestQueryClient } from './testHarness';
@@ -24,7 +27,8 @@ describe('useSubmitFeedback（V12 骨架 — 端点未就绪恒抛错）', () =>
     (toast.error as jest.Mock).mockClear();
   });
 
-  it('mutate 恒抛 FEEDBACK_ENDPOINT_NOT_READY（端点未就绪的真实行为）', async () => {
+  // EXPECTED_UNAVAILABLE(F1)：断言的是骨架占位行为而非真实业务路径；端点就绪后改写为成功路径
+  it('EXPECTED_UNAVAILABLE(F1): mutate 恒抛 FEEDBACK_ENDPOINT_NOT_READY（端点未就绪的真实行为）', async () => {
     const client = createTestQueryClient();
     const { result } = renderHookWithClient(() => useSubmitFeedback(), client);
 
@@ -39,7 +43,8 @@ describe('useSubmitFeedback（V12 骨架 — 端点未就绪恒抛错）', () =>
     ).rejects.toThrow('FEEDBACK_ENDPOINT_NOT_READY');
   });
 
-  it('抛错时 onError 触发 toast.error(submitFailed)（不静默失败，弱网规则 12）', async () => {
+  // EXPECTED_UNAVAILABLE(F1)：onError 是骨架阶段的唯一可达路径；端点就绪后补 onSuccess 断言
+  it('EXPECTED_UNAVAILABLE(F1): 抛错时 onError 触发 toast.error(submitFailed)（不静默失败，弱网规则 12）', async () => {
     const client = createTestQueryClient();
     const { result } = renderHookWithClient(() => useSubmitFeedback(), client);
 
@@ -52,7 +57,8 @@ describe('useSubmitFeedback（V12 骨架 — 端点未就绪恒抛错）', () =>
     expect(toast.error).toHaveBeenCalledWith('service.feedback.submitFailed');
   });
 
-  it('isPending 生命周期：mutate 后短暂 pending 再回 false', async () => {
+  // TODO(F1)：端点就绪后本用例需断言 isPending true→false 完整生命周期（当前恒同步失败）
+  it('EXPECTED_UNAVAILABLE(F1): isPending 生命周期：mutate 后短暂 pending 再回 false', async () => {
     const client = createTestQueryClient();
     const { result } = renderHookWithClient(() => useSubmitFeedback(), client);
 

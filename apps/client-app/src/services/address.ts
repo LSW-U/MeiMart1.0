@@ -36,8 +36,16 @@ function transformAddress(raw: AddressRaw): Address {
 
 // Why: 前端 Address → 后端 region 嵌套结构
 // Why: 后端下单要求地址有 lat/lng（用于匹配仓库），未选地图时默认东帝汶帝力坐标
+// C-P2-15: 默认坐标只保留给「更新旧地址补坐标」场景（updateAddress 显式传值）；
+// createAddress 不再静默伪造帝力坐标——由页面层守卫：未选地图点阻止提交并提示。
 const DILI_LAT = -8.5569;
 const DILI_LNG = 125.5603;
+
+/** C-P2-15: 页面层守卫用——缺坐标或坐标都是帝力默认值时视为「未选地图点」（map.tsx 初始视野即此值） */
+export function isDiliDefaultCoords(lat?: number | null, lng?: number | null): boolean {
+  if (lat === undefined || lat === null || lng === undefined || lng === null) return true;
+  return lat === DILI_LAT && lng === DILI_LNG;
+}
 
 function toAddressPayload(addr: Omit<Address, 'id'>): Record<string, unknown> {
   return {
@@ -51,9 +59,10 @@ function toAddressPayload(addr: Omit<Address, 'id'>): Record<string, unknown> {
     detail: addr.detail,
     isDefault: addr.isDefault,
     ...(addr.tag ? { tag: addr.tag } : {}),
-    // Why: 未选地图点时用帝力默认坐标，避免下单 409
-    lat: addr.lat ?? DILI_LAT,
-    lng: addr.lng ?? DILI_LNG,
+    // C-P2-15: service 层不再伪造坐标——lat/lng 缺失时原样透传（后端可空），由页面层守卫
+    // 阻止「未选地图点」提交；仅更新旧地址补坐标时页面显式传帝力兜底值（edit.tsx B3 先例）
+    ...(addr.lat !== undefined && addr.lat !== null ? { lat: addr.lat } : {}),
+    ...(addr.lng !== undefined && addr.lng !== null ? { lng: addr.lng } : {}),
   };
 }
 
@@ -99,7 +108,11 @@ export const addressApi = {
     // Why: 支持更新 lat/lng（旧地址补坐标用）
     if (updates.lat !== undefined) body.lat = updates.lat;
     if (updates.lng !== undefined) body.lng = updates.lng;
-    if (updates.province !== undefined || updates.city !== undefined || updates.district !== undefined) {
+    if (
+      updates.province !== undefined ||
+      updates.city !== undefined ||
+      updates.district !== undefined
+    ) {
       // Why: region 是整体更新，需要补全未传字段（避免部分更新丢失 province/city）。
       // #002 修复（批次2）：原实现读 mockDb.addresses 补全——real 模式读 mock 数据源是错的。
       // 实际调用方（address/edit.tsx）payload 总是全量带三字段，未传场景仅理论存在，
@@ -107,7 +120,7 @@ export const addressApi = {
       body.region = {
         province: updates.province ?? '',
         city: updates.city ?? '',
-        ...((updates.district) ? { district: updates.district } : {}),
+        ...(updates.district ? { district: updates.district } : {}),
       };
     }
     const res = await api.patch<AddressRaw>(`/client/addresses/${id}`, body);

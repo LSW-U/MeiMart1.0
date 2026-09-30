@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/Button';
 import { SelectField } from '@/components/ui/SelectField/SelectField';
 import { toast } from '@/store/toastStore';
 import { useAddresses, useCreateAddress, useUpdateAddress } from '@/services/queries/useAddress';
+import { isDiliDefaultCoords } from '@/services/address';
 import { useMapPickStore } from '@/store/mapPickStore';
 import { addressEditSchema, type AddressEditValues } from '@/forms/schemas/user';
 import type { Address } from '@/types';
@@ -82,24 +83,24 @@ export default function AddressEditPage() {
     >
       <StatusBarConfig />
       <PrimaryHeader
-          title={
-            isEditing
-              ? t('address.edit', { defaultValue: 'Edit Address' })
-              : t('address.add', { defaultValue: 'Add New Address' })
-          }
-          showBack
-          onBackPress={handleBack}
-          rightActions={
-            <Pressable
-              onPress={() => router.push('/service/help')}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t('common.help')}
-            >
-              <Icon symbol="help_outline" size={24} color={colors['on-primary']} />
-            </Pressable>
-          }
-        />
+        title={
+          isEditing
+            ? t('address.edit', { defaultValue: 'Edit Address' })
+            : t('address.add', { defaultValue: 'Add New Address' })
+        }
+        showBack
+        onBackPress={handleBack}
+        rightActions={
+          <Pressable
+            onPress={() => router.push('/service/help')}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.help')}
+          >
+            <Icon symbol="help_outline" size={24} color={colors['on-primary']} />
+          </Pressable>
+        }
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         // Why: position relative 让 bottomBar absolute 相对此容器定位，避免 Web 端定位错误
@@ -115,6 +116,14 @@ export default function AddressEditPage() {
           }
           submitting={createMutation.isPending || updateMutation.isPending}
           onSubmit={(values) => {
+            const lat = mapPick?.lat ?? existing?.lat;
+            const lng = mapPick?.lng ?? existing?.lng;
+            // C-P2-15: 未选地图点（无选点记录 + 无旧坐标，或坐标仍为帝力默认视野）禁止提交——
+            // 后端下单要求真实 lat/lng 匹配仓库，静默填帝力默认会让用户收不到货。提示去地图选点。
+            if (isDiliDefaultCoords(lat, lng)) {
+              toast.error(t('address.pickLocationRequired'));
+              return;
+            }
             const payload: Omit<Address, 'id'> = {
               name: values.recipientName,
               phone: values.phone,
@@ -126,9 +135,9 @@ export default function AddressEditPage() {
               // Why: 审查 B1 —— tag 必须显式进 payload（toAddressPayload 对 undefined 不传，后端存 null）；
               //      ?? null 让「清除标签」也能通过 PATCH 落库
               tag: values.tag ?? null,
-              // Why: 地图选点坐标优先（B3 修复）；旧地址可能没有 lat/lng，兜底帝力默认坐标避免下单 409
-              lat: mapPick?.lat ?? existing?.lat ?? -8.5569,
-              lng: mapPick?.lng ?? existing?.lng ?? 125.5603,
+              // Why: 地图选点坐标优先（B3 修复）；此处守卫已保证非空非默认
+              lat,
+              lng,
             };
             const onError = (error: unknown) => {
               // Why: 提取后端错误码，用 i18n 翻译，找不到时回退到 generic
@@ -292,7 +301,10 @@ function AddressForm({ existing, prefill, submitting, onSubmit }: AddressFormPro
         {/* COMPLETE ADDRESS + city/sub-district */}
         <View>
           <View style={styles.addrLabelRow}>
-            <FieldLabel icon="home" label={t('address.detail', { defaultValue: 'COMPLETE ADDRESS' })} />
+            <FieldLabel
+              icon="home"
+              label={t('address.detail', { defaultValue: 'COMPLETE ADDRESS' })}
+            />
             <Pressable
               onPress={() => router.push('/address/map')}
               hitSlop={8}
@@ -302,8 +314,8 @@ function AddressForm({ existing, prefill, submitting, onSubmit }: AddressFormPro
             >
               <Icon symbol="location_on" size={14} color={colors.primary} />
               <Text style={[styles.pinBtnText, { color: colors.primary }]}>
-              {t('address.pickOnMap', { defaultValue: 'PIN ON MAP' })}
-            </Text>
+                {t('address.pickOnMap', { defaultValue: 'PIN ON MAP' })}
+              </Text>
             </Pressable>
           </View>
           <Controller
@@ -319,7 +331,9 @@ function AddressForm({ existing, prefill, submitting, onSubmit }: AddressFormPro
                     color: colors['on-surface'],
                   },
                 ]}
-                placeholder={t('address.detailPlaceholder', { defaultValue: 'Village, Sub-district, street name, house number...' })}
+                placeholder={t('address.detailPlaceholder', {
+                  defaultValue: 'Village, Sub-district, street name, house number...',
+                })}
                 placeholderTextColor={colors['on-surface-variant']}
                 value={value}
                 onChangeText={onChange}
@@ -575,7 +589,11 @@ function TagPicker({ value, onChange }: { value?: string; onChange: (v?: string)
         );
       })}
 
-      <Modal visible={customVisible} onClose={() => setCustomVisible(false)} title={t('address.tagCustomTitle', { defaultValue: 'Custom Tag' })}>
+      <Modal
+        visible={customVisible}
+        onClose={() => setCustomVisible(false)}
+        title={t('address.tagCustomTitle', { defaultValue: 'Custom Tag' })}
+      >
         <TextInput
           style={[
             styles.input,
@@ -590,7 +608,7 @@ function TagPicker({ value, onChange }: { value?: string; onChange: (v?: string)
           value={customText}
           onChangeText={setCustomText}
           maxLength={20}
-              autoFocus
+          autoFocus
           testID="addr-tag-custom-input"
         />
         <Button

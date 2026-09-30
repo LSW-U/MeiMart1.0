@@ -18,6 +18,8 @@ export type AppConfigExtra = {
   API_BASE_URL: string;
   /** mock 开关（EXPO_PUBLIC_USE_MOCK，'false' 字符串=real） */
   USE_MOCK?: string;
+  /** 商品 /detail 聚合端点开关（EXPO_PUBLIC_USE_PRODUCT_DETAIL，'false'=回退普通 /{id}；C-P1-7） */
+  USE_PRODUCT_DETAIL?: string;
   /** Sentry DSN（EXPO_PUBLIC_SENTRY_DSN，空串=禁用） */
   SENTRY_DSN: string;
   /** EAS 构建元数据（app.json extra.eas 透传） */

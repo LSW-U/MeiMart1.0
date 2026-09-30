@@ -30,9 +30,11 @@ export function usePushRegistration(): void {
   const prevAuthRef = useRef(isAuthenticated);
 
   useEffect(() => {
-    if (!shouldInitPush()) return;
+    // C-P3-11（批4）：早退也要先更新 prevAuthRef，否则 mock/web 下 auth 边沿
+    // 一直不记账；切到 native 后首帧误判 wasAuth=旧值，可能漏注册
     const wasAuth = prevAuthRef.current;
     prevAuthRef.current = isAuthenticated;
+    if (!shouldInitPush()) return;
 
     if (isAuthenticated && !wasAuth) {
       // 登录边沿：注册（fetch 内部已含权限申请；任一步失败静默）

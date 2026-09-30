@@ -1,4 +1,4 @@
-import { act } from '@testing-library/react-native';
+import { act, waitFor } from '@testing-library/react-native';
 import type { Notification } from '@/types';
 import { notificationsApi } from '@/services/notifications';
 import {
@@ -57,9 +57,14 @@ describe('useNotifications 乐观更新', () => {
       await result.current.mutateAsync('n1');
     });
 
+    // P3-6（批4 审查修复）：mutateAsync 返回后乐观缓存写入可能还在 microtask 队列，
+    // 直读缓存会 flaky——waitFor 化（B-4 时序解耦同款）
+    await waitFor(() => {
+      const all = qc.getQueryData<Notification[]>(ALL_KEY)!;
+      expect(all.find((n) => n.id === 'n1')?.read).toBe(true);
+    });
     // all 列表：n1 已读，n2 仍未读
     const all = qc.getQueryData<Notification[]>(ALL_KEY)!;
-    expect(all.find((n) => n.id === 'n1')?.read).toBe(true);
     expect(all.find((n) => n.id === 'n2')?.read).toBe(false);
     // unread 列表契约（仅未读）：n1 被移除，n2 保留
     const unread = qc.getQueryData<Notification[]>(UNREAD_KEY)!;
@@ -82,8 +87,11 @@ describe('useNotifications 乐观更新', () => {
       }
     });
 
-    const all = qc.getQueryData<Notification[]>(ALL_KEY)!;
-    expect(all.find((n) => n.id === 'n1')?.read).toBe(false);
+    // P3-6：rollback 写入同样 waitFor 化
+    await waitFor(() => {
+      const allRb = qc.getQueryData<Notification[]>(ALL_KEY)!;
+      expect(allRb.find((n) => n.id === 'n1')?.read).toBe(false);
+    });
     // unread 列表 n1 回来（rollback 后重新包含）
     const unread = qc.getQueryData<Notification[]>(UNREAD_KEY)!;
     expect(unread.find((n) => n.id === 'n1')).toBeTruthy();
@@ -99,8 +107,11 @@ describe('useNotifications 乐观更新', () => {
       await result.current.mutateAsync();
     });
 
-    const all = qc.getQueryData<Notification[]>(ALL_KEY)!;
-    expect(all.every((n) => n.read)).toBe(true);
+    // P3-6：markAll 乐观缓存写入 waitFor 化
+    await waitFor(() => {
+      const all = qc.getQueryData<Notification[]>(ALL_KEY)!;
+      expect(all.every((n) => n.read)).toBe(true);
+    });
     expect(qc.getQueryData<Notification[]>(UNREAD_KEY)).toEqual([]);
     expect(qc.getQueryData<number>(UNREAD_COUNT_QUERY_KEY)).toBe(0);
   });

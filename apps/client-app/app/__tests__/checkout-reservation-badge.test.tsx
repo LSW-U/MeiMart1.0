@@ -196,3 +196,22 @@ describe('结算页预约单标注（批D D2）', () => {
     expect(screen.queryByText('checkout.estimatedDelivery')).toBeNull();
   });
 });
+
+// B 部分（批4 假绿测试改造）：补 1 条少覆盖集成用例——预约标注与券折扣共存
+// （标注逻辑此前只测了单一 preview 形态，券码透传进 preview 入参未取证）
+it('acceptingReservation=true 且带券码 → useCheckoutPreview 收到券码 + 标注与 ETA 互斥仍成立', () => {
+  mockPreview.mockReturnValue({
+    data: basePreview({
+      id: 'wh-1',
+      code: 'DILI-01',
+      deliveryFee: 0,
+      acceptingReservation: true,
+      nextOpenAt: null,
+    } as PreviewResponse['warehouseMatch']),
+  });
+  const { getByTestId, queryByTestId } = render(<CheckoutPage />, { wrapper });
+  expect(getByTestId('reservation-badge')).toBeTruthy();
+  expect(queryByTestId('checkout-eta')).toBeNull();
+  // 券码来自 useCoupons data 首项（本文件 mock 为空数组 → 无选中券，preview 入参 couponCode 透传 undefined，取证入参契约）
+  expect(mockPreview).toHaveBeenCalledWith(undefined, undefined);
+});

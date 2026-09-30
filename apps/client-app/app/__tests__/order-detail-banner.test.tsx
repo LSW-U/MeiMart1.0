@@ -45,6 +45,12 @@ jest.mock('@/services/queries/useOrderEta', () => ({
   useOrderEta: (...args: unknown[]) => mockUseOrderEta(...args),
 }));
 
+// C-P3-5（批4）：[id].tsx 复购链路引入 useAddToCart（真实 hook 需 QueryClient）——
+// 本文件只测 Banner/Badge，mock 掉整个 useCart 模块
+jest.mock('@/services/queries/useCart', () => ({
+  useAddToCart: () => ({ mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false }),
+}));
+
 const makeOrder = (status: OrderStatus): Order => ({
   id: 'order-1',
   orderNo: 'MM20260814001',
@@ -87,7 +93,9 @@ describe('OrderDetailPage 状态 Banner/Badge（P10）', () => {
   it('OUT_FOR_DELIVERY + 有 ETA：banner 走 arrivingEta 插值（formatEta 输出）', () => {
     const eta = '2026-08-15T09:45:00Z';
     setup('OUT_FOR_DELIVERY', eta);
-    expect(screen.getByText(`order.bannerValue.arrivingEta:${formatEta(eta, 'en-US')}`)).toBeTruthy();
+    expect(
+      screen.getByText(`order.bannerValue.arrivingEta:${formatEta(eta, 'en-US')}`),
+    ).toBeTruthy();
     // fallback 文案不再出现
     expect(screen.queryByText('order.bannerValue.outForDelivery')).toBeNull();
   });

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Pressable, View, Text, StyleSheet } from 'react-native';
 import { useTheme, spacing, borderRadius, typography, shadowPresets } from '@/theme';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +17,8 @@ const ON_PRIMARY = '#ffffff';
 // Why: 方案 §9.4-B - 固定高度档位（3 档错落，无需 Image.getSize 异步取宽高比）
 const HEIGHT_VARIANTS = [140, 168, 120];
 
-export function MasonryProductCard({
+// C-P2-10: React.memo——瀑布流卡片重渲隔离（props 浅比较；调用方需稳定回调 useCallback）
+export const MasonryProductCard = memo(function MasonryProductCard({
   product,
   onPress,
   onLongPress,
@@ -37,7 +39,12 @@ export function MasonryProductCard({
   // Why: 管理态整卡单 Pressable（图+信息区全可点，内层降级 View 无嵌套）；
   //      常态保持分区可点（图/名各自跳详情，add 独立——P0 模式）
   const renderImage = () => (
-    <View style={[styles.imageWrap, { height: imageHeight, backgroundColor: colors['surface-container'] }]}>
+    <View
+      style={[
+        styles.imageWrap,
+        { height: imageHeight, backgroundColor: colors['surface-container'] },
+      ]}
+    >
       <SafeImage source={{ uri: product.image }} style={styles.image} />
       {badge && !selectMode && (
         <View style={[styles.badge, { backgroundColor: colors.primary }]}>
@@ -156,7 +163,7 @@ export function MasonryProductCard({
       {cardContent}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

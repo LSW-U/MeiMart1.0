@@ -59,7 +59,14 @@
     "avatarImage": "Foto avatar",
     "youAreOffline": "Ita laiha rede",
     "weakNetwork": "Rede fraku",
-    "resetApp": "Halo fali aplikasaun nia estadu"
+    "resetApp": "Halo fali aplikasaun nia estadu",
+    "a11y": {
+      "errorAlert": "Sala: {{message}}",
+      "locationChip": "Localizasaun: {{location}}",
+      "selectField": "Hili {{label}}, daudaun {{value}}",
+      "selectOption": "Hili {{option}}",
+      "none": "la iha"
+    }
   },
   "splash": {
     "welcome": "Bem-vindu"
@@ -72,7 +79,10 @@
     "title3": "Kultura Tais",
     "desc3": "Motif tradisional Timor-Leste",
     "start": "Hahú",
-    "skip": "Saltar"
+    "skip": "Saltar",
+    "a11y": {
+      "slide": "Slide {{index}}"
+    }
   },
   "auth": {
     "login": "Tama",
@@ -161,7 +171,10 @@
     "seeAllProducts": "Haree sasan hotu",
     "messagesLabel": "Mensajen",
     "reorderLabel": "Sosa fali {{name}}",
-    "unreadBadge": "Ita iha {{count}} notifikasaun seidauk lee"
+    "unreadBadge": "Ita iha {{count}} notifikasaun seidauk lee",
+    "a11y": {
+      "banner": "Banner: {{title}}"
+    }
   },
   "promotion": {
     "flashDeals": "Ofertas lais",
@@ -303,7 +316,26 @@
     "noProducts": "Laiha sasan",
     "noProductsDesc": "Laiha sasan ne'ebe hanesan filtro nee",
     "addToFavorites": "Tau iha favoritu",
-    "removeFromFavorites": "Hamos husi favoritu"
+    "removeFromFavorites": "Hamos husi favoritu",
+    "a11y": {
+      "category": "Kategoria {{name}}",
+      "variantOption": "{{group}}: {{option}}",
+      "cardItem": "{{name}}, presu {{price}}",
+      "price": "Presu {{price}}",
+      "priceOriginal": "presu orijinal {{price}}"
+    },
+    "specGrind": "Giuun",
+    "specWeight": "Toos",
+    "specFine": "Fine",
+    "specMedium": "Medium",
+    "specCoarse": "Coarse",
+    "specWholeBean": "Whole Bean",
+    "spec100g": "100g",
+    "spec250g": "250g",
+    "spec500g": "500g",
+    "spec1kg": "1kg",
+    "spec5kg": "5kg",
+    "spec10kg": "10kg"
   },
   "order": {
     "status": {
@@ -446,7 +478,19 @@
       "afterSales": "Reklamasaun",
       "review": "Avalia",
       "buyAgain": "Sosa Fali"
-    }
+    },
+    "a11y": {
+      "productItem": "{{name}}, kuantidade {{quantity}}",
+      "countdown": "{{label}} {{time}}",
+      "reviewedTab": "{{name}} {{state}}"
+    },
+    "repeatEmpty": "La iha sasan atu sosa fila fali",
+    "repeatFailed": "Susaun sala, koalia fali",
+    "repeatPartial": "Sasan balun tau ona ({{ok}}/{{total}})",
+    "payCodNoAction": "Order COD selu iha uma",
+    "payAlreadyPaid": "Order selu ona",
+    "paySuccess": "Selu ho susesu",
+    "payFailed": "Selu la susesu, koalia fali"
   },
   "tracking": {
     "title": "Segue Pedidu",
@@ -493,7 +537,8 @@
       "addNew": "Aumenta enderesu foun",
       "useCurrentLocation": "Uza fatin atual",
       "confirmSave": "Konfirma no rai enderesu",
-      "mapArea": "Mapa"
+      "mapArea": "Mapa",
+      "addressCard": "Endresu {{name}} nian, {{address}}"
     },
     "savedAddresses": "Enderesu Rai Ona",
     "emptyDesc": "Aumenta enderesu atu lalais remata sosa",
@@ -515,6 +560,7 @@
     "searchNoResults": "Laiha rezultadu",
     "searchResults": "Rezultadu Buka",
     "previewHint": "Dada mapa ka buka atu hili fatin",
+    "pickLocationRequired": "Favor hatama lokasaun iha mapa lais",
     "nearbyEmpty": "Laiha fatin ho naran besik",
     "webMapFallback": "Mapa interativu iha aplikasaun. Uza buka atu hili fatin.",
     "tagLabel": "ETIKETA",
@@ -654,7 +700,10 @@
     "notAvailable": "La disponível ba pedidu ida ne'e",
     "saveThisOrder": "Ekonomia ${{amount}} iha pedidu ida ne'e",
     "usableThisOrder": "Bele uza",
-    "unusableThisOrder": "La bele uza"
+    "unusableThisOrder": "La bele uza",
+    "a11y": {
+      "couponCard": "{{name}} {{code}}"
+    }
   },
   "claim": {
     "title": "Sentru Kupom",
@@ -696,6 +745,7 @@
     "offlineBlockDesc": "Verifika rede no koko fali",
     "submit": "Halo pedidu",
     "selectAddress": "Hili enderesu entrega",
+    "selectPaymentMethod": "Hili forma pintamento",
     "noItems": "Laiha sasan hili",
     "itemQty": "Ktd: {{count}}",
     "payment": {
@@ -897,7 +947,10 @@
     "mockReason": "Problema kualidade produtu",
     "mockProduct": "Apa Foun Mean Fuji",
     "cancelNotSupported": "Iha etapa ida ne'e la suporta kansela",
-    "cancelFailed": "Falla kansela"
+    "cancelFailed": "Falla kansela",
+    "a11y": {
+      "productItem": "{{label}}: {{name}}"
+    }
   },
   "review": {
     "title": "Hakerek avaliasaun",
@@ -943,7 +996,8 @@
       "ratingSlider": "Slider avaliasaun, dada atu hili estrela 1 to'o 5",
       "charCount": "Karaktere {{count}} husi {{max}}",
       "photoThumb": "Foto {{count}}",
-      "removePhoto": "Hamos foto {{count}}"
+      "removePhoto": "Hamos foto {{count}}",
+      "reviewItem": "Review husi {{name}}, nota {{rating}}"
     },
     "progressHint": "Avaliasaun remata {{done}}/{{total}}"
   },
@@ -1209,7 +1263,11 @@
     "suggestedProducts": "Sasan Popular",
     "noSuggestion": "Laiha sujestaun ba \"{{q}}\". Klik buka atu haree rezultadu.",
     "emptyKeyword": "Favor hatama liafuan buka",
-    "searchTerm": "Buka {{term}}"
+    "searchTerm": "Buka {{term}}",
+    "a11y": {
+      "filterTag": "Filtru: {{tag}}",
+      "removeRecent": "Hasai {{term}}"
+    }
   },
   "legal": {
     "terms": {
@@ -1229,5 +1287,14 @@
       "comingSoonHint": "Forma pagamentu nee seidauk disponivel, aguarda hamutuk"
     },
     "estimatedCny": "≈ ¥{{amount}}"
+  },
+  "pageError": {
+    "title": "Buaat naran iha ne'ebá",
+    "messageFallback": "Sala inesperado. Fila fali no tenta fali."
+  },
+  "notifications": {
+    "a11y": {
+      "notificationItem": "{{title}}, {{time}}"
+    }
   }
 }

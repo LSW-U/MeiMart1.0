@@ -120,10 +120,14 @@ export default function SearchIndexPage() {
   const popularWithHeat = (hotList ?? []).map((item) => ({
     id: item.word,
     label: item.word,
-    heat: item.searchCount >= 1000 ? `${(item.searchCount / 1000).toFixed(1)}k` : `${item.searchCount}`,
+    heat:
+      item.searchCount >= 1000 ? `${(item.searchCount / 1000).toFixed(1)}k` : `${item.searchCount}`,
   }));
   // C方案 §4.2 - 联想双 hook 并行（接 debouncedQuery，非 raw query；showSuggest 控制 enabled）
-  const { data: suggestWords, isLoading: isWordsLoading } = useSearchSuggest(debouncedQuery, showSuggest);
+  const { data: suggestWords, isLoading: isWordsLoading } = useSearchSuggest(
+    debouncedQuery,
+    showSuggest,
+  );
   const { data: suggestProducts, isLoading: isProductsLoading } = useSearchProductsSuggest(
     debouncedQuery,
     showSuggest,
@@ -134,7 +138,8 @@ export default function SearchIndexPage() {
   //   先取 length 到 const number 再进 && 链可避开 correlated narrowing
   const wordsLen = suggestWords?.length ?? 0;
   const productsLen = suggestProducts?.length ?? 0;
-  const isSuggestLoading = isWordsLoading && isProductsLoading && wordsLen === 0 && productsLen === 0;
+  const isSuggestLoading =
+    isWordsLoading && isProductsLoading && wordsLen === 0 && productsLen === 0;
   // C方案 §7.4 - 空态 fallback 复用 hotList（slice 3 作 chips 补位）
   const hotFallback = (hotList ?? [])
     .slice(0, 3)
@@ -167,7 +172,8 @@ export default function SearchIndexPage() {
       { product: item, quantity: 1 },
       {
         onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
-        onError: () => toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+        onError: () =>
+          toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
       },
     );
   };
@@ -254,166 +260,178 @@ export default function SearchIndexPage() {
 
         {/* Filter Tags 横滑 - C方案 §4.6: showSuggest 时隐藏（联想面板独占） */}
         {!showSuggest && (
-        <View style={styles.filterTagsWrap}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.filterTagsRow}>
-              {filterTags.map((tag) => {
-                const active = tag === activeTag;
-                return (
+          <View style={styles.filterTagsWrap}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.filterTagsRow}>
+                {filterTags.map((tag) => {
+                  const active = tag === activeTag;
+                  return (
+                    <Pressable
+                      key={tag}
+                      onPress={() => setActiveTag(tag)}
+                      style={[
+                        styles.filterTag,
+                        active
+                          ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                          : {
+                              // Why: C1 胶囊化 - surface-container-high 底 + transparent 描边（无 rgba）
+                              backgroundColor: colors['surface-container-high'],
+                              borderColor: 'transparent',
+                            },
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('search.a11y.filterTag', { tag })}
+                      accessibilityState={{ selected: active }}
+                    >
+                      <Text
+                        style={[
+                          styles.filterTagText,
+                          { color: active ? ON_PRIMARY : colors.primary },
+                        ]}
+                      >
+                        {tag}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Recent Searches（P7 F1: AsyncStorage 持久化 + 流式 chip，空时隐藏整块） */}
+        {!showSuggest && recentSearches.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                {t('search.recent')}
+              </Text>
+              <Pressable
+                onPress={clearRecent}
+                accessibilityRole="button"
+                accessibilityLabel={t('search.clearAll')}
+              >
+                <Text style={[styles.clearAllText, { color: colors.primary }]}>
+                  {t('search.clearAll')}
+                </Text>
+              </Pressable>
+            </View>
+            <View style={styles.recentChips}>
+              {recentSearches.map((item) => (
+                // Why: Web 端 Pressable 渲染 <button>，HTML 禁止 button 嵌套 button（hydration error）。
+                //   改平级 Pressable（文字点击搜索 + close 点击删除），外层 View 容器不点击
+                <View key={item} style={styles.recentChip}>
                   <Pressable
-                    key={tag}
-                    onPress={() => setActiveTag(tag)}
-                    style={[
-                      styles.filterTag,
-                      active
-                        ? { backgroundColor: colors.primary, borderColor: colors.primary }
-                        : {
-                            // Why: C1 胶囊化 - surface-container-high 底 + transparent 描边（无 rgba）
-                            backgroundColor: colors['surface-container-high'],
-                            borderColor: 'transparent',
-                          },
+                    onPress={() => onSubmitSearch(item)}
+                    style={({ pressed }) => [
+                      styles.recentChipTextWrap,
+                      pressed && styles.chipPressed,
                     ]}
                     accessibilityRole="button"
-                    accessibilityLabel={`Filter: ${tag}`}
-                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={t('search.searchTerm', { term: item })}
                   >
                     <Text
-                      style={[styles.filterTagText, { color: active ? ON_PRIMARY : colors.primary }]}
+                      style={[styles.recentChipText, { color: colors['on-surface-variant'] }]}
+                      numberOfLines={1}
                     >
-                      {tag}
+                      {item}
                     </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => removeRecent(item)}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('search.a11y.removeRecent', { term: item })}
+                  >
+                    {/* 原因：on-sv 暖灰 close 图标，dark 不变（方案 §2.3 F1 流式 chip） */}
+                    <Icon symbol="close" size={12} color={colors['on-surface-variant']} />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Popular Searches 热搜榜（P7 决策 3-B）- 空数据时隐藏整块（跟 Recent 区一致） */}
+        {!showSuggest && popularWithHeat.length > 0 && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+              {t('search.popular')}
+            </Text>
+            <View style={styles.hotList}>
+              {popularWithHeat.map((item, idx) => {
+                const rank = idx + 1;
+                const label = item.label;
+                const rankColor = getRankColor(rank);
+                return (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => onSubmitSearch(label)}
+                    style={({ pressed }) => [
+                      styles.hotRank,
+                      { backgroundColor: colors['surface-container-low'] },
+                      pressed && { opacity: 0.7 },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('search.searchTerm', { term: label })}
+                  >
+                    <View style={[styles.hotNum, { backgroundColor: rankColor.bg }]}>
+                      <Text style={[styles.hotNumText, { color: rankColor.fg }]}>{rank}</Text>
+                    </View>
+                    <Text
+                      style={[styles.hotWord, { color: colors['on-surface'] }]}
+                      numberOfLines={1}
+                    >
+                      {label}
+                    </Text>
+                    <View
+                      style={[styles.hotTag, { backgroundColor: colors['surface-container-high'] }]}
+                    >
+                      <Icon symbol="trending_up" size={10} color={colors.primary} />
+                      <Text style={[styles.hotTagText, { color: colors.primary }]}>
+                        {item.heat}
+                      </Text>
+                    </View>
                   </Pressable>
                 );
               })}
             </View>
-          </ScrollView>
-        </View>
-        )}
-
-        {/* Recent Searches（P7 F1: AsyncStorage 持久化 + 流式 chip，空时隐藏整块） */}
-        {(!showSuggest && recentSearches.length > 0) && (
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              {t('search.recent')}
-            </Text>
-            <Pressable
-              onPress={clearRecent}
-              accessibilityRole="button"
-              accessibilityLabel={t('search.clearAll')}
-            >
-              <Text style={[styles.clearAllText, { color: colors.primary }]}>{t('search.clearAll')}</Text>
-            </Pressable>
           </View>
-          <View style={styles.recentChips}>
-            {recentSearches.map((item) => (
-              // Why: Web 端 Pressable 渲染 <button>，HTML 禁止 button 嵌套 button（hydration error）。
-              //   改平级 Pressable（文字点击搜索 + close 点击删除），外层 View 容器不点击
-              <View key={item} style={styles.recentChip}>
-                <Pressable
-                  onPress={() => onSubmitSearch(item)}
-                  style={({ pressed }) => [styles.recentChipTextWrap, pressed && styles.chipPressed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('search.searchTerm', { term: item })}
-                >
-                  <Text
-                    style={[styles.recentChipText, { color: colors['on-surface-variant'] }]}
-                    numberOfLines={1}
-                  >
-                    {item}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => removeRecent(item)}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Remove ${item}`}
-                >
-                  {/* 原因：on-sv 暖灰 close 图标，dark 不变（方案 §2.3 F1 流式 chip） */}
-                  <Icon symbol="close" size={12} color={colors['on-surface-variant']} />
-                </Pressable>
-              </View>
-            ))}
-          </View>
-        </View>
-        )}
-
-        {/* Popular Searches 热搜榜（P7 决策 3-B）- 空数据时隐藏整块（跟 Recent 区一致） */}
-        {(!showSuggest && popularWithHeat.length > 0) && (
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-            {t('search.popular')}
-          </Text>
-          <View style={styles.hotList}>
-            {popularWithHeat.map((item, idx) => {
-              const rank = idx + 1;
-              const label = item.label;
-              const rankColor = getRankColor(rank);
-              return (
-              <Pressable
-                key={item.id}
-                onPress={() => onSubmitSearch(label)}
-                style={({ pressed }) => [
-                  styles.hotRank,
-                  { backgroundColor: colors['surface-container-low'] },
-                  pressed && { opacity: 0.7 },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t('search.searchTerm', { term: label })}
-              >
-                <View style={[styles.hotNum, { backgroundColor: rankColor.bg }]}>
-                  <Text style={[styles.hotNumText, { color: rankColor.fg }]}>{rank}</Text>
-                </View>
-                <Text
-                  style={[styles.hotWord, { color: colors['on-surface'] }]}
-                  numberOfLines={1}
-                >
-                  {label}
-                </Text>
-                <View style={[styles.hotTag, { backgroundColor: colors['surface-container-high'] }]}>
-                  <Icon symbol="trending_up" size={10} color={colors.primary} />
-                  <Text style={[styles.hotTagText, { color: colors.primary }]}>{item.heat}</Text>
-                </View>
-              </Pressable>
-              );
-            })}
-          </View>
-        </View>
         )}
 
         {/* Recommended for You（P7 §2.4: MasonryProductCard 两列瀑布流，与首页统一）- C方案 §4.6: showSuggest 时隐藏 */}
         {!showSuggest && (
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-            {t('search.recommended')}
-          </Text>
-          {recommendList.length > 0 && (
-            <View style={styles.masonryRow}>
-              <View style={styles.masonryCol}>
-                {masonryCol1.map((product) => (
-                  <MasonryProductCard
-                    key={product.id}
-                    product={product}
-                    badge={resolveBadges(product, t)[0]}
-                    onPress={() => router.push(`/product/${product.id}`)}
-                    onAddToCart={() => handleAddToCart(product)}
-                  />
-                ))}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+              {t('search.recommended')}
+            </Text>
+            {recommendList.length > 0 && (
+              <View style={styles.masonryRow}>
+                <View style={styles.masonryCol}>
+                  {masonryCol1.map((product) => (
+                    <MasonryProductCard
+                      key={product.id}
+                      product={product}
+                      badge={resolveBadges(product, t)[0]}
+                      onPress={() => router.push(`/product/${product.id}`)}
+                      onAddToCart={() => handleAddToCart(product)}
+                    />
+                  ))}
+                </View>
+                <View style={styles.masonryCol}>
+                  {masonryCol2.map((product) => (
+                    <MasonryProductCard
+                      key={product.id}
+                      product={product}
+                      badge={resolveBadges(product, t)[0]}
+                      onPress={() => router.push(`/product/${product.id}`)}
+                      onAddToCart={() => handleAddToCart(product)}
+                    />
+                  ))}
+                </View>
               </View>
-              <View style={styles.masonryCol}>
-                {masonryCol2.map((product) => (
-                  <MasonryProductCard
-                    key={product.id}
-                    product={product}
-                    badge={resolveBadges(product, t)[0]}
-                    onPress={() => router.push(`/product/${product.id}`)}
-                    onAddToCart={() => handleAddToCart(product)}
-                  />
-                ))}
-              </View>
-            </View>
-          )}
-        </View>
+            )}
+          </View>
         )}
       </ScrollView>
       {/* C方案 §4.4 - SuggestPanel 挂 ScrollView 同级 absolute（top:90=headerWrap 高度），不随滚动 */}

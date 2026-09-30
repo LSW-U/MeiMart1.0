@@ -46,11 +46,11 @@ describe('ProductCard', () => {
 
   it('calls onPress when card pressed', () => {
     const onPress = jest.fn();
-    const { getByLabelText } = render(<ProductCard product={product} onPress={onPress} />, {
+    const { getAllByLabelText } = render(<ProductCard product={product} onPress={onPress} />, {
       wrapper,
     });
     // Q6 修复：a11y label 价格走 formatPrice（与视觉 PriceText 一致，$18.50 而非 18.5）
-    fireEvent.press(getByLabelText('Organic Wild Honey, price $18.50'));
+    fireEvent.press(getAllByLabelText('product.a11y.cardItem:Organic Wild Honey')[0]);
     expect(onPress).toHaveBeenCalledWith(product);
   });
 

@@ -18,7 +18,7 @@ import { useTheme, spacing, layout, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { NotificationItem } from '@/components/business/NotificationItem';
+import { NotificationItem, TickerProvider } from '@/components/business/NotificationItem';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
@@ -292,9 +292,7 @@ export default function NotificationsPage() {
                       style={[
                         styles.tabBadge,
                         {
-                          backgroundColor: isActive
-                            ? colors.primary
-                            : colors['surface-container'],
+                          backgroundColor: isActive ? colors.primary : colors['surface-container'],
                         },
                       ]}
                     >
@@ -329,47 +327,51 @@ export default function NotificationsPage() {
       ) : filtered.length === 0 ? (
         renderEmpty()
       ) : (
-        <SectionList
-          sections={sections}
-          keyExtractor={(item) => item.id}
-          initialNumToRender={6}
-          maxToRenderPerBatch={4}
-          windowSize={5}
-          contentContainerStyle={styles.list}
-          stickySectionHeadersEnabled={false}
-          renderSectionHeader={({ section }) => (
-            <View style={styles.dayLabel}>
-              <Icon
-                symbol={
-                  section.key === 'today'
-                    ? 'today'
-                    : section.key === 'yesterday'
-                      ? 'history'
-                      : 'schedule'
-                }
-                size={14}
-                color={colors['on-surface-variant']}
-              />
-              <Text style={[styles.dayLabelText, { color: colors['on-surface-variant'] }]}>
-                {section.title}
-              </Text>
-              {section.unread > 0 && (
-                <Text style={[styles.dayCount, { color: colors['on-surface-variant'] }]}>
-                  {t('service.notifications.unreadCount', { count: section.unread })}
+        // C-P2-11: 单一共享 ticker——列表内所有倒计时项共用此 Provider 的 1s 心跳
+        //（消灭原每项各自 setInterval 的 N 个定时器）
+        <TickerProvider>
+          <SectionList
+            sections={sections}
+            keyExtractor={(item) => item.id}
+            initialNumToRender={6}
+            maxToRenderPerBatch={4}
+            windowSize={5}
+            contentContainerStyle={styles.list}
+            stickySectionHeadersEnabled={false}
+            renderSectionHeader={({ section }) => (
+              <View style={styles.dayLabel}>
+                <Icon
+                  symbol={
+                    section.key === 'today'
+                      ? 'today'
+                      : section.key === 'yesterday'
+                        ? 'history'
+                        : 'schedule'
+                  }
+                  size={14}
+                  color={colors['on-surface-variant']}
+                />
+                <Text style={[styles.dayLabelText, { color: colors['on-surface-variant'] }]}>
+                  {section.title}
                 </Text>
-              )}
-            </View>
-          )}
-          renderItem={({ item }) => (
-            <NotificationItem
-              notification={item}
-              testID={item.id}
-              onPress={() => onPress(item)}
-              onCta={(action, n) => onCta(action, n)}
-            />
-          )}
-          ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
-        />
+                {section.unread > 0 && (
+                  <Text style={[styles.dayCount, { color: colors['on-surface-variant'] }]}>
+                    {t('service.notifications.unreadCount', { count: section.unread })}
+                  </Text>
+                )}
+              </View>
+            )}
+            renderItem={({ item }) => (
+              <NotificationItem
+                notification={item}
+                testID={item.id}
+                onPress={() => onPress(item)}
+                onCta={(action, n) => onCta(action, n)}
+              />
+            )}
+            ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
+          />
+        </TickerProvider>
       )}
     </SafeAreaWrapper>
   );

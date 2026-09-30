@@ -9,6 +9,16 @@ export interface NetworkQuality {
   status: NetworkStatus | null;
 }
 
+/**
+ * C-P2-12: isInternetReachable 三态语义——null（探测未完成/无法探测，如蜂窝受限网络）
+ * 是「未知」，不是「不可达」。Boolean() 把 null 折叠成 false 会让启动瞬间/探测中误判弱网，
+ * 触发降级 UI（低清图/关动画）。这里未知按「可达」处理（isWeak=false），isConnected 仍为
+ * 硬判据（false 即离线）。
+ */
+function reachableOrUnknown(value: boolean | null | undefined): boolean {
+  return value !== false;
+}
+
 export function useNetworkQuality(): NetworkQuality {
   const [quality, setQuality] = useState<NetworkQuality>({
     isOffline: false,
@@ -20,7 +30,7 @@ export function useNetworkQuality(): NetworkQuality {
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
       const isConnected = Boolean(state.isConnected);
-      const isInternetReachable = Boolean(state.isInternetReachable);
+      const isInternetReachable = reachableOrUnknown(state.isInternetReachable);
       const effectiveType = ((): NetworkStatus['effectiveType'] => {
         const t = (state as { details?: { effectiveType?: string } }).details?.effectiveType;
         if (t === '2g' || t === 'slow-2g') return 'slow';

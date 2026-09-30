@@ -2,9 +2,9 @@
 // （PROCESSING / SHIPPED / DELIVERED）。原 OrderDetailPage.html 是 0 字节空文件。
 // ADR-0004：推翻 ADR-0002 的 Section 组件方案，参照 tracking.tsx 重写为单文件。
 //
-// HTML 行数（取最长）：DeliveryTrackingPage.html 328 行
-// RN 行数：~1086 行（Commit 4 抽 timeline 共享件去重后；含 SVG status badge + custom timeline + RiderCard）
-// 满足 CLAUDE.md 规则 #28 的 30% 门槛（1086 / 610 = 178%）
+// 批5 拆分（C-P3-14）：STATUS_VISUAL/ON_PRIMARY 抽到 order-detail/shared.tsx，
+//   Header/Timeline/BottomActions（含 handleRepeatOrder）抽到 order-detail/sections/。
+//   主文件保留路由壳 + 数据组装 + OrderItemRow/SummaryRow，行为零变更（纯搬移）。
 import {
   StyleSheet,
   View,
@@ -14,14 +14,13 @@ import {
   Alert,
   Pressable,
   Platform,
-  Share,
 } from 'react-native';
 import * as expoClipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { formatDate, formatEta } from '@/utils/format';
-import { buildTimelineSteps, type TimelineStepData } from '@/utils/timeline';
+import { formatDate, formatEta, maskPhone, formatPrice } from '@/utils/format';
+import { buildTimelineSteps } from '@/utils/timeline';
 import { RiderCard, getRiderStatusTag } from '@/components/business/RiderCard';
 import {
   useTheme,
@@ -31,128 +30,22 @@ import {
   borderRadius,
   shadowPresets,
   statusBannerPalettes,
-  type StatusBannerPaletteKey,
 } from '@/theme';
 import { useLocalizer } from '@/i18n';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
-import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { StatusBadge } from '@/components/business/StatusBadge';
 import { Icon } from '@/components/ui/Icon';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
 import { useOrderEta } from '@/services/queries/useOrderEta';
 import { toast } from '@/store/toastStore';
-import type { OrderStatus, Order, CartItem, LocalizableText } from '@/types';
+import type { CartItem, LocalizableText } from '@/types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
-
-// 原因：红底白字 dark 不变（Header/done dot/solidBtn/laisPayBadge 都是 colors.primary 红底白字，与 P2-P7 ON_PRIMARY const 模式一致）
-const ON_PRIMARY = '#ffffff';
-
-// === 状态视觉映射 ===
-
-type StatusVisual = {
-  /** 状态色板 key（颜色统一从 statusBannerPalettes 取，不再内联 hex） */
-  palette: StatusBannerPaletteKey;
-  /** 状态徽章 i18n key（复用 order.status.*，渲染时 toUpperCase 保持大写视觉） */
-  badgeTextKey: string;
-  /** Banner 顶部小标签 i18n key（order.bannerLabel.*，渲染时 toUpperCase） */
-  bannerLabelKey: string;
-  /** Banner 主文案 i18n key（order.bannerValue.*） */
-  bannerValueKey: string;
-  /** Banner 图标名（Material Symbols） */
-  bannerIconSymbol: string;
-};
-
-// Why: STATUS_VISUAL 存 i18n key（纯数据，不依赖 t），渲染处 t() + toUpperCase。
-// badgeTextKey 复用 order.status.*（PENDING_CONFIRM→confirming、CONFIRMED→confirmed 拆开，
-// PICKED/OUT_FOR_DELIVERY→shipped、DELIVERED_*/COMPLETED→delivered、CANCELLED→cancelled）。
-// bannerLabelKey/bannerValueKey 用 order.bannerLabel.*/order.bannerValue.* 子命名空间（新增）。
-const STATUS_VISUAL: Record<OrderStatus, StatusVisual> = {
-  // 待付款（PROCESSING 等价的橙色）
-  PENDING_PAYMENT: {
-    palette: 'pending',
-    badgeTextKey: 'order.status.pending',
-    bannerLabelKey: 'order.bannerLabel.paymentDeadline',
-    bannerValueKey: 'order.bannerValue.completePaymentSoon',
-    bannerIconSymbol: 'schedule',
-  },
-  // 待确认（已付款等审核，颜色同 PENDING_PAYMENT）— P10：badge 从 paid 拆出，避免误显"待发货"
-  PENDING_CONFIRM: {
-    palette: 'pending',
-    badgeTextKey: 'order.status.confirming',
-    bannerLabelKey: 'order.bannerLabel.orderStatus',
-    bannerValueKey: 'order.bannerValue.beingConfirmed',
-    bannerIconSymbol: 'hourglass_empty',
-  },
-  // 已确认（PROCESSING 配色）— P10：badge 从 paid 拆出；无 DeliveryTask 无真实 ETA，banner 用泛化备货文案
-  CONFIRMED: {
-    palette: 'pending',
-    badgeTextKey: 'order.status.confirmed',
-    bannerLabelKey: 'order.bannerLabel.estimatedDelivery',
-    bannerValueKey: 'order.bannerValue.preparing',
-    bannerIconSymbol: 'local_shipping',
-  },
-  // 已拣货（同 SHIPPED 配色）
-  PICKED: {
-    palette: 'pending',
-    badgeTextKey: 'order.status.shipped',
-    bannerLabelKey: 'order.bannerLabel.estimatedDelivery',
-    bannerValueKey: 'order.bannerValue.packagePicked',
-    bannerIconSymbol: 'inventory_2',
-  },
-  // 配送中 — HTML DeliveryTrackingPage2
-  OUT_FOR_DELIVERY: {
-    palette: 'pending',
-    badgeTextKey: 'order.status.shipped',
-    bannerLabelKey: 'order.bannerLabel.estimatedDelivery',
-    // Why: 用户决策 A — 泛化文案去掉写死的「5:30 PM」（mock 占位 real 模式失真，ETA 已在地址卡 B9 展示）
-    bannerValueKey: 'order.bannerValue.outForDelivery',
-    bannerIconSymbol: 'local_shipping',
-  },
-  // 已送达（已付款） — HTML DeliveryTrackingPage3
-  DELIVERED_PAID: {
-    palette: 'delivered',
-    badgeTextKey: 'order.status.delivered',
-    bannerLabelKey: 'order.bannerLabel.deliveryStatus',
-    bannerValueKey: 'order.bannerValue.deliveredEnjoyed',
-    bannerIconSymbol: 'check_circle',
-  },
-  // 已送达（货到付款）
-  DELIVERED_UNPAID: {
-    palette: 'delivered',
-    badgeTextKey: 'order.status.delivered',
-    bannerLabelKey: 'order.bannerLabel.paymentOnDelivery',
-    bannerValueKey: 'order.bannerValue.deliveredPayRider',
-    bannerIconSymbol: 'payments',
-  },
-  // 已送达（通用）
-  DELIVERED: {
-    palette: 'delivered',
-    badgeTextKey: 'order.status.delivered',
-    bannerLabelKey: 'order.bannerLabel.deliveryStatus',
-    bannerValueKey: 'order.bannerValue.deliveredEnjoyed',
-    bannerIconSymbol: 'check_circle',
-  },
-  // 已完成
-  COMPLETED: {
-    palette: 'delivered',
-    badgeTextKey: 'order.status.delivered',
-    bannerLabelKey: 'order.bannerLabel.orderCompleted',
-    bannerValueKey: 'order.bannerValue.orderCompletedThanks',
-    bannerIconSymbol: 'task_alt',
-  },
-  // 已取消
-  CANCELLED: {
-    palette: 'cancelled',
-    badgeTextKey: 'order.status.cancelled',
-    bannerLabelKey: 'order.bannerLabel.orderCancelled',
-    bannerValueKey: 'order.bannerValue.orderCancelled',
-    bannerIconSymbol: 'cancel',
-  },
-};
-
-// Timeline 类型 + buildTimelineSteps/formatTimelineTime 抽到 @/utils/timeline（P10/P11 共享，P11 Commit 2a）
+import { STATUS_VISUAL } from './order-detail/shared';
+import { Header } from './order-detail/sections/Header';
+import { Timeline } from './order-detail/sections/Timeline';
+import { BottomActions } from './order-detail/sections/BottomActions';
 
 // === Page ===
 
@@ -205,9 +98,10 @@ export default function OrderDetailPage() {
       ? t('order.bannerValue.arrivingEta', { eta: formatEta(eta, i18n.language) })
       : t(visual.bannerValueKey);
   // Why: P10 §8.1 D1 - 费用从 transformOrder 映射的字段读取，消除 2.0/5.0 写死（mock 无字段时降级 0）
+  // C-P3-3（批4）：Math.max(0, ...) 防负值——异常数据（运费>商品小计）时 subtotal 显示 0 而非负数
   const shippingFee = order.deliveryFee ?? 0;
   const discount = order.discountAmount ?? 0;
-  const subtotal = order.totalPrice + discount - shippingFee;
+  const subtotal = Math.max(0, order.totalPrice + discount - shippingFee);
 
   const timelineSteps = buildTimelineSteps(
     order.status,
@@ -370,7 +264,8 @@ export default function OrderDetailPage() {
                 {order.address.name}
               </Text>
               <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
-                {order.address.phone}
+                {/* C-P3-6（批4）：收货人手机号脱敏展示（utils/format maskPhone，读屏/截图不泄露全号） */}
+                {maskPhone(order.address.phone)}
               </Text>
               <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
                 {order.address.province}
@@ -425,17 +320,17 @@ export default function OrderDetailPage() {
           <View style={styles.summaryGap}>
             <SummaryRow
               label={t('order.subtotal', { defaultValue: 'Subtotal' })}
-              value={`$${subtotal.toFixed(2)}`}
+              value={formatPrice(subtotal)}
               color={colors['on-surface']}
             />
             <SummaryRow
               label={t('order.shipping', { defaultValue: 'Delivery Fee' })}
-              value={`$${shippingFee.toFixed(2)}`}
+              value={formatPrice(shippingFee)}
               color={colors['on-surface']}
             />
             <SummaryRow
               label={t('order.discount', { defaultValue: 'Discount' })}
-              value={`-$${discount.toFixed(2)}`}
+              value={`-${formatPrice(discount)}`}
               color={colors.semantic.success}
             />
             <View style={[styles.totalRow, { borderTopColor: colors['outline-variant'] }]}>
@@ -506,72 +401,6 @@ export default function OrderDetailPage() {
 
 // === Sub-components ===
 
-function Header({ title, orderNo }: { title: string; orderNo?: string }) {
-  const { colors } = useTheme();
-  const { t } = useTranslation();
-  const handleBack = useSafeBack();
-  return (
-    <View style={[styles.header, { backgroundColor: colors.primary }, shadowPresets.umaLulik]}>
-      <View style={styles.headerPattern} pointerEvents="none">
-        <TaisPattern width={390} height={64} opacity={0.2} />
-      </View>
-      <View style={styles.headerRow}>
-        <Pressable
-          onPress={handleBack}
-          hitSlop={8}
-          style={styles.headerBtn}
-          accessibilityRole="button"
-          accessibilityLabel={t('common.back', { defaultValue: 'Back' })}
-        >
-          <Icon symbol="arrow_back" size={24} color={ON_PRIMARY} />
-        </Pressable>
-        <Text style={styles.headerTitle} accessibilityRole="header" numberOfLines={1}>
-          {title}
-        </Text>
-        <View style={styles.headerActions}>
-          <Pressable
-            onPress={() => router.push('/service/help')}
-            hitSlop={8}
-            style={styles.headerBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.help', { defaultValue: 'Help' })}
-          >
-            <Icon symbol="help_outline" size={22} color={ON_PRIMARY} />
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              const message = t('order.shareMessage', {
-                orderNo: orderNo ?? '',
-                defaultValue: 'MeiMart order {{orderNo}}',
-              });
-              if (Platform.OS === 'web') {
-                // Why: Web 端 Share API 兼容性差，用 clipboard 兜底 + toast 反馈
-                if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                  navigator.clipboard.writeText(message).catch(() => {});
-                  toast.success(t('order.shareCopied', { defaultValue: 'Order link copied' }));
-                }
-              } else {
-                Share.share({ message }).catch(() => {
-                  // 用户取消分享，静默
-                });
-              }
-            }}
-            hitSlop={8}
-            style={styles.headerBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('order.shareA11y', {
-              orderNo: orderNo ?? '',
-              defaultValue: 'Share order {{orderNo}}',
-            })}
-          >
-            <Icon symbol="share" size={22} color={ON_PRIMARY} />
-          </Pressable>
-        </View>
-      </View>
-    </View>
-  );
-}
-
 function OrderItemRow({
   item,
   localize,
@@ -620,86 +449,6 @@ function OrderItemRow({
   );
 }
 
-// Custom Timeline（HTML 原型 B 方案：rail + fill 进度条 + node-head/desc + active 光晕）
-function Timeline({
-  steps,
-  progress,
-}: {
-  steps: TimelineStepData[];
-  progress: number; // 0-1，进度条填充比例
-}) {
-  const { colors } = useTheme();
-  return (
-    <View style={styles.timelineWrap}>
-      <View style={[styles.timelineBgLine, { backgroundColor: colors['outline-variant'] }]} />
-      <View
-        style={[
-          styles.timelineActiveLine,
-          { backgroundColor: colors.primary, height: `${progress * 100}%` },
-        ]}
-      />
-
-      {steps.map((step) => {
-        const isCompleted = step.state === 'completed';
-        const isActive = step.state === 'active';
-        // Why: done = primary 实心 + check；active = 白底 + 3px primary 边 + 光晕 + bannerIcon；pending = 白底 + outline-v 边
-        const dotBg = isCompleted ? colors.primary : colors['surface-container-lowest'];
-        const dotBorder = isActive ? colors.primary : colors['outline-variant'];
-        const labelColor = isActive
-          ? colors.primary
-          : isCompleted
-            ? colors['on-surface']
-            : colors['on-surface-variant'];
-        const descColor = isActive ? colors['on-surface'] : colors['on-surface-variant'];
-        return (
-          <View key={step.id} style={styles.timelineStep}>
-            <View
-              style={[
-                styles.timelineDot,
-                {
-                  backgroundColor: dotBg,
-                  borderColor: dotBorder,
-                  borderWidth: isActive ? 3 : 2,
-                },
-                // Why: active 光晕（HTML 原型 box-shadow: 0 0 0 4px rgba(150,24,19,0.08)）
-                isActive && {
-                  shadowColor: colors.primary,
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowRadius: 4,
-                  shadowOpacity: 0.08,
-                  elevation: 2,
-                },
-              ]}
-            >
-              {isCompleted ? (
-                <Icon symbol="check" size={10} color={ON_PRIMARY} />
-              ) : isActive && step.icon ? (
-                <Icon symbol={step.icon} size={12} color={colors.primary} />
-              ) : null}
-            </View>
-            {/* node-head：状态标题（左）+ 真实时间戳（右） */}
-            <View style={styles.timelineHead}>
-              <Text style={[styles.bodyMdBold, { color: labelColor, flex: 1 }]} numberOfLines={1}>
-                {step.label}
-              </Text>
-              {step.time ? (
-                <Text
-                  style={[styles.timelineTime, { color: colors['on-surface-variant'] }]}
-                  numberOfLines={1}
-                >
-                  {step.time}
-                </Text>
-              ) : null}
-            </View>
-            {/* desc 描述行 */}
-            <Text style={[styles.bodySm, { color: descColor }]}>{step.desc}</Text>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
 function SummaryRow({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <View style={styles.summaryRow}>
@@ -707,160 +456,6 @@ function SummaryRow({ label, value, color }: { label: string; value: string; col
       <Text style={[styles.bodySm, { color, fontWeight: '600' }]}>{value}</Text>
     </View>
   );
-}
-
-// 状态切换的底部按钮（HTML 只画了 processing/shipped/delivered 三个状态，
-// pending/cancelled/refunding 保留业务必须的按钮）
-function BottomActions({
-  status,
-  order,
-  onCancel,
-}: {
-  status: OrderStatus;
-  order: Order;
-  onCancel: () => void;
-}) {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
-
-  const outline = (label: string, onPress: () => void, testID: string) => (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.outlineBtn,
-        { backgroundColor: colors['surface-container'] },
-        pressed && { transform: [{ scale: 0.95 }] },
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-    >
-      <Text style={[styles.btnText, { color: colors.primary }]}>{label}</Text>
-    </Pressable>
-  );
-
-  const solid = (label: string, onPress: () => void, testID: string) => (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.solidBtn,
-        { backgroundColor: colors.primary },
-        shadowPresets.umaLulik,
-        pressed && { transform: [{ scale: 0.95 }] },
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-    >
-      <Text style={[styles.btnText, { color: ON_PRIMARY }]}>{label}</Text>
-    </Pressable>
-  );
-
-  switch (status) {
-    case 'PENDING_PAYMENT':
-      return (
-        <>
-          {outline(
-            t('order.actions.cancel', { defaultValue: 'Cancel Order' }),
-            onCancel,
-            'order-cancel',
-          )}
-          {solid(
-            t('order.actions.pay', { defaultValue: 'Pay Now' }),
-            () => router.push('/order/checkout'),
-            'order-pay',
-          )}
-        </>
-      );
-    case 'PENDING_CONFIRM':
-    case 'CONFIRMED':
-      return (
-        <>
-          {outline(
-            t('order.actions.cancel', { defaultValue: 'Cancel Order' }),
-            onCancel,
-            'order-cancel',
-          )}
-          {solid(
-            t('common.contactSeller', { defaultValue: 'Contact Seller' }),
-            () => router.push('/service'),
-            'order-contact',
-          )}
-        </>
-      );
-    case 'PICKED':
-    case 'OUT_FOR_DELIVERY':
-      return (
-        <>
-          {outline(
-            t('order.actions.track', { defaultValue: 'Track Order' }),
-            () => router.push({ pathname: '/order/tracking', params: { id: order.id } }),
-            'order-track',
-          )}
-          {solid(
-            t('common.contactSeller', { defaultValue: 'Contact Seller' }),
-            () => router.push('/service'),
-            'order-contact',
-          )}
-        </>
-      );
-    case 'DELIVERED_PAID':
-    case 'DELIVERED_UNPAID':
-    case 'DELIVERED':
-      return (
-        <>
-          {outline(
-            t('order.actions.repurchase', { defaultValue: 'Repeat Order' }),
-            () => router.replace('/(main)/home'),
-            'order-repeat',
-          )}
-          {solid(
-            t('order.actions.review', { defaultValue: 'Write a Review' }),
-            () =>
-              router.push({
-                pathname: '/order/review',
-                params: {
-                  id: order.id,
-                  // Why: §8 把订单首商品 id 传给评价页，submit 时归属到正确商品
-                  productId: order.items[0]?.product.id,
-                },
-              }),
-            'order-review',
-          )}
-        </>
-      );
-    case 'COMPLETED':
-      return (
-        <>
-          {outline(
-            t('order.actions.afterSales', { defaultValue: 'After-Sales' }),
-            () =>
-              router.push({ pathname: '/order/after-sales-apply', params: { orderId: order.id } }),
-            'order-aftersales',
-          )}
-          {solid(
-            t('order.actions.repurchase', { defaultValue: 'Buy Again' }),
-            () => router.replace('/(main)/home'),
-            'order-repurchase',
-          )}
-        </>
-      );
-    case 'CANCELLED':
-      return (
-        <>
-          {outline(
-            t('common.contactSeller', { defaultValue: 'Contact Seller' }),
-            () => router.push('/service'),
-            'order-contact',
-          )}
-          {solid(
-            t('order.actions.repurchase', { defaultValue: 'Buy Again' }),
-            () => router.replace('/(main)/home'),
-            'order-repurchase',
-          )}
-        </>
-      );
-  }
 }
 
 const styles = StyleSheet.create({
@@ -879,45 +474,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     borderWidth: StyleSheet.hairlineWidth,
     padding: spacing.md,
-  },
-  // Header
-  header: {
-    position: 'relative',
-    // V16：对齐原型 56px（原 64）
-    height: 56,
-    overflow: 'hidden',
-    paddingHorizontal: layout['container-margin'],
-    justifyContent: 'center',
-  },
-  headerPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    ...typography.h2,
-    color: ON_PRIMARY,
-    fontSize: 22,
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: spacing.xs,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: spacing.xs,
   },
   // Order Header Card
   // V16：订单号 + 复制按钮同行
@@ -948,10 +504,6 @@ const styles = StyleSheet.create({
   },
   bodySm: {
     ...typography['body-sm'],
-  },
-  bodySmBold: {
-    ...typography['body-sm'],
-    fontWeight: '600',
   },
   bodyMdBold: {
     ...typography['body-md'],
@@ -1085,56 +637,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   laisPayText: {
-    color: ON_PRIMARY,
+    color: '#ffffff',
     fontSize: 8,
     fontWeight: '700',
     fontStyle: 'italic',
-  },
-  // Timeline（HTML 原型 B 方案：rail + fill + node-head/desc + 20×20 dot）
-  timelineWrap: {
-    position: 'relative',
-    paddingLeft: 28,
-    paddingVertical: spacing.xs,
-    gap: spacing.md,
-  },
-  timelineBgLine: {
-    position: 'absolute',
-    left: 9,
-    top: 14,
-    bottom: 14,
-    width: 2,
-  },
-  timelineActiveLine: {
-    position: 'absolute',
-    left: 9,
-    top: 14,
-    width: 2,
-  },
-  timelineStep: {
-    position: 'relative',
-    minHeight: 28,
-  },
-  timelineDot: {
-    position: 'absolute',
-    left: -28,
-    top: 2,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // Why: node-head 标题+时间戳右对齐（HTML 原型 .node-head flex space-between）
-  timelineHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  timelineTime: {
-    fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 0.3,
   },
   // Bottom Bar
   bottomBar: {
@@ -1148,23 +654,5 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingBottom: Platform.OS === 'ios' ? spacing.md : spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  outlineBtn: {
-    flex: 1,
-    height: 56,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  solidBtn: {
-    flex: 1,
-    height: 56,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnText: {
-    fontSize: 15,
-    fontWeight: '700',
   },
 });

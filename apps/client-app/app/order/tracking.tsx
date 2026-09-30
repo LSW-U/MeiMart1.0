@@ -13,7 +13,7 @@ import {
   Share,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { formatDate } from '@/utils/format';
+import { formatDate, maskPhone } from '@/utils/format';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import {
@@ -339,7 +339,8 @@ export default function DeliveryTrackingPage() {
             </Text>
             {address?.phone ? (
               <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
-                {address.phone}
+                {/* C-P3-6（批4）：收货人手机号脱敏展示（同 order/[id].tsx 口径） */}
+                {maskPhone(address.phone)}
               </Text>
             ) : null}
           </View>

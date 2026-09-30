@@ -19,6 +19,7 @@ import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { toast } from '@/store/toastStore';
 import { productApi } from '@/services/products';
 import { isMockMode } from '@/services/api';
+import { businessError } from '@/services/cart';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
@@ -30,8 +31,8 @@ import { usePaymentMethods } from '@/services/queries/usePayment';
 import { useCreateOrder } from '@/services/queries/useOrders';
 import { useCoupons } from '@/services/queries/usePromotion';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
-import { formatEta } from '@/utils/format';
-import { useState } from 'react';
+import { formatEta, formatPrice } from '@/utils/format';
+import { useEffect, useState } from 'react';
 
 // Why: mock demo 金额（与 cart 页一致）。real 模式由 useCheckoutPreview 一次拿全金额
 //      —— preview.payableAmount 后端已聚合（itemsSubtotal + deliveryFee - discount，传 couponCode 时算折扣）。
@@ -70,6 +71,17 @@ export default function CheckoutPage() {
 
   const defaultMethodId = paymentMethods?.find((m) => m.isDefault)?.id ?? paymentMethods?.[0]?.id;
   const [selectedMethod, setSelectedMethod] = useState<string | undefined>(defaultMethodId);
+  // C-P1-1: 支付方式列表异步到达后回填选中项。useState 初值只取首渲染值（那时 paymentMethods
+  // 多为 undefined → selectedMethod 恒 undefined），列表就绪后如用户尚未手选则选中默认项；
+  // 用户已手选（selectedMethod 非空）不覆盖。触发源是外部异步数据（paymentMethods query）到达，
+  // 属「派生 state 重置」官方形态，非无条件同步 setState。
+  useEffect(() => {
+    if (defaultMethodId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 原因：异步支付方式列表就绪后的回填，prev ?? 哨兵防覆盖用户手选，非无条件同步 setState
+      setSelectedMethod((prev) => prev ?? defaultMethodId);
+    }
+    // 依赖 defaultMethodId：isDefault 项或首项变化（列表就绪/刷新）时触发回填
+  }, [defaultMethodId]);
   // Why: 防止 submit 期间重复点击（Promise.all 查 SKU 时 createOrder.isPending 还是 false）
   const [submitting, setSubmitting] = useState(false);
 
@@ -138,21 +150,30 @@ export default function CheckoutPage() {
         return;
       }
       if (selectedItems.length === 0) return;
+      // C-P1-1: 未选中支付方式禁止提交——不再静默回退 COD（用户可能根本没看到 COD 选项）。
+      // 提交按钮已 disabled（见底部 bar），此处守卫为兜底（Enter 触发/竞态窗口）
+      if (!selectedMethod) {
+        toast.error(t('checkout.selectPaymentMethod'));
+        return;
+      }
       if (!defaultAddress) {
         toast.error(t('checkout.selectAddress'));
         return;
       }
-      // Why: 后端 createOrder 期望 skuId，列表项 product.id 是 Product UUID 不是 SKU ID
-      // 需查详情获取 defaultSkuId（与 cartApi.addItem 一致）
+      // C-P2-9: 后端 createOrder 期望 skuId——购物车 transformCartItem 已透传 product.defaultSkuId
+      //（CartItemView.skuId），直接用，不再逐项 getProduct 查详情（原 N 次额外请求）。
+      // defaultSkuId 缺失（旧缓存/mock 无 skuId 数据）时兜底查一次详情。
       const itemsWithSku = await Promise.all(
         selectedItems.map(async (i) => {
           const skuId =
             i.product.defaultSkuId ?? (await productApi.getProduct(i.product.id))?.defaultSkuId;
-          if (!skuId) throw new Error(`No SKU for product ${i.product.id}`);
+          // P3-6（批3 复核）：与 cartApi 同款 businessError 口径——缺 SKU 是确定性失败，
+          // 未来走离线队列时守卫按 err.name==='BusinessError' 拦截不入队，普通 Error 会被入队
+          if (!skuId) throw businessError(`NO_SKU: ${i.product.id}`);
           return { skuId, quantity: i.quantity };
         }),
       );
-      const paymentMethod = (selectedMethod ?? 'COD').toUpperCase();
+      const paymentMethod = selectedMethod.toUpperCase();
       const order = await createOrder.mutateAsync({
         items: itemsWithSku,
         payload: {
@@ -169,7 +190,10 @@ export default function CheckoutPage() {
           await paymentApi.devAutoConfirm(order.id, paymentMethod);
         } catch (e) {
           // 确认失败不阻塞下单流程，订单仍已创建
-          console.warn('[checkout] devAutoConfirm failed:', e);
+          console.warn(
+            '[checkout] devAutoConfirm failed:',
+            e instanceof Error ? e.message : String(e),
+          );
         }
       }
       // Why: 清掉本次下单的选中项，防回购物车重复下单（订单已成功，清购物车失败不误报下单失败）。
@@ -177,7 +201,7 @@ export default function CheckoutPage() {
       try {
         await clearCart.mutateAsync();
       } catch (e) {
-        console.warn('[checkout] clearCart failed:', e);
+        console.warn('[checkout] clearCart failed:', e instanceof Error ? e.message : String(e));
       }
       // Why: 下单成功清除本次会话的手选地址，避免污染下次结算（P16 决策 6）
       useAddressSelectionStore.getState().clear();
@@ -399,6 +423,7 @@ export default function CheckoutPage() {
                         testID={`payment-${m.id}`}
                         onPress={() => toast.info(t('payment.methods.comingSoonHint'))}
                         accessibilityRole="button"
+                        // C-P3-1（批4）：占位渠道卡 a11y 语义补「即将上线」状态（原仅渠道名）
                         accessibilityLabel={`${localize(m.name)} — ${t('payment.methods.comingSoonHint')}`}
                         style={({ pressed }) => [
                           styles.paymentCard,
@@ -488,7 +513,7 @@ export default function CheckoutPage() {
                             )}
                         </View>
                         <Text style={[styles.summaryValueBold, { color: colors['on-surface'] }]}>
-                          ${(item.product.price * item.quantity).toFixed(2)}
+                          {formatPrice(item.product.price * item.quantity)}
                         </Text>
                       </View>
                     ))
@@ -510,7 +535,7 @@ export default function CheckoutPage() {
                       {t('checkout.summary.subtotal')}
                     </Text>
                     <Text style={[styles.summaryValue, { color: colors['on-surface-variant'] }]}>
-                      ${subtotal.toFixed(2)}
+                      {formatPrice(subtotal)}
                     </Text>
                   </View>
                   {/* Why: mock 纯展示 demo 折扣；real 模式整行可点 → 打开选券 Modal（preview 传 couponCode 聚合 discount） */}
@@ -520,7 +545,7 @@ export default function CheckoutPage() {
                         {t('checkout.summary.discount')}
                       </Text>
                       <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>
-                        -${discount.toFixed(2)}
+                        -{formatPrice(discount)}
                       </Text>
                     </View>
                   ) : (
@@ -550,7 +575,7 @@ export default function CheckoutPage() {
                       <View style={styles.couponEntryRight}>
                         {discount > 0 && (
                           <Text style={[styles.discountLabel, { color: colors.semantic.positive }]}>
-                            -${discount.toFixed(2)}
+                            -{formatPrice(discount)}
                           </Text>
                         )}
                         <Icon
@@ -566,7 +591,7 @@ export default function CheckoutPage() {
                       {t('checkout.summary.deliveryFee')}
                     </Text>
                     <Text style={[styles.summaryValue, { color: colors['on-surface-variant'] }]}>
-                      ${deliveryFee.toFixed(2)}
+                      {formatPrice(deliveryFee)}
                     </Text>
                   </View>
                 </View>
@@ -615,7 +640,7 @@ export default function CheckoutPage() {
               {t('checkout.summary.finalTotal')}
             </Text>
             <Text style={[styles.finalAmount, { color: colors.primary }]}>
-              ${finalTotal.toFixed(2)}
+              {formatPrice(finalTotal)}
             </Text>
           </View>
         </View>
@@ -623,18 +648,26 @@ export default function CheckoutPage() {
         <Pressable
           testID="checkout-submit"
           onPress={submit}
-          disabled={selectedItems.length === 0 || isOffline || submitting || createOrder.isPending}
+          disabled={
+            selectedItems.length === 0 ||
+            isOffline ||
+            submitting ||
+            createOrder.isPending ||
+            !selectedMethod
+          }
           style={({ pressed }) => [
             styles.payBtn,
             { backgroundColor: colors.primary },
             pressed && { transform: [{ scale: 0.97 }] },
-            (selectedItems.length === 0 || isOffline) && { opacity: 0.5 },
+            (selectedItems.length === 0 || isOffline || !selectedMethod) && { opacity: 0.5 },
           ]}
           accessibilityRole="button"
-          accessibilityLabel={t('checkout.confirmAndPay', { amount: finalTotal.toFixed(2) })}
+          // Why: P3-1 插值串自带 $（confirmAndPay: "...${{amount}}"），只统一数字格式
+          //      （千分位与 formatPrice 同口径），不再叠加符号——currency 传空串去 $。
+          accessibilityLabel={t('checkout.confirmAndPay', { amount: formatPrice(finalTotal, '') })}
         >
           <Text style={styles.payBtnText}>
-            {t('checkout.confirmAndPay', { amount: finalTotal.toFixed(2) })}
+            {t('checkout.confirmAndPay', { amount: formatPrice(finalTotal, '') })}
           </Text>
         </Pressable>
       </View>

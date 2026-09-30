@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View, Pressable, FlatList } from 'react-native';
 import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
 import { useTheme, typography, borderRadius } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '@/components/ui/Icon';
 import { Modal } from '@/components/ui/Modal';
 
@@ -26,6 +27,7 @@ export function SelectField<T extends FieldValues>({
   testID,
 }: SelectFieldProps<T>) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -50,7 +52,10 @@ export function SelectField<T extends FieldValues>({
                 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel={`Select ${label}, current ${value || 'none'}`}
+              accessibilityLabel={t('common.a11y.selectField', {
+                label,
+                value: value || t('common.a11y.none'),
+              })}
             >
               <Text
                 style={[
@@ -72,9 +77,9 @@ export function SelectField<T extends FieldValues>({
               <FlatList
                 data={options}
                 keyExtractor={(item) => item}
-          initialNumToRender={6}
-          maxToRenderPerBatch={4}
-          windowSize={5}
+                initialNumToRender={6}
+                maxToRenderPerBatch={4}
+                windowSize={5}
                 renderItem={({ item }) => (
                   <Pressable
                     onPress={() => {
@@ -86,7 +91,7 @@ export function SelectField<T extends FieldValues>({
                       item === value && { backgroundColor: colors['primary-container'] },
                     ]}
                     accessibilityRole="button"
-                    accessibilityLabel={`Select ${item}`}
+                    accessibilityLabel={t('common.a11y.selectOption', { option: item })}
                   >
                     <Text
                       style={[
@@ -99,13 +104,13 @@ export function SelectField<T extends FieldValues>({
                     >
                       {item}
                     </Text>
-                    {item === value && (
-                      <Icon symbol="check" size={18} color={colors.primary} />
-                    )}
+                    {item === value && <Icon symbol="check" size={18} color={colors.primary} />}
                   </Pressable>
                 )}
                 ItemSeparatorComponent={() => (
-                  <View style={[styles.separator, { backgroundColor: colors['outline-variant'] }]} />
+                  <View
+                    style={[styles.separator, { backgroundColor: colors['outline-variant'] }]}
+                  />
                 )}
               />
             </Modal>

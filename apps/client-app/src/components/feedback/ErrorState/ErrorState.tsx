@@ -13,7 +13,7 @@ export function ErrorState({ message, onRetry, retryLabel, testID }: ErrorStateP
       testID={testID}
       style={[styles.container, { backgroundColor: colors['surface-container-lowest'] }]}
       accessibilityRole="alert"
-      accessibilityLabel={`Error: ${message}`}
+      accessibilityLabel={t('common.a11y.errorAlert', { message })}
     >
       <MaterialCommunityIcons name="alert-circle-outline" size={64} color={colors.error} />
       <Text style={[textStyle('body-md'), { color: colors['on-surface'], textAlign: 'center' }]}>
@@ -21,7 +21,13 @@ export function ErrorState({ message, onRetry, retryLabel, testID }: ErrorStateP
       </Text>
       {onRetry && (
         // T2-B: 兜底文案接 i18n（原 'Retry' 英文硬编码，E10 合规）
-        <Button label={retryLabel ?? t('common.retry')} variant="outline" size="md" onPress={onRetry} style={styles.retry} />
+        <Button
+          label={retryLabel ?? t('common.retry')}
+          variant="outline"
+          size="md"
+          onPress={onRetry}
+          style={styles.retry}
+        />
       )}
     </View>
   );

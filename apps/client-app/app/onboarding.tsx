@@ -174,56 +174,56 @@ export default function OnboardingPage() {
         renderItem={({ item }: { item: Slide }) => {
           const accent = motifAccent(colors, item.motif);
           return (
-          <View style={styles.slide}>
-            {/* Tais 文化纹样：仅末屏铺（D4，屏1/2 删） */}
-            {item.motif === 'tais' && (
-              <View style={styles.slidePattern} pointerEvents="none">
-                <TaisPattern width={SCREEN_WIDTH} height={160} opacity={0.18} />
-              </View>
-            )}
+            <View style={styles.slide}>
+              {/* Tais 文化纹样：仅末屏铺（D4，屏1/2 删） */}
+              {item.motif === 'tais' && (
+                <View style={styles.slidePattern} pointerEvents="none">
+                  <TaisPattern width={SCREEN_WIDTH} height={160} opacity={0.18} />
+                </View>
+              )}
 
-            {/* 插画区：图标 + 强调色渐变底 + motif 角标（D2，替外链图） */}
-            <View style={styles.imageWrap}>
-              <View style={[styles.imageCard, shadowPresets.lg]}>
-                <LinearGradient
-                  colors={[`${accent}33`, `${accent}11`]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.illustration}
+              {/* 插画区：图标 + 强调色渐变底 + motif 角标（D2，替外链图） */}
+              <View style={styles.imageWrap}>
+                <View style={[styles.imageCard, shadowPresets.lg]}>
+                  <LinearGradient
+                    colors={[`${accent}33`, `${accent}11`]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.illustration}
+                  >
+                    {/* opacity 0.85 对齐原型 .ob-ill-inner span（图标略透明融入渐变底） */}
+                    <Icon symbol={item.icon} size={96} color={accent} style={{ opacity: 0.85 }} />
+                  </LinearGradient>
+                </View>
+                <View
+                  style={[
+                    styles.motifBadge,
+                    { backgroundColor: accent, borderColor: colors['on-primary'] },
+                    shadowPresets.md,
+                  ]}
                 >
-                  {/* opacity 0.85 对齐原型 .ob-ill-inner span（图标略透明融入渐变底） */}
-                  <Icon symbol={item.icon} size={96} color={accent} style={{ opacity: 0.85 }} />
-                </LinearGradient>
+                  <Icon symbol={item.icon} size={24} color={colors['on-primary']} />
+                </View>
               </View>
-              <View
-                style={[
-                  styles.motifBadge,
-                  { backgroundColor: accent, borderColor: colors['on-primary'] },
-                  shadowPresets.md,
-                ]}
+
+              {/* 文案 */}
+              <Text
+                style={[styles.title, { color: colors['on-surface'] }]}
+                accessibilityRole="header"
               >
-                <Icon symbol={item.icon} size={24} color={colors['on-primary']} />
-              </View>
+                {t(item.titleKey)}
+              </Text>
+              <Text style={[styles.body, { color: colors['on-surface-variant'] }]}>
+                {t(item.bodyKey)}
+              </Text>
+
+              {/* Tais Divider：仅末屏收尾（D4） */}
+              {item.motif === 'tais' && (
+                <View style={styles.dividerWrap}>
+                  <TaisDivider width={100} />
+                </View>
+              )}
             </View>
-
-            {/* 文案 */}
-            <Text
-              style={[styles.title, { color: colors['on-surface'] }]}
-              accessibilityRole="header"
-            >
-              {t(item.titleKey)}
-            </Text>
-            <Text style={[styles.body, { color: colors['on-surface-variant'] }]}>
-              {t(item.bodyKey)}
-            </Text>
-
-            {/* Tais Divider：仅末屏收尾（D4） */}
-            {item.motif === 'tais' && (
-              <View style={styles.dividerWrap}>
-                <TaisDivider width={100} />
-              </View>
-            )}
-          </View>
           );
         }}
       />
@@ -239,7 +239,7 @@ export default function OnboardingPage() {
               hitSlop={8}
               accessibilityRole="tab"
               accessibilityState={{ selected: i === index }}
-              accessibilityLabel={`Slide ${i + 1}`}
+              accessibilityLabel={t('onboarding.a11y.slide', { index: i + 1 })}
               testID={`dot-${s.id}`}
             >
               <View

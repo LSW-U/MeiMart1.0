@@ -3,6 +3,15 @@ import { mockDb, mockResponse } from './mockDb';
 import i18n from '@/i18n';
 import type { Review } from '@/types';
 
+// C-P2-5: 404 判定（axios 错误带 response.status；非 HTTP 错误一律非 404）
+function isNotFoundError(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    (err as { response?: { status?: number } }).response?.status === 404
+  );
+}
+
 // Why: §8 评论模块 - API 层。mock 模式从 mockDb.reviews 读写并本地聚合 summary；
 //      real 模式后端评论接口已就绪（GET /client/products/:id/reviews +
 //      POST /client/orders/:orderId/review），字段经 mapReviewView 对齐前端 Review。
@@ -27,8 +36,7 @@ export interface ReviewListResult {
 
 export interface ReviewSubmitInput {
   // Why: 后端 POST /client/orders/:orderId/review —— 评论按订单维度提交（一订单一条）
-  orderId: string;
-  // Why: 绑定商品评论（须在订单商品内）；不传则为订单整体评论
+  orderId: string; // Why: 绑定商品评论（须在订单商品内）；不传则为订单整体评论
   productId?: string;
   rating: number;
   content: string;
@@ -131,21 +139,26 @@ function sortNewestFirst(list: Review[]): Review[] {
 export const reviewsApi = {
   async getByProduct(productId: string): Promise<ReviewListResult> {
     if (isMockMode) {
-      const list = sortNewestFirst(
-        mockDb.reviews.filter((r) => r.productId === productId),
-      );
+      const list = sortNewestFirst(mockDb.reviews.filter((r) => r.productId === productId));
       return mockResponse({ reviews: list, summary: computeSummary(list) });
     }
     // Why: 后端 GET /client/products/:id/reviews 返回 { items, nextCursor, hasMore }（游标分页），
-    //      仅 APPROVED。前端取 .items 排序 + 聚合 summary。404/异常时优雅降级为空，不阻断详情页。
+    //      仅 APPROVED。前端取 .items 排序 + 聚合 summary。
+    // C-P2-5: 仅 404（商品无评论端点/下架）降级空态；其余错误（500/网络）rethrow——
+    //      RQ 可重试 + 监控不丢（全吞会让断网时详情页评论永远空态且无法重试）。
     try {
-      const res = await api.get<{ items: ReviewView[]; nextCursor: string | null; hasMore: boolean }>(
-        `/client/products/${productId}/reviews`,
-      );
+      const res = await api.get<{
+        items: ReviewView[];
+        nextCursor: string | null;
+        hasMore: boolean;
+      }>(`/client/products/${productId}/reviews`);
       const list = sortNewestFirst(res.data.items.map(mapReviewView));
       return { reviews: list, summary: computeSummary(list) };
-    } catch {
-      return { reviews: [], summary: computeSummary([]) };
+    } catch (err) {
+      if (isNotFoundError(err)) {
+        return { reviews: [], summary: computeSummary([]) };
+      }
+      throw err;
     }
   },
 

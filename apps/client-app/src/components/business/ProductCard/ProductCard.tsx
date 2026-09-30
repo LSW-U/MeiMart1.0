@@ -85,7 +85,7 @@ function ProductCardBase({
         style={({ pressed }) => [styles.clickableArea, pressed && styles.pressed]}
         onPress={onPress ? () => onPress(product) : undefined}
         accessibilityRole="button"
-        accessibilityLabel={`${name}, price ${formatPrice(product.price)}`}
+        accessibilityLabel={t('product.a11y.cardItem', { name, price: formatPrice(product.price) })}
       >
         <View style={[styles.imageWrap, { backgroundColor: colors['surface-container-lowest'] }]}>
           <SafeImage source={{ uri: product.image }} style={styles.image} accessible={false} />

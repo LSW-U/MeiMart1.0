@@ -32,7 +32,10 @@ function AddressCardBase({
         disabled={!onPress}
         style={({ pressed }) => [styles.row, pressed && styles.pressed]}
         accessibilityRole={onPress ? 'button' : undefined}
-        accessibilityLabel={`Address for ${address.name}, ${fullAddress}`}
+        accessibilityLabel={t('address.a11y.addressCard', {
+          name: address.name,
+          address: fullAddress,
+        })}
       >
         {selectable && (
           <Checkbox

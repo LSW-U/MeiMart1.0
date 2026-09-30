@@ -8,6 +8,7 @@ import type { Review } from '@/types';
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => (key === 'review.anonymousDisplayName' ? 'Anonymous' : key),
+    i18n: { language: 'en' },
   }),
 }));
 
@@ -44,10 +45,9 @@ describe('ReviewItem', () => {
   });
 
   it('anonymous=false（或 undefined）显示真实 userName + 首字母', () => {
-    const { getByText } = render(
-      <ReviewItem review={{ ...review, anonymous: false }} />,
-      { wrapper },
-    );
+    const { getByText } = render(<ReviewItem review={{ ...review, anonymous: false }} />, {
+      wrapper,
+    });
     expect(getByText('Alice')).toBeTruthy();
     // avatar 首字母 = Alice[0] = A
     expect(getByText('A')).toBeTruthy();

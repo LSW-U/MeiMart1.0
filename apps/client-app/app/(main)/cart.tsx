@@ -34,6 +34,7 @@ import {
   useCart,
   useAddToCart,
   useRemoveCartItem,
+  useRemoveCartItems,
   useToggleCartItem,
   useUpdateCartItem,
 } from '@/services/queries/useCart';
@@ -59,6 +60,8 @@ export default function CartPage() {
   const { data: cart, isLoading, isError, refetch } = useCart();
   const { data: coupons } = useCoupons();
   const removeMutation = useRemoveCartItem();
+  // C-P2-8: 批量删收敛为单次 mutation（原 forEach 逐 id mutate：N 次 DELETE + N 次 getCart 竞态）
+  const removeItemsMutation = useRemoveCartItems();
   const toggleMutation = useToggleCartItem();
   const updateMutation = useUpdateCartItem();
 
@@ -85,9 +88,7 @@ export default function CartPage() {
   const allForDelete =
     !isEmpty && cart.items.length > 0 && cart.items.every((i) => selectedForDelete.has(i.id));
   const toggleAllForDelete = () => {
-    setSelectedForDelete(
-      allForDelete ? new Set() : new Set((cart?.items ?? []).map((i) => i.id)),
-    );
+    setSelectedForDelete(allForDelete ? new Set() : new Set((cart?.items ?? []).map((i) => i.id)));
   };
 
   // §4.2 管理态：checkbox 切删除选中（selectedForDelete），与结算选中 item.selected 解耦
@@ -119,13 +120,14 @@ export default function CartPage() {
     toast.success(t('cart.removed', { defaultValue: 'Removed' }));
   };
 
-  // §5.3 批量删除：循环 useRemoveCartItem（mock 量小可接受）；复用 Alert 确认
+  // §5.3 批量删除：C-P2-8 收敛为单次 useRemoveCartItems mutation（一次 DELETE 序列 +
+  //   一次 getCart + 一次乐观更新/invalidate，原逐 id mutate 有 N 次竞态）；复用 Alert 确认
   const deleteSelected = () => {
     const count = selectedForDelete.size;
     if (count === 0) return;
     const ids = Array.from(selectedForDelete);
     const doDelete = () => {
-      ids.forEach((id) => removeMutation.mutate(id));
+      removeItemsMutation.mutate(ids);
       setSelectedForDelete(new Set());
       setManageMode(false);
       toast.success(t('cart.removed', { defaultValue: 'Removed' }));
@@ -134,295 +136,302 @@ export default function CartPage() {
       doDelete();
       return;
     }
-    Alert.alert(
-      t('cart.removeTitle'),
-      t('cart.deleteConfirm', { count }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        { text: t('cart.deleteSelected'), style: 'destructive', onPress: doDelete },
-      ],
-    );
+    Alert.alert(t('cart.removeTitle'), t('cart.deleteConfirm', { count }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('cart.deleteSelected'), style: 'destructive', onPress: doDelete },
+    ]);
   };
 
   return (
     <PageErrorBoundary pageName="cart">
-    <SafeAreaWrapper
-      edges={['top', 'bottom']}
-      style={{ backgroundColor: colors.background, flex: 1 }}
-    >
-      <StatusBarConfig />
-      <PrimaryHeader
-        title={t('tabs.cart')}
-        showLocation
-        locationLabel={t('home.locationLabel')}
-        onLocationPress={() => router.push('/address/map')}
-        rightActions={
-          <Pressable
-            onPress={() => router.push('/search')}
-            hitSlop={8}
-            style={styles.headerBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.search')}
-          >
-            <Icon symbol="search" size={24} color={ON_PRIMARY} />
-          </Pressable>
-        }
-      />
+      <SafeAreaWrapper
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: colors.background, flex: 1 }}
+      >
+        <StatusBarConfig />
+        <PrimaryHeader
+          title={t('tabs.cart')}
+          showLocation
+          locationLabel={t('home.locationLabel')}
+          onLocationPress={() => router.push('/address/map')}
+          rightActions={
+            <Pressable
+              onPress={() => router.push('/search')}
+              hitSlop={8}
+              style={styles.headerBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.search')}
+            >
+              <Icon symbol="search" size={24} color={ON_PRIMARY} />
+            </Pressable>
+          }
+        />
 
-      {isOffline && <OfflineBanner />}
-      {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : isError ? (
-        // T2-B: 401 已由全局 QueryCache onError → clearAuth → RootAuthGate 跳登录兜底（queryClient.ts），
-        // 此处只处理非 401 错误（500/网络）
-        <ErrorState message={t('errors.cart')} onRetry={() => refetch()} />
-      ) : isEmpty ? (
-        <View style={styles.emptyBox}>
-          <EmptyState
-            title={t('cart.empty')}
-            description={t('cart.emptyDesc')}
-            icon="cart-outline"
-            actionLabel={t('favorites.goBrowse')}
-            onAction={() => router.push('/(main)/home')}
-          />
-        </View>
-      ) : (
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* 顶部操作行：默认 Your Items + Coupons + Manage；管理态 Select Items + Cancel（§4.1） */}
-          <View style={styles.itemsHeader}>
-            {manageMode ? (
-              <Text style={[styles.itemsTitle, { color: colors['on-surface'] }]}>
-                {t('cart.selectItems')}
-              </Text>
-            ) : (
-              <Text style={[styles.itemsTitle, { color: colors['on-surface'] }]}>
-                {t('cart.yourItems')}
-              </Text>
-            )}
-            {manageMode ? (
-              <Pressable
-                onPress={exitManage}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={t('cart.cancelManage')}
-              >
-                <Text style={[styles.manageBtn, { color: colors.primary }]}>
-                  {t('cart.cancelManage')}
+        {isOffline && <OfflineBanner />}
+        {isLoading ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : isError ? (
+          // T2-B: 401 已由全局 QueryCache onError → clearAuth → RootAuthGate 跳登录兜底（queryClient.ts），
+          // 此处只处理非 401 错误（500/网络）
+          <ErrorState message={t('errors.cart')} onRetry={() => refetch()} />
+        ) : isEmpty ? (
+          <View style={styles.emptyBox}>
+            <EmptyState
+              title={t('cart.empty')}
+              description={t('cart.emptyDesc')}
+              icon="cart-outline"
+              actionLabel={t('favorites.goBrowse')}
+              onAction={() => router.push('/(main)/home')}
+            />
+          </View>
+        ) : (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* 顶部操作行：默认 Your Items + Coupons + Manage；管理态 Select Items + Cancel（§4.1） */}
+            <View style={styles.itemsHeader}>
+              {manageMode ? (
+                <Text style={[styles.itemsTitle, { color: colors['on-surface'] }]}>
+                  {t('cart.selectItems')}
                 </Text>
-              </Pressable>
-            ) : (
-              <View style={styles.itemsHeaderRight}>
+              ) : (
+                <Text style={[styles.itemsTitle, { color: colors['on-surface'] }]}>
+                  {t('cart.yourItems')}
+                </Text>
+              )}
+              {manageMode ? (
                 <Pressable
-                  onPress={() => router.push('/coupons')}
-                  style={styles.couponsEntry}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('cart.couponsAvailable', { count: couponCount })}
-                >
-                  <Icon symbol="confirmation_number" size={16} color={colors.primary} />
-                  <Text style={[styles.couponsEntryText, { color: colors.primary }]}>
-                    {t('cart.couponsAvailable', { count: couponCount })}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={enterManage}
+                  onPress={exitManage}
                   hitSlop={8}
-                  style={[styles.manageBtnWrap, { borderColor: colors['outline-variant'] }]}
                   accessibilityRole="button"
-                  accessibilityLabel={t('cart.manage')}
+                  accessibilityLabel={t('cart.cancelManage')}
                 >
-                  <Text style={[styles.manageBtn, { color: colors['on-surface-variant'] }]}>
-                    {t('cart.manage')}
+                  <Text style={[styles.manageBtn, { color: colors.primary }]}>
+                    {t('cart.cancelManage')}
                   </Text>
                 </Pressable>
-              </View>
-            )}
-          </View>
-
-          {/* 购物车商品列表 */}
-          <View style={styles.cartList}>
-            {cart.items.map((item) => (
-              <View
-                key={item.id}
-                style={[
-                  styles.cartItemWrap,
-                  {
-                    backgroundColor: colors['surface-container-lowest'],
-                    borderColor: colors['outline-variant'],
-                  },
-                ]}
-              >
-                <CartItemRow
-                  item={item}
-                  // §4.2 管理态：checkbox 切删除选中 + 反映 selectedForDelete；步进器隐藏（onQuantityChange=undefined）
-                  onPress={
-                    manageMode
-                      ? (i) => toggleDeleteSelect(i)
-                      : (i) => toggleMutation.mutate({ itemId: i.id, selected: !i.selected })
-                  }
-                  checkedOverride={manageMode ? selectedForDelete.has(item.id) : undefined}
-                  onItemPress={manageMode ? undefined : (i) => router.push(`/product/${i.product.id}`)}
-                  onQuantityChange={
-                    manageMode
-                      ? undefined
-                      : (qty) =>
-                          updateMutation.mutate({ itemId: item.id, updates: { quantity: qty } })
-                  }
-                  onDelete={manageMode ? removeOne : undefined}
-                  showControls
-                />
-              </View>
-            ))}
-          </View>
-
-          {/* Tais Divider（HTML 第 224-227 行） */}
-          <View style={styles.dividerWrap}>
-            <TaisDivider width={120} />
-          </View>
-
-          {/* PEOPLE ALSO BOUGHT 推荐区 */}
-          <View style={styles.recommendWrap}>
-            <Text style={[styles.recommendTitle, { color: colors['on-surface-variant'] }]}>
-              {t('cart.peopleAlsoBought')}
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.recommendRow}>
-                {recommended.map((rec) => (
-                  // Why: P1 - 替换内联 recommendCard 为统一 SmallProductCard（方案 §4）
-                  <SmallProductCard
-                    key={rec.id}
-                    product={rec}
-                    onPress={() => router.push(`/product/${rec.id}`)}
-                    onAddToCart={() =>
-                      addToCartMutation.mutate(
-                        { product: rec, quantity: 1 },
-                        {
-                          onSuccess: () =>
-                            toast.success(
-                              t('product.addedToCart', { defaultValue: 'Added to cart' }),
-                            ),
-                          onError: () =>
-                            toast.error(
-                              t('product.addToCartFailed', { defaultValue: 'Add to cart failed' }),
-                            ),
-                        },
-                      )
-                    }
-                  />
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-        </ScrollView>
-      )}
-
-      {/* 底部栏：管理态显删除栏（§4.3），默认显结算栏（§3.4 锁定，仅去 discount 行） */}
-      {!isEmpty && manageMode && (
-        <View
-          style={[
-            styles.checkoutBar,
-            {
-              backgroundColor: colors['surface-container-lowest'],
-              borderColor: colors['outline-variant'],
-            },
-            shadowPresets.md,
-          ]}
-        >
-          {/* 左：全选按钮（替「已选 X 件」文本）；右：DELETE 按钮（带 count，spacer 顶到最右） */}
-          <Checkbox
-            checked={allForDelete}
-            onPress={toggleAllForDelete}
-            label={t('common.all')}
-            accessibilityLabel={t('cart.selectAllLabel')}
-          />
-          <View style={styles.barSpacer} />
-          <Pressable
-            onPress={deleteSelected}
-            disabled={selectedForDelete.size === 0}
-            style={({ pressed }) => [
-              styles.deleteBtnBar,
-              { backgroundColor: colors.error },
-              pressed && selectedForDelete.size > 0 && { transform: [{ scale: 0.98 }] },
-              selectedForDelete.size === 0 && { opacity: 0.5 },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t('cart.deleteSelected')}
-          >
-            <Text style={styles.deleteBtnBarText}>
-              {t('cart.deleteSelected').toUpperCase()} ({selectedForDelete.size})
-            </Text>
-          </Pressable>
-        </View>
-      )}
-      {!isEmpty && !manageMode && (
-        <View
-          style={[
-            styles.checkoutBar,
-            {
-              backgroundColor: colors['surface-container-lowest'],
-              borderColor: colors['outline-variant'],
-            },
-            shadowPresets.md,
-          ]}
-        >
-          {/* 全选 checkbox — U4 改方形 Checkbox 组件，与商品行视觉统一 */}
-          <Checkbox
-            checked={allSelected}
-            onPress={toggleAll}
-            label={t('common.all')}
-            accessibilityLabel={t('cart.selectAllLabel')}
-          />
-
-          {/* 合计：有折扣时显示 DISCOUNT 行（后端 cart.discountAmount 有值才显示，无值隐藏） */}
-          <View style={styles.totalBox}>
-            <View style={styles.totalRow}>
-              <Text style={[styles.selectedLabel, { color: colors['on-surface-variant'] }]}>
-                {t('cart.selectedTotal')}
-              </Text>
-              {/* V24：合计对齐原型 Georgia 18px（PriceText lg 是 sans 20，此处行内覆盖字体） */}
-              <PriceText value={Math.max(0, totalPrice)} size="lg" style={styles.totalPriceSerif} />
+              ) : (
+                <View style={styles.itemsHeaderRight}>
+                  <Pressable
+                    onPress={() => router.push('/coupons')}
+                    style={styles.couponsEntry}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('cart.couponsAvailable', { count: couponCount })}
+                  >
+                    <Icon symbol="confirmation_number" size={16} color={colors.primary} />
+                    <Text style={[styles.couponsEntryText, { color: colors.primary }]}>
+                      {t('cart.couponsAvailable', { count: couponCount })}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={enterManage}
+                    hitSlop={8}
+                    style={[styles.manageBtnWrap, { borderColor: colors['outline-variant'] }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('cart.manage')}
+                  >
+                    <Text style={[styles.manageBtn, { color: colors['on-surface-variant'] }]}>
+                      {t('cart.manage')}
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
             </View>
-            {discountAmount > 0 && (
-              <View style={[styles.totalRow, { marginTop: 4 }]}>
-                <Text
+
+            {/* 购物车商品列表 */}
+            <View style={styles.cartList}>
+              {cart.items.map((item) => (
+                <View
+                  key={item.id}
                   style={[
-                    styles.discountPill,
-                    { color: colors.semantic.positive, backgroundColor: colors.semantic['positive-container'] },
+                    styles.cartItemWrap,
+                    {
+                      backgroundColor: colors['surface-container-lowest'],
+                      borderColor: colors['outline-variant'],
+                    },
                   ]}
                 >
-                  {t('cart.discount')}
-                </Text>
-                <Text style={[styles.discountAmount, { color: colors.semantic.positive }]}>
-                  {/* F4：formatPrice 统一货币符（-5 输出 -$5.00，ASCII 减号同 P3 优化原型 discount-pill） */}
-                  {formatPrice(-discountAmount)}
-                </Text>
-              </View>
-            )}
-          </View>
+                  <CartItemRow
+                    item={item}
+                    // §4.2 管理态：checkbox 切删除选中 + 反映 selectedForDelete；步进器隐藏（onQuantityChange=undefined）
+                    onPress={
+                      manageMode
+                        ? (i) => toggleDeleteSelect(i)
+                        : (i) => toggleMutation.mutate({ itemId: i.id, selected: !i.selected })
+                    }
+                    checkedOverride={manageMode ? selectedForDelete.has(item.id) : undefined}
+                    onItemPress={
+                      manageMode ? undefined : (i) => router.push(`/product/${i.product.id}`)
+                    }
+                    onQuantityChange={
+                      manageMode
+                        ? undefined
+                        : (qty) =>
+                            updateMutation.mutate({ itemId: item.id, updates: { quantity: qty } })
+                    }
+                    onDelete={manageMode ? removeOne : undefined}
+                    showControls
+                  />
+                </View>
+              ))}
+            </View>
 
-          {/* CHECKOUT 按钮 */}
-          <Pressable
-            onPress={() => router.push('/order/checkout')}
-            disabled={totalItems === 0 || isOffline}
-            style={({ pressed }) => [
-              styles.checkoutBtn,
-              { backgroundColor: colors.primary },
-              pressed && { transform: [{ scale: 0.98 }] },
-              (totalItems === 0 || isOffline) && { opacity: 0.5 },
+            {/* Tais Divider（HTML 第 224-227 行） */}
+            <View style={styles.dividerWrap}>
+              <TaisDivider width={120} />
+            </View>
+
+            {/* PEOPLE ALSO BOUGHT 推荐区 */}
+            <View style={styles.recommendWrap}>
+              <Text style={[styles.recommendTitle, { color: colors['on-surface-variant'] }]}>
+                {t('cart.peopleAlsoBought')}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.recommendRow}>
+                  {recommended.map((rec) => (
+                    // Why: P1 - 替换内联 recommendCard 为统一 SmallProductCard（方案 §4）
+                    <SmallProductCard
+                      key={rec.id}
+                      product={rec}
+                      onPress={() => router.push(`/product/${rec.id}`)}
+                      onAddToCart={() =>
+                        addToCartMutation.mutate(
+                          { product: rec, quantity: 1 },
+                          {
+                            onSuccess: () =>
+                              toast.success(
+                                t('product.addedToCart', { defaultValue: 'Added to cart' }),
+                              ),
+                            onError: () =>
+                              toast.error(
+                                t('product.addToCartFailed', {
+                                  defaultValue: 'Add to cart failed',
+                                }),
+                              ),
+                          },
+                        )
+                      }
+                    />
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          </ScrollView>
+        )}
+
+        {/* 底部栏：管理态显删除栏（§4.3），默认显结算栏（§3.4 锁定，仅去 discount 行） */}
+        {!isEmpty && manageMode && (
+          <View
+            style={[
+              styles.checkoutBar,
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderColor: colors['outline-variant'],
+              },
+              shadowPresets.md,
             ]}
-            accessibilityRole="button"
-            accessibilityLabel={t('cart.checkout')}
           >
-            <Text style={styles.checkoutText}>{t('cart.checkout').toUpperCase()}</Text>
-          </Pressable>
-        </View>
-      )}
-    </SafeAreaWrapper>
+            {/* 左：全选按钮（替「已选 X 件」文本）；右：DELETE 按钮（带 count，spacer 顶到最右） */}
+            <Checkbox
+              checked={allForDelete}
+              onPress={toggleAllForDelete}
+              label={t('common.all')}
+              accessibilityLabel={t('cart.selectAllLabel')}
+            />
+            <View style={styles.barSpacer} />
+            <Pressable
+              onPress={deleteSelected}
+              disabled={selectedForDelete.size === 0}
+              style={({ pressed }) => [
+                styles.deleteBtnBar,
+                { backgroundColor: colors.error },
+                pressed && selectedForDelete.size > 0 && { transform: [{ scale: 0.98 }] },
+                selectedForDelete.size === 0 && { opacity: 0.5 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t('cart.deleteSelected')}
+            >
+              <Text style={styles.deleteBtnBarText}>
+                {t('cart.deleteSelected').toUpperCase()} ({selectedForDelete.size})
+              </Text>
+            </Pressable>
+          </View>
+        )}
+        {!isEmpty && !manageMode && (
+          <View
+            style={[
+              styles.checkoutBar,
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderColor: colors['outline-variant'],
+              },
+              shadowPresets.md,
+            ]}
+          >
+            {/* 全选 checkbox — U4 改方形 Checkbox 组件，与商品行视觉统一 */}
+            <Checkbox
+              checked={allSelected}
+              onPress={toggleAll}
+              label={t('common.all')}
+              accessibilityLabel={t('cart.selectAllLabel')}
+            />
+
+            {/* 合计：有折扣时显示 DISCOUNT 行（后端 cart.discountAmount 有值才显示，无值隐藏） */}
+            <View style={styles.totalBox}>
+              <View style={styles.totalRow}>
+                <Text style={[styles.selectedLabel, { color: colors['on-surface-variant'] }]}>
+                  {t('cart.selectedTotal')}
+                </Text>
+                {/* V24：合计对齐原型 Georgia 18px（PriceText lg 是 sans 20，此处行内覆盖字体） */}
+                <PriceText
+                  value={Math.max(0, totalPrice)}
+                  size="lg"
+                  style={styles.totalPriceSerif}
+                />
+              </View>
+              {discountAmount > 0 && (
+                <View style={[styles.totalRow, { marginTop: 4 }]}>
+                  <Text
+                    style={[
+                      styles.discountPill,
+                      {
+                        color: colors.semantic.positive,
+                        backgroundColor: colors.semantic['positive-container'],
+                      },
+                    ]}
+                  >
+                    {t('cart.discount')}
+                  </Text>
+                  <Text style={[styles.discountAmount, { color: colors.semantic.positive }]}>
+                    {/* F4：formatPrice 统一货币符（-5 输出 -$5.00，ASCII 减号同 P3 优化原型 discount-pill） */}
+                    {formatPrice(-discountAmount)}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* CHECKOUT 按钮 */}
+            <Pressable
+              onPress={() => router.push('/order/checkout')}
+              disabled={totalItems === 0 || isOffline}
+              style={({ pressed }) => [
+                styles.checkoutBtn,
+                { backgroundColor: colors.primary },
+                pressed && { transform: [{ scale: 0.98 }] },
+                (totalItems === 0 || isOffline) && { opacity: 0.5 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t('cart.checkout')}
+            >
+              <Text style={styles.checkoutText}>{t('cart.checkout').toUpperCase()}</Text>
+            </Pressable>
+          </View>
+        )}
+      </SafeAreaWrapper>
     </PageErrorBoundary>
   );
 }
@@ -567,7 +576,7 @@ const styles = StyleSheet.create({
   selectedLabel: {
     fontSize: 12,
   },
-  
+
   // V5 DISCOUNT 行样式（有折扣时显示）
   discountPill: {
     fontSize: 10,

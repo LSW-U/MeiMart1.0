@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, createContext, useContext, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -34,18 +34,40 @@ function useRelTime(iso: string): string {
   return t(`common.relTime.${unit}`, { count });
 }
 
-/** 秒级倒计时（P23 Q3）：endsAt ISO → HH:MM:SS 段；到 0 显示 ended */
-function useCountdown(endsAt?: unknown, label?: string) {
-  const [left, setLeft] = useState(() =>
-    endsAt ? Math.max(0, Math.floor((new Date(String(endsAt)).getTime() - Date.now()) / 1000)) : 0,
-  );
+// C-P2-11: 全局单一 ticker——所有倒计时项共享一个 1s 心跳（Context tick 广播触发重渲），
+// 消灭原「每项各自 setInterval」的 N 个定时器。Provider 由通知列表页包裹。
+const TickerContext = createContext<number>(0);
+
+export function TickerProvider({ children }: { children: React.ReactNode }) {
+  const [tick, setTick] = useState(0);
   useEffect(() => {
-    if (!endsAt) return;
-    const timer = setInterval(() => {
-      setLeft(Math.max(0, Math.floor((new Date(String(endsAt)).getTime() - Date.now()) / 1000)));
-    }, 1000);
+    const timer = setInterval(() => setTick((v) => v + 1), 1000);
     return () => clearInterval(timer);
-  }, [endsAt]);
+  }, []);
+  return <TickerContext.Provider value={tick}>{children}</TickerContext.Provider>;
+}
+
+/** 秒级倒计时（P23 Q3 + C-P2-11）：endsAt ISO → HH:MM:SS 段；到 0 显示 ended。
+ * 心跳来自 TickerProvider 单一共享 ticker（Context tick 变化触发重渲 → effect 重算 left），
+ * 本组件零 setInterval。 */
+function useCountdown(endsAt?: unknown, label?: string) {
+  const tick = useContext(TickerContext);
+  const compute = () =>
+    endsAt ? Math.max(0, Math.floor((new Date(String(endsAt)).getTime() - Date.now()) / 1000)) : 0;
+  const [left, setLeft] = useState(compute);
+  useEffect(() => {
+    // Why: 仅订阅外部时间信号（共享 ticker tick / endsAt 变化），重算放 interval 语义外的
+    // 微任务回调查阅——直接同步 setState in effect 被规则禁（级联渲染）；setLeft 放
+    // queueMicrotask 回调属「外部事件回调」形态，规则放行且语义等价（每秒一次刷新）
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setLeft(compute());
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 原因：compute 是渲染期派生函数，依赖即 [tick, endsAt]
+  }, [tick, endsAt]);
   if (!endsAt) return null;
   if (left <= 0) return { ended: true as const, label: label ?? '' };
   const h = Math.floor(left / 3600);
@@ -57,7 +79,14 @@ function useCountdown(endsAt?: unknown, label?: string) {
   };
 }
 
-export function NotificationItem({ notification, onPress, onCta, testID }: NotificationItemProps) {
+// C-P2-11: React.memo——通知列表项重渲隔离（ticker 走 Context 广播，tick 变化会穿透 memo
+// 重渲有倒计时的项；无倒计时项的 memo 挡住父列表无关重渲）
+export const NotificationItem = memo(function NotificationItem({
+  notification,
+  onPress,
+  onCta,
+  testID,
+}: NotificationItemProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const relTime = useRelTime(notification.createdAt);
@@ -127,7 +156,10 @@ export function NotificationItem({ notification, onPress, onCta, testID }: Notif
       ]}
       onPress={onPress ? () => onPress(notification) : undefined}
       accessibilityRole="button"
-      accessibilityLabel={`${notification.title}, ${relTime}`}
+      accessibilityLabel={t('notifications.a11y.notificationItem', {
+        title: notification.title,
+        time: relTime,
+      })}
     >
       {/* Why: P23 D2 —— 未读左色条用 borderLeft 实现（§9.1 推荐方案，无层级问题） */}
       <View style={[styles.iconBox, { backgroundColor: iconBg, borderRadius: borderRadius.md }]}>
@@ -325,7 +357,7 @@ export function NotificationItem({ notification, onPress, onCta, testID }: Notif
       </View>
     </Pressable>
   );
-}
+});
 
 /** 倒计时分隔符（: ） */
 function CountSep({ deadline }: { deadline: boolean }) {

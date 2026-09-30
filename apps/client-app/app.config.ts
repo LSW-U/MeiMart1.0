@@ -24,6 +24,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       APP_ENV: process.env.EXPO_PUBLIC_APP_ENV ?? prev.APP_ENV ?? 'development',
       API_BASE_URL: apiBaseUrl,
       USE_MOCK: process.env.EXPO_PUBLIC_USE_MOCK ?? prev.USE_MOCK ?? 'false',
+      // C-P1-7：商品 /detail 聚合端点开关（'false' 强制回退普通 /{id}，默认开）
+      USE_PRODUCT_DETAIL:
+        process.env.EXPO_PUBLIC_USE_PRODUCT_DETAIL ?? prev.USE_PRODUCT_DETAIL ?? 'true',
       SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN ?? prev.SENTRY_DSN ?? '',
     },
     plugins: [
