@@ -1,7 +1,6 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
 import { getCurrentLocale, pickLocalized } from '@/i18n';
-import { getExtra } from '@/config/app-config';
 import type { Product, WarehouseAvailability } from '@/types';
 
 // C-P2-5: 404 判定（同 reviews.ts 口径——axios 错误带 response.status；非 HTTP 错误非 404）
@@ -54,9 +53,6 @@ interface ProductListResponse {
   total: number;
   hasMore: boolean;
 }
-
-// C-P1-7 能力开关（见 getProduct 注释）：默认开（批B 部署后自动生效），env 可强制关
-const PRODUCT_DETAIL_ENDPOINT_ENABLED = getExtra()?.USE_PRODUCT_DETAIL !== 'false';
 
 // Why: mock 数据 price 已是元，real 数据 priceMin 是分，转换函数只在 real 分支调用，避免双倍转换
 // 兜底：字段缺失时用默认值，防 NaN/undefined 渲染崩溃
@@ -135,25 +131,11 @@ export const productApi = {
       const found = withMockCategoryTop3(mockDb.products).find((p) => p.id === id);
       return mockResponse(found);
     }
-    // C-P1-7（能力开关降级）：优先批B /detail 聚合端点（带 isCategoryTop3/skus 等）；
-    //   /detail 404（批B 未部署）或网络失败时回退普通 /{id}——回退响应无 isCategoryTop3，
-    //   Product.isCategoryTop3 本就 optional（types/index.ts:41），transformProduct 透传 undefined，
-    //   徽章 resolveBadges 降级隐藏，不崩。开关：PRODUCT_DETAIL_ENDPOINT_ENABLED 常量 +
-    //   EXPO_PUBLIC_USE_PRODUCT_DETAIL env 覆盖（'false' 关）；批B 部署验证后无需改代码（默认开，
-    //   部署失败回退已兜底）；如需彻底关掉新端点，在 .env 加 EXPO_PUBLIC_USE_PRODUCT_DETAIL=false。
-    if (PRODUCT_DETAIL_ENDPOINT_ENABLED) {
-      try {
-        const res = await api.get<ProductRaw & { skus: unknown[] }>(
-          `/client/products/${id}/detail`,
-        );
-        // Why: /detail 聚合端点额外返回 skus，前端 Product 类型暂未消费，忽略以保持兼容
-        return transformProduct(res.data);
-      } catch {
-        // C-P1-7 回退：/detail 失败（404 批B 未部署 / 网络错误）→ 回退普通详情端点，不让详情页白屏。
-        //   C-P2-5: 回退端点本身的错误原样抛出（最外层不再 try 吞），RQ 可重试、监控不丢。
-      }
-    }
-    const res = await api.get<ProductRaw>(`/client/products/${id}`);
+    // 前端接线切换 T3（C-P1-7 收口）：批B /detail 聚合端点已部署（curl 200 验证过），
+    // 删能力开关与回退分支，直打 /detail（带 isCategoryTop3/skus/images）；错误原样抛
+    // （RQ 可重试、监控不丢）。
+    const res = await api.get<ProductRaw>(`/client/products/${id}/detail`);
+    // Why: /detail 聚合端点额外返回 skus，前端 Product 类型暂未消费，忽略以保持兼容
     return transformProduct(res.data);
   },
 

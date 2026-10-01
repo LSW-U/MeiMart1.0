@@ -27,7 +27,7 @@ describe('geocode service（后端代理）', () => {
     const hits = await searchPlaces('lecidere');
     expect(hits).toHaveLength(2);
     expect(hits[0]).toMatchObject({ lat: -8.5569, lng: 125.5603, label: 'Rua de Lecidere, Dili' });
-    // 端点 + query 参数（后端 viewbox 限定东帝汶，前端不再拼 Nominatim URL）
+    // 端点 + query 参数（后端 viewbox 限定东帝汶，前端不再拼直连 URL）
     expect(mockGet).toHaveBeenCalledWith('/common/geo/suggest', { params: { q: 'lecidere' } });
   });
 
@@ -66,51 +66,44 @@ describe('geocode service（后端代理）', () => {
     expect(places).toEqual([]);
   });
 
-  // B 部分（批4）：reverseGeocode 保留 Nominatim 直调（后端无 reverse 端点），
-  // 走全局 fetch 而非 axios api.get —— 用 global.fetch mock 验证
-  describe('reverseGeocode（Nominatim 直调）', () => {
-    const mockFetch = jest.fn();
-
-    beforeAll(() => {
-      globalThis.fetch = mockFetch as unknown as typeof fetch;
-    });
-
-    afterEach(() => {
-      mockFetch.mockReset();
-    });
-
-    it('拼 reverse URL + 带 UA 头，返回 display_name', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ display_name: 'Rua 12 de Novembro, Dili, Timor-Leste' }),
+  // 前端接线切换 T2：reverseGeocode 切后端代理 GET /common/geo/reverse（走 axios api 实例，
+  // signal 透传 axios config；formattedAddress null/缺失 → 空串不抛错）
+  describe('reverseGeocode（后端 /common/geo/reverse）', () => {
+    it('调后端 reverse 端点并透传 lat/lng，返回 formattedAddress', async () => {
+      mockGet.mockResolvedValueOnce({
+        data: {
+          lat: -8.5569,
+          lng: 125.5603,
+          source: 'nominatim',
+          formattedAddress: 'Rua 12 de Novembro, Dili, Timor-Leste',
+        },
       });
       const label = await reverseGeocode(-8.5569, 125.5603);
       expect(label).toBe('Rua 12 de Novembro, Dili, Timor-Leste');
-      expect(mockFetch).toHaveBeenCalledWith(
-        'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&lat=-8.5569&lon=125.5603',
-        expect.objectContaining({ headers: { 'User-Agent': 'MeiMart-client/1.0' } }),
-      );
+      expect(mockGet).toHaveBeenCalledWith('/common/geo/reverse', {
+        params: { lat: -8.5569, lng: 125.5603 },
+        signal: undefined,
+      });
     });
 
-    it('display_name 缺失兜底空串', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
+    it('formattedAddress null（后端 fallback 态）兜底空串不抛错', async () => {
+      mockGet.mockResolvedValueOnce({
+        data: { lat: -8.5569, lng: 125.5603, source: 'fallback', formattedAddress: null },
+      });
       expect(await reverseGeocode(-8.5569, 125.5603)).toBe('');
     });
 
-    it('res 非 ok 抛 Nominatim reverse {status}', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false, status: 429 });
-      await expect(reverseGeocode(-8.5569, 125.5603)).rejects.toThrow('Nominatim reverse 429');
+    it('formattedAddress 字段缺失兜底空串', async () => {
+      mockGet.mockResolvedValueOnce({ data: { lat: -8.5569, lng: 125.5603, source: 'fallback' } });
+      expect(await reverseGeocode(-8.5569, 125.5603)).toBe('');
     });
 
-    it('C-P1-6: signal 透传给 fetch（拖动打断 in-flight 请求）', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ display_name: 'x' }),
-      });
+    it('C-P1-6: signal 透传给 axios config（拖动打断 in-flight 请求）', async () => {
+      mockGet.mockResolvedValueOnce({ data: { formattedAddress: 'x' } });
       const controller = new AbortController();
       await reverseGeocode(-8.5569, 125.5603, controller.signal);
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(mockGet).toHaveBeenCalledWith(
+        '/common/geo/reverse',
         expect.objectContaining({ signal: controller.signal }),
       );
     });
