@@ -11,7 +11,7 @@
  * - 底层收敛到 @meimart/upload-core（R6 共享包，client/rider 单源）
  * - mock 模式返回伪造 MinIO URL（不实际上传），register/profile-edit 可离线演示
  */
-import { uploadImageFileWithRetry, type UploadResult } from '@meimart/upload-core';
+import { uploadImageFileWithRetry, makeApiBaseUrl, type UploadResult } from '@meimart/upload-core';
 import { currentLocale } from '@meimart/i18n-core';
 import { API_BASE_URL, isMockMode } from './api';
 import { tokenStorage } from './token-storage';
@@ -46,8 +46,9 @@ async function uploadTo(
 ): Promise<UploadResult> {
   if (isMockMode) return mockUploadResult(path);
   const token = await tokenStorage.get();
+  // 批5 C1：baseUrl 契约类型化——调用时校验 /api/v1 前缀（漏配 fail-fast 非 404）
   return uploadImageFileWithRetry({
-    baseUrl: API_BASE_URL,
+    baseUrl: makeApiBaseUrl(API_BASE_URL),
     path,
     fileUri,
     mimeType,

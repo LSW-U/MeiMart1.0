@@ -6,6 +6,42 @@
  */
 import { UploadError } from './error';
 
+/**
+ * 批5 C1：baseUrl 前缀契约类型化（branded type）。
+ *
+ * Why: core.ts 拼 URL 是 `${baseUrl}/${path}`，契约是「baseUrl 必须已含 /api/v1 前缀、
+ * path 必须不含」。此前只靠 JSDoc 注释约定，调用方传裸域名或带前缀的 path 均静默
+ * 404（P15 实案：/api/v1/api/v1 双前缀 404）。branded type 让「未经 makeApiBaseUrl
+ * 校验的裸 string」无法直接赋给 baseUrl，错误用法 tsc 即报。
+ *
+ * 适配成本控制：string → ApiBaseUrl 是赋值不兼容（tsc 报错），ApiBaseUrl → string
+ * 是赋值兼容（branded 只是加了幻影字段），故 UploadRequest.baseUrl 收窄不破坏
+ * 从更宽类型读值的既有路径；两端调用方仅在传字面量/裸 env 值处包 makeApiBaseUrl。
+ */
+declare const apiBaseUrlBrand: unique symbol;
+export type ApiBaseUrl = string & { readonly [apiBaseUrlBrand]: true };
+
+/**
+ * 构造经校验的 ApiBaseUrl：
+ *  - 去尾部 '/'（防 `base//path`）
+ *  - 必须以 /api/v1 结尾（缺前缀即抛，替代静默 404）
+ */
+export function makeApiBaseUrl(raw: string): ApiBaseUrl {
+  const trimmed = raw.replace(/\/+$/, '');
+  if (!trimmed.endsWith('/api/v1')) {
+    throw new Error(
+      `[upload-core] baseUrl must end with /api/v1 (got "${raw}"). ` +
+        '服务层 baseURL 已含前缀（与 axios api 实例同源）；裸域名请补前缀后再传。',
+    );
+  }
+  return trimmed as ApiBaseUrl;
+}
+
+/** 运行时守卫（可选）：从 env/远端来的 string 在不确定是否已构造时使用 */
+export function isApiBaseUrl(v: unknown): v is ApiBaseUrl {
+  return typeof v === 'string' && v.replace(/\/+$/, '').endsWith('/api/v1');
+}
+
 /** 上传成功响应 data（所有上传端点同构） */
 export interface UploadResult {
   url: string;
@@ -29,8 +65,8 @@ export function extractUploadErrorMessage(status: number, body: UploadErrorBody 
 
 /** 上传请求参数 */
 export interface UploadRequest {
-  /** API baseURL（已含 /api/v1 前缀，与 app service 层既有 fetch 拼法一致） */
-  baseUrl: string;
+  /** API baseURL（已含 /api/v1 前缀；批5 C1 起用 makeApiBaseUrl() 构造，裸 string 不再被接受） */
+  baseUrl: ApiBaseUrl;
   /** 端点相对路径（不含 /api/v1，如 'client/uploads/avatar'） */
   path: string;
   /** 本地文件 URI（expo-image-picker assets[].uri） */
@@ -90,6 +126,7 @@ export async function uploadImageFile(req: UploadRequest): Promise<UploadResult>
   if (req.token) headers.Authorization = `Bearer ${req.token}`;
   let res: Response;
   try {
+    // 批5 C1：baseUrl 已由 makeApiBaseUrl 在类型层保证 /api/v1 前缀 + 无尾斜杠
     res = await fetch(`${req.baseUrl}/${req.path}`, {
       method: 'POST',
       headers,

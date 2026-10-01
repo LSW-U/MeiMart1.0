@@ -1,0 +1,55 @@
+{
+  "_comment": "批5 B3 假绿基线（Q6：存量记账不拦截/新增拦截）。键=文件::用例标题前24字符。",
+  "entries": [
+    {
+      "key": "apps/client-app/src/components/feedback/ErrorBoundary/ErrorBoundary.test.tsx::renders children when no",
+      "title": "renders children when no error",
+      "reason": "批5 建档时已存在（存量记账不拦截；清洗另行立项）"
+    },
+    {
+      "key": "apps/client-app/src/components/feedback/ErrorBoundary/ErrorBoundary.test.tsx::renders fallback on erro",
+      "title": "renders fallback on error",
+      "reason": "批5 建档时已存在（存量记账不拦截；清洗另行立项）"
+    },
+    {
+      "key": "apps/client-app/src/components/feedback/ErrorState/ErrorState.test.tsx::renders error message",
+      "title": "renders error message",
+      "reason": "批5 建档时已存在（存量记账不拦截；清洗另行立项）"
+    },
+    {
+      "key": "apps/client-app/src/components/feedback/PageErrorBoundary/PageErrorBoundary.test.tsx::子树崩溃 → 渲染 i18n 失败态（pageE",
+      "title": "子树崩溃 → 渲染 i18n 失败态（pageError.title / pageError.messageFallba",
+      "reason": "批5 建档时已存在（存量记账不拦截；清洗另行立项）"
+    },
+    {
+      "key": "apps/client-app/src/components/ui/Input/Input.test.tsx::shows error message when",
+      "title": "shows error message when error is set",
+      "reason": "批5 建档时已存在（存量记账不拦截；清洗另行立项）"
+    },
+    {
+      "key": "apps/rider-app/src/test/pages/deposit-pay.test.tsx::非法输入（三位小数）→ 「请输入有效的缴纳金额」",
+      "title": "非法输入（三位小数）→ 「请输入有效的缴纳金额」",
+      "reason": "批5 建档时已存在（存量记账不拦截；清洗另行立项）"
+    },
+    {
+      "key": "apps/rider-app/src/test/pages/deposit-pay.test.tsx::resubmitAmount 预填（记录页 RE",
+      "title": "resubmitAmount 预填（记录页 REJECTED 重提）→ $25.00",
+      "reason": "批5 建档时已存在（存量记账不拦截；清洗另行立项）"
+    },
+    {
+      "key": "apps/rider-app/src/test/pages/history.test.tsx::counts error：tab 数字显示「—」",
+      "title": "counts error：tab 数字显示「—」（非 0 误报）",
+      "reason": "批5 建档时已存在（存量记账不拦截；清洗另行立项）"
+    },
+    {
+      "key": "apps/rider-app/src/test/pages/offline-banner.test.tsx::死信 >0：即使在线也渲染失败数 + 重试/放弃",
+      "title": "死信 >0：即使在线也渲染失败数 + 重试/放弃按钮",
+      "reason": "批5 建档时已存在（存量记账不拦截；清洗另行立项）"
+    },
+    {
+      "key": "apps/rider-app/src/test/pages/sign.test.tsx::empty（null）：显示任务不存在空态",
+      "title": "empty（null）：显示任务不存在空态",
+      "reason": "批5 建档时已存在（存量记账不拦截；清洗另行立项）"
+    }
+  ]
+}

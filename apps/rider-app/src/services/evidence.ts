@@ -18,7 +18,7 @@
  */
 import * as FileSystem from 'expo-file-system';
 
-import { uploadImageFileWithRetry } from '@meimart/upload-core';
+import { uploadImageFileWithRetry, makeApiBaseUrl } from '@meimart/upload-core';
 
 import { API_BASE_URL, isMockMode } from './api';
 import { tokenStorage } from './token-storage';
@@ -136,8 +136,9 @@ export async function uploadEvidence(
       continue;
     }
     const token = await tokenStorage.get();
+    // 批5 C1：baseUrl 契约类型化（同 upload.ts）
     const result = await uploadImageFileWithRetry({
-      baseUrl: API_BASE_URL,
+      baseUrl: makeApiBaseUrl(API_BASE_URL),
       path: EVIDENCE_UPLOAD_PATH,
       fileUri: uri,
       mimeType: 'image/jpeg',

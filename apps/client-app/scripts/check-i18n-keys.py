@@ -35,6 +35,58 @@ T_CALL_RE = re.compile(r"\bt\(\s*['\"`]([a-zA-Z0-9_.:-]+)['\"`]")
 PLACEHOLDER_RE = re.compile(r'^\[(TET|PT|ZH|EN|ID)\] ')
 # 插值变量（批B 审查 #1：pt 幻觉 {{amount}} 逃逸——key 集合对齐不查值内容，补插值 parity）
 INTERP_RE = re.compile(r'\{\{(\w+)\}\}')
+# 批5 B1：service 层烘焙字面量（{ zh: '…' / { en: '…' 构造 LocalizableText 绕过 i18n key 体系）
+BAKED_LITERAL_RE = re.compile(r"\{\s*(?:zh|en|tet|pt)\s*:\s*['\"`]")
+# 批5 B1：非 t() 的硬编码中文文案兜底（title={ '中文' } 等模板串直传）
+HARDCODED_CJK_RE = re.compile(r"[一-鿿]{2,}")
+
+
+def strip_comments(text: str) -> str:
+    """按行剥离 // 与 /* */ 注释（防 B1 检测误报注释里的示例；保留字符串内容不动）"""
+    out_lines = []
+    in_block = False
+    for ln in text.split('\n'):
+        if in_block:
+            end = ln.find('*/')
+            if end == -1:
+                out_lines.append('')
+                continue
+            ln = ln[end + 2:]
+            in_block = False
+        # 简易剥离（不解析字符串内 //——i18n 检测场景可接受，误报进记账不拦截）
+        idx = ln.find('//')
+        if idx != -1 and '://' not in ln[:idx]:
+            ln = ln[:idx]
+        if '/*' in ln and '*/' not in ln:
+            in_block = True
+            ln = ln[: ln.find('/*')]
+        out_lines.append(ln)
+    return '\n'.join(out_lines)
+
+
+def scan_baked_literals(scan_root: Path) -> list[tuple[str, int, str]]:
+    """批5 B1（记账模式）：扫 service 层烘焙字面量与非 t() 硬编码中文。
+
+    排除：__tests__ / *.test.* / .tsx 页面（页面文案 t() 已由主检查覆盖）；
+    只扫 *.ts 且路径含 services（批1 已记账口径：service 层是烘焙重灾区）。
+    返回 [(rel_file, line, kind)]，kind ∈ baked-literal / hardcoded-cjk。
+    """
+    hits: list[tuple[str, int, str]] = []
+    services = scan_root / 'src' / 'services'
+    if not services.exists():
+        return hits
+    for fp in sorted(services.rglob('*.ts')):
+        if '__tests__' in fp.parts or '.test.' in fp.name:
+            continue
+        text = strip_comments(fp.read_text(encoding='utf-8'))
+        rel = str(fp.relative_to(scan_root))
+        for m in BAKED_LITERAL_RE.finditer(text):
+            line = text[: m.start()].count('\n') + 1
+            hits.append((rel, line, 'baked-literal'))
+        for m in HARDCODED_CJK_RE.finditer(text):
+            line = text[: m.start()].count('\n') + 1
+            hits.append((rel, line, 'hardcoded-cjk'))
+    return hits
 
 
 def flatten(obj, prefix=''):
@@ -171,6 +223,8 @@ def main():
     ap = argparse.ArgumentParser(description='i18n 门禁：key 存在性 + 跨语对齐 + 未译统计')
     ap.add_argument('--locale', default=DEFAULT_LOCALE, help=f"t() 扫描基线 locale（默认 {DEFAULT_LOCALE}）")
     ap.add_argument('--skip-usage', action='store_true', help='跳过 t() 调用扫描（只跑对齐 + 未译）')
+    ap.add_argument('--strict', action='store_true',
+                    help='（批5 B1）烘焙字面量/硬编码中文从记账升级为拦截（默认记账 exit 0，升级由总指挥拍板）')
     args = ap.parse_args()
 
     baseline = load_lang(args.locale)
@@ -221,6 +275,22 @@ def main():
         print('\n'.join(blockers))
         exit_code = 1
     print()
+
+    # ── 批5 B1：service 层烘焙字面量 + 硬编码中文（记账模式，--strict 才拦截） ──
+    baked = scan_baked_literals(ROOT)
+    if baked:
+        by_kind: dict[str, int] = {}
+        for _, _, k in baked:
+            by_kind[k] = by_kind.get(k, 0) + 1
+        detail = ' / '.join(f'{k}: {n}' for k, n in sorted(by_kind.items()))
+        print(f'[B1 记账] service 层烘焙字面量/硬编码中文命中 {len(baked)} 处（{detail}）——记账模式不拦截')
+        if args.strict:
+            print('❌ --strict 模式：B1 命中即拦截（首个命中样例）：')
+            for rel, line, k in baked[:5]:
+                print(f'  {rel}:{line}  [{k}]')
+            exit_code = 1
+    else:
+        print('[B1 记账] service 层烘焙字面量/硬编码中文命中 0 处 ✅')
 
     if exit_code:
         print('❌ 门禁拦截（对齐缺失 / 未译占位 / t() ERR 有一即为红），修后重跑')

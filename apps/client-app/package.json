@@ -92,7 +92,9 @@
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "check:i18n": "python3 scripts/check-i18n-keys.py",
-    "check:a11y": "python3 scripts/check-a11y-static.py"
+    "check:a11y": "python3 scripts/check-a11y-static.py",
+    "check:gate-mock": "python3 ../../scripts/gate/mock-escape-check.py",
+    "check:gate-fake-green": "python3 ../../scripts/gate/fake-green-check.py"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

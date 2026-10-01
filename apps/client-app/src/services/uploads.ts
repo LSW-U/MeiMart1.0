@@ -21,11 +21,12 @@
 import { getExtra } from '@/config/app-config';
 import { useAuthStore } from '@/store/authStore';
 import { getCurrentLocale } from '@/i18n';
-import { uploadImageFileWithRetry, type UploadResult } from '@meimart/upload-core';
+import { uploadImageFileWithRetry, makeApiBaseUrl, type UploadResult } from '@meimart/upload-core';
 import { isMockMode, tokenStorage } from './api';
 
 const env = getExtra();
-const baseURL = env?.API_BASE_URL ?? 'https://api.meimart.example.com';
+// 批5 C1 收口：兜底常量原缺 /api/v1 前缀（旧拼法下真用它会 404，fail-fast 门禁抓出）——补齐对齐 .env 形态
+const baseURL = env?.API_BASE_URL ?? 'https://api.meimart.example.com/api/v1';
 
 // C-P2-16: 删除自维护 TOKEN_KEY——复用 api.ts tokenStorage 单一真值源（平台分支/存储 key/
 // 异常兜底都在一处维护，此前两份拷贝会漂移：改 api.ts key 时 uploads 静默读不到 token）。
@@ -60,6 +61,9 @@ function mockUploadResult(prefix: string): Promise<UploadResult> {
  * @param mimeType MIME 类型（如 image/jpeg）
  * @param basename 文件名主体（如 'evidence' / 'avatar'）
  */
+// 批5 C1：baseUrl 契约类型化——模块加载时校验 /api/v1 前缀（漏配/裸域名 fail-fast 非 404）
+const apiBaseUrl = makeApiBaseUrl(baseURL);
+
 async function uploadTo(
   path: string,
   fileUri: string,
@@ -68,7 +72,7 @@ async function uploadTo(
 ): Promise<UploadResult> {
   const token = await getToken();
   return uploadImageFileWithRetry({
-    baseUrl: baseURL,
+    baseUrl: apiBaseUrl,
     path,
     fileUri,
     mimeType,

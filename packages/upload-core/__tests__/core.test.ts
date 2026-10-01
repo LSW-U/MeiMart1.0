@@ -15,11 +15,13 @@ import {
   slotToError,
 } from '../src/upload-state';
 import type { UploadRequest } from '../src/core';
+import { makeApiBaseUrl } from '../src/core';
 
 const mockFetch = jest.fn();
 
 const req = (over: Partial<UploadRequest> = {}): UploadRequest => ({
-  baseUrl: 'https://api.test.example.com/api/v1',
+  // 批5 C1：baseUrl 契约类型化——测试夹具同样走 makeApiBaseUrl（裸 string tsc 即报）
+  baseUrl: makeApiBaseUrl('https://api.test.example.com/api/v1'),
   path: 'client/uploads/avatar',
   fileUri: 'file:///tmp/a.jpg',
   mimeType: 'image/jpeg',

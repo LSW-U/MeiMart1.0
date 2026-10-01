@@ -31,6 +31,8 @@ jest.mock('@/store/authStore', () => ({
 jest.mock('@/i18n', () => ({ getCurrentLocale: () => 'en' }));
 
 jest.mock('@meimart/upload-core', () => ({
+  // 批5 C1：mock 同步补 makeApiBaseUrl（uploads.ts 模块加载时调用做 baseUrl 校验）
+  makeApiBaseUrl: (raw: string) => raw,
   uploadImageFileWithRetry: (opts: Record<string, unknown>) => globalFetchCapture(opts),
 }));
 

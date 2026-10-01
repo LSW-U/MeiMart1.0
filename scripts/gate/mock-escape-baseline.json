@@ -1,0 +1,73 @@
+{
+  "_comment": "批5 B5 mock 逃逸基线（Q6：存量记账不拦截/新增拦截）。键=文件::模式（行号漂移不入键）。新增逃逸必须修掉或带理由入本表。",
+  "entries": [
+    {
+      "key": "apps/client-app/src/services/address.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/auth.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/cart.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/catalog.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/favorites.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/notifications.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/orders.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/payment.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/pricing.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/products.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/promotion.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/refunds.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/reviews.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/searchSuggest.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/client-app/src/services/user.ts::mockDb",
+      "reason": "client mock 数据库消费（isMockMode 分支内返回 mock 数据，显式开关控制，非运行时逃逸）"
+    },
+    {
+      "key": "apps/rider-app/src/services/deposit.ts::pay-mock",
+      "reason": "存量逃逸（批5 建档时已存在，未逐一深挖；清理时先核语义）"
+    },
+    {
+      "key": "apps/rider-app/src/services/earnings.ts::FORCE_MOCK",
+      "reason": "存量逃逸（批5 建档时已存在，未逐一深挖；清理时先核语义）"
+    }
+  ]
+}
