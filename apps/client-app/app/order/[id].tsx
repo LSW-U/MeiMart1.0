@@ -330,7 +330,7 @@ export default function OrderDetailPage() {
             />
             <SummaryRow
               label={t('order.discount', { defaultValue: 'Discount' })}
-              value={`-${formatPrice(discount)}`}
+              value={formatPrice(-discount, 'USD', 2, { sign: true })} // 批2 M3：原 `-${formatPrice(...)}` 前缀手拼收口 sign 档（负值 → `-$x.xx`）
               color={colors.semantic.success}
             />
             <View style={[styles.totalRow, { borderTopColor: colors['outline-variant'] }]}>
@@ -338,7 +338,7 @@ export default function OrderDetailPage() {
                 {t('order.total', { defaultValue: 'Total Amount' })}
               </Text>
               <Text style={[styles.priceDisplayLg, { color: colors.primary }]}>
-                ${order.totalPrice.toFixed(2)}
+                {formatPrice(order.totalPrice)}
               </Text>
             </View>
           </View>
@@ -442,7 +442,7 @@ function OrderItemRow({
           </Text>
         </View>
         <Text style={[styles.priceDisplay, { color: colors.primary }]}>
-          ${(item.product.price * item.quantity).toFixed(2)}
+          {formatPrice(item.product.price * item.quantity)}
         </Text>
       </View>
     </Pressable>

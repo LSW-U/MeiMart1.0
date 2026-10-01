@@ -407,8 +407,9 @@ export default function CartPage() {
                     {t('cart.discount')}
                   </Text>
                   <Text style={[styles.discountAmount, { color: colors.semantic.positive }]}>
-                    {/* F4：formatPrice 统一货币符（-5 输出 -$5.00，ASCII 减号同 P3 优化原型 discount-pill） */}
-                    {formatPrice(-discountAmount)}
+                    {/* F4：formatPrice 统一货币符 + sign 档（审查 P1-1：无 sign 档负值走 abs 丢负号，
+                        必须显式 { sign: true } 产出 -$5.00，同 P3 优化原型 discount-pill） */}
+                    {formatPrice(-discountAmount, 'USD', 2, { sign: true })}
                   </Text>
                 </View>
               )}

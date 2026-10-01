@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
-import { formatCompactNumber } from '@/utils/format';
+import { formatCompactNumber, formatPrice } from '@/utils/format';
 import type { Product, LocalizableText } from '@/types';
 import type { StockState } from '../shared';
 
@@ -68,12 +68,13 @@ export function InfoSection({
         </View>
         <Text style={[styles.h1, { color: colors['on-surface'] }]}>{localize(product.name)}</Text>
         <View style={styles.priceRow}>
+          {/* 批2 M3：UI 金额拼接收口 formatPrice（原 $ + toFixed 手拼，千分位/位数口径单源） */}
           <Text style={[styles.priceBig, { color: colors.primary }]}>
-            ${product.price.toFixed(2)}
+            {formatPrice(product.price)}
           </Text>
           {product.originalPrice && (
             <Text style={[styles.priceStrike, { color: colors.secondary }]}>
-              ${product.originalPrice.toFixed(2)}
+              {formatPrice(product.originalPrice)}
             </Text>
           )}
           {/* P3-1（批D 审查修复）：头部评分位，消费 product.rating —— 样式对齐 ProductCard metaRow（star 12 + toFixed(1)） */}

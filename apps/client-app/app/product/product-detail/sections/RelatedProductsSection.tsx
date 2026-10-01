@@ -4,6 +4,7 @@ import { ScrollView, View, Text, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
+import { formatPrice } from '@/utils/format';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import type { Product, LocalizableText } from '@/types';
 
@@ -64,7 +65,7 @@ export function RelatedProductsSection({
                     {localize(p.name)}
                   </Text>
                   <Text style={[styles.relatedPrice, { color: colors.primary }]}>
-                    ${p.price.toFixed(2)}
+                    {formatPrice(p.price)}
                   </Text>
                 </View>
               </Pressable>
@@ -135,7 +136,7 @@ export function RelatedProductsSection({
                   {localize(p.name)}
                 </Text>
                 <Text style={[styles.relatedPrice, { color: colors.primary }]}>
-                  ${p.price.toFixed(2)}
+                  {formatPrice(p.price)}
                 </Text>
               </View>
             </Pressable>

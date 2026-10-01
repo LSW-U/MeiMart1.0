@@ -29,6 +29,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.4.0
         version: 5.9.1(@sinclair/typebox@0.34.52)(ajv@8.20.0)(react-hook-form@7.86.0(react@19.2.3))(zod@4.4.3)
+      '@meimart/format':
+        specifier: workspace:*
+        version: link:../../packages/format
       '@meimart/i18n-core':
         specifier: workspace:*
         version: link:../../packages/i18n-core
@@ -246,6 +249,9 @@ importers:
       '@expo/vector-icons':
         specifier: ^15.1.1
         version: 15.1.1(expo-font@56.0.7)(react-native@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/jest-preset@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1))(@react-native/metro-config@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
+      '@meimart/format':
+        specifier: workspace:*
+        version: link:../../packages/format
       '@meimart/i18n-core':
         specifier: workspace:*
         version: link:../../packages/i18n-core
@@ -406,6 +412,12 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+
+  packages/format:
+    dependencies:
+      '@meimart/i18n-core':
+        specifier: workspace:*
+        version: link:../i18n-core
 
   packages/i18n-core: {}
 

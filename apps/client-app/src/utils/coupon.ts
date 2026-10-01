@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next';
+import { formatPrice } from '@/utils/format';
 import type { ClientCoupon } from '@/services/promotion';
 
 // Why: 券折扣展示文案统一。checkout 选券 Modal + CouponCard 共用，避免两处各写一遍
@@ -17,11 +18,12 @@ export function formatCouponValue(
     case 'PERCENTAGE':
       return `${coupon.value}% ${t('coupons.off', { defaultValue: 'OFF' })}`;
     case 'FIXED_AMOUNT':
-      return `-$${coupon.value}`;
+      // Why: 批2 手拼清零（M3）——原 `-$${coupon.value}` 裸拼无千分位/无位数规整；
+      //      sign 档 + 负值入参（rider 版语义）产出 `-$5.00`，与原展示一致。
+      return formatPrice(-coupon.value, 'USD', 2, { sign: true });
     case 'FREE_DELIVERY':
       return t('checkout.coupon.freeDelivery', { defaultValue: 'FREE DELIVERY' });
     default:
       return '';
   }
 }
-

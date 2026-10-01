@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["jest", "node"]
+  },
+  "include": ["src/**/*", "__tests__/**/*"]
+}

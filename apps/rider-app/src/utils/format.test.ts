@@ -33,4 +33,12 @@ describe('formatCurrency（回归哨兵：distance 收口后确保未破坏）',
   it('一位小数', () => {
     expect(formatCurrency(12.34, '$', { decimals: 1 })).toBe('$12.3');
   });
+
+  // 批2（跨端基建统一）：formatCurrency 已并入 @meimart/format formatPrice（D11 并集），
+  // utils/format.ts 改适配壳——sign 收支符号与 formatter 缓存能力在新包单测锚定
+  // （packages/format/__tests__/index.test.ts），此处锚定壳的签名适配不丢行为。
+  it('sign 选项：正数带 +、负数带 - 且主体取绝对值（经壳透传新包）', () => {
+    expect(formatCurrency(12.5, '$', { sign: true })).toBe('+$12.50');
+    expect(formatCurrency(-12.5, '$', { sign: true })).toBe('-$12.50');
+  });
 });

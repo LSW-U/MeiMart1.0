@@ -23,7 +23,7 @@ import { useFavorites, useToggleFavorite } from '@/services/queries/useFavorites
 import { useAddresses } from '@/services/queries/useAddress';
 import { useReviews, consumeLastSubmittedReviewId } from '@/services/queries/useReviews';
 import { getVariantGroups } from '@/config/variantTemplates';
-import { getRelativeTimeUnit } from '@/utils/format';
+import { getRelativeTimeUnit, formatPrice } from '@/utils/format';
 import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
@@ -223,7 +223,8 @@ export default function ProductDetailPage() {
     if (!product) return;
     const name = localize(product.name);
     Share.share({
-      message: `${name} — $${product.price.toFixed(2)}\nCheck it out on MeiMart!`,
+      // Why: 批2 手拼清零（M3）——原 `$${product.price.toFixed(2)}`，金额格式化走单源 formatPrice
+      message: `${name} — ${formatPrice(product.price)}\nCheck it out on MeiMart!`,
       title: name,
     }).catch(() => {});
   };

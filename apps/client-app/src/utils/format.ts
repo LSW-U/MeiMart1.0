@@ -1,118 +1,16 @@
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  USD: '$',
-  CNY: '¥',
-  IDR: 'Rp',
-  AUD: 'A$',
-};
-
 /**
- * UI 语言码 → Intl locale 标签（语言优化方案 v2 §2.5）。
- * Why: Intl 不认识 Tetum，tet 回退 en-US；取基础码（'zh-CN'/'zh-Hans' 等带地区码同样命中）。
+ * 格式化工具（跨端基建统一 批2）：实现上收共享包 @meimart/format（D11 并集），
+ * 本文件改 re-export 壳——导出名全部保留，调用方 import 路径不变（本地双实现删除）。
  */
-export function toIntlLocale(locale: string): string {
-  const base = locale.split('-')[0];
-  switch (base) {
-    case 'zh':
-      return 'zh-CN';
-    case 'pt':
-      return 'pt';
-    case 'id':
-      return 'id';
-    default:
-      return 'en-US';
-  }
-}
-
-export function formatPrice(value: number, currency = 'USD', decimals = 2): string {
-  // Why: C-P2-1 统一价格口径——两代入参兼容：ISO 代码（'USD'）查表映射符号；
-  //      单字符符号（'$'/'¥'）原样透传（PriceText 旧调用方传符号，一次收口不破调用方）
-  const symbol = CURRENCY_SYMBOLS[currency] ?? (/^[^A-Za-z0-9]$/.test(currency) ? currency : '');
-  const safe = Number.isFinite(value) ? value : 0;
-  // Why: Q6（语言优化 v2）金额跨语言固定美式千分位（$1,234.56），不随 UI 语言变；
-  //      Intl.NumberFormat 替换 toFixed（参照 RiderCard.tsx Intl 先例）
-  const formatted = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(safe);
-  return `${symbol}${formatted}`;
-}
-
-export function formatCompactNumber(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-  return String(value);
-}
-
-/**
- * 日期时间（月日时分，含年）。locale 传 UI 语言码（'zh'/'en'/'tet'/'pt'…），
- * 内部经 toIntlLocale 映射（tet→en-US 回退），调用方不再各自硬编码 'zh-CN'/'en-US'。
- */
-export function formatDate(iso: string, locale: string): string {
-  try {
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return iso;
-    return new Intl.DateTimeFormat(toIntlLocale(locale), {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  } catch {
-    return iso;
-  }
-}
-
-/**
- * 预估送达时间（B9 ETA）：月日 + 时分，无年份（用户只关心哪天到，不关心年）。
- * Why: 结算页 CheckoutPreview.estimatedDeliveryTime 展示用，formatDate 带年份太长。
- * locale 传 UI 语言码，内部经 toIntlLocale 映射（tet→en-US 回退）。
- */
-export function formatEta(iso: string, locale: string): string {
-  try {
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return iso;
-    return new Intl.DateTimeFormat(toIntlLocale(locale), {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  } catch {
-    return iso;
-  }
-}
-
-export function maskPhone(phone: string): string {
-  if (!phone || phone.length < 7) return phone;
-  const head = phone.slice(0, 3);
-  const tail = phone.slice(-3);
-  const middle = '*'.repeat(phone.length - 6);
-  return `${head}${middle}${tail}`;
-}
-
-/**
- * 相对时间（评论卡「2 days ago」用）- 纯计算，返回 i18n key 后缀 + count，
- * 由调用方用 t(`common.relTime.${unit}`, { count }) 拼装，文案全部走 i18n。
- *
- * Why: 评论 createdAt 是 ISO 时间戳，前端展示相对时间；不引入 dayjs（v0.2 未提及）。
- */
-export type RelativeTimeUnit =
-  'justNow' | 'minutesAgo' | 'hoursAgo' | 'daysAgo' | 'weeksAgo' | 'monthsAgo';
-
-export function getRelativeTimeUnit(iso: string): { unit: RelativeTimeUnit; count: number } {
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return { unit: 'justNow', count: 0 };
-  const diffSec = Math.max(0, Math.floor((Date.now() - then) / 1000));
-  if (diffSec < 60) return { unit: 'justNow', count: 0 };
-  const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return { unit: 'minutesAgo', count: diffMin };
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return { unit: 'hoursAgo', count: diffHr };
-  const diffDay = Math.floor(diffHr / 24);
-  if (diffDay < 7) return { unit: 'daysAgo', count: diffDay };
-  const diffWeek = Math.floor(diffDay / 7);
-  if (diffWeek < 5) return { unit: 'weeksAgo', count: diffWeek };
-  const diffMonth = Math.floor(diffDay / 30);
-  return { unit: 'monthsAgo', count: Math.max(1, diffMonth) };
-}
+export {
+  formatPrice,
+  formatDate,
+  formatEta,
+  maskPhone,
+  getRelativeTimeUnit,
+  formatCompactNumber,
+  formatDistance,
+  toIntlLocale,
+  type FormatCurrencyOptions,
+  type RelativeTimeUnit,
+} from '@meimart/format';
