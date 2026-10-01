@@ -12,8 +12,8 @@
  * - mock 模式返回伪造 MinIO URL（不实际上传），register/profile-edit 可离线演示
  */
 import { uploadImageFileWithRetry, type UploadResult } from '@meimart/upload-core';
+import { currentLocale } from '@meimart/i18n-core';
 import { API_BASE_URL, isMockMode } from './api';
-import { getCurrentLanguage } from './settings';
 import { tokenStorage } from './token-storage';
 
 export type { UploadResult };
@@ -26,12 +26,6 @@ function mockUploadResult(prefix: string): Promise<UploadResult> {
     size: 1024,
   };
   return new Promise((resolve) => setTimeout(() => resolve(mock), 500));
-}
-
-/** 当前语言 → Accept-Language（C6/R-P2-6：走 settings 模块态运行时事实源）。
- * 原手读 localStorage 在 native 恒回退 'en'（notification.ts/push-token.ts 同款缺陷已修，此处疏漏）。 */
-function currentLocale(): string {
-  return getCurrentLanguage();
 }
 
 /**
@@ -59,6 +53,8 @@ async function uploadTo(
     mimeType,
     filename: `${basename}.${mimeType.split('/')[1] ?? 'jpg'}`,
     token,
+    // 批1（D9 同口径）：currentLocale 走 i18n-core 单源（rider 端 setLocaleRuntime 注入
+    // settings.getCurrentLanguage，见 src/i18n/index.ts），本地定义已删
     locale: currentLocale(),
   });
 }

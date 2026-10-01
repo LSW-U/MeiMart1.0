@@ -67,11 +67,11 @@ describe('C-P1-4 persist 排除键（前两段精确匹配）', () => {
   });
 
   it('公开数据键照常持久化（categories/products/product/cart/orders）', () => {
-    expect(shouldDehydrate(['categories', 'en'])).toBe(true);
+    expect(shouldDehydrate(['categories'])).toBe(true);
     expect(shouldDehydrate(['products'])).toBe(true);
     expect(shouldDehydrate(['product', 'p001'])).toBe(true);
-    expect(shouldDehydrate(['cart', 'en'])).toBe(true);
-    expect(shouldDehydrate(['orders', 'en'])).toBe(true);
+    expect(shouldDehydrate(['cart'])).toBe(true);
+    expect(shouldDehydrate(['orders'])).toBe(true);
     expect(shouldDehydrate(['payments', 'methods'])).toBe(true);
   });
 

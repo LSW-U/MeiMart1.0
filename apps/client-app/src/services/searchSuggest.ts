@@ -1,6 +1,6 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
-import { getCurrentLocale } from '@/i18n';
+import { getCurrentLocale, pickLocalized } from '@/i18n';
 
 /**
  * 搜索建议（词联想）service - C方案 §4.3
@@ -32,13 +32,13 @@ export const searchSuggestApi = {
       const locale = getCurrentLocale();
       const matched = mockDb.products
         .filter((p) => {
-          const name = (p.name[locale] ?? p.name.en ?? '').toLowerCase();
+          const name = pickLocalized(p.name, locale).toLowerCase();
           return name.startsWith(normalizedPrefix);
         })
         .slice(0, limit);
       const result = matched
         .map((p) => ({
-          word: p.name[locale] ?? p.name.en ?? '',
+          word: pickLocalized(p.name, locale),
           searchCount: p.salesCount ?? 0,
         }))
         .filter((item) => Boolean(item.word));

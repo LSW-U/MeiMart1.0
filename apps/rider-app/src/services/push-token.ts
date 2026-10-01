@@ -23,8 +23,9 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { api, isMockMode } from './api';
-import { getCurrentLanguage } from './settings';
-import type { AppLanguage } from './settings';
+// 批1（D9 同口径）：currentLocale 走 i18n-core 单源（rider 在 src/i18n/index.ts
+// setLocaleRuntime 注入 settings.getCurrentLanguage），本地包装已删
+import { currentLocale } from '@meimart/i18n-core';
 
 // rid 前缀 = FCM/APNs 设备 token（getDevicePushTokenAsync），非 Expo PushToken——
 // 后端 Expo 通道只认 ExpoPushToken（ExponentPushToken[...]），rid 直接发会失败，跳过注册
@@ -36,11 +37,6 @@ function platformOf(): 'ANDROID' | 'IOS' | 'WEB' {
   if (Platform.OS === 'android') return 'ANDROID';
   if (Platform.OS === 'ios') return 'IOS';
   return 'WEB';
-}
-
-/** 当前语言（N5：settings 语言运行时模块态——原 localStorage 手读真机恒 en，审查 P3-2 同源） */
-function currentLocale(): AppLanguage {
-  return getCurrentLanguage();
 }
 
 /** 已注册的 Expo token（登出 DELETE body 需要原 token；内存态，app 进程内有效） */

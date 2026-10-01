@@ -7,20 +7,18 @@ import {
   type ReviewListResult,
 } from '@/services/reviews';
 import { useProfile } from '@/services/queries/useUser';
-import { useLocale } from '@/i18n';
 import type { Review } from '@/types';
 
 // Why: §8 评论模块 - hook 层。query 按 productId 拉评论 + 聚合 summary；
 //      mutation 乐观更新（评论立即置顶 + 评分即时更新，§11.2）。
 
-// Why: 评论内容在 service 层 pickLocalized 按语言烘焙，locale 入 key —— 切语言后
-//      旧语言条目 key 不同自动重查（同 categories 缓存 bug 批量修复）。
-//      根常量供 onSettled 前缀失效用（覆盖所有 locale），避免裸字面量漂移（审查报告 F3 建议）
+// Why: 批1 A4 透传（裁决 B）后评论 content 不再烘焙（原样透传 LocalizableText），
+//      渲染层 localize() 取值——key 去掉 locale 段，切语言不再换 key 重查。
+//      根常量供 onSettled 前缀失效用，避免裸字面量漂移（审查报告 F3 建议）
 export const REVIEWS_ROOT_KEY = ['reviews'] as const;
 export const ORDER_REVIEWS_ROOT_KEY = ['order-reviews'] as const;
 
-export const REVIEWS_QUERY_KEY = (locale: string, productId: string) =>
-  [...REVIEWS_ROOT_KEY, locale, productId] as const;
+export const REVIEWS_QUERY_KEY = (productId: string) => [...REVIEWS_ROOT_KEY, productId] as const;
 
 // Why: §11.2 - 跨页提交（review.tsx -> product 页）后，新评论绿色置顶高亮。
 //      提交时写入，详情页 focus 时 consume 一次（读后即清，避免重复高亮）。
@@ -33,9 +31,8 @@ export function consumeLastSubmittedReviewId(): string | null {
 }
 
 export function useReviews(productId: string | undefined) {
-  const locale = useLocale();
   return useQuery({
-    queryKey: REVIEWS_QUERY_KEY(locale, productId ?? ''),
+    queryKey: REVIEWS_QUERY_KEY(productId ?? ''),
     queryFn: () => reviewsApi.getByProduct(productId as string),
     staleTime: 60 * 1000,
     networkMode: 'offlineFirst',
@@ -46,15 +43,12 @@ export function useReviews(productId: string | undefined) {
 /**
  * 订单所有评价（P15 多商品：判断已评商品，后端 GET /client/orders/:id/reviews）
  * staleTime 30s：评价页反复进出，短缓存减少重复请求；提交后 submit onSuccess invalidate 刷新
- * locale 入 key（评论 content 按语言烘焙，同 REVIEWS_QUERY_KEY）
  */
-export const ORDER_REVIEWS_KEY = (locale: string, orderId: string) =>
-  [...ORDER_REVIEWS_ROOT_KEY, locale, orderId] as const;
+export const ORDER_REVIEWS_KEY = (orderId: string) => [...ORDER_REVIEWS_ROOT_KEY, orderId] as const;
 
 export function useOrderReviews(orderId: string) {
-  const locale = useLocale();
   return useQuery({
-    queryKey: ORDER_REVIEWS_KEY(locale, orderId),
+    queryKey: ORDER_REVIEWS_KEY(orderId),
     queryFn: () => reviewsApi.listOrderReviews(orderId),
     staleTime: 30 * 1000,
     networkMode: 'offlineFirst',
@@ -66,7 +60,6 @@ export function useSubmitReview() {
   const qc = useQueryClient();
   const { t } = useTranslation();
   const { data: me } = useProfile();
-  const locale = useLocale();
 
   return useMutation({
     mutationFn: (input: Omit<ReviewSubmitInput, 'userId' | 'userName'>) => {
@@ -81,7 +74,7 @@ export function useSubmitReview() {
       // Why: productId 可选（订单整体评论无绑定商品）；缺省用空串作 key，与详情页查询自然不匹配
       //      （仅失去乐观置顶，onSettled 仍会 invalidate 拉真实数据）
       const productIdKey = input.productId ?? '';
-      const key = REVIEWS_QUERY_KEY(locale, productIdKey);
+      const key = REVIEWS_QUERY_KEY(productIdKey);
       await qc.cancelQueries({ queryKey: key });
       const previous = qc.getQueryData<ReviewListResult>(key);
       const optimisticReview: Review = {
@@ -92,7 +85,8 @@ export function useSubmitReview() {
         userId: me?.id ?? 'me',
         userName: me?.name ?? t('review.you', { defaultValue: 'You' }),
         rating: input.rating,
-        content: input.content,
+        // 原因：同 reviews.ts——提交入参纯串 → LocalizableText，unknown 单跳桥接（规则 36）
+        content: input.content as unknown as Review['content'],
         tags: input.tags,
         images: input.images,
         isVerified: true,

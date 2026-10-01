@@ -4,6 +4,15 @@ import { getLocales } from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import { useAppStore } from '@/store/appStore';
+// 跨端基建统一 批1（D10）：多语取值单源上收 @meimart/i18n-core——本仓 0 处本地实现，
+// 保留既有导出名（localize/pickLocalized/currentLocale/toIntlLocale），调用方 import 不变。
+import {
+  pickLocalized as pickLocalizedCore,
+  currentLocale,
+  toIntlLocale as toIntlLocaleCore,
+  setLocaleRuntime,
+  type Locale,
+} from '@meimart/i18n-core';
 import type { LocalizableText } from '@/types';
 
 import zh from '../../locales/zh.json';
@@ -102,13 +111,31 @@ export function getCurrentLocale(): AppLocale {
   return (i18n.language as AppLocale) ?? DEFAULT_LOCALE;
 }
 
+// Why: 批1 i18n-core 注入（任务书 §1）——共享包禁读端侧存储，client 以 i18next 运行时为事实源。
+//      initI18n 前调用（模块加载期即注入，i18n.language 未初始化时 getter 回退 DEFAULT_LOCALE）。
+setLocaleRuntime(() => getCurrentLocale() as Locale);
+
 export function isRTL(locale: string): boolean {
   return ['ar', 'he', 'fa', 'ur'].includes(locale);
 }
 
 export function localize(text: LocalizableText, locale: AppLocale): string {
-  return text[locale] ?? text.en;
+  // Why: 单源改 re-export 语义（D10）——原实现 `text[locale] ?? text.en` 升级为 i18n-core
+  //      回退链（locale→en→zh→首值），tet/pt 缺键时不再渲染 undefined，行为只增不减。
+  //      locale 显式入参优先于运行时注入（useLocalizer 闭包语义不变）。
+  return pickLocalizedCore(text, locale, '');
 }
+
+// Why: 批1 单源收口后服务层（products/searchSuggest 等）直接按 locale 取多语值，
+//      re-export i18n-core 原语避免调用方再深引包名（保留 @/i18n 单一入口）。
+export { pickLocalizedCore as pickLocalized };
+
+// Why: currentLocale 同口径 re-export（审查 P3-2）——服务层读 locale 统一走 i18n-core 单源，
+//      getCurrentLocale 仍导出（读 appStore，设置页/回退用）。
+export { currentLocale };
+
+// Why: toIntlLocaleCore 原样 re-export（utils/format.ts 的 toIntlLocale 批2 才上收，先暴露单源实现）
+export { toIntlLocaleCore as toIntlLocale };
 
 export function useLocalizer(): (text: LocalizableText) => string {
   const locale = useLocale();

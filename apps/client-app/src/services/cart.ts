@@ -1,7 +1,6 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
 import { productApi } from './products';
-import { getCurrentLocale } from '@/i18n';
 import type { Cart, CartItem, Product } from '@/types';
 
 // Why: 后端 Cart 字段名/结构差异大（CartItemView 扁平、金额单位是分、selectedSubtotal/totalSubtotal 双字段），
@@ -31,13 +30,6 @@ interface CartRaw {
   discountAmount?: number;
 }
 
-function pickLocalized(raw: unknown, fallback = ''): string {
-  if (!raw || typeof raw !== 'object') return fallback;
-  const record = raw as Record<string, string>;
-  const locale = getCurrentLocale();
-  return record[locale] ?? record.en ?? record.zh ?? Object.values(record)[0] ?? fallback;
-}
-
 /**
  * 批3 第11项（批2 转办 P2-2）：确定性业务 4xx 抛 name==='BusinessError'。
  * useOfflineMutation 守卫（err.name === 'BusinessError'）对这类失败不入队——
@@ -55,14 +47,13 @@ function transformCartItem(raw: CartItemRaw): CartItem {
   // 兜底：字段缺失时用默认值，防 NaN/undefined 渲染崩溃
   // C-P2-9: 透传 skuId（CartItemView 自带，结算 createOrder 直接用）——原 checkout 提交时
   //   对每个选中项额外 getProduct 查 defaultSkuId（N 次详情请求），现从购物车数据直接取。
+  // 批1 A4 透传（D9 删本地 pickLocalized）：productName 多语 JSON 原样透传，渲染层 localize() 取值，
+  // 切语言即翻（原烘焙成 {zh,en} 同值双键 tet/pt 恒回退已废）。
   return {
     id: raw.id ?? '',
     product: {
       id: raw.productId ?? '',
-      name: {
-        zh: pickLocalized(raw.productName),
-        en: pickLocalized(raw.productName),
-      } as Product['name'],
+      name: (raw.productName ?? {}) as Product['name'],
       price: (raw.unitPrice ?? 0) / 100,
       image: raw.productImage ?? '',
       category: '',

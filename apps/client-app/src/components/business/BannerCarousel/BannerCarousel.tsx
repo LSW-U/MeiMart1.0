@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
+import { useLocalizer } from '@/i18n';
 import { useTheme, textStyle, spacing, gradientPresets, shadowPresets } from '@/theme';
 import { DecorativeCorner } from '@/components/cultural/DecorativeCorner';
 import type { Banner, BannerTheme } from '@/types';
@@ -136,6 +137,8 @@ function BannerCard({
 }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  // 原因：批1 A4 透传后 Banner.title 是 LocalizableText，渲染层 localize() 取值
+  const localize = useLocalizer();
   const theme = banner.theme ?? 'primary';
   const gradientPreset = gradientPresets[THEME_GRADIENT[theme]];
   const bgColor = getBannerBg(theme, colors);
@@ -149,7 +152,7 @@ function BannerCard({
         pressed && styles.pressed,
       ]}
       accessibilityRole="button"
-      accessibilityLabel={t('home.a11y.banner', { title: banner.title })}
+      accessibilityLabel={t('home.a11y.banner', { title: localize(banner.title) })}
     >
       {/* 装饰角花（右上） */}
       <View style={styles.corner} pointerEvents="none">
@@ -167,7 +170,7 @@ function BannerCard({
       {/* 文案 + CTA */}
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors['on-primary'] }]} numberOfLines={3}>
-          {banner.title}
+          {localize(banner.title)}
         </Text>
         {banner.ctaLabel && (
           <View style={[styles.ctaBtn, { backgroundColor: colors.tertiary }, shadowPresets.lg]}>

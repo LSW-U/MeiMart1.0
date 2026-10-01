@@ -1,6 +1,6 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
-import { getCurrentLocale } from '@/i18n';
+import { getCurrentLocale, pickLocalized } from '@/i18n';
 import { getExtra } from '@/config/app-config';
 import type { Product, WarehouseAvailability } from '@/types';
 
@@ -181,7 +181,7 @@ export const productApi = {
     if (isMockMode) {
       const lower = keyword.toLowerCase();
       const filtered = withMockCategoryTop3(mockDb.products).filter((p) => {
-        const name = p.name[getCurrentLocale()] ?? p.name.en;
+        const name = pickLocalized(p.name, getCurrentLocale());
         return name.toLowerCase().includes(lower);
       });
       // Why: C方案 §6 F1 - mock 分支补 pageSize 透传（联想 pageSize=3 只取前 3），不传则一次性返全部

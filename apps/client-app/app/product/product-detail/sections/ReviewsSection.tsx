@@ -2,6 +2,7 @@
 // 批5 拆分：从 app/product/[id].tsx 原样搬移（含 ReviewCard/StarsRow 引用），行为零变更
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useLocalizer } from '@/i18n';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
 import { toast } from '@/store/toastStore';
 import { Icon } from '@/components/ui/Icon';
@@ -181,6 +182,8 @@ export function ReviewCard({
 }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  // 原因：批1 A4 透传后 Review.content 是 LocalizableText，渲染层 localize() 取值
+  const localize = useLocalizer();
   // P15 RB1：anonymous=true 时展示「匿名用户」+ 头像「?」（后端返真实 userName + 标记，前端隐藏）
   const displayName = review.anonymous ? t('review.anonymousDisplayName') : review.userName;
   const initial = review.anonymous ? '?' : (review.userName.trim()[0] ?? '?').toUpperCase();
@@ -231,7 +234,7 @@ export function ReviewCard({
         </Text>
       </View>
       <Text style={[styles.reviewBody, { color: colors['on-surface-variant'] }]}>
-        {review.content}
+        {localize(review.content)}
       </Text>
       {/* 评论图片（可选，缩略图横排） */}
       {review.images && review.images.length > 0 && (

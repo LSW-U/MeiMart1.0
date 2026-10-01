@@ -5,6 +5,13 @@ import { ThemeProvider } from '@/theme';
 import { BannerCarousel } from './BannerCarousel';
 import type { Banner } from '@/types';
 
+// Why: 组件用 useLocalizer（@/i18n），测试环境未初始化 i18n——mock 直返 en 取值语义
+jest.mock('@/i18n', () => ({
+  __esModule: true,
+  useLocalizer: () => (text: unknown) =>
+    typeof text === 'string' ? text : ((text as Record<string, string>)?.en ?? ''),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );

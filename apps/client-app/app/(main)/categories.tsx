@@ -20,6 +20,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCategories, useSubCategories } from '@/services/queries/useCatalog';
 import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
 import { useAddToCart } from '@/services/queries/useCart';
+import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import type { Product, Category } from '@/types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -31,6 +32,8 @@ import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 export default function CategoriesPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  // 原因：批1 A4 透传后 Category.name 是 LocalizableText，渲染层 localize() 取值
+  const localize = useLocalizer();
   const { categoryId: urlCategoryId } = useLocalSearchParams<{ categoryId?: string }>();
   const {
     data: categories,
@@ -180,7 +183,7 @@ export default function CategoriesPage() {
                         onPress={() => setSubActiveId(subActive ? null : sub.id)}
                         style={styles.subItem}
                         accessibilityRole="button"
-                        accessibilityLabel={sub.name}
+                        accessibilityLabel={localize(sub.name)}
                         accessibilityState={{ selected: subActive }}
                       >
                         <View
@@ -202,7 +205,7 @@ export default function CategoriesPage() {
                           ]}
                           numberOfLines={1}
                         >
-                          {sub.name}
+                          {localize(sub.name)}
                         </Text>
                       </Pressable>
                     );
@@ -379,6 +382,8 @@ function SidebarItem({
 }) {
   const { colors } = useTheme();
   const [imageError, setImageError] = useState(false);
+  // 原因：批1 A4 透传后渲染层 localize() 取值
+  const localize = useLocalizer();
   const hasImage = Boolean(category.image) && !imageError;
   return (
     <Pressable
@@ -392,7 +397,7 @@ function SidebarItem({
       ]}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      accessibilityLabel={category.name}
+      accessibilityLabel={localize(category.name)}
     >
       {hasImage ? (
         <Image
@@ -417,7 +422,7 @@ function SidebarItem({
         ]}
         numberOfLines={1}
       >
-        {category.name}
+        {localize(category.name)}
       </Text>
     </Pressable>
   );

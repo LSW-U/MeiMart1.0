@@ -30,7 +30,8 @@ jest.mock('../api', () => ({
   },
 }));
 
-jest.mock('@/i18n', () => ({ getCurrentLocale: () => 'zh' }));
+// Why：push.ts P3-2 改调 i18n-core 单源 currentLocale（@/i18n re-export），mock 须同步提供
+jest.mock('@/i18n', () => ({ currentLocale: () => 'zh', getCurrentLocale: () => 'zh' }));
 
 jest.mock('@/config/app-config', () => ({
   getExtra: () => ({ eas: { projectId: 'proj-1' } }),

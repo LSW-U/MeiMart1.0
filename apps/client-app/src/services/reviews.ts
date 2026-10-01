@@ -1,6 +1,6 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
-import i18n from '@/i18n';
+import { getCurrentLocale } from '@/i18n';
 import type { Review } from '@/types';
 
 // C-P2-5: 404 判定（axios 错误带 response.status；非 HTTP 错误一律非 404）
@@ -74,17 +74,9 @@ interface ReviewView {
   createdAt: string;
 }
 
-// Why: 后端 content 是 I18nText（按语言存的 JSON），前端 Review.content 是串。
-//      按当前 locale 取，缺则回退 en → zh → tet → 任意值，保证总有展示文本。
-function pickLocalized(content: unknown): string {
-  if (typeof content === 'string') return content;
-  if (content && typeof content === 'object') {
-    const obj = content as LocaleText;
-    const locale = (i18n.language as string | undefined) ?? 'en';
-    return obj[locale] ?? obj.en ?? obj.zh ?? obj.tet ?? Object.values(obj)[0] ?? '';
-  }
-  return '';
-}
+// Why: 后端 content 是 I18nText（按语言存的 JSON），前端 Review.content 是 LocalizableText。
+//      批1 A4 透传（D9 删本地 pickLocalized）：原样透传由渲染层 localize() 取值，切语言即翻。
+//      mock 数据 content 是纯串（LocalizableText 兼容 string 直通语义）。
 
 // Why: 后端 ReviewView → 前端 Review（字段对齐 + content 本地化）。
 //      isVerified 后端无对应字段，但 createReview 校验订单归属+已送达，提交者必为购买者 → 恒 true。
@@ -97,7 +89,7 @@ function mapReviewView(r: ReviewView): Review {
     userName: r.userName,
     avatarUrl: r.avatarUrl ?? undefined,
     rating: r.rating,
-    content: pickLocalized(r.content),
+    content: (r.content ?? {}) as Review['content'],
     images: r.images,
     isVerified: true,
     anonymous: r.anonymous,
@@ -185,7 +177,10 @@ export const reviewsApi = {
         userId: input.userId ?? 'me',
         userName: input.userName ?? 'You',
         rating: input.rating,
-        content: input.content,
+        // 原因：批1 A4 透传后 Review.content 是 LocalizableText（string|Record），提交入参是
+        // 纯串——LocalizableText 兼容 string 运行时语义，但 TS 判 string→Record 分支不重叠，
+        // 经 unknown 单跳桥接（规则 36 允许写法）
+        content: input.content as unknown as Review['content'],
         tags: input.tags,
         images: input.images,
         // Why: 评价入口在订单详情，提交者必然购买过 -> 自动 verified（§8.6 绿色 ✓）
@@ -201,7 +196,7 @@ export const reviewsApi = {
     //      userId/userName 后端从 JWT + order.user 派生，不传。
     //      anonymous：决策 2，RB1 就绪后后端 DTO 加此字段透传存储；当前 RB1 未做时后端忽略。
     //      tags：B5 修复，RB1 就绪后 Review.tags 列存储；当前 RB1 未做时后端忽略，前端先传不阻塞。
-    const locale = (i18n.language as string | undefined) ?? 'en';
+    const locale = getCurrentLocale();
     const res = await api.post<ReviewView>(`/client/orders/${input.orderId}/review`, {
       rating: input.rating,
       content: { [locale]: input.content },

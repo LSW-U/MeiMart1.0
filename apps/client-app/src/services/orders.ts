@@ -1,7 +1,6 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
 import type { CartItem, Order, OrderStatus } from '@/types';
-import { getCurrentLocale } from '@/i18n';
 
 // Why: 后端 CancelOrderRequest 契约 reason 必填（z.string().min(1).max(200)），
 // 不传 body 触发 ZodValidationPipe 400。当前 UI 无取消原因选择（HTML 原型无 cancel UI），
@@ -90,24 +89,15 @@ interface CreateOrderPayload {
   paymentMethod: string;
 }
 
-function pickLocalized(raw: unknown, fallback = ''): string {
-  if (!raw || typeof raw !== 'object') return fallback;
-  const record = raw as Record<string, string>;
-  const locale = getCurrentLocale();
-  return record[locale] ?? record.en ?? record.zh ?? Object.values(record)[0] ?? fallback;
-}
-
 // Why: 后端 OrderItem 扁平结构，前端 CartItem 需要嵌套 Product；构造最小 Product 避免再 fetch 详情
 // 兜底：字段缺失时用默认值，防 NaN/undefined 渲染崩溃
+// 批1 A4 透传（D9 删本地 pickLocalized）：productName 多语 JSON 原样透传，渲染层 localize() 取值
 function transformOrderItem(raw: OrderItemRaw): CartItem {
   return {
     id: raw.id ?? '',
     product: {
       id: raw.productId ?? '',
-      name: {
-        zh: pickLocalized(raw.productName),
-        en: pickLocalized(raw.productName),
-      } as CartItem['product']['name'],
+      name: (raw.productName ?? {}) as CartItem['product']['name'],
       price: (raw.unitPrice ?? 0) / 100,
       image: raw.productImage ?? '',
       category: '',

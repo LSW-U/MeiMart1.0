@@ -2,6 +2,7 @@ import { memo, createContext, useContext, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useLocalizer } from '@/i18n';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
 import { getRelativeTimeUnit, formatPrice } from '@/utils/format';
 import { openExternalLink } from '@/utils/linking';
@@ -89,6 +90,8 @@ export const NotificationItem = memo(function NotificationItem({
 }: NotificationItemProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  // 原因：批1 A4 透传后 title/body 是 LocalizableText，渲染层 localize() 取值
+  const localize = useLocalizer();
   const relTime = useRelTime(notification.createdAt);
   const read = notification.read;
   const data = notification.data;
@@ -157,7 +160,7 @@ export const NotificationItem = memo(function NotificationItem({
       onPress={onPress ? () => onPress(notification) : undefined}
       accessibilityRole="button"
       accessibilityLabel={t('notifications.a11y.notificationItem', {
-        title: notification.title,
+        title: localize(notification.title),
         time: relTime,
       })}
     >
@@ -177,7 +180,7 @@ export const NotificationItem = memo(function NotificationItem({
             ]}
             numberOfLines={1}
           >
-            {notification.title}
+            {localize(notification.title)}
           </Text>
           {!read && <View style={[styles.dot, { backgroundColor: colors.error }]} />}
         </View>
@@ -189,7 +192,7 @@ export const NotificationItem = memo(function NotificationItem({
           ]}
           numberOfLines={2}
         >
-          {notification.body}
+          {localize(notification.body)}
         </Text>
 
         {/* —— 配送进度条（D4：progress 0-3）—— */}

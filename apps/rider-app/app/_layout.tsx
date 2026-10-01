@@ -6,6 +6,9 @@ import { useEffect, useRef } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { setOnUnauthorized } from '../src/services/api';
+// 批1（D9）：i18n-core locale 运行时注入（getCurrentLanguage 为事实源）——模块加载即生效，
+// 服务层（upload.ts 等）currentLocale() 才有值；副作用 import，保留在前
+import '../src/i18n';
 import { AppProviders } from '../src/providers/AppProviders';
 import { useAuth } from '../src/hooks/useAuth';
 import { LanguageProvider } from '../src/i18n/LanguageContext';

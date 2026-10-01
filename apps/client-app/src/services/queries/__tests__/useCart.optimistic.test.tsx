@@ -1,8 +1,7 @@
 import { act, waitFor } from '@testing-library/react-native';
 import type { Cart, Product } from '@/types';
 import { cartApi } from '@/services/cart';
-// Why: CART_QUERY_KEY 是 factory（locale 入 key，i18n 缓存修复）；测试环境未初始化 i18n，
-//      useLocale() 走 fallback 'en'，故断言用 CART_QUERY_KEY('en') 与 hook 内 key 一致
+// Why: 批1 queryKey 去 locale（透传后切语言不需换 key 重查）——断言用无参 factory 与 hook 内 key 一致
 import {
   CART_QUERY_KEY,
   useToggleCartItem,
@@ -44,7 +43,7 @@ const baseCart: Cart = {
 function setup() {
   (cartApi.getCart as jest.Mock).mockResolvedValue(baseCart);
   const queryClient = createTestQueryClient();
-  queryClient.setQueryData(CART_QUERY_KEY('en'), baseCart);
+  queryClient.setQueryData(CART_QUERY_KEY(), baseCart);
   return queryClient;
 }
 
@@ -60,7 +59,7 @@ describe('useCart 乐观更新', () => {
       await result.current.mutateAsync({ itemId: 'ci2', selected: true });
     });
 
-    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY('en'));
+    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY());
     expect(cart?.items[1].selected).toBe(true);
     expect(cart?.totalItems).toBe(5);
     expect(cart?.totalPrice).toBe(34.8); // 9.9*2 + 5*3
@@ -80,7 +79,7 @@ describe('useCart 乐观更新', () => {
     });
 
     await waitFor(() => {
-      const cart = qc.getQueryData<Cart>(CART_QUERY_KEY('en'));
+      const cart = qc.getQueryData<Cart>(CART_QUERY_KEY());
       expect(cart?.items[1].selected).toBe(false);
     });
   });
@@ -94,7 +93,7 @@ describe('useCart 乐观更新', () => {
       await result.current.mutateAsync({ itemId: 'ci1', updates: { quantity: 5 } });
     });
 
-    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY('en'));
+    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY());
     expect(cart?.items[0].quantity).toBe(5);
     expect(cart?.totalItems).toBe(5);
     expect(cart?.totalPrice).toBe(49.5);
@@ -109,7 +108,7 @@ describe('useCart 乐观更新', () => {
       await result.current.mutateAsync('ci1');
     });
 
-    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY('en'));
+    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY());
     expect(cart?.items.find((i) => i.id === 'ci1')).toBeUndefined();
     expect(cart?.items).toHaveLength(1);
   });
@@ -125,7 +124,7 @@ describe('useCart 乐观更新', () => {
     });
     expect(cartApi.removeItems).toHaveBeenCalledTimes(1);
     expect(cartApi.removeItems).toHaveBeenCalledWith(['ci1', 'ci2']);
-    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY('en'));
+    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY());
     expect(cart?.items).toHaveLength(0);
     expect(cart?.totalItems).toBe(0);
   });
@@ -137,7 +136,7 @@ describe('useCart 乐观更新', () => {
     await act(async () => {
       await result.current.mutateAsync(['ci1']).catch(() => undefined);
     });
-    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY('en'));
+    const cart = qc.getQueryData<Cart>(CART_QUERY_KEY());
     expect(cart?.items).toHaveLength(2); // 回滚回 baseCart
   });
 });

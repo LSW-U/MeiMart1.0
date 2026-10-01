@@ -18,7 +18,7 @@
  */
 import { Platform } from 'react-native';
 import { api, isMockMode } from './api';
-import { getCurrentLocale } from '@/i18n';
+import { currentLocale } from '@/i18n';
 import { getExtra } from '@/config/app-config';
 
 // Why: 延迟 require 而非顶层 import —— expo-notifications 需要原生模块，
@@ -49,9 +49,10 @@ function currentPlatform(): DevicePlatform {
   return 'WEB';
 }
 
-/** locale 快照（契约枚举 en/zh/id/pt/tet；客户端 SUPPORTED_LOCALES 是 zh/en/tet/pt，直传合法值） */
+/** locale 快照（契约枚举 en/zh/id/pt/tet；客户端 SUPPORTED_LOCALES 是 zh/en/tet/pt，直传合法值）
+ * P3-2：改调 i18n-core 单源 currentLocale（@/i18n re-export），与 service 层其他读点同通道 */
 function currentLocaleSnapshot(): 'en' | 'zh' | 'id' | 'pt' | 'tet' {
-  return getCurrentLocale();
+  return currentLocale();
 }
 
 /** 通知权限：已授权直接过；未决/拒绝则请求一次（Android 13+ 运行时权限 / iOS 弹窗） */

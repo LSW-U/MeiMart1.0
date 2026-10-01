@@ -15,6 +15,7 @@ import { HorizontalProductCard } from '@/components/business/HorizontalProductCa
 import { useCategories } from '@/services/queries/useCatalog';
 import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
 import { useAddToCart } from '@/services/queries/useCart';
+import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import { resolveBadges } from '@/utils/resolveBadges';
 import type { Product } from '@/types';
@@ -31,7 +32,6 @@ export default function ProductListPage() {
   const { t } = useTranslation();
   const { category } = useLocalSearchParams<{ category?: string }>();
   const { data: categories } = useCategories();
-  const currentCategory = categories?.find((c) => c.id === category);
   // Why: P9 - 页面定位是「Local Bestsellers 榜单页」，标题恒定；分类是子筛选（active pill 表明当前分类）
   const headerTitle = t('product.localBestsellers');
 
@@ -49,14 +49,17 @@ export default function ProductListPage() {
   };
 
   // Category Bar: "All" + 真实分类名
-  const categoryBar = [ALL_CATEGORY, ...(categories?.map((c) => c.name) ?? [])];
+  // 原因：批1 A4 透传后 Category.name 是 LocalizableText——id 映射表保持语义稳定
+  //（显示走 localize()，跳转/选中判定走 id，不再以本地化串做匹配键）
+  const localize = useLocalizer();
+  const categoryBar = [ALL_CATEGORY, ...(categories?.map((c) => c.id) ?? [])];
   // Why: Category Bar 点击切换 URL category（保持 URL 驱动，不引入本地 state）
   const switchCategory = (cat: string) => {
     if (cat === ALL_CATEGORY) {
       router.replace('/product/list');
       return;
     }
-    const target = categories?.find((c) => c.name === cat);
+    const target = categories?.find((c) => c.id === cat);
     if (target) {
       router.replace({ pathname: '/product/list', params: { category: target.id } });
     }
@@ -83,9 +86,7 @@ export default function ProductListPage() {
       >
         <StatusBarConfig />
         <Header title={headerTitle} />
-        <ErrorState
-          message={t('errors.products', { defaultValue: 'Failed to load products' })}
-        />
+        <ErrorState message={t('errors.products', { defaultValue: 'Failed to load products' })} />
       </SafeAreaWrapper>
     );
   }
@@ -109,8 +110,6 @@ export default function ProductListPage() {
     );
   }
 
-
-
   return (
     <SafeAreaWrapper
       edges={['top', 'bottom']}
@@ -132,7 +131,11 @@ export default function ProductListPage() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.categoryRow}>
             {categoryBar.map((cat) => {
-              const active = cat === ALL_CATEGORY ? !category : cat === currentCategory?.name;
+              const active = cat === ALL_CATEGORY ? !category : cat === category;
+              const label =
+                cat === ALL_CATEGORY
+                  ? t('common.all')
+                  : localize(categories?.find((c) => c.id === cat)?.name ?? '');
               return (
                 <Pressable
                   key={cat}
@@ -148,12 +151,14 @@ export default function ProductListPage() {
                   ]}
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
-                  accessibilityLabel={cat === ALL_CATEGORY ? t('common.all') : t('category.chipA11y', { name: cat })}
+                  accessibilityLabel={
+                    cat === ALL_CATEGORY ? t('common.all') : t('category.chipA11y', { name: label })
+                  }
                 >
                   <Text
                     style={[styles.categoryText, { color: active ? ON_PRIMARY : colors.primary }]}
                   >
-                    {cat === ALL_CATEGORY ? t('common.all') : cat}
+                    {label}
                   </Text>
                 </Pressable>
               );

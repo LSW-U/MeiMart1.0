@@ -28,6 +28,7 @@ import { toast } from '@/store/toastStore';
 import { useRecentSearches } from '@/hooks/useRecentSearches';
 import type { Product } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { useLocalizer } from '@/i18n';
 
 // Why: 红底白字固定（header primary 底 + Filter Tag active 底 + 热搜榜 rank 1/2），dark 不变
 //   同 home.tsx ON_PRIMARY 模式（P6 审查 Q1），不用 colors['on-primary']（dark 翻 #690005 裂色）
@@ -97,9 +98,11 @@ export default function SearchIndexPage() {
   const debouncedQuery = useDebounce(query, 300);
   const showSuggest = suggestOpen && query.trim().length >= 2;
   // Why: P7 I7 - Filter Tags 改 useCategories() 动态分类，首项 "All"（t('common.all')）
+  // 原因：批1 A4 透传后 name 是 LocalizableText——tag 用 id 作 key/匹配键，显示走 localize()
+  const localize = useLocalizer();
   const { data: categories } = useCategories();
-  const filterTags = [t('common.all'), ...(categories?.map((c) => c.name) ?? [])];
-  const [activeTag, setActiveTag] = useState(t('common.all'));
+  const filterTags = ['__ALL__', ...(categories?.map((c) => c.id) ?? [])];
+  const [activeTag, setActiveTag] = useState('__ALL__');
   // Why: P7 F1 - Recent Searches AsyncStorage 持久化（useRecentSearches hook，最多 10 条去重最新在前）
   const { recentSearches, addRecent, removeRecent, clearRecent } = useRecentSearches();
   // Why: P7 §2.4 - Recommended 加购（MasonryProductCard onAddToCart，同 home.tsx 模式）
@@ -265,6 +268,10 @@ export default function SearchIndexPage() {
               <View style={styles.filterTagsRow}>
                 {filterTags.map((tag) => {
                   const active = tag === activeTag;
+                  const label =
+                    tag === '__ALL__'
+                      ? t('common.all')
+                      : localize(categories?.find((c) => c.id === tag)?.name ?? '');
                   return (
                     <Pressable
                       key={tag}
@@ -280,7 +287,7 @@ export default function SearchIndexPage() {
                             },
                       ]}
                       accessibilityRole="button"
-                      accessibilityLabel={t('search.a11y.filterTag', { tag })}
+                      accessibilityLabel={t('search.a11y.filterTag', { tag: label })}
                       accessibilityState={{ selected: active }}
                     >
                       <Text
@@ -289,7 +296,7 @@ export default function SearchIndexPage() {
                           { color: active ? ON_PRIMARY : colors.primary },
                         ]}
                       >
-                        {tag}
+                        {label}
                       </Text>
                     </Pressable>
                   );

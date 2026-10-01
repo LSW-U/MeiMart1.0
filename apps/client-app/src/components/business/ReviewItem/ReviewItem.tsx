@@ -3,6 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/format';
+import { useLocalizer } from '@/i18n';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
 import type { ReviewItemProps } from './ReviewItem.types';
 
@@ -10,6 +11,8 @@ import type { ReviewItemProps } from './ReviewItem.types';
 export const ReviewItem = memo(function ReviewItem({ review, onPress, testID }: ReviewItemProps) {
   const { colors } = useTheme();
   const { t, i18n } = useTranslation();
+  // 原因：批1 A4 透传后 Review.content 是 LocalizableText，渲染层 localize() 取值
+  const localize = useLocalizer();
   // P15 RB1：anonymous=true 时展示「匿名用户」（后端返真实 userName + anonymous 标记，前端展示层隐藏）
   const displayName = review.anonymous ? t('review.anonymousDisplayName') : review.userName;
   const avatarLetter = review.anonymous ? '?' : displayName.slice(0, 1).toUpperCase();
@@ -56,7 +59,9 @@ export const ReviewItem = memo(function ReviewItem({ review, onPress, testID }: 
           </View>
         </View>
       </View>
-      <Text style={[textStyle('body-md'), { color: colors['on-surface'] }]}>{review.content}</Text>
+      <Text style={[textStyle('body-md'), { color: colors['on-surface'] }]}>
+        {localize(review.content)}
+      </Text>
       {review.images && review.images.length > 0 && (
         <View style={styles.imageRow}>
           {review.images.slice(0, 4).map((uri) => (

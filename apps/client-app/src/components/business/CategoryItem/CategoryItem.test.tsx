@@ -10,6 +10,13 @@ jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }),
 }));
 
+// Why: 组件用 useLocalizer（@/i18n），测试环境未初始化 i18n——mock 纯串直通语义
+jest.mock('@/i18n', () => ({
+  __esModule: true,
+  useLocalizer: () => (text: unknown) =>
+    typeof text === 'string' ? text : ((text as Record<string, string>)?.en ?? ''),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );

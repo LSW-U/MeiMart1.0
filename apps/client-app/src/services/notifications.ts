@@ -1,6 +1,5 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
-import { getCurrentLocale } from '@/i18n';
 import type { Notification, NotificationType } from '@/types';
 
 // Why: 后端 Notification 字段名/类型与前端有差异（多语言 Json、type 大写枚举、isRead vs read），service 层做转换避免改组件代码。
@@ -22,17 +21,13 @@ const TYPE_MAP: Record<string, NotificationType> = {
   SYSTEM: 'system',
 };
 
-function pickLocalized(raw: Record<string, string> | null | undefined, fallback = ''): string {
-  if (!raw) return fallback;
-  const locale = getCurrentLocale();
-  return raw[locale] ?? raw.en ?? raw.zh ?? Object.values(raw)[0] ?? fallback;
-}
-
+// Why: 跨端基建统一 批1（A4 透传 + D9 删本地 pickLocalized）——多语 JSON 原样透传，
+// 渲染层 localize() 取值，切语言不再依赖 queryKey 重拉。mock 数据 title/body 是纯串（string 直通）。
 function transformNotification(raw: NotificationRaw): Notification {
   return {
     id: raw.id,
-    title: pickLocalized(raw.title),
-    body: pickLocalized(raw.content),
+    title: (raw.title ?? {}) as Notification['title'],
+    body: (raw.content ?? {}) as Notification['body'],
     type: TYPE_MAP[raw.type] ?? 'system',
     read: raw.isRead,
     createdAt: raw.createdAt,
@@ -51,7 +46,11 @@ export interface NotificationPreferences {
   system: boolean;
 }
 
-const DEFAULT_PREFS: NotificationPreferences = { orderUpdates: true, promotions: true, system: true };
+const DEFAULT_PREFS: NotificationPreferences = {
+  orderUpdates: true,
+  promotions: true,
+  system: true,
+};
 
 // Why: mock 偏好用模块级变量模拟（决策 3）——会话级 UI 态不进 mockDb（落盘无意义且要写迁移）
 let mockPrefs: NotificationPreferences = { ...DEFAULT_PREFS };
@@ -59,7 +58,9 @@ let mockPrefs: NotificationPreferences = { ...DEFAULT_PREFS };
 export const notificationsApi = {
   async list(onlyUnread = false): Promise<Notification[]> {
     if (isMockMode) {
-      const filtered = onlyUnread ? mockDb.notifications.filter((n) => !n.read) : mockDb.notifications;
+      const filtered = onlyUnread
+        ? mockDb.notifications.filter((n) => !n.read)
+        : mockDb.notifications;
       return mockResponse(filtered);
     }
     const res = await api.get<NotificationRaw[]>('/client/notifications', {

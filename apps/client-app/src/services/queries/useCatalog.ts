@@ -1,14 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { catalogApi } from '@/services/catalog';
-import { useLocale } from '@/i18n';
 
-// Why: 分类/-banner 名称在 service 层按当前语言烘焙（pickLocalized），若 queryKey 不含 locale，
-//      切语言后 30min staleTime 内一直命中旧语言缓存（用户反馈：分类名不跟随切换）。
-//      locale 入 key → 切语言即视为新查询，重新拉取/转换；旧语言条目随后被 gc 回收。
+// Why: 批1 A4 透传（裁决 B）后分类/banner 名称不再在 service 层烘焙（原样透传多语 Record），
+//      渲染层 localize() 取值——切语言无需换 key 重查，key 去掉 locale 段
+//      （消灭同一数据按语言分裂的 N 份缓存，也顺带消除 staleTime 内旧语言命中问题）。
 export function useCategories() {
-  const locale = useLocale();
   return useQuery({
-    queryKey: ['categories', locale],
+    queryKey: ['categories'],
     queryFn: () => catalogApi.getCategories(),
     staleTime: 30 * 60 * 1000,
     networkMode: 'offlineFirst',
@@ -16,9 +14,8 @@ export function useCategories() {
 }
 
 export function useBanners() {
-  const locale = useLocale();
   return useQuery({
-    queryKey: ['banners', locale],
+    queryKey: ['banners'],
     queryFn: () => catalogApi.getBanners(),
     staleTime: 10 * 60 * 1000,
     networkMode: 'offlineFirst',

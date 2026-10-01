@@ -4,11 +4,15 @@
  */
 import type { ComponentProps } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { AppLocale } from '@/i18n';
 
 export type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
-export type LocalizableText = Record<AppLocale, string>;
+// 原因：批1 A4 透传（裁决 B）——后端 I18nText 键集是 en/zh/id/pt/tet（5 语），
+// 且 mock JSON 字面量是纯串；窄键集类型会拒收两者。
+// 放宽为「纯串 | 任意串键 Record」与 i18n-core LocalizedText 对齐（pickLocalized 纯串直通）。
+// ⚠️ 契约（审查 P2-2）：取值必须走 localize()/pickLocalized()（回退链 locale→en→zh→首值），
+// 禁止下标直取（text['zh'] / Object.keys(text)）——键集不受类型约束，直取可能命中缺失键或 'id'。
+export type LocalizableText = string | Record<string, string>;
 
 export function toIconName(name: string): IconName {
   return name as IconName;
@@ -193,7 +197,8 @@ export interface User {
 
 export interface Category {
   id: string;
-  name: string;
+  // Why: 跨端基建统一 批1（A4 透传）——后端多语 JSON 原样透传，渲染层 localize() 取值（原 service 层按当前语言烘焙成 string）
+  name: LocalizableText;
   icon: string;
   /** 背景色（如 '#ecfdf5' for emerald-50），用于圆形头像底色 */
   color?: string;
@@ -214,8 +219,8 @@ export interface Banner {
   id: string;
   /** 背景图片 URL（叠加在 gradient 之上，opacity 较低） */
   image: string;
-  /** 主标题（与 HTML 的 `<h2>` 对应） */
-  title: string;
+  /** 主标题（与 HTML 的 `<h2>` 对应）；批1 A4 透传：多语 JSON，渲染层 localize() 取值 */
+  title: LocalizableText;
   /** 副标题 / 描述（可选） */
   description?: string;
   /** 行动号召按钮文字（如 "SHOP NOW"），可选 */
@@ -229,8 +234,9 @@ export type NotificationType = 'order' | 'promotion' | 'system';
 
 export interface Notification {
   id: string;
-  title: string;
-  body: string;
+  // Why: 批1 A4 透传——后端多语 JSON 原样透传，渲染层 localize() 取值（原 service 层烘焙成 string）
+  title: LocalizableText;
+  body: LocalizableText;
   type: NotificationType;
   read: boolean;
   createdAt: string;
@@ -248,7 +254,8 @@ export interface Review {
   userId: string;
   userName: string;
   rating: number;
-  content: string;
+  // Why: 批1 A4 透传——后端 I18nText JSON 原样透传，渲染层 localize() 取值（原 service 层烘焙成 string）
+  content: LocalizableText;
   images?: string[];
   // Why: §8 评论模块 — 评价标签（quality/fresh 等，复用 review.tsx 的 6 标签体系）
   tags?: string[];

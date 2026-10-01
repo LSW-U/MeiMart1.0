@@ -21,15 +21,12 @@ interface FavoriteRaw {
 }
 
 function transformFavorite(raw: FavoriteRaw): Product {
-  // Why: ProductSummary.price 是分（继承 priceMin），转元 /100；name 多语言结构兼容
+  // Why: ProductSummary.price 是分（继承 priceMin），转元 /100
   // 兜底：字段缺失时用默认值，防 NaN/undefined
-  const nameRecord = (raw.product?.name ?? {}) as Record<string, string>;
+  // 批1 A4 透传：name 多语 JSON 原样透传（原 {zh,en} 双键互兜底烘焙已废），渲染层 localize() 取值
   return {
     id: raw.product?.id ?? '',
-    name: {
-      zh: nameRecord.zh ?? nameRecord.en ?? '',
-      en: nameRecord.en ?? nameRecord.zh ?? '',
-    } as Product['name'],
+    name: (raw.product?.name ?? {}) as Product['name'],
     price: (raw.product?.price ?? 0) / 100,
     image: raw.product?.image ?? '',
     category: '',

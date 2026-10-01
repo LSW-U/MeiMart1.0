@@ -1,6 +1,5 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
-import { getCurrentLocale } from '@/i18n';
 import type { Banner, Category } from '@/types';
 
 // Why: 后端 Category/Banner 字段名与前端类型不同，service 层做转换避免改组件代码。
@@ -27,16 +26,14 @@ interface BannerRaw {
   updatedAt: string;
 }
 
-function pickLocalized(raw: Record<string, string> | null | undefined, fallback = ''): string {
-  if (!raw) return fallback;
-  const locale = getCurrentLocale();
-  return raw[locale] ?? raw.en ?? raw.zh ?? Object.values(raw)[0] ?? fallback;
-}
+// Why: 跨端基建统一 批1（A4 透传 + D9 删本地 pickLocalized）——多语 JSON 原样透传，
+// 渲染层 localize()（@/i18n → @meimart/i18n-core）取值，切语言不再依赖 queryKey 重拉。
+// mock 数据 name/title 是纯串（LocalizableText 兼容 string 直通语义）。
 
 function transformCategory(raw: CategoryRaw): Category {
   return {
     id: raw.id,
-    name: pickLocalized(raw.name),
+    name: (raw.name ?? {}) as Category['name'],
     // Why: iconUrl 统一为图片 URL 契约（后端 W7-ext-H1 已清 emoji）
     // icon 字段废弃，统一走 image；空 URL -> undefined 走 fallback 'tag' 图标
     icon: '',
@@ -51,7 +48,7 @@ function transformBanner(raw: BannerRaw): Banner {
   return {
     id: raw.id,
     image: raw.imageUrl,
-    title: pickLocalized(raw.alt),
+    title: (raw.alt ?? {}) as Banner['title'],
   };
 }
 

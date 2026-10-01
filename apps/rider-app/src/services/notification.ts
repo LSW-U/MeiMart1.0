@@ -1,8 +1,9 @@
+import { pickLocalized, currentLocale } from '@meimart/i18n-core';
 import type { NotificationItem, NotificationCategory } from '@/src/types/notification';
 
 import { SAFE_ID_PATTERN } from '../utils/safe-deep-link';
 import { api, isMockMode } from './api';
-import { getCurrentLanguage, riderSettingsApi } from './settings';
+import { riderSettingsApi } from './settings';
 
 // ── 后端契约层（批C C1：isMockMode 开关接入，真模式走 /rider/notifications 四端点） ──
 
@@ -26,18 +27,12 @@ interface NotificationRaw {
   createdAt: string;
 }
 
-// 多语言 pick：当前语言 → en → zh → 首值（方案v2 §3.5 rider，对齐 client-app pickLocalized 语义）
-// N5（后续批）：改接 settings 语言运行时（getCurrentLanguage 模块态）——原 localStorage
-// 手读在 native（无 localStorage）恒回退 en（审查 P3-2），真机通知标题语言错误。
-function currentLanguage(): string {
-  return getCurrentLanguage();
-}
-
-function pickLocalized(raw: Record<string, string> | null | undefined): string {
-  if (!raw) return '';
-  const locale = currentLanguage();
-  return raw[locale] ?? raw.en ?? raw.zh ?? Object.values(raw)[0] ?? '';
-}
+// 批1（D10 单源收口）：本地 pickLocalized/currentLanguage 已删——titleKey/messageKey
+// 直接调 @meimart/i18n-core pickLocalized（回退链 locale→en→zh→首值，空值回退 ''），
+// 当前语言经 i18n-core currentLocale()（rider 在 src/i18n/index.ts setLocaleRuntime
+// 注入 getCurrentLanguage）。后端字段可能 null → 转 undefined 走 fallback。
+const pickField = (raw: Record<string, string> | null | undefined): string =>
+  pickLocalized(raw ?? undefined, currentLocale(), '');
 
 // data 透传键（方案v2 §3.5：taskId/orderId/amount/withdrawId）
 const DATA_KEYS = [
@@ -64,8 +59,8 @@ function transformNotification(raw: NotificationRaw): NotificationItem {
     category: CATEGORY_MAP[raw.type] ?? 'system',
     // 后端返回的是多语言原文（非 i18n key）——沿用 NotificationItem 字段名，值换烘焙文本，
     // 页面 t(titleKey) 对普通文本是恒等回退（useTranslation 字典 miss 回退原串），零组件改动
-    titleKey: pickLocalized(raw.title),
-    messageKey: pickLocalized(raw.content),
+    titleKey: pickField(raw.title),
+    messageKey: pickField(raw.content),
     vars,
     createdAt: new Date(raw.createdAt).getTime(),
     read: raw.isRead,

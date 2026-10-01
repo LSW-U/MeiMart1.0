@@ -30,14 +30,17 @@ interface PaymentMethodApiItem {
 }
 
 // Why: 后端多语言 JSON 是 5 语（en/zh/id/pt/tet），前端 LocalizableText 是 4 语（zh/en/tet/pt），
-// 收敛键集避免 'id' 键泄漏进 UI 层；缺键回退空串（localizer 会再 fallback en）
+// 收敛键集避免 'id' 键泄漏进 UI 层。
+// P2-1 修复：只拷有值键——后端某语言键缺失时不写入该键，让 i18n-core pickLocalized
+// 回退链（locale→en→zh→首值，跳过空串）能正常穿透兜底；原「缺键填 ''」会把空串
+// 当合法值堵死回退链，导致该语言下渲染空白。回退链只在四语全缺时才碰 id 键
+// （i18n-core 键集收敛单测锚定），与本地化键集收敛的语义互补不冲突。
 function toLocalizable(record: Record<string, string>): LocalizableText {
-  return {
-    en: record.en ?? '',
-    zh: record.zh ?? '',
-    tet: record.tet ?? '',
-    pt: record.pt ?? '',
-  };
+  return Object.fromEntries(
+    (['en', 'zh', 'tet', 'pt'] as const)
+      .filter((k) => typeof record[k] === 'string' && record[k].length > 0)
+      .map((k) => [k, record[k]]),
+  );
 }
 
 function toUiMethod(item: PaymentMethodApiItem): PaymentMethod {

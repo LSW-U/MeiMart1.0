@@ -11,9 +11,9 @@ import { createTestQueryClient, renderHookWithClient } from './testHarness';
 
 jest.mock('@/services/notifications');
 
-// Why: 列表 key 含 locale 维度（i18n 缓存修复），测试环境 i18n 默认 en
-const ALL_KEY = notificationsListKey('en', false);
-const UNREAD_KEY = notificationsListKey('en', true);
+// Why: 批1 queryKey 去 locale（透传后切语言不需换 key 重查）
+const ALL_KEY = notificationsListKey(false);
+const UNREAD_KEY = notificationsListKey(true);
 
 const baseNotifications: Notification[] = [
   {

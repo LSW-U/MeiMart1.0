@@ -2,6 +2,7 @@ import { memo, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useLocalizer } from '@/i18n';
 import { useTheme, textStyle, spacing } from '@/theme';
 import { toIconName } from '@/types';
 import type { CategoryItemProps, CategoryItemSize } from './CategoryItem.types';
@@ -24,6 +25,8 @@ export const CategoryItem = memo(function CategoryItem({
 }: CategoryItemProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  // 原因：批1 A4 透传后 Category.name 是 LocalizableText，渲染层 localize() 取值
+  const localize = useLocalizer();
   const dims = SIZE_MAP[size];
   // Why: C2b - 图标盒白底（替代 secondary-container / category.color），无图时图标用 primary 色
   const bgColor = colors['surface-container-lowest'];
@@ -45,7 +48,7 @@ export const CategoryItem = memo(function CategoryItem({
       style={({ pressed }) => [styles.container, pressed && styles.pressed]}
       onPress={onPress ? () => onPress(category) : undefined}
       accessibilityRole="button"
-      accessibilityLabel={t('product.a11y.category', { name: category.name })}
+      accessibilityLabel={t('product.a11y.category', { name: localize(category.name) })}
     >
       <View
         style={[
@@ -101,7 +104,7 @@ export const CategoryItem = memo(function CategoryItem({
         ]}
         numberOfLines={1}
       >
-        {category.name}
+        {localize(category.name)}
       </Text>
     </Pressable>
   );
