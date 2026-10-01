@@ -30,6 +30,10 @@ module.exports = {
         // index.js（better-sqlite3 通道，方案v2 N2 已验证），真库集成测试才可跑。
         // 相对 require './makeDispatcher' 不带包前缀，按后缀匹配才能拦到
         'makeDispatcher$': '<rootDir>/../../node_modules/@nozbe/watermelondb/adapters/sqlite/makeDispatcher/index.js',
+        // 批3 A10/D12：env 迁 expo-constants extra 后，rn project（node 环境）也需桩
+        // expo-constants（真包 ESM + 原生宿主必炸；web project 的同名映射见下）。
+        // 桩默认值=「本地开发缺省」语义（USE_MOCK 缺省 → mock），与迁移前 process.env 行为一致。
+        '^expo-constants$': '<rootDir>/src/test/expo-constants.rn-mock.js',
       },
       // pnpm 布局兼容：依赖真身在 node_modules/.pnpm/<pkg>@<ver>/node_modules/<pkg>/ 深路径。
       // (\.pnpm/)? 可选段让放行列表同时命中「包根」（.pnpm 目录名的 @scope+name@ver 前缀）
@@ -91,8 +95,9 @@ module.exports = {
         '^expo-image-picker$': '<rootDir>/src/test/expo-image-picker.mock.js',
         // T1 审查 P3-1（tasks 页测试）：babel-preset-expo 把 process.env.EXPO_PUBLIC_*
         // 编译成 require('expo/virtual/env')（ESM 发布，web project 不 transform →
-        // "Unexpected token 'export'"）。页面级测试经 TaskDetailHeader→api.ts 首次
-        // 拉进该链。桩成 CJS env 透传 process.env（与真包语义一致）。
+        // "Unexpected token 'export'"）。桩成 CJS env 透传 process.env（与真包语义一致）。
+        // 批3 A10 后 rider 源码已无 process.env.EXPO_PUBLIC_* 直读（迁 expo-constants
+        // extra），本映射保留防第三方依赖残留烘焙引用，非主通道。
         '^expo/virtual/env$': '<rootDir>/src/test/expo-virtual-env.mock.js',
         // 批C 设备跟随：settings.ts 顶层 import expo-localization（ESM 发布 + 原生宿主，
         // jsdom 不 transform → "Cannot use import statement outside module"）。桩成
@@ -104,6 +109,8 @@ module.exports = {
         '^expo-notifications$': '<rootDir>/src/test/expo-notifications.mock.js',
         // 批C C3：push-token.ts 读 Constants.expoConfig（ESM + requireOptionalNativeModule，
         // jsdom 无宿主）。桩成 expoConfig 可控 mock。
+        // 批3 A10/D12：api/ws/sentry 也读 expoConfig.extra 了——原 expo-virtual-env.mock.js
+        // （expo/virtual/env 桩）失去消费方，改由本 mock 承担（__setExtra 可控 extra）。
         '^expo-constants$': '<rootDir>/src/test/expo-constants.mock.js',
         // 批C C3：push-token.ts 用 Device.isDevice 判模拟器（ESM + 原生宿主）。桩成可控 mock。
         '^expo-device$': '<rootDir>/src/test/expo-device.mock.js',

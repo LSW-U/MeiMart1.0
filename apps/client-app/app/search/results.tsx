@@ -118,6 +118,10 @@ export default function SearchResultsPage() {
     router.setParams({ q: trimmed });
   };
 
+  // 批3 P2-2：卡片签名 (product)=>void，直传稳定 handler（消灭内联箭头）
+  const handleCardPress = useCallback((p: Product) => router.push(`/product/${p.id}`), []);
+  const handleCardAdd = handleAddToCart;
+
   // P8-6: Recommended 渲染抽函数（结果分支 !hasNextPage + empty 分支共用）
   const renderRecommended = () =>
     recommendList.length > 0 ? (
@@ -132,8 +136,8 @@ export default function SearchResultsPage() {
                 key={product.id}
                 product={product}
                 badge={resolveBadges(product, t)[0]}
-                onPress={() => router.push(`/product/${product.id}`)}
-                onAddToCart={() => handleAddToCart(product)}
+                onPress={handleCardPress}
+                onAddToCart={handleCardAdd}
               />
             ))}
           </View>
@@ -143,8 +147,8 @@ export default function SearchResultsPage() {
                 key={product.id}
                 product={product}
                 badge={resolveBadges(product, t)[0]}
-                onPress={() => router.push(`/product/${product.id}`)}
-                onAddToCart={() => handleAddToCart(product)}
+                onPress={handleCardPress}
+                onAddToCart={handleCardAdd}
               />
             ))}
           </View>

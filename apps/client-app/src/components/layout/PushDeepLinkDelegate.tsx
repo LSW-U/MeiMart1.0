@@ -15,6 +15,7 @@
  */
 import { useEffect } from 'react';
 import { router } from 'expo-router';
+import { safeRoutePush } from '@meimart/nav-core';
 import {
   getNotificationsModule,
   shouldInitPush,
@@ -36,12 +37,27 @@ export function resolveRouteFromResponse(
   return routeFromPushData(data, type);
 }
 
-function navigateFromResponse(
+/** 响应 → 路由动作（含降级与白名单），导出供单测 */
+export function navigateFromResponse(
   response: { notification: { request: { content: { data?: Record<string, unknown> } } } } | null,
 ): void {
   const { path } = resolveRouteFromResponse(response);
   // 无 data / 未知 type 降级：进通知页（任务书 B2「不报错，进通知页」）
-  router.push(path ?? NOTIFICATIONS_PAGE);
+  // 批3 A6：推送可控的 orderId/productId 动态段经 safeRoutePush 白名单（非法 id 不导航）；
+  // 静态降级目标（列表页/券页/通知页）无注入面，直接 push。
+  if (path == null) {
+    router.push(NOTIFICATIONS_PAGE);
+    return;
+  }
+  if (path.startsWith('/order/')) {
+    safeRoutePush((href) => router.push(href as never), '/order', path.slice('/order/'.length));
+    return;
+  }
+  if (path.startsWith('/product/')) {
+    safeRoutePush((href) => router.push(href as never), '/product', path.slice('/product/'.length));
+    return;
+  }
+  router.push(path);
 }
 
 export function PushDeepLinkDelegate(): null {

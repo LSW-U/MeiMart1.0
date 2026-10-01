@@ -11,6 +11,9 @@ web-build/
 .env
 .env.local
 .env.*.local
+# 批3 A9：分环境 env 文件（staging/production 密钥不入库；example 模板保留可提交）
+.env.production
+.env.staging
 !.env.example
 
 # AI tools

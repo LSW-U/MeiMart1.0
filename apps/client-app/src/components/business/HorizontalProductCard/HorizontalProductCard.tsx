@@ -32,6 +32,10 @@ export const HorizontalProductCard = memo(function HorizontalProductCard({
   const { t } = useTranslation();
   const localize = useLocalizer();
   const name = localize(product.name);
+  // 批3 P2-2：回调签名 (product) => void——内部绑 item，调用方直传稳定 handler（memo 可命中）
+  const handlePress = () => onPress(product);
+  const handleLongPress = onLongPress ? () => onLongPress(product) : undefined;
+  const handleAdd = () => onAddToCart(product);
 
   // Why: 管理态整卡单 Pressable（图片+信息+圆圈全可点，无嵌套：内层 image/name 均降级 View）；
   //      常态保持分区可点（image/name 各自 Pressable 跳详情，add 独立——P0 模式）
@@ -43,8 +47,8 @@ export const HorizontalProductCard = memo(function HorizontalProductCard({
         </View>
       ) : (
         <Pressable
-          onPress={onPress}
-          onLongPress={onLongPress}
+          onPress={handlePress}
+          onLongPress={handleLongPress}
           style={({ pressed }) => [pressed && { opacity: 0.85 }]}
           accessibilityRole="button"
           accessibilityLabel={t('product.viewItem', { name })}
@@ -78,7 +82,7 @@ export const HorizontalProductCard = memo(function HorizontalProductCard({
             </Text>
           </View>
         ) : (
-          <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+          <Pressable onPress={handlePress} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
             <Text style={[styles.name, { color: colors['on-surface'] }]} numberOfLines={2}>
               {name}
             </Text>
@@ -115,7 +119,7 @@ export const HorizontalProductCard = memo(function HorizontalProductCard({
         </View>
       ) : (
         <Pressable
-          onPress={onAddToCart}
+          onPress={handleAdd}
           disabled={addPending || addDisabled}
           style={({ pressed }) => [
             styles.addBtn,
@@ -142,8 +146,8 @@ export const HorizontalProductCard = memo(function HorizontalProductCard({
     return (
       <Pressable
         testID={testID}
-        onPress={onPress}
-        onLongPress={onLongPress}
+        onPress={handlePress}
+        onLongPress={handleLongPress}
         style={({ pressed }) => [
           styles.card,
           {

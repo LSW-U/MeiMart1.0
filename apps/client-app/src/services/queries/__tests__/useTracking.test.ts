@@ -6,11 +6,10 @@ import { renderHook, act } from '@testing-library/react-native';
 import { useOrderTracking } from '@/services/queries/useTracking';
 
 jest.mock('@/services/tracking', () => ({
+  // 批3 P2-1：工厂返回 { socket, destroy }（destroy = 断连 + NetInfo 退订）
   connectOrderTracking: () => ({
-    on: jest.fn(),
-    off: jest.fn(),
-    emit: jest.fn(),
-    disconnect: jest.fn(),
+    socket: { on: jest.fn(), off: jest.fn(), emit: jest.fn(), disconnect: jest.fn() },
+    destroy: jest.fn(),
   }),
 }));
 

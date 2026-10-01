@@ -12,6 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
+import { safeRoutePush } from '@meimart/nav-core';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography } from '@/theme';
@@ -97,21 +98,24 @@ export default function NotificationsPage() {
 
   // Why: P23 改动 3 —— 直达详情：order 带 data.orderId 跳 /order/[id]，无 id 降级列表；
   //      promotion 按 productId 分流；点击顺带标记单条已读
+  // 批3 A6：orderId/productId 是服务端可控数据，动态段跳转统一走 safeRoutePush
+  // 白名单（非法 id 降级不导航，与下方 else 分支同口径）
   const onPress = (item: Notification) => {
     if (!item.read) markRead.mutate(item.id);
     const str = (v: unknown) => (typeof v === 'string' ? v : undefined);
     if (item.type === 'order') {
       const orderId = str(item.data?.orderId);
-      if (orderId) router.push(`/order/${orderId}`);
+      if (orderId) safeRoutePush((href) => router.push(href as never), '/order', orderId);
       else router.push('/(main)/orders');
     } else if (item.type === 'promotion') {
       const productId = str(item.data?.productId);
-      if (productId) router.push(`/product/${productId}`);
+      if (productId) safeRoutePush((href) => router.push(href as never), '/product', productId);
       else router.push('/coupons');
     }
   };
 
   // Why: P23 D4 —— 卡片内 CTA 分发（查看物流/付款→订单，去抢购/购买→商品，去凑单→购物车，去使用→券页）
+  // 批3 A6：同 onPress——动态段走 safeRoutePush，静态降级直接 push
   const onCta = (action: string, item: Notification) => {
     if (!item.read) markRead.mutate(item.id);
     const str = (v: unknown) => (typeof v === 'string' ? v : undefined);
@@ -125,12 +129,12 @@ export default function NotificationsPage() {
       case 'viewOrder':
       case 'confirmReplacement':
         // Q2 拍板：确认替换跳订单详情由详情页处理；无 orderId 一律降级订单列表
-        if (orderId) router.push(`/order/${orderId}`);
+        if (orderId) safeRoutePush((href) => router.push(href as never), '/order', orderId);
         else router.push('/(main)/orders');
         break;
       case 'shopNow':
       case 'buyNow':
-        if (productId) router.push(`/product/${productId}`);
+        if (productId) safeRoutePush((href) => router.push(href as never), '/product', productId);
         else router.push('/(main)/categories');
         break;
       case 'addMore':

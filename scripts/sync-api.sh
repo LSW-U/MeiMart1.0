@@ -27,7 +27,8 @@ FRONTEND_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # ====================================
 
 OPENAPI_SRC="$BACKEND_ROOT/packages/api-contract/openapi.yaml"
-TYPES_SRC="$BACKEND_ROOT/packages/shared-types/src/api-types.ts"
+# 批3 D13：api-types.ts 整文件 cp 步骤已删（2.4 万行死文件、双端 0 import，仅注释提及）；
+# B4 契约测试挂账改为「复用后端 shared-types + 本管道按需恢复」。
 
 echo "🔍 后端 repo: $BACKEND_ROOT"
 echo "🔍 前端 repo: $FRONTEND_ROOT"
@@ -40,22 +41,17 @@ if [ ! -d "$BACKEND_ROOT" ]; then
   exit 1
 fi
 
-# 检查后端是否需要重新生成 artifacts
-if [ ! -f "$OPENAPI_SRC" ] || [ ! -f "$TYPES_SRC" ]; then
-  echo "⚠️  后端 artifact 缺失，自动跑 gen:openapi + gen:types..."
+# 检查后端是否需要重新生成 artifacts（批3 D13：只生成 openapi.yaml，api-types.ts 已停同步）
+if [ ! -f "$OPENAPI_SRC" ]; then
+  echo "⚠️  后端 openapi.yaml 缺失，自动跑 gen:openapi..."
   cd "$BACKEND_ROOT"
   pnpm --filter @meimart/api-contract gen:openapi
-  pnpm --filter @meimart/shared-types gen:types
   cd "$FRONTEND_ROOT"
   echo
 fi
 
 if [ ! -f "$OPENAPI_SRC" ]; then
   echo "❌ OpenAPI 生成失败: $OPENAPI_SRC 不存在"
-  exit 1
-fi
-if [ ! -f "$TYPES_SRC" ]; then
-  echo "❌ TS 类型生成失败: $TYPES_SRC 不存在"
   exit 1
 fi
 
@@ -89,11 +85,7 @@ sync_to_app() {
   cp "$OPENAPI_SRC" "$api_dir/openapi.yaml"
   echo "  ✓ openapi.yaml   → apps/$app/api/openapi.yaml"
 
-  # 2. TS 类型（单文件 api-types.ts）
-  cp "$TYPES_SRC" "$api_dir/api-types.ts"
-  echo "  ✓ api-types.ts   → apps/$app/api/api-types.ts"
-
-  # 3. 写一个版本戳（git 可追溯上次同步时间）
+  # 写一个版本戳（git 可追溯上次同步时间）
   date -u +"%Y-%m-%dT%H:%M:%SZ" > "$api_dir/.last-sync"
   cd "$BACKEND_ROOT"
   BACKEND_SHA=$(git rev-parse --short HEAD)
@@ -111,6 +103,6 @@ done
 echo "🎉 同步完成"
 echo
 echo "下一步："
-echo "  - 在 app 代码中 import ' in app 代码中导入类型，例如：import type { paths } from './api/api-types'"
+echo "  - 契约类型按需从后端 packages/shared-types 引入（api-types.ts 整文件已停同步，批3 D13）"
 echo "  - 用 openapi.yaml 加载到 swagger viewer 或 code generator"
 echo "  - git add apps/*/api/ commit 这次同步"

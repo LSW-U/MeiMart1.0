@@ -25,6 +25,9 @@ export const SmallProductCard = memo(function SmallProductCard({
   const { t } = useTranslation();
   const localize = useLocalizer();
   const name = localize(product.name);
+  // 批3 P2-2：回调签名 (product) => void——内部绑 item，调用方直传稳定 handler（memo 可命中）
+  const handlePress = () => onPress(product);
+  const handleAdd = () => onAddToCart(product);
 
   return (
     <View
@@ -39,7 +42,7 @@ export const SmallProductCard = memo(function SmallProductCard({
       ]}
     >
       <Pressable
-        onPress={onPress}
+        onPress={handlePress}
         style={({ pressed }) => [styles.main, pressed && { opacity: 0.7 }]}
         accessibilityRole="button"
         accessibilityLabel={t('product.viewItem', { name })}
@@ -55,7 +58,7 @@ export const SmallProductCard = memo(function SmallProductCard({
       <View style={styles.bottom}>
         {/* Why: 统一加购按钮 - 32² 圆形 999 primary + 白 add（废弃 add_shopping_cart，方案 §2.2） */}
         <Pressable
-          onPress={onAddToCart}
+          onPress={handleAdd}
           style={({ pressed }) => [
             styles.addBtn,
             { backgroundColor: colors.primary },

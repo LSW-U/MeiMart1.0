@@ -40,7 +40,7 @@ export function shouldInitPush(): boolean {
   return !isMockMode && Platform.OS !== 'web';
 }
 
-/** 后端契约平台枚举（api-types DeviceTokenPlatform） */
+/** 后端契约平台枚举（openapi 生成类型 DeviceTokenPlatform） */
 type DevicePlatform = 'ANDROID' | 'IOS' | 'WEB';
 
 function currentPlatform(): DevicePlatform {

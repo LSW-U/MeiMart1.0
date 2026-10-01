@@ -4,10 +4,16 @@ import type { ProductBadge } from '@/components/business/ProductCard/ProductCard
 // Why: 全局卡片统一方案 §9 - 横向卡（categories Hot + product/list 共用）
 export interface HorizontalProductCardProps {
   product: Product;
-  onPress: () => void; // 点图/名跳详情
-  onAddToCart: () => void; // 加购
-  /** 长按（favorites 列表态长按进管理；categories/product-list 不传无影响）—— 审查 Q4 对称补齐 */
-  onLongPress?: () => void;
+  /**
+   * 点图/名跳详情。批3 P2-2：签名统一 `(product) => void`——卡片内部调 onPress(product)，
+   * 调用方直传稳定 handler（useCallback [deps] 不含 item），memo 浅比较才能命中
+   * （调用点包内联箭头 `() => go(item)` 会让 prop 引用恒新，memo 恒失效）。
+   */
+  onPress: (product: Product) => void;
+  /** 加购（同 onPress 口径：卡片内部调 onAddToCart(product)） */
+  onAddToCart: (product: Product) => void;
+  /** 长按（favorites 列表态长按进管理；categories/product-list 不传无影响）—— 审查 Q4 对称补齐；同 onPress 口径 (product)=>void */
+  onLongPress?: (product: Product) => void;
   /** 左上角 badge（resolveBadges 派生，§9-5） */
   badge?: ProductBadge;
   /** 是否显示评分（categories 显，product/list 不显） */

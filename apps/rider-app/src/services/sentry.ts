@@ -1,18 +1,21 @@
 import * as Sentry from '@sentry/react-native';
 
 import { redactError } from '../utils/redact';
+import { getExtra } from '../config/app-config';
 
 // 骑手端 Sentry（批次3 接入）：
-// 仅当构建期注入 EXPO_PUBLIC_SENTRY_DSN 且 APP_ENV=production 时启用。
+// 仅当构建期注入 SENTRY_DSN 且 APP_ENV=production 时启用。
 // 本地/开发不注入 DSN → 默认关闭，不打扰开发；生产 EAS 构建由 eas.json env 注入。
-const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
-const SENTRY_ENABLED = Boolean(SENTRY_DSN) && process.env.EXPO_PUBLIC_APP_ENV === 'production';
+// 批3 A10：env 从 process.env.EXPO_PUBLIC_* 迁 expo-constants extra（APP_ENV 判断语义不搬，只换注入通道）
+const extra = getExtra();
+const SENTRY_DSN = extra?.SENTRY_DSN ?? '';
+const SENTRY_ENABLED = Boolean(SENTRY_DSN) && extra?.APP_ENV === 'production';
 
 export function initSentry() {
   if (!SENTRY_ENABLED) return;
   Sentry.init({
     dsn: SENTRY_DSN,
-    environment: process.env.EXPO_PUBLIC_APP_ENV ?? 'production',
+    environment: extra?.APP_ENV ?? 'production',
     enableAutoSessionTracking: true,
     sessionTrackingIntervalMillis: 30000,
     attachStacktrace: true,

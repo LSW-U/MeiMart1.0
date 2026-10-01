@@ -2,7 +2,7 @@
 // HTML → RN 行数比：337 → ~390（含样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 116%）
 // Fix-10: 重建 5 个缺失模块（Primary Header / Filter Tags / Recent / Popular / Recommended）
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -170,16 +170,22 @@ export default function SearchIndexPage() {
   };
 
   // Why: P7 §2.4 - Recommended 加购（同 home.tsx handleBuyAgainAddToCart）
-  const handleAddToCart = (item: Product) => {
-    addToCartMutation.mutate(
-      { product: item, quantity: 1 },
-      {
-        onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
-        onError: () =>
-          toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
-      },
-    );
-  };
+  // Why: 批3 P2-2 —— 卡片签名 (product)=>void，回调 useCallback 直传（消灭内联箭头）
+  const handleAddToCart = useCallback(
+    (item: Product) => {
+      addToCartMutation.mutate(
+        { product: item, quantity: 1 },
+        {
+          onSuccess: () =>
+            toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
+          onError: () =>
+            toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+        },
+      );
+    },
+    [addToCartMutation, t],
+  );
+  const handleCardPress = useCallback((p: Product) => router.push(`/product/${p.id}`), []);
 
   return (
     <SafeAreaWrapper edges={['top']} style={{ backgroundColor: colors.primary, flex: 1 }}>
@@ -420,8 +426,8 @@ export default function SearchIndexPage() {
                       key={product.id}
                       product={product}
                       badge={resolveBadges(product, t)[0]}
-                      onPress={() => router.push(`/product/${product.id}`)}
-                      onAddToCart={() => handleAddToCart(product)}
+                      onPress={handleCardPress}
+                      onAddToCart={handleAddToCart}
                     />
                   ))}
                 </View>
@@ -431,8 +437,8 @@ export default function SearchIndexPage() {
                       key={product.id}
                       product={product}
                       badge={resolveBadges(product, t)[0]}
-                      onPress={() => router.push(`/product/${product.id}`)}
-                      onAddToCart={() => handleAddToCart(product)}
+                      onPress={handleCardPress}
+                      onAddToCart={handleAddToCart}
                     />
                   ))}
                 </View>

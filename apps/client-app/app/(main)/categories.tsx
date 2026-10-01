@@ -3,7 +3,7 @@
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 128%）
 // Fix-15: Primary tais-pattern Header + 侧栏图标 + Daily Deals + 分类标题 + TaisDivider + HOT PRODUCTS + VIEW ALL + Skeleton
 // 优化: 商品卡片整体可点击跳转 + 加购按钮真正加购 + 真实商品替换 mock + 商品网格 2 列 8 个
-import { useState, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView, Image } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -91,16 +91,24 @@ export default function CategoriesPage() {
     .slice(0, 4);
 
   // Why: 加购成功提示
-  const handleAddToCart = (product: Product) => {
-    addToCartMutation.mutate(
-      { product, quantity: 1 },
-      {
-        onSuccess: () => toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
-        onError: () =>
-          toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
-      },
-    );
-  };
+  // Why: 批3 A7 —— HorizontalProductCard 为 React.memo，回调 useCallback 稳定引用
+  const handleAddToCart = useCallback(
+    (product: Product) => {
+      addToCartMutation.mutate(
+        { product, quantity: 1 },
+        {
+          onSuccess: () =>
+            toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
+          onError: () =>
+            toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+        },
+      );
+    },
+    [addToCartMutation, t],
+  );
+
+  // Why: 批3 P2-2 —— HPC 签名 (product)=>void，直传稳定 handler（消灭内联箭头）
+  const handleCardPress = useCallback((p: Product) => router.push(`/product/${p.id}`), []);
 
   if (catLoading) {
     return (
@@ -308,8 +316,8 @@ export default function CategoriesPage() {
                     <HorizontalProductCard
                       key={p.id}
                       product={p}
-                      onPress={() => router.push(`/product/${p.id}`)}
-                      onAddToCart={() => handleAddToCart(p)}
+                      onPress={handleCardPress}
+                      onAddToCart={handleAddToCart}
                       badge={resolveBadges(p, t)[0]}
                       showRating
                     />
@@ -333,8 +341,8 @@ export default function CategoriesPage() {
                       <HorizontalProductCard
                         key={p.id}
                         product={p}
-                        onPress={() => router.push(`/product/${p.id}`)}
-                        onAddToCart={() => handleAddToCart(p)}
+                        onPress={handleCardPress}
+                        onAddToCart={handleAddToCart}
                         showRating
                       />
                     ))}

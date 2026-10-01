@@ -1,4 +1,5 @@
 // ProductListPage — 商品列表（§9-3 统一为 HorizontalProductCard 纵向列）
+import { useCallback } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -42,11 +43,18 @@ export default function ProductListPage() {
   const isLoading = category ? byCategoryQuery.isLoading : allQuery.isLoading;
   const isError = category ? byCategoryQuery.isError : allQuery.isError;
   // Why: P0 修复 - 排行榜加购按钮之前是 View 不可点击，接 useAddToCart 让加购可用
+  // Why: 批3 A7 —— HorizontalProductCard 为 React.memo，回调 useCallback 稳定引用
   const addMutation = useAddToCart();
-  const handleAdd = (product: Product) => {
-    addMutation.mutate({ product, quantity: 1 });
-    toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' }));
-  };
+  const handleAdd = useCallback(
+    (product: Product) => {
+      addMutation.mutate({ product, quantity: 1 });
+      toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' }));
+    },
+    [addMutation, t],
+  );
+
+  // Why: 批3 P2-2 —— HPC 签名 (product)=>void，直传稳定 handler（消灭内联箭头）
+  const handleCardPress = useCallback((p: Product) => router.push(`/product/${p.id}`), []);
 
   // Category Bar: "All" + 真实分类名
   // 原因：批1 A4 透传后 Category.name 是 LocalizableText——id 映射表保持语义稳定
@@ -179,8 +187,8 @@ export default function ProductListPage() {
               key={product.id}
               product={product}
               badge={resolveBadges(product, t)[0]}
-              onPress={() => router.push(`/product/${product.id}`)}
-              onAddToCart={() => handleAdd(product)}
+              onPress={handleCardPress}
+              onAddToCart={handleAdd}
             />
           ))}
         </View>

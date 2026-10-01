@@ -20,6 +20,8 @@
     "@expo/vector-icons": "^15.1.1",
     "@meimart/format": "workspace:*",
     "@meimart/i18n-core": "workspace:*",
+    "@meimart/api-core": "workspace:*",
+    "@meimart/nav-core": "workspace:*",
     "@meimart/upload-core": "workspace:*",
     "@nozbe/watermelondb": "^0.28.0",
     "@react-native-async-storage/async-storage": "2.2.0",

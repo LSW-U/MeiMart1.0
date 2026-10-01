@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { Socket } from 'socket.io-client';
 import {
   connectOrderTracking,
   type RiderLocation,
@@ -37,7 +38,7 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
   });
 
   // Why: 用 lazy ref 避免 useRef(Date.now()) 触发 react-hooks/purity 规则（render 期不允许 impure 调用）
-  const socketRef = useRef<ReturnType<typeof connectOrderTracking> | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const lastMsgRef = useRef<number>(0);
 
   useEffect(() => {
@@ -45,7 +46,8 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
 
     // Why: 不在 effect body 直接 setState('connecting')（react-hooks/set-state-in-effect 规则），
     // socket 自身事件（connect / connect_error / disconnect）会驱动 wsState 更新
-    const socket = connectOrderTracking(accessToken);
+    // 批3 P2-1：connectOrderTracking 返回 { socket, destroy }——destroy 负责断连 + NetInfo 退订
+    const { socket, destroy } = connectOrderTracking(accessToken);
     socketRef.current = socket;
     lastMsgRef.current = Date.now();
 
@@ -127,7 +129,7 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
       socket.off('connect_error', handleConnectError);
       socket.off('order:location', handleLocation);
       socket.off('order:status-changed', handleStatusChanged);
-      socket.disconnect();
+      destroy(); // 批3 P2-1：断连 + NetInfo 退订（原 socket.disconnect() 释放改走工厂销毁句柄）
       socketRef.current = null;
     };
   }, [orderId, accessToken]);

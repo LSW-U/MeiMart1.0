@@ -1,4 +1,4 @@
-import { io, type Socket } from 'socket.io-client';
+import { createTrackingSocket, type TrackingSocket } from '@meimart/api-core';
 import { getExtra } from '@/config/app-config';
 
 // Why: 后端 WS 主通道（realtime.gateway.ts），客户端订阅 order room 后收到状态变更和骑手位置。
@@ -42,16 +42,11 @@ export type WsConnectionState = 'disconnected' | 'connecting' | 'connected' | 'e
  * 否则重连后 socket.io 发件箱缓冲不重放，客户端会永久掉出 order room，
  * 收不到 order:location / order:status-changed。
  *
- * 调用方在 useEffect 内调用，return 时 socket.disconnect() 释放。
+ * 调用方在 useEffect 内调用，return 时调 destroy()（断连 + NetInfo 退订，批3 P2-1）。
  */
-export function connectOrderTracking(accessToken: string): Socket {
-  const socket = io(buildWsUrl(), {
-    auth: { token: `Bearer ${accessToken}` },
-    transports: ['websocket'],
-    reconnection: true,
-    reconnectionDelay: 3000,
-    reconnectionAttempts: 5,
-  });
-
-  return socket;
+export function connectOrderTracking(accessToken: string): TrackingSocket {
+  // 批3 A5：自愈参数（退避/attempts/网络恢复重连）上收 @meimart/api-core 单源；
+  // 不传 transports（原 ['websocket'] 强制直连删除）→ 恢复 socket.io 默认
+  // polling→websocket 升级路径，弱网/webview 环境下 websocket 握手失败仍可回退 polling。
+  return createTrackingSocket({ url: buildWsUrl(), accessToken });
 }

@@ -41,6 +41,9 @@ export function useRiderSocket() {
       return;
     }
     let cancelled = false;
+    // 批3 P2-1：工厂销毁句柄提到 effect 作用域，cleanup 可达（异步建连完成前卸载时为 null，
+    // 由 async 内 cancelled 分支兜底销毁）
+    let destroyFn: (() => void) | null = null;
 
     (async () => {
       const { tokenStorage } = await import('@/src/services/token-storage');
@@ -51,10 +54,12 @@ export function useRiderSocket() {
       }
 
       setState('connecting');
-      const sock = connectRiderSocket(token);
+      // 批3 P2-1：工厂返回 { socket, destroy }——destroy 负责断连 + NetInfo 退订
+      const { socket: sock, destroy } = connectRiderSocket(token);
+      destroyFn = destroy;
       if (cancelled) {
         sock.removeAllListeners();
-        sock.disconnect();
+        destroy();
         return;
       }
       setSocket(sock);
@@ -85,6 +90,9 @@ export function useRiderSocket() {
           prev.removeAllListeners();
           prev.disconnect();
         }
+        // 批3 P2-1：cleanup 走工厂 destroy（断连 + NetInfo 退订）；destroyFn 为 null（异步
+        // 建连未完成即卸载）时由上方 cancelled 分支兜底销毁
+        destroyFn?.();
         return null;
       });
     };

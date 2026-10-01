@@ -2,7 +2,7 @@
 // D.12: PrimaryHeader + 视图切换 + 批量管理 + 空状态
 // 网格态：两列瀑布流（MasonryProductCard，与 home/search 统一）；列表态：HorizontalProductCard；
 // 管理态跟随当前视图（D7）：卡片原地变选择态，不切换卡片组件
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -69,19 +69,20 @@ export default function FavoritesPage() {
     AsyncStorage.setItem(VIEW_STORAGE_KEY, next).catch(() => {});
   };
 
-  const toggleSelect = (id: string) => {
+  // Why: 批3 A7 —— 卡片组件均为 React.memo，回调一律 useCallback 稳定引用（防 memo 浅比较失效）
+  const toggleSelect = useCallback((id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  };
+  }, []);
 
-  const exitSelectMode = () => {
+  const exitSelectMode = useCallback(() => {
     setSelectMode(false);
     setSelected(new Set());
-  };
+  }, []);
 
   // Why: 真实批量删除（P19 D1 + 审查 Q2）—— 并行 toggle + 乐观移除；allSettled 局部回滚：
   //      失败项 hook 已加回 cache，这里按结果分流 toast；失败时选择集合只保留失败项可重试
@@ -142,38 +143,99 @@ export default function FavoritesPage() {
     );
   };
 
-  const onLongPress = (id: string) => {
-    setSelectMode(true);
-    toggleSelect(id);
-  };
+  const onLongPress = useCallback(
+    (id: string) => {
+      setSelectMode(true);
+      toggleSelect(id);
+    },
+    [toggleSelect],
+  );
 
   // Why: 列表态快速加购（P19 D4）—— useAddToCart 自带乐观更新；收藏摘要无 stock 字段，
   //      SOLD_OUT/STOCK_EXCEEDED/无 SKU 的失败统一走 onError toast（无库存/网络兜底）
   const addToCart = useAddToCart();
   const [addingId, setAddingId] = useState<string | null>(null);
-  const handleQuickAdd = (item: Product) => {
-    if (addingId) return; // 同一时间只允许一个加购请求（防重复提交）
-    setAddingId(item.id);
-    addToCart.mutate(
-      { product: item, quantity: 1 },
-      {
-        onSuccess: () => {
-          toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' }));
+  const handleQuickAdd = useCallback(
+    (item: Product) => {
+      if (addingId) return; // 同一时间只允许一个加购请求（防重复提交）
+      setAddingId(item.id);
+      addToCart.mutate(
+        { product: item, quantity: 1 },
+        {
+          onSuccess: () => {
+            toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' }));
+          },
+          onError: (err) => {
+            const msg = err instanceof Error ? err.message : '';
+            const friendly =
+              msg === 'SOLD_OUT'
+                ? t('product.soldOut', { defaultValue: 'Sold Out' })
+                : msg === 'STOCK_EXCEEDED'
+                  ? t('product.stockExceeded')
+                  : getApiErrorMessage(
+                      err,
+                      t('product.addToCartFailed', { defaultValue: 'Failed to add to cart' }),
+                    );
+            toast.error(friendly);
+          },
+          onSettled: () => setAddingId(null),
         },
-        onError: (err) => {
-          const msg = err instanceof Error ? err.message : '';
-          const friendly =
-            msg === 'SOLD_OUT'
-              ? t('product.soldOut', { defaultValue: 'Sold Out' })
-              : msg === 'STOCK_EXCEEDED'
-                ? t('product.stockExceeded')
-                : getApiErrorMessage(err, t('product.addToCartFailed', { defaultValue: 'Failed to add to cart' }));
-          toast.error(friendly);
-        },
-        onSettled: () => setAddingId(null),
-      },
-    );
-  };
+      );
+    },
+    [addingId, addToCart, t],
+  );
+
+  // Why: 批3 A7 —— FlatList renderItem 用 useCallback（依赖以下稳定回调 + 渲染态值）
+  // 批3 P2-2：onPress/onLongPress/onAddToCart 直传稳定 handler（卡片内部调 handler(product)），
+  // 消灭调用点内联箭头 → memo 浅比较可命中。selectMode 分流在 handler 内部判定。
+  const handleCardPress = useCallback(
+    (item: Product) => {
+      if (selectMode) toggleSelect(item.id);
+      else router.push(`/product/${item.id}`);
+    },
+    [selectMode, toggleSelect],
+  );
+  const handleCardLongPress = useCallback((item: Product) => onLongPress(item.id), [onLongPress]);
+  const handleCardAdd = useCallback((item: Product) => handleQuickAdd(item), [handleQuickAdd]);
+
+  const renderListItem = useCallback(
+    ({ item }: { item: Product }) => (
+      <HorizontalProductCard
+        product={item}
+        onPress={handleCardPress}
+        // Why: 长按进管理态（D7），与网格态 Masonry 对称（审查 Q4）
+        onLongPress={handleCardLongPress}
+        onAddToCart={handleCardAdd}
+        badge={selectMode ? undefined : resolveBadges(item, t)[0]}
+        selectMode={selectMode}
+        isSelected={selected.has(item.id)}
+        // Q4：spinner 只在发起卡；单飞行期间其他卡 disabled（点按不再静默丢弃）
+        addPending={addingId === item.id}
+        addDisabled={addingId !== null && addingId !== item.id}
+        testID={`favorites-hpc-${item.id}`}
+      />
+    ),
+    [handleCardPress, handleCardLongPress, handleCardAdd, selectMode, selected, addingId, t],
+  );
+
+  // Why: 批3 P2-2 —— 网格态卡片同样直传稳定 handler（上三个 useCallback）；
+  // resolveBadges(item,t) 是渲染期派生值逐项不同，不影响回调引用稳定性
+  const renderMasonryItem = useCallback(
+    (item: Product) => (
+      <MasonryProductCard
+        key={item.id}
+        product={item}
+        badge={selectMode ? undefined : resolveBadges(item, t)[0]}
+        onPress={handleCardPress}
+        onLongPress={handleCardLongPress}
+        onAddToCart={handleCardAdd}
+        selectMode={selectMode}
+        isSelected={selected.has(item.id)}
+        testID={`favorites-masonry-${item.id}`}
+      />
+    ),
+    [handleCardPress, handleCardLongPress, handleCardAdd, selectMode, selected, t],
+  );
 
   const HeaderRight = selectMode ? (
     <View style={styles.headerActions}>
@@ -239,12 +301,18 @@ export default function FavoritesPage() {
             style={[styles.viewSwitch, { borderColor: colors['outline-variant'] }]}
             accessibilityRole="tablist"
           >
-            {(
-              [
-                { key: 'grid' as FavoritesView, icon: 'grid_view', label: t('favorites.a11y.gridView') },
-                { key: 'list' as FavoritesView, icon: 'view_list', label: t('favorites.a11y.listView') },
-              ]
-            ).map(({ key, icon, label }) => {
+            {[
+              {
+                key: 'grid' as FavoritesView,
+                icon: 'grid_view',
+                label: t('favorites.a11y.gridView'),
+              },
+              {
+                key: 'list' as FavoritesView,
+                icon: 'view_list',
+                label: t('favorites.a11y.listView'),
+              },
+            ].map(({ key, icon, label }) => {
               const active = view === key;
               return (
                 <Pressable
@@ -252,14 +320,20 @@ export default function FavoritesPage() {
                   onPress={() => switchView(key)}
                   style={[
                     styles.viewBtn,
-                    { backgroundColor: active ? colors.primary : colors['surface-container-lowest'] },
+                    {
+                      backgroundColor: active ? colors.primary : colors['surface-container-lowest'],
+                    },
                   ]}
                   accessibilityRole="button"
                   accessibilityLabel={label}
                   accessibilityState={active ? { selected: true } : undefined}
                   testID={`favorites-view-${key}`}
                 >
-                  <Icon symbol={icon} size={18} color={active ? colors['on-primary'] : colors['on-surface-variant']} />
+                  <Icon
+                    symbol={icon}
+                    size={18}
+                    color={active ? colors['on-primary'] : colors['on-surface-variant']}
+                  />
                 </Pressable>
               );
             })}
@@ -307,64 +381,21 @@ export default function FavoritesPage() {
           windowSize={5}
           key="list"
           contentContainerStyle={[styles.listStack, selectMode && styles.listManage]}
-          renderItem={({ item }: { item: Product }) => (
-            <HorizontalProductCard
-              product={item}
-              onPress={() =>
-                selectMode ? toggleSelect(item.id) : router.push(`/product/${item.id}`)
-              }
-              // Why: 长按进管理态（D7），与网格态 Masonry 对称（审查 Q4）
-              onLongPress={() => onLongPress(item.id)}
-              onAddToCart={() => handleQuickAdd(item)}
-              badge={selectMode ? undefined : resolveBadges(item, t)[0]}
-              selectMode={selectMode}
-              isSelected={selected.has(item.id)}
-              // Q4：spinner 只在发起卡；单飞行期间其他卡 disabled（点按不再静默丢弃）
-              addPending={addingId === item.id}
-              addDisabled={addingId !== null && addingId !== item.id}
-              testID={`favorites-hpc-${item.id}`}
-            />
-          )}
+          renderItem={renderListItem}
         />
       ) : (
         // 网格态：两列瀑布流（复用 home/search 的 MasonryProductCard 奇偶分列模式，高度档位错落）
         // Why: 收藏数通常 < 100，ScrollView 全量渲染可接受（home/search 同款取舍）；
         //      管理态跟随视图原地变选择态（右上角 select-circle + 选中红边），不切换卡片组件
-        <ScrollView contentContainerStyle={[styles.masonryContent, selectMode && styles.listManage]}>
+        <ScrollView
+          contentContainerStyle={[styles.masonryContent, selectMode && styles.listManage]}
+        >
           <View style={styles.masonryRow}>
             <View style={styles.masonryCol}>
-              {favorites.map((item, i) => i % 2 === 0 && (
-                <MasonryProductCard
-                  key={item.id}
-                  product={item}
-                  badge={selectMode ? undefined : resolveBadges(item, t)[0]}
-                  onPress={() =>
-                    selectMode ? toggleSelect(item.id) : router.push(`/product/${item.id}`)
-                  }
-                  onLongPress={() => onLongPress(item.id)}
-                  onAddToCart={() => handleQuickAdd(item)}
-                  selectMode={selectMode}
-                  isSelected={selected.has(item.id)}
-                  testID={`favorites-masonry-${item.id}`}
-                />
-              ))}
+              {favorites.map((item, i) => i % 2 === 0 && renderMasonryItem(item))}
             </View>
             <View style={styles.masonryCol}>
-              {favorites.map((item, i) => i % 2 === 1 && (
-                <MasonryProductCard
-                  key={item.id}
-                  product={item}
-                  badge={selectMode ? undefined : resolveBadges(item, t)[0]}
-                  onPress={() =>
-                    selectMode ? toggleSelect(item.id) : router.push(`/product/${item.id}`)
-                  }
-                  onLongPress={() => onLongPress(item.id)}
-                  onAddToCart={() => handleQuickAdd(item)}
-                  selectMode={selectMode}
-                  isSelected={selected.has(item.id)}
-                  testID={`favorites-masonry-${item.id}`}
-                />
-              ))}
+              {favorites.map((item, i) => i % 2 === 1 && renderMasonryItem(item))}
             </View>
           </View>
         </ScrollView>

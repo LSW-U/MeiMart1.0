@@ -6,7 +6,8 @@
  * 原生模块（jsdom 不可用），由 shouldInitPush/getNotificationsModule 双守卫兜底，
  * 路由分流逻辑本身在 push.test.ts 的 routeFromPushData 已全覆盖。
  */
-import { resolveRouteFromResponse } from '../PushDeepLinkDelegate';
+import { resolveRouteFromResponse, navigateFromResponse } from '../PushDeepLinkDelegate';
+import { router } from 'expo-router';
 
 describe('resolveRouteFromResponse（B2 响应 → 路由）', () => {
   it('null response → 降级 null', () => {
@@ -45,5 +46,59 @@ describe('resolveRouteFromResponse（B2 响应 → 路由）', () => {
         notification: { request: { content: { data: { type: 'WALLET' } } } },
       }),
     ).toEqual({ path: null });
+  });
+});
+
+// ============================================================================
+// 批3 A6：navigateFromResponse 经 safeRoutePush 白名单——非法动态段 id 降级不导航
+// （expo-router 全 mock，只取证 push 收到的 href）
+// ============================================================================
+jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('@/services/push', () => ({
+  shouldInitPush: () => false,
+  getNotificationsModule: () => null,
+  routeFromPushData: jest.requireActual('@/services/push').routeFromPushData,
+}));
+
+const mockedPush = router.push as jest.Mock;
+
+describe('navigateFromResponse 批3 A6 safeRoutePush 接线', () => {
+  beforeEach(() => {
+    mockedPush.mockClear();
+  });
+
+  it('合法 orderId → push /order/:id', () => {
+    navigateFromResponse({
+      notification: { request: { content: { data: { type: 'ORDER_UPDATE', orderId: 'o-1' } } } },
+    });
+    expect(mockedPush).toHaveBeenCalledWith('/order/o-1');
+  });
+
+  it('非法 orderId（路径穿越）→ 降级不导航（safeRoutePush 白名单拦截）', () => {
+    navigateFromResponse({
+      notification: {
+        request: { content: { data: { type: 'ORDER_UPDATE', orderId: '../../admin' } } },
+      },
+    });
+    expect(mockedPush).not.toHaveBeenCalled();
+  });
+
+  it('非法 productId（% 编码）→ 降级不导航', () => {
+    navigateFromResponse({
+      notification: { request: { content: { data: { type: 'PROMOTION', productId: 'a%2Fb' } } } },
+    });
+    expect(mockedPush).not.toHaveBeenCalled();
+  });
+
+  it('无 data（path null）→ 降级进通知页', () => {
+    navigateFromResponse(null);
+    expect(mockedPush).toHaveBeenCalledWith('/service/notifications');
+  });
+
+  it('静态降级目标（无 id 列表页）→ 直接 push 不过白名单', () => {
+    navigateFromResponse({
+      notification: { request: { content: { data: { type: 'ORDER_UPDATE' } } } },
+    });
+    expect(mockedPush).toHaveBeenCalledWith('/(main)/orders');
   });
 });

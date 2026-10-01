@@ -1,6 +1,6 @@
 import type { Coordinates } from './common';
 
-// 后端 DeliveryTaskView 真实字段（来源：api/api-types.ts 的 /rider/dispatch/tasks 端点）
+// 后端 DeliveryTaskView 真实字段（来源：packages/api-contract 生成的 openapi 类型，/rider/dispatch/tasks 端点）
 export type TaskStatus =
   'PENDING_ASSIGN' | 'ASSIGNED' | 'PICKED_UP' | 'DELIVERING' | 'DELIVERED' | 'FAILED';
 
@@ -88,10 +88,9 @@ export type DeliveryTask = {
   /**
    * 批B B3（保证金批A T5-c 契约同步 2026-09-11）：预约单开门时间（打烊时段下单的
    * 该仓下一次开门时间；即时单 null/undefined）。
-   * ⚠️ 本仓 api/api-types.ts 尚未同步批A 契约增量（rider DeliveryTaskView 未透传
-   * scheduledFor，后端大厅/候选已按开门时间过滤——预约单开门前本就不可见），此处
-   * 为**防御性可选字段**：后端未来透传时 UI 直接标注「预约单 {time} 后可接」，
-   * 无需再改类型。当前 real/mock 数据恒 undefined → 标注不渲染。
+   * 防御性可选字段：后端 DeliveryTaskView 当前未透传 scheduledFor（后端大厅/候选已按
+   * 开门时间过滤——预约单开门前本就不可见）。后端未来透传时 UI 直接标注「预约单
+   * {time} 后可接」，无需再改类型。当前 real/mock 数据恒 undefined → 标注不渲染。
    */
   scheduledFor?: string | null;
   // ── 兼容字段（旧 UI 引用 task.pickup.title / task.fee 等） ──

@@ -32,6 +32,10 @@ export const MasonryProductCard = memo(function MasonryProductCard({
   const { t } = useTranslation();
   const localize = useLocalizer();
   const name = localize(product.name);
+  // 批3 P2-2：回调签名 (product) => void——内部绑 item，调用方直传稳定 handler（memo 可命中）
+  const handlePress = () => onPress(product);
+  const handleLongPress = onLongPress ? () => onLongPress(product) : undefined;
+  const handleAdd = () => onAddToCart(product);
   // Why: 按 id charCode 选高度档位（稳定，同商品总同高度，避免切换重排）
   const heightIdx = product.id.charCodeAt(0) % HEIGHT_VARIANTS.length;
   const imageHeight = HEIGHT_VARIANTS[heightIdx];
@@ -75,8 +79,8 @@ export const MasonryProductCard = memo(function MasonryProductCard({
         renderImage()
       ) : (
         <Pressable
-          onPress={onPress}
-          onLongPress={onLongPress}
+          onPress={handlePress}
+          onLongPress={handleLongPress}
           style={({ pressed }) => [pressed && { opacity: 0.85 }]}
           accessibilityRole="button"
           accessibilityLabel={t('product.viewItem', { name })}
@@ -93,7 +97,7 @@ export const MasonryProductCard = memo(function MasonryProductCard({
             </Text>
           </View>
         ) : (
-          <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+          <Pressable onPress={handlePress} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
             <Text style={[styles.name, { color: colors['on-surface'] }]} numberOfLines={2}>
               {name}
             </Text>
@@ -106,7 +110,7 @@ export const MasonryProductCard = memo(function MasonryProductCard({
             <View style={styles.selectPlaceholder} />
           ) : (
             <Pressable
-              onPress={onAddToCart}
+              onPress={handleAdd}
               style={({ pressed }) => [
                 styles.addBtn,
                 { backgroundColor: colors.primary },
@@ -127,8 +131,8 @@ export const MasonryProductCard = memo(function MasonryProductCard({
     return (
       <Pressable
         testID={testID}
-        onPress={onPress}
-        onLongPress={onLongPress}
+        onPress={handlePress}
+        onLongPress={handleLongPress}
         style={({ pressed }) => [
           styles.card,
           {

@@ -9,6 +9,8 @@
     "@hookform/resolvers": "^5.4.0",
     "@meimart/format": "workspace:*",
     "@meimart/i18n-core": "workspace:*",
+    "@meimart/api-core": "workspace:*",
+    "@meimart/nav-core": "workspace:*",
     "@meimart/upload-core": "workspace:*",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "^12.0.1",

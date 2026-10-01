@@ -1,6 +1,6 @@
 // OrderListPage — 还原自 OrderListPage.html
 // Fix-20: Primary tais-pattern Header + Tab 栏分隔线 + 状态彩色胶囊
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -45,57 +45,74 @@ export default function OrdersPage() {
   // P12 Commit 1: 修复 OrderCard action 链路（原 orders.tsx 未传 onAction，footer 按钮 + header delete 全不渲染）
   // 按 OrderAction 6 种类型分发路由；cancel 走 Alert 确认 + useCancelOrder（复用 P10 详情页模式）
   const cancelMutation = useCancelOrder();
-  const handleAction = (action: OrderAction, order: Order) => {
-    switch (action) {
-      case 'pay':
-        // C-P3-4（批4）：待支付订单跳详情页原位支付（详情页 BottomActions handlePay），
-        // 不经 checkout（checkout 内部走 createOrder，会重复下单）
-        router.push({ pathname: '/order/[id]', params: { id: order.id } });
-        break;
-      case 'track':
-        // PENDING_CONFIRM/CONFIRMED 未发货 → 详情页；PICKED 及之后 → 物流追踪页
-        if (order.status === 'PENDING_CONFIRM' || order.status === 'CONFIRMED') {
-          router.push(`/order/${order.id}`);
-        } else {
-          // #005 修复（批次2）：tracking 是平铺路由（app/order/tracking.tsx 读 params.id），
-          // 原插值 /order/${id}/tracking 匹配不到路由（会落进 [id].tsx 的子路径解析）
-          router.push({ pathname: '/order/tracking', params: { id: order.id } });
+  // Why: 批3 A7 —— useCallback 稳定 handleAction 引用（OrderCard 为 React.memo，
+  // 内联函数引用每次渲染变化 → memo 浅比较失效全量重渲染）
+  const handleAction = useCallback(
+    (action: OrderAction, order: Order) => {
+      switch (action) {
+        case 'pay':
+          // C-P3-4（批4）：待支付订单跳详情页原位支付（详情页 BottomActions handlePay），
+          // 不经 checkout（checkout 内部走 createOrder，会重复下单）
+          router.push({ pathname: '/order/[id]', params: { id: order.id } });
+          break;
+        case 'track':
+          // PENDING_CONFIRM/CONFIRMED 未发货 → 详情页；PICKED 及之后 → 物流追踪页
+          if (order.status === 'PENDING_CONFIRM' || order.status === 'CONFIRMED') {
+            router.push(`/order/${order.id}`);
+          } else {
+            // #005 修复（批次2）：tracking 是平铺路由（app/order/tracking.tsx 读 params.id），
+            // 原插值 /order/${id}/tracking 匹配不到路由（会落进 [id].tsx 的子路径解析）
+            router.push({ pathname: '/order/tracking', params: { id: order.id } });
+          }
+          break;
+        case 'review':
+          router.push({
+            pathname: '/order/review',
+            params: { id: order.id, productId: order.items[0]?.product.id ?? '' },
+          });
+          break;
+        case 'after-sales':
+          router.push({
+            pathname: '/order/after-sales-apply',
+            params: { orderId: order.id },
+          });
+          break;
+        case 'repurchase': {
+          // 取首商品 productId 跳详情页，用户在详情页重新加购（不直接下单，避免 skuId 缺失）
+          const productId = order.items[0]?.product.id;
+          if (productId) router.push(`/product/${productId}`);
+          break;
         }
-        break;
-      case 'review':
-        router.push({
-          pathname: '/order/review',
-          params: { id: order.id, productId: order.items[0]?.product.id ?? '' },
-        });
-        break;
-      case 'after-sales':
-        router.push({
-          pathname: '/order/after-sales-apply',
-          params: { orderId: order.id },
-        });
-        break;
-      case 'repurchase': {
-        // 取首商品 productId 跳详情页，用户在详情页重新加购（不直接下单，避免 skuId 缺失）
-        const productId = order.items[0]?.product.id;
-        if (productId) router.push(`/product/${productId}`);
-        break;
+        case 'cancel':
+          Alert.alert(t('order.cancelTitle'), t('order.cancelConfirm'), [
+            { text: t('common.cancel'), style: 'cancel' },
+            {
+              text: t('common.confirm'),
+              style: 'destructive',
+              onPress: () =>
+                cancelMutation.mutate(order.id, {
+                  onSuccess: () =>
+                    toast.success(t('order.cancelled', { defaultValue: 'Order cancelled' })),
+                }),
+            },
+          ]);
+          break;
       }
-      case 'cancel':
-        Alert.alert(t('order.cancelTitle'), t('order.cancelConfirm'), [
-          { text: t('common.cancel'), style: 'cancel' },
-          {
-            text: t('common.confirm'),
-            style: 'destructive',
-            onPress: () =>
-              cancelMutation.mutate(order.id, {
-                onSuccess: () =>
-                  toast.success(t('order.cancelled', { defaultValue: 'Order cancelled' })),
-              }),
-          },
-        ]);
-        break;
-    }
-  };
+      // Why: 批3 A7 —— useCallback 稳定 handleAction 引用（OrderCard 为 React.memo，
+      // 内联函数每次渲染变化 → memo 浅比较失效全量重渲染）
+    },
+    [cancelMutation, t],
+  );
+
+  // Why: 批3 A7 —— renderItem 同走 useCallback（FlatList 内联闭包同理使 memo 失效）
+  // 批3 P2-2：onPress 直传稳定 handler（OrderCard 内部调 onPress(order)），消灭内联箭头
+  const handleCardPress = useCallback((order: Order) => router.push(`/order/${order.id}`), []);
+  const renderItem = useCallback(
+    ({ item }: { item: Order }) => (
+      <OrderCard order={item} onPress={handleCardPress} onAction={handleAction} />
+    ),
+    [handleCardPress, handleAction],
+  );
 
   return (
     <PageErrorBoundary pageName="orders">
@@ -231,13 +248,7 @@ export default function OrdersPage() {
                 <TaisDivider />
               </View>
             )}
-            renderItem={({ item }: { item: Order }) => (
-              <OrderCard
-                order={item}
-                onPress={() => router.push(`/order/${item.id}`)}
-                onAction={handleAction}
-              />
-            )}
+            renderItem={renderItem}
           />
         )}
       </SafeAreaWrapper>

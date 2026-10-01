@@ -1,6 +1,6 @@
 import type { Coordinates } from './common';
 
-// 后端 RiderProfileView 真实字段（来源：api/api-types.ts 的 /rider/profile 端点）
+// 后端 RiderProfileView 真实字段（来源：packages/api-contract 生成的 openapi 类型，/rider/profile 端点）
 export type RiderStatus = 'OFFLINE' | 'ONLINE' | 'BUSY';
 export type VehicleType = 'MOTORCYCLE' | 'BICYCLE' | 'CAR';
 export type ApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';

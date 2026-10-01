@@ -9,7 +9,7 @@ import promotionsData from '../../mocks/data/promotions.json';
 // 本 service 对齐后端 ClientCoupon schema；旧前端 Coupon 类型（mock 推导）保留给现有 cart/profile UI，
 // 此处不动的目的是让 checkout 券选择 UI（待做）直接消费真实契约。
 
-/** 后端 ClientCoupon schema（api-types.ts），GET /client/coupons 返回数组 */
+/** 后端 ClientCoupon schema（openapi 生成类型），GET /client/coupons 返回数组 */
 export interface ClientCoupon {
   id: string;
   /** 券码（validate 入参用，旧前端 Coupon 无此字段） */

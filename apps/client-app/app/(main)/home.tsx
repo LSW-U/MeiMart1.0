@@ -94,6 +94,17 @@ export default function HomePage() {
     [addToCartMutation, t],
   );
 
+  // Why: 批3 P2-2 —— 卡片签名 (product)=>void，直传稳定 handler（消灭内联箭头）
+  const handleCardPress = useCallback((p: Product) => router.push(`/product/${p.id}`), []);
+
+  // Why: 批3 A7 —— CategoryGrid 透传给 memo 化 CategoryItem 的回调稳定引用
+  const handleCategoryPress = useCallback(
+    (c: { id: string }) =>
+      router.push({ pathname: '/(main)/categories', params: { categoryId: c.id } }),
+    [],
+  );
+  const handleMorePress = useCallback(() => router.push('/(main)/categories'), []);
+
   // C-P2-10: 瀑布流改 FlatList(numColumns=2)——替代手动两列 filter 分发（虚拟化渲染
   //   仅可见项）。行为零变更：odd/even 分列顺序一致（numColumns 按索引取模分列，等价原
   //   i%2===0→col1 / i%2===1→col2）；高度档位错落在 MasonryProductCard 内部（按 id 档位），
@@ -104,12 +115,12 @@ export default function HomePage() {
         <MasonryProductCard
           product={item}
           badge={resolveBadges(item, t)[0]}
-          onPress={() => router.push(`/product/${item.id}`)}
-          onAddToCart={() => handleBuyAgainAddToCart(item)}
+          onPress={handleCardPress}
+          onAddToCart={handleBuyAgainAddToCart}
         />
       </View>
     ),
-    [t, handleBuyAgainAddToCart],
+    [t, handleBuyAgainAddToCart, handleCardPress],
   );
   return (
     <PageErrorBoundary pageName="home">
@@ -240,11 +251,10 @@ export default function HomePage() {
               </View>
               <CategoryGrid
                 categories={categories}
-                onCategoryPress={(c) =>
-                  router.push({ pathname: '/(main)/categories', params: { categoryId: c.id } })
-                }
+                // Why: 批3 A7 —— CategoryItem 为 React.memo，经 CategoryGrid 透传的回调须稳定引用
+                onCategoryPress={handleCategoryPress}
                 // Why: P6 V1f - 超 7 分类时第 8 格 More 跳全量分类页
-                onMorePress={() => router.push('/(main)/categories')}
+                onMorePress={handleMorePress}
               />
             </View>
           )}
@@ -320,8 +330,8 @@ export default function HomePage() {
                 <SmallProductCard
                   key={item.id}
                   product={item}
-                  onPress={() => router.push(`/product/${item.id}`)}
-                  onAddToCart={() => handleBuyAgainAddToCart(item)}
+                  onPress={handleCardPress}
+                  onAddToCart={handleBuyAgainAddToCart}
                 />
               ))}
             </ScrollView>

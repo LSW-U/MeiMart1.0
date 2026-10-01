@@ -2,7 +2,7 @@
 // HTML → RN 行数比：358 → ~440（含样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 123%）
 // Fix-19: Primary tais-pattern Header + 商品缩略图 + TaisDivider + You May Also Like + Checkout Bar
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { formatPrice } from '@/utils/format';
 import {
   StyleSheet,
@@ -92,33 +92,37 @@ export default function CartPage() {
   };
 
   // §4.2 管理态：checkbox 切删除选中（selectedForDelete），与结算选中 item.selected 解耦
-  const toggleDeleteSelect = (item: CartItem) => {
+  // Why: 批3 A7 —— CartItemRow/SmallProductCard 均为 React.memo，回调 useCallback 稳定引用
+  const toggleDeleteSelect = useCallback((item: CartItem) => {
     setSelectedForDelete((prev) => {
       const next = new Set(prev);
       if (next.has(item.id)) next.delete(item.id);
       else next.add(item.id);
       return next;
     });
-  };
-  const enterManage = () => {
+  }, []);
+  const enterManage = useCallback(() => {
     setSelectedForDelete(new Set());
     setManageMode(true);
-  };
-  const exitManage = () => {
+  }, []);
+  const exitManage = useCallback(() => {
     setSelectedForDelete(new Set());
     setManageMode(false);
-  };
+  }, []);
 
   // 管理态单个删除（卡片最右侧 trash）：直删 + toast，同步从 selectedForDelete 移除
-  const removeOne = (item: CartItem) => {
-    removeMutation.mutate(item.id);
-    setSelectedForDelete((prev) => {
-      const next = new Set(prev);
-      next.delete(item.id);
-      return next;
-    });
-    toast.success(t('cart.removed', { defaultValue: 'Removed' }));
-  };
+  const removeOne = useCallback(
+    (item: CartItem) => {
+      removeMutation.mutate(item.id);
+      setSelectedForDelete((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+      toast.success(t('cart.removed', { defaultValue: 'Removed' }));
+    },
+    [removeMutation, t],
+  );
 
   // §5.3 批量删除：C-P2-8 收敛为单次 useRemoveCartItems mutation（一次 DELETE 序列 +
   //   一次 getCart + 一次乐观更新/invalidate，原逐 id mutate 有 N 次竞态）；复用 Alert 确认
@@ -141,6 +145,28 @@ export default function CartPage() {
       { text: t('cart.deleteSelected'), style: 'destructive', onPress: doDelete },
     ]);
   };
+
+  // Why: 批3 A7 —— SmallProductCard 为 React.memo，回调 useCallback 稳定引用
+  const handleRecommendAdd = useCallback(
+    (rec: (typeof recommended)[number]) => {
+      addToCartMutation.mutate(
+        { product: rec, quantity: 1 },
+        {
+          onSuccess: () =>
+            toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' })),
+          onError: () =>
+            toast.error(t('product.addToCartFailed', { defaultValue: 'Add to cart failed' })),
+        },
+      );
+    },
+    [addToCartMutation, t],
+  );
+
+  // Why: 批3 P2-2 —— SmallProductCard 签名 (product)=>void，直传稳定 handler（消灭内联箭头）
+  const handleRecommendPress = useCallback(
+    (rec: (typeof recommended)[number]) => router.push(`/product/${rec.id}`),
+    [],
+  );
 
   return (
     <PageErrorBoundary pageName="cart">
@@ -260,12 +286,12 @@ export default function CartPage() {
                     // §4.2 管理态：checkbox 切删除选中 + 反映 selectedForDelete；步进器隐藏（onQuantityChange=undefined）
                     onPress={
                       manageMode
-                        ? (i) => toggleDeleteSelect(i)
-                        : (i) => toggleMutation.mutate({ itemId: i.id, selected: !i.selected })
+                        ? () => toggleDeleteSelect(item)
+                        : () => toggleMutation.mutate({ itemId: item.id, selected: !item.selected })
                     }
                     checkedOverride={manageMode ? selectedForDelete.has(item.id) : undefined}
                     onItemPress={
-                      manageMode ? undefined : (i) => router.push(`/product/${i.product.id}`)
+                      manageMode ? undefined : () => router.push(`/product/${item.product.id}`)
                     }
                     onQuantityChange={
                       manageMode
@@ -297,24 +323,8 @@ export default function CartPage() {
                     <SmallProductCard
                       key={rec.id}
                       product={rec}
-                      onPress={() => router.push(`/product/${rec.id}`)}
-                      onAddToCart={() =>
-                        addToCartMutation.mutate(
-                          { product: rec, quantity: 1 },
-                          {
-                            onSuccess: () =>
-                              toast.success(
-                                t('product.addedToCart', { defaultValue: 'Added to cart' }),
-                              ),
-                            onError: () =>
-                              toast.error(
-                                t('product.addToCartFailed', {
-                                  defaultValue: 'Add to cart failed',
-                                }),
-                              ),
-                          },
-                        )
-                      }
+                      onPress={handleRecommendPress}
+                      onAddToCart={handleRecommendAdd}
                     />
                   ))}
                 </View>
