@@ -40,6 +40,11 @@ jobs:
       # 批次1 CI 修复：pnpm run script 的 `-- --ci` 在 CI 被当成位置参数（jest Pattern:
       # --ci|--coverage=false - 0 matches）→ exit 1。改用 exec 直跑 jest 绕开透传歧义
       - run: pnpm -F ${{ steps.pkg.outputs.name }} exec jest --ci --coverage=false
+      # 前端接线切换 P1（20261002）：跨端批5 门禁挂接 CI（存量记账不拦截 / 新增拦截，
+      # 语义见 scripts/gate/README.md；基线 json 与脚本本体不在本批改动范围）
+      - run: |
+          pnpm -F ${{ steps.pkg.outputs.name }} run check:gate-mock
+          pnpm -F ${{ steps.pkg.outputs.name }} run check:gate-fake-green
       - if: matrix.app == 'client-app'
         run: |
           pnpm -F mei-mart-app check:i18n
