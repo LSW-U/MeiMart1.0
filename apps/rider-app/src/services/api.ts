@@ -22,20 +22,10 @@ export { ApiError };
 let authTokenMemory: string | null = null;
 let onUnauthorizedCallback: (() => void) | null = null;
 
-export function setAuthToken(token: string | null) {
-  authTokenMemory = token;
-  if (token) {
-    // D6 批4 最小修（R-P3-6）：只写 access token，不覆盖 refreshToken
-    void tokenStorage.setAccess(token).catch(() => {});
-  } else {
-    void tokenStorage.clear().catch(() => {});
-  }
-}
-
-export function getAuthToken() {
-  return authTokenMemory;
-}
-
+// 前端接线切换 T5：setAuthToken/getAuthToken 已删（全仓 0 调用方，D2 拍板）。
+// ⚠️ 红线：authTokenMemory 不能删——tokenAdapter getAccessToken 镜像 + onTokenRefreshed
+// 回写仍消费（下方 createApiClient），11 个 service 经 api 实例间接依赖。
+// setOnUnauthorized 保留：唯一调用方 app/_layout.tsx:47（登出回调接管），调用方迁移后再删（挂账）。
 export function setOnUnauthorized(cb: (() => void) | null) {
   onUnauthorizedCallback = cb;
 }
