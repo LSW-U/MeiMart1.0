@@ -260,13 +260,13 @@ export const taskApi = {
     return fromView(res.data);
   },
 
-  async pickup(id: string, note?: string): Promise<DeliveryTask> {
+  async pickup(id: string, body: { note?: string; evidenceUrls?: string[] }): Promise<DeliveryTask> {
     if (isMockMode) {
       return mockDelay(await mutateMockStatus(id, 'PICKED_UP'), 400);
     }
     const res = await api.post<DeliveryTask>(
       `/rider/dispatch/tasks/${encodeURIComponent(id)}/pickup`,
-      { note },
+      body,
     );
     return fromView(res.data);
   },
@@ -292,7 +292,7 @@ export const taskApi = {
     return fromView(res.data);
   },
 
-  async deliver(id: string, body: { collectedAmount?: number; note?: string }): Promise<DeliveryTask> {
+  async deliver(id: string, body: { collectedAmount?: number; note?: string; evidenceUrls?: string[] }): Promise<DeliveryTask> {
     if (isMockMode) {
       return mockDelay(await mutateMockStatus(id, 'DELIVERED'), 400);
     }
@@ -305,7 +305,7 @@ export const taskApi = {
 
   async reportIssue(
     id: string,
-    body: { reason: ReportIssueReason; note?: string },
+    body: { reason: ReportIssueReason; note?: string; evidenceUrls?: string[] },
   ): Promise<DeliveryTask> {
     if (isMockMode) {
       return mockDelay(await mutateMockStatus(id, 'FAILED'), 400);

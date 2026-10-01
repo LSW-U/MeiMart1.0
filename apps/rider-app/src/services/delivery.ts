@@ -1,6 +1,7 @@
 import type { DeliveryTask } from '@/src/types/task';
 
 import { isMockMode } from './api';
+import { deleteEvidenceFile, forgetUploadedUrl, uploadEvidenceCached } from './evidence';
 import { notificationApi } from './notification';
 import { orderApi } from './order';
 import { taskApi } from './task';
@@ -47,19 +48,40 @@ async function writeMockSideEffects(task: DeliveryTask): Promise<void> {
 // ── deliveryApi 对象 ────────────────────────────────────────────────
 
 export const deliveryApi = {
-  async confirmPickup(taskId: string, _evidence?: DeliveryEvidence): Promise<void> {
-    // TODO(B.4.3+): real 模式下若 evidence.photoUri 存在，先调 uploadFile 上传拿 URL，
-    // 再传给后端 /tasks/{id}/status（multipart 端点契约待后端确认）。当前 mock + real 都不传 photo。
-    await taskApi.pickup(taskId, _evidence?.doorUri ? 'door photo attached' : undefined);
+  async confirmPickup(taskId: string, evidence?: DeliveryEvidence): Promise<void> {
+    // 在线取证接线（前端接线切换 T1-D4）：evidence 先 uploadEvidenceCached 拿远端 URL
+    // 再随 pickup body.evidenceUrls 上报；成功后清本地副本 + 回收 URL 缓存（对齐 sync.ts 先例）。
+    const evidenceUrls = evidence
+      ? Object.values(await uploadEvidenceCached(evidence)).filter((u): u is string => Boolean(u))
+      : [];
+    await taskApi.pickup(taskId, {
+      note: evidence?.doorUri ? 'door photo attached' : undefined,
+      evidenceUrls,
+    });
+    for (const uri of Object.values(evidence ?? {})) {
+      if (uri) {
+        deleteEvidenceFile(uri);
+        forgetUploadedUrl(uri);
+      }
+    }
   },
 
   async confirmDelivery(
     taskId: string,
-    _evidence?: DeliveryEvidence,
+    evidence?: DeliveryEvidence,
     collectedAmount?: number,
   ): Promise<DeliveryTask> {
-    // TODO(B.4.3+): 同上，evidence.doorUri + packageUri 待上传链路接入
-    const task = await taskApi.deliver(taskId, { collectedAmount });
+    // 在线取证接线（T1-D4）：同 confirmPickup
+    const evidenceUrls = evidence
+      ? Object.values(await uploadEvidenceCached(evidence)).filter((u): u is string => Boolean(u))
+      : [];
+    const task = await taskApi.deliver(taskId, { collectedAmount, evidenceUrls });
+    for (const uri of Object.values(evidence ?? {})) {
+      if (uri) {
+        deleteEvidenceFile(uri);
+        forgetUploadedUrl(uri);
+      }
+    }
     await writeMockSideEffects(task);
     return task;
   },
