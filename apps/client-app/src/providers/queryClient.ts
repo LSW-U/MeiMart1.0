@@ -3,7 +3,7 @@ import { isAxios401 } from '@/utils/error';
 import { useAuthStore } from '@/store/authStore';
 
 // Why: T2-B 全局 401 查询处理。到达 query/mutation 层的 401 一定是终态 —— interceptor（api.ts）
-// 对非终态 401 要么已 refresh 重发（不 reject）、要么在 pendingQueue 排队。
+// 对非终态 401 已在包内单飞 refresh 并重发（批4 D14 后单飞共享同一 promise，不再有队列层）。
 // 这里只负责把「终态 401」翻转成 clearAuth（幂等 set），后续清缓存/toast/跳登录全部
 // 复用 RootAuthGate 单一 Owner（app/_layout.tsx），不在 axios 层外再造第二套跳转逻辑。
 // 覆盖缺口：A) refresh 成功但重发仍 401（_retry reject 不走 interceptor clearAuth 分支）

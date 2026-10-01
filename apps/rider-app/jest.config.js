@@ -114,6 +114,10 @@ module.exports = {
         '^expo-constants$': '<rootDir>/src/test/expo-constants.mock.js',
         // 批C C3：push-token.ts 用 Device.isDevice 判模拟器（ESM + 原生宿主）。桩成可控 mock。
         '^expo-device$': '<rootDir>/src/test/expo-device.mock.js',
+        // 批4：rider api.ts 改 import @meimart/api-core barrel → 传递拉入 trackingSocket
+        // 顶层 NetInfo（原生宿主，jsdom 崩 RNCNetInfo）。api-core 自测用 jest.mock 注入；
+        // 端侧 jsdom 用本最小桩（见 mock 文件头注）。
+        '^@react-native-community/netinfo$': '<rootDir>/src/test/netinfo.mock.js',
       },
     },
   ],

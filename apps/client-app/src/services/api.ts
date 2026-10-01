@@ -1,15 +1,14 @@
-import {
-  create as axiosCreate,
-  type AxiosError,
-  type AxiosRequestConfig,
-  type InternalAxiosRequestConfig,
-} from 'axios';
-import * as SecureStore from 'expo-secure-store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
+import { createApiClient, type ApiClient } from '@meimart/api-core';
 import { useAuthStore } from '@/store/authStore';
 import { getCurrentLocale } from '@/i18n';
 import { getExtra } from '@/config/app-config';
+import { tokenStorage } from './token-storage';
+
+// 批4（任务书 2）：api.ts 改为对 @meimart/api-core 的差异注入 + re-export。
+// 调用方 import 路径与符号零变更（api/isMockMode/tokenStorage/useAuthStore 链）；
+// 双轨 refresh（isRefreshing+pendingQueue 队列包裹层）删除，单飞实现在包内（D14/M1）；
+// T4 isAuthEndpoint 排除纳入包行为（authEndpointPrefixes 参数化）；
+// sanitizeLogPayload 换包级 redact()（递归脱敏 + 两端键集并集，rider 多 'code'）。
 
 const env = getExtra();
 
@@ -18,177 +17,38 @@ if (env?.APP_ENV === 'production' && !baseURL.startsWith('https://')) {
   console.error('[security] Production API must use HTTPS. Current:', baseURL);
 }
 
-export const api = axiosCreate({
-  baseURL,
-  timeout: 15000,
-  headers: { 'Content-Type': 'application/json' },
-});
-
 // Why: 文档「问题 4」——APP_ENV=development 时永久走 mock，关不掉。
 // 加 USE_MOCK=false 显式开关后，联调可切真实，演示切回 mock（删 USE_MOCK 行即恢复默认 mock）。
-export const isMockMode =
-  env?.USE_MOCK !== 'false' && env?.APP_ENV === 'development';
+// 批4：mock 判据与环境读取保持端侧（任务书 4，批3 已定），不迁入包。
+export const isMockMode = env?.USE_MOCK !== 'false' && env?.APP_ENV === 'development';
 
-// Why: SecureStore 不支持 Web，Web 端用 AsyncStorage 替代
-// Native 端保持 SecureStore（更安全）
-const TOKEN_KEY = 'meimart.token';
-const REFRESH_KEY = 'meimart.refresh';
+// 批4 验收⑤：'meimart.*' key 定义点收敛至 token-storage.ts（1 处），此处复用同一实例
+export { tokenStorage };
 
-const isWeb = Platform.OS === 'web';
-
-export const tokenStorage = {
-  async get(): Promise<string | null> {
-    try {
-      if (isWeb) {
-        return await AsyncStorage.getItem(TOKEN_KEY);
-      }
-      return await SecureStore.getItemAsync(TOKEN_KEY);
-    } catch {
-      return null;
-    }
+const client: ApiClient = createApiClient({
+  baseURL,
+  tokenStorage,
+  // client 内存镜像：authStore.accessToken 优先，存储兜底（原拦截器行为）
+  getAccessToken: () => {
+    const authState = useAuthStore.getState();
+    return authState.accessToken ?? null;
   },
-  async set(token: string, refreshToken: string): Promise<void> {
-    if (isWeb) {
-      await AsyncStorage.setItem(TOKEN_KEY, token);
-      await AsyncStorage.setItem(REFRESH_KEY, refreshToken);
-    } else {
-      await SecureStore.setItemAsync(TOKEN_KEY, token);
-      await SecureStore.setItemAsync(REFRESH_KEY, refreshToken);
-    }
-  },
-  async getRefresh(): Promise<string | null> {
-    try {
-      if (isWeb) {
-        return await AsyncStorage.getItem(REFRESH_KEY);
-      }
-      return await SecureStore.getItemAsync(REFRESH_KEY);
-    } catch {
-      return null;
-    }
-  },
-  async clear(): Promise<void> {
-    if (isWeb) {
-      await AsyncStorage.removeItem(TOKEN_KEY);
-      await AsyncStorage.removeItem(REFRESH_KEY);
-    } else {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
-      await SecureStore.deleteItemAsync(REFRESH_KEY);
-    }
-  },
-};
-
-api.interceptors.request.use(async (config) => {
-  const authState = useAuthStore.getState();
-  const token = authState.accessToken ?? (await tokenStorage.get());
-  if (token) {
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${token}`;
-  }
   // Why: 后端按 Accept-Language 返本地化数据（热搜词 lang / 错误文案），前端按当前 locale 传
-  config.headers = config.headers ?? {};
-  config.headers['Accept-Language'] = getCurrentLocale();
-  if (__DEV__ && config.data) {
-    const safeBody = sanitizeLogPayload(config.data);
-    console.debug('[api request]', config.method, config.url, safeBody);
-  }
-  return config;
+  getLocale: () => getCurrentLocale(),
+  // T4（api.ts:161 原行为）：排除 /common/auth/* 端点（登录/注册/refresh/logout 等获取
+  // token 的端点）——对它们的 401 做 refresh 毫无意义（凭据错 vs token 失效），且多余
+  // 请求 + clearAuth 副作用 + 状态抖动。批4 纳入包行为（验收③单测锚定）。
+  authEndpointPrefixes: ['/common/auth/'],
+  onUnauthorized: () => useAuthStore.getState().clearAuth(),
+  // 原实现语义：refresh 成功 → setAuth(newToken, newRefresh)（authStore 内部再持久化）。
+  // 包回调只给 access token，refresh token 从包级 tokenStorage 读回（refresh 已写回）。
+  onTokenRefreshed: async (token) => {
+    const newRefresh = await tokenStorage.getRefresh();
+    useAuthStore.getState().setAuth(token, newRefresh ?? '');
+  },
+  // client 现行为：非 401 错误透传 axios 原始 error（调用方 ApiError 渐进迁移，任务书 1）
+  throwApiError: false,
+  debugLog: __DEV__,
 });
 
-function sanitizeLogPayload(payload: unknown): unknown {
-  if (typeof payload !== 'object' || payload === null) return payload;
-  const sensitiveKeys = ['password', 'smsCode', 'token', 'refreshToken', 'secret'];
-  const sanitized = { ...(payload as Record<string, unknown>) };
-  for (const key of Object.keys(sanitized)) {
-    if (sensitiveKeys.includes(key)) sanitized[key] = '***';
-  }
-  return sanitized;
-}
-
-let refreshPromise: Promise<string | null> | null = null;
-
-async function refreshAccessToken(): Promise<string | null> {
-  if (refreshPromise) return refreshPromise;
-  const refreshToken = await tokenStorage.getRefresh();
-  if (!refreshToken) return null;
-  refreshPromise = (async () => {
-    try {
-      const res = await api.post<{ accessToken: string; refreshToken: string }>(
-        '/common/auth/refresh',
-        { refreshToken },
-      );
-      const { accessToken: newToken, refreshToken: newRefresh } = res.data;
-      await tokenStorage.set(newToken, newRefresh);
-      useAuthStore.getState().setAuth(newToken, newRefresh);
-      return newToken;
-    } catch {
-      useAuthStore.getState().clearAuth();
-      await tokenStorage.clear();
-      return null;
-    } finally {
-      refreshPromise = null;
-    }
-  })();
-  return refreshPromise;
-}
-
-let isRefreshing = false;
-let pendingQueue: ((token: string | null) => void)[] = [];
-
-function flushQueue(token: string | null) {
-  pendingQueue.forEach((cb) => cb(token));
-  pendingQueue = [];
-}
-
-api.interceptors.response.use(
-  (response) => {
-    // Why: 后端响应统一为 { success, data, error? }，service 层 res.data 应直接拿到业务数据，
-    // 而不是 { success, data } 壳。剥层后 service 写法保持 axios 原生风格。
-    const body = response.data as { success?: boolean; data?: unknown } | undefined;
-    if (body && typeof body === 'object' && 'success' in body && typeof body.success === 'boolean') {
-      response.data = body.data as unknown;
-    }
-    return response;
-  },
-  async (error: AxiosError) => {
-    const original = error.config as
-      | (InternalAxiosRequestConfig & { _retry?: boolean })
-      | undefined;
-    const status = error.response?.status;
-
-    // T4: 排除 /common/auth/* 端点（登录/注册/refresh/logout 等获取 token 的端点），
-    // 对它们的 401 做 refresh 毫无意义（凭据错 vs token 失效），且多余请求 + clearAuth 副作用 + 状态抖动
-    const url = original?.url ?? '';
-    const isAuthEndpoint = url.startsWith('/common/auth/');
-    if (status === 401 && original && !original._retry && !isAuthEndpoint) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          pendingQueue.push((token) => {
-            if (!token) {
-              reject(error);
-              return;
-            }
-            original.headers = original.headers ?? {};
-            original.headers.Authorization = `Bearer ${token}`;
-            original._retry = true;
-            resolve(api(original as AxiosRequestConfig));
-          });
-        });
-      }
-
-      original._retry = true;
-      isRefreshing = true;
-      try {
-        const newToken = await refreshAccessToken();
-        flushQueue(newToken);
-        if (!newToken) return Promise.reject(error);
-        original.headers = original.headers ?? {};
-        original.headers.Authorization = `Bearer ${newToken}`;
-        return api(original as AxiosRequestConfig);
-      } finally {
-        isRefreshing = false;
-      }
-    }
-
-    return Promise.reject(error);
-  },
-);
+export const api = client.api;

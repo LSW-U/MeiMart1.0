@@ -1,12 +1,6 @@
-import {
-  create as axiosCreate,
-  type AxiosError,
-  type AxiosRequestConfig,
-  type InternalAxiosRequestConfig,
-} from 'axios';
-
-import { tokenStorage } from './token-storage';
+import { createApiClient, ApiError, type ApiClient } from '@meimart/api-core';
 import { getExtra } from '../config/app-config';
+import { tokenStorage } from './token-storage';
 
 // 批3 A10：env 从 process.env.EXPO_PUBLIC_* 迁 expo-constants extra（app.config.ts 注入）
 export const API_BASE_URL = getExtra()?.API_BASE_URL ?? '';
@@ -17,163 +11,21 @@ export const API_BASE_URL = getExtra()?.API_BASE_URL ?? '';
 // 骑手长时间无感知。改为显式开关后，漏配 URL 时 URL 为空但 USE_MOCK 未开 →
 // 走 real 分支打空 baseURL 报错（显式失败），不再静默吞。
 // 想开 mock：.env 设 EXPO_PUBLIC_USE_MOCK=true（或不设=默认 mock，本地开发免配）。
+// 批4：mock 判据与环境读取保持端侧（任务书 4，批3 已定），不迁入包。
 export const isMockMode = (getExtra()?.USE_MOCK ?? '') !== 'false' && API_BASE_URL.length === 0;
 
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    public code: string,
-    message: string,
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
+// 批4（任务书 3）：包级 ApiError 单源（对齐原本地实现，符号/构造签名不变）
+export { ApiError };
 
-// ── axios 实例 + 拦截器 ─────────────────────────────────────────────
-
-export const api = axiosCreate({
-  baseURL: API_BASE_URL,
-  timeout: 15000,
-  headers: { 'Content-Type': 'application/json' },
-});
-
-api.interceptors.request.use(async (config) => {
-  const token = authTokenMemory ?? (await tokenStorage.get());
-  if (token) {
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  if (__DEV__ && config.data) {
-    console.debug('[api request]', config.method, config.url, sanitizeLogPayload(config.data));
-  }
-  return config;
-});
-
-function sanitizeLogPayload(payload: unknown): unknown {
-  if (typeof payload !== 'object' || payload === null) return payload;
-  const sensitiveKeys = ['password', 'smsCode', 'code', 'token', 'refreshToken', 'secret'];
-  const sanitized = { ...(payload as Record<string, unknown>) };
-  for (const key of Object.keys(sanitized)) {
-    if (sensitiveKeys.includes(key)) sanitized[key] = '***';
-  }
-  return sanitized;
-}
-
-// ── refresh token 队列（401 自动刷新 + 重试） ─────────────────────────
-
-let refreshPromise: Promise<string | null> | null = null;
-let isRefreshing = false;
-let pendingQueue: ((token: string | null) => void)[] = [];
-
-/** C17（R-P2-15 拍板②）：显式刷新入口——离线队列 dispatch 收到 401 时先刷新重试一次，
- * 仍失败才死信（sync.ts retryAfterTokenRefresh 消费）。单例去重逻辑与拦截器共享。 */
-export async function refreshAccessToken(): Promise<string | null> {
-  if (refreshPromise) return refreshPromise;
-  const refreshToken = await tokenStorage.getRefresh();
-  if (!refreshToken) return null;
-  refreshPromise = (async () => {
-    try {
-      const res = await api.post<{ accessToken: string; refreshToken: string }>(
-        '/common/auth/refresh',
-        { refreshToken },
-      );
-      const { accessToken: newToken, refreshToken: newRefresh } = res.data;
-      await tokenStorage.set(newToken, newRefresh);
-      authTokenMemory = newToken;
-      return newToken;
-    } catch {
-      authTokenMemory = null;
-      await tokenStorage.clear();
-      onUnauthorizedCallback?.();
-      return null;
-    } finally {
-      refreshPromise = null;
-    }
-  })();
-  return refreshPromise;
-}
-
-function flushQueue(token: string | null) {
-  pendingQueue.forEach((cb) => cb(token));
-  pendingQueue = [];
-}
-
-api.interceptors.response.use(
-  (response) => {
-    // 后端业务端点统一返回 { success: true, data: T }，剥层后 service 层 res.data 直接是 T。
-    // auth 端点（login/refresh/sms-code）无此包裹，typeof body.success !== 'boolean' 时跳过剥层。
-    const body = response.data as { success?: unknown; data?: unknown } | undefined;
-    if (
-      body &&
-      typeof body === 'object' &&
-      'success' in body &&
-      typeof body.success === 'boolean'
-    ) {
-      response.data = body.data;
-    }
-    return response;
-  },
-  async (error: AxiosError) => {
-    const original = error.config as
-      (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
-    const status = error.response?.status;
-
-    if (status === 401 && original && !original._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          pendingQueue.push((token) => {
-            if (!token) {
-              reject(error);
-              return;
-            }
-            original.headers = original.headers ?? {};
-            original.headers.Authorization = `Bearer ${token}`;
-            original._retry = true;
-            resolve(api(original as AxiosRequestConfig));
-          });
-        });
-      }
-
-      original._retry = true;
-      isRefreshing = true;
-      try {
-        const newToken = await refreshAccessToken();
-        flushQueue(newToken);
-        if (!newToken) return Promise.reject(error);
-        original.headers = original.headers ?? {};
-        original.headers.Authorization = `Bearer ${newToken}`;
-        return api(original as AxiosRequestConfig);
-      } finally {
-        isRefreshing = false;
-      }
-    }
-
-    // 非 401 或重试失败 → 抛 ApiError（保持旧 request() 行为）
-    // 后端业务错误格式：{ success: false, error: { code, message, details? } }
-    const raw = error.response?.data as
-      { code?: string; message?: string; error?: { code?: string; message?: string } } | undefined;
-    const code = raw?.error?.code ?? raw?.code ?? 'UNKNOWN';
-    const message = raw?.error?.message ?? raw?.message ?? `Request failed: ${status ?? 'unknown'}`;
-    throw new ApiError(status ?? 0, code, message);
-  },
-);
-
-// ── 兼容层：旧的内存 token API（11 个 service 仍用） ──────────────────
-//
-// A.2 阶段：保留 setAuthToken/getAuthToken/setOnUnauthorized 三个函数的签名，
-// 内部委托给 SecureStore + 内存镜像。后续 A.3 改 services/auth.ts 时切换到
-// 直接调 tokenStorage.set/clear，逐步淘汰本节。
+// ── 兼容层：旧的内存 token API（C17/A.2 阶段语义保留，逐步淘汰） ──────────
 
 let authTokenMemory: string | null = null;
 let onUnauthorizedCallback: (() => void) | null = null;
 
 export function setAuthToken(token: string | null) {
   authTokenMemory = token;
-  // 同步到 SecureStore，让 axios 请求拦截器能从持久层读到 token
   if (token) {
     // D6 批4 最小修（R-P3-6）：只写 access token，不覆盖 refreshToken
-    // （原 set(token, '') 会把已存 refreshToken 覆盖成空串，401 刷新链断裂）
     void tokenStorage.setAccess(token).catch(() => {});
   } else {
     void tokenStorage.clear().catch(() => {});
@@ -188,12 +40,37 @@ export function setOnUnauthorized(cb: (() => void) | null) {
   onUnauthorizedCallback = cb;
 }
 
+// ── api-core 接线（批4 任务书 3）──────────────────────────────────────
+//
+// 端侧差异注入：内存镜像 get/set（兼容层 authTokenMemory，11 个 service 仍用）、
+// onUnauthorized 回调、非 401 抛 ApiError（throwApiError，旧 request() 行为）。
+// 单飞 refresh 由包内实现；refreshAccessToken 显式再导出（C17 离线队列依赖，语义保留）。
+
+// 批4 验收⑤：key 定义点收敛——'mei-delivery.*' key 只在 token-storage.ts 定义 1 处，
+// 此处复用同一实例（不二次 createTokenStorage）。
+const client: ApiClient = createApiClient({
+  baseURL: API_BASE_URL,
+  tokenStorage,
+  getAccessToken: () => authTokenMemory,
+  onUnauthorized: () => onUnauthorizedCallback?.(),
+  onTokenRefreshed: (token) => {
+    authTokenMemory = token;
+  },
+  throwApiError: true,
+  debugLog: __DEV__,
+});
+
+export const api = client.api;
+
+/** C17（R-P2-15 拍板②）：显式刷新入口——离线队列 dispatch 收到 401 时先刷新重试一次，
+ * 仍失败才死信（sync.ts retryAfterTokenRefresh 消费）。单飞实现在包内（批4 D14）。 */
+export const refreshAccessToken = client.refreshAccessToken;
+
 // ── 通用 request() — 旧 API 兼容，内部委托给 axios 实例 ───────────────
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const method = (init?.method ?? 'GET').toUpperCase();
   // D6 批4 最小修（R-P3-6）：body 非法 JSON 不再炸出 SyntaxError，按无 body 处理
-  // （兼容层调用方可能传非 JSON 文本/FormData，原 JSON.parse 直接抛错）
   let data: unknown;
   if (init?.body) {
     try {
@@ -202,9 +79,9 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
       data = init.body;
     }
   }
-  const config: AxiosRequestConfig = {
+  const config: Parameters<typeof api.request>[0] = {
     url: path,
-    method: method as AxiosRequestConfig['method'],
+    method: method as 'GET',
     headers: init?.headers as Record<string, string> | undefined,
     data,
   };
