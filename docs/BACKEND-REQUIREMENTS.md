@@ -1,6 +1,13 @@
 # MeiMart 后端需求清单（前端联调发现）
 
+> ⚠️ **历史文档声明（2026-10-03，后端联调需求批次模块批0 核对）**：本文件为 7 月联调旧文档复活。现状核对结论以《后端联调需求批次》模块为准：
+> `Work-Wiki/_inbox/04-后端记录/三端优化更新/后端联调需求批次/执行日志/批0-证据归档-20261003.md`（curl 实测 + openapi 契约核对证据）。
+> 摘要：§二.1 createOrder items、§二.2 geocode、§二.4 defaultSkuId、§三.2 payments/methods 均**已在后端 main@5087325 落地并实测通过**（来源=W7/批B 提前落地）；§二.3 支付方式枚举由 /client/payments/methods 端点方案取代。仍开放：多语补 tet（§九.2）、W6 rider earnings/withdraw（§九.1）、search 多语化（§九.3）。
+> 本文件保留作需求溯源记录，不再作为现状权威源更新。
+
 > 本文档记录前端联调过程中发现的后端问题、需要的接口、期望的响应格式。请后端逐一处理。
+>
+> ~~⚠️ **本文件是唯一权威源（canonical）**~~（2026-10-03 起废止，见上方历史文档声明；Obsidian 镜像副本同步废止）。
 
 ---
 
@@ -433,3 +440,112 @@ ADMIN_TOKEN=$(curl -s -X POST http://localhost:3000/api/v1/common/auth/mock-logi
 curl -s "http://localhost:3000/api/v1/admin/orders?limit=5" \
   -H "Authorization: Bearer $ADMIN_TOKEN" | python3 -m json.tool
 ```
+
+---
+
+## 九、2026-10-03 新增需求（三端优化审查复验后的遗留）
+
+> 来源：前端双端代码审查修复（44 条）完成后的**独立复验**（回代码 + 实跑测试 + curl 实测 + **开后端仓逐条取证**）。
+> 复验结论：审查问题已实质闭环；本节只登记**仍需后端配合**的项，按优先级排列。
+> 前端侧对应文档：Obsidian `_inbox/04-后端记录/三端优化更新/全栈代码审查/复验报告-修复完成度核查-20261003.md`。
+
+### 九.0 已回后端仓核实、**无需再处理**（确认即可）
+
+| 项 | 后端证据 |
+|---|---|
+| pay-mock 生产白名单 + 403 | ✅ `src/modules/rider/deposit.controller.ts:77-89`（`NODE_ENV==='production' \|\| PAY_MOCK_ENABLED!=='true'` → 403 `E-DEPOSIT-008`，提交 `0592c2f`） |
+| 骑手任务取证 evidence 契约 | ✅ 提交 `4e4d946`（前端接线 `69dcb56`） |
+| `/common/geo/reverse` 反查代理 | ✅ 提交 `5087325`（前端已撤 Nominatim 直连 `b3ee0ec`）；curl 实测 **200** |
+| `/client/products/{id}/detail` 聚合端点 | ✅ curl 实测 **200** |
+| 缴纳点停用过滤 | ✅ `src/modules/rider/deposit.service.ts:325-331` `listEnabledLocations()` 已 `where:{enabled:true}` |
+
+### 九.1 【P0·骑手资金】W6 骑手收入/提现端点缺失
+
+**问题**：后端**没有骑手自助的收入/流水/提现端点**，仅存在 `POST/GET /api/v1/admin/settle/withdrawals`（super_admin 代录）。
+**当前后端路由实测**：`api/v1/rider/deposit/*`（requests / pay-mock / status / locations / tiers）存在；**`rider/earnings`、`rider/withdrawals`、`client/withdrawals` 均不存在**。
+
+**前端现状（已做兜底，等后端放开）**：
+- `apps/rider-app/src/services/earnings.ts:12` `const FORCE_MOCK = true;`
+- `:18` `isEarningsForcedMock = !isMockMode && FORCE_MOCK` → real 模式下钱包页/提现页**只读降级**（假数字不上屏，见 `app/(main)/earnings.tsx:148`、`app/earnings/withdraw.tsx:108`）
+- 后端一排期，前端把 `FORCE_MOCK` 改 `false` 即自动恢复真实数据，**无需改页面**。
+
+**期望端点（建议契约，供后端参考）**：
+```
+GET  /api/v1/rider/earnings/summary        → { availableBalance, todayEarnings, weeklyEarnings, monthlyEarnings }（金额分）
+GET  /api/v1/rider/earnings/transactions   → [{ id, orderId?, amount, type, createdAt, description }]（分页）
+POST /api/v1/rider/withdrawals             → 提现申请（body: { amount, method }；强制 requesterId = req.user.sub）
+GET  /api/v1/rider/withdrawals             → 提现记录
+```
+> 注意：`withdraw.controller.ts` 注释已提到「`/client/withdrawals` — customer/rider 自申请，强制 requesterId = req.user.sub」的设想，但**路由尚未实现**，可据此对齐。
+
+**验收命令（实现后）**：
+```bash
+RTOKEN=$(curl -s -X POST http://localhost:3000/api/v1/common/auth/mock-login \
+  -H "Content-Type: application/json" -d '{"role":"rider","deviceType":"rider_app"}' \
+  | python3 -c "import sys,json;print(json.load(sys.stdin)['data']['accessToken'])")
+curl -s -o /dev/null -w "earnings.summary=%{http_code}\n" \
+  http://localhost:3000/api/v1/rider/earnings/summary -H "Authorization: Bearer $RTOKEN"   # 期望 200（当前 404）
+```
+
+### 九.2 【P1·多语数据】商品/分类多语 JSON 缺 `tet` 键 + 键集口径统一
+
+**问题**：`GET /api/v1/client/products` 返回的 `name` **只有 `{en, id, pt, zh}`，缺 `tet`（德顿语）**：
+
+```json
+"name": { "en": "Red Nail Polish", "id": "Cat Kuku Merah", "pt": "Esmalte Vermelho", "zh": "红色指甲油" }
+```
+
+**影响**：前端 i18n 已完成「文案下沉单源」（`@meimart/i18n-core`，`localize()` 回退链 locale→en→zh→首值），但**数据侧没有 tet 译文** → **tet 用户商品名/分类名仍回退英文**。前端无法自行修复。
+
+**要求**：
+1. 商品 / 分类（及任何返回多语 JSON 的端点）**补齐 `tet` 译文**。
+2. **统一键集口径**：两端前端 `LocalizableText` 定义为 **`zh / en / tet / pt`（4 语）**，而响应含 `id`（印尼语，骑手端 `settings` 已启用 Bahasa Indonesia）。请后端明确：多语 JSON 的**权威键集**是 `{en, id, pt, tet, zh}` 五语，还是四语？若含 `id`，前端需同步扩 `LocalizableText` 并处理四语/五语不一致（否则 `id` 用户看到回落）。
+
+**验收命令**：
+```bash
+curl -s "http://localhost:3000/api/v1/client/products?limit=1" \
+  | python3 -c "import sys,json;d=json.load(sys.stdin)['data']['items'][0];print(sorted(d['name'].keys()))"
+# 期望含 'tet'；口径统一后与前端 LocalizableText 一致
+```
+
+### 九.3 【P1·多语检索】search 多语化（前端已挂账，等后端）
+
+**问题**：后端搜索联想/热搜按 **locale** 返回内容，导致前端 queryKey 必须携带 locale：
+- `apps/client-app/src/services/queries/useSearchSuggest.ts:29` `queryKey: ['search-suggest', locale, prefix]`、`:53` 同类
+- `apps/client-app/src/services/searchSuggest.ts:32` 仍用 `getCurrentLocale()`
+
+**要求（二选一，需后端表态）**：
+- **方案 A（推荐）**：`/client/search/suggest`、`/client/search/products` 支持**多语命中的统一检索**（服务端跨语言匹配商品名），前端去掉 queryKey 里的 locale（配合缓存失效策略）。
+- **方案 B**：维持按 locale 检索，则**视为产品设计**，前端保持现状并登记为「locale 例外豁免」（不再作为缺陷）。
+
+**验收**：前端 `useSearchSuggest` 的 queryKey 去掉 locale 后，切语言仍能命中同一商品（方案 A）。
+
+### 九.4 【P2·可靠性】WS 长宕自愈语义（D7）
+
+**问题**：两端 WS 重连参数已统一到前端单点 `packages/api-core/src/wsDefaults.ts`（attempts 10 / delay 1s / max 30s），但注释自述**数值待校准**：
+> 「待后端 D7 长宕语义结论校准：attempts 耗尽后由调用方生命周期重建通道；长宕期间是否需要 service-worker 级重连、退避上限是否匹配后端网关重启窗口，均待 D7 结论后回填。」
+
+**要求后端/运维给出**：网关重启窗口时长、长宕（>10min）期间期望的前端行为语义（是否需要 `recover` 式重连 / 服务端 session 保留时长）。前端据此**只改 `wsDefaults.ts` 的数字**。
+
+### 九.5 【P2·错误码】geo 系 429 错误码嵌套读取（G8）
+
+**问题**：`E-COMMON-004`（超频）在网关/过滤器嵌套层的读取路径待确认，导致前端 `toApiErrorText` 的 429 文案可能落空（前端已兜底映射通用「操作频繁」）。
+**要求**：确认 429 响应的错误信封位置（`error.code` vs 顶层 `code`）与 `E-COMMON-004` 是否稳定下发；如不一致请统一。
+
+### 九.6 【产品·非后端】真实收银台 UI 立项（C-6）
+
+渠道范围（微信/银行/本地 PSP…）需**产品拍板**，前置是支付网关后端接入。前端已就绪：`payment.ts` 的 `ICON_SYMBOL_BY_CODE` 已预置 `wechat / paypal / stripe / alipay / local-psp` 等渠道映射，后端开通即显示。
+
+---
+
+### 九.7 本节优先级总表
+
+| 优先级 | 项 | 归属 | 阻塞对象 |
+|---|---|---|---|
+| **P0** | 九.1 W6 骑手收入/提现端点 | 后端 | 骑手端钱包**真实可用**（当前为只读降级） |
+| **P1** | 九.2 商品/分类补 `tet` + 键集口径 | 后端 | **tet 用户商品/分类名可读性** |
+| **P1** | 九.3 search 多语化 | 后端 + 前端跟着去 key | 切语言后搜索一致性 |
+| P2 | 九.4 WS 长宕语义（D7） | 后端/运维 | 前端 `wsDefaults.ts` 参数校准 |
+| P2 | 九.5 geo 429 错误码 | 后端 | 前端超频文案 |
+| 产品 | 九.6 收银台 UI 立项 | 产品 + 后端 | 真实支付渠道上线 |
+
