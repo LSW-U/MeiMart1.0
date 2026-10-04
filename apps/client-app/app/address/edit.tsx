@@ -31,6 +31,7 @@ import { SelectField } from '@/components/ui/SelectField/SelectField';
 import { toast } from '@/store/toastStore';
 import { useAddresses, useCreateAddress, useUpdateAddress } from '@/services/queries/useAddress';
 import { isDiliDefaultCoords } from '@/services/address';
+import { textGeocode, type GeoHit } from '@/services/geocode';
 import { useMapPickStore } from '@/store/mapPickStore';
 import { addressEditSchema, type AddressEditValues } from '@/forms/schemas/user';
 import type { Address } from '@/types';
@@ -217,6 +218,55 @@ function AddressForm({ existing, prefill, submitting, onSubmit }: AddressFormPro
     }
   }, [mapPick, setValue]);
 
+  // 批1 T5（D1/D9）：文本框防抖文本转坐标——detail 输入 ≥2 字符后 1.2s 防抖调 textGeocode
+  //（后端 geo 限流 1 req/s + 10 req/min，防抖 <1s 必撞 429）；结果展示为 suggest 下拉，
+  // 点击才回填坐标（setPick）。source==='fallback' / formattedAddress==null → 不回填，
+  // toast 引导改用地图选点（fallback 坐标即帝力默认点，回填会伪造「已定位」骗过 C-P2-15 守卫）。
+  const [geoHits, setGeoHits] = useState<GeoHit[]>([]);
+  const [geoResolving, setGeoResolving] = useState(false);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
+  const resolveDetailText = (text: string) => {
+    const trimmed = text.trim();
+    setGeoHits([]);
+    if (trimmed.length < 2) return;
+    setGeoResolving(true);
+    textGeocode(trimmed)
+      .then((result) => {
+        if (result.source === 'fallback' || result.formattedAddress == null) {
+          // D9：fallback（后端失败/无结果返 Dili 中心兜底）不回填——当次输入未定位，保持无坐标态
+          setGeoHits([]);
+          toast.info(
+            t('address.suggestNotFound', { defaultValue: 'Could not locate this address' }),
+          );
+        } else {
+          // 真实命中：作为单条可点结果展示（formattedAddress 作 label），点击回填坐标
+          setGeoHits([{ lat: result.lat, lng: result.lng, label: result.formattedAddress }]);
+        }
+      })
+      .catch(() => {
+        // E-COMMON-004 超频等：静默降级为「未定位」，不打断输入
+        setGeoHits([]);
+      })
+      .finally(() => setGeoResolving(false));
+  };
+  const handleDetailChange = (text: string, onChange: (v: string) => void) => {
+    onChange(text);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => resolveDetailText(text), 1200);
+  };
+  const applyGeoHit = (hit: GeoHit) => {
+    // Why: 回填走 mapPickStore.setPick——与地图选点同一数据通道，locatedRow/C-P2-15 守卫
+    //      消费同一 pick（pickedAt 变化触发 detail 回填 + 提交坐标放行）
+    useMapPickStore.getState().setPick({ lat: hit.lat, lng: hit.lng, address: hit.label });
+    setGeoHits([]);
+    toast.success(t('address.suggestSelect', { defaultValue: 'Location set' }));
+  };
+
   // Why: 校验失败时 toast 提示第一个错误，避免用户点击无反应
   const submit = handleSubmit(
     (values) => onSubmit(values),
@@ -322,25 +372,62 @@ function AddressForm({ existing, prefill, submitting, onSubmit }: AddressFormPro
             control={control}
             name="detail"
             render={({ field: { value, onChange } }) => (
-              <TextInput
-                style={[
-                  styles.textarea,
-                  {
-                    backgroundColor: colors['surface-container-lowest'],
-                    borderColor: colors['outline-variant'],
-                    color: colors['on-surface'],
-                  },
-                ]}
-                placeholder={t('address.detailPlaceholder', {
-                  defaultValue: 'Village, Sub-district, street name, house number...',
-                })}
-                placeholderTextColor={colors['on-surface-variant']}
-                value={value}
-                onChangeText={onChange}
-                multiline
-                numberOfLines={3}
-                testID="addr-detail"
-              />
+              <>
+                <TextInput
+                  style={[
+                    styles.textarea,
+                    {
+                      backgroundColor: colors['surface-container-lowest'],
+                      borderColor: colors['outline-variant'],
+                      color: colors['on-surface'],
+                    },
+                  ]}
+                  placeholder={t('address.detailPlaceholder', {
+                    defaultValue: 'Village, Sub-district, street name, house number...',
+                  })}
+                  placeholderTextColor={colors['on-surface-variant']}
+                  value={value}
+                  onChangeText={(text) => handleDetailChange(text, onChange)}
+                  multiline
+                  numberOfLines={3}
+                  testID="addr-detail"
+                />
+                {/* 批1 T5：文本转坐标下拉（geocode 命中时展示，点击回填坐标） */}
+                {geoResolving && (
+                  <Text
+                    style={[styles.geoHintText, { color: colors['on-surface-variant'] }]}
+                    testID="addr-geo-resolving"
+                  >
+                    {t('address.suggestLocating', {
+                      defaultValue: 'Resolving address location...',
+                    })}
+                  </Text>
+                )}
+                {geoHits.map((hit) => (
+                  <Pressable
+                    key={`${hit.lat},${hit.lng}`}
+                    testID="addr-geo-hit"
+                    onPress={() => applyGeoHit(hit)}
+                    style={[
+                      styles.geoHitRow,
+                      {
+                        backgroundColor: colors['surface-container-lowest'],
+                        borderColor: colors['outline-variant'],
+                      },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={hit.label}
+                  >
+                    <Icon symbol="location_on" size={16} color={colors.primary} />
+                    <Text
+                      style={[styles.geoHitText, { color: colors['on-surface'] }]}
+                      numberOfLines={2}
+                    >
+                      {hit.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </>
             )}
           />
           {/* P16 决策 10 —— 地图选点回传后的定位状态反馈（未定位不显示） */}
@@ -736,6 +823,25 @@ const styles = StyleSheet.create({
   locatedCoords: {
     ...typography['label-caps'],
     fontSize: 10,
+  },
+  // 批1 T5 文本转坐标下拉
+  geoHintText: {
+    ...typography['body-sm'],
+    marginTop: spacing.xs,
+  },
+  geoHitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  geoHitText: {
+    ...typography['body-sm'],
+    flex: 1,
   },
   cityRow: {
     flexDirection: 'row',

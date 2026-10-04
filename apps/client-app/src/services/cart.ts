@@ -65,7 +65,8 @@ function transformCartItem(raw: CartItemRaw): CartItem {
 }
 
 function transformCart(raw: CartRaw): Cart {
-  const items = (raw.items ?? []).map(transformCartItem);
+  // 批1 T1（D7）：撤 `?? []` 兜底——响应缺失 items 属后端契约破坏，让异常上抛（同 orders.ts T1 口径）
+  const items = raw.items.map(transformCartItem);
   return {
     items,
     totalPrice: (raw.selectedSubtotal ?? 0) / 100,
@@ -95,7 +96,12 @@ export const cartApi = {
     return this.getCart();
   },
 
-  async addItemById(productId: string, quantity = 1): Promise<Cart> {
+  // 批1 T2（D8）：加购优先消费调用方传入的 skuId（离线队列重放等调用方若已知 skuId
+  // 直接透传，0 次详情请求）；未传时 getProduct 查详情降为最后 fallback。
+  // defaultSkuId null（后端 catalog.service skus[0]?.id ?? null 可空）→ 显式 businessError
+  //（提示商品暂不可购买），不静默。当前唯一调用方 offline/queue.ts 只带 productId，
+  // 走 fallback 路径，行为与原实现一致。
+  async addItemById(productId: string, quantity = 1, skuId?: string): Promise<Cart> {
     if (isMockMode) {
       const product = mockDb.products.find((p) => p.id === productId);
       if (!product) {
@@ -107,11 +113,14 @@ export const cartApi = {
       recalculateCart();
       return mockResponse(mockDb.cart);
     }
-    // Why: real 模式需查详情获取 SKU ID
-    const detail = await productApi.getProduct(productId);
-    const skuId = detail?.defaultSkuId;
-    if (!skuId) throw businessError('NO_SKU: ' + productId); // 批3#11: 确定性业务失败，不入离线队列
-    await api.post('/client/cart/items', { skuId, quantity });
+    let resolvedSkuId = skuId;
+    if (!resolvedSkuId) {
+      // Why: real 模式入参无 skuId 时最后 fallback 查详情获取 SKU ID
+      const detail = await productApi.getProduct(productId);
+      resolvedSkuId = detail?.defaultSkuId ?? undefined;
+    }
+    if (!resolvedSkuId) throw businessError('NO_SKU: ' + productId); // 批3#11: 确定性业务失败，不入离线队列
+    await api.post('/client/cart/items', { skuId: resolvedSkuId, quantity });
     return this.getCart();
   },
 

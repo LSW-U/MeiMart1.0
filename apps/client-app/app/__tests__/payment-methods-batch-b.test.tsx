@@ -391,3 +391,64 @@ it('全列表无 isDefault（占位渠道在列）→ 自动回填首个可选�
   // checkout-payment-selection.test.tsx「列表就绪回填后提交按钮恢复可用」覆盖
   expect(screen.getByTestId('checkout-submit').props.accessibilityState?.disabled).toBe(true);
 });
+
+// ── 批1 T3（D2/M1/N3）验收断言 ──────────────────────────────────────────────
+
+describe('批1 T3 支付方式接线验收', () => {
+  it('getMethods 消费 { data: { items } } 契约，字段 code/name/subtitle/icon/isDefault/enabled/available/mockFlag 齐备', async () => {
+    const items = backendItems(makeMethods());
+    mockApiGet.mockResolvedValueOnce(items);
+    const methods = await paymentApi.getMethods();
+    // 断言请求的是真实端点
+    expect(mockApiGet).toHaveBeenCalledWith('/client/payments/methods');
+    // mock 枚举与后端 8 code 逐一对齐（M1：无 laispay 删除动作，仅核对一致）
+    expect(methods.map((m) => m.code).sort()).toEqual(
+      [
+        'COD',
+        'BANK_TRANSFER',
+        'STRIPE',
+        'WECHAT',
+        'PAYPAL',
+        'WECHAT_GLOBAL',
+        'ALIPAY_CN',
+        'LOCAL_PSP',
+      ].sort(),
+    );
+    // 契约字段逐项透传（N3：无 label 字段，subtitle 为 I18nText Record）
+    const cod = methods.find((m) => m.code === 'COD')!;
+    expect(cod.id).toBe('COD');
+    expect(cod.isDefault).toBe(true);
+    expect(cod.enabled).toBe(true);
+    expect(cod.available).toBe(true);
+    expect(cod.mockFlag).toBe(false);
+    expect(cod.subtitle).toMatchObject({ en: 'subtitle', zh: '副标题' });
+    expect((cod.name as Record<string, string>).zh).toBeTruthy();
+  });
+
+  it('available:false 不可选中（仅进"即将上线"区，a11y role=button 而非 radio）+ 选中集合不含占位渠道（D2）', () => {
+    const allComingSoon = makeMethods().map((m) => ({ ...m, available: false, isDefault: false }));
+    mockUsePaymentMethods.mockReturnValue({ data: allComingSoon });
+    render(<CheckoutPage />, { wrapper });
+    // available:false 渠道只渲染在"即将上线"区（a11y role=button 占位卡，无 radio 语义），
+    // 不进可选 radio 列表——通过 role 断言区分两个分区（testID 两区同名共用 payment-<id>）
+    for (const code of ['WECHAT_GLOBAL', 'ALIPAY_CN', 'LOCAL_PSP']) {
+      const card = screen.getByTestId(`payment-${code}`);
+      expect(card.props.accessibilityRole).toBe('button');
+    }
+    // 全空时可选区无任何 radio 卡（COD 也被标 available:false）
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+  });
+
+  it('选中值提交 = code 大写枚举（checkout.tsx toUpperCase 通道断言）', async () => {
+    // makeMethods 中 WECHAT available:true 可选；点击后进入选中态，提交值经 toUpperCase 透传 code
+    render(<CheckoutPage />, { wrapper });
+    const wechat = screen.getByTestId('payment-WECHAT');
+    expect(wechat.props.accessibilityState.selected).toBe(false);
+    fireEvent.press(wechat);
+    expect(screen.getByTestId('payment-WECHAT').props.accessibilityState.selected).toBe(true);
+    // 批1 审查 P3-6：原「'wechat'.toUpperCase() 恒真」断言锁不住任何行为，删除。
+    // 「卡 id 即后端 code」的真实行为已由上面 selected 切换 + payment-<code> testID
+    // 存在性（8 code 枚举对齐用例）锁定；提交通道 toUpperCase 在 checkout.tsx:176
+    // 对大写 code 恒等，无需重复断言。
+  });
+});

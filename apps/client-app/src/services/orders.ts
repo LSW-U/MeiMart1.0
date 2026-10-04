@@ -57,6 +57,8 @@ interface OrderRaw {
   cancelledAt: string | null;
   cancelReason: string | null;
   items: OrderItemRaw[];
+  // 批1 审查 P1-1：events 仅详情/列表端点 include；createOrder 响应无此字段（可选）。
+  // 缺失即契约破坏（transform 内直取上抛），仅 createOrder 分支调用前显式归一化补 []。
   events: {
     id: string;
     eventType: string;
@@ -112,8 +114,10 @@ function transformOrder(raw: OrderRaw): Order {
     id: raw.id ?? '',
     orderNo: raw.orderNo ?? '',
     status: raw.status ?? 'PENDING_PAYMENT',
-    // Why: 后端 createOrder 响应不含 items（只有金额/状态），用空数组兜底避免 .map 报错
-    items: (raw.items ?? []).map(transformOrderItem),
+    // 批1 T1（D7）：撤 `?? []` 兜底——响应缺失 items/events 属后端契约破坏，让异常上抛
+    //（静默空列表会把「详情渲染为空」伪装成正常态）。页面层 4 处 `order?.items ?? []`
+    // 属可选守卫不在本清理范围（方案v2 N1）。
+    items: raw.items.map(transformOrderItem),
     totalPrice: (raw.payableAmount ?? raw.totalAmount ?? 0) / 100,
     createdAt: raw.createdAt ?? new Date().toISOString(),
     // Why: P10 §8.1 D1/D2 - 费用 + 支付方式（后端分→元 / paymentMethod 透传枚举字符串）
@@ -140,7 +144,10 @@ function transformOrder(raw: OrderRaw): Order {
     completedAt: raw.completedAt ?? null,
     cancelledAt: raw.cancelledAt ?? null,
     // Why: P10 §8.1 events[] 真实事件流，timeline 精细化备用 + P11 共享
-    events: (raw.events ?? []).map((e) => ({
+    // 批1 T1（D7）：详情/列表端点按契约 include events，缺失即异常上抛（同 items 口径）。
+    // 批1 审查 P1-1：createOrder 响应后端本就不含 events（order.service.ts return 对象），
+    // 属已知合法形态非契约破坏——由 createOrder 分支调用前显式归一化补 []，transform 内直取。
+    events: raw.events.map((e) => ({
       id: e.id ?? '',
       eventType: e.eventType ?? '',
       fromStatus: e.fromStatus ?? null,
@@ -223,7 +230,10 @@ export const orderApi = {
         headers: { 'Idempotency-Key': idempotencyKey },
       },
     );
-    return transformOrder(res.data);
+    // 批1 审查 P1-1：后端 createOrder 响应不含 events（MeiMart order.service.ts return
+    // 对象仅 items/金额/状态；详情/列表端点才 include events）。createOrder 下单后本地
+    // 无事件流可展示，归一化补空数组后走 transformOrder（详情页事件流由 getOrder 提供）。
+    return transformOrder({ ...res.data, events: res.data.events ?? [] });
   },
 
   async cancelOrder(id: string, reason?: string): Promise<Order> {

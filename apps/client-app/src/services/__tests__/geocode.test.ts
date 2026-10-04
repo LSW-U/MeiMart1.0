@@ -1,4 +1,4 @@
-import { fetchNearbyPlaces, reverseGeocode, searchPlaces } from '@/services/geocode';
+import { fetchNearbyPlaces, reverseGeocode, searchPlaces, textGeocode } from '@/services/geocode';
 import { api } from '@/services/api';
 
 // Why: 批D D1 — searchPlaces/fetchNearbyPlaces 切后端代理（/common/geo/suggest、/common/geo/nearby），
@@ -106,6 +106,41 @@ describe('geocode service（后端代理）', () => {
         '/common/geo/reverse',
         expect.objectContaining({ signal: controller.signal }),
       );
+    });
+  });
+
+  // 批1 T5（D1/D9）：文本转坐标——edit 页文本框防抖消费
+  describe('textGeocode（批1 T5，/common/geo/geocode）', () => {
+    it('调后端 geocode 端点透传 address，nominatim 命中返回真实坐标', async () => {
+      mockGet.mockResolvedValueOnce({
+        data: {
+          lat: -8.5568,
+          lng: 125.5602,
+          source: 'nominatim',
+          formattedAddress: 'Rua de Lecidere, Dili, Timor-Leste',
+        },
+      });
+      const result = await textGeocode('Rua de Lecidere, Dili');
+      expect(result).toMatchObject({ lat: -8.5568, lng: 125.5602, source: 'nominatim' });
+      expect(mockGet).toHaveBeenCalledWith('/common/geo/geocode', {
+        params: { address: 'Rua de Lecidere, Dili' },
+      });
+    });
+
+    it('短于 2 字符不发请求（后端 zod address 2-500 前置），返回 fallback 形态', async () => {
+      const result = await textGeocode('a');
+      expect(result.source).toBe('fallback');
+      expect(result.formattedAddress).toBeNull();
+      expect(mockGet).not.toHaveBeenCalled();
+    });
+
+    it('后端 fallback 态（source=fallback / formattedAddress null）原样透传，由调用方判不回填', async () => {
+      mockGet.mockResolvedValueOnce({
+        data: { lat: -8.5567, lng: 125.5595, source: 'fallback', formattedAddress: null },
+      });
+      const result = await textGeocode('unknown place');
+      expect(result.source).toBe('fallback');
+      expect(result.formattedAddress).toBeNull();
     });
   });
 });

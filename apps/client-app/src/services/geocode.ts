@@ -54,3 +54,28 @@ export async function fetchNearbyPlaces(lat: number, lng: number): Promise<Nearb
   });
   return res.data.items ?? [];
 }
+
+/** 文本地理编码结果（批1 T5/D9）：source==='fallback' 或 formattedAddress==null 时不得当作已选点消费 */
+export interface TextGeocodeResult {
+  lat: number;
+  lng: number;
+  source: 'nominatim' | 'fallback';
+  formattedAddress: string | null;
+}
+
+/**
+ * 文本 → 坐标（批1 T5/D1 新增：GET /common/geo/geocode?address=，edit 页文本框防抖消费）。
+ * 失败/无结果后端返 Dili fallback 不抛错——调用方必须检查 source/formattedAddress
+ * （fallback 坐标即 isDiliDefaultCoords 守卫的帝力默认点，回填会伪造「已定位」）。
+ * 后端限流 1 req/s + 10 req/min/IP，调用方防抖 ≥1s。
+ */
+export async function textGeocode(address: string): Promise<TextGeocodeResult> {
+  // 与 suggest 同口径：后端 zod 校验 address 长度 2-500，短于 2 直接空手而归省一次注定 400 的请求
+  if (address.trim().length < 2) {
+    return { lat: -8.5567, lng: 125.5595, source: 'fallback', formattedAddress: null };
+  }
+  const res = await api.get<TextGeocodeResult>('/common/geo/geocode', {
+    params: { address },
+  });
+  return res.data;
+}
