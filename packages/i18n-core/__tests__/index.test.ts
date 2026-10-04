@@ -105,6 +105,28 @@ describe('键集收敛能力（M6：payment.ts toLocalizable 评估依据）', (
   it('四语全缺仅剩 id → 「首个值」兜底可命中 id（有意保留：宁显示原文不显示空）', () => {
     expect(pickLocalized({ id: 'Bayar di tempat' }, 'zh')).toBe('Bayar di tempat');
   });
+
+  it('批1 T4（D4/N8）：后端五语 Record（含 id）在四 locale 渲染均不丢字', () => {
+    // 后端 I18nText 实际产出五语（en/zh/id/tet/pt），i18n-core SUPPORTED_LOCALES 无 id——
+    // 断言 id 值经回退链被「对应 locale 值」兜住（优先命中本语），tet/pt 有值直取不丢，
+    // 且四 locale 各自输出非空字符串（宁显示原文不显示空）
+    const backend5 = {
+      en: 'Bank transfer',
+      zh: '银行转账',
+      id: 'Transferensi bank',
+      tet: 'Transferénsia bank',
+      pt: 'Transferência bancária',
+    };
+    expect(pickLocalized(backend5, 'en')).toBe('Bank transfer');
+    expect(pickLocalized(backend5, 'zh')).toBe('银行转账');
+    expect(pickLocalized(backend5, 'tet')).toBe('Transferénsia bank');
+    expect(pickLocalized(backend5, 'pt')).toBe('Transferência bancária');
+    // 全键非空时 id 键永不泄漏为输出值
+    for (const locale of SUPPORTED_LOCALES) {
+      expect(pickLocalized(backend5, locale).length).toBeGreaterThan(0);
+      expect(pickLocalized(backend5, locale)).not.toBe('Transferensi bank');
+    }
+  });
 });
 
 describe('toIntlLocale', () => {
