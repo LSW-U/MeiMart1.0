@@ -1,21 +1,87 @@
-import type { EarningSummary, EarningTransaction, WithdrawalRequest } from '@/src/types/earnings';
+import type {
+  EarningSummary,
+  EarningTransaction,
+  EarningTxStatus,
+  WithdrawalSubmit,
+} from '@/src/types/earnings';
 
-import { api, isMockMode } from './api';
+import { isMockMode, api } from './api';
 import { notificationApi } from './notification';
 import { riderSettingsApi } from './settings';
 import { translate } from '../i18n/useTranslation';
 import { formatCurrency } from '../utils/format';
 
-// 后端无 rider earnings / withdraw 端点（W6+ 才实现），real 模式也强制走 mock。
-// R-P0-3（D9）治理：FORCE_MOCK=true 时 real 模式钱包整页只读占位（假数字不得上屏），
-// 页面经 isEarningsForcedMock 判断降级；W6+ 后端实现后把本值改 false 即自动恢复，无页面改动。
-const FORCE_MOCK = true;
+// 批1 T6（D5/N4）：后端 W6+ earnings/withdrawals 端点已就绪（MeiMart ccaa26b），
+// 撤 FORCE_MOCK——real 模式走真实端点（适配层见下），mock 模式（本地开发）保留原 localStorage 层。
+// isEarningsForcedMock 因 FORCE_MOCK=false 恒 false，页面占位分支自动退役（保留导出防调用点断裂，
+// T7 死代码评估结论：earnings.tsx/withdraw.tsx 的占位分支由本批一并移除，见各页注释）。
+const FORCE_MOCK = false;
 
 /**
- * 钱包只读降级开关（R-P0-3/D9）：real 模式（isMockMode=false）但 earnings 数据仍被
- * FORCE_MOCK 接管 → 整页只读占位。mock 模式（本地开发）不降级，保留假数据演示。
+ * 钱包只读降级开关（R-P0-3/D9，已退役）：FORCE_MOCK=false 后恒 false。
+ * 保留导出仅为本批外潜在引用兜底，本仓无剩余调用点（grep 已核），T7 清理范围外不删。
  */
 export const isEarningsForcedMock = !isMockMode && FORCE_MOCK;
+
+// ── 后端原始结构（契约 @meimart/api-contract rider-earnings.ts，金额单位：分）──
+
+interface RiderEarningsSummaryRaw {
+  availableBalance: number; // 分
+  today: number; // 分
+  weekly: number; // 分
+  monthly: number; // 分
+}
+
+interface RiderEarningsTransactionRaw {
+  id: string;
+  periodDate: string;
+  orderCount: number;
+  grossAmount: number; // 分
+  commission: number; // 分
+  refundAmount: number; // 分
+  netAmount: number; // 分
+  status: string; // PENDING/CONFIRMED/PAID/DISPUTED
+  confirmedAt: string | null;
+  paidAt: string | null;
+  createdAt: string;
+}
+
+// ── 适配层（D5：字段映射 + 分→美元 /100 集中在此，页面格式化沿用本地 formatCurrency）──
+
+const CENTS_PER_DOLLAR = 100;
+
+/** 分 → 美元（保留 2 位小数误差安全：金额整数分，/100 天然 2 位精度） */
+function centsToUsd(cents: number): number {
+  return cents / CENTS_PER_DOLLAR;
+}
+
+function adaptSummary(raw: RiderEarningsSummaryRaw): EarningSummary {
+  // 字段映射 today→todayEarnings（D5）：映射集中 earnings service 一处
+  return {
+    availableBalance: centsToUsd(raw.availableBalance),
+    todayEarnings: centsToUsd(raw.today),
+    weeklyEarnings: centsToUsd(raw.weekly),
+    monthlyEarnings: centsToUsd(raw.monthly),
+  };
+}
+
+/** 后端 status 收敛到前端四枚举（未知值按 PENDING 处理不崩渲染） */
+function adaptTxStatus(status: string): EarningTxStatus {
+  if (status === 'CONFIRMED' || status === 'PAID' || status === 'DISPUTED') return status;
+  return 'PENDING';
+}
+
+function adaptTransaction(raw: RiderEarningsTransactionRaw): EarningTransaction {
+  return {
+    id: raw.id,
+    // 流水行按结算周期聚合（无单号概念），description 用 periodDate 供页面 i18n 描述
+    amount: centsToUsd(raw.netAmount),
+    type: 'deliveryFee',
+    status: adaptTxStatus(raw.status),
+    createdAt: raw.createdAt,
+    description: raw.periodDate,
+  };
+}
 
 // ── Mock layer (localStorage for Web dev) ──────────────────────────
 
@@ -34,6 +100,7 @@ const seedTransactions: EarningTransaction[] = [
     orderId: '1023',
     amount: 12.5,
     type: 'deliveryFee',
+    status: 'PAID',
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     description: 'Delivery #1023',
   },
@@ -41,6 +108,7 @@ const seedTransactions: EarningTransaction[] = [
     id: 'tx-2',
     amount: -10.0,
     type: 'withdrawal',
+    status: 'PAID',
     createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
     description: 'Withdrawal to bank',
   },
@@ -49,6 +117,7 @@ const seedTransactions: EarningTransaction[] = [
     orderId: '1021',
     amount: 8.2,
     type: 'deliveryFee',
+    status: 'CONFIRMED',
     createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
     description: 'Delivery #1021',
   },
@@ -57,6 +126,7 @@ const seedTransactions: EarningTransaction[] = [
     orderId: '1019',
     amount: 4.0,
     type: 'bonus',
+    status: 'PAID',
     createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     description: 'First order bonus',
   },
@@ -118,8 +188,9 @@ function generateId(): string {
 export const earningsApi = {
   async getSummary(): Promise<EarningSummary> {
     if (isMockMode || FORCE_MOCK) return mockDelay({ ...getMockSummary() });
-    const res = await api.get<EarningSummary>('/earnings/summary');
-    return res.data;
+    // 批1 T6（N4）：真实路径 /rider/earnings/summary（原 /earnings/summary 是错路径）
+    const res = await api.get<RiderEarningsSummaryRaw>('/rider/earnings/summary');
+    return adaptSummary(res.data);
   },
 
   async getTransactions(): Promise<EarningTransaction[]> {
@@ -129,25 +200,31 @@ export const earningsApi = {
         items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
       );
     }
-    const res = await api.get<EarningTransaction[]>('/earnings/transactions');
-    return res.data;
+    // 批1 T6（N4）：真实路径 /rider/earnings/transactions + netAmount→amount 适配
+    // （审查 P3-4：响应缺 items 按契约破坏上抛，不静默空列表——与 T1 撤兜底同口径）
+    const res = await api.get<{ items: RiderEarningsTransactionRaw[] }>(
+      '/rider/earnings/transactions',
+    );
+    const items = res.data.items.map(adaptTransaction);
+    return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   },
 
-  async createWithdrawal(amount: number, method: WithdrawalRequest['method']): Promise<void> {
+  async createWithdrawal(input: WithdrawalSubmit): Promise<void> {
     if (isMockMode || FORCE_MOCK) {
       const s = getMockSummary();
-      if (amount > s.availableBalance) {
+      if (input.amount > s.availableBalance) {
         throw new Error('Insufficient balance');
       }
-      s.availableBalance = Math.round((s.availableBalance - amount) * 100) / 100;
+      s.availableBalance = Math.round((s.availableBalance - input.amount) * 100) / 100;
       saveMockSummary();
 
       const tx: EarningTransaction = {
         id: generateId(),
-        amount: -amount,
+        amount: -input.amount,
         type: 'withdrawal',
+        status: 'PENDING',
         createdAt: new Date().toISOString(),
-        description: method === 'bank' ? 'Withdrawal to bank' : 'Cash pickup',
+        description: 'Withdrawal',
       };
       getMockTransactions().unshift(tx);
       saveMockTransactions();
@@ -160,7 +237,7 @@ export const earningsApi = {
         // 货币符号由 i18n common.currency 提供（5 语言统一 $，对齐 USD 官方货币）。
         vars: {
           amount: formatCurrency(
-            amount,
+            input.amount,
             translate((await riderSettingsApi.get()).language, 'common.currency'),
           ),
         },
@@ -168,7 +245,23 @@ export const earningsApi = {
       });
       return;
     }
-    // 后端只有 /admin/settle/withdrawals（super_admin 代录），骑手端不可用
-    throw new Error('rider withdraw endpoint not available (W6+)');
+    // 批1 T6（N5/D10）：POST /rider/withdrawals，amount 美元×100 转分（换算集中在适配层），
+    // payoutAccount 按 PayoutAccount 契约拼装（channel 枚举四选一，account 必填）。
+    try {
+      await api.post('/rider/withdrawals', {
+        amount: Math.round(input.amount * CENTS_PER_DOLLAR),
+        payoutAccount: {
+          channel: input.channel,
+          account: input.account,
+          ...(input.holderName ? { holderName: input.holderName } : {}),
+          ...(input.bankName ? { bankName: input.bankName } : {}),
+          ...(input.branchName ? { branchName: input.branchName } : {}),
+        },
+      });
+    } catch (e: unknown) {
+      // E-SETTLE-001 余额不足：rider api throwApiError=true 抛 ApiError(status, code, message)，
+      // 透传原始 code 供页面映射提示（withdraw 页 resolveErrorMessage 按 code 判断）。
+      throw e;
+    }
   },
 };

@@ -10,7 +10,6 @@ import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslati
 import { colors } from '../../src/theme/colors';
 import type { EarningSummary, EarningTransaction } from '../../src/types/earnings';
 import { useEarningSummary, useEarningTransactions } from '../../src/services/queries/useEarnings';
-import { isEarningsForcedMock } from '../../src/services/earnings';
 import { formatCurrency } from '../../src/utils/format';
 import { localeTagFor } from '../../src/services/settings';
 import { useState } from 'react';
@@ -143,146 +142,143 @@ export default function EarningsPage() {
       </View>
 
       <ScrollView className="flex-1" contentContainerClassName="px-5 pb-24">
-        {/* R-P0-3/D9：real 模式 FORCE_MOCK 接管（后端 W6+ 无 earnings 端点）→ 整页只读
-            占位：无假数字、无提现入口、无账单列表；FORCE_MOCK=false 后自动恢复 */}
-        {isEarningsForcedMock ? (
-          <View className="items-center gap-3 rounded-2xl border border-surface-variant bg-surface p-8">
-            <AppIcon className="text-4xl text-on-surface-variant" name="lock" size={40} />
-            <Text className="text-center text-base font-semibold text-on-surface">
-              {t('earnings.readOnly.title')}
-            </Text>
-            <Text className="text-center text-sm leading-5 text-on-surface-variant">
-              {t('earnings.readOnly.desc')}
-            </Text>
-          </View>
-        ) : (
-          <>
-            {/* E1 §3.1.A：summary 三态（summary 骨架变体）。isEmpty 恒 false——
-            summary 是单对象非数组（mock 恒返 defaultSummary），走 loading/error/data 三分支 */}
-            <QueryBoundary<EarningSummary>
-              data={summary}
-              isLoading={summaryLoading}
-              isError={summaryError}
-              isEmpty={() => false}
-              errorTitle={t('common.loadError.title')}
-              errorMessage={t('common.loadError.desc')}
-              retryLabel={t('common.retry')}
-              emptyTitle={t('earnings.title')}
-              skeleton="summary"
-              onRetry={() => void refetchSummary()}
+        {/* 批1 T6（D5）：FORCE_MOCK 退役 → 只读占位分支删除，直接走真实接线。
+            E1 §3.1.A：summary 三态（summary 骨架变体）。isEmpty 恒 false——
+            summary 是单对象非数组，走 loading/error/data 三分支 */}
+        <QueryBoundary<EarningSummary>
+          data={summary}
+          isLoading={summaryLoading}
+          isError={summaryError}
+          isEmpty={() => false}
+          errorTitle={t('common.loadError.title')}
+          errorMessage={t('common.loadError.desc')}
+          retryLabel={t('common.retry')}
+          emptyTitle={t('earnings.title')}
+          skeleton="summary"
+          onRetry={() => void refetchSummary()}
+        >
+          {(s) => (
+            <EarningCard
+              balance={formatCurrency(s.availableBalance, currency)}
+              balanceLabel={t('earnings.balanceLabel')}
+              depositAmount={formatCurrency(s.todayEarnings, currency)}
+              depositLabel={t('earnings.deposit')}
+              paidLabel={t('earnings.paid')}
+              unsettledLabel={t('earnings.unsettled')}
+            />
+          )}
+        </QueryBoundary>
+
+        {/* 批1 T6（D5）：结算节奏提示——只说「今日收入次日到账」，不承诺提现 T+1 */}
+        <Text className="mt-3 text-xs leading-4 text-on-surface-variant">
+          {t('earnings.settleHint')}
+        </Text>
+
+        <View className="mt-6">
+          <Button
+            className="h-12 bg-primary-container"
+            onPress={() => router.push('/earnings/withdraw')}
+          >
+            {t('earnings.withdraw')}
+          </Button>
+        </View>
+
+        <View className="mt-8">
+          <View className="mb-4 flex-row border-b border-surface-container-high">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('earnings.todayBilling')}
+              accessibilityState={{ selected: billingTab === 'today' }}
+              className={`border-b-2 px-1 pb-2 ${billingTab === 'today' ? 'border-primary' : 'border-transparent'}`}
+              onPress={() => setBillingTab('today')}
             >
-              {(s) => (
-                <EarningCard
-                  balance={formatCurrency(s.availableBalance, currency)}
-                  balanceLabel={t('earnings.balanceLabel')}
-                  depositAmount={formatCurrency(s.todayEarnings, currency)}
-                  depositLabel={t('earnings.deposit')}
-                  paidLabel={t('earnings.paid')}
-                  unsettledLabel={t('earnings.unsettled')}
-                />
-              )}
-            </QueryBoundary>
-
-            <View className="mt-6">
-              <Button
-                className="h-12 bg-primary-container"
-                onPress={() => router.push('/earnings/withdraw')}
+              <Text
+                className={`text-xl font-semibold ${billingTab === 'today' ? 'text-primary' : 'text-on-surface-variant'}`}
               >
-                {t('earnings.withdraw')}
-              </Button>
-            </View>
-
-            <View className="mt-8">
-              <View className="mb-4 flex-row border-b border-surface-container-high">
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('earnings.todayBilling')}
-                  accessibilityState={{ selected: billingTab === 'today' }}
-                  className={`border-b-2 px-1 pb-2 ${billingTab === 'today' ? 'border-primary' : 'border-transparent'}`}
-                  onPress={() => setBillingTab('today')}
-                >
-                  <Text
-                    className={`text-xl font-semibold ${billingTab === 'today' ? 'text-primary' : 'text-on-surface-variant'}`}
-                  >
-                    {t('earnings.todayBilling')}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('earnings.allBilling')}
-                  accessibilityState={{ selected: billingTab === 'all' }}
-                  className={`ml-6 border-b-2 px-1 pb-2 ${billingTab === 'all' ? 'border-primary' : 'border-transparent'}`}
-                  onPress={() => setBillingTab('all')}
-                >
-                  <Text
-                    className={`text-xl font-semibold ${billingTab === 'all' ? 'text-primary' : 'text-on-surface-variant'}`}
-                  >
-                    {t('earnings.allBilling')}
-                  </Text>
-                </Pressable>
-              </View>
-
-              {/* E1 §3.1.B：transactions 三态（list 骨架 + 独立 error 重试 + isEmpty 空态） */}
-              <QueryBoundary<EarningTransaction[]>
-                data={visibleTransactions}
-                isLoading={txLoading}
-                isError={txError}
-                isEmpty={(list) => list.length === 0}
-                errorTitle={t('common.loadError.title')}
-                errorMessage={t('common.loadError.desc')}
-                retryLabel={t('common.retry')}
-                emptyTitle={t('earnings.noTransactions')}
-                skeleton="list"
-                onRetry={() => void refetchTx()}
+                {t('earnings.todayBilling')}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('earnings.allBilling')}
+              accessibilityState={{ selected: billingTab === 'all' }}
+              className={`ml-6 border-b-2 px-1 pb-2 ${billingTab === 'all' ? 'border-primary' : 'border-transparent'}`}
+              onPress={() => setBillingTab('all')}
+            >
+              <Text
+                className={`text-xl font-semibold ${billingTab === 'all' ? 'text-primary' : 'text-on-surface-variant'}`}
               >
-                {() => (
-                  <View className="gap-4">
-                    {/* E1 §3.2：区块标题随 tab 动态（today→「今日」/ all→「全部账单」），
-                    修原 :80 写死 earnings.today、切「全部」仍显「今日」bug */}
-                    <Text className="pt-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                      {billingTab === 'today' ? t('earnings.today') : t('earnings.allBilling')}
-                    </Text>
-                    {groups.map((group, groupIndex) => (
-                      <View key={group.key}>
-                        {/* 「全部账单」多分组时组头标注今日/昨日/更早；第一组头与区块标题
-                        同文案（今日）会重复——单分组不叠头，多分组从第二组起显示组头 */}
-                        {groups.length > 1 && groupIndex > 0 ? (
-                          <Text className="pb-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                            {group.label}
-                          </Text>
-                        ) : null}
-                        {group.items.map((tx) => {
-                          const meta = txBadgeMeta[tx.type];
-                          return (
-                            <HistoryItem
-                              key={tx.id}
-                              amount={formatCurrency(tx.amount, currency, { sign: true })}
-                              icon={{
-                                name: meta.icon,
-                                circleClass: meta.circleClass,
-                                color: meta.iconColor,
-                                label: txTitle(tx),
-                              }}
-                              positive={tx.amount >= 0}
-                              time={new Date(tx.createdAt).toLocaleTimeString(
-                                localeTagFor(language),
-                                {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                },
-                              )}
-                              title={txTitle(tx)}
-                            />
-                          );
-                        })}
-                      </View>
-                    ))}
+                {t('earnings.allBilling')}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* E1 §3.1.B：transactions 三态（list 骨架 + 独立 error 重试 + isEmpty 空态） */}
+          <QueryBoundary<EarningTransaction[]>
+            data={visibleTransactions}
+            isLoading={txLoading}
+            isError={txError}
+            isEmpty={(list) => list.length === 0}
+            errorTitle={t('common.loadError.title')}
+            errorMessage={t('common.loadError.desc')}
+            retryLabel={t('common.retry')}
+            emptyTitle={t('earnings.noTransactions')}
+            skeleton="list"
+            onRetry={() => void refetchTx()}
+          >
+            {() => (
+              <View className="gap-4">
+                {/* E1 §3.2：区块标题随 tab 动态（today→「今日」/ all→「全部账单」），
+                修原 :80 写死 earnings.today、切「全部」仍显「今日」bug */}
+                <Text className="pt-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                  {billingTab === 'today' ? t('earnings.today') : t('earnings.allBilling')}
+                </Text>
+                {groups.map((group, groupIndex) => (
+                  <View key={group.key}>
+                    {/* 「全部账单」多分组时组头标注今日/昨日/更早；第一组头与区块标题
+                    同文案（今日）会重复——单分组不叠头，多分组从第二组起显示组头 */}
+                    {groups.length > 1 && groupIndex > 0 ? (
+                      <Text className="pb-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                        {group.label}
+                      </Text>
+                    ) : null}
+                    {group.items.map((tx) => {
+                      const meta = txBadgeMeta[tx.type];
+                      return (
+                        <View key={tx.id} className="gap-1">
+                          <HistoryItem
+                            amount={formatCurrency(tx.amount, currency, { sign: true })}
+                            icon={{
+                              name: meta.icon,
+                              circleClass: meta.circleClass,
+                              color: meta.iconColor,
+                              label: txTitle(tx),
+                            }}
+                            positive={tx.amount >= 0}
+                            time={new Date(tx.createdAt).toLocaleTimeString(
+                              localeTagFor(language),
+                              {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              },
+                            )}
+                            title={txTitle(tx)}
+                          />
+                          {/* 批1 T6：DISPUTED 行标注「争议中，未计入余额」（后端不计入 availableBalance，UI 同步提示） */}
+                          {tx.status === 'DISPUTED' ? (
+                            <Text className="ml-14 text-xs font-semibold text-status-danger-text">
+                              {t('earnings.tx.disputed')}
+                            </Text>
+                          ) : null}
+                        </View>
+                      );
+                    })}
                   </View>
-                )}
-              </QueryBoundary>
-            </View>
-          </>
-        )}
+                ))}
+              </View>
+            )}
+          </QueryBoundary>
+        </View>
       </ScrollView>
     </View>
   );

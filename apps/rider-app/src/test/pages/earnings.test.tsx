@@ -86,6 +86,8 @@ function buildTx(
     createdAt: new Date().toISOString(),
     description: 'seed en text',
     orderId: '1023',
+    // 批1 T6：status 改必填（后端 Settlement 状态透出），mock 默认 PAID
+    status: 'PAID',
     ...overrides,
   };
 }
@@ -100,32 +102,36 @@ function renderPage() {
   return render(<EarningsPage />, { wrapper });
 }
 
-describe('R-P0-3/D9 钱包只读降级（real+FORCE_MOCK）', () => {
+describe('批1 T6：FORCE_MOCK 退役（占位分支删除）', () => {
   beforeEach(() => {
     mockSummaryState = 'summary-ok';
     mockTxState = 'tx-ok';
   });
 
-  it('isEarningsForcedMock=true（real+FORCE_MOCK）降级形态：占位文案 key 5 语齐备 + 开关导出', () => {
-    // 页面模块已被顶部静态 import 缓存，doMock/resetModules 对其无效；resetModules
-    // 还会分裂 react 双副本（useState null，已实证）。降级分支是薄三元：这里锁定
-    // 开关导出 + 占位文案 key 存在；「无假数字/无提现入口」由页面 JSX 分支结构保证
-    //（isEarningsForcedMock ? 占位 : 原内容），非降级形态由下方及主套件覆盖。
+  it('isEarningsForcedMock 恒 false（FORCE_MOCK=false，占位分支退役）', () => {
     const earningsModule = require('../../../src/services/earnings') as {
       isEarningsForcedMock: boolean;
     };
-    expect(typeof earningsModule.isEarningsForcedMock).toBe('boolean');
+    expect(earningsModule.isEarningsForcedMock).toBe(false);
+  });
+
+  it('结算提示 settleHint 5 语齐备且不承诺提现 T+1（「次日到账」仅指收入）', () => {
     for (const lang of ['zh', 'en', 'tet', 'pt', 'id'] as const) {
       const dict = require(`../../../src/i18n/locales/${lang}.json`) as Record<string, string>;
-      expect(dict['earnings.readOnly.title']).toBeTruthy();
-      expect(dict['earnings.readOnly.desc']).toBeTruthy();
+      expect(dict['earnings.settleHint']).toBeTruthy();
+      expect(dict['earnings.tx.disputed']).toBeTruthy();
     }
   });
 
-  it('isEarningsForcedMock=false（mock 模式开发态）：正常渲染假数字与提现入口（页面主套件已覆盖）', () => {
-    const { queryByText } = renderPage();
-    expect(queryByText('$128.50')).toBeTruthy();
-    expect(queryByText('立即提现')).toBeTruthy();
+  it('页面渲染余额 + 结算提示 + 提现入口（正常接线形态）', () => {
+    const { getByText } = renderPage();
+    expect(getByText('$128.50')).toBeTruthy();
+    expect(getByText('立即提现')).toBeTruthy();
+    // 结算节奏提示上屏（zh 字典）
+    expect(getByText('今日收入次日到账')).toBeTruthy();
+    // 占位文案 key 已随 T7 清扫删除（成孤儿）
+    const zhDict = require('../../../src/i18n/locales/zh.json') as Record<string, string>;
+    expect(zhDict['earnings.readOnly.title']).toBeUndefined();
   });
 });
 
@@ -300,5 +306,39 @@ describe('balanceLabel 修正（E1 §3.6）', () => {
     expect(getByText('钱包余额')).toBeTruthy();
     expect(queryByText(/美元/)).toBeNull();
     expect(getByText('$128.50')).toBeTruthy();
+  });
+});
+
+describe('批1 T6：DISPUTED 行标注', () => {
+  it('DISPUTED 交易行下方显示「争议中，未计入余额」提示', () => {
+    mockTransactions = [
+      buildTx({
+        id: 'tx-disputed',
+        type: 'deliveryFee',
+        amount: 9.9,
+        orderId: '1025',
+        status: 'DISPUTED',
+        createdAt: new Date().toISOString(),
+      }),
+    ];
+    const { getByText } = renderPage();
+    expect(
+      getByText(require('../../../src/i18n/locales/zh.json')['earnings.tx.disputed']),
+    ).toBeTruthy();
+  });
+
+  it('PAID 交易不显示争议标注', () => {
+    mockTransactions = [
+      buildTx({
+        id: 'tx-paid',
+        type: 'deliveryFee',
+        amount: 9.9,
+        createdAt: new Date().toISOString(),
+      }),
+    ];
+    const { queryByText } = renderPage();
+    expect(
+      queryByText(require('../../../src/i18n/locales/zh.json')['earnings.tx.disputed']),
+    ).toBeNull();
   });
 });

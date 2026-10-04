@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { WithdrawalRequest } from '@/src/types/earnings';
+import type { WithdrawalSubmit } from '@/src/types/earnings';
 
 import { earningsApi } from '../earnings';
 
@@ -21,11 +21,12 @@ export function useEarningTransactions() {
   });
 }
 
+// 批1 T6（D10）：提现入参改 WithdrawalSubmit（amount 美元 + payout channel + account），
+// service 层负责 ×100 转分与 payoutAccount 拼装
 export function useCreateWithdrawal() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: { amount: number; method: WithdrawalRequest['method'] }) =>
-      earningsApi.createWithdrawal(params.amount, params.method),
+    mutationFn: (params: WithdrawalSubmit) => earningsApi.createWithdrawal(params),
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: earningsSummaryKey });
       void queryClient.invalidateQueries({ queryKey: earningsTransactionsKey });
