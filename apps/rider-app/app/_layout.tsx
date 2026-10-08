@@ -1,8 +1,10 @@
 import '../global.css';
 
 import { Stack } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
+import { cssInterop } from 'nativewind';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { setOnUnauthorized } from '../src/services/api';
@@ -17,6 +19,12 @@ import { useAuthStore } from '../src/store/useAuthStore';
 import { useNetworkStore } from '../src/hooks/useNetworkStore';
 import { registerPushToken, unregisterPushToken } from '../src/services/push-token';
 import { usePushDeepLink } from '../src/services/push-deep-link';
+
+// T8 渐变二期：LinearGradient 未注册 nativewind interop（css-interop 默认只映射 RN
+// 内置组件），className 静默失效 → 保证金页 hero 直角/无描边/无内边距。
+// 此处全局注册一处修；web 端 backgroundImage 由 NativeLinearGradient.web 注入
+// style 数组第二位，className style 合并不冲突。
+cssInterop(LinearGradient, { className: 'style' });
 
 function PushTokenRegistrar() {
   // 批C C3：登录态驱动 token 注册/注销（真机跳过条件在 push-token.ts 内守卫）
