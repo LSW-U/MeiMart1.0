@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 
 import { buildLocationPayload, reportLocationHttp } from '../services/location';
 import { captureError } from '../services/sentry';
@@ -88,6 +89,11 @@ export function useBackgroundTask(options: UseBackgroundTaskOptions) {
   }, [currentOrderId]);
 
   useEffect(() => {
+    // web 守卫：expo-location web stub 无 start/stopLocationUpdatesAsync（调用即
+    // TypeError 非 UnavailabilityError），后台定位本就是原生专属场景。
+    // 模块顶层 defineTask 保留（内存注册，task 永不被触发，无害）。
+    if (Platform.OS === 'web') return;
+
     if (!enabled) {
       if (isRegisteredRef.current) {
         Location.stopLocationUpdatesAsync(TASK_NAME).catch((e) =>
