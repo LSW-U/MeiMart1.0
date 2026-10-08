@@ -70,6 +70,10 @@ function extractData(response: Notifications.NotificationResponse): PushData | n
  */
 export function usePushDeepLink(): void {
   useEffect(() => {
+    // web 守卫：getLastNotificationResponseAsync 无 web 实现，调用即抛
+    // UnavailabilityError（expo-modules stub）。web 无推送，深链整体跳过。
+    if (Platform.OS === 'web') return;
+
     // 冷启动：点推送图标拉起 app（JS 重新执行），initial response 落在 root 挂载前
     void Notifications.getLastNotificationResponseAsync().then((response) => {
       if (response) routeByPushData(extractData(response));
