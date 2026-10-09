@@ -206,3 +206,112 @@ describe('C-P3-5 再买/复购（handleRepeatOrder，P2-3 ②）', () => {
     expect(router.push).not.toHaveBeenCalledWith('/(main)/cart');
   });
 });
+
+// ── 第三轮新增代码修复 批1（N-P2-11）：连点锁 ──
+describe('N-P2-11 连点支付/复购只走一次流程', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('同帧连点 Pay Now → paymentApi 三连各只调 1 次', async () => {
+    // getIntent 挂起期间连点第二下（state 未变，state 守卫拦不住）
+    let releaseIntent: (v: { status: string }) => void;
+    mockGetIntent.mockReturnValue(
+      new Promise((resolve) => {
+        releaseIntent = resolve;
+      }),
+    );
+    mockMockPay.mockResolvedValue({ orderId: 'order-1' });
+    mockConfirm.mockResolvedValue({ orderId: 'order-1' });
+
+    setup(makeOrder('PENDING_PAYMENT', 'QRIS'));
+    const payBtn = await screen.findByTestId('order-pay', {}, { timeout: 2000 });
+    fireEvent.press(payBtn);
+    fireEvent.press(payBtn); // 同帧第二击（getIntent 仍挂起）
+    releaseIntent!({ status: 'UNPAID' });
+
+    await waitFor(() => expect(mockConfirm).toHaveBeenCalledTimes(1));
+    expect(mockGetIntent).toHaveBeenCalledTimes(1);
+    expect(mockMockPay).toHaveBeenCalledTimes(1);
+  });
+
+  it('复购进行中连点 → addToCart 只发起一轮（2 项）', async () => {
+    let releaseFirst: (v: undefined) => void;
+    mockAddToCartMutateAsync.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          releaseFirst = resolve;
+        }),
+    );
+    mockAddToCartMutateAsync.mockResolvedValueOnce(undefined);
+
+    setup(makeOrder('DELIVERED'));
+    const repeatBtn = await screen.findByTestId('order-repeat', {}, { timeout: 2000 });
+    fireEvent.press(repeatBtn);
+    fireEvent.press(repeatBtn); // 第一项加购挂起期间连点
+    releaseFirst!(undefined);
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/(main)/cart'));
+    expect(mockAddToCartMutateAsync).toHaveBeenCalledTimes(2); // 一轮的 2 项，非 4 项
+  });
+});
+
+// ── N-P2-1（D6 第二层）：pay/repeat 挂起期 disabled（ref 锁之外的可达性双保险）──
+describe('N-P2-1 pay/repeat 挂起期 disabled', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('支付挂起期 order-pay accessibilityState.disabled=true，结束后恢复 false', async () => {
+    let releaseIntent: (v: { status: string }) => void;
+    mockGetIntent.mockReturnValue(
+      new Promise((resolve) => {
+        releaseIntent = resolve;
+      }),
+    );
+
+    setup(makeOrder('PENDING_PAYMENT', 'QRIS'));
+    const payBtn = await screen.findByTestId('order-pay', {}, { timeout: 2000 });
+    expect(payBtn.props.accessibilityState).toMatchObject({ disabled: false });
+
+    fireEvent.press(payBtn);
+    // 挂起期（getIntent 未 resolve）：disabled 置位
+    await waitFor(() =>
+      expect(screen.getByTestId('order-pay').props.accessibilityState).toMatchObject({
+        disabled: true,
+      }),
+    );
+
+    releaseIntent!({ status: 'UNPAID' });
+    await waitFor(() => expect(mockConfirm).toHaveBeenCalledTimes(1));
+    // 流程结束恢复可点
+    await waitFor(() =>
+      expect(screen.getByTestId('order-pay').props.accessibilityState).toMatchObject({
+        disabled: false,
+      }),
+    );
+  });
+
+  it('复购挂起期 order-repeat disabled=true，结束后恢复（全部失败路径也复位）', async () => {
+    mockAddToCartMutateAsync.mockRejectedValue(new Error('SOLD_OUT'));
+
+    setup(makeOrder('DELIVERED'));
+    const repeatBtn = await screen.findByTestId('order-repeat', {}, { timeout: 2000 });
+    expect(repeatBtn.props.accessibilityState).toMatchObject({ disabled: false });
+
+    fireEvent.press(repeatBtn);
+    await waitFor(() =>
+      expect(screen.getByTestId('order-repeat').props.accessibilityState).toMatchObject({
+        disabled: true,
+      }),
+    );
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('order.repeatFailed'));
+    // 失败路径 finally 复位
+    await waitFor(() =>
+      expect(screen.getByTestId('order-repeat').props.accessibilityState).toMatchObject({
+        disabled: false,
+      }),
+    );
+  });
+});

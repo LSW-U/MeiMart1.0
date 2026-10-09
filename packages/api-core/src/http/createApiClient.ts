@@ -20,6 +20,9 @@ export type { ApiClient, CreateApiClientOptions };
  *   - 响应拦截器：{ success, data } 壳剥层 + 401 单飞 refresh 重试（队列层删除，直接共享
  *     refreshPromise——并发 401 等待的是同一个 Promise，flushQueue 层冗余消除）
  *   - T4 isAuthEndpoint 排除纳入包行为（参数化前缀，默认 '/common/auth/'）
+ *   - N-P1-1（方案A）：refresh 副作用（tokenStorage.set / onTokenRefreshed）抛错可 reject，
+ *     调用方拿原始 Error，不经 throwApiError 分型（两端调用方均为泛型 catch）
+ *     ⚠️ 方案A后 refresh 副作用抛错可 reject，调用方拿原始 Error，不经 throwApiError
  */
 export function createApiClient(options: CreateApiClientOptions): ApiClient {
   const {
@@ -51,23 +54,35 @@ export function createApiClient(options: CreateApiClientOptions): ApiClient {
     refreshPromise = (async () => {
       const refreshToken = await tokenStorage.getRefresh();
       if (!refreshToken) return null;
+      // N-P1-1（D1 方案A）：仅网络请求在 try 内——tokenStorage.set / onTokenRefreshed
+      // 等副作用移出（N-P1-2 落地后写失败本就静默），副作用抛错不得误触发 clear+登出
+      let newToken: string;
+      let newRefresh: string;
       try {
         const res = await api.post<{ accessToken: string; refreshToken: string }>(
           '/common/auth/refresh',
           { refreshToken },
         );
-        const { accessToken: newToken, refreshToken: newRefresh } = res.data;
-        await tokenStorage.set(newToken, newRefresh);
-        await onTokenRefreshed?.(newToken);
-        return newToken;
+        newToken = res.data.accessToken;
+        newRefresh = res.data.refreshToken;
       } catch {
         await tokenStorage.clear();
         onUnauthorized?.();
         return null;
-      } finally {
-        refreshPromise = null;
       }
+      await tokenStorage.set(newToken, newRefresh);
+      await onTokenRefreshed?.(newToken);
+      return newToken;
     })();
+    // N-P1-1：副作用抛错时也复位单飞槽位（reject 仍向调用方传播）——
+    // 前置 .catch 吞掉副本，.finally 复位不会成 unhandledRejection；单链单回调无微任务缝隙
+    void refreshPromise
+      // 吞掉 rejection 的副本；原 promise 的 reject 仍传播给已挂 then 的调用方
+      //（副本返回值无人消费，直接 null，省掉双重断言）
+      .catch(() => null)
+      .finally(() => {
+        refreshPromise = null;
+      });
     return refreshPromise;
   };
 

@@ -83,8 +83,14 @@ export default function WithdrawalPage() {
     return t('withdraw.failed');
   };
 
+  // N-P2-6（D6）：useRef 同步置位锁——state 守卫是异步的，同帧双击两请求都过守卫；
+  // ref 同步写入第一击即生效（对齐仓内其它提交点 ref 锁惯例），state 守卫保留为第二层（按钮 disabled）
+  const submitLockRef = useRef(false);
+
   const submit = async () => {
     if (!amountValid || !accountValid || status === 'processing' || status === 'success') return;
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
     setStatus('processing');
     try {
       await createWithdrawal.mutateAsync({
@@ -106,6 +112,7 @@ export default function WithdrawalPage() {
         router.replace('/(main)/earnings');
       }, 800);
     } catch (e) {
+      submitLockRef.current = false; // N-P2-6：失败放行，允许用户改后重试
       setStatus('error');
       showToast(resolveErrorMessage(e), 'error');
     }

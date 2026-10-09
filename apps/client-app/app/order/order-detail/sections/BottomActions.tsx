@@ -3,6 +3,7 @@
 // 批5 拆分：从 app/order/[id].tsx 原样搬移（含 handleRepeatOrder），行为零变更
 import { Text, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useTheme, borderRadius, shadowPresets } from '@/theme';
@@ -68,18 +69,29 @@ export function BottomActions({
   const { colors } = useTheme();
   // C-P3-5（批4）：再买/复购真实加购（hook 层含库存校验 SOLD_OUT/STOCK_EXCEEDED + 乐观更新）
   const addToCart = useAddToCart();
+  // N-P2-11（D6）：useRef 同步锁——连点支付/复购同帧多次触发时仅首击生效
+  //（state 异步守卫拦不住同帧双击；对齐仓内其它提交点 ref 锁惯例）
+  const payLockRef = useRef(false);
+  const repeatLockRef = useRef(false);
+  // N-P2-1（D6 第二层）：pending disabled——pay/repeat 进行中按钮置 disabled，
+  // 视觉可达性双保险（ref 锁管同帧连点，disabled 管挂起期重复点击）
+  const [payPending, setPayPending] = useState(false);
+  const [repeatPending, setRepeatPending] = useState(false);
   // C-P3-4（批4）：待支付订单原位支付——预付渠道走 paymentApi（查 intent → dev mock 支付+确认，
   // 真实支付渠道接入前 dev 便利链路；prod 后端支付网关就绪后此处换真实收银台），COD 无需支付。
   // 失败 toast 不跳页，不经 checkout（不带入购物车与新建地址，杜绝重复下单路径）。
   // 挂账：真实支付渠道收银台 UI（需产品拍板渠道范围），当前 dev 链路仅验证状态流转。
   const handlePay = async () => {
-    const method = (order.paymentMethod ?? 'COD').toUpperCase();
-    if (method === 'COD') {
-      // COD 无预付动作（骑手端货到收款），提示语义而非静默无响应
-      toast.info(t('order.payCodNoAction', { defaultValue: 'COD orders are paid on delivery' }));
-      return;
-    }
+    if (payLockRef.current) return;
+    payLockRef.current = true;
+    setPayPending(true);
     try {
+      const method = (order.paymentMethod ?? 'COD').toUpperCase();
+      if (method === 'COD') {
+        // COD 无预付动作（骑手端货到收款），提示语义而非静默无响应
+        toast.info(t('order.payCodNoAction', { defaultValue: 'COD orders are paid on delivery' }));
+        return;
+      }
       const intent = await paymentApi.getIntent(order.id);
       if (intent.status === 'PAID') {
         toast.info(t('order.payAlreadyPaid', { defaultValue: 'Order already paid' }));
@@ -91,36 +103,55 @@ export function BottomActions({
       toast.success(t('order.paySuccess', { defaultValue: 'Payment successful' }));
     } catch {
       toast.error(t('order.payFailed', { defaultValue: 'Payment failed, please try again' }));
+    } finally {
+      payLockRef.current = false;
+      setPayPending(false);
     }
   };
-  const outline = (label: string, onPress: () => void, testID: string) => (
+  // N-P2-11：复购同样补 ref 锁（连点多订单项重复加购）
+  const handleRepeatOrderLocked = async () => {
+    if (repeatLockRef.current) return;
+    repeatLockRef.current = true;
+    setRepeatPending(true);
+    try {
+      await handleRepeatOrder(order, { addToCart, t, toast });
+    } finally {
+      repeatLockRef.current = false;
+      setRepeatPending(false);
+    }
+  };
+  const outline = (label: string, onPress: () => void, testID: string, disabled = false) => (
     <Pressable
       testID={testID}
       onPress={onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.outlineBtn,
         { backgroundColor: colors['surface-container'] },
-        pressed && { transform: [{ scale: 0.95 }] },
+        pressed && !disabled && { transform: [{ scale: 0.95 }] },
       ]}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled, busy: disabled }}
     >
       <Text style={[styles.btnText, { color: colors.primary }]}>{label}</Text>
     </Pressable>
   );
 
-  const solid = (label: string, onPress: () => void, testID: string) => (
+  const solid = (label: string, onPress: () => void, testID: string, disabled = false) => (
     <Pressable
       testID={testID}
       onPress={onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.solidBtn,
         { backgroundColor: colors.primary },
         shadowPresets.umaLulik,
-        pressed && { transform: [{ scale: 0.95 }] },
+        pressed && !disabled && { transform: [{ scale: 0.95 }] },
       ]}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled, busy: disabled }}
     >
       <Text style={[styles.btnText, { color: ON_PRIMARY }]}>{label}</Text>
     </Pressable>
@@ -142,8 +173,12 @@ export function BottomActions({
               t('order.actions.pay', { defaultValue: 'Pay Now' }),
               // C-P3-4（批4）：待支付订单不再跳 /order/checkout（会带入购物车+新建地址，
               // 存在重复下单风险）——留在本详情页原位发起支付（见下方 handlePay）。
+              // 原因：handlePay 的 ref 锁仅在点击事件回调内执行，render 期只传引用未调用；
+              // react-hooks/refs 跨函数传播把 render 期调用的 solid() 参数误判为 render 期读 ref
+              // eslint-disable-next-line react-hooks/refs
               handlePay,
               'order-pay',
+              payPending,
             )
           ) : (
             <Text style={styles.payUnavailable} testID="order-pay-unavailable">
@@ -193,10 +228,13 @@ export function BottomActions({
         <>
           {outline(
             t('order.actions.repurchase', { defaultValue: 'Repeat Order' }),
-            // C-P3-5（批4）：再买从「跳 home」改真实加购——逐项复用订单商品走 addToCart
-            //（hook 层已含库存校验/乐观更新），成功跳购物车，部分失败 toast 提示
-            () => handleRepeatOrder(order, { addToCart, t, toast }),
+            // N-P2-11：换带 ref 锁的包装版（同帧连点只走一次加购流程）
+            // 原因：ref 锁仅在点击事件回调内执行，render 期只传引用未调用；
+            // react-hooks/refs 跨函数传播把 render 期调用的 outline() 参数误判为 render 期读 ref
+            // eslint-disable-next-line react-hooks/refs
+            () => void handleRepeatOrderLocked(),
             'order-repeat',
+            repeatPending,
           )}
           {solid(
             t('order.actions.review', { defaultValue: 'Write a Review' }),
@@ -225,8 +263,12 @@ export function BottomActions({
           {solid(
             t('order.actions.repurchase', { defaultValue: 'Buy Again' }),
             // C-P3-5（批4）：同 Repeat Order——真实加购后跳购物车
-            () => handleRepeatOrder(order, { addToCart, t, toast }),
+            // 原因：ref 锁仅在点击事件回调内执行，render 期只传引用未调用；
+            // react-hooks/refs 跨函数传播把 render 期调用的 solid() 参数误判为 render 期读 ref
+            // eslint-disable-next-line react-hooks/refs
+            () => void handleRepeatOrderLocked(),
             'order-repurchase',
+            repeatPending,
           )}
         </>
       );
@@ -241,8 +283,12 @@ export function BottomActions({
           {solid(
             t('order.actions.repurchase', { defaultValue: 'Buy Again' }),
             // C-P3-5（批4）：同 Repeat Order——真实加购后跳购物车
-            () => handleRepeatOrder(order, { addToCart, t, toast }),
+            // 原因：ref 锁仅在点击事件回调内执行，render 期只传引用未调用；
+            // react-hooks/refs 跨函数传播把 render 期调用的 solid() 参数误判为 render 期读 ref
+            // eslint-disable-next-line react-hooks/refs
+            () => void handleRepeatOrderLocked(),
             'order-repurchase',
+            repeatPending,
           )}
         </>
       );

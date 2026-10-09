@@ -15,6 +15,9 @@ import EditPage from '../address/edit';
 
 const mockMutate = jest.fn();
 const mockTextGeocode = jest.fn();
+// N-P1-3：可控的 useAddresses 返回（isLoading / data 空态切换）；
+// 初值在 fakeExisting 声明后的 beforeEach 里设置，此处仅占位
+let mockAddresses: { data?: unknown; isLoading: boolean } = { isLoading: false };
 
 jest.mock('@/services/geocode', () => ({
   ...jest.requireActual('@/services/geocode'),
@@ -49,7 +52,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 jest.mock('@/services/queries/useAddress', () => ({
-  useAddresses: () => ({ data: [fakeExisting] }),
+  useAddresses: () => mockAddresses,
   useCreateAddress: () => ({ mutate: mockMutate, isPending: false }),
   useUpdateAddress: () => ({ mutate: mockMutate, isPending: false }),
 }));
@@ -61,6 +64,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 beforeEach(() => {
   mockMutate.mockReset();
   mockTextGeocode.mockReset();
+  mockAddresses = { data: [fakeExisting], isLoading: false };
   useMapPickStore.getState().clear();
 });
 
@@ -189,5 +193,31 @@ describe('AddressEditPage 批1 T5 文本转坐标', () => {
     await waitFor(() => {
       expect(mockMutate).not.toHaveBeenCalled();
     });
+  });
+});
+
+// ── 第三轮新增代码修复 批1（N-P1-3）：编辑态健壮性 ──
+describe('AddressEditPage N-P1-3 编辑态健壮性', () => {
+  it('① isLoading → 渲染骨架不渲染表单', () => {
+    mockAddresses = { isLoading: true };
+    const { getByTestId, queryByDisplayValue } = render(<EditPage />, { wrapper });
+    expect(getByTestId('addr-edit-loading')).toBeTruthy();
+    expect(queryByDisplayValue('Maria Silva')).toBeNull();
+  });
+
+  it('② 编辑态 id 有值但数据查不到 → 显式错误态 + 返回按钮，绝不静默落 create', () => {
+    mockAddresses = { data: [], isLoading: false }; // id='a1' 在列表中不存在
+    const { getByTestId, queryByDisplayValue } = render(<EditPage />, { wrapper });
+    expect(getByTestId('addr-edit-notfound')).toBeTruthy();
+    expect(getByTestId('addr-edit-back')).toBeTruthy();
+    // 表单没渲染 → 不可能触发 create
+    expect(queryByDisplayValue('Maria Silva')).toBeNull();
+  });
+
+  it('③ 查不到时标题仍是 Edit（isEditing 按 id 判定，不随 existing 消失）', () => {
+    mockAddresses = { data: [], isLoading: false };
+    const { getByText } = render(<EditPage />, { wrapper });
+    expect(getByText('address.edit')).toBeTruthy();
+    expect(() => getByText('address.add')).toThrow();
   });
 });

@@ -284,3 +284,47 @@ describe('成功提交（E2 §3.3）', () => {
     expect(payload.branchName).toBeUndefined();
   });
 });
+
+// ── 第三轮新增代码修复 批1（N-P2-6）：同帧双击 ref 同步锁 ──
+describe('N-P2-6 同帧双击提现只发一次请求', () => {
+  it('mutateAsync 挂起期间同帧连点提交 → 只发 1 次请求', async () => {
+    let release: (v: undefined) => void;
+    mockMutateAsync.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+    );
+    const { container, getByText } = renderPage();
+    fillValidForm(container, '50');
+
+    // Button loading 态会把 label 换成 spinner，第二击改用同一 DOM 节点引用点击
+    const btn = getByText('确认提现');
+    fireEvent.click(btn);
+    fireEvent.click(btn); // 第一击请求挂起中，同步锁立即置位拦下第二击
+    release!(undefined);
+
+    await waitFor(() => {
+      expect(showToastMock).toHaveBeenCalledWith('提现申请已提交', 'success');
+    });
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('失败后锁释放 → 可再次提交', async () => {
+    mockMutateAsync.mockRejectedValueOnce({ code: 'E-NET' });
+    const { container, getByText } = renderPage();
+    fillValidForm(container, '50');
+
+    fireEvent.click(getByText('确认提现'));
+    await waitFor(() => {
+      expect(showToastMock).toHaveBeenCalledWith('网络异常，请重试', 'error');
+    });
+
+    mockMutateAsync.mockResolvedValueOnce(undefined);
+    fireEvent.click(getByText('确认提现'));
+    await waitFor(() => {
+      expect(showToastMock).toHaveBeenCalledWith('提现申请已提交', 'success');
+    });
+    expect(mockMutateAsync).toHaveBeenCalledTimes(2);
+  });
+});

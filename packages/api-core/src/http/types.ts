@@ -44,11 +44,20 @@ export function createTokenStorage(options: CreateTokenStorageOptions): TokenSto
       }
     },
     async set(token: string, refreshToken: string): Promise<void> {
-      await adapter.setItem(tokenKey, token);
-      await adapter.setItem(refreshKey, refreshToken);
+      // N-P1-2：写失败静默（头注释承诺），对齐 get/getRefresh 读兜底
+      try {
+        await adapter.setItem(tokenKey, token);
+        await adapter.setItem(refreshKey, refreshToken);
+      } catch {
+        // 静默：存储写失败不阻断调用链（登出清理等场景不能因存储异常二次抛错）
+      }
     },
     async setAccess(token: string): Promise<void> {
-      await adapter.setItem(tokenKey, token);
+      try {
+        await adapter.setItem(tokenKey, token);
+      } catch {
+        // 静默：同 set
+      }
     },
     async getRefresh(): Promise<string | null> {
       try {
@@ -58,8 +67,12 @@ export function createTokenStorage(options: CreateTokenStorageOptions): TokenSto
       }
     },
     async clear(): Promise<void> {
-      await adapter.deleteItem(tokenKey);
-      await adapter.deleteItem(refreshKey);
+      try {
+        await adapter.deleteItem(tokenKey);
+        await adapter.deleteItem(refreshKey);
+      } catch {
+        // 静默：同 set
+      }
     },
   };
 }

@@ -71,11 +71,14 @@ export default function AddressEditPage() {
   }>();
   // Why: 提交时用地图选点坐标（B3）；表单内的状态行在 AddressForm 里另行订阅
   const mapPick = useMapPickStore((s) => s.pick);
-  const { data: addresses } = useAddresses();
+  // N-P1-3：isLoading 区分「查询中」与「编辑态数据查不到」——深链/无效 id 不得静默落 create
+  const { data: addresses, isLoading } = useAddresses();
   const existing = addresses?.find((a) => a.id === id);
   const createMutation = useCreateAddress();
   const updateMutation = useUpdateAddress();
-  const isEditing = !!existing;
+  // N-P1-3：判据从 !!existing 改 id != null——existing 未到/查不到时编辑态身份不变，
+  // 保存走 update 而非 create（防无效 id 静默建新地址）
+  const isEditing = id != null;
 
   return (
     <SafeAreaWrapper
@@ -83,6 +86,7 @@ export default function AddressEditPage() {
       style={{ backgroundColor: colors.background, flex: 1 }}
     >
       <StatusBarConfig />
+      {/* N-P1-3：编辑态标题在数据到达前即按 id 判定（isEditing 与 existing 解耦） */}
       <PrimaryHeader
         title={
           isEditing
@@ -107,73 +111,113 @@ export default function AddressEditPage() {
         // Why: position relative 让 bottomBar absolute 相对此容器定位，避免 Web 端定位错误
         style={{ flex: 1, position: 'relative' }}
       >
-        <AddressForm
-          key={existing?.id ?? 'new'}
-          existing={existing}
-          prefill={
-            existing
-              ? undefined
-              : { name: prefillName ?? '', phone: prefillPhone ?? '', detail: prefillDetail ?? '' }
-          }
-          submitting={createMutation.isPending || updateMutation.isPending}
-          onSubmit={(values) => {
-            const lat = mapPick?.lat ?? existing?.lat;
-            const lng = mapPick?.lng ?? existing?.lng;
-            // C-P2-15: 未选地图点（无选点记录 + 无旧坐标，或坐标仍为帝力默认视野）禁止提交——
-            // 后端下单要求真实 lat/lng 匹配仓库，静默填帝力默认会让用户收不到货。提示去地图选点。
-            if (isDiliDefaultCoords(lat, lng)) {
-              toast.error(t('address.pickLocationRequired'));
-              return;
+        {/* N-P1-3①：列表查询中渲染骨架不渲染表单（避免拿旧 prefill 闪现） */}
+        {isLoading ? (
+          <View style={styles.skeletonWrap} testID="addr-edit-loading">
+            {[0, 1, 2].map((row) => (
+              <View
+                key={row}
+                style={[styles.skeletonBar, { backgroundColor: colors['surface-container-high'] }]}
+              />
+            ))}
+          </View>
+        ) : isEditing && !existing ? (
+          /* N-P1-3③：编辑态 id 有值但数据查不到 → 页内错误态（D2），绝不静默回退 create */
+          <View style={styles.errorWrap} testID="addr-edit-notfound">
+            <Icon symbol="error_outline" size={48} color={colors.error} />
+            <Text style={[styles.errorText, { color: colors['on-surface-variant'] }]}>
+              {t('errors.addresses', { defaultValue: 'Failed to load addresses' })}
+            </Text>
+            <Pressable
+              onPress={handleBack}
+              style={[styles.backToListBtn, { backgroundColor: colors.primary }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.back')}
+              testID="addr-edit-back"
+            >
+              <Text style={[styles.backToListText, { color: colors['on-primary'] }]}>
+                {t('common.back')}
+              </Text>
+            </Pressable>
+          </View>
+        ) : (
+          /* N-P1-3：表单 prefill 仅在「非编辑态」传入；编辑态 existing 未到时由 isLoading/notfound 分支挡住 */
+          <AddressForm
+            existing={existing}
+            prefill={
+              !isEditing
+                ? {
+                    name: prefillName ?? '',
+                    phone: prefillPhone ?? '',
+                    detail: prefillDetail ?? '',
+                  }
+                : undefined
             }
-            const payload: Omit<Address, 'id'> = {
-              name: values.recipientName,
-              phone: values.phone,
-              province: values.province,
-              city: values.city,
-              district: values.district,
-              detail: values.detail,
-              isDefault: values.isDefault,
-              // Why: 审查 B1 —— tag 必须显式进 payload（toAddressPayload 对 undefined 不传，后端存 null）；
-              //      ?? null 让「清除标签」也能通过 PATCH 落库
-              tag: values.tag ?? null,
-              // Why: 地图选点坐标优先（B3 修复）；此处守卫已保证非空非默认
-              lat,
-              lng,
-            };
-            const onError = (error: unknown) => {
-              // Why: 提取后端错误码，用 i18n 翻译，找不到时回退到 generic
-              const err = error as {
-                response?: { data?: { error?: { code?: string; message?: string } } };
-                message?: string;
+            submitting={createMutation.isPending || updateMutation.isPending}
+            onSubmit={(values) => {
+              const lat = mapPick?.lat ?? existing?.lat;
+              const lng = mapPick?.lng ?? existing?.lng;
+              // C-P2-15: 未选地图点（无选点记录 + 无旧坐标，或坐标仍为帝力默认视野）禁止提交——
+              // 后端下单要求真实 lat/lng 匹配仓库，静默填帝力默认会让用户收不到货。提示去地图选点。
+              if (isDiliDefaultCoords(lat, lng)) {
+                toast.error(t('address.pickLocationRequired'));
+                return;
+              }
+              const payload: Omit<Address, 'id'> = {
+                name: values.recipientName,
+                phone: values.phone,
+                province: values.province,
+                city: values.city,
+                district: values.district,
+                detail: values.detail,
+                isDefault: values.isDefault,
+                // Why: 审查 B1 —— tag 必须显式进 payload（toAddressPayload 对 undefined 不传，后端存 null）；
+                //      ?? null 让「清除标签」也能通过 PATCH 落库
+                tag: values.tag ?? null,
+                // Why: 地图选点坐标优先（B3 修复）；此处守卫已保证非空非默认
+                lat,
+                lng,
               };
-              const code = err?.response?.data?.error?.code;
-              const fallback = err?.response?.data?.error?.message ?? err?.message;
-              const translated = code ? t(`errors.${code}`, { defaultValue: fallback }) : fallback;
-              toast.error(translated ?? t('errors.generic'));
-            };
-            if (existing) {
-              updateMutation.mutate(
-                { id: existing.id, updates: payload },
-                {
+              const onError = (error: unknown) => {
+                // Why: 提取后端错误码，用 i18n 翻译，找不到时回退到 generic
+                const err = error as {
+                  response?: { data?: { error?: { code?: string; message?: string } } };
+                  message?: string;
+                };
+                const code = err?.response?.data?.error?.code;
+                const fallback = err?.response?.data?.error?.message ?? err?.message;
+                const translated = code
+                  ? t(`errors.${code}`, { defaultValue: fallback })
+                  : fallback;
+                toast.error(translated ?? t('errors.generic'));
+              };
+              if (existing) {
+                // N-P1-3：编辑态保存走 update；existing 查不到的分支已被上方错误态拦截，
+                // 此分支仅在 existing 有值时可达，绝不静默落 create
+                updateMutation.mutate(
+                  { id: existing.id, updates: payload },
+                  {
+                    onSuccess: () => {
+                      toast.success(t('address.saved', { defaultValue: 'Address saved' }));
+                      handleBack();
+                    },
+                    onError,
+                  },
+                );
+              } else {
+                // N-P1-3：仅新增态（id 无值）可达——编辑态查不到时被 notfound 分支拦截，不走这里
+                createMutation.mutate(payload, {
                   onSuccess: () => {
                     toast.success(t('address.saved', { defaultValue: 'Address saved' }));
                     handleBack();
                   },
                   onError,
-                },
-              );
-            } else {
-              createMutation.mutate(payload, {
-                onSuccess: () => {
-                  toast.success(t('address.saved', { defaultValue: 'Address saved' }));
-                  handleBack();
-                },
-                onError,
-              });
-            }
-          }}
-        />
-      </KeyboardAvoidingView>
+                });
+              }
+            }}
+          />
+        )}
+      </KeyboardAvoidingView>{' '}
     </SafeAreaWrapper>
   );
 }
@@ -591,7 +635,10 @@ function Field<T extends FieldValues>({
               testID={testID}
             />
             {error?.message && (
-              <Text style={[styles.errorText, { color: colors.error }]} accessibilityRole="alert">
+              <Text
+                style={[styles.fieldErrorText, { color: colors.error }]}
+                accessibilityRole="alert"
+              >
                 {error.message}
               </Text>
             )}
@@ -735,6 +782,38 @@ const styles = StyleSheet.create({
     padding: layout['container-margin'],
     paddingBottom: 120,
     gap: spacing.lg,
+  },
+  // N-P1-3：查询骨架
+  skeletonWrap: {
+    padding: layout['container-margin'],
+    gap: spacing.lg,
+  },
+  skeletonBar: {
+    height: 56,
+    borderRadius: borderRadius.xl,
+  },
+  // N-P1-3：编辑态数据查不到的页内错误态
+  errorWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    padding: layout['container-margin'],
+  },
+  errorText: {
+    ...typography['body-md'],
+    textAlign: 'center',
+  },
+  backToListBtn: {
+    height: 48,
+    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backToListText: {
+    ...typography['body-md'],
+    fontWeight: '700',
   },
   labelRow: {
     flexDirection: 'row',
@@ -908,7 +987,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1,
   },
-  errorText: {
+  // N-P1-3：表单字段校验错误文本（Field 组件用）
+  fieldErrorText: {
     ...typography['body-sm'],
     marginTop: spacing.xs,
   },
