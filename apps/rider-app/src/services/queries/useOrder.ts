@@ -43,10 +43,13 @@ export function useOrderTodayStats() {
 }
 
 export function useOrder(id: string | undefined) {
+  // 补 isAuthenticated gate（同文件另 3 个 order 系 query 对齐）：未登录深链 detail 页
+  // 时 queryFn 空跑必 401，触发全局 401 误登出。
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: id ? orderDetailKey(id) : ['orders', 'detail', 'none'],
     queryFn: () => orderApi.getById(id as string),
-    enabled: Boolean(id),
+    enabled: Boolean(id) && isAuthenticated,
   });
 }
 

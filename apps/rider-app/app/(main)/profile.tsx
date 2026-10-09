@@ -73,7 +73,7 @@ export default function ProfilePage() {
   const rider = useAuthStore((s) => s.rider);
   const { logout } = useAuth();
   const hydrate = useAuthStore((s) => s.hydrate);
-  // P1 §3.1①：今日订单/收入接 useOrderTodayStats（real `/rider/orders/today-stats`，E3 history 同源）
+  // P1 §3.1①：今日订单/收入接 useOrderTodayStats（real `/rider/orders/stats/today`，E3 history 同源）
   const { data: todayStats, isLoading: todayLoading, isError: todayError } = useOrderTodayStats();
   // 批C C2：通知入口角标（>0 红点；accessibilityHint 报未读数）
   const { data: unread } = useUnreadCount();
