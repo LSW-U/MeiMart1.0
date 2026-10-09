@@ -1,6 +1,8 @@
+// add() 保留 mock 侧效应（delivery.ts writeMockSideEffects 用，mock 模式专属）。
+
 import type { OrderHistoryItem, OrderHistoryStatus } from '@/src/types/order';
 
-import { isMockMode } from './api';
+import { ApiError, api, buildQuery, isMockMode } from './api';
 
 // ── Mock layer (localStorage for Web dev) ──────────────────────────
 
@@ -119,53 +121,104 @@ function mockDelay<T>(value: T, ms = 300): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
 
-// ── orderApi 对象 ───────────────────────────────────────────────────
+// ── real 分支适配层（后端四端点已上线：/rider/orders/history|stats/today|stats/status-counts|:id）──
+//
+// 后端派生口径（order-history.service.ts 头注释 + api-contract rider-order-history.ts）：
+//   - completedAt = deliveredAt（completed）/ updatedAt（其余），epoch ms —— 与前端 Date 消费直通
+//   - income = order.deliveryFee（分，Q2 拍板）→ /100 转元（earnings.ts centsToUsd 同款）
+//   - durationMinutes / distanceKm：缺失给 0 —— 0 是后端「缺失」哨兵，直通，
+//     前端既有降级消费（[id].tsx `durationMinutes > 0 ? … : '—'`）不破坏
+//   - status 三值 completed|cancelled|transferred 与前端 OrderHistoryStatus 直通
+const CENTS_PER_DOLLAR = 100;
 
-// R-P1-8（M5）：后端无骑手订单历史 / today-stats 端点（已实核 MeiMart rider.controller
-// 与 CAPABILITY-CONTRACT）。mock-only 显式化——mock 模式走本地存储；real 模式**抛错**，
-// 禁止静默返回假数据冒充真实业绩（消费方 history.tsx / profile.tsx 均有 isError 三态降级）。
-// add() 保留 mock 侧效应（delivery.ts writeMockSideEffects 用，mock 模式专属）。
-
-/** real 模式读路径统一抛出（后端补端点后替换为真实 API 调用） */
-function notImplemented(op: string): never {
-  throw new Error(`[orderApi] ${op}: rider order history API not implemented on backend yet`);
+interface RiderOrderHistoryRaw {
+  id: string;
+  orderNo: string;
+  status: OrderHistoryStatus;
+  completedAt: number;
+  pickupName: string;
+  pickupAddress: string;
+  dropoffName: string;
+  dropoffAddress: string;
+  income: number; // 分
+  distanceKm: number;
+  durationMinutes: number;
 }
+
+function fromView(raw: RiderOrderHistoryRaw): OrderHistoryItem {
+  return {
+    ...raw,
+    income: raw.income / CENTS_PER_DOLLAR,
+  };
+}
+
+/** 单页上限=契约 max（api-contract RiderOrderHistoryQuery pageSize max(100)） */
+const HISTORY_PAGE_SIZE = 100;
 
 export const orderApi = {
   async getHistory(): Promise<OrderHistoryItem[]> {
-    // mock-only（R-P1-8）：real 模式不返回假历史
-    if (!isMockMode) notImplemented('getHistory');
-    const items = getMockStore().slice();
-    return mockDelay(items.sort((a, b) => b.completedAt - a.completedAt));
+    if (isMockMode) {
+      const items = getMockStore().slice();
+      return mockDelay(items.sort((a, b) => b.completedAt - a.completedAt));
+    }
+    // 列表页消费方（history.tsx）按全量做客户端 tab 过滤 + status-counts 徽标对账，
+    // 故此处翻页拉全（单骑手终态任务量级小，后端实测 <150 行）；响应缺 items 按契约
+    // 破坏上抛（earnings P3-4 同口径，不静默空列表）。
+    const all: OrderHistoryItem[] = [];
+    for (let page = 1; ; page += 1) {
+      const res = await api.get<{ items: RiderOrderHistoryRaw[]; total: number }>(
+        `/rider/orders/history${buildQuery({ page, pageSize: HISTORY_PAGE_SIZE })}`,
+      );
+      if (!res.data.items) throw new Error('[orderApi] getHistory: response missing items');
+      all.push(...res.data.items.map(fromView));
+      if (all.length >= res.data.total || res.data.items.length === 0) break;
+    }
+    return all.sort((a, b) => b.completedAt - a.completedAt);
   },
 
   async getById(id: string): Promise<OrderHistoryItem | null> {
-    if (!isMockMode) notImplemented('getById');
-    return mockDelay(getMockStore().find((item) => item.id === id) ?? null);
+    if (isMockMode) return mockDelay(getMockStore().find((item) => item.id === id) ?? null);
+    // 404（非本人/非历史范围，E-RIDER-001）→ 业务 null，[id].tsx QueryBoundary 走 notFound 空态
+    try {
+      const res = await api.get<RiderOrderHistoryRaw>(`/rider/orders/${encodeURIComponent(id)}`);
+      return fromView(res.data);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) return null;
+      throw e;
+    }
   },
 
   async countByStatus(): Promise<Record<OrderHistoryStatus | 'all', number>> {
-    if (!isMockMode) notImplemented('countByStatus');
-    const items = getMockStore();
-    return mockDelay({
-      all: items.length,
-      completed: items.filter((item) => item.status === 'completed').length,
-      cancelled: items.filter((item) => item.status === 'cancelled').length,
-      transferred: items.filter((item) => item.status === 'transferred').length,
-    });
+    if (isMockMode) {
+      const items = getMockStore();
+      return mockDelay({
+        all: items.length,
+        completed: items.filter((item) => item.status === 'completed').length,
+        cancelled: items.filter((item) => item.status === 'cancelled').length,
+        transferred: items.filter((item) => item.status === 'transferred').length,
+      });
+    }
+    const res = await api.get<Record<OrderHistoryStatus | 'all', number>>(
+      '/rider/orders/stats/status-counts',
+    );
+    return res.data;
   },
 
   async getTodayStats(): Promise<{ count: number; totalIncome: number }> {
-    if (!isMockMode) notImplemented('getTodayStats');
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const items = getMockStore().filter(
-      (item) => item.completedAt >= startOfDay && item.status === 'completed',
-    );
-    return mockDelay({
-      count: items.length,
-      totalIncome: items.reduce((sum, item) => sum + item.income, 0),
-    });
+    if (isMockMode) {
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const items = getMockStore().filter(
+        (item) => item.completedAt >= startOfDay && item.status === 'completed',
+      );
+      return mockDelay({
+        count: items.length,
+        totalIncome: items.reduce((sum, item) => sum + item.income, 0),
+      });
+    }
+    // totalIncome 后端为分（Σ order.deliveryFee）→ /100 转元，与列表 income 同口径
+    const res = await api.get<{ count: number; totalIncome: number }>('/rider/orders/stats/today');
+    return { count: res.data.count, totalIncome: res.data.totalIncome / CENTS_PER_DOLLAR };
   },
 
   async add(item: OrderHistoryItem): Promise<void> {
