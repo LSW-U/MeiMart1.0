@@ -50,6 +50,56 @@
       "key": "apps/rider-app/src/test/pages/sign.test.tsx::empty（null）：显示任务不存在空态",
       "title": "empty（null）：显示任务不存在空态",
       "reason": "批5 建档时已存在（存量记账不拦截；清洗另行立项）"
+    },
+    {
+      "key": "apps/client-app/app/__tests__/coupons-p18.test.tsx::D3 近过期券出现提醒条（3 天内，count ",
+      "title": "D3 近过期券出现提醒条（3 天内，count 插值），远期券不出现",
+      "reason": "批2 N-P2-1 扩根 app/ 后入账（存量记账不拦截；命中断言均带 getByTestId/文案比对，非真假绿；清洗另行立项）"
+    },
+    {
+      "key": "apps/client-app/app/__tests__/order-detail-banner.test.tsx::OUT_FOR_DELIVERY + 无 ETA",
+      "title": "OUT_FOR_DELIVERY + 无 ETA（getTracking 失败/无 task）：fallback 到 outForDelivery 文案",
+      "reason": "批2 N-P2-1 扩根 app/ 后入账（存量记账不拦截；命中断言查具体 fallback 文案，非真假绿；清洗另行立项）"
+    },
+    {
+      "key": "apps/client-app/app/__tests__/product-detail-batch-d.test.tsx::接口失败/超时（isError）→ ErrorS",
+      "title": "接口失败/超时（isError）→ ErrorState 降级（product.notFound + 可重试），不白屏",
+      "reason": "批2 N-P2-1 扩根 app/ 后入账（存量记账不拦截；命中断言查 ErrorState 具体文案，非真假绿；清洗另行立项）"
+    },
+    {
+      "key": "apps/client-app/app/__tests__/product-detail-batch-d.test.tsx::data null 且非 loading（!pr",
+      "title": "data null 且非 loading（!product）→ 同走 ErrorState 降级",
+      "reason": "批2 N-P2-1 扩根 app/ 后入账（存量记账不拦截；命中断言查 ErrorState 具体文案，非真假绿；清洗另行立项）"
+    },
+    {
+      "key": "apps/rider-app/src/test/pages/navigate.test.tsx::empty（null）：显示任务不存在空态（非路",
+      "title": "empty（null）：显示任务不存在空态（非路线失效语义）",
+      "reason": "批2 N-P2-2 弱断言占比口径入账（存量记账不拦截；末条 toBeNull 负向断言有效，清洗另行立项）"
+    },
+    {
+      "key": "apps/rider-app/src/test/pages/pickup.test.tsx::error：显示加载失败 + 重试按钮，不渲染取",
+      "title": "error：显示加载失败 + 重试按钮，不渲染取证卡（弱网不再照常可提交）",
+      "reason": "批2 N-P2-2 弱断言占比口径入账（存量记账不拦截；后段有 queryByText 负向断言，清洗另行立项）"
+    },
+    {
+      "key": "apps/rider-app/src/test/pages/task-detail.test.tsx::FAILED：显示「配送失败」banner",
+      "title": "FAILED：显示「配送失败」banner",
+      "reason": "批2 N-P2-2 弱断言占比口径入账（存量记账不拦截；断言 toBeGreaterThanOrEqual 非纯弱断言，清洗另行立项）"
+    },
+    {
+      "key": "apps/client-app/app/__tests__/order-result.test.tsx::S1 成功态：渲染 successTitle2 ",
+      "title": "S1 成功态：渲染 successTitle2 + continueShopping/viewOrder，无倒计时条/失败卡",
+      "reason": "批2 N-P2-2 弱断言占比口径入账（存量记账不拦截；含 2 条 toBeNull 负向断言，清洗另行立项）"
+    },
+    {
+      "key": "apps/client-app/app/__tests__/order-result.test.tsx::S2 待支付：渲染 pendingTitle +",
+      "title": "S2 待支付：渲染 pendingTitle + payNow + 倒计时条，无失败卡",
+      "reason": "批2 N-P2-2 弱断言占比口径入账（存量记账不拦截；含 toBeNull 负向断言，清洗另行立项）"
+    },
+    {
+      "key": "apps/client-app/app/__tests__/order-result.test.tsx::S4 下单失败（status undefined",
+      "title": "S4 下单失败（status undefined，无 orderId）：渲染 orderFailTitle + 失败原因卡 + reorder，无摘要卡",
+      "reason": "批2 N-P2-2 弱断言占比口径入账（存量记账不拦截；含 toBeNull 负向断言，清洗另行立项）"
     }
   ]
 }

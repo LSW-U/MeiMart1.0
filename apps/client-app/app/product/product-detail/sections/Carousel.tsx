@@ -62,7 +62,8 @@ export function Carousel({
           </Text>
         </View>
       )}
-      {/* U5: Play 按钮缩到右上小尺寸（视频入口保留但不抢眼） */}
+      {/* U5: Play 按钮缩到右上小尺寸——仅装饰性标识（pointerEvents="none" 且无 onPress，
+          当前非可点视频入口；真实视频接入时需补 onPress 与 pointerEvents 调整） */}
       <View style={styles.playWrap} pointerEvents="none">
         <BlurView intensity={30} tint="light" style={styles.playBtn}>
           <Icon symbol="play_arrow" size={20} color={colors['on-primary']} />

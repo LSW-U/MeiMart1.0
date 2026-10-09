@@ -77,12 +77,23 @@ export function createTokenStorage(options: CreateTokenStorageOptions): TokenSto
   };
 }
 
-/** 两端敏感键集并集（rider 多 'code'）—— redact() 单源使用 */
-export const SENSITIVE_KEYS = ['password', 'smsCode', 'code', 'token', 'refreshToken', 'secret'];
+/** 两端敏感键集并集（rider 多 'code'；N-P2-3 补 accessToken/Authorization/phone）—— redact() 单源使用 */
+export const SENSITIVE_KEYS = [
+  'password',
+  'smsCode',
+  'code',
+  'token',
+  'refreshToken',
+  'accessToken',
+  'Authorization',
+  'phone',
+  'secret',
+];
 
 /**
  * 批4（任务书 1）：递归脱敏（替代两端浅拷贝顶层版 sanitizeLogPayload）。
- * 覆盖嵌套对象/数组；循环引用用 WeakSet 防炸。
+ * 覆盖嵌套对象/数组；循环/深嵌套引用用 depth 封顶（8 层）防炸
+ *（N-P2-3 注释对齐：原注释写 WeakSet，实现是深度上限——改注释服从实现）。
  */
 export function redact(payload: unknown, depth = 0): unknown {
   if (depth > 8) return '[max-depth]';

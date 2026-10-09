@@ -28,7 +28,7 @@ export {
 export interface TrackingSocketOptions {
   /** 完整 WS 地址（含命名空间，如 `http://host:3000/realtime`） */
   url: string;
-  /** 鉴权 token（原样透传 auth.token，调用方决定 Bearer 前缀） */
+  /** 鉴权 token（本工厂统一拼 `Bearer ` 前缀后放入 auth.token，调用方传裸 token） */
   accessToken: string;
 }
 

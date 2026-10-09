@@ -12,7 +12,8 @@
  *   <LinearGradient {...gradientPresets.brand} style={styles.banner} />
  *
  * 注意：HTML 原型使用 Tailwind 任意颜色（emerald-700, blue-700 等）作为 banner 背景。
- * RN 侧统一使用主题色板（primary/tertiary/secondary）以保持暗色模式兼容。
+ * 当前实现为亮色硬编码 hex（#961813 系等），渐变不受主题色板驱动——
+ * 暗色模式下渐变保持亮色观感（横幅类视觉可接受）；如需暗色渐变需在此扩展变体。
  */
 import type { LinearGradientProps } from 'expo-linear-gradient';
 

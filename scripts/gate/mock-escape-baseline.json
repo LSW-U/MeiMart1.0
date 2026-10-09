@@ -68,6 +68,30 @@
     {
       "key": "apps/rider-app/src/services/earnings.ts::FORCE_MOCK",
       "reason": "存量逃逸（批5 建档时已存在，未逐一深挖；清理时先核语义）"
+    },
+    {
+      "key": "apps/client-app/app/(main)/home.tsx::mockDb",
+      "reason": "批2 N-P2-1 扩根 app/ 入账：注释提及，非运行时"
+    },
+    {
+      "key": "apps/client-app/app/order/checkout.tsx::mockDb",
+      "reason": "批2 N-P2-1 扩根 app/ 入账：注释提及，非运行时"
+    },
+    {
+      "key": "apps/client-app/app/product/product-detail/shared.tsx::mockDb",
+      "reason": "批2 N-P2-1 扩根 app/ 入账：注释提及，非运行时"
+    },
+    {
+      "key": "apps/rider-app/app/(main)/earnings.tsx::FORCE_MOCK",
+      "reason": "批2 N-P2-1 扩根 app/ 入账：注释提及，非运行时"
+    },
+    {
+      "key": "apps/rider-app/app/earnings/withdraw.tsx::FORCE_MOCK",
+      "reason": "批2 N-P2-1 扩根 app/ 入账：注释提及，非运行时"
+    },
+    {
+      "key": "apps/rider-app/app/settings/deposit/pay.tsx::pay-mock",
+      "reason": "批2 N-P2-1 扩根 app/ 入账：注释提及，非运行时"
     }
   ]
 }

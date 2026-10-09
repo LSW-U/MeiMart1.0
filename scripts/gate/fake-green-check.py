@@ -25,7 +25,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent  # 仓根
 
-SCAN_ROOTS = [ROOT / 'apps' / 'client-app' / 'src', ROOT / 'apps' / 'rider-app' / 'src']
+# N-P2-1（批2）：两端 src + 两端 app 页面层测试（app/__tests__ 等）一并纳入
+SCAN_ROOTS = [
+    ROOT / 'apps' / 'client-app' / 'src',
+    ROOT / 'apps' / 'rider-app' / 'src',
+    ROOT / 'apps' / 'client-app' / 'app',
+    ROOT / 'apps' / 'rider-app' / 'app',
+]
 
 # it/test('标题', ...) 完整捕获到匹配闭括号前的用例体
 IT_RE = re.compile(r"""\b(?:it|test)\s*\(\s*(['"`])(.+?)\1\s*,""")
@@ -34,9 +40,42 @@ FAIL_HINT_RE = re.compile(
     r'(error|fail|404|500|异常|失败|拒绝|无效|未实现|不存在|非法|超限|过期| invalid |invalid\b|reject)', re.IGNORECASE)
 # 断言清单（用例体内逐行）
 ASSERT_RE = re.compile(r'expect\s*\(')
-# 「唯一断言是 toBeTruthy」= 所有断言行里 toBeTruthy 覆盖全部、无其他匹配器
-MATCHER_RE = re.compile(r"expect\s*\(.*?\)\s*\.\s*(\w+)")
-TRUTHY_ONLY = {'toBeTruthy'}
+# 弱断言匹配器（N-P2-2 批2：从「仅 toBeTruthy」扩为「弱断言占比」口径）
+WEAK_MATCHERS = {'toBeTruthy', 'toBeDefined'}
+# 弱断言占比阈值：失败语义用例中弱断言 ≥60% 即判假绿（纯 toBeTruthy 是 100%，自然覆盖旧口径）
+WEAK_RATIO = 0.6
+
+
+def extract_matchers(body: str) -> list[str]:
+    """从用例体提取 expect(...) 链尾匹配器。
+
+    N-P2-2 加固：expect( 与 ) 跨行（render 多行参数/换行链式）旧单行正则漏检，
+    改为括号深度扫描（带字符串字面量感知），expect 的 close paren 后接 .matcher。
+    """
+    matchers: list[str] = []
+    for m in ASSERT_RE.finditer(body):
+        i = m.end()
+        depth = 1
+        quote: str | None = None
+        while i < len(body) and depth:
+            c = body[i]
+            if quote:
+                if c == '\\':
+                    i += 2
+                    continue
+                if c == quote:
+                    quote = None
+            elif c in ('"', "'", '`'):
+                quote = c
+            elif c in '([{':
+                depth += 1
+            elif c in ')]}':
+                depth -= 1
+            i += 1
+        mm = re.match(r'\s*\.\s*(\w+)', body[i:])
+        if mm:
+            matchers.append(mm.group(1))
+    return matchers
 
 
 def scan() -> list[dict]:
@@ -59,11 +98,16 @@ def scan() -> list[dict]:
                 rest = '\n'.join(lines[start_line + 1:])
                 nxt = re.search(r"\b(?:it|test|describe)\s*\(", rest)
                 body = rest[: nxt.start()] if nxt else rest
-                matchers = MATCHER_RE.findall(body)
-                if matchers and set(matchers) <= TRUTHY_ONLY:
+                matchers = extract_matchers(body)
+                if not matchers:
+                    continue
+                weak = [x for x in matchers if x in WEAK_MATCHERS]
+                # N-P2-2：弱断言占比 ≥ WEAK_RATIO（纯 toBeTruthy=100% 自然命中）
+                if len(weak) / len(matchers) >= WEAK_RATIO:
                     line = start_line + 1
                     hits.append({'file': rel, 'line': line,
-                                 'title': title[:60], 'assertions': len(matchers)})
+                                 'title': title[:60], 'assertions': len(weak),
+                                 'total': len(matchers)})
     return hits
 
 
@@ -81,16 +125,16 @@ def run_check() -> int:
     new = [h for h in hits if key(h) not in known]
     hit_keys = {key(h) for h in hits}
     stale = [e for e in baseline['entries'] if e['key'] not in hit_keys]
-    print(f'[fake-green] 扫描两端测试文件，失败语义用例中「仅 toBeTruthy」命中 {len(hits)} 处'
-          f'（基线 {len(known)} 项）')
+    print(f'[fake-green] 扫描两端测试文件，失败语义用例中弱断言占比 ≥{int(WEAK_RATIO * 100)}%'
+          f'命中 {len(hits)} 处（基线 {len(known)} 项）')
     if stale:
         print(f'\nℹ️  基线内 {len(stale)} 项已无命中（修好了记得同步删基线，仅提示不拦）：')
         for e in stale[:10]:
             print(f"  - {e['key']}")
     if new:
-        print(f'\n❌ 新增假绿 {len(new)} 处（失败语义用例仅 toBeTruthy 断言，基线外拦截）：')
+        print(f'\n❌ 新增假绿 {len(new)} 处（失败语义用例弱断言占比过高，基线外拦截）：')
         for h in new[:30]:
-            print(f"  {h['file']}:{h['line']}  it('{h['title']}'…) — {h['assertions']} 个 toBeTruthy")
+            print(f"  {h['file']}:{h['line']}  it('{h['title']}'…) — 弱断言 {h['assertions']}/{h['total']}")
         if len(new) > 30:
             print(f'  … 其余 {len(new) - 30} 处省略')
         print('\n处置：补强断言（断言错误文案/错误码/状态翻转为负向），或带理由入基线')
@@ -104,7 +148,9 @@ def self_test() -> int:
     import subprocess
 
     fake_root = Path(tempfile.mkdtemp(prefix='fake-green-selftest-'))
+    # N-P2-1 批2：SCAN_ROOTS 已扩到 apps/*/app——self-test 样例覆盖 app 根测试文件
     (fake_root / 'apps' / 'client-app' / 'src').mkdir(parents=True)
+    (fake_root / 'apps' / 'client-app' / 'app' / '__tests__').mkdir(parents=True)
     # 存量样例：失败语义 + 仅 toBeTruthy（基线内）
     (fake_root / 'apps' / 'client-app' / 'src' / 'old.test.ts').write_text(
         "it('shows error state', () => {\n"
@@ -122,7 +168,7 @@ def self_test() -> int:
         [sys.executable, str(Path(__file__).resolve()), '--fake-root', str(fake_root)],
         capture_output=True, text=True)
     r1 = run()
-    # 新增样例：基线外同款假绿
+    # 新增样例 1：基线外同款假绿（src 根）
     (fake_root / 'apps' / 'client-app' / 'src' / 'new.test.ts').write_text(
         "it('404 fails gracefully', () => {\n"
         "  render(<Y />);\n"
@@ -130,13 +176,24 @@ def self_test() -> int:
         "});\n",
         encoding='utf-8')
     r2 = run()
+    # 新增样例 2：app 根测试文件（app/__tests__）同款假绿——证明扩根拦截生效
+    (fake_root / 'apps' / 'client-app' / 'app' / '__tests__' / 'page.test.tsx').write_text(
+        "it('500 error page renders', () => {\n"
+        "  render(<Z />);\n"
+        "  expect(screen.getByText('boom')).toBeTruthy();\n"
+        "});\n",
+        encoding='utf-8')
+    r3 = run()
 
     ok1 = r1.returncode == 0
     ok2 = r2.returncode != 0 and '404 fails gracefully' in r2.stdout
+    ok3 = r3.returncode != 0 and '500 error page renders' in r3.stdout \
+        and 'page.test.tsx' in r3.stdout
     print(f'  存量命中 exit 0 …… {"✅" if ok1 else "❌ " + r1.stdout}')
-    print(f'  新增假绿 exit 非零 …… {"✅" if r2.returncode != 0 else "❌ " + r2.stdout}')
+    print(f'  新增假绿 exit 非零 …… {"✅" if ok2 else "❌ " + r2.stdout}')
     print(f'  新增列明位置 …… {"✅" if "404 fails gracefully" in r2.stdout else "❌"}')
-    if not (ok1 and ok2):
+    print(f'  app 根新增假绿拦截 …… {"✅" if ok3 else "❌ " + r3.stdout}')
+    if not (ok1 and ok2 and ok3):
         return 1
     print('✅ self-test 通过')
     return 0
@@ -150,7 +207,12 @@ def main() -> None:
     global ROOT, SCAN_ROOTS
     if args.fake_root:
         ROOT = Path(args.fake_root)
-        SCAN_ROOTS = [ROOT / 'apps' / 'client-app' / 'src', ROOT / 'apps' / 'rider-app' / 'src']
+        SCAN_ROOTS = [
+            ROOT / 'apps' / 'client-app' / 'src',
+            ROOT / 'apps' / 'rider-app' / 'src',
+            ROOT / 'apps' / 'client-app' / 'app',
+            ROOT / 'apps' / 'rider-app' / 'app',
+        ]
     if args.self_test:
         sys.exit(self_test())
     sys.exit(run_check())

@@ -10,6 +10,7 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -84,6 +85,15 @@ export default function OrdersPage() {
           break;
         }
         case 'cancel':
+          // N-P2-9（批2）：Web 端 Alert.alert 不显示 → 照 order/[id].tsx 先例直接取消 + toast；
+          // Native 端保留 Alert 确认（破坏性操作需确认）
+          if (Platform.OS === 'web') {
+            cancelMutation.mutate(order.id, {
+              onSuccess: () =>
+                toast.success(t('order.cancelled', { defaultValue: 'Order cancelled' })),
+            });
+            break;
+          }
           Alert.alert(t('order.cancelTitle'), t('order.cancelConfirm'), [
             { text: t('common.cancel'), style: 'cancel' },
             {

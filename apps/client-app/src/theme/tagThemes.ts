@@ -1,12 +1,11 @@
 /**
  * 地址标签 chip 色板（P16 决策 7）
  *
- * 家=蓝 / 公司=琥珀 / 学校=绿 / 自定义=灰，取自 theme semantic 角色色
+ * 家=蓝 / 公司=琥珀 / 学校=绿 / 自定义=灰，取自 theme semantic 角色色的亮色值
  * （info / warning / success 的 container 底 + 主色文字，与订单状态 pill 同构）。
  *
- * Why 不直接用 colors['info-container']：semantic 色不在 AppColors 类型上
- * （见 statusBannerThemes 同款说明），场景色板在主题定义层保留 hex。
- * 暗色模式落地时此处加 dark 变体（当前仅亮色，同 statusBannerPalettes）。
+ * Why hex 直写而不用 colors.semantic['info-container']：场景色板需在主题定义层
+ * 保留稳定 hex（chip 是装饰性固定色板，不随暗色翻转）；暗色模式落地时此处加 dark 变体。
  */
 
 export type AddressTagPreset = 'home' | 'company' | 'school';

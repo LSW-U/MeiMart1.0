@@ -26,8 +26,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent  # 仓根（scripts/gate/ 上两级）
 BASELINE = Path(__file__).resolve().parent / 'mock-escape-baseline.json'
 
-# 扫描目标：两端 src（测试文件豁免——测试里的 mock 语义不是运行时逃逸）
-SCAN_ROOTS = [ROOT / 'apps' / 'client-app' / 'src', ROOT / 'apps' / 'rider-app' / 'src']
+# 扫描目标：两端 src + 两端 app 页面层（N-P2-1 批2 补 apps/*/app 根；
+# 测试文件豁免——测试里的 mock 语义不是运行时逃逸）
+SCAN_ROOTS = [
+    ROOT / 'apps' / 'client-app' / 'src',
+    ROOT / 'apps' / 'rider-app' / 'src',
+    ROOT / 'apps' / 'client-app' / 'app',
+    ROOT / 'apps' / 'rider-app' / 'app',
+]
 # mockDb 定义文件自身豁免（定义≠逃逸）
 EXEMPT_FILES = {'mockDb.ts'}
 
@@ -106,7 +112,9 @@ def self_test() -> int:
     import subprocess
 
     fake_root = Path(tempfile.mkdtemp(prefix='mock-escape-selftest-'))
+    # N-P2-1 批2：SCAN_ROOTS 已扩到 apps/*/app——self-test 样例覆盖两条根类型
     (fake_root / 'apps' / 'client-app' / 'src' / 'services').mkdir(parents=True)
+    (fake_root / 'apps' / 'rider-app' / 'app' / 'settings').mkdir(parents=True)
     baseline = {'entries': [{'key': 'apps/client-app/src/services/ok.ts::FORCE_MOCK',
                              'reason': '自测存量样例'}]}
     # 基线写到假仓根的 scripts/gate/（--fake-root 模式下 BASELINE 随 ROOT 重解析）
@@ -114,23 +122,30 @@ def self_test() -> int:
     base_file.parent.mkdir(parents=True)
     base_file.write_text(json.dumps(baseline, ensure_ascii=False), encoding='utf-8')
 
-    # 样例 1：存量命中（基线内）→ 应 exit 0
+    # 样例 1：存量命中（基线内，src 根）→ 应 exit 0
     (fake_root / 'apps' / 'client-app' / 'src' / 'services' / 'ok.ts').write_text(
         'const FORCE_MOCK = true;\n', encoding='utf-8')
+    # 样例 1b：app 根注释性存量命中（基线内）→ 同样 exit 0
+    (fake_root / 'apps' / 'rider-app' / 'app' / 'settings' / 'ok-page.tsx').write_text(
+        '// 参见 pay-mock 端点文档\n', encoding='utf-8')
+    baseline['entries'].append({'key': 'apps/rider-app/app/settings/ok-page.tsx::pay-mock',
+                                'reason': '自测 app 根存量样例'})
+    base_file.write_text(json.dumps(baseline, ensure_ascii=False), encoding='utf-8')
     r1 = subprocess.run(
         [sys.executable, str(Path(__file__).resolve()), '--fake-root', str(fake_root)],
         capture_output=True, text=True)
-    # 样例 2：新增违规（基线外 pay-mock）→ 应 exit 非零
-    (fake_root / 'apps' / 'client-app' / 'src' / 'services' / 'bad.ts').write_text(
+    # 样例 2：新增违规（基线外 pay-mock，app 根——证明扩根后新增拦截生效）→ 应 exit 非零
+    (fake_root / 'apps' / 'rider-app' / 'app' / 'settings' / 'bad-page.tsx').write_text(
         "const p = '/pay-mock';\n", encoding='utf-8')
     r2 = subprocess.run(
         [sys.executable, str(Path(__file__).resolve()), '--fake-root', str(fake_root)],
         capture_output=True, text=True)
 
-    ok = r1.returncode == 0 and r2.returncode != 0 and 'pay-mock' in r2.stdout
-    print(f'  存量命中 exit 0 …… {"✅" if r1.returncode == 0 else "❌ " + r1.stdout}')
-    print(f'  新增违规 exit 非零 …… {"✅" if r2.returncode != 0 else "❌ " + r2.stdout}')
-    print(f'  新增列明位置 …… {"✅" if "pay-mock" in r2.stdout else "❌"}')
+    ok = (r1.returncode == 0 and r2.returncode != 0
+          and 'pay-mock' in r2.stdout and 'bad-page.tsx' in r2.stdout)
+    print(f'  存量命中 exit 0（src+app 双根） …… {"✅" if r1.returncode == 0 else "❌ " + r1.stdout}')
+    print(f'  新增违规 exit 非零（app 根） …… {"✅" if r2.returncode != 0 else "❌ " + r2.stdout}')
+    print(f'  新增列明位置 …… {"✅" if "bad-page.tsx" in r2.stdout and "pay-mock" in r2.stdout else "❌"}')
     if not ok:
         return 1
     print('✅ self-test 通过')
@@ -147,7 +162,12 @@ def main() -> None:
     global ROOT, SCAN_ROOTS
     if args.fake_root:
         ROOT = Path(args.fake_root)
-        SCAN_ROOTS = [ROOT / 'apps' / 'client-app' / 'src', ROOT / 'apps' / 'rider-app' / 'src']
+        SCAN_ROOTS = [
+            ROOT / 'apps' / 'client-app' / 'src',
+            ROOT / 'apps' / 'rider-app' / 'src',
+            ROOT / 'apps' / 'client-app' / 'app',
+            ROOT / 'apps' / 'rider-app' / 'app',
+        ]
     sys.exit(run_check())
 
 

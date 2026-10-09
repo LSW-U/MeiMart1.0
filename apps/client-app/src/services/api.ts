@@ -12,7 +12,9 @@ import { tokenStorage } from './token-storage';
 
 const env = getExtra();
 
-const baseURL = env?.API_BASE_URL ?? 'https://api.meimart.example.com';
+// N-P2-4（批2）：|| 兜底——app.json 里 API_BASE_URL 配成空串时 ?? 不拦（空串非 nullish），
+// 会以空 baseURL 构建 axios（相对路径请求直接打 app 包自身）；|| 连空串一起兜到默认域名
+const baseURL = env?.API_BASE_URL || 'https://api.meimart.example.com';
 if (env?.APP_ENV === 'production' && !baseURL.startsWith('https://')) {
   console.error('[security] Production API must use HTTPS. Current:', baseURL);
 }
