@@ -64,6 +64,10 @@ export default function CartPage() {
   const removeItemsMutation = useRemoveCartItems();
   const toggleMutation = useToggleCartItem();
   const updateMutation = useUpdateCartItem();
+  // P1-2（审查拍板）：RQ v5 的 useMutation result 对象每渲染新引用，不能进 useCallback deps；
+  //   解构出 mutate（RQ 内部稳定绑定）供 makeRow* 工厂依赖。removeMutation 供 removeOne 用（同款收口）。
+  const { mutate: toggleMutate } = toggleMutation;
+  const { mutate: updateMutate } = updateMutation;
 
   const isEmpty = !cart || cart.items.length === 0;
   const allSelected = !isEmpty && cart.items.every((i) => i.selected);
@@ -92,7 +96,7 @@ export default function CartPage() {
   };
 
   // §4.2 管理态：checkbox 切删除选中（selectedForDelete），与结算选中 item.selected 解耦
-  // Why: 批3 A7 —— CartItemRow/SmallProductCard 均为 React.memo，回调 useCallback 稳定引用
+  // Why: 批3 A7 / A-P2-3 (D5) —— CartItemRow/SmallProductCard 均为 React.memo，回调 useCallback 稳定引用
   const toggleDeleteSelect = useCallback((item: CartItem) => {
     setSelectedForDelete((prev) => {
       const next = new Set(prev);
@@ -111,9 +115,11 @@ export default function CartPage() {
   }, []);
 
   // 管理态单个删除（卡片最右侧 trash）：直删 + toast，同步从 selectedForDelete 移除
+  // P1-2 同款收口：deps 用解构出的 removeMutate（mutation result 对象每渲染新引用）
+  const { mutate: removeMutate } = removeMutation;
   const removeOne = useCallback(
     (item: CartItem) => {
-      removeMutation.mutate(item.id);
+      removeMutate(item.id);
       setSelectedForDelete((prev) => {
         const next = new Set(prev);
         next.delete(item.id);
@@ -121,7 +127,7 @@ export default function CartPage() {
       });
       toast.success(t('cart.removed', { defaultValue: 'Removed' }));
     },
-    [removeMutation, t],
+    [removeMutate, t],
   );
 
   // §5.3 批量删除：C-P2-8 收敛为单次 useRemoveCartItems mutation（一次 DELETE 序列 +
@@ -166,6 +172,30 @@ export default function CartPage() {
   const handleRecommendPress = useCallback(
     (rec: (typeof recommended)[number]) => router.push(`/product/${rec.id}`),
     [],
+  );
+
+  // A-P2-3 (D5)（审查 P1-2 修正后）：CartItemRow 为 React.memo，三处回调 useCallback 稳定引用——
+  //   语义为防整列表重渲（父级 state 变化时 memo 浅比较通过则跳过重渲）。
+  //   item 通过柯里化闭包携带（返回稳定到 item 维度：行数少，仅 item 变更时对应行重渲）。
+  //   deps 只依赖解构出的 mutate（RQ v5 mutate 引用稳定）与 manageMode/toggleDeleteSelect，
+  //   不依赖 mutation result 对象（每渲染新引用，会让工厂每渲染重建击穿 memo）。
+  const makeRowPress = useCallback(
+    (item: CartItem) =>
+      manageMode
+        ? () => toggleDeleteSelect(item)
+        : () => toggleMutate({ itemId: item.id, selected: !item.selected }),
+    [manageMode, toggleDeleteSelect, toggleMutate],
+  );
+  const makeRowItemPress = useCallback(
+    (item: CartItem) => (manageMode ? undefined : () => router.push(`/product/${item.product.id}`)),
+    [manageMode],
+  );
+  const makeRowQuantityChange = useCallback(
+    (item: CartItem) =>
+      manageMode
+        ? undefined
+        : (qty: number) => updateMutate({ itemId: item.id, updates: { quantity: qty } }),
+    [manageMode, updateMutate],
   );
 
   return (
@@ -284,21 +314,11 @@ export default function CartPage() {
                   <CartItemRow
                     item={item}
                     // §4.2 管理态：checkbox 切删除选中 + 反映 selectedForDelete；步进器隐藏（onQuantityChange=undefined）
-                    onPress={
-                      manageMode
-                        ? () => toggleDeleteSelect(item)
-                        : () => toggleMutation.mutate({ itemId: item.id, selected: !item.selected })
-                    }
+                    // A-P2-3 (D5)：三处回调经 make* 工厂传稳定引用（防整列表重渲，见上）
+                    onPress={makeRowPress(item)}
                     checkedOverride={manageMode ? selectedForDelete.has(item.id) : undefined}
-                    onItemPress={
-                      manageMode ? undefined : () => router.push(`/product/${item.product.id}`)
-                    }
-                    onQuantityChange={
-                      manageMode
-                        ? undefined
-                        : (qty) =>
-                            updateMutation.mutate({ itemId: item.id, updates: { quantity: qty } })
-                    }
+                    onItemPress={makeRowItemPress(item)}
+                    onQuantityChange={makeRowQuantityChange(item)}
                     onDelete={manageMode ? removeOne : undefined}
                     showControls
                   />

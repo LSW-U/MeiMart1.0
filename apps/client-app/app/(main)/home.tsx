@@ -11,19 +11,11 @@ import {
   ActivityIndicator,
   Pressable,
 } from 'react-native';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  useTheme,
-  spacing,
-  layout,
-  typography,
-  shadowPresets,
-  gradientPresets,
-  borderRadius,
-} from '@/theme';
+import { useTheme, spacing, layout, typography, shadowPresets, gradientPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { BannerCarousel } from '@/components/business/BannerCarousel';
@@ -68,7 +60,8 @@ export default function HomePage() {
   const recommendList = products ?? [];
   // Why: §9-4 瀑布流两列分发改 FlatList numColumns（C-P2-10，分发逻辑由列表承担）
   const { data: buyAgainProducts } = useBuyAgain();
-  const buyAgainList = buyAgainProducts ?? [];
+  // A-P2-2：useMemo 稳定引用（renderDashboardHeader 依赖数组要求引用稳定，空数组兜底不变）
+  const buyAgainList = useMemo(() => buyAgainProducts ?? [], [buyAgainProducts]);
   // Why: P6 V3e - PromoDock 数据源由 usePromotions hook 驱动（后端控制数量/排序/时效）
   const { data: promotions } = usePromotions();
   const addToCartMutation = useAddToCart();
@@ -105,10 +98,7 @@ export default function HomePage() {
   );
   const handleMorePress = useCallback(() => router.push('/(main)/categories'), []);
 
-  // C-P2-10: 瀑布流改 FlatList(numColumns=2)——替代手动两列 filter 分发（虚拟化渲染
-  //   仅可见项）。行为零变更：odd/even 分列顺序一致（numColumns 按索引取模分列，等价原
-  //   i%2===0→col1 / i%2===1→col2）；高度档位错落在 MasonryProductCard 内部（按 id 档位），
-  //   FlatList 网格行内等高但列间仍错落（卡片图高不同 + info 自适应），视觉语义保持。
+  // A-P2-2: 瀑布流 renderItem（FlatList numColumns=2；列表主体见下方 A-P2-2 说明）
   const renderMasonryItem = useCallback(
     ({ item }: { item: Product }) => (
       <View style={styles.masonryCell}>
@@ -122,10 +112,168 @@ export default function HomePage() {
     ),
     [t, handleBuyAgainAddToCart, handleCardPress],
   );
+  // C-P2-10/A-P2-2: 推荐瀑布流改 FlatList(numColumns=2) 且**直接承担页面滚动**（A-P2-2：
+  //   旧版 FlatList(scrollEnabled=false) 嵌 ScrollView，虚拟化失效全量挂载）——页面其余
+  //   dashboard 区块（搜索栏/Banner/分类/Divider/PromoDock/推荐标题/横滑区）收进
+  //   ListHeaderComponent；Buy Again 横滑留 header 尾部（横滑区非列表语义，留原样）。
+  //   行为零变更：odd/even 分列顺序一致（numColumns 按索引取模分列，等价原
+  //   i%2===0→col1 / i%2===1→col2）；高度档位错落在 MasonryProductCard 内部（按 id 档位），
+  //   FlatList 网格行内等高但列间仍错落（卡片图高不同 + info 自适应），视觉语义保持。
+  //   loading/error/空列表三态时退回 ScrollView 包 dashboard 区（区块少非热路径）。
+  const renderDashboardHeader = useCallback(
+    () => (
+      <>
+        {/* 搜索栏 */}
+        <View style={styles.searchSection}>
+          <Pressable
+            onPress={() => router.push('/search')}
+            style={({ pressed }) => [
+              styles.searchCard,
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderColor: colors['outline-variant'],
+              },
+              shadowPresets.sm,
+              pressed && { opacity: 0.7 },
+            ]}
+            accessibilityRole="search"
+          >
+            <Icon symbol="search" size={22} color={colors.outline} />
+            <Text style={[styles.searchPlaceholder, { color: colors['on-surface-variant'] }]}>
+              {t('home.searchPlaceholder')}
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Banner 轮播（弱网降级：跳过） */}
+        {!shouldSkipNonEssential && banners && banners.length > 0 && (
+          <View style={styles.bannerSection}>
+            <BannerCarousel
+              banners={banners}
+              onBannerPress={(b) => b.link && router.push(b.link)}
+            />
+          </View>
+        )}
+
+        {/* 分类入口 */}
+        {categories && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                {t('home.categories')}
+              </Text>
+              <Pressable
+                onPress={() => router.push('/(main)/categories')}
+                style={styles.seeAllBtn}
+                accessibilityRole="button"
+                accessibilityLabel={t('home.seeAllCategories')}
+              >
+                <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                  {t('common.seeAll')}
+                </Text>
+                <Icon symbol="chevron_right" size={16} color={colors.primary} />
+              </Pressable>
+            </View>
+            <CategoryGrid
+              categories={categories}
+              // Why: 批3 A7 —— CategoryItem 为 React.memo，经 CategoryGrid 透传的回调须稳定引用
+              onCategoryPress={handleCategoryPress}
+              // Why: P6 V1f - 超 7 分类时第 8 格 More 跳全量分类页
+              onMorePress={handleMorePress}
+            />
+          </View>
+        )}
+
+        {/* Tais Divider（保留 HTML 装饰） */}
+        <View style={styles.dividerRow}>
+          <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
+          <TaisDivider />
+          <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
+        </View>
+
+        {/* PromoDock - 横排功能停靠栏（V3c 无标题，接 TaisDivider 下方） */}
+        <View style={styles.section}>
+          <PromoDock promotions={promotions ?? []} onPress={(p) => router.push(p.link)} />
+        </View>
+
+        {/* 推荐商品标题 + 状态行（瀑布流列表主体在 FlatList data；横滑见 Buy Again） */}
+        <View style={[styles.sectionHeader, styles.recommendHeader]}>
+          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+            {t('home.recommend')}
+          </Text>
+          <Pressable
+            onPress={() => router.push('/product/list')}
+            style={styles.seeAllBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.seeAllProducts')}
+          >
+            <Text style={[styles.seeAllText, { color: colors.primary }]}>{t('common.seeAll')}</Text>
+            <Icon symbol="chevron_right" size={16} color={colors.primary} />
+          </Pressable>
+        </View>
+
+        {/* Buy Again — 横滑小卡片（HTML 第 389-421 行；横滑区非列表语义，留原样） */}
+        <View style={styles.buyAgainSection}>
+          <View style={[styles.sectionHeader, styles.buyAgainHeader]}>
+            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+              {t('order.actions.repurchase')}
+            </Text>
+            <Icon symbol="history" size={20} color={colors.outline} />
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.hScroll}
+          >
+            {buyAgainList.map((item) => (
+              // Why: P1 - 替换内联 buyAgainCard 为统一 SmallProductCard（方案 §4）
+              <SmallProductCard
+                key={item.id}
+                product={item}
+                onPress={handleCardPress}
+                onAddToCart={handleBuyAgainAddToCart}
+              />
+            ))}
+          </ScrollView>
+        </View>
+      </>
+    ),
+    [
+      buyAgainList,
+      banners,
+      categories,
+      colors,
+      handleBuyAgainAddToCart,
+      handleCardPress,
+      handleCategoryPress,
+      handleMorePress,
+      promotions,
+      shouldSkipNonEssential,
+      t,
+    ],
+  );
+
+  // A-P2-2: dashboard 三态（loading/error/空列表）退回 ScrollView——瀑布流无数据时
+  //   FlatList 仅剩 header（等价原 ScrollView 布局）；有数据才走 FlatList 主体
+  const dashboardFallback = useCallback(
+    () => (
+      <ScrollView
+        style={[styles.scrollArea, { backgroundColor: colors.background }]}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {renderDashboardHeader()}
+        {isLoading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
+        {isError && <ErrorState message={t('errors.products')} onRetry={() => refetch()} />}
+      </ScrollView>
+    ),
+    [colors, isLoading, isError, refetch, renderDashboardHeader, t],
+  );
+
   return (
     <PageErrorBoundary pageName="home">
       {/* Why: edges 仅 top —— header 红底需避状态栏。bottom 不需 edges：
-        ScrollView 的 scrollContent.paddingBottom(xxl*2=96px) 兜底浮动 BottomNav + 底部手势条
+        列表的 scrollContent.paddingBottom(xxl*2=96px) 兜底浮动 BottomNav + 底部手势条
         （主 tab 是自定义 BottomNav 浮层非系统 TabBar，故 home 走 paddingBottom 而非 edges bottom，审查 Q3）*/}
       <SafeAreaWrapper edges={['top']} style={{ backgroundColor: colors.primary, flex: 1 }}>
         <LinearGradient
@@ -193,156 +341,31 @@ export default function HomePage() {
           <Text style={styles.deliveryTipText}>{t('home.deliveryTip')}</Text>
         </View>
 
-        <ScrollView
-          style={[styles.scrollArea, { backgroundColor: colors.background }]}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* 搜索栏 */}
-          <View style={styles.searchSection}>
-            <Pressable
-              onPress={() => router.push('/search')}
-              style={({ pressed }) => [
-                styles.searchCard,
-                {
-                  backgroundColor: colors['surface-container-lowest'],
-                  borderColor: colors['outline-variant'],
-                },
-                shadowPresets.sm,
-                pressed && { opacity: 0.7 },
-              ]}
-              accessibilityRole="search"
-            >
-              <Icon symbol="search" size={22} color={colors.outline} />
-              <Text style={[styles.searchPlaceholder, { color: colors['on-surface-variant'] }]}>
-                {t('home.searchPlaceholder')}
-              </Text>
-            </Pressable>
-          </View>
-
-          {/* Banner 轮播（弱网降级：跳过） */}
-          {!shouldSkipNonEssential && banners && banners.length > 0 && (
-            <View style={styles.bannerSection}>
-              <BannerCarousel
-                banners={banners}
-                onBannerPress={(b) => b.link && router.push(b.link)}
-              />
-            </View>
-          )}
-
-          {/* 分类入口 */}
-          {categories && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                  {t('home.categories')}
-                </Text>
-                <Pressable
-                  onPress={() => router.push('/(main)/categories')}
-                  style={styles.seeAllBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('home.seeAllCategories')}
-                >
-                  <Text style={[styles.seeAllText, { color: colors.primary }]}>
-                    {t('common.seeAll')}
-                  </Text>
-                  <Icon symbol="chevron_right" size={16} color={colors.primary} />
-                </Pressable>
-              </View>
-              <CategoryGrid
-                categories={categories}
-                // Why: 批3 A7 —— CategoryItem 为 React.memo，经 CategoryGrid 透传的回调须稳定引用
-                onCategoryPress={handleCategoryPress}
-                // Why: P6 V1f - 超 7 分类时第 8 格 More 跳全量分类页
-                onMorePress={handleMorePress}
-              />
-            </View>
-          )}
-
-          {/* Tais Divider（保留 HTML 装饰） */}
-          <View style={styles.dividerRow}>
-            <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
-            <TaisDivider />
-            <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
-          </View>
-
-          {/* PromoDock - 横排功能停靠栏（V3c 无标题，接 TaisDivider 下方） */}
-          <View style={styles.section}>
-            <PromoDock promotions={promotions ?? []} onPress={(p) => router.push(p.link)} />
-          </View>
-
-          {/* 推荐商品标题 + 横滑卡片 */}
-          <View style={styles.recommendSection}>
-            <View style={[styles.sectionHeader, styles.recommendHeader]}>
-              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                {t('home.recommend')}
-              </Text>
-              <Pressable
-                onPress={() => router.push('/product/list')}
-                style={styles.seeAllBtn}
-                accessibilityRole="button"
-                accessibilityLabel={t('home.seeAllProducts')}
-              >
-                <Text style={[styles.seeAllText, { color: colors.primary }]}>
-                  {t('common.seeAll')}
-                </Text>
-                <Icon symbol="chevron_right" size={16} color={colors.primary} />
-              </Pressable>
-            </View>
-            {isLoading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
-            {isError && <ErrorState message={t('errors.products')} onRetry={() => refetch()} />}
-            {!isLoading && !isError && recommendList.length > 0 && (
-              // Why: §9-4 - 横滑 ProductCard -> 两列瀑布流 MasonryProductCard（方案 §9.4-B）
-              //      ⚠️ 无 HTML 原型（推荐横滑改瀑布流是方案改版），高度档位错落
-              // C-P2-10: 改 FlatList(numColumns=2) 虚拟化（原手动两列 View+map 全量渲染）；
-              //   columnWrapperStyle 承接原 masonryRow 的横向 padding + gap
-              <FlatList
-                data={recommendList}
-                keyExtractor={(item) => item.id}
-                numColumns={2}
-                columnWrapperStyle={styles.masonryRow}
-                contentContainerStyle={styles.masonryContent}
-                renderItem={renderMasonryItem}
-                scrollEnabled={false}
-                initialNumToRender={6}
-                maxToRenderPerBatch={4}
-                windowSize={5}
-                showsVerticalScrollIndicator={false}
-              />
-            )}
-          </View>
-
-          {/* Buy Again — 横滑小卡片（HTML 第 389-421 行） */}
-          <View style={styles.buyAgainSection}>
-            <View style={[styles.sectionHeader, styles.buyAgainHeader]}>
-              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-                {t('order.actions.repurchase')}
-              </Text>
-              <Icon symbol="history" size={20} color={colors.outline} />
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.hScroll}
-            >
-              {buyAgainList.map((item) => (
-                // Why: P1 - 替换内联 buyAgainCard 为统一 SmallProductCard（方案 §4）
-                <SmallProductCard
-                  key={item.id}
-                  product={item}
-                  onPress={handleCardPress}
-                  onAddToCart={handleBuyAgainAddToCart}
-                />
-              ))}
-            </ScrollView>
-          </View>
-        </ScrollView>
+        {isLoading || isError || recommendList.length === 0 ? (
+          dashboardFallback()
+        ) : (
+          // A-P2-2: 单列表容器——FlatList 直接承担页面滚动（虚拟化生效），
+          //   dashboard 区块挂 ListHeaderComponent（Buy Again 横滑留 header 尾部）
+          <FlatList
+            style={[styles.scrollArea, { backgroundColor: colors.background }]}
+            data={recommendList}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.masonryRow}
+            contentContainerStyle={styles.scrollContent}
+            renderItem={renderMasonryItem}
+            ListHeaderComponent={renderDashboardHeader}
+            onScrollToIndexFailed={() => undefined}
+            initialNumToRender={6}
+            maxToRenderPerBatch={4}
+            windowSize={5}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </SafeAreaWrapper>
     </PageErrorBoundary>
   );
 }
-
-const RECOMMEND_CARD_WIDTH = 180;
 
 const styles = StyleSheet.create({
   headerBg: {
@@ -487,10 +510,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: StyleSheet.hairlineWidth,
   },
-  recommendSection: {
-    // V15：推荐区间距 lg(24)+sm(8) 对齐原型节奏（原 xl(32)+sm 偏松）
-    marginTop: spacing.lg + spacing.sm,
-  },
   recommendHeader: {
     paddingHorizontal: layout['container-margin'],
     marginBottom: spacing.md,
@@ -503,9 +522,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingBottom: spacing.sm,
   },
-  recommendCard: {
-    width: RECOMMEND_CARD_WIDTH,
-  },
   // Why: §9-4 瀑布流两列容器（替 recommendCard 横滑）
   masonryRow: {
     // FlatList numColumns=2 行容器（C-P2-10）：承接原两列布局的横向 padding + 列间距
@@ -513,10 +529,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     paddingHorizontal: layout['container-margin'],
-  },
-  masonryContent: {
-    // 列表整体下间距（原 masonryCol 间 gap 的纵向等价）
-    rowGap: spacing.md,
   },
   masonryCell: {
     // 每列等宽（numColumns 均分，flex:1 + gap 已由行容器控制）
@@ -530,46 +542,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout['container-margin'],
     marginBottom: spacing.md,
   },
-  buyAgainCard: {
-    minWidth: 140,
-    padding: spacing.sm,
-    borderRadius: borderRadius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: spacing.xs,
-  },
   // Why: 可点击主体（图片+名称+价格）
-  buyAgainMain: {
-    gap: spacing.xs,
-  },
-  buyAgainImageWrap: {
-    height: 96,
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
-  },
-  buyAgainImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  buyAgainName: {
-    ...typography['label-caps'],
-    fontSize: 10,
-  },
   // Why: 加购按钮行，靠右对齐
-  buyAgainRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: spacing.xs,
-  },
-  buyAgainAddBtn: {
-    minWidth: 36,
-    minHeight: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buyAgainPrice: {
-    ...typography['price-display'],
-    fontSize: 14,
-  },
 });

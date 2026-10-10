@@ -87,7 +87,7 @@ const contactHandler = (
 
 export default function TasksPage() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
   const [activeTab, setActiveTab] = useState<TaskTab>(
     tabParam === 'pickups' ? 'pickups' : tabParam === 'deliveries' ? 'deliveries' : 'new',
@@ -146,6 +146,9 @@ export default function TasksPage() {
   void rider; // rider 仅剩兜底（depositStatus 未加载时不拦截，保守可用）
   const activeTasksExist = taskLists.pickups.length + taskLists.deliveries.length > 0;
   const currency = t('common.currency');
+  // C-P2-5 依赖稳定性（审查 P1-1）：rider useTranslation 的 t 每渲染新建（useTranslation.ts:48），
+  //   下述 useMemo deps 不能用 t——改依赖 language（语言不变则 t 行为等价，闭包捕获的
+  //   language 与 t 一致）。t 仅在 memo 回调内消费，重算时取值仍正确。
 
   // 批 G：拦截弹窗「稍后」置 true（本会话不再弹；切换 duty/重进页面重置）
   const [depositDismissed, setDepositDismissed] = useState(false);
@@ -206,118 +209,210 @@ export default function TasksPage() {
   );
 
   // §7.3 拍板 A：删 index 第二参数——Q1 假数据清零后无下标依赖；后端有 reward 字段再恢复
-  const renderNewTask = (task: DeliveryTask) => (
-    <TaskCard
-      key={task.id}
-      actionLabel={t('tasks.accept')}
-      fee={formatCurrency((task.fee ?? 0) / 100, currency, {
-        decimals: (task.fee ?? 0) % 100 === 0 ? 0 : 1,
-      })}
-      // 距离计费批次1（2026-08-27）：明细 + 计费距离（billingDistanceKm 与骑行 distanceKm 分开展示）
-      feeBreakdown={formatFeeBreakdown(task, currency, t)}
-      items={task.items.length ? formatItems(task.items, t) : undefined}
-      note={task.note ?? undefined}
-      points={[
-        {
-          label: 'P',
-          title: task.pickup.title,
-          subtitle: task.pickup.address,
-          distance: withDistance('common.totalDistance', task.distanceKm, t),
-        },
-        {
-          label: 'D',
-          title: task.dropoff.title,
-          distance: withDistance('common.fromPickup', task.distanceKm, t),
-        },
-      ]}
-      timeLabel={t('common.deliverWithin', { minutes: String(task.estimatedMinutes) })}
-      // 批B B3：预约单防御标注（scheduledFor 恒 undefined 时零渲染；后端未来透传即生效）
-      scheduledFor={task.scheduledFor}
-      onAction={() => router.push(`/task/${task.id}`)}
-    />
+  // C-P2-5（审查 P1-1 修正后）：TaskCard 为 memo（TaskCard.tsx:66），points/feeBreakdown/
+  //   onAction/onContact 须稳定引用——三处 renderXxx 的 props 组装走 useMemo 缓存，deps 用
+  //   language（t 每渲染新建不能进 deps），语言/task 列表不变则 props 引用稳定 → 父级
+  //   state 变化（弹窗/toast）时列表不整列重渲，points/feeBreakdown 每 task/语言变化才重建。
+  const newTaskProps = useMemo(
+    () =>
+      new Map(
+        taskLists.available.map((task) => [
+          task.id,
+          {
+            actionLabel: t('tasks.accept'),
+            fee: formatCurrency((task.fee ?? 0) / 100, currency, {
+              decimals: (task.fee ?? 0) % 100 === 0 ? 0 : 1,
+            }),
+            // 距离计费批次1（2026-08-27）：明细 + 计费距离（billingDistanceKm 与骑行 distanceKm 分开展示）
+            feeBreakdown: formatFeeBreakdown(task, currency, t),
+            items: task.items.length ? formatItems(task.items, t) : undefined,
+            note: task.note ?? undefined,
+            points: [
+              {
+                label: 'P' as const,
+                title: task.pickup.title,
+                subtitle: task.pickup.address,
+                distance: withDistance('common.totalDistance', task.distanceKm, t),
+              },
+              {
+                label: 'D' as const,
+                title: task.dropoff.title,
+                distance: withDistance('common.fromPickup', task.distanceKm, t),
+              },
+            ],
+            timeLabel: t('common.deliverWithin', { minutes: String(task.estimatedMinutes) }),
+            // 批B B3：预约单防御标注（scheduledFor 恒 undefined 时零渲染；后端未来透传即生效）
+            scheduledFor: task.scheduledFor,
+          },
+        ]),
+      ),
+    // 原因：t 每渲染新建（useTranslation.ts:48），deps 用 language 替代（语言不变 t 行为等价，t 仅在回调内消费）——审查 P1-1 拍板
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [taskLists.available, language, currency],
   );
 
-  const renderPickupTask = (task: DeliveryTask) => {
-    // S4: 用共享 helper（与详情页 statusAction 同源），避免两处状态机分散维护
-    const action = getTaskAction(task);
-    return (
-      <TaskCard
-        key={task.id}
-        actionLabel={action ? t(action.labelKey) : t('tasks.arrivedPickup')}
-        chatLabel={t('tasks.chat')}
-        contactLabel={t('tasks.contact')}
-        contactSuffix={
-          task.dropoff.contactPhone
-            ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}`
-            : undefined
-        }
-        feeBreakdown={formatFeeBreakdown(task, currency, t)}
-        items={task.items.length ? formatItems(task.items, t) : undefined}
-        note={task.note ?? undefined}
-        orderId={task.orderId}
-        points={[
-          {
-            label: 'P',
-            title: task.pickup.title,
-            subtitle: task.pickup.address,
-            distance: withDistance('common.totalDistance', task.distanceKm, t),
-          },
-          // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
-          {
-            label: 'D',
-            title: task.dropoff.title,
-            distance: withDistance('common.fromPickup', task.distanceKm, t),
-            subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t),
-          },
-        ]}
-        timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
-        variant="active"
-        onContact={contactHandler(task, t)}
-        onAction={() => action && router.push(`/task/${task.id}/${action.target}`)}
-      />
-    );
-  };
-
-  const renderDeliveryTask = (task: DeliveryTask) => (
-    <TaskCard
-      key={task.id}
-      actionLabel={t('tasks.arrivedDelivery')}
-      chatLabel={t('tasks.chat')}
-      contactLabel={t('tasks.contact')}
-      contactSuffix={
-        task.dropoff.contactPhone
-          ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}`
-          : undefined
-      }
-      feeBreakdown={formatFeeBreakdown(task, currency, t)}
-      // T6 审查 P1-1：note 只放真实客户备注（尾号已在联系按钮 contactSuffix 展示，
-      // 原「有电话时 note 被尾号覆盖」会吞掉配送环节最关键的留言信息）
-      note={task.note ?? undefined}
-      orderId={task.orderId}
-      points={[
-        {
-          label: 'P',
-          title: task.pickup.title,
-          distance: withDistance('common.totalDistance', task.distanceKm, t),
-        },
-        // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
-        {
-          label: 'D',
-          title: task.dropoff.title,
-          distance: withDistance('common.fromPickup', task.distanceKm, t),
-          subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t),
-        },
-      ]}
-      timeLabel={t('common.remaining', { minutes: String(task.estimatedMinutes) })}
-      variant="active"
-      onContact={contactHandler(task, t)}
-      onAction={() => router.push(`/task/${task.id}/sign`)}
-    />
+  const pickupTaskProps = useMemo(
+    () =>
+      new Map(
+        taskLists.pickups.map((task) => {
+          // S4: 用共享 helper（与详情页 statusAction 同源），避免两处状态机分散维护
+          const action = getTaskAction(task);
+          return [
+            task.id,
+            {
+              actionLabel: action ? t(action.labelKey) : t('tasks.arrivedPickup'),
+              chatLabel: t('tasks.chat'),
+              contactLabel: t('tasks.contact'),
+              contactSuffix: task.dropoff.contactPhone
+                ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}`
+                : undefined,
+              feeBreakdown: formatFeeBreakdown(task, currency, t),
+              items: task.items.length ? formatItems(task.items, t) : undefined,
+              note: task.note ?? undefined,
+              orderId: task.orderId,
+              points: [
+                {
+                  label: 'P' as const,
+                  title: task.pickup.title,
+                  subtitle: task.pickup.address,
+                  distance: withDistance('common.totalDistance', task.distanceKm, t),
+                },
+                // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
+                {
+                  label: 'D' as const,
+                  title: task.dropoff.title,
+                  distance: withDistance('common.fromPickup', task.distanceKm, t),
+                  subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t),
+                },
+              ],
+              timeLabel: t('common.remaining', { minutes: String(task.estimatedMinutes) }),
+              actionTarget: action?.target,
+            },
+          ];
+        }),
+      ),
+    // 原因：t 每渲染新建（useTranslation.ts:48），deps 用 language 替代（语言不变 t 行为等价，t 仅在回调内消费）——审查 P1-1 拍板
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [taskLists.pickups, language, currency],
   );
 
-  // R-P1-4：renderItem useCallback 工厂（按 tab 一个稳定引用，配合 memo(TaskCard) 不失效）。
-  // 置于三个 renderXxx 声明之后——闭包引用前向声明会触发 react-hooks/immutability
-  // 「Cannot access variable before it is declared」。
+  const deliveryTaskProps = useMemo(
+    () =>
+      new Map(
+        taskLists.deliveries.map((task) => [
+          task.id,
+          {
+            actionLabel: t('tasks.arrivedDelivery'),
+            chatLabel: t('tasks.chat'),
+            contactLabel: t('tasks.contact'),
+            contactSuffix: task.dropoff.contactPhone
+              ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}`
+              : undefined,
+            feeBreakdown: formatFeeBreakdown(task, currency, t),
+            // T6 审查 P1-1：note 只放真实客户备注（尾号已在联系按钮 contactSuffix 展示，
+            // 原「有电话时 note 被尾号覆盖」会吞掉配送环节最关键的留言信息）
+            note: task.note ?? undefined,
+            orderId: task.orderId,
+            points: [
+              {
+                label: 'P' as const,
+                title: task.pickup.title,
+                distance: withDistance('common.totalDistance', task.distanceKm, t),
+              },
+              // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
+              {
+                label: 'D' as const,
+                title: task.dropoff.title,
+                distance: withDistance('common.fromPickup', task.distanceKm, t),
+                subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t),
+              },
+            ],
+            timeLabel: t('common.remaining', { minutes: String(task.estimatedMinutes) }),
+          },
+        ]),
+      ),
+    // 原因：t 每渲染新建（useTranslation.ts:48），deps 用 language 替代（语言不变 t 行为等价，t 仅在回调内消费）——审查 P1-1 拍板
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [taskLists.deliveries, language, currency],
+  );
+
+  // C-P2-5：contactHandler 柯里化（TaskCard.tsx 原 :76）每渲染新函数也是不稳定引用——
+  //   同样按 task.id 缓存（Linking 在调用方，组件不感知 task）
+  const contactHandlers = useMemo(
+    () =>
+      new Map(
+        [...taskLists.pickups, ...taskLists.deliveries].map((task) => [
+          task.id,
+          contactHandler(task, t),
+        ]),
+      ),
+    // 原因：t 每渲染新建（useTranslation.ts:48），deps 用 language 替代（语言不变 t 行为等价，t 仅在回调内消费）——审查 P1-1 拍板
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [taskLists.pickups, taskLists.deliveries, language],
+  );
+
+  // C-P2-5：onAction 回调按 task.id 稳定缓存（避免 renderXxx 内联箭头使 memo 失效）
+  const actionHandlers = useMemo(() => {
+    const map = new Map<string, () => void>();
+    for (const task of taskLists.available) {
+      map.set(task.id, () => router.push(`/task/${task.id}`));
+    }
+    for (const task of taskLists.pickups) {
+      const action = getTaskAction(task);
+      map.set(task.id, () => action && router.push(`/task/${task.id}/${action.target}`));
+    }
+    for (const task of taskLists.deliveries) {
+      map.set(task.id, () => router.push(`/task/${task.id}/sign`));
+    }
+    return map;
+  }, [router, taskLists.available, taskLists.pickups, taskLists.deliveries]);
+
+  const renderNewTask = useCallback(
+    (task: DeliveryTask) => {
+      const props = newTaskProps.get(task.id);
+      if (!props) return null;
+      return <TaskCard key={task.id} {...props} onAction={actionHandlers.get(task.id)} />;
+    },
+    [newTaskProps, actionHandlers],
+  );
+
+  const renderPickupTask = useCallback(
+    (task: DeliveryTask) => {
+      const props = pickupTaskProps.get(task.id);
+      if (!props) return null;
+      const { actionTarget, ...cardProps } = props;
+      return (
+        <TaskCard
+          key={task.id}
+          {...cardProps}
+          variant="active"
+          onContact={contactHandlers.get(task.id)}
+          onAction={actionHandlers.get(task.id)}
+        />
+      );
+    },
+    [pickupTaskProps, contactHandlers, actionHandlers],
+  );
+
+  const renderDeliveryTask = useCallback(
+    (task: DeliveryTask) => {
+      const props = deliveryTaskProps.get(task.id);
+      if (!props) return null;
+      return (
+        <TaskCard
+          key={task.id}
+          {...props}
+          variant="active"
+          onContact={contactHandlers.get(task.id)}
+          onAction={actionHandlers.get(task.id)}
+        />
+      );
+    },
+    [deliveryTaskProps, contactHandlers, actionHandlers],
+  );
+
+  // R-P1-4 + C-P2-5：renderItem useCallback 工厂（按 tab 一个稳定引用）；
+  //   renderXxx 本身已 useCallback 且内部 props 走 memo 缓存，依赖收敛为三函数引用
   const renderTaskItem = useCallback(
     ({ item }: { item: DeliveryTask }) =>
       activeTab === 'new'
@@ -325,9 +420,7 @@ export default function TasksPage() {
         : activeTab === 'pickups'
           ? renderPickupTask(item)
           : renderDeliveryTask(item),
-    // renderXxx 是组件内闭包（依赖 t/router/currency 等），activeTab 切换或依赖变化时重建
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 原因：renderXxx 为组件体闭包，逐项列依赖会造成巨型数组且与下方实现强耦合
-    [activeTab, t, router, currency, taskLists],
+    [activeTab, renderNewTask, renderPickupTask, renderDeliveryTask],
   );
 
   const emptyMeta: Record<TaskTab, { title: TranslationKey; desc: TranslationKey }> = {

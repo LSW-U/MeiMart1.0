@@ -76,7 +76,7 @@ export default function SearchResultsPage() {
   const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
   const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
   const addToCartMutation = useAddToCart();
-  // C-P2-10: useCallback 稳定化（memo 化卡片 props 浅比较，回调稳定才生效）
+  // A-P2-2: useCallback 稳定化（memo 化卡片 props 浅比较，回调稳定才生效）
   const handleAddToCart = useCallback(
     (item: Product) => {
       addToCartMutation.mutate(
@@ -92,7 +92,8 @@ export default function SearchResultsPage() {
     [addToCartMutation, t],
   );
 
-  // C-P2-10: 结果网格改 FlatList(numColumns=2)——替代 View+map 全量渲染（虚拟化）。
+  // A-P2-2: 结果网格 FlatList(numColumns=2) 现直接承担页面滚动（旧版嵌
+  //   ScrollView(scrollEnabled=false) 内，虚拟化失效全量挂载）。
   //   行为零变更：行容器样式承接原 grid/gridCell（半 gutter 列 padding + 行距）；
   //   ProductCard onPress 签名是 (product) => void（非 () => void），直接传稳定 router 跳转。
   const renderResultItem = useCallback(
@@ -156,6 +157,66 @@ export default function SearchResultsPage() {
       </View>
     ) : null;
 
+  // A-P2-2: 排序栏/计数收进 ListHeaderComponent（旧版 FlatList 嵌 ScrollView
+  //   (scrollEnabled=false) 使虚拟化失效、全量挂载）；onSort 稳定引用
+  const handleSortPress = useCallback((key: ProductSortKey) => setActiveSort(key), []);
+
+  const renderListHeader = useCallback(
+    () => (
+      <>
+        {/* Sort & Filter Bar */}
+        <View
+          style={[
+            styles.sortWrap,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
+          ]}
+        >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.sortRow}>
+              {SORT_OPTIONS.map((opt) => {
+                const active = opt.key === activeSort;
+                const label = t(opt.labelKey);
+                return (
+                  <Pressable
+                    key={opt.key}
+                    onPress={() => handleSortPress(opt.key)}
+                    style={[
+                      styles.sortPill,
+                      active && { backgroundColor: colors['surface-container-high'] },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={t('search.sort.a11y', { label })}
+                  >
+                    <Text
+                      style={[
+                        styles.sortText,
+                        {
+                          color: active ? colors.primary : colors['on-surface-variant'],
+                        },
+                      ]}
+                    >
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* Results Found 计数 */}
+        <Text style={[styles.countText, { color: colors['on-surface-variant'] }]}>
+          {t('search.resultCount', { count })}
+        </Text>
+      </>
+    ),
+    [colors, count, handleSortPress, t, activeSort],
+  );
+
   return (
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
@@ -193,97 +254,48 @@ export default function SearchResultsPage() {
           {renderRecommended()}
         </ScrollView>
       ) : (
-        <ScrollView
+        // A-P2-2: 单列表容器——FlatList 直接承担滚动（虚拟化生效），筛选/计数挂
+        //   ListHeaderComponent，Load More/Recommended 挂 ListFooterComponent
+        <FlatList
           style={{ flex: 1 }}
+          data={results}
+          keyExtractor={(item: Product) => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.grid}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+          renderItem={renderResultItem}
+          ListHeaderComponent={renderListHeader}
+          ListFooterComponent={
+            <View style={styles.footerSection}>
+              {/* P8-5 F3 真实分页：hasNextPage 时显示 Load More，无更多隐藏（替假 spinner） */}
+              {(hasNextPage || isFetchingNextPage) && (
+                <View style={styles.loadMore}>
+                  <View
+                    style={[
+                      styles.spinner,
+                      {
+                        borderColor: colors.outline,
+                        borderTopColor: colors.primary,
+                      },
+                    ]}
+                  />
+                  <Text style={[styles.loadMoreText, { color: colors['on-surface-variant'] }]}>
+                    {t('search.loadingMore')}
+                  </Text>
+                </View>
+              )}
+
+              {/* P8-6 R2/R4：Recommended 瀑布流，分页结束后（!hasNextPage）显示，避免穿插每页底部 */}
+              {!hasNextPage && renderRecommended()}
+            </View>
+          }
           onScroll={handleScroll}
           scrollEventThrottle={16}
-        >
-          {/* Sort & Filter Bar */}
-          <View
-            style={[
-              styles.sortWrap,
-              {
-                backgroundColor: colors['surface-container-lowest'],
-                borderColor: colors['outline-variant'],
-              },
-            ]}
-          >
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.sortRow}>
-                {SORT_OPTIONS.map((opt) => {
-                  const active = opt.key === activeSort;
-                  const label = t(opt.labelKey);
-                  return (
-                    <Pressable
-                      key={opt.key}
-                      onPress={() => setActiveSort(opt.key)}
-                      style={[
-                        styles.sortPill,
-                        active && { backgroundColor: colors['surface-container-high'] },
-                      ]}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: active }}
-                      accessibilityLabel={t('search.sort.a11y', { label })}
-                    >
-                      <Text
-                        style={[
-                          styles.sortText,
-                          {
-                            color: active ? colors.primary : colors['on-surface-variant'],
-                          },
-                        ]}
-                      >
-                        {label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </ScrollView>
-          </View>
-
-          {/* Results Found 计数 */}
-          <Text style={[styles.countText, { color: colors['on-surface-variant'] }]}>
-            {t('search.resultCount', { count })}
-          </Text>
-
-          {/* Product Grid 2 列 —— C-P2-10: FlatList(numColumns) 虚拟化（原 View+map 全量渲染） */}
-          <FlatList
-            data={results}
-            keyExtractor={(item: Product) => item.id}
-            numColumns={2}
-            columnWrapperStyle={styles.grid}
-            contentContainerStyle={styles.gridContent}
-            renderItem={renderResultItem}
-            scrollEnabled={false}
-            initialNumToRender={6}
-            maxToRenderPerBatch={4}
-            windowSize={5}
-          />
-
-          {/* P8-5 F3 真实分页：hasNextPage 时显示 Load More + 触底加载，无更多隐藏（替假 spinner） */}
-          {(hasNextPage || isFetchingNextPage) && (
-            <View style={styles.loadMore}>
-              <View
-                style={[
-                  styles.spinner,
-                  {
-                    borderColor: colors.outline,
-                    borderTopColor: colors.primary,
-                  },
-                ]}
-              />
-              <Text style={[styles.loadMoreText, { color: colors['on-surface-variant'] }]}>
-                {t('search.loadingMore')}
-              </Text>
-            </View>
-          )}
-
-          {/* P8-6 R2/R4：Recommended 瀑布流，分页结束后（!hasNextPage）显示，避免穿插每页底部 */}
-          {!hasNextPage && renderRecommended()}
-        </ScrollView>
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
+        />
       )}
     </SafeAreaWrapper>
   );
@@ -422,6 +434,10 @@ const styles = StyleSheet.create({
     padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
   },
+  // A-P2-2：ListFooterComponent 的 Recommended 区左对齐外边距（原 scrollContent padding 由 header 承担）
+  footerSection: {
+    paddingHorizontal: layout['container-margin'],
+  },
   sortWrap: {
     borderRadius: borderRadius.xl,
     padding: spacing.xs,
@@ -448,14 +464,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   grid: {
-    // FlatList numColumns=2 行容器（C-P2-10）：原 grid 负 margin + gridCell 半 gutter 组合
-    flex: 1,
+    // FlatList numColumns=2 行容器（A-P2-2）：原 grid 负 margin + gridCell 半 gutter 组合
     flexDirection: 'row',
     marginHorizontal: -layout.gutter / 2,
-  },
-  gridContent: {
-    // 纵向行距（原 gridCell marginBottom）
-    rowGap: spacing.lg,
   },
   gridCell: {
     flex: 1,
@@ -480,6 +491,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   // P8-6 R4：Recommended 两列瀑布流（同 home.tsx / P7 search/index masonry 模式）
+  // A-P2-2：原 scrollContent 的横向 padding 由 footerSection 承担（FlatList footer 无页级 padding）
   section: {
     marginTop: spacing.xl,
     gap: spacing.md,

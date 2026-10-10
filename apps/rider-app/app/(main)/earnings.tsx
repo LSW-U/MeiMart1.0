@@ -12,7 +12,7 @@ import type { EarningSummary, EarningTransaction } from '../../src/types/earning
 import { useEarningSummary, useEarningTransactions } from '../../src/services/queries/useEarnings';
 import { formatCurrency } from '../../src/utils/format';
 import { localeTagFor } from '../../src/services/settings';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 type BillingTab = 'today' | 'all';
 
@@ -77,46 +77,55 @@ export default function EarningsPage() {
   } = useEarningTransactions();
   const [billingTab, setBillingTab] = useState<BillingTab>('today');
 
-  // TODO: 后端按时间过滤；当前前端按 createdAt 是否在今天内筛选
-  const today = new Date();
-  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-  const startOfYesterday = startOfDay - 24 * 60 * 60 * 1000;
-  const currency = t('common.currency');
+  // C-P2-10: 过滤/分桶 useMemo——父级任意 state（tab 切换等）重渲染时不重复
+  //   遍历交易列表；startOfDay 收进 memo 回调，依赖 transactions/billingTab/t
+  const { visibleTransactions, groups } = useMemo(() => {
+    // TODO: 后端按时间过滤；当前前端按 createdAt 是否在今天内筛选
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = startOfDay - 24 * 60 * 60 * 1000;
 
-  const visibleTransactions =
-    billingTab === 'today'
-      ? (transactions ?? []).filter((tx) => new Date(tx.createdAt).getTime() >= startOfDay)
-      : (transactions ?? []);
+    const visible =
+      billingTab === 'today'
+        ? (transactions ?? []).filter((tx) => new Date(tx.createdAt).getTime() >= startOfDay)
+        : (transactions ?? []);
 
-  /**
-   * E1 §3.3 日期分组：「全部账单」按 今日/昨日/更早 分组；「今日账单」单组
-   * （全是今天，组头即区块标题）。transactions service 层已按 createdAt 降序，
-   * 顺序遍历按桶收集即保持组内时序；降序遍历下组顺序天然是 今日→昨日→更早。
-   */
-  const groups: (TxGroup & { label: string })[] = [];
-  if (billingTab === 'today') {
-    groups.push({ key: 'today', label: t('earnings.today'), items: visibleTransactions });
-  } else {
-    let todayGroup: TxGroup | null = null;
-    let yesterdayGroup: TxGroup | null = null;
-    let earlierGroup: TxGroup | null = null;
-    for (const tx of visibleTransactions) {
-      const ts = new Date(tx.createdAt).getTime();
-      if (ts >= startOfDay) {
-        todayGroup ??= { key: 'today', items: [] };
-        todayGroup.items.push(tx);
-      } else if (ts >= startOfYesterday) {
-        yesterdayGroup ??= { key: 'yesterday', items: [] };
-        yesterdayGroup.items.push(tx);
-      } else {
-        earlierGroup ??= { key: 'earlier', items: [] };
-        earlierGroup.items.push(tx);
+    /**
+     * E1 §3.3 日期分组：「全部账单」按 今日/昨日/更早 分组；「今日账单」单组
+     * （全是今天，组头即区块标题）。transactions service 层已按 createdAt 降序，
+     * 顺序遍历按桶收集即保持组内时序；降序遍历下组顺序天然是 今日→昨日→更早。
+     */
+    const result: (TxGroup & { label: string })[] = [];
+    if (billingTab === 'today') {
+      result.push({ key: 'today', label: t('earnings.today'), items: visible });
+    } else {
+      let todayGroup: TxGroup | null = null;
+      let yesterdayGroup: TxGroup | null = null;
+      let earlierGroup: TxGroup | null = null;
+      for (const tx of visible) {
+        const ts = new Date(tx.createdAt).getTime();
+        if (ts >= startOfDay) {
+          todayGroup ??= { key: 'today', items: [] };
+          todayGroup.items.push(tx);
+        } else if (ts >= startOfYesterday) {
+          yesterdayGroup ??= { key: 'yesterday', items: [] };
+          yesterdayGroup.items.push(tx);
+        } else {
+          earlierGroup ??= { key: 'earlier', items: [] };
+          earlierGroup.items.push(tx);
+        }
       }
+      if (todayGroup) result.push({ ...todayGroup, label: t('earnings.today') });
+      if (yesterdayGroup) result.push({ ...yesterdayGroup, label: t('common.yesterday') });
+      if (earlierGroup) result.push({ ...earlierGroup, label: t('common.earlier') });
     }
-    if (todayGroup) groups.push({ ...todayGroup, label: t('earnings.today') });
-    if (yesterdayGroup) groups.push({ ...yesterdayGroup, label: t('common.yesterday') });
-    if (earlierGroup) groups.push({ ...earlierGroup, label: t('common.earlier') });
-  }
+    return { visibleTransactions: visible, groups: result };
+    // C-P2-10 依赖稳定性（审查 P1-1/P2-2）：t 每渲染新建不能进 deps——改 language（同 tasks.tsx 先例）
+    // 原因：t 每渲染新建（useTranslation.ts:48），deps 用 language 替代（语言不变 t 行为等价，t 仅在回调内消费）——审查 P1-1 拍板
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [billingTab, transactions, language]);
+
+  const currency = t('common.currency');
 
   /** E1 §3.5：按 tx.type 生成 i18n 描述（替代 mock 英文 description 直出） */
   const txTitle = (tx: EarningTransaction): string => {
