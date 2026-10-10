@@ -18,6 +18,7 @@ import { useProductsByCategory, useProducts } from '@/services/queries/useProduc
 import { useAddToCart } from '@/services/queries/useCart';
 import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
+import { getApiErrorMessage } from '@/utils/error';
 import { resolveBadges } from '@/utils/resolveBadges';
 import type { Product } from '@/types';
 
@@ -46,9 +47,31 @@ export default function ProductListPage() {
   // Why: 批3 A7 —— HorizontalProductCard 为 React.memo，回调 useCallback 稳定引用
   const addMutation = useAddToCart();
   const handleAdd = useCallback(
+    // 第四轮批4 P3：等加购结果再 toast（mutate 回调 onSuccess/onError）——
+    // 原实现 mutate() 后立即 toast，库存校验（SOLD_OUT/STOCK_EXCEEDED）失败也弹「已加购」假成功。
+    // 错误文案映射对齐 favorites.tsx handleQuickAdd 先例。
     (product: Product) => {
-      addMutation.mutate({ product, quantity: 1 });
-      toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' }));
+      addMutation.mutate(
+        { product, quantity: 1 },
+        {
+          onSuccess: () => {
+            toast.success(t('product.addedToCart', { defaultValue: 'Added to cart' }));
+          },
+          onError: (err) => {
+            const msg = err instanceof Error ? err.message : '';
+            const friendly =
+              msg === 'SOLD_OUT'
+                ? t('product.soldOut', { defaultValue: 'Sold Out' })
+                : msg === 'STOCK_EXCEEDED'
+                  ? t('product.stockExceeded')
+                  : getApiErrorMessage(
+                      err,
+                      t('product.addToCartFailed', { defaultValue: 'Failed to add to cart' }),
+                    );
+            toast.error(friendly);
+          },
+        },
+      );
     },
     [addMutation, t],
   );

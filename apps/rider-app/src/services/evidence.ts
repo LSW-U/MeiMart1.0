@@ -100,15 +100,9 @@ export function forgetUploadedUrl(uri: string): void {
   uploadedUrlCache.delete(uri);
 }
 
-/** P2-3：清空整个 evidence 持久目录（放弃/死信回收孤儿文件用；目录不存在静默通过） */
-export function clearEvidenceDir(): void {
-  try {
-    const dir = evidenceDir();
-    if (dir.exists) dir.delete();
-  } catch (e) {
-    console.warn('[evidence] clear dir failed:', (e as Error).message);
-  }
-}
+// 第四轮批4：clearEvidenceDir 已删（零生产调用方——P2-6 后死信回收改按文件
+// deleteEvidenceFile 逐个删，整目录清空无消费者；sync.test.ts 仅 mock 断言「未被调用」，
+// 该断言随本删除一并移除）。
 
 /** 队列 payload 内的 evidence 字段（JSON 可序列化，只存本地路径不存对象） */
 export type PersistedEvidence = {

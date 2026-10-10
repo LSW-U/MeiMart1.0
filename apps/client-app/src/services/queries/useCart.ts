@@ -202,3 +202,30 @@ export function useToggleCartItem() {
     onSettled: () => qc.invalidateQueries({ queryKey: CART_ROOT_KEY }),
   });
 }
+
+// Why: 第四轮批4 P3（toggleAll 收敛）——「全选/全不选」批量切换单次 mutation：
+// 一次乐观更新（所有目标项同帧置位）+ 一次 cartApi.toggleMany（逐 PATCH 但仅末次
+// getCart），替代页面层 forEach 逐项 mutate 的 N 次 PATCH + N 次 getCart 竞态。
+// 乐观/回滚/校准三件套与 useToggleCartItem 同构。
+export function useToggleCartItems() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemIds, selected }: { itemIds: string[]; selected: boolean }) =>
+      cartApi.toggleMany(itemIds, selected),
+    onMutate: async ({ itemIds, selected }) => {
+      await qc.cancelQueries({ queryKey: CART_ROOT_KEY });
+      const previous = qc.getQueryData(CART_QUERY_KEY());
+      qc.setQueryData(CART_QUERY_KEY(), (old: Cart | undefined) => {
+        if (!old) return old;
+        const ids = new Set(itemIds);
+        const items = old.items.map((i) => (ids.has(i.id) ? { ...i, selected } : i));
+        return recomputeTotals(old, items);
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(CART_QUERY_KEY(), ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: CART_ROOT_KEY }),
+  });
+}

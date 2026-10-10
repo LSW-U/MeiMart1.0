@@ -52,12 +52,6 @@ export const gradientPresets = {
     start: { x: 0, y: 0 },
     end: { x: 0, y: 1 },
   },
-  /** 暖白纵向（页面顶部到主背景） */
-  warmSurface: {
-    colors: ['#FAF7F2', '#fff8f7'],
-    start: { x: 0, y: 0 },
-    end: { x: 0, y: 1 },
-  },
 } as const satisfies Record<string, GradientPreset>;
 
 export type GradientPresetKey = keyof typeof gradientPresets;

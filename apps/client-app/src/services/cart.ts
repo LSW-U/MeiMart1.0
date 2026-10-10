@@ -188,6 +188,24 @@ export const cartApi = {
     return this.getCart();
   },
 
+  // Why: 第四轮批4 P3（toggleAll 收敛）——购物车「全选/全不选」单次批量：逐项 PATCH 顺序化
+  // + 最后仅一次 getCart（同 selectOnly/clearSelected 竞态治理先例）。原调用方 forEach 逐项
+  // mutate 会产生 N 次 PATCH + N 次 getCart 竞态。
+  async toggleMany(itemIds: string[], selected: boolean): Promise<Cart> {
+    if (isMockMode) {
+      const ids = new Set(itemIds);
+      for (const item of mockDb.cart.items) {
+        if (ids.has(item.id)) item.selected = selected;
+      }
+      recalculateCart();
+      return mockResponse(mockDb.cart);
+    }
+    for (const id of itemIds) {
+      await api.patch(`/client/cart/items/${id}`, { isSelected: selected });
+    }
+    return this.getCart();
+  },
+
   // Why: C-P1-2 Buy Now「显式只选本商品」——结算页只结算 selected 项，跳转前必须保证
   // 选中集合 = {本商品}：取消其它已选中项，本商品置选中。mock 直改本地；real 走
   // PATCH isSelected（同 toggleSelect），最后 getCart 拉最终状态。

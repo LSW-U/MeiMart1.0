@@ -210,7 +210,8 @@ export default function AfterSalesApplyPage() {
     setSlots((prev) => [...prev, slot]);
     setUploading(true);
     try {
-      slotToUploading(slot);
+      // 第四轮批4 P3：删死语句 slotToUploading(slot)（纯函数返回新对象，弃值无副作用；
+      // 真正的状态落盘是下一行 setSlots）
       setSlots((prev) => prev.map((s) => (s.id === slotId ? { ...slotToUploading(s) } : s)));
       const uploaded = await uploadsApi.refundEvidence(asset.uri, asset.mimeType ?? 'image/jpeg');
       setSlots((prev) => prev.map((s) => (s.id === slotId ? slotToDone(s, uploaded.url) : s)));

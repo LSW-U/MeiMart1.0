@@ -2,7 +2,7 @@
 // HTML → RN 行数比：358 → ~440（含样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 123%）
 // Fix-19: Primary tais-pattern Header + 商品缩略图 + TaisDivider + You May Also Like + Checkout Bar
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { formatPrice } from '@/utils/format';
 import {
   StyleSheet,
@@ -36,6 +36,7 @@ import {
   useRemoveCartItem,
   useRemoveCartItems,
   useToggleCartItem,
+  useToggleCartItems,
   useUpdateCartItem,
 } from '@/services/queries/useCart';
 import { useProducts } from '@/services/queries/useProducts';
@@ -80,13 +81,17 @@ export default function CartPage() {
   const [manageMode, setManageMode] = useState(false);
   const [selectedForDelete, setSelectedForDelete] = useState<Set<string>>(new Set());
 
-  const toggleAll = () => {
-    cart?.items.forEach((item) => {
-      if (item.selected === allSelected) {
-        toggleMutation.mutate({ itemId: item.id, selected: !allSelected });
-      }
-    });
-  };
+  // 第四轮批4 P3：全选/全不选收敛为单次批量 mutation（原 forEach 逐项 mutate：N 次 PATCH
+  // + N 次 getCart 竞态）。目标项 = 选中态与目标相反的项（与原过滤语义一致）。
+  const toggleAllTargets = useMemo(
+    () => cart?.items.filter((i) => i.selected === allSelected).map((i) => i.id) ?? [],
+    [cart, allSelected],
+  );
+  const toggleAllMutation = useToggleCartItems();
+  const toggleAll = useCallback(() => {
+    if (toggleAllTargets.length === 0) return;
+    toggleAllMutation.mutate({ itemIds: toggleAllTargets, selected: !allSelected });
+  }, [toggleAllTargets, allSelected, toggleAllMutation]);
 
   // 管理态全选：checkbox 勾选 = 全部加入 selectedForDelete，取消 = 清空
   const allForDelete =

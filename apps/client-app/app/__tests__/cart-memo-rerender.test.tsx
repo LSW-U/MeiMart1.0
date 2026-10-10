@@ -64,6 +64,7 @@ jest.mock('@/services/queries/useCart', () => ({
   // 回归锚（P1-2）：mutation result 对象每渲染新引用——真实 useMutation 行为。
   // 若 makeRow* 误依赖 mutation 对象，memo 断言（②不重渲）会失败。
   useToggleCartItem: () => ({ mutate: jest.fn(), isPending: false }),
+  useToggleCartItems: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateCartItem: () => ({ mutate: jest.fn(), isPending: false }),
   useRemoveCartItem: () => ({ mutate: jest.fn(), isPending: false }),
   useRemoveCartItems: () => ({ mutate: jest.fn(), isPending: false }),

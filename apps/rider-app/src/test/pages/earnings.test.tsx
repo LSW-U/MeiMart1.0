@@ -108,13 +108,6 @@ describe('批1 T6：FORCE_MOCK 退役（占位分支删除）', () => {
     mockTxState = 'tx-ok';
   });
 
-  it('isEarningsForcedMock 恒 false（FORCE_MOCK=false，占位分支退役）', () => {
-    const earningsModule = require('../../../src/services/earnings') as {
-      isEarningsForcedMock: boolean;
-    };
-    expect(earningsModule.isEarningsForcedMock).toBe(false);
-  });
-
   it('结算提示 settleHint 5 语齐备且不承诺提现 T+1（「次日到账」仅指收入）', () => {
     for (const lang of ['zh', 'en', 'tet', 'pt', 'id'] as const) {
       const dict = require(`../../../src/i18n/locales/${lang}.json`) as Record<string, string>;

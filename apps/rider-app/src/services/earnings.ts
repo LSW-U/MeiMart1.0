@@ -13,15 +13,9 @@ import { formatCurrency } from '../utils/format';
 
 // 批1 T6（D5/N4）：后端 W6+ earnings/withdrawals 端点已就绪（MeiMart ccaa26b），
 // 撤 FORCE_MOCK——real 模式走真实端点（适配层见下），mock 模式（本地开发）保留原 localStorage 层。
-// isEarningsForcedMock 因 FORCE_MOCK=false 恒 false，页面占位分支自动退役（保留导出防调用点断裂，
-// T7 死代码评估结论：earnings.tsx/withdraw.tsx 的占位分支由本批一并移除，见各页注释）。
+// 第四轮批4：isEarningsForcedMock 导出已删（FORCE_MOCK=false 恒 false，页面占位分支
+// 已退役且全仓零调用方，grep 已核；退役断言测试同步删除）。
 const FORCE_MOCK = false;
-
-/**
- * 钱包只读降级开关（R-P0-3/D9，已退役）：FORCE_MOCK=false 后恒 false。
- * 保留导出仅为本批外潜在引用兜底，本仓无剩余调用点（grep 已核），T7 清理范围外不删。
- */
-export const isEarningsForcedMock = !isMockMode && FORCE_MOCK;
 
 // ── 后端原始结构（契约 @meimart/api-contract rider-earnings.ts，金额单位：分）──
 

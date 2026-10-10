@@ -197,7 +197,6 @@ export const authApi = {
   },
 };
 
-// 兼容 login.tsx 现有调用
-export async function sendSmsCode(phone: string): Promise<void> {
-  await authApi.sendSmsCode(phone);
-}
+// 第四轮批4：顶层 sendSmsCode 包装已删（零调用方）。注意与 src/hooks/useAuth.ts:100
+// 的同名 hook sendSmsCode 区分——页面统一走 useAuth()（内部 mutation 调 authApi.sendSmsCode），
+// 本文件只保留 authApi 本体。

@@ -38,8 +38,9 @@ jobs:
       - run: pnpm -F ${{ steps.pkg.outputs.name }} typecheck
       - run: pnpm -F ${{ steps.pkg.outputs.name }} lint
       # 批次1 CI 修复：pnpm run script 的 `-- --ci` 在 CI 被当成位置参数（jest Pattern:
-      # --ci|--coverage=false - 0 matches）→ exit 1。改用 exec 直跑 jest 绕开透传歧义
-      - run: pnpm -F ${{ steps.pkg.outputs.name }} exec jest --ci --coverage=false
+      # --ci -- 0 matches）→ exit 1。改用 exec 直跑 jest 绕开透传歧义
+      # 第四轮修复 E-P2-1：去 --coverage=false，启用 jest.config.js collectCoverageFrom 覆盖率采集
+      - run: pnpm -F ${{ steps.pkg.outputs.name }} exec jest --ci
       # 前端接线切换 P1（20261002）：跨端批5 门禁挂接 CI（存量记账不拦截 / 新增拦截，
       # 语义见 scripts/gate/README.md；基线 json 与脚本本体不在本批改动范围）
       - run: |
@@ -61,10 +62,14 @@ jobs:
   # 解析不到 config 包）
   commitlint:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # 第四轮修复 E-P2-1：补 PR 触发——PR 时校验 PR 全部新增 commit（origin/master..HEAD），
+    # squash-merge 后 push(master) 仍走 push 分支校验刚落库的单条 commit
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
+      github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 2 }
+        with: { fetch-depth: 0 }
       - uses: pnpm/action-setup@v4
         with: { version: 11 }
       - uses: actions/setup-node@v4
@@ -72,7 +77,15 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm -w exec commitlint --from HEAD~1 --to HEAD
+      - name: Pick commitlint range
+        id: range
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "args=--from origin/${{ github.base_ref }} --to HEAD" >> "$GITHUB_OUTPUT"
+          else
+            echo "args=--from HEAD~1 --to HEAD" >> "$GITHUB_OUTPUT"
+          fi
+      - run: pnpm -w exec commitlint ${{ steps.range.outputs.args }}
 
   # 第四轮修复 P1-5：packages/* 补 CI 覆盖（此前仅本地跑，5 包 test 带 --passWithNoTests 假绿风险）。
   # 沿用两端 job 的既有套路：目录名→包名映射（pnpm -F 按目录名匹配不到会打印
@@ -96,4 +109,4 @@ jobs:
         id: pkg
         run: echo "name=@meimart/${{ matrix.package }}" >> "$GITHUB_OUTPUT"
       - run: pnpm -F ${{ steps.pkg.outputs.name }} typecheck
-      - run: pnpm -F ${{ steps.pkg.outputs.name }} exec jest --ci --coverage=false
+      - run: pnpm -F ${{ steps.pkg.outputs.name }} exec jest --ci

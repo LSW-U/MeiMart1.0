@@ -56,30 +56,6 @@ export const api = client.api;
  * 仍失败才死信（sync.ts retryAfterTokenRefresh 消费）。单飞实现在包内（批4 D14）。 */
 export const refreshAccessToken = client.refreshAccessToken;
 
-// ── 通用 request() — 旧 API 兼容，内部委托给 axios 实例 ───────────────
-
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const method = (init?.method ?? 'GET').toUpperCase();
-  // D6 批4 最小修（R-P3-6）：body 非法 JSON 不再炸出 SyntaxError，按无 body 处理
-  let data: unknown;
-  if (init?.body) {
-    try {
-      data = JSON.parse(init.body as string);
-    } catch {
-      data = init.body;
-    }
-  }
-  const config: Parameters<typeof api.request>[0] = {
-    url: path,
-    method: method as 'GET',
-    headers: init?.headers as Record<string, string> | undefined,
-    data,
-  };
-  const res = await api.request<T>(config);
-  if (res.status === 204) return undefined as T;
-  return res.data;
-}
-
 export function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
   const entries = Object.entries(params).filter(([, v]) => v !== undefined);
   if (entries.length === 0) return '';

@@ -1,11 +1,5 @@
-import {
-  enqueue,
-  processQueue,
-  dispatchAction,
-  getQueueSize,
-  getDeadCount,
-  purgeFailedEntries,
-} from './sync';
+import { enqueue, processQueue, dispatchAction, getDeadCount, purgeFailedEntries } from './sync';
+
 import { makeTestDatabase } from './test-utils';
 import * as indexModule from './index';
 import type { OfflineQueueEntry } from './models';
@@ -17,7 +11,6 @@ import {
   deleteEvidenceFile,
   uploadEvidenceCached,
   forgetUploadedUrl,
-  clearEvidenceDir,
 } from '../services/evidence';
 
 /**
@@ -61,14 +54,12 @@ jest.mock('../services/evidence', () => ({
   })),
   deleteEvidenceFile: jest.fn(),
   forgetUploadedUrl: jest.fn(),
-  clearEvidenceDir: jest.fn(),
 }));
 
 const mockUploadEvidence = uploadEvidence as jest.Mock;
 const mockDeleteEvidenceFile = deleteEvidenceFile as jest.Mock;
 const mockUploadEvidenceCached = uploadEvidenceCached as jest.Mock;
 const mockForgetUploadedUrl = forgetUploadedUrl as jest.Mock;
-const mockClearEvidenceDir = clearEvidenceDir as jest.Mock;
 
 // D14 真库基座：不 mock write 语义，只把 ./index 的 database 导出重定向到每用例
 // 独立的真实 SQLite 实例（test-utils 造库）——sync.ts 的 enqueue/processQueue 全部
@@ -107,7 +98,6 @@ beforeEach(() => {
     );
   mockDeleteEvidenceFile.mockReset();
   mockForgetUploadedUrl.mockReset();
-  mockClearEvidenceDir.mockReset();
   mockRefreshAccessToken.mockReset().mockResolvedValue(undefined);
   ctx = makeTestDatabase();
   (indexModule as { database: unknown }).database = ctx.database;
@@ -132,8 +122,12 @@ describe('processQueue（真库）', () => {
 
     expect(result).toEqual({ synced: 2, failed: 0 });
     expect(mockPickup).toHaveBeenCalledWith('T1', { note: undefined, evidenceUrls: [] });
-    expect(mockDeliver).toHaveBeenCalledWith('T1', { collectedAmount: 50, note: undefined, evidenceUrls: [] });
-    expect(await getQueueSize()).toBe(0); // 软删后 query().fetch() 排除，活条目为 0
+    expect(mockDeliver).toHaveBeenCalledWith('T1', {
+      collectedAmount: 50,
+      note: undefined,
+      evidenceUrls: [],
+    });
+    expect((await fetchEntries()).length).toBe(0); // 软删后 query().fetch() 排除，活条目为 0
   });
 
   it('R-P0-2 回归：失败 attempts/lastError 经 entry.update 在 write 内真实落盘', async () => {
@@ -222,7 +216,7 @@ describe('enqueue（真库）', () => {
     await enqueue({ type: 'pickup', payload: { taskId: 'T7' } });
     await enqueue({ type: 'pickup', payload: { taskId: 'T7' } });
 
-    expect(await getQueueSize()).toBe(1);
+    expect((await fetchEntries()).length).toBe(1);
   });
 
   it('去重例外：死信（attempts>=MAX）允许新建；不同 action 不互斥', async () => {
@@ -232,10 +226,10 @@ describe('enqueue（真库）', () => {
     mockPickup.mockResolvedValue(undefined);
 
     await enqueue({ type: 'pickup', payload: { taskId: 'T8' } });
-    expect(await getQueueSize()).toBe(2);
+    expect((await fetchEntries()).length).toBe(2);
 
     await enqueue({ type: 'deliver', payload: { taskId: 'T8' } });
-    expect(await getQueueSize()).toBe(3);
+    expect((await fetchEntries()).length).toBe(3);
   });
 });
 
@@ -250,7 +244,11 @@ describe('dispatchAction 路由（保持旧覆盖，bug 1 端点对齐）', () =
 
     expect(mockPickup).toHaveBeenCalledWith('A', { note: 'arrived', evidenceUrls: [] });
     expect(mockStartDelivering).toHaveBeenCalledWith('B', undefined);
-    expect(mockDeliver).toHaveBeenCalledWith('C', { collectedAmount: 100, note: 'cash', evidenceUrls: [] });
+    expect(mockDeliver).toHaveBeenCalledWith('C', {
+      collectedAmount: 100,
+      note: 'cash',
+      evidenceUrls: [],
+    });
   });
 });
 
@@ -327,10 +325,10 @@ describe('R-P1-2/R-P1-3：evidence 链 + permanent 分型', () => {
 
     const purged = await purgeFailedEntries();
     expect(purged).toBe(1);
-    // P2-6：只删死信条目自己的文件（不再整目录 clearEvidenceDir——活条目文件不受影响）
+    // P2-6：只删死信条目自己的文件（不再整目录清空——活条目文件不受影响；
+    // clearEvidenceDir 已删，第四轮批4）
     expect(mockDeleteEvidenceFile).toHaveBeenCalledWith('file://p/orphan.jpg');
     expect(mockForgetUploadedUrl).toHaveBeenCalledWith('file://p/orphan.jpg');
-    expect(mockClearEvidenceDir).not.toHaveBeenCalled();
   });
 
   it('P2-6：purge 死信与活条目共存——活条目的 evidence 文件不被回收', async () => {
@@ -407,7 +405,7 @@ describe('P2-5（C17）：401 → token 刷新 → 重试链', () => {
     expect(result).toEqual({ synced: 1, failed: 0 });
     expect(mockRefreshAccessToken).toHaveBeenCalledTimes(1);
     expect(mockPickup).toHaveBeenCalledTimes(2); // 首次 401 + 刷新后重试
-    expect(await getQueueSize()).toBe(0); // 重试成功，条目软删
+    expect((await fetchEntries()).length).toBe(0); // 重试成功，条目软删
   });
 
   it('D13 批4 收紧：401 刷新后重试仍 401 → PermanentSyncError 立即死信（新 token 下仍 401 = 重试无意义）', async () => {

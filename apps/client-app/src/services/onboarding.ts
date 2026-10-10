@@ -13,7 +13,7 @@ export interface OnboardingSlideRemote {
   icon: string;
   /** 该屏强调色 hex（图标+角标底+渐变底），为空用 primary */
   accentColor: string;
-  /** 标题 i18n key（三语言文案，不传明文） */
+  /** 标题 i18n key（四语 zh/en/tet/pt 文案，不传明文） */
   titleKey: string;
   /** 描述 i18n key */
   descKey: string;

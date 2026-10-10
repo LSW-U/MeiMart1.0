@@ -21,7 +21,8 @@ export type RiderSocketState = 'disconnected' | 'connecting' | 'connected' | 'er
  *   - `'error'`：connect_error，握手/连接失败（token 失效、网络层断、CORS）—— 客观失败，需警示。
  *   - `'disconnected'`：socket.io reconnection:true 下是重连中瞬态（每次重试前 emit disconnect）。
  *     但服务端 graceful disconnect（网关重启主动断开）只 emit `disconnect` 不 emit `connect_error`，
- *     socket.io 在 reconnectionAttempts 耗尽前一直 `disconnected`（reconnectionAttempts=Infinity 永不耗尽 → connect_error 不再 fire），
+ *     socket.io 在 reconnectionAttempts 耗尽前一直 `disconnected`（attempts 上限 10（api-core
+ *     WS_RECONNECTION_ATTEMPTS，非 Infinity，耗尽后通道由调用方生命周期重建）→ 之后 connect_error 不再 fire），
  *     骑手长时间无感知。故 `disconnected` 持续态也需纳入可见反馈（见 _layout debounce 后显示 Banner）。
  */
 export function useRiderSocket() {

@@ -1,9 +1,4 @@
-import type {
-  ApplyRiderPayload,
-  RiderProfile,
-  RiderStatus,
-  UpdateDutyPayload,
-} from '@/src/types/rider';
+import type { ApplyRiderPayload, RiderProfile, UpdateDutyPayload } from '@/src/types/rider';
 
 import { api, isMockMode } from './api';
 import { tokenStorage } from './token-storage';
@@ -138,11 +133,7 @@ export const riderApi = {
 // ── 兼容 export ──────────────────────────────────────────────────────
 // B.2.3 清理：getRiderProfile / registerRiderProfile / updateRiderProfile 已被
 // riderApi 替代且无外部调用方；isRiderSessionActive 保留因 useGoBack.ts 仍在用。
-//
-// 兼容旧 API（部分调用方仍用 setStatus）：
-export async function setRiderStatus(status: RiderStatus): Promise<RiderProfile> {
-  return riderApi.updateDuty({ status });
-}
+// 第四轮批4：setRiderStatus 顶层包装已删（零调用方，走 riderApi.updateDuty 的调用方不受影响）。
 
 export async function isRiderSessionActive(): Promise<boolean> {
   if (isMockMode) return true;

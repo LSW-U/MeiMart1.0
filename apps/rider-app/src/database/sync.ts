@@ -35,9 +35,10 @@ const MAX_ATTEMPTS = 5;
 export async function enqueue(action: QueueAction): Promise<void> {
   await database.write(async () => {
     // 审查 M2：同 taskId+action 已有未超限 entry 则去重，避免重复入队。
-    // 批1 R-P1-5：taskId 拆独立列后走索引查询（不再 JSON.parse payload 全表扫）；
-    // WMB query().fetch() 默认排除软删（已 markAsDeleted），existing 都是未处理项；
-    // 只去重 attempts < MAX（超限死信允许新建，给重试机会）。UI button disabled 已防重复点击，此为双保险。
+    // 实际行为（第四轮批4 注释对齐）：query().fetch() 取回全表（WMB 默认排除软删），
+    // 再在内存 find 过滤——列上虽有索引但此查询未走 where，队列表小（本地待同步项）
+    // 可接受；若队列量级增长需改 where 查询。只去重 attempts < MAX（超限死信允许新建，
+    // 给重试机会）。UI button disabled 已防重复点击，此为双保险。
     const existing = await database.get<OfflineQueueEntry>('offline_queue').query().fetch();
     const taskId = action.payload.taskId;
     const dup = existing.find(
@@ -167,8 +168,9 @@ function isPermanentStatus(status: number | undefined): boolean {
 /** 401 专用（C17 + D13 批4 收紧）：显式刷新 token 后重试一次 fn——
  * 刷新成功：fn 用拦截器新 token 重发；重试仍 401 → PermanentSyncError
  * （新 token 下仍 401 = 凭证已失效/会话被顶，重试无意义，交死信 + 登出回调接管）；
- * 刷新失败（无 refreshToken/refresh 401）：直接跑 fn 原样抛错，交上层
- * isPermanentStatus 分型（401 不判 permanent，走 attempts 重试直至登出回调接管）。 */
+ * 刷新失败（无 refreshToken/refresh 401）：refreshAccessToken 在 try 外调用，失败直接
+ * 原样抛出（不会跑 fn），交上层 isPermanentStatus 分型（401 不判 permanent，走 attempts
+ * 重试直至登出回调接管）。 */
 async function retryAfterTokenRefresh<T>(fn: () => Promise<T>): Promise<T> {
   await refreshAccessToken();
   try {
@@ -281,9 +283,8 @@ export async function dispatchAction(action: QueueAction): Promise<void> {
   }
 }
 
-export async function getQueueSize(): Promise<number> {
-  return database.get<OfflineQueueEntry>('offline_queue').query().fetchCount();
-}
+// 第四轮批4：getQueueSize 已删（零生产调用方，仅 sync.test.ts 曾用；死信统计用
+// getDeadLetterCount，见下）。database 层排除区：本批只删此只读辅助函数，不动 schema/队列逻辑。
 
 /**
  * R-P1-3：死信统计（Banner「N 条同步失败」用）。

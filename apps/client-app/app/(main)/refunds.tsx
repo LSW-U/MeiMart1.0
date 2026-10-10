@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { formatDate } from '@/utils/format';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -66,6 +67,8 @@ function statusColor(status: string, colors: AppColors): string {
 export default function RefundsPage() {
   const { colors } = useTheme();
   const { t, i18n } = useTranslation();
+  // 第四轮批4 P3：router.back() 换 useSafeBack（深链/通知直进无历史时兜底 home，防退出 app）
+  const handleBack = useSafeBack();
   const { isOffline } = useWeakNetworkUI();
   const [active, setActive] = useState<RefundTabKey>('all');
   const { data: refunds, isLoading, isError, refetch } = useRefunds();
@@ -83,7 +86,7 @@ export default function RefundsPage() {
         style={{ backgroundColor: colors.background, flex: 1 }}
       >
         <StatusBarConfig />
-        <PrimaryHeader title={t('refunds.title')} showBack onBackPress={() => router.back()} />
+        <PrimaryHeader title={t('refunds.title')} showBack onBackPress={handleBack} />
         {isOffline && <OfflineBanner />}
 
         {/* 状态筛选 tab（全部 / 进行中 / 已完成） */}
