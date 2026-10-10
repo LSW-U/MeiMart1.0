@@ -39,7 +39,8 @@ jobs:
       - run: pnpm -F ${{ steps.pkg.outputs.name }} lint
       # 批次1 CI 修复：pnpm run script 的 `-- --ci` 在 CI 被当成位置参数（jest Pattern:
       # --ci -- 0 matches）→ exit 1。改用 exec 直跑 jest 绕开透传歧义
-      # 第四轮修复 E-P2-1：去 --coverage=false，启用 jest.config.js collectCoverageFrom 覆盖率采集
+      # 第五轮 W1：覆盖率由两端 jest.config.js 的 collectCoverage: true 常开
+      # （coverageThreshold 随采集在 CI 被评估；collectCoverageFrom 只定义范围不开启采集）
       - run: pnpm -F ${{ steps.pkg.outputs.name }} exec jest --ci
       # 前端接线切换 P1（20261002）：跨端批5 门禁挂接 CI（存量记账不拦截 / 新增拦截，
       # 语义见 scripts/gate/README.md；基线 json 与脚本本体不在本批改动范围）

@@ -79,7 +79,7 @@ export function Avatar({
         onPress={onPress}
         accessibilityRole="imagebutton"
         accessibilityLabel={t('common.avatar')}
-        accessibilityHint={editable ? 'Edit avatar' : 'View avatar'}
+        accessibilityHint={t(editable ? 'common.editAvatarHint' : 'common.viewAvatarHint')}
         style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
       >
         {inner}

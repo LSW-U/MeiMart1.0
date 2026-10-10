@@ -12,6 +12,9 @@
  * 路由：src/services/queries/** 渲染类测试归 web；其余归 rn。
  */
 module.exports = {
+  // 第五轮 W1：默认开启采集（双 project 各自生效），coverageThreshold 才会在
+  // 本地/CI 常规跑测时被评估——collectCoverageFrom 只定义范围、不开采集
+  collectCoverage: true,
   // 覆盖率棘轮（收尾批 3）：baseline = 20261010 实测值（70.58/64.15/66.86/72.75）
   // 下浮 ~1.5 点，先低后升，防覆盖率静默倒退
   coverageThreshold: {

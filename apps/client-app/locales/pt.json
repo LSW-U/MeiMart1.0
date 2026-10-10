@@ -59,6 +59,8 @@
     "voiceSearch": "Pesquisa por voz",
     "avatar": "Avatar",
     "avatarImage": "Imagem de avatar",
+    "editAvatarHint": "Editar avatar",
+    "viewAvatarHint": "Ver avatar",
     "youAreOffline": "Está offline",
     "weakNetwork": "Ligação de rede fraca",
     "resetApp": "Reiniciar estado da aplicação",

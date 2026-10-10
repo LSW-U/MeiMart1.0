@@ -59,6 +59,8 @@
     "voiceSearch": "语音搜索",
     "avatar": "头像",
     "avatarImage": "头像图片",
+    "editAvatarHint": "编辑头像",
+    "viewAvatarHint": "查看头像",
     "youAreOffline": "您已离线",
     "weakNetwork": "网络连接较弱",
     "resetApp": "重置应用状态",

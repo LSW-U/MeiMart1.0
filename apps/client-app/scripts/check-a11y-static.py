@@ -46,6 +46,11 @@ HINT_RE = re.compile(
 FALLBACK_RE = re.compile(
     r'''(?:accessibilityLabel|accessibilityHint)=\{[^{}]*?\?\?\s*(?:"([A-Za-z][^"]*)"|'([A-Za-z][^']*)')\s*\}'''
 )
+# {cond ? 'A' : 'B'} 三元形态（第五轮 W2）：捕获 ? 与 : 之间及 : 之后的引号字面量两分支
+# （cond ? t('k') : t('k2') 不命中——分支非引号字面量）。Avatar.tsx:82 假阴性实证。
+TERNARY_RE = re.compile(
+    r'''(?:accessibilityLabel|accessibilityHint)=\{[^{}]*?\?\s*(?:"([A-Za-z][^"]*)"|'([A-Za-z][^']*)')\s*:\s*(?:"([A-Za-z][^"]*)"|'([A-Za-z][^']*)')\s*\}'''
+)
 
 # 模板内插值形态 ${...}
 INTERP_RE = re.compile(r'\$\{')
@@ -72,10 +77,13 @@ def self_check():
         ('accessibilityHint="Tap outside to close"', True, 'static'),
         ('accessibilityLabel={title ?? \'Dialog\'}', True, 'static'),  # FALLBACK_RE 命中（LABEL_RE 不命中，不双计）
         ('accessibilityLabel={v ?? t("ns.key")}', False, None),  # ?? t() 回退不算静态英文
+        # 第五轮 W2：三元形态
+        ("accessibilityHint={editable ? 'Edit avatar' : 'View avatar'}", True, 'static'),
+        ("accessibilityLabel={cond ? t('k') : t('k2')}", False, None),  # 分支是 t() 不算静态
     ]
     ok = True
     for code, should_match, kind in cases:
-        m = LABEL_RE.search(code) or HINT_RE.search(code) or FALLBACK_RE.search(code)
+        m = LABEL_RE.search(code) or HINT_RE.search(code) or FALLBACK_RE.search(code) or TERNARY_RE.search(code)
         if bool(m) != should_match:
             print(f'❌ self-check 失败（命中性）: {code}')
             ok = False
@@ -135,6 +143,15 @@ def main():
                     line = text[:m.start()].count('\n') + 1
                     rel = str(fp.relative_to(ROOT))
                     static_results.append((rel, line, label))
+                # 第五轮 W2：三元形态 {cond ? 'A' : 'B'}（LABEL_RE 对 { 开头不命中，无双计；
+                # 两分支引号字面量都进静态存量，t() 分支天然不命中）
+                for m in TERNARY_RE.finditer(text):
+                    for label in m.groups():
+                        if not label or label in EXCLUSIONS:
+                            continue
+                        line = text[:m.start()].count('\n') + 1
+                        rel = str(fp.relative_to(ROOT))
+                        static_results.append((rel, line, label))
 
     def dump(rows):
         by_file = {}

@@ -59,6 +59,8 @@
     "voiceSearch": "Voice search",
     "avatar": "Avatar",
     "avatarImage": "Avatar image",
+    "editAvatarHint": "Edit avatar",
+    "viewAvatarHint": "View avatar",
     "youAreOffline": "You are offline",
     "weakNetwork": "Weak network connection",
     "resetApp": "Reset app state",

@@ -22,3 +22,9 @@ expo-env.d.ts
 
 # rider prebuild 产物（批1冒烟副产物，可由 expo prebuild 重建；P2-2 审查项）
 ios/
+
+# test coverage
+coverage/
+
+# jest better-sqlite3 临时库（test-utils/migration-test-utils 产物）
+wmb-*-test-*.db
