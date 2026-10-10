@@ -47,9 +47,15 @@ const categoryStyle: Record<
 };
 
 // P4-1 §3.1：loading 骨架卡——复用通知卡布局（圆角 2xl + border + p-4，左侧圆占位 + 右侧两行灰条）
+// 收尾批 E-A11Y-1：硬编码 'loading' 改 t()（复用既有 duty.loading，五语已齐，不新增 key）
 function NotificationSkeleton() {
+  const { t } = useTranslation();
   return (
-    <View accessibilityRole="none" accessibilityLabel="loading" testID="notification-skeleton">
+    <View
+      accessibilityRole="none"
+      accessibilityLabel={t('duty.loading')}
+      testID="notification-skeleton"
+    >
       {[0, 1, 2].map((i) => (
         <View
           className="flex-row items-start gap-3 rounded-2xl border border-surface-variant bg-surface p-4"

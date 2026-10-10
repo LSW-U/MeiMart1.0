@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 
 import type { CheckboxProps } from './Checkbox.types';
@@ -14,6 +15,7 @@ export function Checkbox({
   accessibilityLabel,
 }: CheckboxProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const handlePress = () => {
     if (disabled) return;
@@ -27,7 +29,7 @@ export function Checkbox({
       onPress={handlePress}
       disabled={disabled}
       accessibilityRole="checkbox"
-      accessibilityLabel={accessibilityLabel ?? label ?? 'Checkbox'}
+      accessibilityLabel={accessibilityLabel ?? label ?? t('common.checkbox')}
       accessibilityState={{ checked, disabled }}
       style={({ pressed }) => [styles.row, { opacity: disabled ? 0.5 : pressed ? 0.7 : 1 }]}
     >

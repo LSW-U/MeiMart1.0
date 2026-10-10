@@ -34,10 +34,7 @@ export function Modal({
     <>
       {title && (
         <View style={[styles.header, { borderBottomColor: colors['outline-variant'] }]}>
-          <Text
-            style={[styles.title, { color: colors['on-surface'] }]}
-            accessibilityRole="header"
-          >
+          <Text style={[styles.title, { color: colors['on-surface'] }]} accessibilityRole="header">
             {title}
           </Text>
           {onClose && (
@@ -48,20 +45,14 @@ export function Modal({
               accessibilityLabel={t('common.close')}
               style={styles.closeBtn}
             >
-              <MaterialCommunityIcons
-                name="close"
-                size={20}
-                color={colors['on-surface-variant']}
-              />
+              <MaterialCommunityIcons name="close" size={20} color={colors['on-surface-variant']} />
             </Pressable>
           )}
         </View>
       )}
       <View style={styles.body}>{children}</View>
       {footer && (
-        <View style={[styles.footer, { borderTopColor: colors['outline-variant'] }]}>
-          {footer}
-        </View>
+        <View style={[styles.footer, { borderTopColor: colors['outline-variant'] }]}>{footer}</View>
       )}
     </>
   );
@@ -75,7 +66,7 @@ export function Modal({
       animationType="fade"
       onRequestClose={onClose}
       testID={testID}
-      accessibilityLabel={title ?? 'Dialog'}
+      accessibilityLabel={title ?? t('common.dialog')}
     >
       {isWeb ? (
         // Web：backdrop View（div）+ onClick target 检查（仅点 backdrop 空白关闭，点 dialog 不关闭）。
@@ -89,7 +80,11 @@ export function Modal({
           // 会与子 close Pressable(<button>) 嵌套违规。backdrop 是点击关闭遮罩，div + onClick + aria-label 即可
           accessibilityLabel={t('common.closeDialog')}
         >
-          <View style={dialogStyle} accessibilityRole="alert" accessibilityLabel={title ?? 'Dialog content'}>
+          <View
+            style={dialogStyle}
+            accessibilityRole="alert"
+            accessibilityLabel={title ?? t('common.dialogContent')}
+          >
             {inner}
           </View>
         </WebBackdrop>
@@ -100,13 +95,13 @@ export function Modal({
           onPress={() => dismissable && onClose?.()}
           accessibilityRole="button"
           accessibilityLabel={t('common.closeDialog')}
-          accessibilityHint="Tap outside to close"
+          accessibilityHint={t('common.tapOutsideToClose')}
         >
           <Pressable
             style={dialogStyle}
             onPress={(e) => e.stopPropagation()}
             accessibilityRole="alert"
-            accessibilityLabel={title ?? 'Dialog content'}
+            accessibilityLabel={title ?? t('common.dialogContent')}
           >
             {inner}
           </Pressable>

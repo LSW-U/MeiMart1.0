@@ -12,6 +12,16 @@
  * 路由：src/services/queries/** 渲染类测试归 web；其余归 rn。
  */
 module.exports = {
+  // 覆盖率棘轮（收尾批 3）：baseline = 20261010 实测值（70.58/64.15/66.86/72.75）
+  // 下浮 ~1.5 点，先低后升，防覆盖率静默倒退
+  coverageThreshold: {
+    global: {
+      statements: 69,
+      branches: 63,
+      functions: 65,
+      lines: 71,
+    },
+  },
   projects: [
     {
       displayName: 'rn',

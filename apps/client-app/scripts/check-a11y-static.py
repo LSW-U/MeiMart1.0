@@ -33,8 +33,18 @@ SCAN_DIRS = [ROOT / 'app', ROOT / 'src']
 
 # 三形态一网打尽：双引号 / 单引号 / 模板字面量（\{? 可选花括号前缀）。
 # 模板组捕获完整字面段，插值判定在 main 里做（含 ${ 则为动态模板）。
+# 收尾批（批4审查 E-A11Y-1）：扩 accessibilityHint（同款硬编码风险）+
+# {expr ?? 'Literal'} 表达式回退形态（?? 右侧字面量也是静态英文，Modal/Checkbox/
+# PhotoUploadTile 假阴性实证）。
 LABEL_RE = re.compile(
     r'''accessibilityLabel=\{?(?:"([A-Za-z][^"]*)"|'([A-Za-z][^']*)'|`([^`]*)`)'''
+)
+HINT_RE = re.compile(
+    r'''accessibilityHint=\{?(?:"([A-Za-z][^"]*)"|'([A-Za-z][^']*)'|`([^`]*)`)'''
+)
+# {expr ?? 'Literal'} 回退形态：只捕获 ?? 右侧引号字面量（?? t('ns.key') 不命中）
+FALLBACK_RE = re.compile(
+    r'''(?:accessibilityLabel|accessibilityHint)=\{[^{}]*?\?\?\s*(?:"([A-Za-z][^"]*)"|'([A-Za-z][^']*)')\s*\}'''
 )
 
 # 模板内插值形态 ${...}
@@ -58,10 +68,14 @@ def self_check():
         ('accessibilityLabel={`Price ${p}`}', True, 'dynamic'),
         ('accessibilityLabel={`Pure static tpl`}', True, 'static'),
         ('accessibilityLabel={t("common.back")}', False, None),
+        # 收尾批新增形态：hint + ?? 回退
+        ('accessibilityHint="Tap outside to close"', True, 'static'),
+        ('accessibilityLabel={title ?? \'Dialog\'}', True, 'static'),  # FALLBACK_RE 命中（LABEL_RE 不命中，不双计）
+        ('accessibilityLabel={v ?? t("ns.key")}', False, None),  # ?? t() 回退不算静态英文
     ]
     ok = True
     for code, should_match, kind in cases:
-        m = LABEL_RE.search(code)
+        m = LABEL_RE.search(code) or HINT_RE.search(code) or FALLBACK_RE.search(code)
         if bool(m) != should_match:
             print(f'❌ self-check 失败（命中性）: {code}')
             ok = False
@@ -101,6 +115,26 @@ def main():
                         dynamic_results.append((rel, line, label))
                     else:
                         static_results.append((rel, line, label))
+                # 收尾批：hint 与 LABEL_RE 同口径（独立循环防一个属性匹配吞掉另一个的重叠区）
+                for m in HINT_RE.finditer(text):
+                    label = next((g for g in m.groups() if g), '')
+                    if not label or label in EXCLUSIONS:
+                        continue
+                    line = text[:m.start()].count('\n') + 1
+                    rel = str(fp.relative_to(ROOT))
+                    if INTERP_RE.search(label):
+                        dynamic_results.append((rel, line, label))
+                    else:
+                        static_results.append((rel, line, label))
+                # 收尾批：?? 回退形态（LABEL_RE 对 {expr ?? 'Lit'} 不命中，无双计；
+                # ?? t() 回退不算静态英文——i18n 化已到位，仅字面量回退是假阴性源）
+                for m in FALLBACK_RE.finditer(text):
+                    label = next((g for g in m.groups() if g), '')
+                    if not label or label in EXCLUSIONS:
+                        continue
+                    line = text[:m.start()].count('\n') + 1
+                    rel = str(fp.relative_to(ROOT))
+                    static_results.append((rel, line, label))
 
     def dump(rows):
         by_file = {}
@@ -111,7 +145,7 @@ def main():
                 print(f'  {f}:{line}  "{label}"')
 
     print(f'扫描 {files} 文件')
-    print(f'\n== 静态英文 accessibilityLabel: {len(static_results)} 处（真静态，i18n 化清单） ==')
+    print(f'\n== 静态英文 accessibilityLabel/Hint（含 ?? 字面量回退）: {len(static_results)} 处（真静态，i18n 化清单） ==')
     dump(static_results)
     print(
         f'\n== 动态模板 label（含 ${{}} 插值，运行时文本，不属静态英文）: {len(dynamic_results)} 处 =='

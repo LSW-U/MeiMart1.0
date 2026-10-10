@@ -37,6 +37,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # P1-6 收尾：发布前校验 eas 配置（--strict：production 档 TODO/非法值也 fail）。
+      # 这里是真正产出坏包的路径——坏配置在构建前拦下，不烧 EAS 额度。
+      - name: Check release config (strict)
+        run: node scripts/check-release-config.mjs --strict
       - uses: expo/expo-github-action@v8
         with:
           eas-version: latest

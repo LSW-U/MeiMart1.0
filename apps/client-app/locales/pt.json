@@ -68,7 +68,11 @@
       "selectField": "Selecionar {{label}}, atual {{value}}",
       "selectOption": "Selecionar {{option}}",
       "none": "nenhum"
-    }
+    },
+    "dialog": "Diálogo",
+    "dialogContent": "Conteúdo do diálogo",
+    "tapOutsideToClose": "Toque fora para fechar",
+    "checkbox": "Caixa de seleção"
   },
   "splash": {
     "welcome": "Bem-vindo"

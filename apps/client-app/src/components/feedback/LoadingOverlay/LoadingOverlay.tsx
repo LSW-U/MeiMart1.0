@@ -1,16 +1,18 @@
 import { ActivityIndicator, Modal, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle } from '@/theme';
 import type { LoadingOverlayProps } from './LoadingOverlay.types';
 
 export function LoadingOverlay({ visible, message, testID }: LoadingOverlayProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   return (
     <Modal visible={visible} transparent animationType="fade" testID={testID}>
       <View style={[styles.backdrop, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
         <View
           style={[styles.content, { backgroundColor: colors['surface-container-lowest'] }]}
           accessibilityRole="progressbar"
-          accessibilityLabel={message ?? 'Loading'}
+          accessibilityLabel={message ?? t('common.loading')}
         >
           <ActivityIndicator size="large" color={colors.primary} />
           {message && (

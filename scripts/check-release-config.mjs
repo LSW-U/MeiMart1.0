@@ -16,7 +16,9 @@
  *     'production' 移除（或整体改为严格），production 档 TODO 即恢复 fail。**
  *   - submit 档资质字段属 go-live 人工环节，同 production 口径降级警告
  *
- * 用法：node scripts/check-release-config.mjs   # 从任一 app 目录经相对路径调用均可
+ * 用法：node scripts/check-release-config.mjs [--strict]
+ *   --strict：production 档 TODO/非法值也 fail（收尾批 P1-6：release.yml eas-build
+ *   前置调用——真正产出坏包的路径必须拦；本地/常规 CI 不带参数维持 WARN 口径）
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -49,10 +51,14 @@ function checkCred(value) {
 const failures = [];
 const warnings = [];
 
-/** 按档位分流：WARN_PROFILES 内的档位降级警告，其余入 fail */
+// --strict（收尾批 P1-6）：production 档不再降级警告，TODO/非法值一律 fail。
+// go-live 后常规口径翻转方式不变：WARN_PROFILES 移除 'production'。
+const STRICT = process.argv.includes('--strict');
+
+/** 按档位分流：--strict 或非 WARN_PROFILES 档位入 fail，否则降级警告 */
 function report(kind, app, where, err) {
   const msg = `${app}: ${kind} → ${err}`;
-  if (WARN_PROFILES.has(where.profile)) warnings.push(`[go-live] ${msg}`);
+  if (!STRICT && WARN_PROFILES.has(where.profile)) warnings.push(`[go-live] ${msg}`);
   else failures.push(msg);
 }
 
@@ -90,8 +96,8 @@ if (warnings.length) {
   for (const w of warnings) console.log(`  - ${w}`);
 }
 if (failures.length) {
-  console.error(`❌ eas 发布前置校验失败 ${failures.length} 处（非 production 档出现 TODO/非法值）：`);
+  console.error(`❌ eas 发布前置校验失败 ${failures.length} 处（${STRICT ? '--strict：含 production 档' : '非 production 档'}出现 TODO/非法值）：`);
   for (const f of failures) console.error(`  - ${f}`);
   process.exit(1);
 }
-console.log('✅ eas 发布前置校验通过（非 production 档无 TODO/非法值；production 档占位已按 [go-live] 警告打点）');
+console.log('✅ eas 发布前置校验通过（无 TODO/非法值）');

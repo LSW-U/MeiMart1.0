@@ -12,6 +12,7 @@
  */
 import { useMemo } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme, borderRadius } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
 
@@ -38,6 +39,7 @@ export function PhotoUploadTile({
   removeTestID,
 }: PhotoUploadTileProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   // error 态展示文案：调用方传入 errorMessage（已本地化）优先；否则用 errorCode 拼通用兜底
   // Why: 文案解析在页面层做（按 errors 命名空间 + code 拼 key），组件保持纯展示不依赖 i18n
@@ -103,7 +105,7 @@ export function PhotoUploadTile({
               onPress={onRetry}
               style={styles.retryBtn}
               accessibilityRole="button"
-              accessibilityLabel={retryA11yLabel ?? 'Retry'}
+              accessibilityLabel={retryA11yLabel ?? t('common.retry')}
               testID={testID ? `${testID}-retry` : undefined}
             >
               {retryLabel ? (
@@ -122,7 +124,7 @@ export function PhotoUploadTile({
           onPress={onDelete}
           style={styles.deleteBtn}
           accessibilityRole="button"
-          accessibilityLabel={deleteA11yLabel ?? 'Delete photo'}
+          accessibilityLabel={deleteA11yLabel ?? t('afterSales.deletePhotoA11y')}
           testID={removeTestID ?? (testID ? `${testID}-remove` : undefined)}
           hitSlop={8}
         >

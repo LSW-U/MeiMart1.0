@@ -68,7 +68,11 @@
       "selectField": "选择{{label}}，当前 {{value}}",
       "selectOption": "选择{{option}}",
       "none": "无"
-    }
+    },
+    "dialog": "对话框",
+    "dialogContent": "对话框内容",
+    "tapOutsideToClose": "点按外部关闭",
+    "checkbox": "复选框"
   },
   "splash": {
     "welcome": "欢迎"

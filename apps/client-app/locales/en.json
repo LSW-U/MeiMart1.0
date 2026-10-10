@@ -68,7 +68,11 @@
       "selectField": "Select {{label}}, current {{value}}",
       "selectOption": "Select {{option}}",
       "none": "none"
-    }
+    },
+    "dialog": "Dialog",
+    "dialogContent": "Dialog content",
+    "tapOutsideToClose": "Tap outside to close",
+    "checkbox": "Checkbox"
   },
   "splash": {
     "welcome": "Welcome"

@@ -68,7 +68,11 @@
       "selectField": "Hili {{label}}, daudaun {{value}}",
       "selectOption": "Hili {{option}}",
       "none": "la iha"
-    }
+    },
+    "dialog": "Dialogu",
+    "dialogContent": "Konteúdu dialogu",
+    "tapOutsideToClose": "Klik liha hodi taka",
+    "checkbox": "Xeki"
   },
   "splash": {
     "welcome": "Bem-vindu"
