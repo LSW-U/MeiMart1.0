@@ -2,6 +2,12 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tokenStorage } from '@/services/api';
+// 第四轮修复 P1-1（D3）：登出清持久化缓存收口——7 条登出路径原只有 profile.tsx 显式调
+// clearPersistedQueryCache，其余 6 条（settings×2/index.web/queryClient 401/api 401/useAuth）
+// 只翻内存状态，AsyncStorage 落盘的 orders/addresses/refunds/cart 等用户数据残留。
+// 本模块无 authStore 依赖（persist.ts 有，反向 import 会闭环），clearAuth 内直调后
+// 全部路径自动收口，调用方零改动。
+import { clearPersistedQueryCache } from '@/services/offline/persistCacheClear';
 
 interface AuthState {
   accessToken: string | null;
@@ -28,6 +34,9 @@ export const useAuthStore = create<AuthState>()(
         set({ accessToken: null, refreshToken: null, isAuthenticated: false });
         // Why: 清除内存时也清除持久化存储
         void tokenStorage.clear();
+        // 第四轮修复 P1-1（D3）：登出统一收口清持久化 query 缓存（PII 治理）——
+        // 7 条登出路径全部经本函数，无需各调用方自调（profile.tsx 原直调已移除）
+        void clearPersistedQueryCache();
       },
       initFromStorage: async () => {
         // Why: 应用启动时从 tokenStorage（SecureStore）恢复 token

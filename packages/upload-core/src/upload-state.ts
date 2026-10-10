@@ -31,11 +31,32 @@ export interface UploadSlot {
   errorCode?: string;
   /** 失败类别（error 态；network 类提示「点重试」，business 类提示「换一张」） */
   errorKind?: 'network' | 'business';
+  /** 图片宽 px（第四轮修复 P1-7/D8：重试回传用——error 态保留预览，尺寸随 slot 缓存） */
+  width?: number;
+  /** 图片高 px（同上） */
+  height?: number;
 }
 
-/** 创建 idle 图片位 */
-export function createSlot(id: string, localUri?: string): UploadSlot {
-  return { id, state: localUri ? 'uploading' : 'idle', localUri, progress: localUri ? 0 : 0 };
+/**
+ * 创建图片位（idle 或 uploading）。
+ * 第四轮修复 P1-7/D8：可选 meta { width, height }——选图时把 picker asset 尺寸存进 slot，
+ * 手动重试回传 { uri, width, height }（原回传 as ImagePickerAsset 尺寸字段 undefined，
+ * precheckImage 读到 0 必报 E-UPLOAD-016「图片过小」，重试永远失败）。签名向后兼容
+ * （可选参数，既有调用方零改动）。
+ */
+export function createSlot(
+  id: string,
+  localUri?: string,
+  meta?: { width?: number; height?: number },
+): UploadSlot {
+  return {
+    id,
+    state: localUri ? 'uploading' : 'idle',
+    localUri,
+    progress: 0,
+    ...(meta?.width !== undefined ? { width: meta.width } : {}),
+    ...(meta?.height !== undefined ? { height: meta.height } : {}),
+  };
 }
 
 /** 阶段推进：请求发出 60（响应头已到） */

@@ -62,8 +62,16 @@ export default function SignConfirmPage() {
     !(Number.isFinite(Number.parseFloat(collectedInput)) && Number.parseFloat(collectedInput) >= 0);
   const submitDisabled = !canSubmit || status === 'success' || codAmountInvalid;
 
+  // N-P2-6 同款（第四轮修复 P1-8）：useRef 同步置位锁——state 守卫（canSubmit 的
+  // status !== 'processing'）是异步的，同帧双击两击都过守卫；本页双击窗口比常规更宽
+  // （守卫 :66 与 setStatus('processing') :97 之间还隔 COD 校验），ref 锁第一击同步生效。
+  // 对齐 withdraw.tsx:88-93,115 三段式：守卫置位 / finally 复位。
+  const submitLockRef = useRef(false);
+
   const handleConfirmDelivery = async () => {
     if (!canSubmit) return;
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
 
     // 提交时从 task 重新读取 isCod（不依赖顶层 loading 期的 isCod），保证与后端 task 一致
     const codAtSubmit = task?.paymentMethod === 'COD';
@@ -73,6 +81,9 @@ export default function SignConfirmPage() {
       const parsed = Number.parseFloat(collectedInput);
       if (!Number.isFinite(parsed) || parsed < 0) {
         showToast(t('sign.codRequired'), 'error');
+        // 审查问题①：此 return 在 try 之前，不走 catch 复位——提前退出必放行锁，
+        // 否则用户改完金额后永久无法再提交（对齐 withdraw 三段式「凡早退必复位」）
+        submitLockRef.current = false;
         return;
       }
     }
@@ -98,6 +109,7 @@ export default function SignConfirmPage() {
         router.replace('/(main)/tasks?tab=deliveries');
       }, 1200);
     } catch (e) {
+      submitLockRef.current = false; // P1-8：失败放行，允许用户改后重试（对齐 withdraw.tsx）
       setStatus('idle');
       // ApiError 差异化：业务失败（送达冲突）vs 网络
       const msg = e instanceof ApiError ? t('sign.failed') : t('common.networkError');

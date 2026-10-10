@@ -48,5 +48,7 @@ export function connectOrderTracking(accessToken: string): TrackingSocket {
   // 批3 A5：自愈参数（退避/attempts/网络恢复重连）上收 @meimart/api-core 单源；
   // 不传 transports（原 ['websocket'] 强制直连删除）→ 恢复 socket.io 默认
   // polling→websocket 升级路径，弱网/webview 环境下 websocket 握手失败仍可回退 polling。
-  return createTrackingSocket({ url: buildWsUrl(), accessToken });
+  // 第四轮修复 P1-3（D4）：token 改函数式注入——accessToken 参数语义保持「调用时刻的
+  // 裸 token」，包成 getter 后工厂每次重连握手动态执行（token 轮换后重连自动带新 token）。
+  return createTrackingSocket({ url: buildWsUrl(), getAccessToken: () => accessToken });
 }

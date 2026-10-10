@@ -124,8 +124,15 @@ describe('自动重试（U2：网络类 2 次指数退避，业务类不重试�
   });
 });
 
-describe('图片位状态机（U3 内联进度 + 手动重试兜底）', () => {  it('idle → uploading(60) → done(100, remoteUrl) 全程推进', () => {
+describe('图片位状态机（U3 内联进度 + 手动重试兜底）', () => {
+  it('idle → uploading(60) → done(100, remoteUrl) 全程推进', () => {
     let slot = createSlot('s1', 'file:///tmp/pick.jpg');
+    // 第四轮修复 P1-7（D8）：meta 可选参数——尺寸随 slot 缓存（重试回传用），不传不落字段
+    expect(slot.width).toBeUndefined();
+    expect(slot.height).toBeUndefined();
+    const sized = createSlot('s1-meta', 'file:///tmp/pick.jpg', { width: 800, height: 600 });
+    expect(sized.width).toBe(800);
+    expect(sized.height).toBe(600);
     expect(slot.state).toBe('uploading'); // 选图后即进入上传态（带本地预览）
     slot = slotToUploading(slot);
     expect(slot.progress).toBe(60);

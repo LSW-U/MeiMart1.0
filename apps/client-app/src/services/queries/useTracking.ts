@@ -47,6 +47,8 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
     // Why: 不在 effect body 直接 setState('connecting')（react-hooks/set-state-in-effect 规则），
     // socket 自身事件（connect / connect_error / disconnect）会驱动 wsState 更新
     // 批3 P2-1：connectOrderTracking 返回 { socket, destroy }——destroy 负责断连 + NetInfo 退订
+    // 第四轮修复 P1-3（D7）：token 经 connectOrderTracking 包成 getter 动态取（重连握手
+    // 自动带新 token），effect 不再依赖 accessToken——token 变化时 effect 重建反而丢 join 语义
     const { socket, destroy } = connectOrderTracking(accessToken);
     socketRef.current = socket;
     lastMsgRef.current = Date.now();
@@ -132,7 +134,14 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
       destroy(); // 批3 P2-1：断连 + NetInfo 退订（原 socket.disconnect() 释放改走工厂销毁句柄）
       socketRef.current = null;
     };
-  }, [orderId, accessToken]);
+    // 第四轮修复 P1-3（D7）：deps 改 [orderId]——token 不再驱动 effect 重建（统一经
+    // getAccessToken 动态取，重连握手消化轮换，避免重建丢 join 语义）。
+    // accessToken 仅作「是否已登录」守卫快照：登录前 effect 直接 return，登录后由
+    // orderId 变化或重挂载建连（与 rider useRiderSocket「effect 内异步取 token」同口径）。
+    // 原因：accessToken 是登录守卫快照，真 token 经 getAccessToken 每次握手动态取；
+    // 若补进 deps，token 刷新会重建 effect → 断开 socket 丢 room join 语义
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId]);
 
   return state;
 }

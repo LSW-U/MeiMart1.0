@@ -66,13 +66,26 @@ describe('C-P1-4 persist 排除键（前两段精确匹配）', () => {
     expect(shouldDehydrate(['user', 'unknown-new-key'])).toBe(true);
   });
 
-  it('公开数据键照常持久化（categories/products/product/cart/orders）', () => {
+  it('公开数据键照常持久化（categories/products/product/payments）', () => {
     expect(shouldDehydrate(['categories'])).toBe(true);
     expect(shouldDehydrate(['products'])).toBe(true);
     expect(shouldDehydrate(['product', 'p001'])).toBe(true);
-    expect(shouldDehydrate(['cart'])).toBe(true);
-    expect(shouldDehydrate(['orders'])).toBe(true);
     expect(shouldDehydrate(['payments', 'methods'])).toBe(true);
+  });
+
+  // 第四轮修复 P1-1：登录用户私有数据补入排除表（单段前缀，与 user:* 同口径）——
+  // addresses（姓名/手机号/门牌）/ orders（收货人+商品+金额）/ refunds（售后凭证）/
+  // cart（购物车内容）不再落 AsyncStorage（V1 的持久化层证据）
+  it('P1-1 私有键不落盘：addresses/orders/refunds/cart 全部排除', () => {
+    expect(shouldDehydrate(['addresses'])).toBe(false);
+    expect(shouldDehydrate(['addresses', 'a001'])).toBe(false);
+    expect(shouldDehydrate(['orders'])).toBe(false);
+    expect(shouldDehydrate(['orders', 'o001'])).toBe(false);
+    expect(shouldDehydrate(['orders', 'counts'])).toBe(false);
+    expect(shouldDehydrate(['refunds'])).toBe(false);
+    expect(shouldDehydrate(['refunds', 'r001'])).toBe(false);
+    expect(shouldDehydrate(['cart'])).toBe(false);
+    expect(shouldDehydrate(['cart', 'items'])).toBe(false);
   });
 
   it('pending 查询一律不持久化', () => {
@@ -99,5 +112,12 @@ describe('C-P1-4 登出显式清持久化缓存', () => {
     // 未登录分支走 clearPersistedQueryCache（内含 persistQueryClient 不再被调？——仍被调，
     // 清盘 + persist 继续搭好，登录后开始写）
     expect(persistQueryClient).toHaveBeenCalled();
+  });
+
+  // 第四轮修复 P1-1（D3）：实现迁 persistCacheClear.ts（authStore 可 import 无环），
+  // persist.ts import+re-export 兼容——断言 re-export 与实现同一引用（不双份定义）
+  it('re-export 兼容：persist.clearPersistedQueryCache === 实现本体', () => {
+    const impl = jest.requireActual('../persistCacheClear');
+    expect(clearPersistedQueryCache).toBe(impl.clearPersistedQueryCache);
   });
 });

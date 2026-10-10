@@ -7,7 +7,7 @@ import { buildLocationPayload, reportLocationHttp } from '../services/location';
 import { captureError } from '../services/sentry';
 import { tokenStorage } from '../services/token-storage';
 import { showToast } from '../components/feedback/Toast';
-import { useTranslation } from '../i18n/useTranslation';
+import { translate, useTranslation } from '../i18n/useTranslation';
 
 /**
  * 后台定位 hook（P0 技术债，CLAUDE.md 规则 16）
@@ -74,7 +74,7 @@ type UseBackgroundTaskOptions = {
 
 export function useBackgroundTask(options: UseBackgroundTaskOptions) {
   const { enabled, currentOrderId } = options;
-  const { t } = useTranslation();
+  const { language } = useTranslation();
   const [isRegistered, setIsRegistered] = useState(false);
   // ref 持有注册状态，避免 effect 依赖 isRegistered 造成 start→setState→重跑循环
   const isRegisteredRef = useRef(false);
@@ -116,7 +116,11 @@ export function useBackgroundTask(options: UseBackgroundTaskOptions) {
           captureError(new Error('bg-location foreground permission denied'), {
             source: 'bg-location-task',
           });
-          showToast(t('common.locationPermDenied'), 'error');
+          // 第四轮修复 P1-2（D5 改判版）：effect 内改用纯函数 translate(language,...)——
+          // 原 deps 含 hook 的 t（每渲染新引用）→ 宿主重渲染即销毁重建定位任务（反复
+          // start/stopLocationUpdatesAsync）。deps 收窄为 [enabled, language]：语言切换
+          // 重建一次属预期，普通重渲染不再重启定位。
+          showToast(translate(language, 'common.locationPermDenied'), 'error');
           return;
         }
         // 后台权限（iOS「始终允许」/ Android「后台定位」）
@@ -157,7 +161,7 @@ export function useBackgroundTask(options: UseBackgroundTaskOptions) {
         setIsRegistered(false);
       }
     };
-  }, [enabled, t]);
+  }, [enabled, language]);
 
   return { isRegistered };
 }

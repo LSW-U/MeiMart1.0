@@ -243,7 +243,10 @@ export default function OrderReviewPage() {
     }
   };
 
-  // U4 手动重试：error 态 slot 用保留的 localUri 重新上传
+  // U4 手动重试：error 态 slot 用保留的 localUri 重新上传。
+  // 第四轮修复 P1-7（D8）：slot 缓存了建槽时的 width/height（createSlot meta），重试
+  // 回传完整尺寸——原回传 { uri } as ImagePickerAsset 尺寸字段 undefined → precheck
+  // 读 0 必报 E-UPLOAD-016，重试永远失败。
   const handleRetrySlot = async (
     slotId: string,
     onChange: (v: string[]) => void,
@@ -251,7 +254,14 @@ export default function OrderReviewPage() {
   ) => {
     const target = slotsRef.current.find((s) => s.id === slotId);
     if (!target?.localUri || uploading) return;
-    const url = await uploadOne({ uri: target.localUri } as ImagePicker.ImagePickerAsset, slotId);
+    const url = await uploadOne(
+      {
+        uri: target.localUri,
+        width: target.width,
+        height: target.height,
+      } as ImagePicker.ImagePickerAsset,
+      slotId,
+    );
     if (url) onChange([...current, url].slice(0, 3));
   };
 
@@ -274,8 +284,11 @@ export default function OrderReviewPage() {
     });
     if (result.canceled) return;
     setUploading(true);
-    // 逐张建 slot（本地预览立即可见）再并发上传
-    const newSlots = result.assets.map((a, i) => createSlot(`review-${Date.now()}-${i}`, a.uri));
+    // 逐张建 slot（本地预览立即可见）再并发上传。
+    // 第四轮修复 P1-7（D8）：建槽时缓存 picker asset 尺寸，重试回传用（见 handleRetrySlot）
+    const newSlots = result.assets.map((a, i) =>
+      createSlot(`review-${Date.now()}-${i}`, a.uri, { width: a.width, height: a.height }),
+    );
     setSlots((prev) => [...prev, ...newSlots]);
     const uploaded = await Promise.all(result.assets.map((a, i) => uploadOne(a, newSlots[i].id)));
     const newUrls = uploaded.filter((u): u is string => u !== null);

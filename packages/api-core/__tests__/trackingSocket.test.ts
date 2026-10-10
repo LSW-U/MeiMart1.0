@@ -46,19 +46,42 @@ describe('createTrackingSocket', () => {
   });
 
   it('url/auth 透传；不传 transports（polling 回退保持 socket.io 默认）', () => {
-    createTrackingSocket({ url: 'http://x:3000/realtime', accessToken: 'tok' });
+    createTrackingSocket({ url: 'http://x:3000/realtime', getAccessToken: () => 'tok' });
     expect(mockIo).toHaveBeenCalledTimes(1);
     const [, opts] = mockIo.mock.calls[0];
-    expect(opts.auth).toEqual({ token: 'Bearer tok' });
     expect(opts.transports).toBeUndefined();
     expect(opts.reconnection).toBe(true);
     expect(opts.reconnectionAttempts).toBe(WS_RECONNECTION_ATTEMPTS);
+    // 第四轮修复 P1-3（D4）：auth 改函数式——断言函数调用产出的 token 载荷
+    expect(typeof opts.auth).toBe('function');
+    const cb = jest.fn();
+    opts.auth(cb);
+    expect(cb).toHaveBeenCalledWith({ token: 'Bearer tok' });
+  });
+
+  // 第四轮修复 P1-3（V3）：重连握手取当前 token——mock getAccessToken 两次不同值，
+  // 断言两次握手 token 不同（静态 accessToken 快照做不到，这正是本次修复的目标）。
+  // socket.io v4 每次重连握手重新执行 auth 函数 → token 轮换后重连自动带新 token。
+  it('V3：每次握手重新执行 getAccessToken（token 轮换后重连带新 token）', () => {
+    let token = 'old-token';
+    createTrackingSocket({ url: 'u', getAccessToken: () => token });
+    const [, opts] = mockIo.mock.calls[0];
+
+    const first: unknown[] = [];
+    const second: unknown[] = [];
+    opts.auth((payload: unknown) => first.push(payload));
+    token = 'new-token'; // 模拟 token 轮换（refresh 后 tokenStorage 已换新）
+    opts.auth((payload: unknown) => second.push(payload));
+
+    expect(first[0]).toEqual({ token: 'Bearer old-token' });
+    expect(second[0]).toEqual({ token: 'Bearer new-token' });
+    expect(first[0]).not.toEqual(second[0]);
   });
 
   it('订阅 NetInfo 恢复信号（addEventListener 被调用且返回退订）', () => {
     const unsub = jest.fn();
     mockNetInfoAdd.mockImplementation(() => unsub);
-    createTrackingSocket({ url: 'u', accessToken: 't' });
+    createTrackingSocket({ url: 'u', getAccessToken: () => 't' });
     expect(mockNetInfoAdd).toHaveBeenCalledTimes(1);
   });
 
@@ -68,7 +91,7 @@ describe('createTrackingSocket', () => {
       cb = fn;
       return jest.fn();
     });
-    const { socket } = createTrackingSocket({ url: 'u', accessToken: 't' });
+    const { socket } = createTrackingSocket({ url: 'u', getAccessToken: () => 't' });
     (socket.connected as boolean) = false;
     cb!({ isInternetReachable: false });
     expect(socket.connect).not.toHaveBeenCalled();
@@ -82,7 +105,7 @@ describe('createTrackingSocket', () => {
       cb = fn;
       return jest.fn();
     });
-    const { socket } = createTrackingSocket({ url: 'u', accessToken: 't' });
+    const { socket } = createTrackingSocket({ url: 'u', getAccessToken: () => 't' });
     (socket.connected as boolean) = true;
     cb!({ isInternetReachable: true });
     expect(socket.connect).not.toHaveBeenCalled();
@@ -98,7 +121,7 @@ describe('createTrackingSocket', () => {
       cb = fn;
       return jest.fn();
     });
-    const { socket, destroy } = createTrackingSocket({ url: 'u', accessToken: 't' });
+    const { socket, destroy } = createTrackingSocket({ url: 'u', getAccessToken: () => 't' });
     // ① 退订不挂 socket 事件（工厂不注册任何退订型 socket 监听）
     expect(socket.on).not.toHaveBeenCalled();
 

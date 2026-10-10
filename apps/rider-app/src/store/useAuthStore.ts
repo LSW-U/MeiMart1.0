@@ -4,6 +4,9 @@ import type { RiderProfile } from '../types/rider';
 import { riderApi } from '../services/user';
 import { ApiError } from '../services/api';
 import { tokenStorage } from '../services/token-storage';
+// 第四轮修复 P1-4：console.error 落完整 error 对象（AxiosError 带 config.headers.
+// Authorization/config.data）= 凭证与 PII 入 logcat。redactError 只留安全面。
+import { redactError } from '../utils/redact';
 
 type AuthState = {
   isAuthenticated: boolean;
@@ -49,11 +52,13 @@ export const useAuthStore = create<AuthState>((set) => ({
           return;
         }
         // 其他错误（网络瞬断等）：仍设登录态，rider 留空（页面用 useRiderProfile 重试）
-        console.error('[useAuthStore] hydrate profile failed:', e);
+        // 第四轮修复 P1-4：redactError 脱敏（原整 error 对象含 Authorization/config.data）
+        console.error('[useAuthStore] hydrate profile failed:', redactError(e));
         set({ isAuthenticated: true, hydrated: true });
       }
     } catch (e) {
-      console.error('[useAuthStore] hydrate failed:', e);
+      // 第四轮修复 P1-4：redactError 脱敏（同上）
+      console.error('[useAuthStore] hydrate failed:', redactError(e));
       set({ hydrated: true });
     }
   },

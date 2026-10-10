@@ -13,7 +13,10 @@ export function connectRiderSocket(accessToken: string): TrackingSocket {
   // NetInfo 恢复重置）上收 @meimart/api-core 单源（wsDefaults.ts，待后端 D7 长宕语义
   // 结论校准）——原 C7/R-P2-7 本地 io() 配置整段删除，两端行为同源。
   // 批3 P2-1：返回 { socket, destroy }，调用方（useRiderSocket）在 cleanup 调 destroy。
-  return createTrackingSocket({ url: `${WS_URL}/realtime`, accessToken });
+  // 第四轮修复 P1-3（D4）：token 改函数式注入——accessToken 参数语义保持「调用时刻的
+  // 裸 token」，包成 getter 后工厂每次重连握手动态执行；调用方（useRiderSocket）签名
+  // 不变（token 仍在 effect 内异步取，取法不变）。
+  return createTrackingSocket({ url: `${WS_URL}/realtime`, getAccessToken: () => accessToken });
 }
 
 export type { Socket };

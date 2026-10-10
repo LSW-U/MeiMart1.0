@@ -15,7 +15,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "check:i18n": "python3 scripts/check-i18n-keys.py",
     "check:gate-mock": "python3 ../../scripts/gate/mock-escape-check.py",
-    "check:gate-fake-green": "python3 ../../scripts/gate/fake-green-check.py"
+    "check:gate-fake-green": "python3 ../../scripts/gate/fake-green-check.py",
+    "check:release-config": "node ../../scripts/check-release-config.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "^56.0.14",

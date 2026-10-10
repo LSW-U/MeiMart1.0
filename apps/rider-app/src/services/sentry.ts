@@ -28,6 +28,11 @@ export function initSentry() {
           breadcrumb.data.url = url.replace(/=[^&]*/g, '=***');
         }
       }
+      // 第四轮修复 P1-4：console 类面包屑 message 脱敏——console.error(e) 整对象
+      // 序列化后 Authorization/config.data 会随面包屑上报，只留安全面摘要
+      if (breadcrumb.category === 'console' && typeof breadcrumb.message === 'string') {
+        breadcrumb.message = redactError(breadcrumb.message);
+      }
       return breadcrumb;
     },
     beforeSend: (event) => {

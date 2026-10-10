@@ -28,8 +28,13 @@ export {
 export interface TrackingSocketOptions {
   /** 完整 WS 地址（含命名空间，如 `http://host:3000/realtime`） */
   url: string;
-  /** 鉴权 token（本工厂统一拼 `Bearer ` 前缀后放入 auth.token，调用方传裸 token） */
-  accessToken: string;
+  /**
+   * 鉴权 token 取值函数（第四轮修复 P1-3 / D4：原静态 accessToken 字符串是连接时刻的
+   * 快照，token 轮换后重连握手仍带旧 token → 永久 401）。工厂内 auth 改函数式
+   * `(cb) => cb({ token: ... })`，socket.io v4 每次重连握手重新执行 → 动态取到当前 token。
+   * 调用方传裸 token（`Bearer ` 前缀仍由本工厂统一拼）。
+   */
+  getAccessToken: () => string;
 }
 
 /** 网络恢复探测最小间隔（防 NetInfo 抖动连发 reset） */
@@ -69,9 +74,11 @@ function onNetworkRecovery(callback: () => void): () => void {
  * 的目标窗口——立即失效）。改为随连接返回 destroy()，由调用方在 useEffect
  * cleanup 调用，与「join 放 connect 回调」同类生命周期纪律。
  */
-export function createTrackingSocket({ url, accessToken }: TrackingSocketOptions): TrackingSocket {
+export function createTrackingSocket({ url, getAccessToken }: TrackingSocketOptions): TrackingSocket {
   const socket = io(url, {
-    auth: { token: `Bearer ${accessToken}` },
+    // P1-3/D4：auth 函数式——每次（重连）握手重新执行，动态取当前 token（token 轮换
+    // 后重连自动带新 token，无需销毁重建 socket——重建会丢 join 语义）
+    auth: (cb) => cb({ token: `Bearer ${getAccessToken()}` }),
     // S-P1-8：不传 transports = polling 握手再升级 websocket（允许降档）；
     // 显式传 ['websocket'] 会把回退路径禁死，弱网/受限代理下永久连不上。
     reconnection: true,

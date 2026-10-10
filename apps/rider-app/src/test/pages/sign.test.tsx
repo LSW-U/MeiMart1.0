@@ -34,7 +34,12 @@ let mockNote: string | null = 'Call on arrival. Do not leave at door.';
 let mockContactPhone: string | null = '+670 7755 4072';
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace, back: mockBack, canGoBack: () => true }),
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    back: mockBack,
+    canGoBack: () => true,
+  }),
   useLocalSearchParams: () => ({ id: 'task-1' }),
 }));
 
@@ -48,9 +53,12 @@ jest.mock('../../../src/hooks/useGoBack', () => ({
 
 jest.mock('../../../src/services/queries/useTask', () => ({
   useTask: () => {
-    if (mockTaskState === 'loading') return { data: undefined, isLoading: true, isError: false, refetch: mockRefetch };
-    if (mockTaskState === 'error') return { data: undefined, isLoading: false, isError: true, refetch: mockRefetch };
-    if (mockTaskState === 'empty') return { data: null, isLoading: false, isError: false, refetch: mockRefetch };
+    if (mockTaskState === 'loading')
+      return { data: undefined, isLoading: true, isError: false, refetch: mockRefetch };
+    if (mockTaskState === 'error')
+      return { data: undefined, isLoading: false, isError: true, refetch: mockRefetch };
+    if (mockTaskState === 'empty')
+      return { data: null, isLoading: false, isError: false, refetch: mockRefetch };
     return {
       data: {
         id: 'task-1',
@@ -92,7 +100,9 @@ jest.mock('../../../src/components/feedback/Toast', () => ({
 }));
 
 function renderPage() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
@@ -165,7 +175,9 @@ describe('进度条 step 语义（T5 审查修复 P2-1：sign 比 navigate 前�
     expect(getByText('配送中')).toBeTruthy();
     expect(getByText('待送达')).toBeTruthy();
     // DELIVERING step=3：step1/2 done 有 check 图标（≥2 个）
-    expect(container.querySelectorAll('[data-testid="icon-check"]').length).toBeGreaterThanOrEqual(2);
+    expect(container.querySelectorAll('[data-testid="icon-check"]').length).toBeGreaterThanOrEqual(
+      2,
+    );
   });
 
   it('PICKED_UP：step=2（已取货 done + 配送中 active，非照抄 navigate 的 step=1）', () => {
@@ -173,7 +185,9 @@ describe('进度条 step 语义（T5 审查修复 P2-1：sign 比 navigate 前�
     const { container } = renderPage();
 
     // PICKED_UP step=2：仅 step1 done 有 1 个 check（step2 是 active）
-    expect(container.querySelectorAll('[data-testid="icon-check"]').length).toBeGreaterThanOrEqual(1);
+    expect(container.querySelectorAll('[data-testid="icon-check"]').length).toBeGreaterThanOrEqual(
+      1,
+    );
   });
 });
 
@@ -184,7 +198,9 @@ describe('L1 送达地址卡 + 致电客人（T5 §7.10 A）', () => {
     await act(async () => {
       fireEvent.click(getByText('联系客人'));
     });
-    expect((Linking as unknown as { openURL: jest.Mock }).openURL).toHaveBeenCalledWith('tel:+670 7755 4072');
+    expect((Linking as unknown as { openURL: jest.Mock }).openURL).toHaveBeenCalledWith(
+      'tel:+670 7755 4072',
+    );
   });
 
   it('致电失败（openURL reject）：toast 无法拨打电话（P3-2 语义修正）', async () => {
@@ -229,7 +245,8 @@ describe('L4 COD 实时校验（T5 §3.5）', () => {
     // RN mock 壳：onChangeText 经 __fnProps 直调（TextInput host 不暴露原生 placeholder）
     const input = container.querySelector('[data-rn-host="TextInput"]');
     fireEvent.click(input!); // 确认节点存在
-    const onChangeText = (input as unknown as { __fnProps: { onChangeText: (v: string) => void } }).__fnProps.onChangeText;
+    const onChangeText = (input as unknown as { __fnProps: { onChangeText: (v: string) => void } })
+      .__fnProps.onChangeText;
     act(() => {
       onChangeText('abc');
     });
@@ -259,10 +276,15 @@ describe('成功反馈强化（T5 §3.4 + 审查修复 P1-1）', () => {
   it('提交成功：toast + 按钮绿底「送达成功」+ 1200ms 后跳转 deliveries', async () => {
     mockMutateAsync.mockResolvedValueOnce(undefined);
     // Native 分支拍照解锁提交（mock 权限 granted + uri 回调）
-    (globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }).__RN_PLATFORM_OS__ = 'ios';
+    (
+      globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }
+    ).__RN_PLATFORM_OS__ = 'ios';
     const imagePicker = require('../../../src/test/expo-image-picker.mock');
     imagePicker.__setRequestCameraPermissions({ status: 'granted' });
-    imagePicker.__setLaunchCameraAsync(async () => ({ canceled: false, assets: [{ uri: 'file://door.jpg' }] }));
+    imagePicker.__setLaunchCameraAsync(async () => ({
+      canceled: false,
+      assets: [{ uri: 'file://door.jpg' }],
+    }));
     const { getAllByText, container } = renderPage();
 
     await act(async () => {
@@ -283,8 +305,12 @@ describe('成功反馈强化（T5 §3.4 + 审查修复 P1-1）', () => {
 
     // P1-1：成功态按钮 inline style 绿（backgroundColor = success #137a3a）。
     // 带 style 的 Pressable 才是底栏 Button（页头返回键/致电按钮各有自己的 style，按绿色值匹配）
-    const styledBtns = Array.from(container.querySelectorAll('[data-rn-host="Pressable"][data-prop-style]'));
-    const green = styledBtns.find((el) => (el.getAttribute('data-prop-style') ?? '').includes('137a3a'));
+    const styledBtns = Array.from(
+      container.querySelectorAll('[data-rn-host="Pressable"][data-prop-style]'),
+    );
+    const green = styledBtns.find((el) =>
+      (el.getAttribute('data-prop-style') ?? '').includes('137a3a'),
+    );
     expect(green).toBeTruthy();
 
     // 1200ms 内不跳转，到点跳 deliveries（P2 检查 500→1200）
@@ -311,5 +337,129 @@ describe('成功反馈强化（T5 §3.4 + 审查修复 P1-1）', () => {
     const { container } = renderPage();
     expect(container).toBeTruthy();
     expect(showToastMock).not.toHaveBeenCalledWith('送达成功！已签收。', 'success');
+  });
+
+  // 第四轮修复 P1-8（V5）：双击窗口比常规更宽（守卫 :66 与 setStatus('processing') :97
+  // 之间隔 COD 校验）——submitLockRef 同步置位，同帧双击只发一次 mutateAsync。
+  it('P1-8（V5）：同帧双击确认送达只发一次 mutateAsync（submitLockRef 同步锁）', async () => {
+    mockMutateAsync.mockResolvedValueOnce(undefined);
+    (
+      globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }
+    ).__RN_PLATFORM_OS__ = 'ios';
+    const imagePicker = require('../../../src/test/expo-image-picker.mock');
+    imagePicker.__setRequestCameraPermissions({ status: 'granted' });
+    imagePicker.__setLaunchCameraAsync(async () => ({
+      canceled: false,
+      assets: [{ uri: 'file://door.jpg' }],
+    }));
+    const { getAllByText } = renderPage();
+
+    // 解锁两张照片（同成功 case：点两次「点击拍照」各拍一张）
+    await act(async () => {
+      fireEvent.click(getAllByText('点击拍照')[0]);
+    });
+    await act(async () => {
+      fireEvent.click(getAllByText('点击拍照')[0]);
+    });
+
+    // 同帧双击：两击同步连续触发（await 之间不 flush 微任务，模拟双击竞态窗口）
+    const confirmNodes = getAllByText('确认送达');
+    const submitBtn = confirmNodes[confirmNodes.length - 1];
+    await act(async () => {
+      fireEvent.click(submitBtn);
+      fireEvent.click(submitBtn);
+    });
+
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    // 失败/入队后放行重试：失败场景下锁复位（resolve 场景锁保持、status=success 挡重提）
+  });
+
+  it('P1-8：提交失败后锁复位——再次点击可重发（失败放行，对齐 withdraw 三段式）', async () => {
+    mockMutateAsync.mockRejectedValueOnce(new Error('conflict'));
+    (
+      globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }
+    ).__RN_PLATFORM_OS__ = 'ios';
+    const imagePicker = require('../../../src/test/expo-image-picker.mock');
+    imagePicker.__setRequestCameraPermissions({ status: 'granted' });
+    imagePicker.__setLaunchCameraAsync(async () => ({
+      canceled: false,
+      assets: [{ uri: 'file://door.jpg' }],
+    }));
+    const { getAllByText } = renderPage();
+
+    await act(async () => {
+      fireEvent.click(getAllByText('点击拍照')[0]);
+    });
+    await act(async () => {
+      fireEvent.click(getAllByText('点击拍照')[0]);
+    });
+
+    const confirmNodes = getAllByText('确认送达');
+    const submitBtn = confirmNodes[confirmNodes.length - 1];
+    await act(async () => {
+      fireEvent.click(submitBtn);
+    });
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    // 裸 Error（非 ApiError）→ 走 common.networkError 分支文案
+    expect(showToastMock).toHaveBeenCalledWith('网络异常，请重试', 'error');
+
+    // 失败后重试：锁已复位；catch 里 setStatus('idle') 触发重渲染，
+    // 旧 DOM 节点的 onClick 闭包已过期——重新查询取新节点再点
+    mockMutateAsync.mockResolvedValueOnce(undefined);
+    const retryNodes = getAllByText('确认送达');
+    await act(async () => {
+      fireEvent.click(retryNodes[retryNodes.length - 1]);
+    });
+    expect(mockMutateAsync).toHaveBeenCalledTimes(2);
+  });
+
+  // 审查问题①（P1）：COD 校验早退分支在 try 之前 return，不走 catch 复位——已补
+  // submitLockRef.current = false（防御性复位）。实测该分支经 UI 不可达：金额非法时
+  // submitDisabled=true → Button disabled → mock 壳剥掉 onClick，点击到不了 handler。
+  // 本测试从用户视角验证「COD 金额非法点不动 → 改金额后可正常提交」的重试能力。
+  it('P1-8（审查①）：COD 金额非法不触发提交（按钮禁用），改金额后可正常提交', async () => {
+    mockPaymentMethod = 'COD';
+    mockMutateAsync.mockResolvedValueOnce(undefined);
+    (
+      globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }
+    ).__RN_PLATFORM_OS__ = 'ios';
+    const imagePicker = require('../../../src/test/expo-image-picker.mock');
+    imagePicker.__setRequestCameraPermissions({ status: 'granted' });
+    imagePicker.__setLaunchCameraAsync(async () => ({
+      canceled: false,
+      assets: [{ uri: 'file://door.jpg' }],
+    }));
+    const { getAllByText, container } = renderPage();
+
+    await act(async () => {
+      fireEvent.click(getAllByText('点击拍照')[0]);
+    });
+    await act(async () => {
+      fireEvent.click(getAllByText('点击拍照')[0]);
+    });
+
+    // 首击：COD 金额为空 → submitDisabled=true，Button host 无 onClick，点击无效
+    const firstNodes = getAllByText('确认送达');
+    await act(async () => {
+      fireEvent.click(firstNodes[firstNodes.length - 1]);
+    });
+    expect(showToastMock).not.toHaveBeenCalled();
+    expect(mockMutateAsync).not.toHaveBeenCalled();
+
+    // 改金额（RN 壳 __fnProps 直调 onChangeText）后再次点击 → mutateAsync 发出
+    const input = container.querySelector('[data-rn-host="TextInput"]');
+    const onChangeText = (input as unknown as { __fnProps: { onChangeText: (v: string) => void } })
+      .__fnProps.onChangeText;
+    act(() => {
+      onChangeText('12.8');
+    });
+    const retryNodes = getAllByText('确认送达');
+    await act(async () => {
+      fireEvent.click(retryNodes[retryNodes.length - 1]);
+    });
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    expect(mockMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ collectedAmount: 1280 }),
+    );
   });
 });

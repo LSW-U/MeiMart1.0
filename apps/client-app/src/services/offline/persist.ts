@@ -2,21 +2,16 @@ import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { QueryClient } from '@tanstack/react-query';
-import { queryClient as appQueryClient } from '@/providers/queryClient';
 import { useAuthStore } from '@/store/authStore';
 import { isMockMode } from '@/services/api';
 
-const REACT_QUERY_KEY = 'meimart-react-query';
+// 第四轮修复 P1-1（D3）：实现迁到独立小模块 persistCacheClear.ts（无 authStore 依赖，
+// 供 authStore.clearAuth 内直调，断 persist↔authStore 反向依赖）——此处 re-export 兼容
+// 既有测试/引用（profile.tsx 已改走 clearAuth，不再直接调本函数）。
+import { clearPersistedQueryCache } from './persistCacheClear';
+export { clearPersistedQueryCache };
 
-// C-P1-4: 登出时显式清持久化缓存（PII 泄露治理）——clearAuth 只翻内存状态，
-// AsyncStorage 里上一次 persist throttle 落盘的用户数据（profile/notifications 等）不会自动消失。
-// queryClient.clear() 同步清内存缓存，防止登出后 60s staleTime 内页面仍渲染旧用户数据。
-export async function clearPersistedQueryCache(
-  client: QueryClient = appQueryClient,
-): Promise<void> {
-  client.clear();
-  await AsyncStorage.removeItem(REACT_QUERY_KEY);
-}
+const REACT_QUERY_KEY = 'meimart-react-query';
 
 // C-P1-4: 排除表改「前两段精确匹配」。旧实现只匹配 queryKey[0]：
 //   - ['user','notifications'] / ['user','profile'] 首段是 'user'，全部漏网 → PII（手机号/
@@ -32,6 +27,14 @@ const EXCLUDED_PREFIXES: readonly (readonly string[])[] = [
   ['user', 'notification-preferences'],
   ['user', 'profile'],
   ['user', 'favorites'],
+  // 第四轮修复 P1-1：登录用户私有数据不落盘（PII 治理，与 user:* 同口径）——
+  // addresses（姓名/手机号/门牌）/ orders（收货人+商品+金额）/ refunds（售后凭证）/
+  // cart（购物车内容）均为单段前缀排除。queryKey 出处：useAddress.ts:6 /
+  // useOrders.ts:12 / useRefunds.ts:5 / useCart.ts:7（20261010 核实）。
+  ['addresses'],
+  ['orders'],
+  ['refunds'],
+  ['cart'],
 ];
 
 const asyncStoragePersister = createAsyncStoragePersister({
