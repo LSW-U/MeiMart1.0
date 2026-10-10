@@ -8,15 +8,15 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('OfflineBanner', () => {
-  it('renders offline message', () => {
+  it('renders offline message (t() 链路，key 直通断言)', () => {
     const { getByText } = render(<OfflineBanner />, { wrapper });
-    expect(getByText(/You are offline/)).toBeTruthy();
+    expect(getByText('common.youAreOffline')).toBeTruthy();
   });
 
   it('calls onRetry when retry pressed', () => {
     const onRetry = jest.fn();
     const { getByText } = render(<OfflineBanner onRetry={onRetry} />, { wrapper });
-    fireEvent.press(getByText('Retry'));
+    fireEvent.press(getByText('common.retry'));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });
@@ -24,6 +24,6 @@ describe('OfflineBanner', () => {
 describe('WeakNetworkBanner', () => {
   it('renders weak network message', () => {
     const { getByText } = render(<WeakNetworkBanner />, { wrapper });
-    expect(getByText(/Weak network/)).toBeTruthy();
+    expect(getByText('common.weakNetwork')).toBeTruthy();
   });
 });

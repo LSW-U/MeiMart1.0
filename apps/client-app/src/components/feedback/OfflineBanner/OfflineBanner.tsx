@@ -15,8 +15,9 @@ export function OfflineBanner({ onRetry, testID }: OfflineBannerProps) {
       accessibilityLabel={t('common.youAreOffline')}
     >
       <MaterialCommunityIcons name="wifi-off" size={20} color={colors['on-error']} />
+      {/* B-P2-4: 可见文案走 t()（a11y label 已接线，此处补齐可见文案，复用既有 key） */}
       <Text style={[textStyle('body-md'), { color: colors['on-error'], flex: 1 }]}>
-        You are offline. Some features may not work.
+        {t('common.youAreOffline')}
       </Text>
       {onRetry && (
         <Pressable
@@ -26,7 +27,7 @@ export function OfflineBanner({ onRetry, testID }: OfflineBannerProps) {
           accessibilityLabel={t('common.retry')}
         >
           <Text style={[textStyle('body-md'), { color: colors['on-error'], fontWeight: '700' }]}>
-            Retry
+            {t('common.retry')}
           </Text>
         </Pressable>
       )}
@@ -46,7 +47,7 @@ export function WeakNetworkBanner({ testID }: WeakNetworkBannerProps) {
     >
       <MaterialCommunityIcons name="signal-cellular-2" size={20} color={colors['on-error']} />
       <Text style={[textStyle('body-md'), { color: colors['on-error'] }]}>
-        Weak network. Loading may be slower.
+        {t('common.weakNetwork')}
       </Text>
     </View>
   );

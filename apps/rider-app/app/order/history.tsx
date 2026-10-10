@@ -163,6 +163,7 @@ export default function OrderHistoryPage() {
                 statusTone={order.status}
                 time={formatTime(order.completedAt)}
                 viewDetailsLabel={t('history.viewDetails')}
+                a11yLabel={t('history.a11y.openOrder', { order: order.orderNo })}
                 onPress={() => router.push(`/order/${order.id}`)}
               />
             ))

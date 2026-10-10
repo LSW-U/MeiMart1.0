@@ -32,6 +32,7 @@
     "seeAll": "HAREE HOTU",
     "view": "HAREE",
     "badgeNew": "FOUN",
+    "badgeHot": "Popular",
     "network": {
       "offline": "Laiha ligasaun internet",
       "weak": "Rede daudauk — economia dadus ativu",
@@ -52,6 +53,7 @@
     "share": "Partilha",
     "toggle": "Muda",
     "selectAll": "Hili hotu",
+    "selectPlaceholder": "Hili",
     "clearSearch": "Moos buka",
     "searchInput": "Kampu buka",
     "voiceSearch": "Buka ho lian",
@@ -350,6 +352,7 @@
     },
     "list": "Hau-nia pedidu sira",
     "detail": "Detaliu pedidu",
+    "overflowItems": "+{{count}} tan",
     "total": "Total pedidu",
     "orderNo": "Numeru pedidu",
     "createdAt": "Hato'o iha",

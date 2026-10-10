@@ -32,6 +32,7 @@
     "seeAll": "VER TUDO",
     "view": "VER",
     "badgeNew": "NOVO",
+    "badgeHot": "QUENTE",
     "network": {
       "offline": "Sem ligação à internet",
       "weak": "Rede lenta — poupança de dados ativa",
@@ -52,6 +53,7 @@
     "share": "Partilhar",
     "toggle": "Alternar",
     "selectAll": "Selecionar tudo",
+    "selectPlaceholder": "Selecionar",
     "clearSearch": "Limpar pesquisa",
     "searchInput": "Campo de pesquisa",
     "voiceSearch": "Pesquisa por voz",
@@ -371,6 +373,7 @@
     },
     "list": "Os meus pedidos",
     "detail": "Detalhe do pedido",
+    "overflowItems": "+{{count}} itens",
     "total": "Total do pedido",
     "orderNo": "Número do pedido",
     "createdAt": "Feito em",

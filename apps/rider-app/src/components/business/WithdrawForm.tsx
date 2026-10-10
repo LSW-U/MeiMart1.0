@@ -107,6 +107,7 @@ export function WithdrawForm({
           <TextInput
             className="rounded-lg border-2 border-outline-variant bg-surface px-8 py-2 text-lg text-on-surface"
             keyboardType="numeric"
+            accessibilityLabel={amountLabel}
             placeholder={amountPlaceholder}
             placeholderTextColor={colors.outline}
             value={amount}
@@ -166,6 +167,7 @@ export function WithdrawForm({
         </Text>
         <TextInput
           className="rounded-lg border-2 border-outline-variant bg-surface px-4 py-2 text-base text-on-surface"
+          accessibilityLabel={accountLabel}
           placeholder={accountPlaceholder}
           placeholderTextColor={colors.outline}
           value={account}
@@ -183,6 +185,7 @@ export function WithdrawForm({
       <View className="gap-2">
         <TextInput
           className="rounded-lg border border-outline-variant bg-surface px-4 py-2 text-base text-on-surface"
+          accessibilityLabel={holderNameLabel}
           placeholder={holderNameLabel}
           placeholderTextColor={colors.outline}
           value={holderName}
@@ -193,6 +196,7 @@ export function WithdrawForm({
           <View className="flex-row gap-2">
             <TextInput
               className="flex-1 rounded-lg border border-outline-variant bg-surface px-4 py-2 text-base text-on-surface"
+              accessibilityLabel={bankNameLabel}
               placeholder={bankNameLabel}
               placeholderTextColor={colors.outline}
               value={bankName}
@@ -201,6 +205,7 @@ export function WithdrawForm({
             />
             <TextInput
               className="flex-1 rounded-lg border border-outline-variant bg-surface px-4 py-2 text-base text-on-surface"
+              accessibilityLabel={branchNameLabel}
               placeholder={branchNameLabel}
               placeholderTextColor={colors.outline}
               value={branchName}

@@ -22,7 +22,7 @@ export function SelectField<T extends FieldValues>({
   name,
   label,
   icon,
-  placeholder = 'Select',
+  placeholder, // B-P2-5: 默认值移入组件内 t('common.selectPlaceholder')（默认参数在解构期求值，t 不可用）
   options,
   testID,
 }: SelectFieldProps<T>) {
@@ -64,7 +64,7 @@ export function SelectField<T extends FieldValues>({
                 ]}
                 numberOfLines={1}
               >
-                {value || placeholder}
+                {value || placeholder || t('common.selectPlaceholder')}
               </Text>
               <Icon symbol="expand_more" size={20} color={colors['on-surface-variant']} />
             </Pressable>

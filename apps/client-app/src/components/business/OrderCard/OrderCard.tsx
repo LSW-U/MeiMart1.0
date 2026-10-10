@@ -115,7 +115,8 @@ function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
                     { color: colors['on-surface-variant'], fontSize: 10 },
                   ]}
                 >
-                  +{overflow} ITEM
+                  {/* B-P2-5: overflow 计数走 t()（复用 order.itemsCount「商品（共 N 件）」同源 count 插值） */}
+                  {t('order.overflowItems', { count: overflow })}
                 </Text>
               </View>
             )}

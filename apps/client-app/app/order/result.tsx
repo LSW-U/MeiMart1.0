@@ -295,7 +295,8 @@ export default function OrderResultScreen() {
             ]}
             accessibilityRole="summary"
           >
-            <View style={styles.summaryHeader}>
+            {/* A-P2-5: #e0e0e0 → outline-variant（divider 语义无专属 token，outline-variant 为分隔线既有先例） */}
+            <View style={[styles.summaryHeader, { borderBottomColor: colors['outline-variant'] }]}>
               <Text style={[typography['body-sm'], { color: colors['on-surface-variant'] }]}>
                 {t('result.orderInfo')}
               </Text>
@@ -368,7 +369,13 @@ export default function OrderResultScreen() {
                   </Text>
                 </View>
               )}
-              <View style={[styles.amountRow, styles.amountDueRow]}>
+              <View
+                style={[
+                  styles.amountRow,
+                  styles.amountDueRow,
+                  { borderTopColor: colors['outline-variant'] },
+                ]}
+              >
                 <Text style={[typography['label-caps'], { color: colors['on-surface'] }]}>
                   {t('result.amountDue')}
                 </Text>
@@ -444,7 +451,16 @@ export default function OrderResultScreen() {
       </ScrollView>
 
       {/* 底部操作栏（按状态渲染不同按钮） */}
-      <View style={[styles.actionBar, { borderTopColor: colors['outline-variant'] }]}>
+      {/* A-P2-5: #ffffff → surface-container-lowest（亮=纯白，暗=深色抬升底，同 cart 底栏先例） */}
+      <View
+        style={[
+          styles.actionBar,
+          {
+            borderTopColor: colors['outline-variant'],
+            backgroundColor: colors['surface-container-lowest'],
+          },
+        ]}
+      >
         {state === 'SUCCESS' && (
           <>
             <Button
@@ -579,7 +595,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e0e0e0',
+    // A-P2-5: hex 移除——borderBottomColor 由使用处运行时注入（静态 StyleSheet 禁引 colors），见 :298
     marginBottom: spacing.sm,
   },
   itemsPreview: { gap: spacing.sm, marginBottom: spacing.sm },
@@ -591,7 +607,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     marginTop: spacing.xs,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#e0e0e0',
+    // A-P2-5: hex 移除——borderTopColor 由使用处运行时注入，见 :372
   },
   etaBar: {
     flexDirection: 'row',
@@ -620,7 +636,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderTopWidth: 1,
-    backgroundColor: '#ffffff',
+    // A-P2-5: hex 移除——backgroundColor 由使用处运行时注入（同 cart 底栏 surface-container-lowest 先例）
   },
   actionBtn: { flex: 1 },
 });

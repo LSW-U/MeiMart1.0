@@ -68,6 +68,7 @@ function EvidenceUploadNative({
   onError,
   onPrecheckError,
 }: EvidenceUploadProps) {
+  const { t } = useTranslation();
   const ImagePicker = require('expo-image-picker');
   const { Image, Pressable } = require('react-native');
 
@@ -114,6 +115,8 @@ function EvidenceUploadNative({
         {required ? <Text className="font-bold text-primary">*</Text> : null}
       </View>
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('upload.a11y.takePhoto', { title })}
         className={`aspect-[16/9] items-center justify-center overflow-hidden rounded-lg border-2 border-dashed ${captured ? 'border-tertiary-container bg-tier-gold-soft/20' : 'border-outline bg-surface'}`}
         onPress={() => void takePhoto()}
       >
@@ -149,6 +152,7 @@ function EvidenceUploadWeb({
   onError,
   onPrecheckError,
 }: EvidenceUploadProps) {
+  const { t } = useTranslation();
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,6 +205,8 @@ function EvidenceUploadWeb({
         onChange={handleFile}
       />
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('upload.a11y.takePhoto', { title })}
         className={`aspect-[16/9] items-center justify-center overflow-hidden rounded-lg border-2 border-dashed ${captured ? 'border-tertiary-container bg-tier-gold-soft/20' : 'border-outline bg-surface'}`}
         onPress={() => inputRef.current?.click()}
       >

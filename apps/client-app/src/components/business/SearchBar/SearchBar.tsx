@@ -8,7 +8,7 @@ import type { SearchBarProps } from './SearchBar.types';
 export function SearchBar({
   value,
   defaultValue,
-  placeholder = 'Search products',
+  placeholder, // B-P2-5: 默认值移入组件内 t('search.placeholder')（默认参数在解构期求值，t 不可用）
   variant = 'card',
   showMic = false,
   onMicPress,
@@ -73,7 +73,7 @@ export function SearchBar({
       />
       <TextInput
         value={current}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('search.placeholder')}
         placeholderTextColor={placeholderColor}
         onChangeText={handleChange}
         onSubmitEditing={handleSubmit}

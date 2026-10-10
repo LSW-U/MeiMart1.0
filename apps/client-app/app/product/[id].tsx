@@ -316,7 +316,9 @@ export default function ProductDetailPage() {
             onPress={toggleFavorite}
             style={({ pressed }) => [styles.favoriteBtn, pressed && { opacity: 0.6 }]}
             accessibilityRole="button"
-            accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            accessibilityLabel={
+              isFavorite ? t('product.removeFromFavorites') : t('product.addToFavorites')
+            }
             accessibilityState={{ selected: isFavorite }}
           >
             <Icon

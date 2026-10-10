@@ -44,21 +44,21 @@ describe('CategoryItem', () => {
       <CategoryItem category={{ ...category, badge: 'new' }} />,
       { wrapper },
     );
-    expect(getByText('NEW')).toBeTruthy();
-    expect(queryByText('HOT')).toBeNull();
+    expect(getByText('common.badgeNew')).toBeTruthy();
+    expect(queryByText('common.badgeHot')).toBeNull();
   });
 
   it('renders HOT badge when category.badge = hot', () => {
     const { getByText } = render(<CategoryItem category={{ ...category, badge: 'hot' }} />, {
       wrapper,
     });
-    expect(getByText('HOT')).toBeTruthy();
+    expect(getByText('common.badgeHot')).toBeTruthy();
   });
 
   it('does not render badge when category.badge undefined', () => {
     const { queryByText } = render(<CategoryItem category={category} />, { wrapper });
-    expect(queryByText('NEW')).toBeNull();
-    expect(queryByText('HOT')).toBeNull();
+    expect(queryByText('common.badgeNew')).toBeNull();
+    expect(queryByText('common.badgeHot')).toBeNull();
   });
 
   // C-P2-3: 同实例切图重置错误态——上一张图失败走 fallback 图标后，换新 uri 应回到图片分支

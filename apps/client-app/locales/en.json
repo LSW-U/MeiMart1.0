@@ -32,6 +32,7 @@
     "seeAll": "SEE ALL",
     "view": "VIEW",
     "badgeNew": "NEW",
+    "badgeHot": "HOT",
     "network": {
       "offline": "No internet connection",
       "weak": "Slow network — data saver on",
@@ -52,6 +53,7 @@
     "share": "Share",
     "toggle": "Toggle",
     "selectAll": "Select all",
+    "selectPlaceholder": "Select",
     "clearSearch": "Clear search",
     "searchInput": "Search input",
     "voiceSearch": "Voice search",
@@ -350,6 +352,7 @@
     },
     "list": "My orders",
     "detail": "Order detail",
+    "overflowItems": "+{{count}} more",
     "total": "Order total",
     "orderNo": "Order number",
     "createdAt": "Placed at",

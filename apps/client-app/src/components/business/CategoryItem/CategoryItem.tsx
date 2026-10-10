@@ -92,7 +92,8 @@ export const CategoryItem = memo(function CategoryItem({
         >
           <Text style={styles.badgeText}>
             {/* 原因：白字 on 红/绿 badge 底，dark 不变（ON_PRIMARY 模式，P6 §2.3） */}
-            {category.badge === 'hot' ? 'HOT' : 'NEW'}
+            {/* B-P2-5: HOT/NEW 走 t()——badgeHot 新增，badgeNew 复用 common.badgeNew（en 值同为 NEW） */}
+            {category.badge === 'hot' ? t('common.badgeHot') : t('common.badgeNew')}
           </Text>
         </View>
       )}

@@ -62,7 +62,7 @@ function AddressCardBase({
                     { color: colors['on-primary-container'], fontSize: 10 },
                   ]}
                 >
-                  Default
+                  {t('address.default')}
                 </Text>
               </View>
             )}

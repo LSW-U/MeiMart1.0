@@ -29,7 +29,7 @@ describe('AddressCard', () => {
     expect(getByText('Alice')).toBeTruthy();
     expect(getByText('+670 7777 7777')).toBeTruthy();
     expect(getByText('DiliDiliVera CruzStreet 123, House 45')).toBeTruthy();
-    expect(getByText('Default')).toBeTruthy();
+    expect(getByText('address.default')).toBeTruthy();
   });
 
   it('calls onEdit when edit button pressed', () => {
