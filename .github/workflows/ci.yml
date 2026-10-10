@@ -45,10 +45,14 @@ jobs:
       - run: |
           pnpm -F ${{ steps.pkg.outputs.name }} run check:gate-mock
           pnpm -F ${{ steps.pkg.outputs.name }} run check:gate-fake-green
+          # 第四轮修复 P1-6：eas 发布前置校验（TODO- 占位/非法 URL 即 fail，D2 拍板）
+          pnpm -F ${{ steps.pkg.outputs.name }} run check:release-config
       - if: matrix.app == 'client-app'
         run: |
           pnpm -F mei-mart-app check:i18n
           pnpm -F mei-mart-app check:a11y
+          # 第四轮修复 P0-1：mock PII 扫描门禁（手机号/中文人名，双向验证 6 处精确命中）
+          pnpm -F mei-mart-app run check:gate-pii
 
   # 批次1 审查 P1-1 修复：原 job 不 install + 配置在 apps/client-app/ 子目录 +
   # PR 时校验 feature branch 多条中间 commit，三重失效。squash-merge 工作流下
@@ -69,3 +73,27 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm -w exec commitlint --from HEAD~1 --to HEAD
+
+  # 第四轮修复 P1-5：packages/* 补 CI 覆盖（此前仅本地跑，5 包 test 带 --passWithNoTests 假绿风险）。
+  # 沿用两端 job 的既有套路：目录名→包名映射（pnpm -F 按目录名匹配不到会打印
+  # "No projects matched" 但 exit 0 假绿，:28-30 先例）+ exec jest --ci 直跑绕透传歧义（:40-42 先例）
+  packages:
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [api-core, format, i18n-core, nav-core, upload-core]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Map package dir to package name
+        id: pkg
+        run: echo "name=@meimart/${{ matrix.package }}" >> "$GITHUB_OUTPUT"
+      - run: pnpm -F ${{ steps.pkg.outputs.name }} typecheck
+      - run: pnpm -F ${{ steps.pkg.outputs.name }} exec jest --ci --coverage=false
