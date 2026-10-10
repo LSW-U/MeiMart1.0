@@ -22,7 +22,6 @@ import { useCoupons } from '@/services/queries/usePromotion';
 import { useFavorites } from '@/services/queries/useFavorites';
 import { useOrderCounts } from '@/services/queries/useOrders';
 import { useAuthStore } from '@/store/authStore';
-import { clearPersistedQueryCache } from '@/services/offline/persist';
 import { toast } from '@/store/toastStore';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
@@ -86,9 +85,8 @@ export default function ProfilePage() {
 
   const onItemPress = (item: FunctionItem) => {
     if (item.id === 'logout') {
-      // C-P1-4: 登出显式清持久化缓存（PII）——只 clearAuth 会留下 AsyncStorage 落盘的
-      // profile/notifications 等用户数据；内存缓存同步清，防 staleTime 内仍渲染旧数据
-      void clearPersistedQueryCache();
+      // 第四轮修复 P1-1（D3）：清持久化缓存收口进 clearAuth（authStore 内直调）——
+      // 本页原直调 clearPersistedQueryCache 移除，7 条登出路径统一走 clearAuth
       clearAuth();
       router.replace('/(auth)/login');
       return;
