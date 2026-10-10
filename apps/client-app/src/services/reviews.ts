@@ -139,12 +139,26 @@ export const reviewsApi = {
     // C-P2-5: 仅 404（商品无评论端点/下架）降级空态；其余错误（500/网络）rethrow——
     //      RQ 可重试 + 监控不丢（全吞会让断网时详情页评论永远空态且无法重试）。
     try {
-      const res = await api.get<{
+      // B-P2-1: 消费游标翻页（nextCursor/hasMore）聚合全量再 computeSummary——
+      //   后端 take limit+1 游标分页（默认 20/页），只聚合首页会低估 avg/分布
+      type ReviewPage = {
         items: ReviewView[];
         nextCursor: string | null;
         hasMore: boolean;
-      }>(`/client/products/${productId}/reviews`);
-      const list = sortNewestFirst(res.data.items.map(mapReviewView));
+      };
+      const all: ReviewView[] = [];
+      let cursor: string | null = null;
+      let hasMore = true;
+      // 防御上限：max 50/页 × 40 页 = 2000 条，异常死循环（后端 hasMore 恒 true）时截断
+      for (let page = 0; page < 40 && hasMore; page++) {
+        const res: { data: ReviewPage } = await api.get<ReviewPage>(
+          `/client/products/${productId}/reviews${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
+        );
+        all.push(...res.data.items);
+        cursor = res.data.nextCursor;
+        hasMore = res.data.hasMore && cursor != null;
+      }
+      const list = sortNewestFirst(all.map(mapReviewView));
       return { reviews: list, summary: computeSummary(list) };
     } catch (err) {
       if (isNotFoundError(err)) {

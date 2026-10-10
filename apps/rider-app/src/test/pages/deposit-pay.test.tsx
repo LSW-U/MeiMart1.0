@@ -95,6 +95,12 @@ jest.mock('../../../src/components/feedback/Toast', () => ({
   showToast: jest.fn(),
 }));
 
+// C-P2-2: 回滚走 depositApi.discardRequest（mock 模式本地状态机），可控 spy 断言
+const mockDiscardRequest = jest.fn();
+jest.mock('../../../src/services/deposit', () => ({
+  depositApi: { discardRequest: (...args: unknown[]) => mockDiscardRequest(...args) },
+}));
+
 function renderPage(): RenderResult {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -247,13 +253,41 @@ describe('线上 mock 支付', () => {
     });
   });
 
-  it('失败 → e.message toast，不 back', async () => {
+  it('失败（第一步 create）→ e.message toast，不 back，无回滚（无 PENDING 遗留）', async () => {
     mockCreateAsync.mockRejectedValue(new Error('余额不足'));
     const { getByText } = renderPage();
 
     fireEvent.click(findPressableByText(getByText, '确认缴纳 $50.00'));
     await waitFor(() => {
       expect(showToastMock).toHaveBeenCalledWith('余额不足', 'error');
+      expect(mockRouterBack).not.toHaveBeenCalled();
+      expect(mockDiscardRequest).not.toHaveBeenCalled();
+    });
+  });
+
+  it('C-P2-2: 第二步 payMock 失败 → 撤销 PENDING 申请（回滚）+ 回滚 toast，不 back', async () => {
+    mockCreateAsync.mockResolvedValue({ id: 'r-pending' });
+    mockPayMockAsync.mockRejectedValue(new Error('mock pay down'));
+    mockDiscardRequest.mockResolvedValue(undefined);
+    const { getByText } = renderPage();
+
+    fireEvent.click(findPressableByText(getByText, '确认缴纳 $50.00'));
+    await waitFor(() => {
+      expect(mockDiscardRequest).toHaveBeenCalledWith('r-pending');
+      expect(showToastMock).toHaveBeenCalledWith('支付未完成，已撤销待确认申请，请重试', 'error');
+      expect(mockRouterBack).not.toHaveBeenCalled();
+    });
+  });
+
+  it('C-P2-2: 回滚本身失败 → 降级显示原始错误 message（admin REJECT 兜底），不 back', async () => {
+    mockCreateAsync.mockResolvedValue({ id: 'r-pending' });
+    mockPayMockAsync.mockRejectedValue(new Error('mock pay down'));
+    mockDiscardRequest.mockRejectedValue(new Error('rollback unavailable'));
+    const { getByText } = renderPage();
+
+    fireEvent.click(findPressableByText(getByText, '确认缴纳 $50.00'));
+    await waitFor(() => {
+      expect(showToastMock).toHaveBeenCalledWith('mock pay down', 'error');
       expect(mockRouterBack).not.toHaveBeenCalled();
     });
   });

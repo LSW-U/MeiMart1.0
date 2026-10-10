@@ -204,6 +204,7 @@
   "deposit.pay.title": "缴纳保证金",
   "deposit.pay.toastFailed": "支付失败，请重试",
   "deposit.pay.toastSuccess": "支付成功，上限已即时提升",
+  "deposit.pay.toastRolledBack": "支付未完成，已撤销待确认申请，请重试",
   "deposit.pending.bannerText": "请前往 {location} 缴纳 {amount}，admin 确认后即时生效。",
   "deposit.pending.bannerTextNoLocation": "请按所选缴纳点缴纳 {amount}，admin 确认后即时生效。",
   "deposit.pending.bannerTitle": "待确认提示",

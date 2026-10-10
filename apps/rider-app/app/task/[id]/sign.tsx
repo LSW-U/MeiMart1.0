@@ -294,6 +294,13 @@ export default function SignConfirmPage() {
                       showToast(t('common.cameraPermissionDenied'), 'error')
                     }
                     onError={() => showToast(t('common.cameraError'), 'error')}
+                    onPrecheckError={(code) =>
+                      // C-P2-4: 预校验显因——code 与 errors.{code} 预置表对齐（SCENE_RULES）
+                      showToast(
+                        t(`errors.${code}` as Parameters<typeof t>[0], { defaultValue: code }),
+                        'error',
+                      )
+                    }
                     onPress={(uri) => {
                       setDoorCaptured(true);
                       setDoorUri(uri);
@@ -311,6 +318,13 @@ export default function SignConfirmPage() {
                       showToast(t('common.cameraPermissionDenied'), 'error')
                     }
                     onError={() => showToast(t('common.cameraError'), 'error')}
+                    onPrecheckError={(code) =>
+                      // C-P2-4: 预校验显因——code 与 errors.{code} 预置表对齐（SCENE_RULES）
+                      showToast(
+                        t(`errors.${code}` as Parameters<typeof t>[0], { defaultValue: code }),
+                        'error',
+                      )
+                    }
                     onPress={(uri) => {
                       setPackageCaptured(true);
                       setPackageUri(uri);

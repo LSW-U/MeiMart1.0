@@ -54,3 +54,7 @@ const client: ApiClient = createApiClient({
 });
 
 export const api = client.api;
+
+// B-P2-2（C17 对齐 rider）：单飞 refresh 显式再导出——client 离线队列 401 重试依赖，
+// 语义保留（rider api.ts:57 同款先例）。
+export const refreshAccessToken = client.refreshAccessToken;

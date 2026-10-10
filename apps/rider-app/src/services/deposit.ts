@@ -225,6 +225,25 @@ export const depositApi = {
   },
 
   /**
+   * C-P2-2: 撤销 PENDING 申请（payMock 失败回滚用）。mock 模式直接从状态机移除；
+   *   real 模式暂无后端 DELETE 端点（挂账：需后端补 /rider/deposit/requests/:id 撤销），
+   *   抛错由调用方兜底（PENDING 可由 admin REJECT 兜底，不阻塞主流程错误提示）。
+   */
+  async discardRequest(requestId: string): Promise<void> {
+    if (isMockMode) {
+      const state = readMockState();
+      writeMockState({
+        ...state,
+        records: state.records.filter((r) => r.id !== requestId),
+      });
+      return mockDelay(undefined);
+    }
+    throw new Error(
+      'discard deposit request is not available in real mode (backend endpoint pending)',
+    );
+  },
+
+  /**
    * 启用缴纳点列表（线下 COD Tab 下拉）
    * 补端点批（2026-09-03）：后端已提供骑手端只读端点（字段收窄 id/name/address/note）。
    */

@@ -157,11 +157,18 @@ export default function LoginPage() {
           />
           <Text style={[styles.agreementText, { color: colors['on-surface-variant'] }]}>
             {t('auth.agreePrefix')}{' '}
-            <Text style={{ color: colors.primary, fontWeight: '700' }}>
+            {/* A-P2-6（D3）: 协议可点——站内 /legal/terms（app/legal/[type].tsx 已投产） */}
+            <Text
+              onPress={() => router.push('/legal/terms')}
+              style={{ color: colors.primary, fontWeight: '700' }}
+            >
               {t('auth.termsOfService')}
             </Text>{' '}
             {t('auth.and')}{' '}
-            <Text style={{ color: colors.primary, fontWeight: '700' }}>
+            <Text
+              onPress={() => router.push('/legal/privacy')}
+              style={{ color: colors.primary, fontWeight: '700' }}
+            >
               {t('auth.privacyPolicy')}
             </Text>
             .

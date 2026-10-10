@@ -318,7 +318,11 @@ export default function DeliveryTrackingPage() {
               </Text>
             </View>
             <Pressable
-              onPress={() => router.push('/address/list')}
+              onPress={() =>
+                // A-P2-7（D6）: 订单页地址入口维持管理模式，D6 选择语义不再使用
+                //（审查 P2-1 拍板 a，20261010）
+                router.push('/address/list')
+              }
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel={t('checkout.address.change', { defaultValue: 'Change' })}

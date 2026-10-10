@@ -24,7 +24,8 @@ import { PromoDock } from '@/components/business/PromoDock';
 import { SmallProductCard } from '@/components/business/SmallProductCard/SmallProductCard';
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
 import { resolveBadges } from '@/utils/resolveBadges';
-import type { Product } from '@/types';
+import type { Banner, Product } from '@/types';
+import type { Promotion } from '@/services/promotion';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
@@ -40,6 +41,7 @@ import { Badge } from '@/components/ui/Badge';
 import { toast } from '@/store/toastStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
+import { safeRoutePush } from '@meimart/nav-core';
 
 // Why: 红底白字固定（header primary 渐变底 + 红色 badge 底），dark 不变
 //   同 MasonryProductCard/SmallProductCard/HorizontalProductCard 的 ON_PRIMARY 模式
@@ -98,6 +100,27 @@ export default function HomePage() {
   );
   const handleMorePress = useCallback(() => router.push('/(main)/categories'), []);
 
+  // A-P2-1: banner/promo link 是后端可控数据（banner.linkValue 为 admin 可输入的
+  //   linkType URL/PRODUCT/CATEGORY/NONE），不直接 push——完整匹配的动态段路由
+  //   （/product/{id}）走 safeRoutePush 白名单（对齐 PushDeepLinkDelegate 先例）；
+  //   其余一律不导航（不裸 push 回退，防止任意路径注入）。
+  const handleBannerPress = useCallback((b: Banner) => {
+    if (!b.link) return;
+    const productMatch = /^\/product\/([A-Za-z0-9-]+)$/.exec(b.link);
+    if (productMatch) {
+      safeRoutePush((href) => router.push(href as never), '/product', productMatch[1]);
+    }
+    // 非 /product/{id} 形态（含 CATEGORY/URL/NONE 或异常值）→ 不导航（空降页面无承接）
+  }, []);
+
+  const handlePromoPress = useCallback((p: Promotion) => {
+    // Promotion.link 由后端 home.entries.ts 静态白名单下发，但仍按下发数据对待：
+    // 仅放行已知静态路径前缀，非匹配不导航
+    if (/^\/(product\/list|coupons|profile)(\?.*)?$/.test(p.link)) {
+      router.push(p.link as never);
+    }
+  }, []);
+
   // A-P2-2: 瀑布流 renderItem（FlatList numColumns=2；列表主体见下方 A-P2-2 说明）
   const renderMasonryItem = useCallback(
     ({ item }: { item: Product }) => (
@@ -148,10 +171,7 @@ export default function HomePage() {
         {/* Banner 轮播（弱网降级：跳过） */}
         {!shouldSkipNonEssential && banners && banners.length > 0 && (
           <View style={styles.bannerSection}>
-            <BannerCarousel
-              banners={banners}
-              onBannerPress={(b) => b.link && router.push(b.link)}
-            />
+            <BannerCarousel banners={banners} onBannerPress={handleBannerPress} />
           </View>
         )}
 
@@ -193,7 +213,7 @@ export default function HomePage() {
 
         {/* PromoDock - 横排功能停靠栏（V3c 无标题，接 TaisDivider 下方） */}
         <View style={styles.section}>
-          <PromoDock promotions={promotions ?? []} onPress={(p) => router.push(p.link)} />
+          <PromoDock promotions={promotions ?? []} onPress={handlePromoPress} />
         </View>
 
         {/* 推荐商品标题 + 状态行（瀑布流列表主体在 FlatList data；横滑见 Buy Again） */}
@@ -244,9 +264,11 @@ export default function HomePage() {
       categories,
       colors,
       handleBuyAgainAddToCart,
+      handleBannerPress,
       handleCardPress,
       handleCategoryPress,
       handleMorePress,
+      handlePromoPress,
       promotions,
       shouldSkipNonEssential,
       t,

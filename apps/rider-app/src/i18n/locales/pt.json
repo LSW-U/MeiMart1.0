@@ -204,6 +204,7 @@
   "deposit.pay.title": "Pagar depósito",
   "deposit.pay.toastFailed": "Falha no pagamento, tente novamente",
   "deposit.pay.toastSuccess": "Pagamento bem-sucedido — limite atualizado instantaneamente",
+  "deposit.pay.toastRolledBack": "Pagamento não concluído — pedido pendente retirado, tente novamente",
   "deposit.pending.bannerText": "Vá a {location} para pagar {amount}. Tem efeito assim que o admin confirmar.",
   "deposit.pending.bannerTextNoLocation": "Pague {amount} no local que selecionou. Tem efeito assim que o admin confirmar.",
   "deposit.pending.bannerTitle": "Aviso pendente",

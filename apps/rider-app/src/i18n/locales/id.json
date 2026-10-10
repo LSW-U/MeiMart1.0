@@ -204,6 +204,7 @@
   "deposit.pay.title": "Bayar deposit",
   "deposit.pay.toastFailed": "Pembayaran gagal, silakan coba lagi",
   "deposit.pay.toastSuccess": "Pembayaran berhasil — batas diperbarui seketika",
+  "deposit.pay.toastRolledBack": "Pembayaran tidak selesai — permintaan tertunda ditarik, silakan coba lagi",
   "deposit.pending.bannerText": "Silakan ke {location} untuk membayar {amount}. Berlaku setelah admin mengonfirmasi.",
   "deposit.pending.bannerTextNoLocation": "Silakan bayar {amount} di lokasi yang Anda pilih. Berlaku setelah admin mengonfirmasi.",
   "deposit.pending.bannerTitle": "Pemberitahuan menunggu",

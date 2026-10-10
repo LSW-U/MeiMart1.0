@@ -13,7 +13,8 @@ import {
   Pressable,
   ScrollView,
   Platform,
- TextInput } from 'react-native';
+  TextInput,
+} from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +44,7 @@ export default function AddressListPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   // Why: 决策 6 —— checkout 跳来带 from='checkout'，点地址=选中并返回（写中转 store）；
+  //      A-P2-7（D6）: 订单页入口维持管理模式，D6 选择语义不再使用（审查 P2-1 拍板 a）；
   //      个人中心跳来是管理模式，点地址只设默认不退出
   const { from } = useLocalSearchParams<{ from?: string }>();
   const isSelectMode = from === 'checkout';
@@ -77,7 +79,9 @@ export default function AddressListPage() {
   const handleSmartParse = () => {
     const parsed = parseAddressText(smartText);
     if (!parsed.phone && !parsed.name) {
-      toast.error(t('address.smartParseFailed', { defaultValue: 'Could not recognize name or phone' }));
+      toast.error(
+        t('address.smartParseFailed', { defaultValue: 'Could not recognize name or phone' }),
+      );
       return;
     }
     setSmartVisible(false);
@@ -231,7 +235,9 @@ export default function AddressListPage() {
             <View style={styles.swipeHintRow}>
               <Icon symbol="swap_vert" size={12} color={colors['on-surface-variant']} />
               <Text style={[styles.swipeHintText, { color: colors['on-surface-variant'] }]}>
-                {t('address.swipeHint', { defaultValue: 'Swipe a card to edit / set default / delete' })}
+                {t('address.swipeHint', {
+                  defaultValue: 'Swipe a card to edit / set default / delete',
+                })}
               </Text>
             </View>
           )}
@@ -303,13 +309,7 @@ export function AddressTagChip({ tag }: { tag: string }) {
   };
   return (
     <View style={[styles.tagChip, { backgroundColor: theme.bg }]}>
-      {isPreset && (
-        <Icon
-          symbol={presetIcon[tag]}
-          size={11}
-          color={theme.fg}
-        />
-      )}
+      {isPreset && <Icon symbol={presetIcon[tag]} size={11} color={theme.fg} />}
       <Text style={[styles.tagChipText, { color: theme.fg }]} numberOfLines={1}>
         {isPreset ? presetLabel[tag] : tag}
       </Text>

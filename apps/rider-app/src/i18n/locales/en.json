@@ -204,6 +204,7 @@
   "deposit.pay.title": "Pay deposit",
   "deposit.pay.toastFailed": "Payment failed, please retry",
   "deposit.pay.toastSuccess": "Payment successful — limit updated instantly",
+  "deposit.pay.toastRolledBack": "Payment not completed — pending request withdrawn, please retry",
   "deposit.pending.bannerText": "Please go to {location} to pay {amount}. Takes effect once the admin confirms.",
   "deposit.pending.bannerTextNoLocation": "Please pay {amount} at your selected location. Takes effect once the admin confirms.",
   "deposit.pending.bannerTitle": "Pending notice",

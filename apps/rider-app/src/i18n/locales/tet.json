@@ -204,6 +204,7 @@
   "deposit.pay.title": "Paga Depositu",
   "deposit.pay.toastFailed": "Pagamentu falla, favor koko fali",
   "deposit.pay.toastSuccess": "Pagamentu susesu — límitu atualiza imediatamente",
+  "deposit.pay.toastRolledBack": "Pagamentu la hotu — pedidu pendente retira tiha ona, favor ida fali",
   "deposit.pending.bannerText": "Favor ba {location} atu paga {amount}. Efeitu bainhira admin konfirma.",
   "deposit.pending.bannerTextNoLocation": "Favor paga {amount} iha ita-nia fatin ne'ebé selekta. Efeitu bainhira admin konfirma.",
   "deposit.pending.bannerTitle": "Avisu Pendente",

@@ -34,6 +34,7 @@ import {
   useDepositLocations,
 } from '@/src/services/queries/useDeposit';
 import { isMockMode } from '@/src/services/api';
+import { depositApi } from '@/src/services/deposit';
 
 /** HTML 原型：档位预设 chips（分） */
 const AMOUNT_CHIPS_CENTS = [100, 500, 1000, 5000, 10000];
@@ -113,9 +114,10 @@ export default function DepositPayPage() {
 
   async function handleOnlinePay() {
     if (amountCents === null) return;
+    let record: Awaited<ReturnType<typeof createRequest.mutateAsync>> | null = null;
     try {
       // 两步（批 B 契约）：创建 ONLINE_MOCK PENDING → pay-mock 即时生效
-      const record = await createRequest.mutateAsync({
+      record = await createRequest.mutateAsync({
         channel: 'ONLINE_MOCK',
         amount: amountCents,
       });
@@ -123,7 +125,20 @@ export default function DepositPayPage() {
       showToast(t('deposit.pay.toastSuccess'), 'success');
       router.back();
     } catch (e) {
-      showToast(e instanceof Error ? e.message : t('deposit.pay.toastFailed'), 'error');
+      // C-P2-2: 第二步 payMock 失败 → 撤销第一步遗留的 PENDING 申请（不回滚会
+      //   残留「待确认」幽灵记录，与重新缴纳产生双申请）。撤销本身失败仅记日志
+      //   （PENDING 可由 admin REJECT 兜底，不阻塞用户错误提示）。
+      if (record) {
+        try {
+          await depositApi.discardRequest(record.id);
+          showToast(t('deposit.pay.toastRolledBack'), 'error');
+        } catch (rollbackErr) {
+          console.warn('[deposit-pay] rollback PENDING failed:', rollbackErr);
+          showToast(e instanceof Error ? e.message : t('deposit.pay.toastFailed'), 'error');
+        }
+      } else {
+        showToast(e instanceof Error ? e.message : t('deposit.pay.toastFailed'), 'error');
+      }
     }
   }
 

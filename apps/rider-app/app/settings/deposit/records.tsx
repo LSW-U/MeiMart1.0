@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AppIcon } from '@/src/components/ui/AppIcon';
+import { Button } from '@/src/components/ui';
 import { SimplePageHeader } from '@/src/components/layout/SimplePageHeader';
 import { EmptyState } from '@/src/components/feedback/EmptyState';
 import { colors } from '@/src/theme/colors';
@@ -42,7 +43,9 @@ export default function DepositRecordsPage() {
   const { t, language } = useTranslation();
   const currency = t('common.currency');
 
-  const { data: status, isLoading, refetch } = useDepositStatus();
+  // C-P2-3: 解构 isError 补三态（对照 deposit/index.tsx:85/:238 先例）——
+  //   失败不再误显「暂无记录」空态
+  const { data: status, isLoading, isError, refetch } = useDepositStatus();
   const locationsQuery = useDepositLocations();
   const locations = locationsQuery.data ?? [];
 
@@ -64,6 +67,21 @@ export default function DepositRecordsPage() {
           <Text className="py-8 text-center text-sm text-on-surface-variant">
             {t('duty.loading')}
           </Text>
+        ) : isError ? (
+          // C-P2-3: 错误卡片 + 重试（对齐 deposit/index.tsx:238 先例），不伪装成空态
+          <View className="items-center gap-3 rounded-2xl border border-blush-border bg-danger-soft p-6">
+            <Text className="text-sm font-bold text-status-danger-text">
+              {t('deposit.status.loadFailed')}
+            </Text>
+            <Text className="text-xs text-on-surface-variant">{t('common.loadError.desc')}</Text>
+            <Button
+              accessibilityLabel={t('common.retry')}
+              className="h-10 px-6"
+              onPress={() => void refetch()}
+            >
+              <Text className="text-sm">{t('common.retry')}</Text>
+            </Button>
+          </View>
         ) : records.length === 0 ? (
           <EmptyState
             description={t('deposit.records.emptyDescription')}

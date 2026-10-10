@@ -1,7 +1,7 @@
 import React from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 
-import { precheckImage } from '@meimart/upload-core';
+import { precheckImage, PrecheckError } from '@meimart/upload-core';
 
 import { AppIcon } from '../ui/AppIcon';
 import { colors } from '../../theme/colors';
@@ -50,6 +50,9 @@ type EvidenceUploadProps = {
   onPermissionDenied?: () => void;
   // T3 §3.5.3: launchCameraAsync 异常（设备无相机/存储满）不裸抛未捕获 rejection
   onError?: () => void;
+  // C-P2-4: 预校验失败显因——PrecheckError 时回调具体 E-UPLOAD code（调用方按 code
+  //   映射 errors.{code} 文案），非预校验异常仍走 onError 通用提示
+  onPrecheckError?: (code: string) => void;
 };
 
 function EvidenceUploadNative({
@@ -63,6 +66,7 @@ function EvidenceUploadNative({
   onPress,
   onPermissionDenied,
   onError,
+  onPrecheckError,
 }: EvidenceUploadProps) {
   const ImagePicker = require('expo-image-picker');
   const { Image, Pressable } = require('react-native');
@@ -79,13 +83,22 @@ function EvidenceUploadNative({
         const asset = result.assets[0];
         // D1 批4：取证图预校验（generic：≥100×100 任意比例 + ≤5MB，与后端 E-UPLOAD 对齐）——
         // 拦得住的明显违规不消耗一次弱网上传；asset 无元数据（部分测试/特殊机型）跳过，后端兜底
+        // C-P2-4: 裸 catch 改 PrecheckError 显因（对齐 profile/edit.tsx:130 先例）
         if ((asset.width ?? 0) > 0 && (asset.height ?? 0) > 0) {
-          precheckImage('generic', {
-            mimeType: asset.mimeType,
-            sizeBytes: asset.fileSize ?? null,
-            width: asset.width ?? 0,
-            height: asset.height ?? 0,
-          });
+          try {
+            precheckImage('generic', {
+              mimeType: asset.mimeType,
+              sizeBytes: asset.fileSize ?? null,
+              width: asset.width ?? 0,
+              height: asset.height ?? 0,
+            });
+          } catch (err) {
+            if (err instanceof PrecheckError) {
+              onPrecheckError?.(err.code);
+              return;
+            }
+            throw err;
+          }
         }
         onPress(asset.uri);
       }
@@ -134,6 +147,7 @@ function EvidenceUploadWeb({
   photoUri,
   onPress,
   onError,
+  onPrecheckError,
 }: EvidenceUploadProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -142,6 +156,7 @@ function EvidenceUploadWeb({
     if (!file) return;
     // D1 批4：Web 分支预校验（File 对象直接带 size/type；尺寸 web 拍照场景不做
     // Image 解码——readAsDataURL 后无 naturalWidth 便捷点，尺寸交给后端 magic bytes 兜底）
+    // C-P2-4: Web 分支同款——PrecheckError 显因，非预校验异常走 onError
     try {
       precheckImage('generic', {
         mimeType: file.type || undefined,
@@ -152,7 +167,11 @@ function EvidenceUploadWeb({
         width: 1,
         height: 1,
       });
-    } catch {
+    } catch (err) {
+      if (err instanceof PrecheckError) {
+        onPrecheckError?.(err.code);
+        return;
+      }
       onError?.();
       return;
     }
