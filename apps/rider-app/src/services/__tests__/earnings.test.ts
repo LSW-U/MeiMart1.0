@@ -30,9 +30,9 @@ jest.mock('../../i18n/useTranslation', () => ({
 const mockGet = api.get as jest.Mock;
 const mockPost = api.post as jest.Mock;
 
-// 后端资金越权并发修复批1：FORCE_MOCK 回退 true（待总指挥终验通过后放开），
-// 真实接线分支不可达 → 本组用例整体跳过；放开 FORCE_MOCK 时移除 .skip 即恢复（方案 v2 §七 R6）
-describe.skip('earningsApi 真实接线（批1 T6）', () => {
+// 批0性能清理：FORCE_MOCK 已放开为 false（RealOrderAggregator 后端批2 a8d5431 终验通过），
+// 真实接线分支可达，本组用例恢复执行（方案 v2 §七 R6）。
+describe('earningsApi 真实接线（批1 T6）', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });

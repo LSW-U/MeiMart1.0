@@ -11,11 +11,9 @@ import { riderSettingsApi } from './settings';
 import { translate } from '../i18n/useTranslation';
 import { formatCurrency } from '../utils/format';
 
-// 批1 T6（D5/N4）：后端 W6+ earnings/withdrawals 端点已就绪（MeiMart ccaa26b），
-// 撤 FORCE_MOCK——real 模式走真实端点（适配层见下），mock 模式（本地开发）保留原 localStorage 层。
-// 第四轮批4：isEarningsForcedMock 导出已删（FORCE_MOCK=false 恒 false，页面占位分支
-// 已退役且全仓零调用方，grep 已核；退役断言测试同步删除）。
-const FORCE_MOCK = true;
+// 批1 T6（D5/N4）：后端 RealOrderAggregator 已上线（MeiMart 后端批2 a8d5431），
+// real 模式走真实端点 /rider/earnings/*（适配层见下），mock 模式（本地开发）保留原 localStorage 层。
+const FORCE_MOCK = false;
 
 // ── 后端原始结构（契约 @meimart/api-contract rider-earnings.ts，金额单位：分）──
 
