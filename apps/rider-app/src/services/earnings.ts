@@ -15,7 +15,7 @@ import { formatCurrency } from '../utils/format';
 // 撤 FORCE_MOCK——real 模式走真实端点（适配层见下），mock 模式（本地开发）保留原 localStorage 层。
 // 第四轮批4：isEarningsForcedMock 导出已删（FORCE_MOCK=false 恒 false，页面占位分支
 // 已退役且全仓零调用方，grep 已核；退役断言测试同步删除）。
-const FORCE_MOCK = false;
+const FORCE_MOCK = true;
 
 // ── 后端原始结构（契约 @meimart/api-contract rider-earnings.ts，金额单位：分）──
 
