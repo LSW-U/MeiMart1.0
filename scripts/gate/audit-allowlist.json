@@ -1,0 +1,89 @@
+{
+  "_comment": "依赖审计基线（安全专项收尾 P2-2，2026-10-11）。pnpm audit --audit-level=high 实测 21 条存量（8 moderate / 12 high / 1 critical）。全部为 Expo 工具链（expo ~56 → @expo/cli 等）传递依赖，仅存在于开发/构建期（jest/metro/expo-cli），不进入 App 产物包。维护规则：上游发版消减后，先删 entry 再实跑 pnpm audit 验证该条消失，多余的 entry 留着会掩盖同名新 advisory（key 含 advisory id，过期条目应删除）；新增 advisory 不在本表 → CI 直接 fail。键形态 = 包名@advisory-id::GHSA 编号。消减尝试记录（2026-10-11）：npx expo install --check = Dependencies are up to date（32 个 expo 系依赖全对齐 ~56）；pnpm update expo → 最新为 57.0.27（跨主版本，升级需改 package.json/lockfile，超出本批范围，另行立项）。",
+  "entries": [
+    {
+      "key": "shell-quote@1241332::GHSA-pqg4-j6r4-53mv",
+      "reason": "critical：quote() 命令注入。来源 expo → @expo/cli（本地 CLI 工具），不进 App 包；Expo 57 上游待修复"
+    },
+    {
+      "key": "js-yaml@1193726::GHSA-2883-xcg3-v3hh",
+      "reason": "high：maxTotalMergeKeys CPU DoS。传递链 react-native>@react-native/jest-preset>babel-jest>@istanbuljs/load-nyc-config，仅 jest 测试期，不进 App 包"
+    },
+    {
+      "key": "js-yaml@1193727::GHSA-2883-xcg3-v3hh",
+      "reason": "high：同 GHSA-2883-xcg3-v3hh 另一安装路径（babel-plugin-istanbul 直连），仅测试期，不进 App 包"
+    },
+    {
+      "key": "fast-uri@1239943::GHSA-qw65-cvwx-89v3",
+      "reason": "high：authority 注入。Expo CLI 工具链传递依赖（开发期），不进 App 包"
+    },
+    {
+      "key": "fast-uri@1239946::GHSA-58mr-gqgx-xq4g",
+      "reason": "high：host confusion。Expo CLI 工具链传递依赖（开发期），不进 App 包"
+    },
+    {
+      "key": "brace-expansion@1240104::GHSA-qhr7-859c-m2p7",
+      "reason": "high：嵌套 brace 递归 DoS。minimatch 家族传递依赖（jest/glob 解析），仅开发期，不进 App 包"
+    },
+    {
+      "key": "brace-expansion@1240107::GHSA-qhr7-859c-m2p7",
+      "reason": "high：同 GHSA-qhr7-859c-m2p7 另一安装路径，仅开发期，不进 App 包"
+    },
+    {
+      "key": "brace-expansion@1240108::GHSA-6j4f-fj2g-mc7p",
+      "reason": "high：parseCommand 递归 DoS。minimatch 家族传递依赖，仅开发期，不进 App 包"
+    },
+    {
+      "key": "brace-expansion@1240111::GHSA-6j4f-fj2g-mc7p",
+      "reason": "high：同 GHSA-6j4f-fj2g-mc7p 另一安装路径，仅开发期，不进 App 包"
+    },
+    {
+      "key": "node-forge@1240912::GHSA-86w9-cpqp-85rv",
+      "reason": "high：RSA PKCS#1 v1.5 签名验签异常接受。self-signing 证书工具链传递依赖（开发期），不进 App 包"
+    },
+    {
+      "key": "braces@1240992::GHSA-vfj7-8cjw-p6xm",
+      "reason": "high：栈耗尽 DoS。micromatch 家族传递依赖（jest），仅开发期，不进 App 包"
+    },
+    {
+      "key": "source-map-js@1241209::GHSA-68fv-2mgg-jv7q",
+      "reason": "high：大 sourcemap 行号 DoS。metro/babel 传递依赖（构建期），不进 App 包"
+    },
+    {
+      "key": "compression@1241221::GHSA-vc2v-76pw-4v95",
+      "reason": "high：内存泄漏 DoS。@expo/cli 本地 dev server 传递依赖，不进 App 包"
+    },
+    {
+      "key": "@babel/runtime@1104000::GHSA-968p-4wvh-cqc8",
+      "reason": "moderate：生成代码 RegExp 低效复杂度。babel 运行时 helper（构建期），影响面为开发期性能，不进 App 包"
+    },
+    {
+      "key": "uuid@1119441::GHSA-w5hq-g745-h8pq",
+      "reason": "moderate：v3/v5/v6 缓冲区越界。传依赖，仓内仅使用 v4 语义（随机），不触发受影响路径"
+    },
+    {
+      "key": "decode-uri-component@1147955::GHSA-vcc3-ghjq-m6fr",
+      "reason": "moderate：指数级解码 DoS。query-string 家族传递依赖（开发期），不进 App 包"
+    },
+    {
+      "key": "fast-uri@1240091::GHSA-hrr3-gc8f-f4qj",
+      "reason": "moderate：percent 编码 host 大小写归一化不一致。Expo CLI 工具链传递依赖（开发期），不进 App 包"
+    },
+    {
+      "key": "brace-expansion@1240100::GHSA-q2hr-2g5m-vwhr",
+      "reason": "moderate：二次方时间展开 DoS。minimatch 家族传递依赖（开发期），不进 App 包"
+    },
+    {
+      "key": "brace-expansion@1240103::GHSA-q2hr-2g5m-vwhr",
+      "reason": "moderate：同 GHSA-q2hr-2g5m-vwhr 另一安装路径，仅开发期，不进 App 包"
+    },
+    {
+      "key": "sprintf-js@1241202::GHSA-hp3w-g68c-fv3c",
+      "reason": "moderate：无界精度 DoS。传递依赖（开发期），不进 App 包"
+    },
+    {
+      "key": "postcss-selector-parser@1241232::GHSA-rj75-hqrm-r3gf",
+      "reason": "moderate：选择器解析二次复杂度 CPU 耗尽。postcss 传递依赖（构建期），不进 App 包"
+    }
+  ]
+}

@@ -111,3 +111,25 @@ jobs:
         run: echo "name=@meimart/${{ matrix.package }}" >> "$GITHUB_OUTPUT"
       - run: pnpm -F ${{ steps.pkg.outputs.name }} typecheck
       - run: pnpm -F ${{ steps.pkg.outputs.name }} exec jest --ci
+
+  # 安全专项收尾 P2-2：依赖审计门禁。pnpm audit（high 及以上）存量 advisory 记账在
+  # scripts/gate/audit-allowlist.json（逐条带理由，均为 Expo 工具链开发/构建期传递依赖，
+  # 不进 App 包）；记账之外的 advisory 直接 fail（新增不拦截 = 假绿）。
+  # 维护规则：上游消减后先删 entry 再实跑 pnpm audit 验证；allowlist 格式对齐 scripts/gate 基线。
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Dependency Audit (high+ with allowlist)
+        run: |
+          # audit 跑 moderate 级（allowlist 记账覆盖全部 21 条含 moderate），
+          # 拦截语义由 allowlist 决定而非级别
+          pnpm audit --audit-level=moderate --json > /tmp/audit.json || true
+          node scripts/gate/audit-check.mjs /tmp/audit.json scripts/gate/audit-allowlist.json
