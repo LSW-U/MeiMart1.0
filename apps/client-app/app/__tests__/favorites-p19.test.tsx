@@ -40,7 +40,7 @@ const products: Product[] = [
     name: { zh: '苹果', en: 'Apple', tet: 'Apa', pt: 'Maçã' },
     price: 3.5,
     image: 'https://example.com/a.jpg',
-    category: 'fruit',
+    category: 'c002',
     salesCount: 120,
     rating: 4.5,
   },
@@ -49,7 +49,7 @@ const products: Product[] = [
     name: { zh: '牛奶', en: 'Milk', tet: 'Milk', pt: 'Leite' },
     price: 2.8,
     image: 'https://example.com/m.jpg',
-    category: 'dairy',
+    category: 'c003',
     salesCount: 98,
   },
 ];

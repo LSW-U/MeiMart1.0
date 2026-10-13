@@ -16,7 +16,7 @@ const makeProduct = (over: Partial<Product> = {}): Product => ({
   name: { en: 'Fresh Red Fuji Apple', zh: '新鲜红富士苹果', tet: 'Maçã Fuji', pt: 'Maçã Fuji' },
   price: 25.9,
   image: 'https://cdn.example.com/p001.jpg',
-  category: 'fruits',
+  category: 'c002',
   ...over,
 });
 

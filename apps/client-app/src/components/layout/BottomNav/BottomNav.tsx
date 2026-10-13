@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing } from '@/theme';
 import { Badge } from '@/components/ui/Badge';
 import { useCart } from '@/services/queries/useCart';
@@ -9,6 +10,7 @@ import { BOTTOM_TAB_ITEMS } from './BottomNav.types';
 
 export function BottomNav({ activeTab, onTabPress, testID }: BottomNavProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { data: cart } = useCart();
   const cartCount = cart?.totalItems ?? 0;
 
@@ -38,7 +40,7 @@ export function BottomNav({ activeTab, onTabPress, testID }: BottomNavProps) {
             onPress={() => onTabPress(item.key)}
             accessibilityRole="tab"
             accessibilityState={{ selected: isActive }}
-            accessibilityLabel={item.label}
+            accessibilityLabel={t(item.labelKey)}
           >
             <View style={styles.iconWrapper}>
               <MaterialCommunityIcons name={toIconName(item.icon)} size={24} color={color} />
@@ -52,7 +54,7 @@ export function BottomNav({ activeTab, onTabPress, testID }: BottomNavProps) {
                 { color, fontSize: 10, fontWeight: isActive ? '700' : '400' },
               ]}
             >
-              {item.label}
+              {t(item.labelKey)}
             </Text>
           </Pressable>
         );

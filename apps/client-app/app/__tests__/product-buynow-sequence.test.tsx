@@ -56,7 +56,7 @@ jest.mock('@/services/queries/useProducts', () => ({
       name: { en: 'Apple', zh: '苹果', tet: 'x', pt: 'x' },
       price: 25.9,
       image: 'https://cdn.example.com/main.jpg',
-      category: 'fruits',
+      category: 'c002',
       salesCount: 10,
       stock: 85,
     },

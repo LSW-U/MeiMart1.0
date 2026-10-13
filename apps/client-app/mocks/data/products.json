@@ -9,7 +9,7 @@
     "price": 25.9,
     "originalPrice": 35.0,
     "image": "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400",
-    "category": "fruits",
+    "category": "c002",
     "rating": 4.8,
     "salesCount": 1280,
     "stock": 85,
@@ -32,7 +32,7 @@
     "price": 38.5,
     "originalPrice": 48.0,
     "image": "https://images.unsplash.com/photo-1582722872445-44dc5f43e784?w=400",
-    "category": "eggs",
+    "category": "c006",
     "rating": 4.9,
     "salesCount": 2450,
     "stock": 12,
@@ -53,7 +53,7 @@
     },
     "price": 49.9,
     "image": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400",
-    "category": "grain",
+    "category": "c004",
     "rating": 4.7,
     "salesCount": 890,
     "stock": 0,
@@ -70,7 +70,7 @@
     "price": 78.0,
     "originalPrice": 89.0,
     "image": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
-    "category": "oil",
+    "category": "c004",
     "rating": 4.6,
     "salesCount": 1560,
     "stock": 50,
@@ -85,7 +85,7 @@
     },
     "price": 42.9,
     "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
-    "category": "dairy",
+    "category": "c003",
     "rating": 4.8,
     "salesCount": 3200,
     "stock": 3,
@@ -102,7 +102,7 @@
     "price": 58.0,
     "originalPrice": 68.0,
     "image": "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400",
-    "category": "drinks",
+    "category": "c003",
     "rating": 4.7,
     "salesCount": 1890,
     "stock": 40,
@@ -117,7 +117,7 @@
     },
     "price": 35.9,
     "image": "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400",
-    "category": "snacks",
+    "category": "c005",
     "rating": 4.5,
     "salesCount": 980,
     "stock": 25,
@@ -132,7 +132,7 @@
     },
     "price": 29.9,
     "image": "https://images.unsplash.com/photo-1559591937-abc5e0e8e21a?w=400",
-    "category": "household",
+    "category": "c007",
     "rating": 4.9,
     "salesCount": 4500,
     "stock": 0,
@@ -148,7 +148,7 @@
     "price": 45.0,
     "originalPrice": 55.0,
     "image": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400",
-    "category": "household",
+    "category": "c007",
     "rating": 4.8,
     "salesCount": 5200,
     "stock": 18,
@@ -163,10 +163,118 @@
     },
     "price": 89.9,
     "image": "https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400",
-    "category": "seafood",
+    "category": "c006",
     "rating": 4.9,
     "salesCount": 670,
     "stock": 60,
     "defaultSkuId": "sku-p010"
+  },
+  {
+    "id": "p011",
+    "name": {
+      "zh": "本地西兰花 500g",
+      "en": "Fresh Broccoli (500g)",
+      "tet": "Brocolu Fresku 500g"
+    },
+    "price": 12.9,
+    "originalPrice": 16.0,
+    "image": "https://images.unsplash.com/photo-1584270354949-c26b0d5b4a0c?w=400",
+    "category": "c001",
+    "rating": 4.7,
+    "salesCount": 860,
+    "stock": 40,
+    "description": {
+      "zh": "当季西兰花，紧实翠绿",
+      "en": "In-season broccoli, tight and green",
+      "tet": "Brocolu temporada, verde no meten"
+    },
+    "createdAt": "2026-08-01T00:00:00Z",
+    "defaultSkuId": "sku-p011"
+  },
+  {
+    "id": "p012",
+    "name": {
+      "zh": "精选番茄 1kg",
+      "en": "Selected Tomatoes (1kg)",
+      "tet": "Tomate Selecionado 1kg"
+    },
+    "price": 9.5,
+    "image": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400",
+    "category": "c001",
+    "rating": 4.6,
+    "salesCount": 1320,
+    "stock": 65,
+    "description": {
+      "zh": "沙瓤多汁，适合炒菜与生食",
+      "en": "Juicy and ripe, great for cooking or salads",
+      "tet": "Tomate suku, diak ba tein no kante"
+    },
+    "createdAt": "2026-08-02T00:00:00Z",
+    "defaultSkuId": "sku-p012"
+  },
+  {
+    "id": "p013",
+    "name": {
+      "zh": "有机胡萝卜 750g",
+      "en": "Organic Carrots (750g)",
+      "tet": "Suni Moris Organiku 750g"
+    },
+    "price": 8.9,
+    "originalPrice": 11.0,
+    "image": "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400",
+    "category": "c001",
+    "rating": 4.8,
+    "salesCount": 640,
+    "stock": 52,
+    "description": {
+      "zh": "有机种植，脆甜爽口",
+      "en": "Organically grown, crisp and sweet",
+      "tet": "Tema organiku, kresu no hado"
+    },
+    "createdAt": "2026-08-03T00:00:00Z",
+    "defaultSkuId": "sku-p013"
+  },
+  {
+    "id": "p014",
+    "name": {
+      "zh": "婴儿配方奶粉 3段 800g",
+      "en": "Infant Formula Stage 3 (800g)",
+      "tet": "Fórmula Bebé Faze 3 800g"
+    },
+    "price": 168.0,
+    "originalPrice": 198.0,
+    "image": "https://images.unsplash.com/photo-1556909212-d5b604d0c90d?w=400",
+    "category": "c008",
+    "rating": 4.9,
+    "salesCount": 410,
+    "stock": 18,
+    "description": {
+      "zh": "12-36 月龄适用，进口奶源",
+      "en": "For 12-36 months, imported milk source",
+      "tet": "Ba tinan 12-36, susu importadu"
+    },
+    "createdAt": "2026-08-04T00:00:00Z",
+    "defaultSkuId": "sku-p014"
+  },
+  {
+    "id": "p015",
+    "name": {
+      "zh": "婴儿湿巾 80抽×3包",
+      "en": "Baby Wipes 80pc × 3 packs",
+      "tet": "Toalin Uman Bebé 80 × 3"
+    },
+    "price": 29.9,
+    "image": "https://images.unsplash.com/photo-1522771930-78848d9293e8?w=400",
+    "category": "c008",
+    "rating": 4.7,
+    "salesCount": 780,
+    "stock": 90,
+    "description": {
+      "zh": "无酒精无香精，温和亲肤",
+      "en": "Alcohol-free and fragrance-free, gentle on skin",
+      "tet": "La iha alkool, kalmu ba kulit"
+    },
+    "createdAt": "2026-08-05T00:00:00Z",
+    "defaultSkuId": "sku-p015"
   }
 ]

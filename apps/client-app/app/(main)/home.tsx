@@ -137,8 +137,9 @@ export default function HomePage() {
   );
   // C-P2-10/A-P2-2: 推荐瀑布流改 FlatList(numColumns=2) 且**直接承担页面滚动**（A-P2-2：
   //   旧版 FlatList(scrollEnabled=false) 嵌 ScrollView，虚拟化失效全量挂载）——页面其余
-  //   dashboard 区块（搜索栏/Banner/分类/Divider/PromoDock/推荐标题/横滑区）收进
-  //   ListHeaderComponent；Buy Again 横滑留 header 尾部（横滑区非列表语义，留原样）。
+  //   dashboard 区块（搜索栏/Banner/分类/Divider/PromoDock/推荐标题）收进
+  //   ListHeaderComponent；Buy Again 横滑移 ListFooterComponent（实测Bug修复 #7B：对齐
+  //   HTML 原型板块顺序——推荐在前、再次购买在后，推翻 A-P2-2 旧决策「留 header 尾部」）。
   //   行为零变更：odd/even 分列顺序一致（numColumns 按索引取模分列，等价原
   //   i%2===0→col1 / i%2===1→col2）；高度档位错落在 MasonryProductCard 内部（按 id 档位），
   //   FlatList 网格行内等高但列间仍错落（卡片图高不同 + info 自适应），视觉语义保持。
@@ -216,7 +217,7 @@ export default function HomePage() {
           <PromoDock promotions={promotions ?? []} onPress={handlePromoPress} />
         </View>
 
-        {/* 推荐商品标题 + 状态行（瀑布流列表主体在 FlatList data；横滑见 Buy Again） */}
+        {/* 推荐商品标题 + 状态行（瀑布流列表主体在 FlatList data） */}
         <View style={[styles.sectionHeader, styles.recommendHeader]}>
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
             {t('home.recommend')}
@@ -231,41 +232,13 @@ export default function HomePage() {
             <Icon symbol="chevron_right" size={16} color={colors.primary} />
           </Pressable>
         </View>
-
-        {/* Buy Again — 横滑小卡片（HTML 第 389-421 行；横滑区非列表语义，留原样） */}
-        <View style={styles.buyAgainSection}>
-          <View style={[styles.sectionHeader, styles.buyAgainHeader]}>
-            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              {t('order.actions.repurchase')}
-            </Text>
-            <Icon symbol="history" size={20} color={colors.outline} />
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.hScroll}
-          >
-            {buyAgainList.map((item) => (
-              // Why: P1 - 替换内联 buyAgainCard 为统一 SmallProductCard（方案 §4）
-              <SmallProductCard
-                key={item.id}
-                product={item}
-                onPress={handleCardPress}
-                onAddToCart={handleBuyAgainAddToCart}
-              />
-            ))}
-          </ScrollView>
-        </View>
       </>
     ),
     [
-      buyAgainList,
       banners,
       categories,
       colors,
-      handleBuyAgainAddToCart,
       handleBannerPress,
-      handleCardPress,
       handleCategoryPress,
       handleMorePress,
       handlePromoPress,
@@ -273,6 +246,36 @@ export default function HomePage() {
       shouldSkipNonEssential,
       t,
     ],
+  );
+
+  // 实测Bug修复 #7B：Buy Again 整块移 ListFooterComponent（推荐在前、再次购买在后，对齐原型）
+  const renderBuyAgainFooter = useCallback(
+    () => (
+      <View style={styles.buyAgainSection}>
+        <View style={[styles.sectionHeader, styles.buyAgainHeader]}>
+          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+            {t('order.actions.repurchase')}
+          </Text>
+          <Icon symbol="history" size={20} color={colors.outline} />
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.hScroll}
+        >
+          {buyAgainList.map((item) => (
+            // Why: P1 - 替换内联 buyAgainCard 为统一 SmallProductCard（方案 §4）
+            <SmallProductCard
+              key={item.id}
+              product={item}
+              onPress={handleCardPress}
+              onAddToCart={handleBuyAgainAddToCart}
+            />
+          ))}
+        </ScrollView>
+      </View>
+    ),
+    [buyAgainList, colors, handleBuyAgainAddToCart, handleCardPress, t],
   );
 
   // A-P2-2: dashboard 三态（loading/error/空列表）退回 ScrollView——瀑布流无数据时
@@ -287,9 +290,11 @@ export default function HomePage() {
         {renderDashboardHeader()}
         {isLoading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
         {isError && <ErrorState message={t('errors.products')} onRetry={() => refetch()} />}
+        {/* #7B：fallback 态 Buy Again 仍渲染（与 FlatList Footer 同源，板块不丢） */}
+        {renderBuyAgainFooter()}
       </ScrollView>
     ),
-    [colors, isLoading, isError, refetch, renderDashboardHeader, t],
+    [colors, isLoading, isError, refetch, renderDashboardHeader, renderBuyAgainFooter, t],
   );
 
   return (
@@ -367,7 +372,7 @@ export default function HomePage() {
           dashboardFallback()
         ) : (
           // A-P2-2: 单列表容器——FlatList 直接承担页面滚动（虚拟化生效），
-          //   dashboard 区块挂 ListHeaderComponent（Buy Again 横滑留 header 尾部）
+          //   dashboard 区块挂 ListHeaderComponent；Buy Again 挂 ListFooterComponent（#7B）
           <FlatList
             style={[styles.scrollArea, { backgroundColor: colors.background }]}
             data={recommendList}
@@ -377,6 +382,7 @@ export default function HomePage() {
             contentContainerStyle={styles.scrollContent}
             renderItem={renderMasonryItem}
             ListHeaderComponent={renderDashboardHeader}
+            ListFooterComponent={renderBuyAgainFooter}
             onScrollToIndexFailed={() => undefined}
             initialNumToRender={6}
             maxToRenderPerBatch={4}
@@ -546,11 +552,13 @@ const styles = StyleSheet.create({
   },
   // Why: §9-4 瀑布流两列容器（替 recommendCard 横滑）
   masonryRow: {
-    // FlatList numColumns=2 行容器（C-P2-10）：承接原两列布局的横向 padding + 列间距
+    // FlatList numColumns=2 行容器（C-P2-10）：承接原两列布局的横向 padding + 列间距；
+    //   #7A 实测修复：补行间垂直间距（原仅横向 gap，行距 0 挤压）
     flex: 1,
     flexDirection: 'row',
     gap: spacing.md,
     paddingHorizontal: layout['container-margin'],
+    marginBottom: spacing.md,
   },
   masonryCell: {
     // 每列等宽（numColumns 均分，flex:1 + gap 已由行容器控制）

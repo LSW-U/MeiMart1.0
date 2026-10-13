@@ -112,7 +112,7 @@ const makeProduct = (over: Partial<Product> = {}): Product => ({
   },
   price: 25.9,
   image: 'https://cdn.example.com/main.jpg',
-  category: 'fruits',
+  category: 'c002',
   salesCount: 1280,
   stock: 85,
   rating: 4.8,

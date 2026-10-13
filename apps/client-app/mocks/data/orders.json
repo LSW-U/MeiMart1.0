@@ -15,7 +15,7 @@
           },
           "price": 25.9,
           "image": "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400",
-          "category": "fruits"
+          "category": "c002"
         },
         "quantity": 2,
         "selected": true
@@ -43,7 +43,7 @@
           },
           "price": 42.9,
           "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
-          "category": "dairy"
+          "category": "c003"
         },
         "quantity": 1,
         "selected": true
@@ -71,7 +71,7 @@
           },
           "price": 45.0,
           "image": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400",
-          "category": "household"
+          "category": "c007"
         },
         "quantity": 1,
         "selected": true
@@ -106,7 +106,7 @@
           },
           "price": 38.5,
           "image": "https://images.unsplash.com/photo-1582722872445-44dc5f43e784?w=400",
-          "category": "eggs"
+          "category": "c006"
         },
         "quantity": 1,
         "selected": true
@@ -141,7 +141,7 @@
           },
           "price": 35.9,
           "image": "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400",
-          "category": "snacks"
+          "category": "c005"
         },
         "quantity": 1,
         "selected": true
