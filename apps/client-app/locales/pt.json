@@ -491,7 +491,8 @@
     "a11y": {
       "productItem": "{{name}}, quantidade {{quantity}}",
       "countdown": "{{label}} {{time}}",
-      "reviewedTab": "{{name}} {{state}}"
+      "reviewedTab": "{{name}} {{state}}",
+      "manage": "Gerir pedidos"
     },
     "repeatEmpty": "Nada para comprar de novo",
     "repeatFailed": "Falha ao adicionar ao carrinho",
@@ -500,7 +501,13 @@
     "payOnlineUnavailable": "O pagamento online não está disponível, entre em contato com o atendimento",
     "payAlreadyPaid": "Pedido já pago",
     "paySuccess": "Pagamento bem-sucedido",
-    "payFailed": "Falha no pagamento, tente de novo"
+    "payFailed": "Falha no pagamento, tente de novo",
+    "manage": "Gerir",
+    "selectedTitle": "{{count}} selecionada(s)",
+    "deleted": "{{count}} pedido(s) eliminado(s)",
+    "deleteFailed": "Falha ao eliminar, tente novamente",
+    "deleteTitle": "Eliminar pedidos",
+    "deleteConfirm": "Eliminar os {{count}} pedido(s) selecionados? Esta ação não pode ser revertida."
   },
   "tracking": {
     "title": "Rastreio do pedido",

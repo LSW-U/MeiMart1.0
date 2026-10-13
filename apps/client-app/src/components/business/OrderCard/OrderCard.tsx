@@ -5,10 +5,18 @@ import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/the
 import { useLocalizer } from '@/i18n';
 import { PriceText } from '@/components/ui/PriceText';
 import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
 import { ORDER_STATUS_VISUAL, getStatusPill, getOrderActions } from '@/lib/orderStatusConfig';
 import type { OrderCardProps, OrderAction } from './OrderCard.types';
 
-function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
+function OrderCardBase({
+  order,
+  onPress,
+  onAction,
+  selectMode,
+  isSelected,
+  testID,
+}: OrderCardProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const localize = useLocalizer();
@@ -24,15 +32,39 @@ function OrderCardBase({ order, onPress, onAction, testID }: OrderCardProps) {
   return (
     <View
       testID={testID}
+      accessibilityState={selectMode ? { selected: Boolean(isSelected) } : undefined}
       style={[
         styles.card,
         {
           backgroundColor: colors['surface-container-lowest'],
           borderColor: colors['outline-variant'],
         },
+        // 批3：管理模式选中态 2px primary 边（通知/收藏同形态）
+        selectMode && isSelected && { borderWidth: 2, borderColor: colors.primary },
         shadowPresets.sm,
       ]}
     >
+      {/* 批3：选择圆圈（纯状态非独立按钮，勾选走整卡 onPress；NotificationItem 同形态） */}
+      {selectMode && (
+        <View
+          style={[
+            styles.selectCircle,
+            { alignSelf: 'flex-end', marginRight: spacing.md, marginTop: spacing.sm },
+          ]}
+        >
+          <View
+            style={[
+              styles.selectCircleInner,
+              {
+                backgroundColor: isSelected ? colors.primary : colors['surface-container-lowest'],
+                borderColor: isSelected ? colors.primary : colors['outline-variant'],
+              },
+            ]}
+          >
+            {isSelected && <Icon symbol="check" size={13} color={colors['on-primary']} />}
+          </View>
+        </View>
+      )}
       {/* Why: 外层用 View 而非 Pressable，避免 Pressable 嵌套 Pressable/Button
           （RN Web 渲染为 <button> 嵌套 <button>，违反 HTML 规范导致 hydration 错误） */}
       <View style={[styles.header, { borderBottomColor: colors['outline-variant'] }]}>
@@ -222,5 +254,15 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: spacing.sm,
+  },
+  // 批3：管理模式选择圆圈外层占位（对齐通知页 22² 规格）
+  selectCircle: {},
+  selectCircleInner: {
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

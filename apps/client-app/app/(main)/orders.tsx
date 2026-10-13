@@ -1,6 +1,7 @@
 // OrderListPage — 还原自 OrderListPage.html
 // Fix-20: Primary tais-pattern Header + Tab 栏分隔线 + 状态彩色胶囊
-import { useCallback, useState } from 'react';
+// 批3（#5）：管理模式（与批2 通知管理同形态）——selectMode 勾选批量/单删 + 二次确认 + 离线阻止
+import { useCallback, useMemo, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -24,8 +25,14 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
-import { useOrdersInfinite, useCancelOrder, useOrderCounts } from '@/services/queries/useOrders';
+import {
+  useOrdersInfinite,
+  useCancelOrder,
+  useOrderCounts,
+  useDeleteOrders,
+} from '@/services/queries/useOrders';
 import { ORDER_TABS, type OrderTabKey, type OrderAction } from '@/lib/orderStatusConfig';
+import { useNetwork } from '@/hooks/useNetwork';
 import type { Order } from '@/types';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
@@ -41,7 +48,62 @@ export default function OrdersPage() {
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useOrdersInfinite(active);
   // Why: useInfiniteQuery 返回 InfiniteData<{items,...}[]>，拍平多页 items 为 Order[]
-  const orders: Order[] = data?.pages.flatMap((p) => p.items) ?? [];
+  const orders: Order[] = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
+
+  // 批3：管理模式状态（收藏页/通知页 selectMode 同形态）
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const { isOffline } = useNetwork();
+  const deleteOrders = useDeleteOrders();
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelected(new Set());
+  }, []);
+
+  // 批3 审查 P2-1：管理模式下当前 tab 订单删空（切 tab 过滤/删除后）→ 空态与管理栏并存怪异，
+  // 渲染期直接收敛（不 useEffect：setState-in-effect 级联渲染禁；条件收敛幂等无环）
+  if (selectMode && !isLoading && orders.length === 0) {
+    exitSelectMode();
+  }
+
+  const executeDelete = useCallback(() => {
+    const ids = [...selected];
+    deleteOrders.mutate(ids, {
+      onSuccess: () => {
+        toast.success(t('order.deleted', { count: ids.length }));
+        exitSelectMode();
+      },
+      onError: () => toast.error(t('order.deleteFailed')),
+    });
+  }, [selected, deleteOrders, t, exitSelectMode]);
+
+  // 规则12：删除属写操作，离线时阻止并提示（不静默失败）
+  const removeSelected = useCallback(() => {
+    if (selected.size === 0 || deleteOrders.isPending) return;
+    if (isOffline) {
+      toast.error(t('common.youAreOffline'));
+      return;
+    }
+    // Why: Web 端 Alert 不显示（order cancel / favorites 先例），直接执行；Native 端 Alert 二次确认
+    if (Platform.OS === 'web') {
+      executeDelete();
+      return;
+    }
+    Alert.alert(t('order.deleteTitle'), t('order.deleteConfirm', { count: selected.size }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.delete'), style: 'destructive', onPress: executeDelete },
+    ]);
+  }, [selected, deleteOrders.isPending, isOffline, t, executeDelete]);
 
   // P12 Commit 1: 修复 OrderCard action 链路（原 orders.tsx 未传 onAction，footer 按钮 + header delete 全不渲染）
   // 按 OrderAction 6 种类型分发路由；cancel 走 Alert 确认 + useCancelOrder（复用 P10 详情页模式）
@@ -116,12 +178,30 @@ export default function OrdersPage() {
 
   // Why: 批3 A7 —— renderItem 同走 useCallback（FlatList 内联闭包同理使 memo 失效）
   // 批3 P2-2：onPress 直传稳定 handler（OrderCard 内部调 onPress(order)），消灭内联箭头
-  const handleCardPress = useCallback((order: Order) => router.push(`/order/${order.id}`), []);
+  // 批3：管理模式下整卡点按只勾选（OrderCard 内部两处 Pressable 均走 onPress，不嵌套新按钮——
+  // Web 嵌套 Pressable 坑，favorites 先例），onAction 传 undefined 隐藏 footer 操作钮防删除态误触
+  const handleCardPress = useCallback(
+    (order: Order) => {
+      if (selectMode) {
+        toggleSelect(order.id);
+        return;
+      }
+      router.push(`/order/${order.id}`);
+    },
+    [selectMode, toggleSelect],
+  );
   const renderItem = useCallback(
     ({ item }: { item: Order }) => (
-      <OrderCard order={item} onPress={handleCardPress} onAction={handleAction} />
+      <OrderCard
+        order={item}
+        onPress={handleCardPress}
+        onAction={selectMode ? undefined : handleAction}
+        selectMode={selectMode}
+        isSelected={selected.has(item.id)}
+        testID={`order-card-${item.id}`}
+      />
     ),
-    [handleCardPress, handleAction],
+    [handleCardPress, handleAction, selectMode, selected],
   );
 
   return (
@@ -132,17 +212,47 @@ export default function OrdersPage() {
       >
         <StatusBarConfig />
         <PrimaryHeader
-          title={t('profile.orders')}
+          title={
+            selectMode ? t('order.selectedTitle', { count: selected.size }) : t('profile.orders')
+          }
           rightActions={
-            <Pressable
-              onPress={() => router.push('/service/help')}
-              hitSlop={8}
-              style={styles.headerBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.help')}
-            >
-              <Icon symbol="help" size={24} color={ON_PRIMARY} />
-            </Pressable>
+            selectMode ? (
+              <Pressable
+                onPress={exitSelectMode}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.cancel')}
+                testID="orders-exit-select"
+              >
+                <Text style={[styles.headerActionText, { color: ON_PRIMARY }]}>
+                  {t('common.cancel')}
+                </Text>
+              </Pressable>
+            ) : (
+              <>
+                <Pressable
+                  onPress={() => setSelectMode(true)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('order.a11y.manage')}
+                  testID="orders-manage"
+                >
+                  <Text style={[styles.headerActionText, { color: ON_PRIMARY }]}>
+                    {t('order.manage')}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => router.push('/service/help')}
+                  hitSlop={8}
+                  style={styles.headerBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('profile.help')}
+                  testID="orders-help"
+                >
+                  <Icon symbol="help" size={24} color={ON_PRIMARY} />
+                </Pressable>
+              </>
+            )
           }
         />
 
@@ -261,6 +371,69 @@ export default function OrdersPage() {
             renderItem={renderItem}
           />
         )}
+
+        {/* 批3：管理栏底部悬浮（favorites.tsx manageBar 同款规格）——全选 + 删除 */}
+        {selectMode && (
+          <View
+            style={[
+              styles.manageBar,
+              {
+                backgroundColor: colors['surface-container-lowest'],
+                borderTopColor: colors['outline-variant'],
+              },
+            ]}
+          >
+            <Pressable
+              onPress={() => {
+                const all = new Set(orders.map((o) => o.id));
+                setSelected(selected.size === orders.length ? new Set() : all);
+              }}
+              style={styles.manageBarBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.selectAll')}
+            >
+              <Icon
+                symbol={
+                  orders.length > 0 && selected.size === orders.length
+                    ? 'check_circle'
+                    : 'radio_button_unchecked'
+                }
+                size={20}
+                color={colors.primary}
+              />
+              <Text style={[styles.manageBarText, { color: colors['on-surface'] }]}>
+                {t('common.selectAll')}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={removeSelected}
+              disabled={selected.size === 0 || deleteOrders.isPending}
+              style={({ pressed }) => [
+                styles.manageBarDelete,
+                {
+                  backgroundColor:
+                    selected.size === 0 || deleteOrders.isPending
+                      ? colors['outline-variant']
+                      : colors.error,
+                  opacity: selected.size === 0 || deleteOrders.isPending ? 0.5 : 1,
+                },
+                pressed && { transform: [{ scale: 0.98 }] },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.delete')}
+              accessibilityState={
+                selected.size === 0 || deleteOrders.isPending ? { disabled: true } : undefined
+              }
+              testID="orders-batch-delete"
+            >
+              <Icon symbol="delete" size={18} color={colors['on-primary']} />
+              <Text style={[styles.manageBarDeleteText, { color: colors['on-primary'] }]}>
+                {t('common.delete')} ({selected.size})
+              </Text>
+            </Pressable>
+          </View>
+        )}
       </SafeAreaWrapper>
     </PageErrorBoundary>
   );
@@ -275,6 +448,48 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerActionText: {
+    // Why: ON_PRIMARY 运行时注入（header 红底白字，styles 模块级拿不到 colors）
+    ...typography['label-caps'],
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  manageBar: {
+    // 批3：底部悬浮（favorites.tsx 同款）——absolute 挂 SafeAreaWrapper，bottom 0 落 safe area 内
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: layout['container-margin'],
+    paddingVertical: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  manageBarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  manageBarText: {
+    ...typography['body-md'],
+    fontWeight: '600',
+  },
+  manageBarDelete: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: 999,
+  },
+  manageBarDeleteText: {
+    // Why: on-primary 运行时注入（error 红底白字，同上）
+    ...typography['label-caps'],
+    fontWeight: '700',
+    fontSize: 12,
   },
   tabBar: {
     borderBottomWidth: StyleSheet.hairlineWidth,

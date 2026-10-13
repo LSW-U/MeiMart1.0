@@ -491,7 +491,8 @@
     "a11y": {
       "productItem": "{{name}}, quantity {{quantity}}",
       "countdown": "{{label}} {{time}}",
-      "reviewedTab": "{{name}} {{state}}"
+      "reviewedTab": "{{name}} {{state}}",
+      "manage": "Manage orders"
     },
     "repeatEmpty": "No items to repeat",
     "repeatFailed": "Failed to add items to cart",
@@ -500,7 +501,13 @@
     "payOnlineUnavailable": "Online payment is unavailable, please contact customer service",
     "payAlreadyPaid": "Order already paid",
     "paySuccess": "Payment successful",
-    "payFailed": "Payment failed, please try again"
+    "payFailed": "Payment failed, please try again",
+    "manage": "Manage",
+    "selectedTitle": "Selected {{count}}",
+    "deleted": "{{count}} order(s) deleted",
+    "deleteFailed": "Failed to delete, please retry",
+    "deleteTitle": "Delete Orders",
+    "deleteConfirm": "Delete {{count}} selected order(s)? This cannot be undone."
   },
   "tracking": {
     "title": "Order Tracking",

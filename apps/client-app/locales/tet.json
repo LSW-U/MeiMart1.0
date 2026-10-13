@@ -491,7 +491,8 @@
     "a11y": {
       "productItem": "{{name}}, kuantidade {{quantity}}",
       "countdown": "{{label}} {{time}}",
-      "reviewedTab": "{{name}} {{state}}"
+      "reviewedTab": "{{name}} {{state}}",
+      "manage": "Jere pedidu"
     },
     "repeatEmpty": "La iha sasan atu sosa fila fali",
     "repeatFailed": "Susaun sala, koalia fali",
@@ -500,7 +501,13 @@
     "payOnlineUnavailable": "Selu online la disponivel, kontakta amizade servisu",
     "payAlreadyPaid": "Order selu ona",
     "paySuccess": "Selu ho susesu",
-    "payFailed": "Selu la susesu, koalia fali"
+    "payFailed": "Selu la susesu, koalia fali",
+    "manage": "Jere",
+    "selectedTitle": "Selecionado {{count}}",
+    "deleted": "Pedidu {{count}} hapah",
+    "deleteFailed": "Hah falha, favor koko fali",
+    "deleteTitle": "Hah Pedidu",
+    "deleteConfirm": "Hah pedidu {{count}} ne'ebé selecionado? La bele fila fali."
   },
   "tracking": {
     "title": "Segue Pedidu",

@@ -163,3 +163,53 @@ export function useCancelOrder() {
     onSettled: () => qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
   });
 }
+
+// ============================================================================
+// 批3（#5 订单删除）：删除订单（单条/批量）——乐观移除 + counts 按状态组递减
+// ============================================================================
+
+// Why: counts queryKey（[...ORDERS_QUERY_KEY,'counts']）是聚合数无列表可 filter，
+//      乐观更新按被删订单状态对 counts（OrderStatus 键）手动 -1，组角标由 useOrderCounts 聚合层自然联动；
+//      列表（all + 各 status 变体 + infinite 各 tab）走前缀 setQueriesData 数组过滤。
+//      回滚复用 getQueriesData 快照（useCreateOrder 同款基建）。单条/批量统一 ids 入参（单条=长度 1）。
+export function useDeleteOrders() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => orderApi.deleteOrders(ids),
+    onMutate: async (ids) => {
+      await qc.cancelQueries({ queryKey: ORDERS_QUERY_KEY });
+      const previous = qc.getQueriesData({ queryKey: ORDERS_QUERY_KEY });
+      const set = new Set(ids);
+      // 收集被删订单的状态（列表缓存各变体里取，取不到的 id 跳过 counts 递减）
+      const deletedByStatus = new Map<OrderStatus, number>();
+      qc.setQueriesData({ queryKey: ORDERS_QUERY_KEY }, (old: unknown) => {
+        if (!Array.isArray(old)) return old;
+        return (old as Order[]).filter((o) => {
+          if (set.has(o.id)) {
+            deletedByStatus.set(o.status, (deletedByStatus.get(o.status) ?? 0) + 1);
+            return false;
+          }
+          return true;
+        });
+      });
+      // counts 乐观递减：counts 以 OrderStatus 为键（useOrderCounts 按 ORDER_STATUS_GROUPS
+      // 聚合成组角标），按被删订单的状态逐条 -1
+      const countsKey = [...ORDERS_QUERY_KEY, 'counts'] as const;
+      const rawCounts = qc.getQueryData<Record<string, number>>(countsKey);
+      if (rawCounts) {
+        const next = { ...rawCounts };
+        for (const [status, n] of deletedByStatus) {
+          next[status] = Math.max(0, (next[status] ?? 0) - n);
+        }
+        qc.setQueryData(countsKey, next);
+      }
+      return { previous };
+    },
+    onError: (_err, _ids, ctx) => {
+      if (ctx?.previous) {
+        ctx.previous.forEach(([key, data]) => qc.setQueryData(key, data));
+      }
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
+  });
+}

@@ -491,7 +491,8 @@
     "a11y": {
       "productItem": "{{name}}，数量 {{quantity}}",
       "countdown": "{{label}} {{time}}",
-      "reviewedTab": "{{name}} {{state}}"
+      "reviewedTab": "{{name}} {{state}}",
+      "manage": "管理订单"
     },
     "repeatEmpty": "没有可再买的商品",
     "repeatFailed": "加购失败，请重试",
@@ -500,7 +501,13 @@
     "payOnlineUnavailable": "线上支付暂不可用，请联系客服处理",
     "payAlreadyPaid": "订单已支付",
     "paySuccess": "支付成功",
-    "payFailed": "支付失败，请重试"
+    "payFailed": "支付失败，请重试",
+    "manage": "管理",
+    "selectedTitle": "已选 {{count}} 项",
+    "deleted": "已删除 {{count}} 个订单",
+    "deleteFailed": "删除失败，请重试",
+    "deleteTitle": "删除订单",
+    "deleteConfirm": "删除已选的 {{count}} 个订单？此操作不可恢复。"
   },
   "tracking": {
     "title": "订单追踪",

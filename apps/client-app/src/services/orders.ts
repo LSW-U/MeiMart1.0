@@ -205,6 +205,31 @@ export const orderApi = {
     return transformOrder(res.data);
   },
 
+  // ============================================================================
+  // 批3（#5 订单删除）：删除订单（单条/批量）。mock 分支对 mockDb.orders（模块级内存数组，
+  // JSON 不落盘，会话级生效）过滤；real 分支删单条 DELETE /:id、批量 POST /batch-delete
+  // （端点归批4 后端方案 md P27——软删 deletedAt，未实现前 mock 门禁按基线处理）。
+  // ============================================================================
+  async deleteOrder(id: string): Promise<{ success: boolean }> {
+    if (isMockMode) {
+      mockDb.orders = mockDb.orders.filter((o) => o.id !== id);
+      return mockResponse({ success: true });
+    }
+    const res = await api.delete<{ success: boolean }>(`/client/orders/${id}`);
+    return res.data;
+  },
+
+  async deleteOrders(ids: string[]): Promise<{ success: boolean }> {
+    if (ids.length === 0) return { success: true };
+    if (isMockMode) {
+      const set = new Set(ids);
+      mockDb.orders = mockDb.orders.filter((o) => !set.has(o.id));
+      return mockResponse({ success: true });
+    }
+    const res = await api.post<{ success: boolean }>('/client/orders/batch-delete', { ids });
+    return res.data;
+  },
+
   // Why: Idempotency-Key header 用 crypto.randomUUID()，重试用同一 key 后端会回放缓存订单
   async createOrder(
     items: { skuId: string; quantity: number }[],
