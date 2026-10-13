@@ -129,6 +129,47 @@ export function useMarkAllNotificationsRead() {
 }
 
 // ============================================================================
+// 批2（#3 通知管理）：删除通知（单条/批量）——乐观移除 + snapshot/restore 回滚
+// ============================================================================
+
+// Why: 单条/批量共用同一乐观管线（ids 数组统一入参，单条=长度 1）：
+//      all/unread 两列表过滤删除；未读数按删除项中未读条数递减（删已读不动计数）。
+//      snapshot/restore 复用上方基建（与 markRead onMutate 同构）。
+export function useDeleteNotifications() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => notificationsApi.deleteNotifications(ids),
+    onMutate: async (ids) => {
+      await qc.cancelQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
+      const previous = snapshotNotifications(qc);
+      const set = new Set(ids);
+      if (previous.all) {
+        qc.setQueryData<Notification[]>(notificationsListKey(false), (old) =>
+          old ? old.filter((n) => !set.has(n.id)) : old,
+        );
+      }
+      if (previous.unread) {
+        qc.setQueryData<Notification[]>(notificationsListKey(true), (old) =>
+          old ? old.filter((n) => !set.has(n.id)) : old,
+        );
+      }
+      if (typeof previous.count === 'number') {
+        const deletedUnread = (previous.all ?? []).filter((n) => set.has(n.id) && !n.read).length;
+        qc.setQueryData(UNREAD_COUNT_QUERY_KEY, Math.max(0, previous.count - deletedUnread));
+      }
+      return { previous };
+    },
+    onError: (_err, _ids, ctx) => {
+      restoreNotificationSnapshot(qc, ctx?.previous);
+    },
+    onSettled: () => {
+      // 前缀 invalidate 覆盖 all/unread 列表 + unread-count，服务端真值校准
+      qc.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
+    },
+  });
+}
+
+// ============================================================================
 // P17-B1 通知偏好（后端 b8ccfb9）：GET 全量三布尔 + PATCH 部分更新（乐观三件套）
 // ============================================================================
 

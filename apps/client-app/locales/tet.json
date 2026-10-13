@@ -1170,7 +1170,8 @@
       "tabPromo": "Promosaun",
       "tabSystem": "Sistema",
       "a11y": {
-        "settings": "Konfigurasaun notifikasaun"
+        "settings": "Konfigurasaun notifikasaun",
+        "manage": "Jere notifikasaun"
       },
       "timeToday": "Ohin",
       "timeYesterday": "Orsamlul",
@@ -1208,7 +1209,13 @@
       "loginTitle": "Tama atu haree",
       "loginDesc": "Simu atualizasaun entrega no promosaun bainhira tama ona",
       "loginBtn": "Tama",
-      "goBrowse": "Buka"
+      "goBrowse": "Buka",
+      "manage": "Jere",
+      "selectedTitle": "Selecionado {{count}}",
+      "deleted": "Notifikasaun {{count}} hapah",
+      "deleteFailed": "Hah falha, favor koko fali",
+      "deleteTitle": "Hah Notifikasaun",
+      "deleteConfirm": "Hah notifikasaun {{count}} ne'ebé selecionado? La bele fila fali."
     }
   },
   "errors": {

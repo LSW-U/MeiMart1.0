@@ -99,6 +99,29 @@ export const notificationsApi = {
     return res.data;
   },
 
+  // 批2（#3 通知管理）：删除通知。mock 分支对 mockDb.notifications（模块级内存数组，
+  // JSON 不落盘，会话级生效）过滤；real 分支删单条 DELETE /:id、批量 POST /batch-delete
+  //（端点归批4 后端方案 md，未实现前 mock 门禁按基线处理）。
+  async deleteNotification(id: string): Promise<{ success: boolean }> {
+    if (isMockMode) {
+      mockDb.notifications = mockDb.notifications.filter((n) => n.id !== id);
+      return mockResponse({ success: true });
+    }
+    const res = await api.delete<{ success: boolean }>(`/client/notifications/${id}`);
+    return res.data;
+  },
+
+  async deleteNotifications(ids: string[]): Promise<{ success: boolean }> {
+    if (ids.length === 0) return { success: true };
+    if (isMockMode) {
+      const set = new Set(ids);
+      mockDb.notifications = mockDb.notifications.filter((n) => !set.has(n.id));
+      return mockResponse({ success: true });
+    }
+    const res = await api.post<{ success: boolean }>('/client/notifications/batch-delete', { ids });
+    return res.data;
+  },
+
   // P17-B1：读取通知偏好（后端 GET 全量三布尔）
   async getPreferences(): Promise<NotificationPreferences> {
     if (isMockMode) return mockResponse({ ...mockPrefs });

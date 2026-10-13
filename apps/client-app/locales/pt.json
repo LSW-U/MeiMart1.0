@@ -1170,7 +1170,8 @@
       "tabPromo": "Promoções",
       "tabSystem": "Sistema",
       "a11y": {
-        "settings": "Definições de notificações"
+        "settings": "Definições de notificações",
+        "manage": "Gerir notificações"
       },
       "timeToday": "Hoje",
       "timeYesterday": "Ontem",
@@ -1208,7 +1209,13 @@
       "loginTitle": "Entre para ver",
       "loginDesc": "Receba atualizações de entrega e promoções após iniciar sessão",
       "loginBtn": "Entrar",
-      "goBrowse": "Navegar"
+      "goBrowse": "Navegar",
+      "manage": "Gerir",
+      "selectedTitle": "{{count}} selecionada(s)",
+      "deleted": "{{count}} notificação(ões) eliminada(s)",
+      "deleteFailed": "Falha ao eliminar, tente novamente",
+      "deleteTitle": "Eliminar notificações",
+      "deleteConfirm": "Eliminar as {{count}} notificação(ões) selecionadas? Esta ação não pode ser revertida."
     }
   },
   "errors": {

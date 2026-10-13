@@ -1170,7 +1170,8 @@
       "tabPromo": "促销",
       "tabSystem": "系统",
       "a11y": {
-        "settings": "通知设置"
+        "settings": "通知设置",
+        "manage": "管理通知"
       },
       "timeToday": "今天",
       "timeYesterday": "昨天",
@@ -1208,7 +1209,13 @@
       "loginTitle": "登录后查看通知",
       "loginDesc": "登录后即可接收订单配送、促销优惠消息",
       "loginBtn": "立即登录",
-      "goBrowse": "去逛逛"
+      "goBrowse": "去逛逛",
+      "manage": "管理",
+      "selectedTitle": "已选 {{count}} 项",
+      "deleted": "已删除 {{count}} 条通知",
+      "deleteFailed": "删除失败，请重试",
+      "deleteTitle": "删除通知",
+      "deleteConfirm": "删除已选的 {{count}} 条通知？此操作不可恢复。"
     }
   },
   "errors": {

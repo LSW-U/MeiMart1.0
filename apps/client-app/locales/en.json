@@ -1170,7 +1170,8 @@
       "tabPromo": "Promotions",
       "tabSystem": "System",
       "a11y": {
-        "settings": "Notification settings"
+        "settings": "Notification settings",
+        "manage": "Manage notifications"
       },
       "timeToday": "Today",
       "timeYesterday": "Yesterday",
@@ -1208,7 +1209,13 @@
       "loginTitle": "Sign in to view",
       "loginDesc": "Receive order delivery and promo updates after sign in",
       "loginBtn": "Sign in",
-      "goBrowse": "Browse"
+      "goBrowse": "Browse",
+      "manage": "Manage",
+      "selectedTitle": "Selected {{count}}",
+      "deleted": "{{count}} notification(s) deleted",
+      "deleteFailed": "Failed to delete, please retry",
+      "deleteTitle": "Delete Notifications",
+      "deleteConfirm": "Delete {{count}} selected notification(s)? This cannot be undone."
     }
   },
   "errors": {

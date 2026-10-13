@@ -13,6 +13,7 @@ let mockIsAuthenticated = true;
 let mockNotifications: import('@/types').Notification[] = [];
 const mockMarkRead = jest.fn();
 const mockMarkAllMutate = jest.fn();
+const mockDeleteMutate = jest.fn();
 
 jest.mock('@/store/authStore', () => ({
   useAuthStore: (selector: (s: { isAuthenticated: boolean }) => boolean) =>
@@ -28,6 +29,8 @@ jest.mock('@/services/queries/useNotifications', () => ({
   }),
   useMarkNotificationRead: () => ({ mutate: mockMarkRead }),
   useMarkAllNotificationsRead: () => ({ mutate: mockMarkAllMutate }),
+  // 批2：管理模式 hook（页面顶层消费，mock 同构）
+  useDeleteNotifications: () => ({ mutate: mockDeleteMutate, isPending: false }),
 }));
 
 jest.mock('expo-router', () => ({
@@ -68,19 +71,37 @@ function localNoonOffsetDays(days: number, hour = 12): string {
 function seedNotifications() {
   mockNotifications = [
     {
-      id: 'n001', title: '订单配送中', body: '骑手即将送达', type: 'order', read: false,
+      id: 'n001',
+      title: '订单配送中',
+      body: '骑手即将送达',
+      type: 'order',
+      read: false,
       // 今天 10 点（即使凌晨 0-10 点跑，也是今天的合法过去时刻）
       createdAt: localNoonOffsetDays(0, 10),
-      data: { orderId: 'o1', progress: 2, riderName: '陈师傅', riderPhone: '+67077000001', eta: '18:30' },
+      data: {
+        orderId: 'o1',
+        progress: 2,
+        riderName: '陈师傅',
+        riderPhone: '+67077000001',
+        eta: '18:30',
+      },
     },
     {
-      id: 'n002', title: '优惠券到账', body: '20 元券', type: 'promotion', read: true,
+      id: 'n002',
+      title: '优惠券到账',
+      body: '20 元券',
+      type: 'promotion',
+      read: true,
       // 昨天 12 点（无论几点跑都稳定落在昨天）
       createdAt: localNoonOffsetDays(1),
       data: { couponId: 'c1' },
     },
     {
-      id: 'n003', title: '系统维护', body: '今晚维护', type: 'system', read: true,
+      id: 'n003',
+      title: '系统维护',
+      body: '今晚维护',
+      type: 'system',
+      read: true,
       // 8 天前（稳定落在 earlier）
       createdAt: localNoonOffsetDays(8),
     },
@@ -116,7 +137,9 @@ describe('NotificationsPage（P23：分组 + 富内容 + 空态 + 直达）', ()
   });
 
   it('D3 回归：全部已读按钮走 markAll 单次 mutate（非逐条循环）', () => {
+    // 批2 语义重组：readAll 钮移入管理模式底栏（header 右上改「管理」入口）
     const { getByTestId } = render(<NotificationsPage />, { wrapper });
+    fireEvent.press(getByTestId('notif-manage'));
     fireEvent.press(getByTestId('notif-read-all'));
     expect(mockMarkAllMutate).toHaveBeenCalledTimes(1);
     expect(mockMarkRead).not.toHaveBeenCalled();

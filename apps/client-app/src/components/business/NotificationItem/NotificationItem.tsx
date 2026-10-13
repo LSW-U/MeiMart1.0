@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
+import { Icon } from '@/components/ui/Icon';
 import { getRelativeTimeUnit, formatPrice } from '@/utils/format';
 import { openExternalLink } from '@/utils/linking';
 import { toIconName, type IconName } from '@/types';
@@ -86,6 +87,8 @@ export const NotificationItem = memo(function NotificationItem({
   notification,
   onPress,
   onCta,
+  selectMode = false,
+  isSelected = false,
   testID,
 }: NotificationItemProps) {
   const { colors } = useTheme();
@@ -155,15 +158,36 @@ export const NotificationItem = memo(function NotificationItem({
               borderBottomColor: colors['outline-variant'],
               borderLeftColor: colors.primary,
             },
+        // 批2（D4）：管理模式选中态 2px primary 边（收藏页 .selected-card 同款）
+        selectMode &&
+          isSelected && {
+            borderWidth: 2,
+            borderColor: colors.primary,
+          },
         pressed && styles.pressed,
       ]}
       onPress={onPress ? () => onPress(notification) : undefined}
       accessibilityRole="button"
+      accessibilityState={selectMode ? { selected: isSelected } : undefined}
       accessibilityLabel={t('notifications.a11y.notificationItem', {
         title: localize(notification.title),
         time: relTime,
       })}
     >
+      {/* 批2（D4）：管理模式右上角选择圆圈（收藏页 .select-circle 同构，纯状态非独立按钮） */}
+      {selectMode && (
+        <View
+          style={[
+            styles.selectCircle,
+            {
+              backgroundColor: isSelected ? colors.primary : colors['surface-container-lowest'],
+              borderColor: isSelected ? colors.primary : colors['outline-variant'],
+            },
+          ]}
+        >
+          {isSelected && <Icon symbol="check" size={13} color={colors['on-primary']} />}
+        </View>
+      )}
       {/* Why: P23 D2 —— 未读左色条用 borderLeft 实现（§9.1 推荐方案，无层级问题） */}
       <View style={[styles.iconBox, { backgroundColor: iconBg, borderRadius: borderRadius.md }]}>
         <MaterialCommunityIcons name={toIconName(icon.name)} size={22} color={iconColor} />
@@ -513,6 +537,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   main: { flex: 1, gap: 4 },
+  // 批2（D4）：选择圆圈（收藏页 .select-circle 同构：22² 右上角，选中 primary 底白勾）
+  selectCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+  },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   dot: { width: 7, height: 7, borderRadius: 999 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 2 },

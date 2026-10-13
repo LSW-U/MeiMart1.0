@@ -1,7 +1,7 @@
 // NotificationListPage — 消息通知（P23 优化方案，见 第四梯队-辅助页面/P23-通知页-完整方案.md）
 // 结构：PrimaryHeader（全部已读/设置入口）+ 四 Tab + 时间分组（今天/昨天/更早，SectionList）
 //       + 超市场景通知卡（配送进度/骑手/倒计时/商品/满减）+ 分 tab 空态 + 未登录引导态
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
+  Alert,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { safeRoutePush } from '@meimart/nav-core';
@@ -23,10 +25,12 @@ import { NotificationItem, TickerProvider } from '@/components/business/Notifica
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
+import { toast } from '@/store/toastStore';
 import {
   useNotifications,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
+  useDeleteNotifications,
 } from '@/services/queries/useNotifications';
 import { useAuthStore } from '@/store/authStore';
 import type { Notification } from '@/types';
@@ -52,11 +56,72 @@ export default function NotificationsPage() {
   const { colors } = useTheme();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [tab, setTab] = useState<TabKey>('all');
+  // 批2（#3 通知管理，D4）：管理模式——复用收藏页 selectMode 先例（app/favorites.tsx）：
+  // 整卡单 Pressable + 圆圈纯状态，勾选后底部管理栏批量删除 + 二次确认。
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const { data: notifications, isLoading, isError, refetch } = useNotifications();
   const markRead = useMarkNotificationRead();
   // Why: P23 D3 —— 单次 POST /read-all 替代逐条循环（原 N 条 N 请求）；hook 自带乐观三件套
   const markAllReadMutation = useMarkAllNotificationsRead();
+  const deleteNotifications = useDeleteNotifications();
   const unreadCount = notifications?.filter((n) => !n.read).length ?? 0;
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelected(new Set());
+  }, []);
+
+  const executeDelete = useCallback(() => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    deleteNotifications.mutate(ids, {
+      onSuccess: () => {
+        toast.success(t('service.notifications.deleted', { count: ids.length }));
+        exitSelectMode();
+      },
+      onError: () => {
+        toast.error(t('service.notifications.deleteFailed'));
+      },
+    });
+  }, [selected, deleteNotifications, t, exitSelectMode]);
+
+  // Why: 收藏页同款（app/favorites.tsx:122-144）——Web 端 Alert 不显示直接执行；Native 用 Alert 二次确认
+  const removeSelected = useCallback(() => {
+    if (selected.size === 0 || deleteNotifications.isPending) return;
+    if (Platform.OS === 'web') {
+      executeDelete();
+      return;
+    }
+    Alert.alert(
+      t('service.notifications.deleteTitle'),
+      t('service.notifications.deleteConfirm', { count: selected.size }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.delete'), style: 'destructive', onPress: executeDelete },
+      ],
+    );
+  }, [selected, deleteNotifications.isPending, executeDelete, t]);
+
+  const handleCardPress = useCallback(
+    (item: Notification, navigate: (n: Notification) => void) => {
+      if (selectMode) {
+        toggleSelect(item.id);
+        return;
+      }
+      navigate(item);
+    },
+    [selectMode, toggleSelect],
+  );
 
   const filtered = useMemo(() => {
     if (!notifications) return [];
@@ -156,6 +221,34 @@ export default function NotificationsPage() {
     { key: 'system', label: t('service.notifications.tabSystem') },
   ];
 
+  // Why: 批2 管理入口语义重组——右上角统一为「管理」入口（二态 readAll/settings 按钮
+  // 与管理模式冲突，互斥显示无法共存）；原已读/设置能力移入管理模式底栏（勿丢失功能）。
+  const headerRight = selectMode ? (
+    <Pressable
+      onPress={exitSelectMode}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={t('common.cancel')}
+      testID="notif-exit-select"
+    >
+      <Text style={[styles.headerActionText, { color: colors['on-primary'] }]}>
+        {t('common.cancel')}
+      </Text>
+    </Pressable>
+  ) : (
+    <Pressable
+      onPress={() => setSelectMode(true)}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={t('service.notifications.a11y.manage')}
+      testID="notif-manage"
+    >
+      <Text style={[styles.headerActionText, { color: colors['on-primary'] }]}>
+        {t('service.notifications.manage')}
+      </Text>
+    </Pressable>
+  );
+
   // Why: P23 D7 —— 分 tab 空态 + 未登录引导（未登录优先于 loading/error 判断）
   const renderEmpty = () => {
     if (!isAuthenticated) {
@@ -217,43 +310,14 @@ export default function NotificationsPage() {
     >
       <StatusBarConfig />
       <PrimaryHeader
-        title={t('service.notifications.title')}
-        showBack
-        onBackPress={handleBack}
-        rightActions={
-          unreadCount > 0 ? (
-            <Pressable
-              onPress={markAllRead}
-              hitSlop={8}
-              style={styles.readAllBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t('service.notifications.readAll')}
-              testID="notif-read-all"
-            >
-              {/* V22：done_all 图标 + 文字形态（原型明确操作入口）；原因：primary 底上固定白（on-primary token） */}
-              <Icon symbol="done_all" size={20} color={colors['on-primary']} />
-              <Text style={[styles.readAllText, { color: colors['on-primary'] }]}>
-                {t('service.notifications.readAll')}
-              </Text>
-              <View style={[styles.readAllBadge, { backgroundColor: colors['on-primary'] }]}>
-                <Text style={[styles.readAllBadgeText, { color: colors.primary }]}>
-                  {unreadCount}
-                </Text>
-              </View>
-            </Pressable>
-          ) : (
-            <Pressable
-              onPress={() => router.push('/settings')}
-              hitSlop={8}
-              style={styles.headerBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t('service.notifications.a11y.settings')}
-              testID="notif-settings"
-            >
-              <Icon symbol="settings" size={22} color={colors['on-primary']} />
-            </Pressable>
-          )
+        title={
+          selectMode
+            ? t('service.notifications.selectedTitle', { count: selected.size })
+            : t('service.notifications.title')
         }
+        showBack
+        onBackPress={selectMode ? exitSelectMode : handleBack}
+        rightActions={headerRight}
       />
 
       {/* Tab 栏 */}
@@ -369,13 +433,84 @@ export default function NotificationsPage() {
               <NotificationItem
                 notification={item}
                 testID={item.id}
-                onPress={() => onPress(item)}
-                onCta={(action, n) => onCta(action, n)}
+                selectMode={selectMode}
+                isSelected={selected.has(item.id)}
+                onPress={() =>
+                  handleCardPress(item, (n) => {
+                    if (!n.read) markRead.mutate(n.id);
+                    onPress(n);
+                  })
+                }
+                onCta={selectMode ? undefined : (action, n) => onCta(action, n)}
               />
             )}
             ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
           />
         </TickerProvider>
+      )}
+
+      {/* 管理模式底栏（复用收藏页 manageBar 先例）：全部已读 + 通知设置（原 header 能力保留可达）+ 删除 */}
+      {selectMode && (
+        <View
+          style={[
+            styles.manageBar,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderTopColor: colors['outline-variant'],
+            },
+          ]}
+        >
+          <Pressable
+            onPress={markAllRead}
+            style={styles.manageBarBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('service.notifications.readAll')}
+            testID="notif-read-all"
+          >
+            <Icon symbol="done_all" size={20} color={colors.primary} />
+            <Text style={[styles.manageBarText, { color: colors['on-surface'] }]}>
+              {t('service.notifications.readAll')}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push('/settings')}
+            style={styles.manageBarBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('service.notifications.a11y.settings')}
+            testID="notif-settings"
+          >
+            <Icon symbol="settings" size={20} color={colors.primary} />
+            <Text style={[styles.manageBarText, { color: colors['on-surface'] }]}>
+              {t('service.notifications.a11y.settings')}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={removeSelected}
+            disabled={selected.size === 0 || deleteNotifications.isPending}
+            style={({ pressed }) => [
+              styles.manageBarDelete,
+              {
+                backgroundColor:
+                  selected.size === 0 || deleteNotifications.isPending
+                    ? colors['outline-variant']
+                    : colors.error,
+                opacity: selected.size === 0 || deleteNotifications.isPending ? 0.5 : 1,
+              },
+              pressed && { transform: [{ scale: 0.98 }] },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.delete')}
+            accessibilityState={
+              selected.size === 0 || deleteNotifications.isPending ? { disabled: true } : undefined
+            }
+            testID="notif-batch-delete"
+          >
+            <Icon symbol="delete" size={18} color={colors['on-primary']} />
+            <Text style={[styles.manageBarDeleteText, { color: colors['on-primary'] }]}>
+              {t('common.delete')} ({selected.size})
+            </Text>
+          </Pressable>
+        </View>
       )}
     </SafeAreaWrapper>
   );
@@ -387,6 +522,42 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // 批2：header「管理/取消」文字钮（原型 readAllBtn 同位置文字形态）
+  headerActionText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  // 批2：管理模式底栏（收藏页 manageBar 同构：左操作 · 右删除）
+  manageBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: layout['container-margin'],
+    paddingVertical: spacing.sm,
+    gap: spacing.lg,
+  },
+  manageBarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  manageBarText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  manageBarDelete: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 'auto',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 999,
+  },
+  manageBarDeleteText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   // V22：read-all 专用（图标+文字+badge 横排，非 40x40 图标钮）
   readAllBtn: {
