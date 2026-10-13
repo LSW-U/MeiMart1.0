@@ -1,44 +1,35 @@
 /**
- * 引导页远程配置（P24 方案 D8）
+ * 引导页远程配置（方案「引导页内容可配置」批3，2026-10-14）
  *
- * 本期占位：SLIDES 本地硬编码兜底，后端 GET /client/onboarding/slides
- * 排期就绪后实现 useOnboardingSlides() 切换（React Query, staleTime 1h）。
- * 接口契约见方案 md §11（enabled / version / slides[]）。
+ * GET /client/onboarding/slides（@Public）→ { success, data } 信封（api-core 响应拦截器
+ * 统一剥层，res.data 即 OnboardingSlideRemote[]）。空表 [] → hook 转 null → 组件回退
+ * 本地 SLIDES 兜底常量（在 app/onboarding.tsx，永不删除，方案 D5）。
  */
+import { api, isMockMode } from './api';
+import { mockResponse } from './mockDb';
 
-/** 后端下发的单屏配置 */
+/** 后端下发的单屏配置（批1 契约定稿：五语 en/pt/tet/id/zh；客户端 4 语无 id，取值走 localize 回退链补 en） */
 export interface OnboardingSlideRemote {
   id: string;
-  /** Material Symbol 名（前端校验 iconMapping 存在，未知兜底 storefront） */
-  icon: string;
-  /** 该屏强调色 hex（图标+角标底+渐变底），为空用 primary */
-  accentColor: string;
-  /** 标题 i18n key（四语 zh/en/tet/pt 文案，不传明文） */
-  titleKey: string;
-  /** 描述 i18n key */
-  descKey: string;
-  /** 传则用图，null 用 icon+渐变底（默认推荐） */
+  /** Material Symbol 名（null 配图屏走 storefront 兜底，见 onboarding.tsx fromRemote；非 null 名经 Icon→symbolToMc 查 iconMapping 表，未知名取查表结果） */
+  icon: string | null;
+  /** 配图 URL（slide-image 上传端点产出），null 走 icon+渐变底 */
   imageUrl: string | null;
-  /** 末屏主按钮文案 key，null 用 onboarding.start */
-  ctaKey: string | null;
-}
-
-/** GET /client/onboarding/slides 响应体 */
-export interface OnboardingConfig {
-  /** 运营一键开关引导页（false → app/index 跳过 onboarding 直接 login） */
+  /** 五语标题（en 必填，服务端校验） */
+  title: Record<string, string>;
+  /** 五语描述（en 必填，服务端校验） */
+  description: Record<string, string>;
+  /** 排序（升序，服务端已排） */
+  sortOrder: number;
+  /** 启停（服务端只下发 enabled=true） */
   enabled: boolean;
-  /** 内容版本号，前端缓存比对，变更才刷新 */
-  version: number;
-  slides: OnboardingSlideRemote[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-// TODO(后端排期后实现)：
-// export function useOnboardingSlides() {
-//   return useQuery({
-//     queryKey: ['onboarding', 'slides'],
-//     queryFn: () => api.get<OnboardingConfig>('/client/onboarding/slides'),
-//     staleTime: 60 * 60 * 1000,
-//   });
-// }
-// 落地方式：onboarding.tsx query 成功用远端 slides，失败/加载中用本地 SLIDES 兜底（首屏不阻塞）；
-// app/index.tsx 路由守卫读 config.enabled，false 则跳过 onboarding 直接 login。
+export async function fetchOnboardingSlides(): Promise<OnboardingSlideRemote[]> {
+  // mock 分支返回空表 → hook 转 null → 组件回退本地 SLIDES（保回退语义，任务书批3 改动#1）
+  if (isMockMode) return mockResponse([]);
+  const res = await api.get<OnboardingSlideRemote[]>('/client/onboarding/slides');
+  return res.data;
+}

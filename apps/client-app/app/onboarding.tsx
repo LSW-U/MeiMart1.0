@@ -1,5 +1,7 @@
 // OnboardingPage — 引导页（3 屏滑动 + DiamondPattern + LogoBadge，末屏 TaisPattern/TaisDivider 收尾）
 // 插画区：图标 + 强调色渐变底（P24 方案 D2，替换原 Unsplash 外链图，断网不白屏）
+// D8（引导页内容可配置 批3）：远端 slides 成功拉取优先，失败/空回退本地 SLIDES；
+// 配图屏走 SafeImage，无图沿用 icon+渐变；4 处消费点统一读 slides 变量
 import { useCallback, useRef, useState } from 'react';
 import {
   StyleSheet,
@@ -24,7 +26,11 @@ import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { Icon } from '@/components/ui/Icon';
+import { SafeImage } from '@/components/ui/SafeImage';
 import { useAppStore } from '@/store/appStore';
+import { useOnboardingSlides } from '@/services/queries/useOnboardingSlides';
+import type { OnboardingSlideRemote } from '@/services/onboarding';
+import { useLocalizer } from '@/i18n';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -32,13 +38,16 @@ interface Slide {
   id: string;
   /** Material Symbol 名（iconMapping 已映射） */
   icon: string;
-  titleKey: string;
-  bodyKey: string;
+  /** 本地屏为 i18n key（string）；远端屏为五语 JSON（LocalizableText 兼容，t/localize 按来源分派） */
+  titleKey: string | Record<string, string>;
+  bodyKey: string | Record<string, string>;
+  /** 远端配图 URL；本地兜底屏恒 null 走 icon+渐变底 */
+  imageUrl?: string | null;
   /** 仅末屏 'tais' 铺文化纹样 + Divider 收尾，屏1/2 保持干净（D4） */
   motif: 'cart' | 'verified' | 'tais';
 }
 
-// 本地兜底 SLIDES；后端 GET /client/onboarding/slides 就绪后由 useOnboardingSlides() 切换（D8）
+/** 本地兜底 SLIDES；后端就绪后由 useOnboardingSlides() 切换（D8），兜底常量永不删除（方案 D5） */
 const SLIDES: Slide[] = [
   {
     id: 's1',
@@ -75,14 +84,41 @@ function motifAccent(colors: AppColors, motif: Slide['motif']): string {
   return colors.primary;
 }
 
+/** 远端五语 slide → 渲染模型（motif 按序位派生：末屏 tais 收尾，其余轮换 cart/verified） */
+function fromRemote(remote: OnboardingSlideRemote, index: number, total: number): Slide {
+  return {
+    id: remote.id,
+    icon: remote.icon ?? 'storefront',
+    titleKey: remote.title,
+    bodyKey: remote.description,
+    imageUrl: remote.imageUrl,
+    // 末屏（唯一）走 tais 文化收尾；其余按序位轮换强调色
+    motif: index === total - 1 ? 'tais' : index % 2 === 0 ? 'cart' : 'verified',
+  };
+}
+
 export default function OnboardingPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList<Slide>>(null);
   const setOnboardingCompleted = useAppStore((s) => s.setOnboardingCompleted);
+  const localize = useLocalizer();
 
-  const isLast = index === SLIDES.length - 1;
+  // D8 切换（方案v2 §二#3）：4 处消费点统一读合并后的 slides——
+  // 失败/空表回退本地 SLIDES（useOnboardingSlides 已把失败/空归一为 null）
+  const { data: remoteSlides } = useOnboardingSlides();
+  const slides: Slide[] = remoteSlides
+    ? remoteSlides.map((r, i) => fromRemote(r, i, remoteSlides.length))
+    : SLIDES;
+  // Why: 文案取值双来源——本地屏 titleKey 是 i18n key 走 t()；远端屏是五语 JSON 走 localize()（缺语言回退 en）
+  const slideText = (s: Slide, key: 'titleKey' | 'bodyKey'): string => {
+    const v = s[key];
+    if (typeof v === 'string') return t(v);
+    return localize(v);
+  };
+
+  const isLast = index === slides.length - 1;
 
   // Why: onViewableItemsChanged 必须引用稳定（useCallback），否则 FlatList 报错
   const onViewableItemsChanged = useCallback(
@@ -159,7 +195,7 @@ export default function OnboardingPage() {
       {/* 滑动主体 */}
       <FlatList
         ref={listRef}
-        data={SLIDES}
+        data={slides}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -182,18 +218,26 @@ export default function OnboardingPage() {
                 </View>
               )}
 
-              {/* 插画区：图标 + 强调色渐变底 + motif 角标（D2，替外链图） */}
+              {/* 插画区：配图屏走 SafeImage；无图沿用图标 + 强调色渐变底 + motif 角标（D2） */}
               <View style={styles.imageWrap}>
                 <View style={[styles.imageCard, shadowPresets.lg]}>
-                  <LinearGradient
-                    colors={[`${accent}33`, `${accent}11`]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.illustration}
-                  >
-                    {/* opacity 0.85 对齐原型 .ob-ill-inner span（图标略透明融入渐变底） */}
-                    <Icon symbol={item.icon} size={96} color={accent} style={{ opacity: 0.85 }} />
-                  </LinearGradient>
+                  {item.imageUrl ? (
+                    <SafeImage
+                      source={{ uri: item.imageUrl }}
+                      style={styles.illustration}
+                      testID="onboarding-image"
+                    />
+                  ) : (
+                    <LinearGradient
+                      colors={[`${accent}33`, `${accent}11`]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.illustration}
+                    >
+                      {/* opacity 0.85 对齐原型 .ob-ill-inner span（图标略透明融入渐变底） */}
+                      <Icon symbol={item.icon} size={96} color={accent} style={{ opacity: 0.85 }} />
+                    </LinearGradient>
+                  )}
                 </View>
                 <View
                   style={[
@@ -211,10 +255,10 @@ export default function OnboardingPage() {
                 style={[styles.title, { color: colors['on-surface'] }]}
                 accessibilityRole="header"
               >
-                {t(item.titleKey)}
+                {slideText(item, 'titleKey')}
               </Text>
               <Text style={[styles.body, { color: colors['on-surface-variant'] }]}>
-                {t(item.bodyKey)}
+                {slideText(item, 'bodyKey')}
               </Text>
 
               {/* Tais Divider：仅末屏收尾（D4） */}
@@ -232,7 +276,7 @@ export default function OnboardingPage() {
       <View style={[styles.footer, { backgroundColor: colors['surface-container-lowest'] }]}>
         {/* Dot 指示器 */}
         <View style={styles.dots}>
-          {SLIDES.map((s, i) => (
+          {slides.map((s, i) => (
             <Pressable
               key={s.id}
               onPress={() => goTo(i)}
