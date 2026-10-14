@@ -539,6 +539,9 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
   },
   recommendHeader: {
+    // Why: 批5 主理人实测反馈——标题紧贴上方 PromoDock（垂直间距 0，A-P2-2 抽 header 时丢失）；
+    //      加 marginTop 对齐全页 V15 24px 区块节奏（其余区块均 spacing.lg）
+    marginTop: spacing.lg,
     paddingHorizontal: layout['container-margin'],
     marginBottom: spacing.md,
   },
