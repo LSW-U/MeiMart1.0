@@ -139,16 +139,23 @@ export function MoreItem({
             width: dims.box,
             height: dims.box,
             borderRadius: dims.box / 2,
-            backgroundColor: colors['secondary-container'],
+            // 方案B 拍板（主理人 20261014，候选 HTML 原型存档）：深红实底圆 + 白 icon，全格最高对比度
+            backgroundColor: colors.primary,
           },
         ]}
       >
-        <MaterialCommunityIcons name="apps" size={dims.icon} color={colors['on-surface-variant']} />
+        {/* 方案B D2：apps 九宫格语义偏「应用列表」，⋯ 更贴「更多」语义 */}
+        <MaterialCommunityIcons
+          name="dots-horizontal"
+          size={dims.icon}
+          color={colors['on-primary']}
+        />
       </View>
       <Text
         style={[
           textStyle('body-sm'),
-          { color: colors['on-surface-variant'], fontSize: dims.fontSize },
+          // 方案B D3：实底圆深色下灰字发虚，标签提为主色加粗（对齐拍板预览 B）
+          { color: colors.primary, fontSize: dims.fontSize, fontWeight: '600' },
           styles.label,
         ]}
         numberOfLines={1}
