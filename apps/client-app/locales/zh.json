@@ -88,6 +88,10 @@
     "desc3": "传承东帝汶传统纹样",
     "start": "立即开始",
     "skip": "跳过",
+    "tagline": {
+      "market": "Lokál 本地市集",
+      "cooperative": "合作社直供"
+    },
     "a11y": {
       "slide": "第 {{index}} 屏"
     }

@@ -109,6 +109,9 @@ const SYMBOL_TO_MC_LITERAL = {
   sell: 'tag-outline',
   shopping_basket: 'shopping',
   shopping_cart: 'cart',
+  // 引导页视觉统一批（badge/tagline 图标；Stitch 屏1/屏2 原稿）
+  nest_eco_leaf: 'sprout',
+  shield: 'shield-outline',
   support_agent: 'face-agent',
 
   // 财务

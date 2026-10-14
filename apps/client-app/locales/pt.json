@@ -88,6 +88,10 @@
     "desc3": "Padrões tradicionais do Timor-Leste",
     "start": "Começar",
     "skip": "Ignorar",
+    "tagline": {
+      "market": "Mercado Lokál",
+      "cooperative": "Direto das Cooperativas"
+    },
     "a11y": {
       "slide": "Slide {{index}}"
     }

@@ -27,6 +27,37 @@ type SemanticColors = {
   'positive-container': string;
 };
 
+/**
+ * 引导页专属命名空间（视觉统一批，Stitch「Modern Timorese Heritage」深红暖调）
+ * Why: 仅 onboarding 页采用的独立视觉体系（总指挥拍板不动全局 token），
+ *      light 单套；dark 模式本批维持 light 视觉（设计稿仅 light，降级声明）。
+ */
+export type OnboardingColors = {
+  /** 页面暖象牙底 #fff8f7 */
+  bg: string;
+  /** 深红主色 #961813（圆点/主按钮/中心图标/屋顶线饰） */
+  primary: string;
+  /** 标题色 #261816 */
+  'on-surface': string;
+  /** 正文/Skip 色 #59413d */
+  'on-surface-variant': string;
+  /** inactive 圆点 #e1bfba */
+  outline: string;
+  /** 卡底三段渐变 low→mid→high #fff0ee/#ffe9e6/#fce2df */
+  'card-low': string;
+  'card-mid': string;
+  'card-high': string;
+  /** 光晕渐变 primary-fixed #ffdad5 / tertiary-fixed-dim #f5be4c */
+  'glow-from': string;
+  'glow-to': string;
+  /** 白圆底（surface-container-lowest/90，兼作徽章白 icon 色） */
+  'icon-circle': string;
+  /** 右下角深红徽章底 #b83228（primary-container） */
+  badge: string;
+  /** 顶/底栏 blur 底色（#fff8f7 80%） */
+  bar: string;
+};
+
 export type AppColors = {
   primary: string;
   'primary-container': string;
@@ -74,6 +105,7 @@ export type AppColors = {
   'outline-variant': string;
   cultural: CulturalColors;
   semantic: SemanticColors;
+  onboarding: OnboardingColors;
 };
 
 export const lightColors: AppColors = {
@@ -157,6 +189,24 @@ export const lightColors: AppColors = {
     // 折扣 / 省钱 / 安全支付（green-600/50，纯绿，与 emerald 系 success 区分）
     positive: '#16a34a',
     'positive-container': '#f0fdf4',
+  },
+
+  // 引导页专属（Stitch「Modern Timorese Heritage」深红暖调，仅 onboarding 页采用；
+  // dark 同值——设计稿仅 light，dark 模式本批维持 light 视觉，规格 §三 降级声明）
+  onboarding: {
+    bg: '#fff8f7',
+    primary: '#961813',
+    'on-surface': '#261816',
+    'on-surface-variant': '#59413d',
+    outline: '#e1bfba',
+    'card-low': '#fff0ee',
+    'card-mid': '#ffe9e6',
+    'card-high': '#fce2df',
+    'glow-from': '#ffdad5',
+    'glow-to': '#f5be4c',
+    'icon-circle': '#ffffff',
+    badge: '#b83228',
+    bar: '#fff8f7',
   },
 } as const;
 
@@ -245,5 +295,22 @@ export const darkColors: AppColors = {
     'error-container': '#7f1d1d',
     positive: '#4ADE80',
     'positive-container': '#052e16',
+  },
+
+  // 引导页专属：dark 模式本批维持 light 视觉（规格 §三），与 light 同值
+  onboarding: {
+    bg: '#fff8f7',
+    primary: '#961813',
+    'on-surface': '#261816',
+    'on-surface-variant': '#59413d',
+    outline: '#e1bfba',
+    'card-low': '#fff0ee',
+    'card-mid': '#ffe9e6',
+    'card-high': '#fce2df',
+    'glow-from': '#ffdad5',
+    'glow-to': '#f5be4c',
+    'icon-circle': '#ffffff',
+    badge: '#b83228',
+    bar: '#fff8f7',
   },
 } as const;

@@ -88,6 +88,10 @@
     "desc3": "Traditional Timor-Leste patterns",
     "start": "Get started",
     "skip": "Skip",
+    "tagline": {
+      "market": "Mercado Lokál",
+      "cooperative": "Direct from Cooperatives"
+    },
     "a11y": {
       "slide": "Slide {{index}}"
     }

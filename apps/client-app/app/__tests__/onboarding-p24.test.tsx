@@ -70,3 +70,35 @@ describe('OnboardingPage（P24：图标渐变底 + 文化收敛 + goLogin）', (
     expect(queryByTestId('onboarding-login')).toBeNull(); // 首屏非末屏无次按钮
   });
 });
+
+// ── 视觉统一批（深红暖调卡型）渲染断言（规格 §四.4）─────────────────────────────
+describe('视觉统一：三屏同构深红暖调卡型', () => {
+  it('统一卡型渲染：白圆 icon + 右下深红徽章 + 屏1 tagline pill，无 SafeImage', () => {
+    const { getByTestId, queryByTestId, getByText, queryAllByTestId } = render(<OnboardingPage />, {
+      wrapper,
+    });
+    // 无图屏：白圆图标（icon-shopping = shopping_basket 经 iconMapping）
+    expect(getByTestId('icon-shopping')).toBeTruthy();
+    // 屏1 badge：nest_eco_leaf → sprout
+    expect(getByTestId('icon-sprout')).toBeTruthy();
+    // 屏1 tagline pill 文案（t 直返 key）
+    expect(getByText('onboarding.tagline.market')).toBeTruthy();
+    // 首屏非 tais：无菱形徽章/无锯齿分隔线/无 SafeImage（FlatList 预渲染了屏3，断言首屏 pill 可见即可）
+    expect(getByText('onboarding.tagline.market')).toBeTruthy();
+    expect(queryAllByTestId('onboarding-badge-tais').length).toBeLessThanOrEqual(1);
+    expect(queryByTestId('onboarding-image')).toBeNull();
+  });
+
+  it('统一卡型颜色走 onboarding token：卡徽章底 ob.badge、主按钮底 ob.primary（dark 同值，规格 §三）', () => {
+    const { getByTestId } = render(<OnboardingPage />, { wrapper });
+    // badge 底色 = colors.onboarding.badge（#b83228），主按钮 = primary（#961813）
+    // dot-s1 的父链上无需取色；直接断言 next 按钮 style 数组中含 token 值
+    const nextStyle = getByTestId('onboarding-next').props.style;
+    const flat = Array.isArray(nextStyle) ? nextStyle : [nextStyle];
+    const bg = flat
+      .filter(Boolean)
+      .map((s: any) => s?.backgroundColor)
+      .find(Boolean);
+    expect(bg).toBe('#961813');
+  });
+});

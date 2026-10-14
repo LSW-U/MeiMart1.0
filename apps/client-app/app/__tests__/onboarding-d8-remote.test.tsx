@@ -87,8 +87,8 @@ describe('useOnboardingSlides 切换接线（批3 D8）', () => {
     (fetchOnboardingSlides as jest.Mock).mockResolvedValue(REMOTE_SLIDES);
     const { getByTestId, getAllByTestId } = render(<OnboardingPage />, { wrapper });
     await waitFor(() => expect(getByTestId('dot-r1')).toBeTruthy());
-    // r1 icon='shopping_basket'（非 null）：Icon 经 symbolToMc 查 iconMapping 表 → 'shopping'
-    expect(getByTestId('icon-shopping')).toBeTruthy();
+    // r1 icon='shopping_basket'（有 imageUrl 走 SafeImage，icon 不渲染插画位；badge nest_eco_leaf→sprout 仍查表渲染）
+    expect(getByTestId('icon-sprout')).toBeTruthy();
     // r2 icon=null（无图屏）：fromRemote 兜底 storefront——插画+角标两处 Icon 均渲染（getAll 计数锁定）
     expect(getAllByTestId('icon-storefront').length).toBeGreaterThanOrEqual(1);
   });

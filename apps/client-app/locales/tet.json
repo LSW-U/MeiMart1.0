@@ -88,6 +88,10 @@
     "desc3": "Motif tradisional Timor-Leste",
     "start": "Hahú",
     "skip": "Saltar",
+    "tagline": {
+      "market": "Merkadu Lokál",
+      "cooperative": "Diretu husi Kooperativa"
+    },
     "a11y": {
       "slide": "Slide {{index}}"
     }
