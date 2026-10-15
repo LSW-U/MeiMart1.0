@@ -59,6 +59,8 @@ tags:
     description: 用户反馈（P22 反馈页）
   - name: home
     description: 首页活动入口（PromoDock）
+  - name: onboarding
+    description: 引导页内容可配置（slides 管理 + 客户端下发）
   - name: search
     description: 热搜词（Redis ZSET + 运营种子词）
   - name: rate
@@ -187,7 +189,7 @@ components:
               nullable: true
             status:
               type: string
-              enum: &a50
+              enum: &a51
                 - ACTIVE
                 - SUSPENDED
                 - DELETED
@@ -272,7 +274,7 @@ components:
           pattern: ^\+[1-9]\d{1,14}$
         scene:
           type: string
-          enum: &a51
+          enum: &a52
             - REGISTER
             - LOGIN
             - RESET_PASSWORD
@@ -353,7 +355,7 @@ components:
             - DELETED
         memberLevel:
           type: string
-          enum: &a52
+          enum: &a53
             - gold
             - silver
             - bronze
@@ -616,7 +618,7 @@ components:
           format: uuid
         type:
           type: string
-          enum: &a53
+          enum: &a54
             - ORDER_UPDATE
             - PROMOTION
             - SYSTEM
@@ -650,6 +652,25 @@ components:
         - data
         - createdAt
     MarkNotificationReadResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+    BatchDeleteNotificationsRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 100
+      required:
+        - ids
+    DeleteNotificationResponse:
       type: object
       properties:
         success:
@@ -797,7 +818,7 @@ components:
           maxLength: 100
         role:
           type: string
-          enum: &a73
+          enum: &a74
             - SUPER_ADMIN
             - CUSTOMER
             - RIDER
@@ -2263,7 +2284,7 @@ components:
             type: string
         linkType:
           type: string
-          enum: &a63
+          enum: &a64
             - PRODUCT
             - CATEGORY
             - URL
@@ -2275,7 +2296,7 @@ components:
           type: integer
         status:
           type: string
-          enum: &a64
+          enum: &a65
             - ACTIVE
             - INACTIVE
         createdAt:
@@ -2378,11 +2399,15 @@ components:
                 type: string
                 format: uuid
               productName:
-                type: string
+                type: object
+                additionalProperties:
+                  type: string
               productImage:
                 type: string
               skuName:
-                type: string
+                type: object
+                additionalProperties:
+                  type: string
               unitPrice:
                 type: integer
                 minimum: 0
@@ -2505,6 +2530,10 @@ components:
         cancelReason:
           type: string
           nullable: true
+        deletedAt:
+          type: string
+          nullable: true
+          format: date-time
         promotion:
           type: object
           nullable: true
@@ -2551,6 +2580,7 @@ components:
         - deliveredAt
         - cancelledAt
         - cancelReason
+        - deletedAt
         - promotion
         - scheduledFor
         - acceptingReservation
@@ -2567,11 +2597,15 @@ components:
           type: string
           format: uuid
         productName:
-          type: string
+          type: object
+          additionalProperties:
+            type: string
         productImage:
           type: string
         skuName:
-          type: string
+          type: object
+          additionalProperties:
+            type: string
         unitPrice:
           type: integer
           minimum: 0
@@ -2676,6 +2710,25 @@ components:
             CANCELLED: *a16
       required:
         - counts
+    BatchDeleteOrdersRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 100
+      required:
+        - ids
+    DeleteOrderResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
     Cart:
       type: object
       properties:
@@ -3004,7 +3057,7 @@ components:
           format: date-time
         status:
           type: string
-          enum: &a66
+          enum: &a67
             - available
             - used
             - expired
@@ -3033,7 +3086,7 @@ components:
           type: string
         status:
           type: string
-          enum: &a67
+          enum: &a68
             - unused
             - used
             - expired
@@ -3419,7 +3472,7 @@ components:
           type: string
         mockFlag:
           type: string
-          enum: &a68
+          enum: &a69
             - "true"
             - "false"
         cursor:
@@ -4259,7 +4312,7 @@ components:
           type: string
         vehicleType:
           type: string
-          enum: &a69
+          enum: &a70
             - BICYCLE
             - MOTORCYCLE
             - CAR
@@ -5658,20 +5711,20 @@ components:
           minLength: 1
         transport:
           type: string
-          enum: &a70
+          enum: &a71
             - websocket
             - polling
           default: websocket
         authScheme:
           type: string
-          enum: &a71
+          enum: &a72
             - bearer
         userId:
           type: string
           minLength: 1
         role:
           type: string
-          enum: &a72
+          enum: &a73
             - CUSTOMER
             - RIDER
             - SUPER_ADMIN
@@ -5801,7 +5854,7 @@ components:
       properties:
         vehicleType:
           type: string
-          enum: &a77
+          enum: &a78
             - MOTORCYCLE
             - BICYCLE
             - CAR
@@ -5867,7 +5920,7 @@ components:
           format: date-time
         status:
           type: string
-          enum: &a78
+          enum: &a79
             - ACTIVE
             - PAUSED
             - DELETED
@@ -6015,7 +6068,7 @@ components:
       properties:
         action:
           type: string
-          enum: &a79
+          enum: &a80
             - LOGIN
             - REGISTER
             - BLOCKED
@@ -6866,7 +6919,7 @@ components:
       properties:
         status:
           type: string
-          enum: &a80
+          enum: &a81
             - PENDING
             - CONFIRMED
             - REJECTED
@@ -7008,7 +7061,7 @@ components:
               nullable: true
             applicationStatus:
               type: string
-              enum: &a75
+              enum: &a76
                 - PENDING
                 - APPROVED
                 - REJECTED
@@ -7031,7 +7084,7 @@ components:
           properties:
             status:
               type: string
-              enum: &a74
+              enum: &a75
                 - OFFLINE
                 - ONLINE
                 - BUSY
@@ -7416,7 +7469,7 @@ components:
             type: string
             format: uri
           maxItems: 9
-          default: &a86 []
+          default: &a87 []
         anonymous:
           type: boolean
           default: false
@@ -7426,7 +7479,7 @@ components:
             type: string
             enum: *a39
           maxItems: 6
-          default: &a87 []
+          default: &a88 []
         category:
           type: string
           enum: *a40
@@ -7450,7 +7503,7 @@ components:
             type: string
             enum: *a41
           maxItems: 4
-          default: &a88 []
+          default: &a89 []
         comment:
           type: object
           additionalProperties:
@@ -7468,7 +7521,7 @@ components:
           type: string
         theme:
           type: string
-          enum: &a84
+          enum: &a85
             - deals
             - coupons
             - delivery
@@ -7479,7 +7532,7 @@ components:
           type: integer
         status:
           type: string
-          enum: &a85
+          enum: &a86
             - ACTIVE
             - INACTIVE
       required:
@@ -7489,6 +7542,95 @@ components:
         - theme
         - link
         - sortOrder
+    OnboardingSlide:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        icon:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+        title:
+          type: object
+          additionalProperties:
+            type: string
+        description:
+          type: object
+          additionalProperties:
+            type: string
+        sortOrder:
+          type: integer
+        enabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - icon
+        - imageUrl
+        - title
+        - description
+        - sortOrder
+        - enabled
+        - createdAt
+        - updatedAt
+    CreateOnboardingSlideRequest:
+      type: object
+      properties:
+        icon:
+          type: string
+          nullable: true
+          minLength: 1
+        imageUrl:
+          type: string
+          nullable: true
+          minLength: 1
+        title:
+          type: object
+          additionalProperties:
+            type: string
+        description:
+          type: object
+          additionalProperties:
+            type: string
+        sortOrder:
+          type: integer
+        enabled:
+          type: boolean
+      required:
+        - title
+        - description
+    UpdateOnboardingSlideRequest:
+      type: object
+      properties:
+        icon:
+          type: string
+          nullable: true
+          minLength: 1
+        imageUrl:
+          type: string
+          nullable: true
+          minLength: 1
+        title:
+          type: object
+          additionalProperties:
+            type: string
+        description:
+          type: object
+          additionalProperties:
+            type: string
+        sortOrder:
+          type: integer
+        enabled:
+          type: boolean
     HotSearchTermItem:
       type: object
       properties:
@@ -7648,7 +7790,7 @@ components:
             type: string
             format: uri
           maxItems: 9
-          default: &a89 []
+          default: &a90 []
       required:
         - category
         - content
@@ -8094,7 +8236,7 @@ components:
             - WEB
         locale:
           type: string
-          enum: &a54
+          enum: &a55
             - en
             - zh
             - id
@@ -8173,6 +8315,535 @@ components:
         - deliveredCount
         - failedCount
         - push
+    RiderEarningsSummary:
+      type: object
+      properties:
+        availableBalance:
+          type: integer
+          minimum: 0
+          maximum: 999999
+        today:
+          type: integer
+          minimum: 0
+          maximum: 999999
+        weekly:
+          type: integer
+          minimum: 0
+          maximum: 999999
+        monthly:
+          type: integer
+          minimum: 0
+          maximum: 999999
+      required:
+        - availableBalance
+        - today
+        - weekly
+        - monthly
+    RiderEarningsSummaryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          properties:
+            availableBalance:
+              type: integer
+              minimum: 0
+              maximum: 999999
+            today:
+              type: integer
+              minimum: 0
+              maximum: 999999
+            weekly:
+              type: integer
+              minimum: 0
+              maximum: 999999
+            monthly:
+              type: integer
+              minimum: 0
+              maximum: 999999
+          required:
+            - availableBalance
+            - today
+            - weekly
+            - monthly
+        message:
+          type: string
+      required:
+        - success
+        - data
+    RiderEarningsTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        periodDate:
+          type: string
+        orderCount:
+          type: integer
+          minimum: 0
+        grossAmount:
+          type: integer
+          minimum: 0
+          maximum: 999999
+        commission:
+          type: integer
+          minimum: 0
+          maximum: 999999
+        refundAmount:
+          type: integer
+          minimum: 0
+          maximum: 999999
+        netAmount:
+          type: integer
+          minimum: 0
+          maximum: 999999
+        status:
+          type: string
+        confirmedAt:
+          type: string
+          nullable: true
+          format: date-time
+        paidAt:
+          type: string
+          nullable: true
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - periodDate
+        - orderCount
+        - grossAmount
+        - commission
+        - refundAmount
+        - netAmount
+        - status
+        - confirmedAt
+        - paidAt
+        - createdAt
+    RiderEarningsTransactionsQuery:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          default: 1
+        pageSize:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 100
+          default: 20
+    RiderEarningsTransactionsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  periodDate:
+                    type: string
+                  orderCount:
+                    type: integer
+                    minimum: 0
+                  grossAmount:
+                    type: integer
+                    minimum: 0
+                    maximum: 999999
+                  commission:
+                    type: integer
+                    minimum: 0
+                    maximum: 999999
+                  refundAmount:
+                    type: integer
+                    minimum: 0
+                    maximum: 999999
+                  netAmount:
+                    type: integer
+                    minimum: 0
+                    maximum: 999999
+                  status:
+                    type: string
+                  confirmedAt:
+                    type: string
+                    nullable: true
+                    format: date-time
+                  paidAt:
+                    type: string
+                    nullable: true
+                    format: date-time
+                  createdAt:
+                    type: string
+                    format: date-time
+                required:
+                  - id
+                  - periodDate
+                  - orderCount
+                  - grossAmount
+                  - commission
+                  - refundAmount
+                  - netAmount
+                  - status
+                  - confirmedAt
+                  - paidAt
+                  - createdAt
+            total:
+              type: integer
+            page:
+              type: integer
+            pageSize:
+              type: integer
+          required:
+            - items
+            - total
+            - page
+            - pageSize
+      required:
+        - success
+        - data
+    RiderWithdrawalCreateInput:
+      type: object
+      properties:
+        amount:
+          type: integer
+          minimum: 0
+          maximum: 999999
+        payoutAccount:
+          type: object
+          properties:
+            channel:
+              type: string
+              enum: &a91
+                - BANK_TRANSFER
+                - WECHAT
+                - ALIPAY
+                - PAYPAL
+            account:
+              type: string
+            holderName:
+              type: string
+            bankName:
+              type: string
+            branchName:
+              type: string
+          required:
+            - channel
+            - account
+      required:
+        - amount
+        - payoutAccount
+    RiderWithdrawalQuery:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          default: 1
+        pageSize:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 100
+          default: 20
+    RiderOrderHistoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderNo:
+          type: string
+        status:
+          type: string
+          enum: &a49
+            - completed
+            - cancelled
+            - transferred
+        completedAt:
+          type: integer
+          minimum: 0
+        pickupName:
+          type: string
+        pickupAddress:
+          type: string
+        dropoffName:
+          type: string
+        dropoffAddress:
+          type: string
+        income:
+          type: integer
+          minimum: 0
+          maximum: 999999
+        distanceKm:
+          type: number
+          minimum: 0
+        durationMinutes:
+          type: integer
+          minimum: 0
+      required:
+        - id
+        - orderNo
+        - status
+        - completedAt
+        - pickupName
+        - pickupAddress
+        - dropoffName
+        - dropoffAddress
+        - income
+        - distanceKm
+        - durationMinutes
+    RiderOrderHistoryDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            orderNo:
+              type: string
+            status:
+              type: string
+              enum: *a49
+            completedAt:
+              type: integer
+              minimum: 0
+            pickupName:
+              type: string
+            pickupAddress:
+              type: string
+            dropoffName:
+              type: string
+            dropoffAddress:
+              type: string
+            income:
+              type: integer
+              minimum: 0
+              maximum: 999999
+            distanceKm:
+              type: number
+              minimum: 0
+            durationMinutes:
+              type: integer
+              minimum: 0
+          required:
+            - id
+            - orderNo
+            - status
+            - completedAt
+            - pickupName
+            - pickupAddress
+            - dropoffName
+            - dropoffAddress
+            - income
+            - distanceKm
+            - durationMinutes
+        message:
+          type: string
+      required:
+        - success
+        - data
+    RiderOrderHistoryStatusCounts:
+      type: object
+      properties:
+        all:
+          type: integer
+          minimum: 0
+        completed:
+          type: integer
+          minimum: 0
+        cancelled:
+          type: integer
+          minimum: 0
+        transferred:
+          type: integer
+          minimum: 0
+      required:
+        - all
+        - completed
+        - cancelled
+        - transferred
+    RiderOrderHistoryStatusCountsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          properties:
+            all:
+              type: integer
+              minimum: 0
+            completed:
+              type: integer
+              minimum: 0
+            cancelled:
+              type: integer
+              minimum: 0
+            transferred:
+              type: integer
+              minimum: 0
+          required:
+            - all
+            - completed
+            - cancelled
+            - transferred
+        message:
+          type: string
+      required:
+        - success
+        - data
+    RiderOrderHistoryQuery:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          default: 1
+        pageSize:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 100
+          default: 20
+        status:
+          type: string
+          enum: *a49
+    RiderOrderHistoryListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  orderNo:
+                    type: string
+                  status:
+                    type: string
+                    enum: *a49
+                  completedAt:
+                    type: integer
+                    minimum: 0
+                  pickupName:
+                    type: string
+                  pickupAddress:
+                    type: string
+                  dropoffName:
+                    type: string
+                  dropoffAddress:
+                    type: string
+                  income:
+                    type: integer
+                    minimum: 0
+                    maximum: 999999
+                  distanceKm:
+                    type: number
+                    minimum: 0
+                  durationMinutes:
+                    type: integer
+                    minimum: 0
+                required:
+                  - id
+                  - orderNo
+                  - status
+                  - completedAt
+                  - pickupName
+                  - pickupAddress
+                  - dropoffName
+                  - dropoffAddress
+                  - income
+                  - distanceKm
+                  - durationMinutes
+            total:
+              type: integer
+            page:
+              type: integer
+            pageSize:
+              type: integer
+          required:
+            - items
+            - total
+            - page
+            - pageSize
+      required:
+        - success
+        - data
+    RiderOrderTodayStats:
+      type: object
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        totalIncome:
+          type: integer
+          minimum: 0
+          maximum: 999999
+      required:
+        - count
+        - totalIncome
+    RiderOrderTodayStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          properties:
+            count:
+              type: integer
+              minimum: 0
+            totalIncome:
+              type: integer
+              minimum: 0
+              maximum: 999999
+          required:
+            - count
+            - totalIncome
+        message:
+          type: string
+      required:
+        - success
+        - data
     ExchangeRateView:
       type: object
       properties:
@@ -8200,7 +8871,7 @@ components:
           exclusiveMinimum: true
         source:
           type: string
-          enum: &a49
+          enum: &a50
             - OPERATOR
             - FALLBACK
         operatorId:
@@ -8222,7 +8893,7 @@ components:
         - createdAt
     ExchangeRateSource:
       type: string
-      enum: *a49
+      enum: *a50
     UpsertExchangeRateRequest:
       type: object
       properties:
@@ -8268,7 +8939,7 @@ components:
               exclusiveMinimum: true
             source:
               type: string
-              enum: *a49
+              enum: *a50
             operatorId:
               type: string
               nullable: true
@@ -8293,7 +8964,7 @@ components:
       properties:
         to:
           type: string
-          enum: &a95
+          enum: &a96
             - CNY
           default: CNY
     ClientExchangeRateResponseData:
@@ -8320,7 +8991,7 @@ components:
           exclusiveMinimum: true
         source:
           type: string
-          enum: *a49
+          enum: *a50
       required:
         - rateDate
         - fromCurrency
@@ -8377,7 +9048,7 @@ components:
                 exclusiveMinimum: true
               source:
                 type: string
-                enum: *a49
+                enum: *a50
               operatorId:
                 type: string
                 nullable: true
@@ -8454,7 +9125,7 @@ paths:
                         nullable: true
                       status:
                         type: string
-                        enum: *a50
+                        enum: *a51
                     required:
                       - id
                       - role
@@ -8553,7 +9224,7 @@ paths:
                         nullable: true
                       status:
                         type: string
-                        enum: *a50
+                        enum: *a51
                     required:
                       - id
                       - role
@@ -8617,7 +9288,7 @@ paths:
                   pattern: ^\+[1-9]\d{1,14}$
                 scene:
                   type: string
-                  enum: *a51
+                  enum: *a52
                   default: LOGIN
               required:
                 - phone
@@ -8983,7 +9654,7 @@ paths:
                         nullable: true
                       status:
                         type: string
-                        enum: *a50
+                        enum: *a51
                     required:
                       - id
                       - role
@@ -9139,7 +9810,7 @@ paths:
                     enum: *a2
                   memberLevel:
                     type: string
-                    enum: *a52
+                    enum: *a53
                   points:
                     type: integer
                     minimum: 0
@@ -9206,7 +9877,7 @@ paths:
                     enum: *a2
                   memberLevel:
                     type: string
-                    enum: *a52
+                    enum: *a53
                   points:
                     type: integer
                     minimum: 0
@@ -9836,7 +10507,7 @@ paths:
                       format: uuid
                     type:
                       type: string
-                      enum: *a53
+                      enum: *a54
                     title:
                       type: object
                       additionalProperties:
@@ -9912,6 +10583,53 @@ paths:
                     type: boolean
                 required:
                   - success
+  /api/v1/client/notifications/{id}:
+    delete:
+      tags:
+        - notification
+      responses:
+        "200":
+          description: 软删成功（非本人/不存在均 404，不暴露存在性）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                  - success
+  /api/v1/client/notifications/batch-delete:
+    post:
+      tags:
+        - notification
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  minItems: 1
+                  maxItems: 100
+              required:
+                - ids
+      responses:
+        "200":
+          description: 批量软删成功（ids 空 400 / 上限 100 / 全部限定本人）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                  - success
   /api/v1/client/device-tokens:
     post:
       tags:
@@ -9934,7 +10652,7 @@ paths:
                   enum: *a48
                 locale:
                   type: string
-                  enum: *a54
+                  enum: *a55
                   default: en
               required:
                 - token
@@ -10207,7 +10925,7 @@ paths:
                   enum: *a48
                 locale:
                   type: string
-                  enum: *a54
+                  enum: *a55
                   default: en
               required:
                 - token
@@ -10489,7 +11207,7 @@ paths:
                       format: uuid
                     type:
                       type: string
-                      enum: *a53
+                      enum: *a54
                     title:
                       type: object
                       additionalProperties:
@@ -11103,7 +11821,7 @@ paths:
                       type: object
                       nullable: true
                       properties:
-                        mon: &a55
+                        mon: &a56
                           type: object
                           properties:
                             open:
@@ -11125,12 +11843,12 @@ paths:
                           required:
                             - open
                             - close
-                        tue: *a55
-                        wed: *a55
-                        thu: *a55
-                        fri: *a55
-                        sat: *a55
-                        sun: *a55
+                        tue: *a56
+                        wed: *a56
+                        thu: *a56
+                        fri: *a56
+                        sat: *a56
+                        sun: *a56
                     deliveryFee:
                       type: integer
                       minimum: 0
@@ -11253,7 +11971,7 @@ paths:
                       type: object
                       nullable: true
                       properties:
-                        mon: &a56
+                        mon: &a57
                           type: object
                           properties:
                             open:
@@ -11275,12 +11993,12 @@ paths:
                           required:
                             - open
                             - close
-                        tue: *a56
-                        wed: *a56
-                        thu: *a56
-                        fri: *a56
-                        sat: *a56
-                        sun: *a56
+                        tue: *a57
+                        wed: *a57
+                        thu: *a57
+                        fri: *a57
+                        sat: *a57
+                        sun: *a57
                     deliveryFee:
                       type: integer
                       minimum: 0
@@ -11377,7 +12095,7 @@ paths:
                   type: object
                   nullable: true
                   properties:
-                    mon: &a57
+                    mon: &a58
                       type: object
                       properties:
                         open:
@@ -11399,12 +12117,12 @@ paths:
                       required:
                         - open
                         - close
-                    tue: *a57
-                    wed: *a57
-                    thu: *a57
-                    fri: *a57
-                    sat: *a57
-                    sun: *a57
+                    tue: *a58
+                    wed: *a58
+                    thu: *a58
+                    fri: *a58
+                    sat: *a58
+                    sun: *a58
                 deliveryFee:
                   type: integer
                   minimum: 0
@@ -11494,7 +12212,7 @@ paths:
                     type: object
                     nullable: true
                     properties:
-                      mon: &a58
+                      mon: &a59
                         type: object
                         properties:
                           open:
@@ -11516,12 +12234,12 @@ paths:
                         required:
                           - open
                           - close
-                      tue: *a58
-                      wed: *a58
-                      thu: *a58
-                      fri: *a58
-                      sat: *a58
-                      sun: *a58
+                      tue: *a59
+                      wed: *a59
+                      thu: *a59
+                      fri: *a59
+                      sat: *a59
+                      sun: *a59
                   deliveryFee:
                     type: integer
                     minimum: 0
@@ -11671,7 +12389,7 @@ paths:
                     type: object
                     nullable: true
                     properties:
-                      mon: &a59
+                      mon: &a60
                         type: object
                         properties:
                           open:
@@ -11693,12 +12411,12 @@ paths:
                         required:
                           - open
                           - close
-                      tue: *a59
-                      wed: *a59
-                      thu: *a59
-                      fri: *a59
-                      sat: *a59
-                      sun: *a59
+                      tue: *a60
+                      wed: *a60
+                      thu: *a60
+                      fri: *a60
+                      sat: *a60
+                      sun: *a60
                   deliveryFee:
                     type: integer
                     minimum: 0
@@ -11848,7 +12566,7 @@ paths:
                   type: object
                   nullable: true
                   properties:
-                    mon: &a60
+                    mon: &a61
                       type: object
                       properties:
                         open:
@@ -11870,12 +12588,12 @@ paths:
                       required:
                         - open
                         - close
-                    tue: *a60
-                    wed: *a60
-                    thu: *a60
-                    fri: *a60
-                    sat: *a60
-                    sun: *a60
+                    tue: *a61
+                    wed: *a61
+                    thu: *a61
+                    fri: *a61
+                    sat: *a61
+                    sun: *a61
                 deliveryFee:
                   type: integer
                   minimum: 0
@@ -11956,7 +12674,7 @@ paths:
                     type: object
                     nullable: true
                     properties:
-                      mon: &a61
+                      mon: &a62
                         type: object
                         properties:
                           open:
@@ -11978,12 +12696,12 @@ paths:
                         required:
                           - open
                           - close
-                      tue: *a61
-                      wed: *a61
-                      thu: *a61
-                      fri: *a61
-                      sat: *a61
-                      sun: *a61
+                      tue: *a62
+                      wed: *a62
+                      thu: *a62
+                      fri: *a62
+                      sat: *a62
+                      sun: *a62
                   deliveryFee:
                     type: integer
                     minimum: 0
@@ -12187,7 +12905,7 @@ paths:
                     type: object
                     nullable: true
                     properties:
-                      mon: &a62
+                      mon: &a63
                         type: object
                         properties:
                           open:
@@ -12209,12 +12927,12 @@ paths:
                         required:
                           - open
                           - close
-                      tue: *a62
-                      wed: *a62
-                      thu: *a62
-                      fri: *a62
-                      sat: *a62
-                      sun: *a62
+                      tue: *a63
+                      wed: *a63
+                      thu: *a63
+                      fri: *a63
+                      sat: *a63
+                      sun: *a63
                   deliveryFee:
                     type: integer
                     minimum: 0
@@ -12962,7 +13680,7 @@ paths:
                         type: string
                     linkType:
                       type: string
-                      enum: *a63
+                      enum: *a64
                     linkValue:
                       type: string
                       nullable: true
@@ -12970,7 +13688,7 @@ paths:
                       type: integer
                     status:
                       type: string
-                      enum: *a64
+                      enum: *a65
                     createdAt:
                       type: string
                       format: date-time
@@ -13618,7 +14336,7 @@ paths:
                       type: string
                   linkType:
                     type: string
-                    enum: *a63
+                    enum: *a64
                   linkValue:
                     type: string
                     nullable: true
@@ -13626,7 +14344,7 @@ paths:
                     type: integer
                   status:
                     type: string
-                    enum: *a64
+                    enum: *a65
                   createdAt:
                     type: string
                     format: date-time
@@ -14050,11 +14768,15 @@ paths:
                           type: string
                           format: uuid
                         productName:
-                          type: string
+                          type: object
+                          additionalProperties:
+                            type: string
                         productImage:
                           type: string
                         skuName:
-                          type: string
+                          type: object
+                          additionalProperties:
+                            type: string
                         unitPrice:
                           type: integer
                           minimum: 0
@@ -14166,6 +14888,10 @@ paths:
                   cancelReason:
                     type: string
                     nullable: true
+                  deletedAt:
+                    type: string
+                    nullable: true
+                    format: date-time
                   promotion:
                     type: object
                     nullable: true
@@ -14212,6 +14938,7 @@ paths:
                   - deliveredAt
                   - cancelledAt
                   - cancelReason
+                  - deletedAt
                   - promotion
                   - scheduledFor
                   - acceptingReservation
@@ -14288,11 +15015,15 @@ paths:
                             type: string
                             format: uuid
                           productName:
-                            type: string
+                            type: object
+                            additionalProperties:
+                              type: string
                           productImage:
                             type: string
                           skuName:
-                            type: string
+                            type: object
+                            additionalProperties:
+                              type: string
                           unitPrice:
                             type: integer
                             minimum: 0
@@ -14404,6 +15135,10 @@ paths:
                     cancelReason:
                       type: string
                       nullable: true
+                    deletedAt:
+                      type: string
+                      nullable: true
+                      format: date-time
                     promotion:
                       type: object
                       nullable: true
@@ -14450,6 +15185,7 @@ paths:
                     - deliveredAt
                     - cancelledAt
                     - cancelReason
+                    - deletedAt
                     - promotion
                     - scheduledFor
                     - acceptingReservation
@@ -14469,18 +15205,18 @@ paths:
                   counts:
                     type: object
                     properties:
-                      PENDING_PAYMENT: &a65
+                      PENDING_PAYMENT: &a66
                         type: integer
                         minimum: 0
-                      PENDING_CONFIRM: *a65
-                      CONFIRMED: *a65
-                      PICKED: *a65
-                      OUT_FOR_DELIVERY: *a65
-                      DELIVERED_PAID: *a65
-                      DELIVERED: *a65
-                      DELIVERED_UNPAID: *a65
-                      COMPLETED: *a65
-                      CANCELLED: *a65
+                      PENDING_CONFIRM: *a66
+                      CONFIRMED: *a66
+                      PICKED: *a66
+                      OUT_FOR_DELIVERY: *a66
+                      DELIVERED_PAID: *a66
+                      DELIVERED: *a66
+                      DELIVERED_UNPAID: *a66
+                      COMPLETED: *a66
+                      CANCELLED: *a66
                 required:
                   - counts
   /api/v1/admin/platform/dashboard/summary:
@@ -16072,11 +16808,15 @@ paths:
                           type: string
                           format: uuid
                         productName:
-                          type: string
+                          type: object
+                          additionalProperties:
+                            type: string
                         productImage:
                           type: string
                         skuName:
-                          type: string
+                          type: object
+                          additionalProperties:
+                            type: string
                         unitPrice:
                           type: integer
                           minimum: 0
@@ -16188,6 +16928,10 @@ paths:
                   cancelReason:
                     type: string
                     nullable: true
+                  deletedAt:
+                    type: string
+                    nullable: true
+                    format: date-time
                   promotion:
                     type: object
                     nullable: true
@@ -16234,11 +16978,87 @@ paths:
                   - deliveredAt
                   - cancelledAt
                   - cancelReason
+                  - deletedAt
                   - promotion
                   - scheduledFor
                   - acceptingReservation
         "404":
           description: ORDER_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+    delete:
+      tags:
+        - order
+      description: 删除订单（软删 deletedAt，仅本人；非本人/不存在 404；软删后 client list/detail/counts
+        不可见，admin 不过滤）
+      responses:
+        "200":
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                  - success
+        "404":
+          description: ORDER_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "409":
+          description: 非终态订单不可删除
           content:
             application/json:
               schema:
@@ -16315,6 +17135,38 @@ paths:
                 required:
                   - success
                   - error
+  /api/v1/client/orders/batch-delete:
+    post:
+      tags:
+        - order
+      description: 批量删除订单（软删，与通知批量删除同形状：ids 空 400 / 上限 100 / 全部限定本人）
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  minItems: 1
+                  maxItems: 100
+              required:
+                - ids
+      responses:
+        "200":
+          description: 批量删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                  - success
   /api/v1/client/cart:
     get:
       tags:
@@ -17046,7 +17898,7 @@ paths:
                       format: date-time
                     status:
                       type: string
-                      enum: *a66
+                      enum: *a67
                   required:
                     - id
                     - code
@@ -17119,7 +17971,7 @@ paths:
                     type: string
                   status:
                     type: string
-                    enum: *a67
+                    enum: *a68
                   type:
                     type: string
                     enum: *a17
@@ -17236,7 +18088,7 @@ paths:
                     type: string
                   status:
                     type: string
-                    enum: *a67
+                    enum: *a68
                   type:
                     type: string
                     enum: *a17
@@ -17384,7 +18236,7 @@ paths:
                       type: string
                     status:
                       type: string
-                      enum: *a67
+                      enum: *a68
                     type:
                       type: string
                       enum: *a17
@@ -17789,7 +18641,7 @@ paths:
           in: query
         - schema:
             type: string
-            enum: *a68
+            enum: *a69
           required: false
           name: mockFlag
           in: query
@@ -19171,7 +20023,7 @@ paths:
                           type: string
                         vehicleType:
                           type: string
-                          enum: *a69
+                          enum: *a70
                         isOnline:
                           type: boolean
                         totalDeliveries:
@@ -19920,17 +20772,17 @@ paths:
                     minLength: 1
                   transport:
                     type: string
-                    enum: *a70
+                    enum: *a71
                     default: websocket
                   authScheme:
                     type: string
-                    enum: *a71
+                    enum: *a72
                   userId:
                     type: string
                     minLength: 1
                   role:
                     type: string
-                    enum: *a72
+                    enum: *a73
                   serverEvents:
                     type: array
                     items:
@@ -20052,7 +20904,7 @@ paths:
           in: query
         - schema:
             type: string
-            enum: *a73
+            enum: *a74
           required: false
           name: role
           in: query
@@ -21579,11 +22431,15 @@ paths:
                                     type: string
                                     format: uuid
                                   productName:
-                                    type: string
+                                    type: object
+                                    additionalProperties:
+                                      type: string
                                   productImage:
                                     type: string
                                   skuName:
-                                    type: string
+                                    type: object
+                                    additionalProperties:
+                                      type: string
                                   unitPrice:
                                     type: integer
                                     minimum: 0
@@ -21695,6 +22551,10 @@ paths:
                             cancelReason:
                               type: string
                               nullable: true
+                            deletedAt:
+                              type: string
+                              nullable: true
+                              format: date-time
                             promotion:
                               type: object
                               nullable: true
@@ -21741,6 +22601,7 @@ paths:
                             - deliveredAt
                             - cancelledAt
                             - cancelReason
+                            - deletedAt
                             - promotion
                             - scheduledFor
                             - acceptingReservation
@@ -21872,11 +22733,15 @@ paths:
                               type: string
                               format: uuid
                             productName:
-                              type: string
+                              type: object
+                              additionalProperties:
+                                type: string
                             productImage:
                               type: string
                             skuName:
-                              type: string
+                              type: object
+                              additionalProperties:
+                                type: string
                             unitPrice:
                               type: integer
                               minimum: 0
@@ -21988,6 +22853,10 @@ paths:
                       cancelReason:
                         type: string
                         nullable: true
+                      deletedAt:
+                        type: string
+                        nullable: true
+                        format: date-time
                       promotion:
                         type: object
                         nullable: true
@@ -22034,6 +22903,7 @@ paths:
                       - deliveredAt
                       - cancelledAt
                       - cancelReason
+                      - deletedAt
                       - promotion
                       - scheduledFor
                       - acceptingReservation
@@ -22136,11 +23006,15 @@ paths:
                               type: string
                               format: uuid
                             productName:
-                              type: string
+                              type: object
+                              additionalProperties:
+                                type: string
                             productImage:
                               type: string
                             skuName:
-                              type: string
+                              type: object
+                              additionalProperties:
+                                type: string
                             unitPrice:
                               type: integer
                               minimum: 0
@@ -22252,6 +23126,10 @@ paths:
                       cancelReason:
                         type: string
                         nullable: true
+                      deletedAt:
+                        type: string
+                        nullable: true
+                        format: date-time
                       promotion:
                         type: object
                         nullable: true
@@ -22298,6 +23176,7 @@ paths:
                       - deliveredAt
                       - cancelledAt
                       - cancelReason
+                      - deletedAt
                       - promotion
                       - scheduledFor
                       - acceptingReservation
@@ -22532,10 +23411,10 @@ paths:
                               nullable: true
                             status:
                               type: string
-                              enum: *a74
+                              enum: *a75
                             applicationStatus:
                               type: string
-                              enum: *a75
+                              enum: *a76
                             totalDeliveries:
                               type: integer
                               minimum: 0
@@ -22560,7 +23439,7 @@ paths:
                               minimum: 0
                             tier:
                               type: string
-                              enum: &a76
+                              enum: &a77
                                 - BRONZE
                                 - SILVER
                                 - GOLD
@@ -22735,10 +23614,10 @@ paths:
                         nullable: true
                       status:
                         type: string
-                        enum: *a74
+                        enum: *a75
                       applicationStatus:
                         type: string
-                        enum: *a75
+                        enum: *a76
                       totalDeliveries:
                         type: integer
                         minimum: 0
@@ -22763,7 +23642,7 @@ paths:
                         minimum: 0
                       tier:
                         type: string
-                        enum: *a76
+                        enum: *a77
                       preferredWarehouseIds:
                         type: array
                         items:
@@ -22950,10 +23829,10 @@ paths:
                           nullable: true
                         status:
                           type: string
-                          enum: *a74
+                          enum: *a75
                         applicationStatus:
                           type: string
-                          enum: *a75
+                          enum: *a76
                         totalDeliveries:
                           type: integer
                           minimum: 0
@@ -22978,7 +23857,7 @@ paths:
                           minimum: 0
                         tier:
                           type: string
-                          enum: *a76
+                          enum: *a77
                         preferredWarehouseIds:
                           type: array
                           items:
@@ -23131,10 +24010,10 @@ paths:
                         nullable: true
                       status:
                         type: string
-                        enum: *a74
+                        enum: *a75
                       applicationStatus:
                         type: string
-                        enum: *a75
+                        enum: *a76
                       totalDeliveries:
                         type: integer
                         minimum: 0
@@ -23159,7 +24038,7 @@ paths:
                         minimum: 0
                       tier:
                         type: string
-                        enum: *a76
+                        enum: *a77
                       preferredWarehouseIds:
                         type: array
                         items:
@@ -23257,7 +24136,7 @@ paths:
               properties:
                 vehicleType:
                   type: string
-                  enum: *a77
+                  enum: *a78
                 vehiclePlate:
                   type: string
                   nullable: true
@@ -23300,10 +24179,10 @@ paths:
                         nullable: true
                       status:
                         type: string
-                        enum: *a74
+                        enum: *a75
                       applicationStatus:
                         type: string
-                        enum: *a75
+                        enum: *a76
                       totalDeliveries:
                         type: integer
                         minimum: 0
@@ -23328,7 +24207,7 @@ paths:
                         minimum: 0
                       tier:
                         type: string
-                        enum: *a76
+                        enum: *a77
                       preferredWarehouseIds:
                         type: array
                         items:
@@ -23807,7 +24686,7 @@ paths:
                           format: date-time
                         status:
                           type: string
-                          enum: *a78
+                          enum: *a79
                         createdBy:
                           type: string
                         createdAt:
@@ -24009,7 +24888,7 @@ paths:
                         format: date-time
                       status:
                         type: string
-                        enum: *a78
+                        enum: *a79
                       createdBy:
                         type: string
                       createdAt:
@@ -24167,7 +25046,7 @@ paths:
                         format: date-time
                       status:
                         type: string
-                        enum: *a78
+                        enum: *a79
                       createdBy:
                         type: string
                       createdAt:
@@ -24334,7 +25213,7 @@ paths:
                         format: date-time
                       status:
                         type: string
-                        enum: *a78
+                        enum: *a79
                       createdBy:
                         type: string
                       createdAt:
@@ -24492,7 +25371,7 @@ paths:
                         format: date-time
                       status:
                         type: string
-                        enum: *a78
+                        enum: *a79
                       createdBy:
                         type: string
                       createdAt:
@@ -24650,7 +25529,7 @@ paths:
                         format: date-time
                       status:
                         type: string
-                        enum: *a78
+                        enum: *a79
                       createdBy:
                         type: string
                       createdAt:
@@ -25175,7 +26054,7 @@ paths:
                     properties:
                       action:
                         type: string
-                        enum: *a79
+                        enum: *a80
                       accessToken:
                         type: string
                       refreshToken:
@@ -25518,10 +26397,10 @@ paths:
                         nullable: true
                       status:
                         type: string
-                        enum: *a74
+                        enum: *a75
                       applicationStatus:
                         type: string
-                        enum: *a75
+                        enum: *a76
                       totalDeliveries:
                         type: integer
                         minimum: 0
@@ -25546,7 +26425,7 @@ paths:
                         minimum: 0
                       tier:
                         type: string
-                        enum: *a76
+                        enum: *a77
                       preferredWarehouseIds:
                         type: array
                         items:
@@ -25663,10 +26542,10 @@ paths:
                         nullable: true
                       status:
                         type: string
-                        enum: *a74
+                        enum: *a75
                       applicationStatus:
                         type: string
-                        enum: *a75
+                        enum: *a76
                       totalDeliveries:
                         type: integer
                         minimum: 0
@@ -25691,7 +26570,7 @@ paths:
                         minimum: 0
                       tier:
                         type: string
-                        enum: *a76
+                        enum: *a77
                       preferredWarehouseIds:
                         type: array
                         items:
@@ -25841,10 +26720,10 @@ paths:
                         nullable: true
                       status:
                         type: string
-                        enum: *a74
+                        enum: *a75
                       applicationStatus:
                         type: string
-                        enum: *a75
+                        enum: *a76
                       totalDeliveries:
                         type: integer
                         minimum: 0
@@ -25869,7 +26748,7 @@ paths:
                         minimum: 0
                       tier:
                         type: string
-                        enum: *a76
+                        enum: *a77
                       preferredWarehouseIds:
                         type: array
                         items:
@@ -25990,7 +26869,7 @@ paths:
               properties:
                 status:
                   type: string
-                  enum: *a74
+                  enum: *a75
                 acceptMode:
                   type: string
                   enum:
@@ -26031,10 +26910,10 @@ paths:
                         nullable: true
                       status:
                         type: string
-                        enum: *a74
+                        enum: *a75
                       applicationStatus:
                         type: string
-                        enum: *a75
+                        enum: *a76
                       totalDeliveries:
                         type: integer
                         minimum: 0
@@ -26059,7 +26938,7 @@ paths:
                         minimum: 0
                       tier:
                         type: string
-                        enum: *a76
+                        enum: *a77
                       preferredWarehouseIds:
                         type: array
                         items:
@@ -27545,7 +28424,7 @@ paths:
       parameters:
         - schema:
             type: string
-            enum: *a80
+            enum: *a81
           required: false
           name: status
           in: query
@@ -28047,7 +28926,7 @@ paths:
                             nullable: true
                           applicationStatus:
                             type: string
-                            enum: *a75
+                            enum: *a76
                           preferredWarehouseIds:
                             type: array
                             items:
@@ -28067,7 +28946,7 @@ paths:
                         properties:
                           status:
                             type: string
-                            enum: *a74
+                            enum: *a75
                           isOnline:
                             type: boolean
                           maybeOffline:
@@ -29223,7 +30102,7 @@ paths:
                   format: uuid
                 reason:
                   type: string
-                  enum: &a81
+                  enum: &a82
                     - OUT_OF_STOCK
                     - EXPIRED
                     - QUALITY_ISSUE
@@ -29295,14 +30174,14 @@ paths:
                         maximum: 999999
                       reason:
                         type: string
-                        enum: *a81
+                        enum: *a82
                       reasonDetail:
                         type: string
                         nullable: true
                         maxLength: 500
                       status:
                         type: string
-                        enum: &a82
+                        enum: &a83
                           - PENDING
                           - APPROVED
                           - REJECTED
@@ -29383,7 +30262,7 @@ paths:
                           format: uri
                       refundType:
                         type: string
-                        enum: &a83
+                        enum: &a84
                           - REFUND_ONLY
                           - RETURN_REFUND
                       pickupAt:
@@ -29483,14 +30362,14 @@ paths:
                           maximum: 999999
                         reason:
                           type: string
-                          enum: *a81
+                          enum: *a82
                         reasonDetail:
                           type: string
                           nullable: true
                           maxLength: 500
                         status:
                           type: string
-                          enum: *a82
+                          enum: *a83
                         transactionId:
                           type: string
                           nullable: true
@@ -29565,7 +30444,7 @@ paths:
                             format: uri
                         refundType:
                           type: string
-                          enum: *a83
+                          enum: *a84
                         pickupAt:
                           type: string
                           nullable: true
@@ -29640,14 +30519,14 @@ paths:
                         maximum: 999999
                       reason:
                         type: string
-                        enum: *a81
+                        enum: *a82
                       reasonDetail:
                         type: string
                         nullable: true
                         maxLength: 500
                       status:
                         type: string
-                        enum: *a82
+                        enum: *a83
                       transactionId:
                         type: string
                         nullable: true
@@ -29722,7 +30601,7 @@ paths:
                           format: uri
                       refundType:
                         type: string
-                        enum: *a83
+                        enum: *a84
                       pickupAt:
                         type: string
                         nullable: true
@@ -29826,14 +30705,14 @@ paths:
                         maximum: 999999
                       reason:
                         type: string
-                        enum: *a81
+                        enum: *a82
                       reasonDetail:
                         type: string
                         nullable: true
                         maxLength: 500
                       status:
                         type: string
-                        enum: *a82
+                        enum: *a83
                       transactionId:
                         type: string
                         nullable: true
@@ -29908,7 +30787,7 @@ paths:
                           format: uri
                       refundType:
                         type: string
-                        enum: *a83
+                        enum: *a84
                       pickupAt:
                         type: string
                         nullable: true
@@ -29949,7 +30828,7 @@ paths:
       parameters:
         - schema:
             type: string
-            enum: *a82
+            enum: *a83
           required: false
           name: status
           in: query
@@ -30000,14 +30879,14 @@ paths:
                               maximum: 999999
                             reason:
                               type: string
-                              enum: *a81
+                              enum: *a82
                             reasonDetail:
                               type: string
                               nullable: true
                               maxLength: 500
                             status:
                               type: string
-                              enum: *a82
+                              enum: *a83
                             transactionId:
                               type: string
                               nullable: true
@@ -30082,7 +30961,7 @@ paths:
                                 format: uri
                             refundType:
                               type: string
-                              enum: *a83
+                              enum: *a84
                             pickupAt:
                               type: string
                               nullable: true
@@ -30168,14 +31047,14 @@ paths:
                         maximum: 999999
                       reason:
                         type: string
-                        enum: *a81
+                        enum: *a82
                       reasonDetail:
                         type: string
                         nullable: true
                         maxLength: 500
                       status:
                         type: string
-                        enum: *a82
+                        enum: *a83
                       transactionId:
                         type: string
                         nullable: true
@@ -30250,7 +31129,7 @@ paths:
                           format: uri
                       refundType:
                         type: string
-                        enum: *a83
+                        enum: *a84
                       pickupAt:
                         type: string
                         nullable: true
@@ -30374,14 +31253,14 @@ paths:
                         maximum: 999999
                       reason:
                         type: string
-                        enum: *a81
+                        enum: *a82
                       reasonDetail:
                         type: string
                         nullable: true
                         maxLength: 500
                       status:
                         type: string
-                        enum: *a82
+                        enum: *a83
                       transactionId:
                         type: string
                         nullable: true
@@ -30456,7 +31335,7 @@ paths:
                           format: uri
                       refundType:
                         type: string
-                        enum: *a83
+                        enum: *a84
                       pickupAt:
                         type: string
                         nullable: true
@@ -32740,6 +33619,180 @@ paths:
                 required:
                   - success
                   - error
+  /api/v1/admin/uploads/slide-image:
+    post:
+      tags:
+        - upload
+      description: 引导页 slide 图片上传（引导页内容可配置 批1，2026-10-14）。multipart/form-data，field
+        name="file"。SUPER_ADMIN/WAREHOUSE_STAFF 权限（与 upload.controller 类级 @Roles
+        一致）。支持 jpg/png/webp，size ≤ 5MB，宽度 600-2000px，宽高比 3:4 - 1:1（竖向偏方，方案v2 D2
+        拍板建议区间）。MinIO 路径前缀 onboarding/slide-。前端拿到 URL 后提交 POST
+        /admin/onboarding/slides 的 imageUrl。
+      responses:
+        "200":
+          description: 上传成功，返回公开 URL + key + size
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  key:
+                    type: string
+                  size:
+                    type: integer
+                    minimum: 0
+                required:
+                  - url
+                  - key
+                  - size
+        "400":
+          description: 不支持的 mime / 空文件 / magic bytes 不匹配 / 宽度出界（600-2000px）/ 宽高比出界（3:4-1:1）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "401":
+          description: E-AUTH-003 未授权
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "403":
+          description: E-AUTH-001 无权限（非 SUPER_ADMIN/WAREHOUSE_STAFF）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "413":
+          description: 文件超过 5MB 上限
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "500":
+          description: E-UPLOAD-001 存储服务错误（StorageError）/ E-UPLOAD-002 其他上传错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
   /api/v1/client/home-entries:
     get:
       tags:
@@ -32763,14 +33816,14 @@ paths:
                       type: string
                     theme:
                       type: string
-                      enum: *a84
+                      enum: *a85
                     link:
                       type: string
                     sortOrder:
                       type: integer
                     status:
                       type: string
-                      enum: *a85
+                      enum: *a86
                   required:
                     - id
                     - titleKey
@@ -32778,6 +33831,420 @@ paths:
                     - theme
                     - link
                     - sortOrder
+  /api/v1/client/onboarding/slides:
+    get:
+      tags:
+        - onboarding
+      description: 引导页 slide 列表（@Public 匿名可达，首启无 token 场景）。enabled=true 按 sortOrder
+        升序；空表返回 []（客户端回退本地 SLIDES 兜底）。
+      responses:
+        "200":
+          description: 引导页 slide 列表（可为空数组）
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    icon:
+                      type: string
+                      nullable: true
+                    imageUrl:
+                      type: string
+                      nullable: true
+                    title:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    description:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    sortOrder:
+                      type: integer
+                    enabled:
+                      type: boolean
+                    createdAt:
+                      type: string
+                      format: date-time
+                    updatedAt:
+                      type: string
+                      format: date-time
+                  required:
+                    - id
+                    - icon
+                    - imageUrl
+                    - title
+                    - description
+                    - sortOrder
+                    - enabled
+                    - createdAt
+                    - updatedAt
+  /api/v1/admin/onboarding/slides:
+    post:
+      tags:
+        - onboarding
+      description: 创建引导页 slide（SUPER_ADMIN）。title/description 五语 JSON（en
+        必填非空，服务端校验）。icon/imageUrl 二选一。
+      responses:
+        "200":
+          description: 创建后的 slide
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  icon:
+                    type: string
+                    nullable: true
+                  imageUrl:
+                    type: string
+                    nullable: true
+                  title:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  description:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  sortOrder:
+                    type: integer
+                  enabled:
+                    type: boolean
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
+                required:
+                  - id
+                  - icon
+                  - imageUrl
+                  - title
+                  - description
+                  - sortOrder
+                  - enabled
+                  - createdAt
+                  - updatedAt
+        "400":
+          description: E-ONBOARDING-001 五语对象非法（缺 en 或键集越界）/ E-COMMON-001 zod 校验失败
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "403":
+          description: E-AUTH-001 非 SUPER_ADMIN
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "409":
+          description: E-ONBOARDING-003 imageUrl 非本服务上传 URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+  /api/v1/admin/onboarding/slides/{id}:
+    patch:
+      tags:
+        - onboarding
+      description: 修改引导页 slide（SUPER_ADMIN），部分字段（含 sortOrder、enabled）。
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                icon:
+                  type: string
+                  nullable: true
+                  minLength: 1
+                imageUrl:
+                  type: string
+                  nullable: true
+                  minLength: 1
+                title:
+                  type: object
+                  additionalProperties:
+                    type: string
+                description:
+                  type: object
+                  additionalProperties:
+                    type: string
+                sortOrder:
+                  type: integer
+                enabled:
+                  type: boolean
+      responses:
+        "200":
+          description: 修改后的 slide
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  icon:
+                    type: string
+                    nullable: true
+                  imageUrl:
+                    type: string
+                    nullable: true
+                  title:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  description:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  sortOrder:
+                    type: integer
+                  enabled:
+                    type: boolean
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
+                required:
+                  - id
+                  - icon
+                  - imageUrl
+                  - title
+                  - description
+                  - sortOrder
+                  - enabled
+                  - createdAt
+                  - updatedAt
+        "403":
+          description: E-AUTH-001 非 SUPER_ADMIN
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "404":
+          description: E-ONBOARDING-002 slide 不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+    delete:
+      tags:
+        - onboarding
+      description: 删除引导页 slide（SUPER_ADMIN，物理删除）。
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    nullable: true
+                required:
+                  - success
+                  - data
+        "403":
+          description: E-AUTH-001 非 SUPER_ADMIN
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "404":
+          description: E-ONBOARDING-002 slide 不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
   /api/v1/client/search/hot:
     get:
       tags:
@@ -33703,7 +35170,7 @@ paths:
                     type: string
                     format: uri
                   maxItems: 9
-                  default: *a86
+                  default: *a87
                 anonymous:
                   type: boolean
                   default: false
@@ -33713,7 +35180,7 @@ paths:
                     type: string
                     enum: *a39
                   maxItems: 6
-                  default: *a87
+                  default: *a88
                 category:
                   type: string
                   enum: *a40
@@ -33883,7 +35350,7 @@ paths:
                     type: string
                     enum: *a41
                   maxItems: 4
-                  default: *a88
+                  default: *a89
                 comment:
                   type: object
                   additionalProperties:
@@ -34661,7 +36128,7 @@ paths:
                     type: string
                     format: uri
                   maxItems: 9
-                  default: *a89
+                  default: *a90
               required:
                 - category
                 - content
@@ -35620,6 +37087,1226 @@ paths:
                 required:
                   - success
                   - error
+  /api/v1/rider/orders/history:
+    get:
+      tags:
+        - rider
+      description: "骑手订单历史列表（方案v2 §2.1，R12 互斥口径，Role: RIDER）。三态全查（DELIVERED / FAILED /
+        关联订单 CANCELLED）后派生 status：Order CANCELLED → cancelled（优先）；task FAILED
+        且订单未取消 → transferred；task DELIVERED 且订单未取消 → completed。query.status
+        过滤在派生映射后做（可选 completed/cancelled/transferred，不透传 Prisma
+        枚举）。deliveredAt/updatedAt 倒序，page/pageSize + total（offset
+        分页）。字段口径：income = order.deliveryFee（分，配送费收入）；completedAt =
+        deliveredAt（completed）/ updatedAt（其余）epoch ms；durationMinutes =
+        pickedUpAt→deliveredAt 差值缺失给 0；dropoffName =
+        order.deliveryAddress.name；pickupName = warehouse.name.en 回退
+        code；distanceKm = pickup→dropoff Haversine 回退计费距离兜底 0。金额单位分。"
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 100
+            default: 20
+          required: false
+          name: pageSize
+          in: query
+        - schema:
+            type: string
+            enum: *a49
+          required: false
+          name: status
+          in: query
+      responses:
+        "200":
+          description: 历史订单列表（offset 分页）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            orderNo:
+                              type: string
+                            status:
+                              type: string
+                              enum: *a49
+                            completedAt:
+                              type: integer
+                              minimum: 0
+                            pickupName:
+                              type: string
+                            pickupAddress:
+                              type: string
+                            dropoffName:
+                              type: string
+                            dropoffAddress:
+                              type: string
+                            income:
+                              type: integer
+                              minimum: 0
+                              maximum: 999999
+                            distanceKm:
+                              type: number
+                              minimum: 0
+                            durationMinutes:
+                              type: integer
+                              minimum: 0
+                          required:
+                            - id
+                            - orderNo
+                            - status
+                            - completedAt
+                            - pickupName
+                            - pickupAddress
+                            - dropoffName
+                            - dropoffAddress
+                            - income
+                            - distanceKm
+                            - durationMinutes
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      pageSize:
+                        type: integer
+                    required:
+                      - items
+                      - total
+                      - page
+                      - pageSize
+                required:
+                  - success
+                  - data
+        "401":
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "403":
+          description: 非 RIDER
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+  /api/v1/rider/orders/stats/today:
+    get:
+      tags:
+        - rider
+      description: "骑手订单今日统计（方案v2 §2.3，R12 口径，Role: RIDER）。count = 今日（Asia/Dili
+        当日，shared/datetime MARKET_TIMEZONE helper，非手写 offset）completed
+        任务数；totalIncome = 同口径 order.deliveryFee 求和（分）——count 与 totalIncome
+        严格同口径只算 completed。前端 profile 页「今日订单/收入」+ history 页底栏消费。"
+      responses:
+        "200":
+          description: 今日统计（count + totalIncome 分）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: object
+                    properties:
+                      count:
+                        type: integer
+                        minimum: 0
+                      totalIncome:
+                        type: integer
+                        minimum: 0
+                        maximum: 999999
+                    required:
+                      - count
+                      - totalIncome
+                  message:
+                    type: string
+                required:
+                  - success
+                  - data
+        "401":
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "403":
+          description: 非 RIDER
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+  /api/v1/rider/orders/{id}:
+    get:
+      tags:
+        - rider
+      description: "骑手订单历史详情（方案v2 §2.4，Role: RIDER）。路径参数 = history 列表项 id（delivery
+        task id）。响应同 §2.1 单对象：R12 互斥口径派生 status（Order CANCELLED → cancelled
+        优先；task FAILED 且订单未取消 → transferred；DELIVERED → completed）；income =
+        order.deliveryFee（分，配送费收入）；completedAt = deliveredAt（completed）/
+        updatedAt（其余）；durationMinutes = pickedUpAt→deliveredAt 差值缺失给
+        0。归属校验：task.riderId ≠ 当前骑手 RiderProfile.id → 404（E-RIDER-001，与
+        listMyTasks 不泄露他人任务存在性同语义）。"
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: 历史订单详情（单对象）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      orderNo:
+                        type: string
+                      status:
+                        type: string
+                        enum: *a49
+                      completedAt:
+                        type: integer
+                        minimum: 0
+                      pickupName:
+                        type: string
+                      pickupAddress:
+                        type: string
+                      dropoffName:
+                        type: string
+                      dropoffAddress:
+                        type: string
+                      income:
+                        type: integer
+                        minimum: 0
+                        maximum: 999999
+                      distanceKm:
+                        type: number
+                        minimum: 0
+                      durationMinutes:
+                        type: integer
+                        minimum: 0
+                    required:
+                      - id
+                      - orderNo
+                      - status
+                      - completedAt
+                      - pickupName
+                      - pickupAddress
+                      - dropoffName
+                      - dropoffAddress
+                      - income
+                      - distanceKm
+                      - durationMinutes
+                  message:
+                    type: string
+                required:
+                  - success
+                  - data
+        "401":
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "403":
+          description: 非 RIDER
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "404":
+          description: E-RIDER-001 任务不存在或不属于当前骑手
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+  /api/v1/rider/orders/stats/status-counts:
+    get:
+      tags:
+        - rider
+      description: "骑手订单历史状态计数（方案v2 §2.2，R12 互斥口径，Role: RIDER）。数据源同 history 列表过滤条件聚合
+        count：completed = task DELIVERED 且订单未取消；cancelled = 关联 Order
+        CANCELLED（优先，双命中时不计入 completed/transferred）；transferred = task FAILED
+        且订单未取消；all = 三者之和（tab 徽标不双计）。历史数据注记：当前库 99 FAILED 任务全部关联 CANCELLED 订单 →
+        transferred 预期 0，属预期非 bug。"
+      responses:
+        "200":
+          description: 四值状态计数
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: object
+                    properties:
+                      all:
+                        type: integer
+                        minimum: 0
+                      completed:
+                        type: integer
+                        minimum: 0
+                      cancelled:
+                        type: integer
+                        minimum: 0
+                      transferred:
+                        type: integer
+                        minimum: 0
+                    required:
+                      - all
+                      - completed
+                      - cancelled
+                      - transferred
+                  message:
+                    type: string
+                required:
+                  - success
+                  - data
+        "401":
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "403":
+          description: 非 RIDER
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+  /api/v1/rider/earnings/summary:
+    get:
+      tags:
+        - rider
+      description: '骑手收入汇总（批2 B-P1-2，R11 口径，Role: RIDER）。availableBalance = Σ
+        Settlement.netAmount(subjectType=RIDER, status ∈ {CONFIRMED, PAID}) − Σ
+        WithdrawalRequest.amount(requesterType=RIDER, requesterId=当前骑手,
+        status=PAID)；today/weekly/monthly 同源按 periodDate 滚动窗口（今日/近7天/近30天，仅计
+        CONFIRMED+PAID）。T+1 口径：当日完成订单次日才生成结算单，今日字段可能为
+        0，前端需提示"今日收入次日到账"。DISPUTED/PENDING 结算单不计入。金额单位均为分。'
+      responses:
+        "200":
+          description: 收入汇总（4 字段金额分）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: object
+                    properties:
+                      availableBalance:
+                        type: integer
+                        minimum: 0
+                        maximum: 999999
+                      today:
+                        type: integer
+                        minimum: 0
+                        maximum: 999999
+                      weekly:
+                        type: integer
+                        minimum: 0
+                        maximum: 999999
+                      monthly:
+                        type: integer
+                        minimum: 0
+                        maximum: 999999
+                    required:
+                      - availableBalance
+                      - today
+                      - weekly
+                      - monthly
+                  message:
+                    type: string
+                required:
+                  - success
+                  - data
+        "401":
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "403":
+          description: 非 RIDER
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+  /api/v1/rider/earnings/transactions:
+    get:
+      tags:
+        - rider
+      description: "骑手收入流水（批2 B-P1-2，R11 口径，Role: RIDER）。数据源 =
+        Settlement(subjectType=RIDER, subjectId=当前骑手 RiderProfile.id)，按
+        periodDate 倒序 offset 分页（page/pageSize/total）。DISPUTED 结算单也会出现在流水中但不得计入
+        summary/availableBalance 口径（前端展示时标注）。金额单位分。"
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 100
+            default: 20
+          required: false
+          name: pageSize
+          in: query
+      responses:
+        "200":
+          description: 流水列表（offset 分页）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            periodDate:
+                              type: string
+                            orderCount:
+                              type: integer
+                              minimum: 0
+                            grossAmount:
+                              type: integer
+                              minimum: 0
+                              maximum: 999999
+                            commission:
+                              type: integer
+                              minimum: 0
+                              maximum: 999999
+                            refundAmount:
+                              type: integer
+                              minimum: 0
+                              maximum: 999999
+                            netAmount:
+                              type: integer
+                              minimum: 0
+                              maximum: 999999
+                            status:
+                              type: string
+                            confirmedAt:
+                              type: string
+                              nullable: true
+                              format: date-time
+                            paidAt:
+                              type: string
+                              nullable: true
+                              format: date-time
+                            createdAt:
+                              type: string
+                              format: date-time
+                          required:
+                            - id
+                            - periodDate
+                            - orderCount
+                            - grossAmount
+                            - commission
+                            - refundAmount
+                            - netAmount
+                            - status
+                            - confirmedAt
+                            - paidAt
+                            - createdAt
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      pageSize:
+                        type: integer
+                    required:
+                      - items
+                      - total
+                      - page
+                      - pageSize
+                required:
+                  - success
+                  - data
+        "401":
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "403":
+          description: 非 RIDER
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+  /api/v1/rider/withdrawals:
+    post:
+      tags:
+        - rider
+      description: "骑手发起提现申请（批2 B-P1-2，R11 口径，Role: RIDER）。requesterType/requesterId
+        由服务端从 JWT 硬编码（RIDER + req.user.sub），不收请求体——防伪造 requesterId 越权。body 仅 {
+        amount, payoutAccount }。复用 admin 侧状态机（PENDING → admin review →
+        PAID），rider 侧不可改状态。余额校验口径同 availableBalance（advisory lock 防并发
+        TOCTOU）。E-SETTLE-001 余额不足。金额单位分。"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                  minimum: 0
+                  maximum: 999999
+                payoutAccount:
+                  type: object
+                  properties:
+                    channel:
+                      type: string
+                      enum: *a91
+                    account:
+                      type: string
+                    holderName:
+                      type: string
+                    bankName:
+                      type: string
+                    branchName:
+                      type: string
+                  required:
+                    - channel
+                    - account
+              required:
+                - amount
+                - payoutAccount
+      responses:
+        "200":
+          description: 申请成功（返回 PENDING 记录）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      requesterType:
+                        type: string
+                        enum: &a92
+                          - MERCHANT
+                          - RIDER
+                      requesterId:
+                        type: string
+                      amount:
+                        type: integer
+                        minimum: 0
+                        maximum: 999999
+                      status:
+                        type: string
+                        enum: &a93
+                          - PENDING
+                          - APPROVED
+                          - REJECTED
+                          - PAID
+                          - FAILED
+                      payoutAccount:
+                        type: object
+                        properties:
+                          channel:
+                            type: string
+                            enum: *a91
+                          account:
+                            type: string
+                          holderName:
+                            type: string
+                          bankName:
+                            type: string
+                          branchName:
+                            type: string
+                        required:
+                          - channel
+                          - account
+                      rejectReason:
+                        type: string
+                        nullable: true
+                      payoutReference:
+                        type: string
+                        nullable: true
+                      reviewedBy:
+                        type: string
+                        nullable: true
+                      reviewedAt:
+                        type: string
+                        nullable: true
+                        format: date-time
+                      paidAt:
+                        type: string
+                        nullable: true
+                        format: date-time
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - id
+                      - requesterType
+                      - requesterId
+                      - amount
+                      - status
+                      - payoutAccount
+                      - rejectReason
+                      - payoutReference
+                      - reviewedBy
+                      - reviewedAt
+                      - paidAt
+                      - createdAt
+                      - updatedAt
+                  message:
+                    type: string
+                required:
+                  - success
+                  - data
+        "400":
+          description: E-SETTLE-001 金额超过可用余额 / E-COMMON-001 校验失败
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "401":
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "403":
+          description: 非 RIDER
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+    get:
+      tags:
+        - rider
+      description: "骑手提现记录（批2 B-P1-2，Role:
+        RIDER）。仅返回当前骑手（requesterId=req.user.sub）的申请，按 createdAt 倒序 offset 分页。状态机
+        PENDING → APPROVED → PAID / REJECTED / FAILED，rider 侧只读。"
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 100
+            default: 20
+          required: false
+          name: pageSize
+          in: query
+      responses:
+        "200":
+          description: 提现记录列表（offset 分页）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            requesterType:
+                              type: string
+                              enum: *a92
+                            requesterId:
+                              type: string
+                            amount:
+                              type: integer
+                              minimum: 0
+                              maximum: 999999
+                            status:
+                              type: string
+                              enum: *a93
+                            payoutAccount:
+                              type: object
+                              properties:
+                                channel:
+                                  type: string
+                                  enum: *a91
+                                account:
+                                  type: string
+                                holderName:
+                                  type: string
+                                bankName:
+                                  type: string
+                                branchName:
+                                  type: string
+                              required:
+                                - channel
+                                - account
+                            rejectReason:
+                              type: string
+                              nullable: true
+                            payoutReference:
+                              type: string
+                              nullable: true
+                            reviewedBy:
+                              type: string
+                              nullable: true
+                            reviewedAt:
+                              type: string
+                              nullable: true
+                              format: date-time
+                            paidAt:
+                              type: string
+                              nullable: true
+                              format: date-time
+                            createdAt:
+                              type: string
+                              format: date-time
+                            updatedAt:
+                              type: string
+                              format: date-time
+                          required:
+                            - id
+                            - requesterType
+                            - requesterId
+                            - amount
+                            - status
+                            - payoutAccount
+                            - rejectReason
+                            - payoutReference
+                            - reviewedBy
+                            - reviewedAt
+                            - paidAt
+                            - createdAt
+                            - updatedAt
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      pageSize:
+                        type: integer
+                    required:
+                      - items
+                      - total
+                      - page
+                      - pageSize
+                required:
+                  - success
+                  - data
+        "401":
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
+        "403":
+          description: 非 RIDER
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        pattern: ^E-[A-Z]+-\d{3}$|^E-HTTP-\d{3}$
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - code
+                      - message
+                required:
+                  - success
+                  - error
   /api/v1/admin/settle/settlements:
     get:
       tags:
@@ -35628,7 +38315,7 @@ paths:
       parameters:
         - schema:
             type: string
-            enum: &a90
+            enum: &a94
               - MERCHANT
               - RIDER
           required: false
@@ -35651,7 +38338,7 @@ paths:
           in: query
         - schema:
             type: string
-            enum: &a91
+            enum: &a95
               - PENDING
               - CONFIRMED
               - PAID
@@ -35703,7 +38390,7 @@ paths:
                               type: string
                             subjectType:
                               type: string
-                              enum: *a90
+                              enum: *a94
                             subjectId:
                               type: string
                             warehouseId:
@@ -35730,7 +38417,7 @@ paths:
                               maximum: 999999
                             status:
                               type: string
-                              enum: *a91
+                              enum: *a95
                             confirmedAt:
                               type: string
                               nullable: true
@@ -35867,7 +38554,7 @@ paths:
                         type: string
                       subjectType:
                         type: string
-                        enum: *a90
+                        enum: *a94
                       subjectId:
                         type: string
                       warehouseId:
@@ -35894,7 +38581,7 @@ paths:
                         maximum: 999999
                       status:
                         type: string
-                        enum: *a91
+                        enum: *a95
                       confirmedAt:
                         type: string
                         nullable: true
@@ -35993,7 +38680,7 @@ paths:
                         type: string
                       subjectType:
                         type: string
-                        enum: *a90
+                        enum: *a94
                       subjectId:
                         type: string
                       warehouseId:
@@ -36020,7 +38707,7 @@ paths:
                         maximum: 999999
                       status:
                         type: string
-                        enum: *a91
+                        enum: *a95
                       confirmedAt:
                         type: string
                         nullable: true
@@ -36129,7 +38816,7 @@ paths:
                   type: string
                 subjectType:
                   type: string
-                  enum: *a90
+                  enum: *a94
                 subjectId:
                   type: string
               required:
@@ -36157,7 +38844,7 @@ paths:
                         type: string
                       subjectType:
                         type: string
-                        enum: *a90
+                        enum: *a94
                       subjectId:
                         type: string
                       warehouseId:
@@ -36184,7 +38871,7 @@ paths:
                         maximum: 999999
                       status:
                         type: string
-                        enum: *a91
+                        enum: *a95
                       confirmedAt:
                         type: string
                         nullable: true
@@ -36262,9 +38949,7 @@ paths:
               properties:
                 requesterType:
                   type: string
-                  enum: &a92
-                    - MERCHANT
-                    - RIDER
+                  enum: *a92
                 requesterId:
                   type: string
                 amount:
@@ -36276,11 +38961,7 @@ paths:
                   properties:
                     channel:
                       type: string
-                      enum: &a93
-                        - BANK_TRANSFER
-                        - WECHAT
-                        - ALIPAY
-                        - PAYPAL
+                      enum: *a91
                     account:
                       type: string
                     holderName:
@@ -36326,18 +39007,13 @@ paths:
                         maximum: 999999
                       status:
                         type: string
-                        enum: &a94
-                          - PENDING
-                          - APPROVED
-                          - REJECTED
-                          - PAID
-                          - FAILED
+                        enum: *a93
                       payoutAccount:
                         type: object
                         properties:
                           channel:
                             type: string
-                            enum: *a93
+                            enum: *a91
                           account:
                             type: string
                           holderName:
@@ -36438,7 +39114,7 @@ paths:
           in: query
         - schema:
             type: string
-            enum: *a94
+            enum: *a93
           required: false
           name: status
           in: query
@@ -36493,13 +39169,13 @@ paths:
                               maximum: 999999
                             status:
                               type: string
-                              enum: *a94
+                              enum: *a93
                             payoutAccount:
                               type: object
                               properties:
                                 channel:
                                   type: string
-                                  enum: *a93
+                                  enum: *a91
                                 account:
                                   type: string
                                 holderName:
@@ -36661,13 +39337,13 @@ paths:
                         maximum: 999999
                       status:
                         type: string
-                        enum: *a94
+                        enum: *a93
                       payoutAccount:
                         type: object
                         properties:
                           channel:
                             type: string
-                            enum: *a93
+                            enum: *a91
                           account:
                             type: string
                           holderName:
@@ -36806,13 +39482,13 @@ paths:
                         maximum: 999999
                       status:
                         type: string
-                        enum: *a94
+                        enum: *a93
                       payoutAccount:
                         type: object
                         properties:
                           channel:
                             type: string
-                            enum: *a93
+                            enum: *a91
                           account:
                             type: string
                           holderName:
@@ -36976,13 +39652,13 @@ paths:
                         maximum: 999999
                       status:
                         type: string
-                        enum: *a94
+                        enum: *a93
                       payoutAccount:
                         type: object
                         properties:
                           channel:
                             type: string
-                            enum: *a93
+                            enum: *a91
                           account:
                             type: string
                           holderName:
@@ -37153,7 +39829,7 @@ paths:
                         exclusiveMinimum: true
                       source:
                         type: string
-                        enum: *a49
+                        enum: *a50
                       operatorId:
                         type: string
                         nullable: true
@@ -37259,7 +39935,7 @@ paths:
                         exclusiveMinimum: true
                       source:
                         type: string
-                        enum: *a49
+                        enum: *a50
                       operatorId:
                         type: string
                         nullable: true
@@ -37377,7 +40053,7 @@ paths:
                           exclusiveMinimum: true
                         source:
                           type: string
-                          enum: *a49
+                          enum: *a50
                         operatorId:
                           type: string
                           nullable: true
@@ -37411,7 +40087,7 @@ paths:
       parameters:
         - schema:
             type: string
-            enum: *a95
+            enum: *a96
             default: CNY
           required: false
           name: to
@@ -37445,7 +40121,7 @@ paths:
                     exclusiveMinimum: true
                   source:
                     type: string
-                    enum: *a49
+                    enum: *a50
                 required:
                   - rateDate
                   - fromCurrency
