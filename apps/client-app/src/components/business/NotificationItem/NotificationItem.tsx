@@ -262,7 +262,9 @@ export const NotificationItem = memo(function NotificationItem({
                   }
                 }}
                 style={[styles.callBtn, { backgroundColor: colors.semantic['positive-container'] }]}
-                accessibilityRole="button"
+                // Web 实测嵌套 <button> 报错（validateDOMNesting）：外层卡片 Pressable+role=button
+                // 已渲染 <button>，此 View 若再设 role=button 在 RN Web 同样渲染 <button> 构成嵌套
+                //（Modal.tsx:79 同款先例）。删 role 保留 label + onAccessibilityTap，读屏仍可达。
                 accessibilityLabel={t('service.notifications.cta.callRider')}
                 onAccessibilityTap={callRider}
               >

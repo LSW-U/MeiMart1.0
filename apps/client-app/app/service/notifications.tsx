@@ -129,6 +129,20 @@ export default function NotificationsPage() {
     return notifications.filter((n) => n.type === tab);
   }, [notifications, tab]);
 
+  // 主理人实测反馈（settings 按钮换全选）：当前 tab 全部勾选/取消；已全选再点即清空。
+  const allSelected = filtered.length > 0 && filtered.every((n) => selected.has(n.id));
+  const toggleSelectAll = useCallback(() => {
+    setSelected((prev) => {
+      if (filtered.length > 0 && filtered.every((n) => prev.has(n.id))) {
+        // 已全选 → 取消全部
+        const next = new Set(prev);
+        filtered.forEach((n) => next.delete(n.id));
+        return next;
+      }
+      return new Set([...prev, ...filtered.map((n) => n.id)]);
+    });
+  }, [filtered]);
+
   // Why: P23 D1 —— 时间分组（今天/昨天/更早），SectionList renderSectionHeader 渲染分组头
   const sections = useMemo(() => {
     const buckets: Record<DayGroup, Notification[]> = { today: [], yesterday: [], earlier: [] };
@@ -449,7 +463,7 @@ export default function NotificationsPage() {
         </TickerProvider>
       )}
 
-      {/* 管理模式底栏（复用收藏页 manageBar 先例）：全部已读 + 通知设置（原 header 能力保留可达）+ 删除 */}
+      {/* 管理模式底栏（复用收藏页 manageBar 先例）：全部已读 + 全选 + 删除 */}
       {selectMode && (
         <View
           style={[
@@ -472,16 +486,21 @@ export default function NotificationsPage() {
               {t('service.notifications.readAll')}
             </Text>
           </Pressable>
+          {/* 主理人实测反馈：设置入口低频，管理态换成「全选」——一键勾选当前 tab 全部通知
+              （复用 common.selectAll，收藏页/订单页同款 key）；无可选项时禁用。 */}
           <Pressable
-            onPress={() => router.push('/settings')}
+            onPress={toggleSelectAll}
+            disabled={filtered.length === 0}
             style={styles.manageBarBtn}
             accessibilityRole="button"
-            accessibilityLabel={t('service.notifications.a11y.settings')}
-            testID="notif-settings"
+            accessibilityLabel={t('common.selectAll')}
+            accessibilityState={filtered.length === 0 ? { disabled: true } : undefined}
+            testID="notif-select-all"
           >
-            <Icon symbol="settings" size={20} color={colors.primary} />
+            <Icon symbol="done_all" size={20} color={colors.primary} />
+            {/* 已全选时切「取消全选」态（favorites.a11y.cancelSelect 同语义复用），图标不变 */}
             <Text style={[styles.manageBarText, { color: colors['on-surface'] }]}>
-              {t('service.notifications.a11y.settings')}
+              {allSelected ? t('favorites.a11y.cancelSelect') : t('common.selectAll')}
             </Text>
           </Pressable>
           <Pressable

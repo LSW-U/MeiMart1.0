@@ -103,6 +103,12 @@ export function getStatusPill(
 
 export type OrderAction = 'pay' | 'cancel' | 'track' | 'review' | 'repurchase' | 'after-sales';
 
+// Why: Web 实测 409 —— 后端 batch-delete 仅接受终态订单（order-status.machine TERMINAL_STATES
+//      = COMPLETED/CANCELLED），非终态整批拒绝。前端管理模式据此禁勾（对齐后端唯一事实源）。
+export function isTerminalOrder(status: OrderStatus): boolean {
+  return status === 'COMPLETED' || status === 'CANCELLED';
+}
+
 export interface OrderActionDescriptor {
   /** 按钮文案 i18n key（order.actionLabels.*，zh/en/tet/pt 4 语齐） */
   labelKey: string;

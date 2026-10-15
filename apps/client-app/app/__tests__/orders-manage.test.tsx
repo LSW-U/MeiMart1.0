@@ -9,6 +9,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { ThemeProvider } from '@/theme';
+import { router } from 'expo-router';
 import { toast } from '@/store/toastStore';
 import OrdersPage from '../(main)/orders';
 
@@ -83,7 +84,8 @@ beforeEach(() => {
   mockDeletePending = false;
   mockIsOffline = false;
   pushState.push.mockReset();
-  mockOrders = [o('o1'), o('o2', 'CONFIRMED')];
+  // Web 409 修复后管理模式只可勾终态单：o1=COMPLETED（可勾）、o2=CONFIRMED（非终态禁勾）
+  mockOrders = [o('o1', 'COMPLETED'), o('o2', 'CONFIRMED')];
 });
 
 describe('订单列表管理模式（批3）', () => {
@@ -137,14 +139,34 @@ describe('订单列表管理模式（批3）', () => {
     expect(getByTestId('orders-batch-delete').props.accessibilityState).toEqual({ disabled: true });
   });
 
-  it('C1：全选 → 两单勾选（删除 (2)）；再点取消全选', () => {
-    const { getByTestId, getByText } = render(<OrdersPage />, { wrapper });
+  // Web 409 修复后全选只收终态单：o1 COMPLETED 入选、o2 CONFIRMED 跳过；已全选（终态全勾）再点清空
+  it('C1：全选只勾终态单（删除 (1)）；终态全勾时再点清空', () => {
+    const { getByTestId, getByText, getAllByLabelText } = render(<OrdersPage />, { wrapper });
     fireEvent.press(getByTestId('orders-manage'));
     fireEvent.press(getByText('common.selectAll'));
-    expect(getByText('order.selectedTitle:2')).toBeTruthy();
-    expect(getByText('common.delete (2)')).toBeTruthy();
+    expect(getByText('order.selectedTitle:1')).toBeTruthy();
+    expect(getByText('common.delete (1)')).toBeTruthy();
+    // 终态单已全勾 → 再点清空
     fireEvent.press(getByText('common.selectAll'));
     expect(getByText('common.delete (0)')).toBeTruthy();
+    // 清空后手动勾终态单仍正常（规则只拦非终态）
+    fireEvent.press(getAllByLabelText('order.cardHeaderA11y')[0]);
+    expect(getByText('order.selectedTitle:1')).toBeTruthy();
+  });
+
+  // Web 409 修复：非终态单（o2 CONFIRMED）管理模式点按 → 跳详情不勾选（push 被调、计数不变）
+  it('C1：非终态单管理模式点按 → 跳详情不勾选（409 预防）', () => {
+    const { getByTestId, getByText, getAllByLabelText } = render(<OrdersPage />, { wrapper });
+    fireEvent.press(getByTestId('orders-manage'));
+    // o2 是 CONFIRMED（非终态），卡片排第二
+    fireEvent.press(getAllByLabelText('order.cardHeaderA11y')[1]);
+    // Why: jest.mock('expo-router') 的 router.push 是 mock 内自建 jest.fn（pushState 未接线），
+    //      断言须取 mock 模块导出的 router.push 本体
+    expect(jest.mocked(router.push).mock.calls).toContainEqual(['/order/o2']);
+    expect(getByText('common.delete (0)')).toBeTruthy();
+    // 终态单 o1 仍正常勾选
+    fireEvent.press(getAllByLabelText('order.cardHeaderA11y')[0]);
+    expect(getByText('order.selectedTitle:1')).toBeTruthy();
   });
 
   it('C2：离线时点删除 → 阻止（不弹 Alert 不 mutate）', () => {

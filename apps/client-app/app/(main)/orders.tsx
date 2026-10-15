@@ -31,7 +31,12 @@ import {
   useOrderCounts,
   useDeleteOrders,
 } from '@/services/queries/useOrders';
-import { ORDER_TABS, type OrderTabKey, type OrderAction } from '@/lib/orderStatusConfig';
+import {
+  ORDER_TABS,
+  isTerminalOrder,
+  type OrderTabKey,
+  type OrderAction,
+} from '@/lib/orderStatusConfig';
 import { useNetwork } from '@/hooks/useNetwork';
 import type { Order } from '@/types';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
@@ -180,9 +185,14 @@ export default function OrdersPage() {
   // 批3 P2-2：onPress 直传稳定 handler（OrderCard 内部调 onPress(order)），消灭内联箭头
   // 批3：管理模式下整卡点按只勾选（OrderCard 内部两处 Pressable 均走 onPress，不嵌套新按钮——
   // Web 嵌套 Pressable 坑，favorites 先例），onAction 传 undefined 隐藏 footer 操作钮防删除态误触
+  // Web 409 修复：非终态订单不可删（后端仅收 COMPLETED/CANCELLED），管理模式点它跳详情不勾选
   const handleCardPress = useCallback(
     (order: Order) => {
       if (selectMode) {
+        if (!isTerminalOrder(order.status)) {
+          router.push(`/order/${order.id}`);
+          return;
+        }
         toggleSelect(order.id);
         return;
       }
@@ -198,6 +208,7 @@ export default function OrdersPage() {
         onAction={selectMode ? undefined : handleAction}
         selectMode={selectMode}
         isSelected={selected.has(item.id)}
+        selectDisabled={selectMode && !isTerminalOrder(item.status)}
         testID={`order-card-${item.id}`}
       />
     ),
@@ -385,8 +396,14 @@ export default function OrdersPage() {
           >
             <Pressable
               onPress={() => {
-                const all = new Set(orders.map((o) => o.id));
-                setSelected(selected.size === orders.length ? new Set() : all);
+                // Web 409 修复：全选只收终态单（非终态后端 409 整批拒绝，与卡片禁勾同规则）
+                const deletable = orders.filter((o) => isTerminalOrder(o.status));
+                const all = new Set(deletable.map((o) => o.id));
+                setSelected(
+                  deletable.length > 0 && deletable.every((o) => selected.has(o.id))
+                    ? new Set()
+                    : all,
+                );
               }}
               style={styles.manageBarBtn}
               accessibilityRole="button"
@@ -394,7 +411,8 @@ export default function OrdersPage() {
             >
               <Icon
                 symbol={
-                  orders.length > 0 && selected.size === orders.length
+                  orders.some((o) => isTerminalOrder(o.status)) &&
+                  orders.filter((o) => isTerminalOrder(o.status)).every((o) => selected.has(o.id))
                     ? 'check_circle'
                     : 'radio_button_unchecked'
                 }

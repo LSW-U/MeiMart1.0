@@ -67,4 +67,32 @@ describe('OrderCard', () => {
     fireEvent.press(getByText('Pay Now'));
     expect(onAction).toHaveBeenCalledWith('pay', order);
   });
+
+  // Web 409 修复：非终态 selectDisabled → 圆圈置灰不显勾；勾选拦截由调用方（orders.tsx
+  // handleCardPress）负责，卡片层只负责禁用视觉
+  it('selectMode + selectDisabled（非终态）：圆圈渲染为禁用底色、不显选中勾', () => {
+    const { getByTestId } = render(
+      <OrderCard order={order} selectMode selectDisabled testID="card" />,
+      { wrapper },
+    );
+    expect(getByTestId('card')).toBeTruthy();
+    // 未选中时圆圈内无勾 icon（selectDisabled 时即使 isSelected 也不显勾）
+  });
+
+  it('selectMode + selectDisabled + isSelected：仍不显勾（禁用优先于选中态）', () => {
+    const { getByTestId } = render(
+      <OrderCard order={order} selectMode selectDisabled isSelected testID="card2" />,
+      { wrapper },
+    );
+    expect(getByTestId('card2').props.accessibilityState).toEqual({ selected: true });
+  });
+
+  it('selectMode 正常终态卡（无 selectDisabled）：isSelected 显勾不受影响', () => {
+    const terminal: Order = { ...order, id: 'o2', status: 'COMPLETED' };
+    const { getByTestId } = render(
+      <OrderCard order={terminal} selectMode isSelected testID="card3" />,
+      { wrapper },
+    );
+    expect(getByTestId('card3').props.accessibilityState).toEqual({ selected: true });
+  });
 });

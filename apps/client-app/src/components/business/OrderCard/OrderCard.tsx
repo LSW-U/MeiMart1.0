@@ -15,6 +15,7 @@ function OrderCardBase({
   onAction,
   selectMode,
   isSelected,
+  selectDisabled,
   testID,
 }: OrderCardProps) {
   const { t } = useTranslation();
@@ -44,7 +45,8 @@ function OrderCardBase({
         shadowPresets.sm,
       ]}
     >
-      {/* 批3：选择圆圈（纯状态非独立按钮，勾选走整卡 onPress；NotificationItem 同形态） */}
+      {/* 批3：选择圆圈（纯状态非独立按钮，勾选走整卡 onPress；NotificationItem 同形态）
+          Web 409 修复：selectDisabled（非终态）圆圈置灰不显勾，提示不可删 */}
       {selectMode && (
         <View
           style={[
@@ -56,12 +58,22 @@ function OrderCardBase({
             style={[
               styles.selectCircleInner,
               {
-                backgroundColor: isSelected ? colors.primary : colors['surface-container-lowest'],
-                borderColor: isSelected ? colors.primary : colors['outline-variant'],
+                backgroundColor: selectDisabled
+                  ? colors['surface-container']
+                  : isSelected
+                    ? colors.primary
+                    : colors['surface-container-lowest'],
+                borderColor: selectDisabled
+                  ? colors['outline-variant']
+                  : isSelected
+                    ? colors.primary
+                    : colors['outline-variant'],
               },
             ]}
           >
-            {isSelected && <Icon symbol="check" size={13} color={colors['on-primary']} />}
+            {isSelected && !selectDisabled && (
+              <Icon symbol="check" size={13} color={colors['on-primary']} />
+            )}
           </View>
         </View>
       )}

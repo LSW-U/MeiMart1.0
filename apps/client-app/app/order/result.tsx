@@ -632,11 +632,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'row',
+    justifyContent: 'flex-end',
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderTopWidth: 1,
     // A-P2-5: hex 移除——backgroundColor 由使用处运行时注入（同 cart 底栏 surface-container-lowest 先例）
   },
-  actionBtn: { flex: 1 },
+  // 主理人实测反馈：按钮改靠右（原 flex:1 等宽铺满偏左视觉），不再拉伸、按内容自适应宽
+  actionBtn: { flex: 0 },
 });

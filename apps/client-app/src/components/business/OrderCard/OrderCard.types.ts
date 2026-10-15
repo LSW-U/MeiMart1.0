@@ -13,4 +13,7 @@ export interface OrderCardProps {
   // 圆圈为纯状态非独立按钮（避免 Web 嵌套 Pressable）；选中态 primary 边框
   selectMode?: boolean;
   isSelected?: boolean;
+  // Web 409 实测修复：非终态订单不可删（后端 batch-delete 仅收 COMPLETED/CANCELLED），
+  // 管理模式下该卡勾选禁用（圆圈置灰 + onPress 分流跳详情不勾选）
+  selectDisabled?: boolean;
 }
