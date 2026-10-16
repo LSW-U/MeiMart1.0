@@ -3,7 +3,7 @@
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 94%）。
 // P6: 间距微调 + 分类网格 C2/角标/溢出 + PromoShortcut→PromoDock（方案二色条）
 import { StyleSheet, View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -43,6 +43,9 @@ const ON_PRIMARY = '#ffffff';
 const ON_AMBER = '#000000';
 
 // Buy Again 区块改用 useBuyAgain 从 mockDb 拉 p007-p010，避免与详情页数据脱节
+// Why: 换一批按钮 批2 —— 两板块每批数量常量（recommend 后端默认 6 / buy-again 原固定 4）
+const RECOMMEND_LIMIT = 6;
+const BUY_AGAIN_LIMIT = 4;
 
 export default function HomePage() {
   const { colors } = useTheme();
@@ -50,10 +53,39 @@ export default function HomePage() {
   const { shouldSkipNonEssential } = useWeakNetworkUI();
   const { data: banners } = useBanners();
   const { data: categories } = useCategories();
-  const { data: products, isLoading, isError, refetch } = useRecommendations();
+  // Why: 换一批按钮 批2（方案v2 20261017）——offset += limit 步进；返回数量 < limit 视为末尾，
+  //   下次点击回绕 offset=0（与 mock service 越界回 0 语义一致）；isFetching 防连点。
+  const [recommendOffset, setRecommendOffset] = useState(0);
+  const [buyAgainOffset, setBuyAgainOffset] = useState(0);
+  const {
+    data: products,
+    isLoading,
+    isError,
+    refetch,
+    isFetching: isFetchingRecommend,
+  } = useRecommendations({
+    limit: RECOMMEND_LIMIT,
+    offset: recommendOffset,
+  });
   const recommendList = products ?? [];
   // Why: §9-4 瀑布流两列分发改 FlatList numColumns（C-P2-10，分发逻辑由列表承担）
-  const { data: buyAgainProducts } = useBuyAgain();
+  const { data: buyAgainProducts, isFetching: buyAgainFetching } = useBuyAgain({
+    limit: BUY_AGAIN_LIMIT,
+    offset: buyAgainOffset,
+  });
+  const handleRecommendChangeBatch = useCallback(() => {
+    setRecommendOffset((prev) => {
+      const next = prev + RECOMMEND_LIMIT;
+      return recommendList.length < RECOMMEND_LIMIT ? 0 : next;
+    });
+  }, [recommendList.length]);
+  const buyAgainCount = buyAgainProducts?.length ?? 0;
+  const handleBuyAgainChangeBatch = useCallback(() => {
+    setBuyAgainOffset((prev) => {
+      const next = prev + BUY_AGAIN_LIMIT;
+      return buyAgainCount < BUY_AGAIN_LIMIT ? 0 : next;
+    });
+  }, [buyAgainCount]);
   // A-P2-2：useMemo 稳定引用（renderDashboardHeader 依赖数组要求引用稳定，空数组兜底不变）
   const buyAgainList = useMemo(() => buyAgainProducts ?? [], [buyAgainProducts]);
   // Why: P6 V3e - PromoDock 数据源由 usePromotions hook 驱动（后端控制数量/排序/时效）
@@ -211,15 +243,42 @@ export default function HomePage() {
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
             {t('home.recommend')}
           </Text>
-          <Pressable
-            onPress={() => router.push('/product/list')}
-            style={styles.seeAllBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('home.seeAllProducts')}
-          >
-            <Text style={[styles.seeAllText, { color: colors.primary }]}>{t('common.seeAll')}</Text>
-            <Icon symbol="chevron_right" size={16} color={colors.primary} />
-          </Pressable>
+          {/* Why: 换一批按钮 批2 —— offset 步进翻页，isFetching 防连点 */}
+          <View style={styles.headerActions}>
+            <Pressable
+              testID="home-recommend-change-batch"
+              onPress={handleRecommendChangeBatch}
+              disabled={isFetchingRecommend}
+              style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('home.changeBatch')}
+            >
+              <Icon
+                symbol="refresh"
+                size={16}
+                color={isFetchingRecommend ? colors.outline : colors.primary}
+              />
+              <Text
+                style={[
+                  styles.seeAllText,
+                  { color: isFetchingRecommend ? colors.outline : colors.primary },
+                ]}
+              >
+                {t('home.changeBatch')}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push('/product/list')}
+              style={styles.seeAllBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('home.seeAllProducts')}
+            >
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                {t('common.seeAll')}
+              </Text>
+              <Icon symbol="chevron_right" size={16} color={colors.primary} />
+            </Pressable>
+          </View>
         </View>
       </>
     ),
@@ -231,6 +290,8 @@ export default function HomePage() {
       handleCategoryPress,
       handleMorePress,
       handlePromoPress,
+      handleRecommendChangeBatch,
+      isFetchingRecommend,
       promotions,
       shouldSkipNonEssential,
       t,
@@ -245,6 +306,29 @@ export default function HomePage() {
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
             {t('order.actions.repurchase')}
           </Text>
+          {/* Why: 换一批按钮 批2 —— offset 步进翻页，isFetching 防连点 */}
+          <Pressable
+            testID="home-buy-again-change-batch"
+            onPress={handleBuyAgainChangeBatch}
+            disabled={buyAgainFetching}
+            style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.changeBatch')}
+          >
+            <Icon
+              symbol="refresh"
+              size={16}
+              color={buyAgainFetching ? colors.outline : colors.primary}
+            />
+            <Text
+              style={[
+                styles.seeAllText,
+                { color: buyAgainFetching ? colors.outline : colors.primary },
+              ]}
+            >
+              {t('home.changeBatch')}
+            </Text>
+          </Pressable>
           <Icon symbol="history" size={20} color={colors.outline} />
         </View>
         <ScrollView
@@ -264,7 +348,15 @@ export default function HomePage() {
         </ScrollView>
       </View>
     ),
-    [buyAgainList, colors, handleBuyAgainAddToCart, handleCardPress, t],
+    [
+      buyAgainList,
+      colors,
+      handleBuyAgainAddToCart,
+      handleBuyAgainChangeBatch,
+      handleCardPress,
+      buyAgainFetching,
+      t,
+    ],
   );
 
   // A-P2-2: dashboard 三态（loading/error/空列表）退回 ScrollView——瀑布流无数据时
@@ -506,6 +598,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   seeAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  // Why: 换一批按钮 批2 —— 按钮组容器（推荐板块 header 三个元素并排）
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  changeBatchBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,

@@ -3,6 +3,16 @@ import { mockDb, mockResponse } from './mockDb';
 import { getCurrentLocale, pickLocalized } from '@/i18n';
 import type { Product, WarehouseAvailability } from '@/types';
 
+// Why: 换一批按钮 批2 —— mock 分支翻页游标：请求 offset 越界（≥ pool 长度）回绕 0，
+//   与视图层「短批回绕」语义一致（方案v2 批2 §3）；会话级不落盘。
+const mockCursorPos: Record<string, number> = {};
+function mockCursor(key: string, poolLen: number, limit: number, requested?: number): number {
+  const next = requested ?? mockCursorPos[key] ?? 0;
+  const clamped = poolLen > 0 && next >= poolLen ? 0 : Math.max(0, next);
+  mockCursorPos[key] = clamped + limit;
+  return clamped;
+}
+
 // C-P2-5: 404 判定（同 reviews.ts 口径——axios 错误带 response.status；非 HTTP 错误非 404）
 function isNotFoundError(err: unknown): boolean {
   return (
@@ -139,19 +149,38 @@ export const productApi = {
     return transformProduct(res.data);
   },
 
-  async getRecommendations(limit?: number): Promise<Product[]> {
-    if (isMockMode) return mockResponse(withMockCategoryTop3(mockDb.products).slice(0, 6));
+  // Why: 换一批按钮 批2（方案v2 20261017）——三层透传 offset：hook → service → api params。
+  //   real 分支透传 limit/offset（后端批1 clampOffset 已兜底负值/NaN，上限 1000）；
+  //   mock 分支用模块级游标切片（同款越界回 0 语义，会话级不落盘），否则 mock 模式按钮形同虚设。
+  async getRecommendations(opts?: { limit?: number; offset?: number }): Promise<Product[]> {
+    if (isMockMode) {
+      const pool = withMockCategoryTop3(mockDb.products);
+      const limit = opts?.limit ?? 6;
+      const offset = mockCursor('recommend', pool.length, limit, opts?.offset);
+      return mockResponse(pool.slice(offset, offset + limit));
+    }
     const res = await api.get<ProductRaw[]>('/client/products/recommendations', {
-      params: limit ? { limit } : undefined,
+      params: {
+        ...(opts?.limit ? { limit: opts.limit } : {}),
+        ...(opts?.offset ? { offset: opts.offset } : {}),
+      },
     });
     return res.data.map(transformProduct);
   },
 
-  async getBuyAgain(limit?: number): Promise<Product[]> {
-    if (isMockMode) return mockResponse(withMockCategoryTop3(mockDb.products).slice(6, 10));
+  async getBuyAgain(opts?: { limit?: number; offset?: number }): Promise<Product[]> {
+    if (isMockMode) {
+      const pool = withMockCategoryTop3(mockDb.products);
+      const limit = opts?.limit ?? 6;
+      const offset = mockCursor('buy-again', pool.length, limit, opts?.offset);
+      return mockResponse(pool.slice(offset, offset + limit));
+    }
     // Why: buy-again 是后端专属端点，不是前端按 tag 过滤
     const res = await api.get<ProductRaw[]>('/client/products/buy-again', {
-      params: limit ? { limit } : undefined,
+      params: {
+        ...(opts?.limit ? { limit: opts.limit } : {}),
+        ...(opts?.offset ? { offset: opts.offset } : {}),
+      },
     });
     return res.data.map(transformProduct);
   },

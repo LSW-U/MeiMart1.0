@@ -26,19 +26,21 @@ export function useProduct(id: string | undefined) {
   });
 }
 
-export function useRecommendations() {
+// Why: 换一批按钮 批2（方案v2 20261017）——offset 进 queryKey 分批缓存（放弃 refetch 方案：
+//   refetch 只能刷当前批，无法表达「看第 2 批」）；批间缓存天然隔离，翻回上一批吃缓存。
+export function useRecommendations(opts?: { limit?: number; offset?: number }) {
   return useQuery({
-    queryKey: ['products', 'recommend'],
-    queryFn: () => productApi.getRecommendations(),
+    queryKey: ['products', 'recommend', opts?.offset ?? 0],
+    queryFn: () => productApi.getRecommendations(opts),
     staleTime: 5 * 60 * 1000,
     networkMode: 'offlineFirst',
   });
 }
 
-export function useBuyAgain() {
+export function useBuyAgain(opts?: { limit?: number; offset?: number }) {
   return useQuery({
-    queryKey: ['products', 'buy-again'],
-    queryFn: () => productApi.getBuyAgain(),
+    queryKey: ['products', 'buy-again', opts?.offset ?? 0],
+    queryFn: () => productApi.getBuyAgain(opts),
     staleTime: 5 * 60 * 1000,
     networkMode: 'offlineFirst',
   });
