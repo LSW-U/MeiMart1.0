@@ -2,15 +2,7 @@
 // 还原自 HomePage.html（511 行）。HTML → RN 行数比：511 → ~480（含样式），
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 94%）。
 // P6: 间距微调 + 分类网格 C2/角标/溢出 + PromoShortcut→PromoDock（方案二色条）
-import {
-  StyleSheet,
-  View,
-  Text,
-  FlatList,
-  ScrollView,
-  ActivityIndicator,
-  Pressable,
-} from 'react-native';
+import { StyleSheet, View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { useCallback, useMemo } from 'react';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -121,28 +113,25 @@ export default function HomePage() {
     }
   }, []);
 
-  // A-P2-2: 瀑布流 renderItem（FlatList numColumns=2；列表主体见下方 A-P2-2 说明）
+  // 方案A（奇偶分列）：renderMasonryItem 不再被 FlatList 消费（无 renderItem 契约），
+  //   改收 Product 直出卡片（key 由分列 map 上下文的卡片 testID 承担；favorites 同款）
   const renderMasonryItem = useCallback(
-    ({ item }: { item: Product }) => (
-      <View style={styles.masonryCell}>
-        <MasonryProductCard
-          product={item}
-          badge={resolveBadges(item, t)[0]}
-          onPress={handleCardPress}
-          onAddToCart={handleBuyAgainAddToCart}
-        />
-      </View>
+    (item: Product) => (
+      <MasonryProductCard
+        key={item.id}
+        product={item}
+        badge={resolveBadges(item, t)[0]}
+        onPress={handleCardPress}
+        onAddToCart={handleBuyAgainAddToCart}
+      />
     ),
     [t, handleBuyAgainAddToCart, handleCardPress],
   );
-  // C-P2-10/A-P2-2: 推荐瀑布流改 FlatList(numColumns=2) 且**直接承担页面滚动**（A-P2-2：
-  //   旧版 FlatList(scrollEnabled=false) 嵌 ScrollView，虚拟化失效全量挂载）——页面其余
-  //   dashboard 区块（搜索栏/Banner/分类/Divider/PromoDock/推荐标题）收进
-  //   ListHeaderComponent；Buy Again 横滑移 ListFooterComponent（实测Bug修复 #7B：对齐
-  //   HTML 原型板块顺序——推荐在前、再次购买在后，推翻 A-P2-2 旧决策「留 header 尾部」）。
-  //   行为零变更：odd/even 分列顺序一致（numColumns 按索引取模分列，等价原
-  //   i%2===0→col1 / i%2===1→col2）；高度档位错落在 MasonryProductCard 内部（按 id 档位），
-  //   FlatList 网格行内等高但列间仍错落（卡片图高不同 + info 自适应），视觉语义保持。
+  // 历史决策链：C-P2-10/A-P2-2 曾改 FlatList(numColumns=2) 承担滚动（救虚拟化）；主理人
+  //   实测发现 numColumns 行对齐导致「顶部对齐网格、非瀑布流」（方案A 拍板 20261016），
+  //   改回奇偶分列 ScrollView（favorites/search 先例，真错落）——虚拟化让位视觉语义，
+  //   量级一页 20 条内可接受（收藏页同款取舍）。dashboard 区块收 renderDashboardHeader、
+  //   Buy Again 横滑 renderBuyAgainFooter（实测Bug修复 #7B 板块顺序：推荐在前、再次购买在后）。
   //   loading/error/空列表三态时退回 ScrollView 包 dashboard 区（区块少非热路径）。
   const renderDashboardHeader = useCallback(
     () => (
@@ -371,24 +360,26 @@ export default function HomePage() {
         {isLoading || isError || recommendList.length === 0 ? (
           dashboardFallback()
         ) : (
-          // A-P2-2: 单列表容器——FlatList 直接承担页面滚动（虚拟化生效），
-          //   dashboard 区块挂 ListHeaderComponent；Buy Again 挂 ListFooterComponent（#7B）
-          <FlatList
+          // 方案A（主理人拍板 20261016，回看批7 审查语境）：奇偶分列两列瀑布流——
+          //   对齐 favorites/search 先例（真错落，同列独立堆叠），代价是放弃 FlatList
+          //   虚拟化（A-P2-2 动机），推荐位量级一页 20 条内可接受（收藏页同款取舍）；
+          //   dashboard 区块/Buy Again 沿用原 header/footer 渲染函数挂 ScrollView
+          <ScrollView
             style={[styles.scrollArea, { backgroundColor: colors.background }]}
-            data={recommendList}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            columnWrapperStyle={styles.masonryRow}
             contentContainerStyle={styles.scrollContent}
-            renderItem={renderMasonryItem}
-            ListHeaderComponent={renderDashboardHeader}
-            ListFooterComponent={renderBuyAgainFooter}
-            onScrollToIndexFailed={() => undefined}
-            initialNumToRender={6}
-            maxToRenderPerBatch={4}
-            windowSize={5}
             showsVerticalScrollIndicator={false}
-          />
+          >
+            {renderDashboardHeader()}
+            <View style={styles.masonryRow}>
+              <View style={styles.masonryCol}>
+                {recommendList.map((item, i) => i % 2 === 0 && renderMasonryItem(item))}
+              </View>
+              <View style={styles.masonryCol}>
+                {recommendList.map((item, i) => i % 2 === 1 && renderMasonryItem(item))}
+              </View>
+            </View>
+            {renderBuyAgainFooter()}
+          </ScrollView>
         )}
       </SafeAreaWrapper>
     </PageErrorBoundary>
@@ -555,17 +546,15 @@ const styles = StyleSheet.create({
   },
   // Why: §9-4 瀑布流两列容器（替 recommendCard 横滑）
   masonryRow: {
-    // FlatList numColumns=2 行容器（C-P2-10）：承接原两列布局的横向 padding + 列间距；
-    //   #7A 实测修复：补行间垂直间距（原仅横向 gap，行距 0 挤压）
-    flex: 1,
+    // 方案A：奇偶分列行容器（favorites.tsx masonryRow 同构）——横向 padding + 列间距
     flexDirection: 'row',
     gap: spacing.md,
     paddingHorizontal: layout['container-margin'],
-    marginBottom: spacing.md,
   },
-  masonryCell: {
-    // 每列等宽（numColumns 均分，flex:1 + gap 已由行容器控制）
+  masonryCol: {
+    // 每列等宽、列内卡片纵向堆叠（真错落；favorites masonryCol 同构）
     flex: 1,
+    gap: spacing.md,
   },
   buyAgainSection: {
     // Why: P6 S5 - Buy Again marginTop xl(32) -> lg(24)，页尾区块视觉收束
