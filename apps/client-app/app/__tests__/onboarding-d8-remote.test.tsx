@@ -51,13 +51,14 @@ const REMOTE_SLIDES = [
   },
 ];
 
+// Why 模块级 QueryClient：wrapper 内 new 的实例在用例结束后拿不到引用，无法 clear——
+// 实测该文件挂起不退出（Jest did not exit，--detectOpenHandles 无报告）。共享实例 +
+// afterEach clear/unmount 收口 RQ 的异步副产物（test-open-handle 收口批，20261017）。
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>
-    <QueryClientProvider
-      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
-    >
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   </ThemeProvider>
 );
 
@@ -65,6 +66,12 @@ beforeEach(() => {
   mockLocale = 'en';
   useAppStore.setState({ onboardingCompleted: false });
   (fetchOnboardingSlides as jest.Mock).mockReset();
+});
+
+afterEach(() => {
+  // test-open-handle 收口：RQ 查询异步链（retry/timer/observer）在用例结束前清空，
+  // 防挂起不退出；RTL 自动 cleanup unmount 组件，这里补缓存层清理
+  queryClient.clear();
 });
 
 describe('useOnboardingSlides 切换接线（批3 D8）', () => {
