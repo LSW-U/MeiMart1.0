@@ -25,7 +25,7 @@ import { Logo } from '@/components/cultural/Logo';
 import { UmaLulikSkyline } from '@/components/cultural/UmaLulikSkyline';
 import { Icon } from '@/components/ui/Icon';
 import { useCategories, useBanners } from '@/services/queries/useCatalog';
-import { useRecommendations, useBuyAgain } from '@/services/queries/useProducts';
+import { useRecommendationsInfinite, useBuyAgain } from '@/services/queries/useProducts';
 import { usePromotions } from '@/services/queries/usePromotions';
 import { useAddToCart } from '@/services/queries/useCart';
 import { useUnreadCount } from '@/services/queries/useNotifications';
@@ -53,32 +53,40 @@ export default function HomePage() {
   const { shouldSkipNonEssential } = useWeakNetworkUI();
   const { data: banners } = useBanners();
   const { data: categories } = useCategories();
-  // Why: 换一批按钮 批2（方案v2 20261017）——offset += limit 步进；返回数量 < limit 视为末尾，
-  //   下次点击回绕 offset=0（与 mock service 越界回 0 语义一致）；isFetching 防连点。
-  const [recommendOffset, setRecommendOffset] = useState(0);
+  // Why: 首页推荐展示 批2（方案v2 20261017）——推荐板块切追加式真分页（useInfiniteQuery）：
+  //   pages.flatMap 拼全部已加载页，奇偶分列追加后自动重排；换一批改 epoch 复位（D3 方案 B，
+  //   epoch 进 queryKey 精确匹配，旧 epoch 缓存 5min 后 GC，零 resetQueries 前缀副作用）。
+  //   旧 useRecommendations 保留（cart.tsx 消费中，cart 不改）。
+  const [recommendEpoch, setRecommendEpoch] = useState(0);
   const [buyAgainOffset, setBuyAgainOffset] = useState(0);
   const {
-    data: products,
+    data: recommendPages,
     isLoading,
     isError,
     refetch,
     isFetching: isFetchingRecommend,
-  } = useRecommendations({
-    limit: RECOMMEND_LIMIT,
-    offset: recommendOffset,
-  });
-  const recommendList = products ?? [];
+    fetchNextPage,
+    isFetchingNextPage,
+    hasNextPage,
+  } = useRecommendationsInfinite({ limit: RECOMMEND_LIMIT, epoch: recommendEpoch });
+  const recommendList = useMemo(
+    () => recommendPages?.pages.flatMap((p) => p) ?? [],
+    [recommendPages],
+  );
   // Why: §9-4 瀑布流两列分发改 FlatList numColumns（C-P2-10，分发逻辑由列表承担）
   const { data: buyAgainProducts, isFetching: buyAgainFetching } = useBuyAgain({
     limit: BUY_AGAIN_LIMIT,
     offset: buyAgainOffset,
   });
   const handleRecommendChangeBatch = useCallback(() => {
-    setRecommendOffset((prev) => {
-      const next = prev + RECOMMEND_LIMIT;
-      return recommendList.length < RECOMMEND_LIMIT ? 0 : next;
-    });
-  }, [recommendList.length]);
+    // D3 方案 B：换一批 = 回首屏复位——epoch++ 换 queryKey，从头取第一页
+    if (!isFetchingRecommend && !isFetchingNextPage) setRecommendEpoch((e) => e + 1);
+  }, [isFetchingRecommend, isFetchingNextPage]);
+  // Why: 首页推荐展示 批2 ——「加载更多」三态：可点 fetchNextPage / isFetchingNextPage
+  //   loading（防连点，同换一批按钮范式）/ !hasNextPage 条件渲染移除（D4 按钮消失）
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
   const buyAgainCount = buyAgainProducts?.length ?? 0;
   const handleBuyAgainChangeBatch = useCallback(() => {
     setBuyAgainOffset((prev) => {
@@ -474,6 +482,32 @@ export default function HomePage() {
                 {recommendList.map((item, i) => i % 2 === 1 && renderMasonryItem(item))}
               </View>
             </View>
+            {/* Why: 首页推荐展示 批2 ——「加载更多」三态（masonryRow 与 Buy Again 之间）：
+                hasNextPage 可点追加 / isFetchingNextPage loading 防连点 / 到底按钮消失（D4） */}
+            {hasNextPage && (
+              <View style={styles.loadMoreRow}>
+                <Pressable
+                  testID="home-recommend-load-more"
+                  onPress={handleLoadMore}
+                  disabled={isFetchingNextPage}
+                  style={({ pressed }) => [
+                    styles.loadMoreBtn,
+                    { borderColor: colors['outline-variant'] },
+                    pressed && !isFetchingNextPage && { opacity: 0.7 },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('home.loadMore')}
+                >
+                  {isFetchingNextPage ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Text style={[styles.loadMoreText, { color: colors.primary }]}>
+                      {t('home.loadMore')}
+                    </Text>
+                  )}
+                </Pressable>
+              </View>
+            )}
             {renderBuyAgainFooter()}
           </ScrollView>
         )}
@@ -662,6 +696,25 @@ const styles = StyleSheet.create({
     // 每列等宽、列内卡片纵向堆叠（真错落；favorites masonryCol 同构）
     flex: 1,
     gap: spacing.md,
+  },
+  // Why: 首页推荐展示 批2 ——「加载更多」按钮行（居中，宽约 40% 收敛视觉）
+  loadMoreRow: {
+    alignItems: 'center',
+    marginTop: spacing.lg,
+    paddingHorizontal: layout['container-margin'],
+  },
+  loadMoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '50%',
+    paddingVertical: spacing.sm,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  loadMoreText: {
+    ...typography['label-caps'],
+    fontSize: 12,
   },
   buyAgainSection: {
     // Why: P6 S5 - Buy Again marginTop xl(32) -> lg(24)，页尾区块视觉收束

@@ -41,6 +41,17 @@ jest.mock('@/services/queries/useCatalog', () => ({
 }));
 
 jest.mock('@/services/queries/useProducts', () => ({
+  // 批2（首页推荐展示）：home 推荐板块已切 useRecommendationsInfinite（追加式真分页）
+  useRecommendationsInfinite: () => ({
+    data: { pages: [[]] },
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+    isFetching: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
+    hasNextPage: false,
+  }),
   useRecommendations: () => ({ data: [], isLoading: false, isError: false, refetch: jest.fn() }),
   useBuyAgain: () => ({ data: [] }),
 }));

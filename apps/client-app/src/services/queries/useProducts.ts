@@ -37,6 +37,29 @@ export function useRecommendations(opts?: { limit?: number; offset?: number }) {
   });
 }
 
+/**
+ * 首页推荐展示 批2（方案v2 20261017）——追加式真分页 hook（home 推荐板块消费）
+ *
+ * - pageParam=offset（D1 沿用后端 offset/limit 形态），initialPageParam 0
+ * - 响应无 hasMore（E6 红线零新增字段），getNextPageParam 按页长判定：满页才有下一页，
+ *   短批/空批 → undefined（mock 池 15 条：6+6+3 短批到底，D5）
+ * - queryKey 含 epoch 位（D3 方案 B）：换一批 = epoch++，回首屏复位；
+ *   精确匹配零跨页副作用（resetQueries 前缀会误伤 cart 的 ['products','recommend',n]，故弃 A）
+ * - 旧 useRecommendations 保留并存（cart.tsx:67 消费中，cart 不切）
+ */
+export function useRecommendationsInfinite(opts?: { limit?: number; epoch?: number }) {
+  const limit = opts?.limit ?? 6;
+  return useInfiniteQuery({
+    queryKey: ['products', 'recommend-infinite', opts?.epoch ?? 0, limit],
+    queryFn: ({ pageParam }) => productApi.getRecommendations({ limit, offset: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === limit ? allPages.length * limit : undefined,
+    staleTime: 5 * 60 * 1000,
+    networkMode: 'offlineFirst',
+  });
+}
+
 export function useBuyAgain(opts?: { limit?: number; offset?: number }) {
   return useQuery({
     queryKey: ['products', 'buy-again', opts?.offset ?? 0],
