@@ -39,13 +39,16 @@ import {
   useToggleCartItems,
   useUpdateCartItem,
 } from '@/services/queries/useCart';
-import { useProducts } from '@/services/queries/useProducts';
+import { useRecommendations } from '@/services/queries/useProducts';
 import { useCoupons } from '@/services/queries/usePromotion';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import type { CartItem } from '@/types';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 
 // Why: "PEOPLE ALSO BOUGHT" 推荐改用真实商品（避免 mock id 'p003' 跳转详情 404）
+// 换一批按钮（批2 推广至购物车页 2026-10-17）：offset 步进翻页，短批回绕 offset=0；
+//   复用 useRecommendations（offset 进 queryKey 分批缓存，与首页同款语义）
+const RECOMMEND_LIMIT = 6;
 
 // 原因：primary header / CHECKOUT 按钮上的固定白字。两种模式都是品牌红底，白字正确不变。
 // 不可用 colors['on-primary']：dark 模式下翻为 #690005（暗红），叠红底会裂色（同 P2 ON_PRIMARY）。
@@ -54,8 +57,24 @@ const ON_PRIMARY = '#ffffff';
 export default function CartPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const { data: realProducts } = useProducts();
-  const recommended = (realProducts ?? []).slice(0, 6);
+  // 换一批（批2 推广）：offset state + useRecommendations 替代原 useProducts 前 6 条切片；
+  //   短批/空批（< limit）下次点击回绕 offset=0；isFetching 防连点（同 home.tsx 范式）
+  const [recommendOffset, setRecommendOffset] = useState(0);
+  const {
+    data: recommendData,
+    isFetching: recommendFetching,
+    refetch: refetchRecommend,
+  } = useRecommendations({ limit: RECOMMEND_LIMIT, offset: recommendOffset });
+  const recommended = recommendData ?? [];
+  const handleRecommendChangeBatch = useCallback(() => {
+    // 短批回绕后 queryKey 回 0 可能命中 staleTime 缓存（首批即短批空转，批2 P3-1 同源）→ 强制 refetch
+    setRecommendOffset((prev) => {
+      const next = prev + RECOMMEND_LIMIT;
+      const wrapped = recommended.length < RECOMMEND_LIMIT ? 0 : next;
+      if (wrapped === 0) void refetchRecommend();
+      return wrapped;
+    });
+  }, [recommended.length, refetchRecommend]);
   const addToCartMutation = useAddToCart();
   const { isOffline } = useWeakNetworkUI();
   const { data: cart, isLoading, isError, refetch } = useCart();
@@ -338,9 +357,34 @@ export default function CartPage() {
 
             {/* PEOPLE ALSO BOUGHT 推荐区 */}
             <View style={styles.recommendWrap}>
-              <Text style={[styles.recommendTitle, { color: colors['on-surface-variant'] }]}>
-                {t('cart.peopleAlsoBought')}
-              </Text>
+              <View style={styles.recommendHeader}>
+                <Text style={[styles.recommendTitle, { color: colors['on-surface-variant'] }]}>
+                  {t('cart.peopleAlsoBought')}
+                </Text>
+                {/* 换一批按钮（批2 推广至购物车页）：offset 步进 + 短批回绕，isFetching 防连点 */}
+                <Pressable
+                  testID="cart-change-batch"
+                  onPress={handleRecommendChangeBatch}
+                  disabled={recommendFetching}
+                  style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('home.changeBatch')}
+                >
+                  <Icon
+                    symbol="refresh"
+                    size={16}
+                    color={recommendFetching ? colors.outline : colors.primary}
+                  />
+                  <Text
+                    style={[
+                      styles.changeBatchText,
+                      { color: recommendFetching ? colors.outline : colors.primary },
+                    ]}
+                  >
+                    {t('home.changeBatch')}
+                  </Text>
+                </Pressable>
+              </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={styles.recommendRow}>
                   {recommended.map((rec) => (
@@ -534,10 +578,26 @@ const styles = StyleSheet.create({
   recommendWrap: {
     marginBottom: spacing.md,
   },
+  // 换一批按钮（批2 推广）：标题与按钮同行两端
+  recommendHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
   recommendTitle: {
     ...typography['body-md'],
     fontWeight: '700',
-    marginBottom: spacing.md,
+  },
+  changeBatchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  changeBatchText: {
+    ...typography['label-caps'],
+    fontSize: 12,
+    fontWeight: '600',
   },
   recommendRow: {
     flexDirection: 'row',

@@ -72,6 +72,8 @@ jest.mock('@/services/queries/useCart', () => ({
 
 jest.mock('@/services/queries/useProducts', () => ({
   useProducts: () => ({ data: [] }),
+  // 换一批（批2 推广至购物车页）：cart.tsx 改用 useRecommendations
+  useRecommendations: () => ({ data: [], isFetching: false, refetch: jest.fn() }),
 }));
 
 jest.mock('@/services/queries/usePromotion', () => ({

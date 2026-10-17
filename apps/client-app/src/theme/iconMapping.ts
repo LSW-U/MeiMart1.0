@@ -158,6 +158,9 @@ const SYMBOL_TO_MC_LITERAL = {
   facebook: 'facebook',
   whatsapp: 'whatsapp',
   instagram: 'instagram',
+
+  // 换一批按钮 批2 追修 —— 首页换一批图标（漏映射兜底 circle-outline，用户实测发现）
+  refresh: 'refresh',
 } satisfies Readonly<Record<string, IconName>>;
 
 const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = SYMBOL_TO_MC_LITERAL;

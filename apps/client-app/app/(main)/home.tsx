@@ -307,29 +307,33 @@ export default function HomePage() {
             {t('order.actions.repurchase')}
           </Text>
           {/* Why: 换一批按钮 批2 —— offset 步进翻页，isFetching 防连点 */}
-          <Pressable
-            testID="home-buy-again-change-batch"
-            onPress={handleBuyAgainChangeBatch}
-            disabled={buyAgainFetching}
-            style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('home.changeBatch')}
-          >
-            <Icon
-              symbol="refresh"
-              size={16}
-              color={buyAgainFetching ? colors.outline : colors.primary}
-            />
-            <Text
-              style={[
-                styles.seeAllText,
-                { color: buyAgainFetching ? colors.outline : colors.primary },
-              ]}
+          {/* 追修 P3-4：换一批+history 包进右侧组——sectionHeader 是 space-between，
+              三顶层子元素会把按钮挤到正中间（推荐板块 headerActions 同款做法） */}
+          <View style={styles.headerActions}>
+            <Pressable
+              testID="home-buy-again-change-batch"
+              onPress={handleBuyAgainChangeBatch}
+              disabled={buyAgainFetching}
+              style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('home.changeBatch')}
             >
-              {t('home.changeBatch')}
-            </Text>
-          </Pressable>
-          <Icon symbol="history" size={20} color={colors.outline} />
+              <Icon
+                symbol="refresh"
+                size={16}
+                color={buyAgainFetching ? colors.outline : colors.primary}
+              />
+              <Text
+                style={[
+                  styles.seeAllText,
+                  { color: buyAgainFetching ? colors.outline : colors.primary },
+                ]}
+              >
+                {t('home.changeBatch')}
+              </Text>
+            </Pressable>
+            <Icon symbol="history" size={20} color={colors.outline} />
+          </View>
         </View>
         <ScrollView
           horizontal
