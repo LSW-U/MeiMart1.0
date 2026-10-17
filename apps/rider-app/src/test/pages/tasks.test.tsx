@@ -243,6 +243,33 @@ describe('P6-1 三态 online（settings 加载失败保守不停派单）', () =
   });
 });
 
+describe('已下班隐藏底栏（online===false 无刷新意义，设置走左上角汉堡菜单）', () => {
+  it('offDuty：底栏（刷新/设置按钮）不渲染，offline 空态仍在', () => {
+    // settings 桩 dutyStatus 切 offDuty → online=false → 底栏隐藏 + offline 空态
+    const useSettingsMod = jest.requireMock('../../../src/services/queries/useSettings') as {
+      useRiderSettings: () => unknown;
+    };
+    const original = useSettingsMod.useRiderSettings;
+    useSettingsMod.useRiderSettings = () => ({
+      data: { dutyStatus: 'offDuty', language: 'zh' },
+      isError: false,
+    });
+    try {
+      const { queryByText, getByText } = renderPage();
+
+      // 底栏两按钮消失（tasks.refresh=刷新 / tasks.settings=设置）
+      expect(queryByText('刷新')).toBeNull();
+      expect(queryByText('设置')).toBeNull();
+      // offline 空态仍在（空态卡片提示下班状态）
+      expect(getByText('你已离线')).toBeTruthy();
+      // 班次菜单入口仍在（切回上班 + 汉堡菜单进设置的路都保留——header 无条件渲染）
+      expect(getByText('已下班')).toBeTruthy();
+    } finally {
+      useSettingsMod.useRiderSettings = original;
+    }
+  });
+});
+
 describe('保证金拦截弹窗（批B B1：抽公共 + 未缴态改跳 pay 缴款页）', () => {
   it('未缴态：弹窗渲染「前往缴纳」，点击跳 /settings/deposit/pay（原 settings 首页已改）', () => {
     mockDepositBlock = 'unpaid';

@@ -438,8 +438,9 @@ export default function TasksPage() {
     }
     if (taskListsLoading) {
       // 骨架直接渲染（对齐 QueryBoundary 内部 QuerySkeleton list 输出，testID 同款）
+      // flex-1 包裹：无弹性占位时底栏会紧跟骨架上浮（同 offDuty 空态问题）
       return (
-        <View testID="query-skeleton">
+        <View className="flex-1" testID="query-skeleton">
           <View className="rounded-lg border border-surface-variant p-3.5">
             <View className="h-3.5 w-1/2 rounded bg-surface-variant" />
             <View className="mt-2.5 h-3.5 w-3/5 rounded bg-surface-variant" />
@@ -454,7 +455,7 @@ export default function TasksPage() {
     }
     if (taskListsError) {
       return (
-        <View className="items-center rounded-3xl bg-surface p-6" testID="query-error">
+        <View className="flex-1 items-center rounded-3xl bg-surface p-6" testID="query-error">
           <Text className="text-lg font-bold text-on-surface">{t('common.loadError.title')}</Text>
           <Text className="mt-2 text-center text-sm text-on-surface-variant">
             {t('common.loadError.desc')}
@@ -533,13 +534,18 @@ export default function TasksPage() {
           onViewRequest={() => router.push('/settings/deposit/records')}
         />
       )}
-      <BottomActionBar
-        isRefreshing={taskListsFetching}
-        refreshLabel={t('tasks.refresh')}
-        settingsLabel={t('tasks.settings')}
-        onPressSettings={() => router.push('/settings')}
-        onRefresh={() => void refetchTasks()}
-      />
+      {online !== false && (
+        // 已下班（online===false）隐藏底栏：不派单无刷新意义，设置走左上角汉堡菜单
+        // （header 无条件渲染）→ profile → settings；online=null（settings 加载失败）保守保留。
+        // 同时消除 offDuty 空态下底栏失去 flex-1 撑开元素而上浮的问题。
+        <BottomActionBar
+          isRefreshing={taskListsFetching}
+          refreshLabel={t('tasks.refresh')}
+          settingsLabel={t('tasks.settings')}
+          onPressSettings={() => router.push('/settings')}
+          onRefresh={() => void refetchTasks()}
+        />
+      )}
       <DutyStatusMenu
         cancelLabel={t('duty.menu.cancel')}
         current={dutyStatusForUi}
