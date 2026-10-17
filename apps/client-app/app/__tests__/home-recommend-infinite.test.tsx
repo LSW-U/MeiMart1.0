@@ -57,6 +57,8 @@ jest.mock('@/services/queries/useProducts', () => ({
     hasNextPage: mockHasNextPage,
   }),
   useBuyAgain: () => ({ data: [], isFetching: false }),
+  // 批3 B8：home 现调用 useFrequentBundle，缺 mock 会 undefined 崩
+  useFrequentBundle: () => ({ data: undefined }),
 }));
 
 jest.mock('react-i18next', () => ({
@@ -184,5 +186,15 @@ describe('HomePage 推荐板块 — 加载更多三态（批2）', () => {
     // 页面渲染成功本身就是回归证据；cart.tsx 消费路径由 hook 层 queryKey 隔离断言兜底
     const { getByTestId } = setup();
     expect(getByTestId('home-recommend-load-more')).toBeTruthy();
+  });
+
+  it('批3 P2-1 修复：buy-again 板块「查看全部」入口存在且跳转常购清单页', () => {
+    const { getByTestId } = setup();
+    const entry = getByTestId('home-buy-again-view-all');
+    expect(entry).toBeTruthy();
+    fireEvent.press(entry);
+    expect(jest.requireMock('expo-router').router.push).toHaveBeenCalledWith(
+      '/product/frequently-bought',
+    );
   });
 });

@@ -54,6 +54,8 @@ jest.mock('@/services/queries/useProducts', () => ({
   }),
   useRecommendations: () => ({ data: [], isLoading: false, isError: false, refetch: jest.fn() }),
   useBuyAgain: () => ({ data: [] }),
+  // 批3 B8：home 现调用 useFrequentBundle，缺 mock 会 undefined 崩
+  useFrequentBundle: () => ({ data: undefined }),
 }));
 
 jest.mock('@/services/queries/usePromotions', () => ({

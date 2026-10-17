@@ -26,7 +26,8 @@ import { Icon } from '@/components/ui/Icon';
 import { CouponPicker } from '@/components/business/CouponPicker/CouponPicker';
 import { useCart, useCheckoutPreview, useClearCart } from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
-import { useAddressSelectionStore, resolveCheckoutAddress } from '@/store/addressSelectionStore';
+import { useAddressSelectionStore } from '@/store/addressSelectionStore';
+import { useFrequentAddressStore, resolveSmartDefaultAddress } from '@/store/frequentAddressStore';
 import { usePaymentMethods } from '@/services/queries/usePayment';
 import { useCreateOrder } from '@/services/queries/useOrders';
 import { useCoupons } from '@/services/queries/usePromotion';
@@ -56,11 +57,24 @@ export default function CheckoutPage() {
   // Why: P16 决策 6 —— 地址列表（from='checkout' 选择模式）选中的地址优先于 isDefault，
   //      只影响本次结算会话，不改用户的默认地址数据
   const selectedAddressId = useAddressSelectionStore((s) => s.selectedId);
+  // Why: 客户画像批3 B6 智能默认（2026-10-18）——地址预填加一层本地使用频次（下单成功记账），
+  //   优先级 = 本次会话手选 > 本地频次最高 > isDefault > 第一条；记账只增频次不改 isDefault 数据
+  const frequentCounts = useFrequentAddressStore((s) => s.counts);
+  const recordOrderAddress = useFrequentAddressStore((s) => s.recordOrder);
   const { data: paymentMethods } = usePaymentMethods();
   const createOrder = useCreateOrder();
   const clearCart = useClearCart();
   const selectedItems = cart?.items.filter((i) => i.selected) ?? [];
-  const defaultAddress = resolveCheckoutAddress(addresses, selectedAddressId);
+  const defaultAddress = resolveSmartDefaultAddress(addresses, selectedAddressId, frequentCounts);
+  // Why: B6 提示条件 —— 预填命中来自本地频次（非手选/非 isDefault/非第一条兜底）才显示来源提示；
+  //   与 resolveSmartDefaultAddress 同判：手选优先级最高不提示，isDefault 兜底路径不提示
+  const smartPrefilled =
+    !selectedAddressId &&
+    Boolean(
+      addresses &&
+      frequentCounts[defaultAddress?.id ?? ''] > 0 &&
+      addresses.find((a) => a.id === defaultAddress?.id && !a.isDefault),
+    );
   // Why: real 模式选券 —— selectedCouponCode 驱动 preview 重查（key 含 couponCode），后端聚合 discount
   const [selectedCouponCode, setSelectedCouponCode] = useState<string | undefined>(undefined);
   const [showCouponModal, setShowCouponModal] = useState(false);
@@ -205,6 +219,8 @@ export default function CheckoutPage() {
       }
       // Why: 下单成功清除本次会话的手选地址，避免污染下次结算（P16 决策 6）
       useAddressSelectionStore.getState().clear();
+      // Why: 客户画像批3 B6 —— 下单成功记地址使用频次（下次结算预填最高频地址）
+      recordOrderAddress(defaultAddress.id);
       toast.success(t('checkout.orderPlaced', { defaultValue: 'Order placed' }));
       // Why: P28 D2 - replace 传 orderId/orderNo/status，result 页据 status 渲染 S1-S5 状态机。
       //     replace 不入栈，避免返回键回到 checkout 重复下单
@@ -306,6 +322,17 @@ export default function CheckoutPage() {
                       {defaultAddress.district}
                       {defaultAddress.detail}
                     </Text>
+                    {/* Why: 客户画像批3 B6 —— 频次预填来源提示（isDefault 命中不显示，手选会话内无提示需求）：
+                        仅当该地址非 isDefault 且为本地频次最高时显示，解释「为什么预填了这个地址」 */}
+                    {!defaultAddress.isDefault && smartPrefilled && (
+                      <Text
+                        style={[styles.smartHint, { color: colors['on-surface-variant'] }]}
+                        testID="checkout-smart-address-hint"
+                      >
+                        <Icon symbol="history" size={12} color={colors['on-surface-variant']} />{' '}
+                        {t('home.smartDefaultAddress')}
+                      </Text>
+                    )}
                   </View>
                 </View>
               ) : (
@@ -751,6 +778,10 @@ const styles = StyleSheet.create({
   },
   addressText: { flex: 1, gap: 2 },
   addrName: { ...typography['body-sm'], fontWeight: '700' },
+  smartHint: {
+    marginTop: 2,
+    fontSize: 12,
+  },
   addrDetail: { ...typography['body-sm'], fontSize: 12 },
   noAddressRow: {
     flexDirection: 'row',

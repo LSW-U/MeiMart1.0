@@ -116,6 +116,36 @@ function withMockCategoryTop3(products: Product[]): Product[] {
 //   方案契约（WarehouseAvailability）已就位。mock 分支按 product.stock 合成供演示/验收。
 const WAREHOUSE_AVAILABILITY_READY = false;
 
+// Why: 客户画像批3 B8（2026-10-18）— frequent-bundle 端点已在 MeiMart 后端工作区（3c05738+）
+//   完成，契约（FrequentBundleData：seed ProductSummary? / items ProductSummary[] / coOrderCount）
+//   已入 openapi。真机联调前挂同款门禁：false 时 real 分支返空组合（UI 整块隐藏，零 404 噪音），
+//   mock 分支正常合成供演示。端点部署验证后改 true 即接通（同 WAREHOUSE_AVAILABILITY_READY 范式）。
+const FREQUENT_BUNDLE_READY = false;
+
+/** B8 常买组合（契约 FrequentBundleData 前端形态；ProductSummary→Product 复用 transformProduct） */
+export interface FrequentBundle {
+  /** 组合主商品（用户最常买）；无组合 null */
+  seed: Product | null;
+  /** 与 seed 同单常共现的伙伴商品（共现订单数 desc） */
+  items: Product[];
+  /** 最强组合的共现订单数（展示「同单 N 次」用，0=无） */
+  coOrderCount: number;
+}
+
+/** 契约 ProductSummary raw（frequent-bundle 返回；字段是 ProductSummary 子集形状） */
+interface BundleCardRaw {
+  id: string;
+  name: Record<string, string>;
+  mainImage: string;
+  priceMin: number;
+  defaultSkuId: string | null;
+  status: string;
+  salesCount: number;
+  isCategoryTop3: boolean;
+  stock?: number;
+  rating?: number;
+}
+
 interface ProductListQuery {
   categoryId?: string;
   keyword?: string;
@@ -183,6 +213,42 @@ export const productApi = {
       },
     });
     return res.data.map(transformProduct);
+  },
+
+  /**
+   * 客户画像批3 B8 常买组合：GET /client/products/frequent-bundle
+   * 契约：seed ProductSummary? + items ProductSummary[] + coOrderCount；匿名/无历史/无共现
+   * /seed 下架 → 空组合（seed null、items []），UI 整块隐藏。no-store（后端已带）。
+   */
+  async getFrequentBundle(limit = 5): Promise<FrequentBundle> {
+    if (isMockMode) {
+      // Why: mock 按 salesCount 取 top 商品作 seed，其余按销量续排作伙伴（共现次数合成递减）
+      //   ——演示/验收用；空池返回空组合对齐契约。
+      const pool = withMockCategoryTop3(
+        [...mockDb.products].sort((a, b) => (b.salesCount ?? 0) - (a.salesCount ?? 0)),
+      );
+      if (pool.length === 0) return mockResponse({ seed: null, items: [], coOrderCount: 0 });
+      const [seed, ...rest] = pool;
+      const items = rest.slice(0, limit);
+      return mockResponse({
+        seed: seed ?? null,
+        items,
+        coOrderCount: items.length > 0 ? 3 : 0,
+      });
+    }
+    if (!FREQUENT_BUNDLE_READY) return { seed: null, items: [], coOrderCount: 0 };
+    const res = await api.get<{
+      seed: BundleCardRaw | null;
+      items: BundleCardRaw[];
+      coOrderCount: number;
+    }>('/client/products/frequent-bundle', {
+      params: { ...(limit ? { limit } : {}) },
+    });
+    return {
+      seed: res.data.seed ? transformProduct({ ...res.data.seed, skus: undefined } as never) : null,
+      items: res.data.items.map((raw) => transformProduct({ ...raw, skus: undefined } as never)),
+      coOrderCount: res.data.coOrderCount ?? 0,
+    };
   },
 
   async search(

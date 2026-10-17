@@ -1,5 +1,6 @@
 import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
-import { productApi } from '@/services/products';
+import { productApi, type FrequentBundle } from '@/services/products';
+import { useAuthStore } from '@/store/authStore';
 
 /**
  * 排序方式（P8 决策 2-B 后端排序，与后端 ProductSortBy enum 一致）
@@ -60,12 +61,35 @@ export function useRecommendationsInfinite(opts?: { limit?: number; epoch?: numb
   });
 }
 
-export function useBuyAgain(opts?: { limit?: number; offset?: number }) {
+export function useBuyAgain(opts?: { limit?: number; offset?: number; enabled?: boolean }) {
   return useQuery({
     queryKey: ['products', 'buy-again', opts?.offset ?? 0],
     queryFn: () => productApi.getBuyAgain(opts),
     staleTime: 5 * 60 * 1000,
     networkMode: 'offlineFirst',
+    // 批3 P2-2：默认 true（home 换一批对匿名照常出销量切片）；B1 清单页传
+    // enabled: isAuthenticated——匿名不请求（后端兜底切片不是「你常买的」，白打+错位展示）
+    enabled: opts?.enabled ?? true,
+  });
+}
+
+/**
+ * 客户画像批3 B8 常买组合（方案v2 §三 批3 2026-10-18）
+ *
+ * - 可选登录端点（OptionalAuth + no-store，同 buy-again 范式）：匿名/无历史/无共现返回空组合
+ *   （seed null + items []），消费方按空组合整块隐藏
+ * - queryKey 独立段（不进 buy-again 前缀，语义不同：组合 vs 清单）
+ * - staleTime 5min 与 buy-again 同款（no-store 只约束 HTTP 缓存，RQ 内存缓存照常）
+ */
+export function useFrequentBundle(limit = 5) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  return useQuery<FrequentBundle>({
+    queryKey: ['products', 'frequent-bundle', limit],
+    queryFn: () => productApi.getFrequentBundle(limit),
+    staleTime: 5 * 60 * 1000,
+    networkMode: 'offlineFirst',
+    // 匿名不请求（端点匿名也返空组合，但省一次请求；登录后自动重查）
+    enabled: isAuthenticated,
   });
 }
 

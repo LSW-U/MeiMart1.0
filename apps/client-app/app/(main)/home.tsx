@@ -7,7 +7,15 @@ import { useCallback, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTheme, spacing, layout, typography, shadowPresets, gradientPresets } from '@/theme';
+import {
+  useTheme,
+  spacing,
+  layout,
+  typography,
+  shadowPresets,
+  gradientPresets,
+  borderRadius,
+} from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { BannerCarousel } from '@/components/business/BannerCarousel';
@@ -25,12 +33,17 @@ import { Logo } from '@/components/cultural/Logo';
 import { UmaLulikSkyline } from '@/components/cultural/UmaLulikSkyline';
 import { Icon } from '@/components/ui/Icon';
 import { useCategories, useBanners } from '@/services/queries/useCatalog';
-import { useRecommendationsInfinite, useBuyAgain } from '@/services/queries/useProducts';
+import {
+  useRecommendationsInfinite,
+  useBuyAgain,
+  useFrequentBundle,
+} from '@/services/queries/useProducts';
 import { usePromotions } from '@/services/queries/usePromotions';
 import { useAddToCart } from '@/services/queries/useCart';
 import { useUnreadCount } from '@/services/queries/useNotifications';
 import { Badge } from '@/components/ui/Badge';
 import { toast } from '@/store/toastStore';
+import { useAuthStore } from '@/store/authStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 import { safeRoutePush } from '@meimart/nav-core';
@@ -96,9 +109,48 @@ export default function HomePage() {
   }, [buyAgainCount]);
   // A-P2-2：useMemo 稳定引用（renderDashboardHeader 依赖数组要求引用稳定，空数组兜底不变）
   const buyAgainList = useMemo(() => buyAgainProducts ?? [], [buyAgainProducts]);
-  // Why: P6 V3e - PromoDock 数据源由 usePromotions hook 驱动（后端控制数量/排序/时效）
+  // 批3 P2-1 修复：B1 常购清单入口——「查看全部」仅登录态展示（匿名看的是销量兜底切片
+  //   而非「你常买的」，入口跟着语义走；B1 页自身匿名分流见 frequently-bought.tsx）
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // Why: 客户画像批3 B8 常买组合（2026-10-18）——useFrequentBundle 拉打包组合（seed+伙伴），
+  //   空组合（匿名/无历史/无共现/门禁关）整块隐藏；一键整包加购走 addToCartMutation 逐个 mutate
+  const { data: bundle } = useFrequentBundle();
   const { data: promotions } = usePromotions();
   const addToCartMutation = useAddToCart();
+  const bundleItems = useMemo(() => (bundle?.seed ? [bundle.seed, ...bundle.items] : []), [bundle]);
+  const [bundlePending, setBundlePending] = useState(false);
+  // Why: 整包加购 = seed + items 逐个 addToCart（后端无 batch 端点）；串行 mutation 防竞态，
+  //   全部成功才 toast，任一失败弹错误并停（部分已入车由 invalidate 校准，不回滚）
+  const handleBundleAddAll = useCallback(() => {
+    if (bundlePending || bundleItems.length === 0) return;
+    setBundlePending(true);
+    void (async () => {
+      // 批3 P3-3 修复：错误 toast 带已成功计数（部分成功语义可见，不回滚由 invalidate 校准）
+      let done = 0;
+      try {
+        for (const item of bundleItems) {
+          await addToCartMutation.mutateAsync({ product: item, quantity: 1 });
+          done += 1;
+        }
+        toast.success(t('home.bundleAdded', { count: bundleItems.length }));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : '';
+        toast.error(
+          msg === 'SOLD_OUT'
+            ? t('product.soldOut', { defaultValue: 'Sold Out' })
+            : msg === 'STOCK_EXCEEDED'
+              ? t('product.stockExceeded')
+              : t('product.addToCartFailed', { defaultValue: 'Failed to add to cart' }),
+        );
+        if (done > 0) {
+          // 部分成功补充说明（一行文案注明失败语义，审查 P3-3 顺手项）
+          toast.info(t('home.bundlePartialAdded', { done, failed: bundleItems.length - done }));
+        }
+      } finally {
+        setBundlePending(false);
+      }
+    })();
+  }, [bundlePending, bundleItems, addToCartMutation, t]);
   // 批B B3：mail 图标角标换真实未读数（原硬编码 2 是线上假数据，方案v2 风险#8）
   // 未登录时 useUnreadCount 不请求（enabled: isAuthenticated）→ data undefined → 不显示角标
   const { data: unreadCount } = useUnreadCount();
@@ -307,6 +359,74 @@ export default function HomePage() {
   );
 
   // 实测Bug修复 #7B：Buy Again 整块移 ListFooterComponent（推荐在前、再次购买在后，对齐原型）
+  // 客户画像批3 B8：常买组合板块挂在 Buy Again 上方（组合=整包动作，清单=逐卡加购，层级区分）
+  const renderBundleSection = useCallback(() => {
+    // 空组合（匿名/无历史/无共现/门禁关）整块隐藏（契约语义）
+    if (!bundle || !bundle.seed || bundle.items.length === 0) return null;
+    return (
+      <View style={[styles.buyAgainSection, styles.bundleSection]}>
+        <View style={[styles.sectionHeader, styles.buyAgainHeader]}>
+          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+            {t('home.bundleTitle')}
+          </Text>
+          <Icon symbol="shopping_basket" size={20} color={colors.outline} />
+        </View>
+        <View
+          style={[
+            styles.bundleCard,
+            {
+              backgroundColor: colors['surface-container-lowest'],
+              borderColor: colors['outline-variant'],
+            },
+            shadowPresets.sm,
+          ]}
+        >
+          {bundleItems.map((item) => (
+            <SmallProductCard
+              key={item.id}
+              testID={`bundle-card-${item.id}`}
+              product={item}
+              onPress={handleCardPress}
+              onAddToCart={handleBuyAgainAddToCart}
+            />
+          ))}
+        </View>
+        <Pressable
+          testID="home-bundle-add-all"
+          onPress={handleBundleAddAll}
+          disabled={bundlePending}
+          style={({ pressed }) => [
+            styles.bundleAddAllBtn,
+            { borderColor: colors.primary },
+            pressed && !bundlePending && { opacity: 0.7 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t('home.bundleAddAll')}
+        >
+          {bundlePending ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Icon symbol="add" size={16} color={colors.primary} />
+          )}
+          <Text
+            style={[styles.seeAllText, { color: bundlePending ? colors.outline : colors.primary }]}
+          >
+            {t('home.bundleAddAll')}
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }, [
+    bundle,
+    bundleItems,
+    bundlePending,
+    colors,
+    handleBundleAddAll,
+    handleCardPress,
+    handleBuyAgainAddToCart,
+    t,
+  ]);
+
   const renderBuyAgainFooter = useCallback(
     () => (
       <View style={styles.buyAgainSection}>
@@ -340,6 +460,23 @@ export default function HomePage() {
                 {t('home.changeBatch')}
               </Text>
             </Pressable>
+            {/* 批3 P2-1 修复：B1 常购清单页导航入口（原孤儿页零入口）——
+                「查看全部」跳 /product/frequently-bought，复用 common.seeAll 现有 key；
+                仅登录态展示（匿名 buy-again 是销量兜底切片，入口跟语义走） */}
+            {isAuthenticated && (
+              <Pressable
+                testID="home-buy-again-view-all"
+                onPress={() => router.push('/product/frequently-bought')}
+                style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.seeAll')}
+              >
+                <Icon symbol="chevron_right" size={16} color={colors.primary} />
+                <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                  {t('common.seeAll')}
+                </Text>
+              </Pressable>
+            )}
             <Icon symbol="history" size={20} color={colors.outline} />
           </View>
         </View>
@@ -367,10 +504,12 @@ export default function HomePage() {
       handleBuyAgainChangeBatch,
       handleCardPress,
       buyAgainFetching,
+      isAuthenticated,
       t,
     ],
   );
 
+  // B1 常购清单入口（批3 P2-1 修复）
   // A-P2-2: dashboard 三态（loading/error/空列表）退回 ScrollView——瀑布流无数据时
   //   FlatList 仅剩 header（等价原 ScrollView 布局）；有数据才走 FlatList 主体
   const dashboardFallback = useCallback(
@@ -384,10 +523,20 @@ export default function HomePage() {
         {isLoading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
         {isError && <ErrorState message={t('errors.products')} onRetry={() => refetch()} />}
         {/* #7B：fallback 态 Buy Again 仍渲染（与 FlatList Footer 同源，板块不丢） */}
+        {renderBundleSection()}
         {renderBuyAgainFooter()}
       </ScrollView>
     ),
-    [colors, isLoading, isError, refetch, renderDashboardHeader, renderBuyAgainFooter, t],
+    [
+      colors,
+      isLoading,
+      isError,
+      refetch,
+      renderDashboardHeader,
+      renderBundleSection,
+      renderBuyAgainFooter,
+      t,
+    ],
   );
 
   return (
@@ -508,6 +657,7 @@ export default function HomePage() {
                 </Pressable>
               </View>
             )}
+            {renderBundleSection()}
             {renderBuyAgainFooter()}
           </ScrollView>
         )}
@@ -719,6 +869,32 @@ const styles = StyleSheet.create({
   buyAgainSection: {
     // Why: P6 S5 - Buy Again marginTop xl(32) -> lg(24)，页尾区块视觉收束
     marginTop: spacing.lg,
+  },
+  // Why: 客户画像批3 B8 —— 常买组合板块（组合整包加购，挂 Buy Again 上方）
+  bundleSection: {
+    marginTop: spacing.lg,
+  },
+  bundleCard: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    marginHorizontal: layout['container-margin'],
+    padding: spacing.md,
+    borderRadius: borderRadius?.lg ?? 16,
+    borderWidth: 1,
+  },
+  bundleAddAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.md,
+    marginHorizontal: layout['container-margin'],
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   buyAgainHeader: {
     paddingHorizontal: layout['container-margin'],
