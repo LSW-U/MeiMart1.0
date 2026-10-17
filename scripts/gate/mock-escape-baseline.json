@@ -92,6 +92,10 @@
     {
       "key": "apps/rider-app/app/settings/deposit/pay.tsx::pay-mock",
       "reason": "批2 N-P2-1 扩根 app/ 入账：注释提及，非运行时"
+    },
+    {
+      "key": "apps/client-app/src/services/onboarding.ts::mockDb",
+      "reason": "远端配置引导页 c9c9a88 存量，onboarding 运行时 mock 切换为既定架构（注释提及，非运行时）"
     }
   ]
 }
