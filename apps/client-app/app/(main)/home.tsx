@@ -303,7 +303,7 @@ export default function HomePage() {
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
             {t('home.recommend')}
           </Text>
-          {/* Why: 换一批按钮 批2 —— offset 步进翻页，isFetching 防连点 */}
+          {/* Why: 换一批按钮 批2（清债微批修正）—— epoch++ 回首屏复位（D3 方案 B），isFetching 防连点 */}
           <View style={styles.headerActions}>
             <Pressable
               testID="home-recommend-change-batch"
@@ -434,7 +434,7 @@ export default function HomePage() {
           <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
             {t('order.actions.repurchase')}
           </Text>
-          {/* Why: 换一批按钮 批2 —— offset 步进翻页，isFetching 防连点 */}
+          {/* Why: 换一批按钮 批2（清债微批修正）—— epoch++ 回首屏复位（D3 方案 B），isFetching 防连点 */}
           {/* 追修 P3-4：换一批+history 包进右侧组——sectionHeader 是 space-between，
               三顶层子元素会把按钮挤到正中间（推荐板块 headerActions 同款做法） */}
           <View style={styles.headerActions}>

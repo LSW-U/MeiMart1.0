@@ -46,6 +46,8 @@ export function useRecommendations(opts?: { limit?: number; offset?: number }) {
  *   短批/空批 → undefined（mock 池 15 条：6+6+3 短批到底，D5）
  * - queryKey 含 epoch 位（D3 方案 B）：换一批 = epoch++，回首屏复位；
  *   精确匹配零跨页副作用（resetQueries 前缀会误伤 cart 的 ['products','recommend',n]，故弃 A）
+ * - placeholderData: (previous) => previous（清债微批）：换一批 epoch++ 后旧列表保持渲染直到
+ *   新首屏到达，消除复位瞬间 isLoading 闪 fallback；仅影响本 hook，旧 useRecommendations 不动
  * - 旧 useRecommendations 保留并存（cart.tsx:67 消费中，cart 不切）
  */
 export function useRecommendationsInfinite(opts?: { limit?: number; epoch?: number }) {
@@ -56,6 +58,7 @@ export function useRecommendationsInfinite(opts?: { limit?: number; epoch?: numb
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length === limit ? allPages.length * limit : undefined,
+    placeholderData: (previous) => previous,
     staleTime: 5 * 60 * 1000,
     networkMode: 'offlineFirst',
   });
