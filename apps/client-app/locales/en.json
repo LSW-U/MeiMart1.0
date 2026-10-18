@@ -360,7 +360,16 @@
     "spec500g": "500g",
     "spec1kg": "1kg",
     "spec5kg": "5kg",
-    "spec10kg": "10kg"
+    "spec10kg": "10kg",
+    "priceAlert": "Price alert",
+    "priceAlertOn": "Price alert on",
+    "priceAlertSubscribed": "We'll notify you when the price drops",
+    "restockAlert": "Notify me when available",
+    "restockAlertOn": "Restock alert on",
+    "restockAlertSubscribed": "We'll notify you when it's back in stock",
+    "alertLoginRequired": "Log in to set product alerts",
+    "alertOff": "Alert turned off",
+    "alertFailed": "Failed to set alert"
   },
   "order": {
     "status": {

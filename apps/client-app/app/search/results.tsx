@@ -31,6 +31,7 @@ import { SearchBar } from '@/components/business/SearchBar';
 import { resolveBadges } from '@/utils/resolveBadges';
 import { toast } from '@/store/toastStore';
 import { useProductSearch, useProducts, type ProductSortKey } from '@/services/queries/useProducts';
+import { trackSearchClick } from '@/services/behavior';
 import { useCart, useAddToCart } from '@/services/queries/useCart';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Product } from '@/types';
@@ -76,6 +77,15 @@ export default function SearchResultsPage() {
   const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
   const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
   const addToCartMutation = useAddToCart();
+  // 批3 P2-2：卡片签名 (product)=>void，直传稳定 handler（消灭内联箭头）
+  // 批5 G2 埋点：搜索结果点击 → SEARCH_CLICK（fire-and-forget 攒批上报）后再跳详情
+  const handleCardPress = useCallback((p: Product) => {
+    trackSearchClick(p.id);
+    router.push(`/product/${p.id}`);
+  }, []);
+  // Why 独立 handler：Recommended 区非搜索结果（useProducts 热销切片），点击不计 SEARCH_CLICK，
+  //   否则漏斗（搜索→点击→成交）对账时推荐点击会污染点击侧数字（P5-2 口径）
+  const handleRecommendPress = useCallback((p: Product) => router.push(`/product/${p.id}`), []);
   // A-P2-2: useCallback 稳定化（memo 化卡片 props 浅比较，回调稳定才生效）
   const handleAddToCart = useCallback(
     (item: Product) => {
@@ -91,6 +101,7 @@ export default function SearchResultsPage() {
     },
     [addToCartMutation, t],
   );
+  const handleCardAdd = handleAddToCart;
 
   // A-P2-2: 结果网格 FlatList(numColumns=2) 现直接承担页面滚动（旧版嵌
   //   ScrollView(scrollEnabled=false) 内，虚拟化失效全量挂载）。
@@ -100,14 +111,10 @@ export default function SearchResultsPage() {
     ({ item }: { item: Product }) => (
       <View style={styles.gridCell}>
         {/* C-P3-10（批4 修复）：徽章走 resolveBadges 真实口径（Recommended 区同款），宁缺毋假 */}
-        <ProductCard
-          product={item}
-          badge={resolveBadges(item, t)[0]}
-          onPress={(p: Product) => router.push(`/product/${p.id}`)}
-        />
+        <ProductCard product={item} badge={resolveBadges(item, t)[0]} onPress={handleCardPress} />
       </View>
     ),
-    [t],
+    [t, handleCardPress],
   );
 
   // P8-7: 顶部搜索框可编辑（同 P7 SearchBar + 麦克风）
@@ -118,10 +125,6 @@ export default function SearchResultsPage() {
     // Why: setParams 刷新当前页（useProductSearch 自动重查），避免 push 堆路由栈
     router.setParams({ q: trimmed });
   };
-
-  // 批3 P2-2：卡片签名 (product)=>void，直传稳定 handler（消灭内联箭头）
-  const handleCardPress = useCallback((p: Product) => router.push(`/product/${p.id}`), []);
-  const handleCardAdd = handleAddToCart;
 
   // P8-6: Recommended 渲染抽函数（结果分支 !hasNextPage + empty 分支共用）
   const renderRecommended = () =>
@@ -137,7 +140,7 @@ export default function SearchResultsPage() {
                 key={product.id}
                 product={product}
                 badge={resolveBadges(product, t)[0]}
-                onPress={handleCardPress}
+                onPress={handleRecommendPress}
                 onAddToCart={handleCardAdd}
               />
             ))}
@@ -148,7 +151,7 @@ export default function SearchResultsPage() {
                 key={product.id}
                 product={product}
                 badge={resolveBadges(product, t)[0]}
-                onPress={handleCardPress}
+                onPress={handleRecommendPress}
                 onAddToCart={handleCardAdd}
               />
             ))}

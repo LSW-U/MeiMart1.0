@@ -360,7 +360,16 @@
     "spec500g": "500g",
     "spec1kg": "1kg",
     "spec5kg": "5kg",
-    "spec10kg": "10kg"
+    "spec10kg": "10kg",
+    "priceAlert": "降价提醒",
+    "priceAlertOn": "已开启降价提醒",
+    "priceAlertSubscribed": "降价后将第一时间通知你",
+    "restockAlert": "到货提醒",
+    "restockAlertOn": "已开启到货提醒",
+    "restockAlertSubscribed": "补货后将第一时间通知你",
+    "alertLoginRequired": "登录后可设置商品提醒",
+    "alertOff": "已取消提醒",
+    "alertFailed": "设置提醒失败"
   },
   "order": {
     "status": {

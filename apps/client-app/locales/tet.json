@@ -360,7 +360,16 @@
     "spec500g": "500g",
     "spec1kg": "1kg",
     "spec5kg": "5kg",
-    "spec10kg": "10kg"
+    "spec10kg": "10kg",
+    "priceAlert": "Notifikasaun Presu",
+    "priceAlertOn": "Notifikasaun presu ativu",
+    "priceAlertSubscribed": "Ita sei rona nota bainhira presu hamenus",
+    "restockAlert": "Rona nota bainhira iha fali",
+    "restockAlertOn": "Notifikasaun stock ativu",
+    "restockAlertSubscribed": "Ita sei rona nota bainhira produto fila fali",
+    "alertLoginRequired": "Tama ka bo'ot atu konfigura notifikasaun",
+    "alertOff": "Notifikasaun taka ona",
+    "alertFailed": "Falha atu konfigura notifikasaun"
   },
   "order": {
     "status": {

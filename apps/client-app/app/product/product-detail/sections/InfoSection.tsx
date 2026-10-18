@@ -16,6 +16,7 @@ export function InfoSection({
   product,
   stockState,
   isSoldOut,
+  alertEntry,
   variants,
   variantSelection,
   selectVariant,
@@ -32,6 +33,13 @@ export function InfoSection({
   product: Product;
   stockState: StockState;
   isSoldOut: boolean;
+  /** 批5 C7/C8 提醒订阅入口（有值渲染按钮；null 隐藏） */
+  alertEntry: {
+    kind: 'price' | 'restock';
+    subscribed: boolean;
+    disabled: boolean;
+    onPress: () => void;
+  } | null;
   variants: import('@/config/variantTemplates').VariantGroup[];
   variantSelection: Record<string, string>;
   selectVariant: (groupName: string, label: string) => void;
@@ -219,6 +227,48 @@ export function InfoSection({
             {t('product.soldOutDesc')}
           </Text>
         </View>
+      )}
+
+      {/* 批5 C7/C8 提醒订阅入口：C8 到货提醒（缺货时）/ C7 降价提醒（有货时），互斥单按钮 */}
+      {alertEntry && (
+        <Pressable
+          testID="product-alert-entry"
+          onPress={alertEntry.onPress}
+          disabled={alertEntry.disabled}
+          style={({ pressed }) => [
+            styles.alertEntry,
+            {
+              borderColor: alertEntry.subscribed ? colors.primary : colors.outline,
+              backgroundColor: colors['surface-container-lowest'],
+              opacity: alertEntry.disabled ? 0.5 : pressed ? 0.7 : 1,
+            },
+          ]}
+          accessibilityRole="button"
+          accessibilityState={{ selected: alertEntry.subscribed, disabled: alertEntry.disabled }}
+          accessibilityLabel={
+            alertEntry.kind === 'restock' ? t('product.restockAlert') : t('product.priceAlert')
+          }
+        >
+          <Icon
+            symbol="notifications"
+            size={16}
+            color={alertEntry.subscribed ? colors.primary : colors['on-surface-variant']}
+          />
+          <Text
+            style={[
+              styles.alertEntryText,
+              { color: alertEntry.subscribed ? colors.primary : colors['on-surface'] },
+            ]}
+          >
+            {alertEntry.kind === 'restock'
+              ? alertEntry.subscribed
+                ? t('product.restockAlertOn')
+                : t('product.restockAlert')
+              : alertEntry.subscribed
+                ? t('product.priceAlertOn')
+                : t('product.priceAlert')}
+          </Text>
+        </Pressable>
       )}
 
       {/* Delivery Section — §9 Q2 接入 useAddresses，取默认地址；无地址显示「选择地址」可点击跳列表 */}
@@ -524,6 +574,20 @@ const styles = StyleSheet.create({
   soldOutDesc: {
     ...typography['body-sm'],
     textAlign: 'center',
+  },
+  // 批5 C7/C8 提醒订阅入口（描边按钮，左图标右文案）
+  alertEntry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+  },
+  alertEntryText: {
+    ...typography['body-sm'],
+    fontWeight: '600',
   },
   // 规格组容器
   variantGroup: {

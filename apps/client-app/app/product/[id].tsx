@@ -4,7 +4,7 @@
 // 批5 拆分（C-P3-14）：sections/hooks 抽到 product-detail/ 子目录——
 //   shared.tsx（常量/纯函数/StarsRow）、sections/{TopBar,Carousel,InfoSection,ReviewsSection,RelatedProductsSection}
 //   主文件保留路由壳 + 数据组装 + 底部操作栏，行为零变更（纯搬移）。
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Share } from 'react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -15,17 +15,25 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useProduct, useProducts, useWarehouseAvailability } from '@/services/queries/useProducts';
+import {
+  useAlertSubscriptions,
+  useToggleAlertSubscription,
+} from '@/services/queries/useSubscriptions';
 import { isMockMode } from '@/services/api';
 import { useAddToCart, useCart, CART_ROOT_KEY } from '@/services/queries/useCart';
 import { cartApi } from '@/services/cart';
 import { useQueryClient } from '@tanstack/react-query';
 import { useFavorites, useToggleFavorite } from '@/services/queries/useFavorites';
+import { useAuthStore } from '@/store/authStore';
 import { useAddresses } from '@/services/queries/useAddress';
 import { useReviews, consumeLastSubmittedReviewId } from '@/services/queries/useReviews';
 import { getVariantGroups } from '@/config/variantTemplates';
 import { getRelativeTimeUnit, formatPrice } from '@/utils/format';
 import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
+import { trackProductView } from '@/services/behavior';
+import type { AlertSubscriptionType } from '@/services/subscriptions';
+import { getApiErrorMessage } from '@/utils/error';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 import { TopBar } from './product-detail/sections/TopBar';
 import { Carousel } from './product-detail/sections/Carousel';
@@ -66,6 +74,42 @@ export default function ProductDetailPage() {
     defaultAddr?.lng ?? null,
   );
 
+  // 批5 C7/C8 提醒订阅（hook 须在早退分支前调用——rules-of-hooks）：C8 到货=缺货 / C7 降价=有货，
+  // 互斥单按钮；匿名点击引导登录（端点 Roles CUSTOMER）。product 未就绪时 alertType 恒 PRICE_ALERT，
+  // 就绪后随库存态切换 queryKey 自动重查（列表是「我的订阅」全量，与 id 无关，无害）
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const alertType: AlertSubscriptionType =
+    product && computeStockState(product.stock) === 'out' ? 'RESTOCK_ALERT' : 'PRICE_ALERT';
+  const { data: alertSubs } = useAlertSubscriptions(alertType);
+  const toggleAlertMutation = useToggleAlertSubscription(alertType);
+  const alertSubsList = useMemo(() => alertSubs ?? [], [alertSubs]);
+  const productId = product?.id;
+  const handleAlertToggle = useCallback(() => {
+    if (!productId) return;
+    if (!isAuthenticated) {
+      toast.info(t('product.alertLoginRequired'));
+      router.push('/(auth)/login');
+      return;
+    }
+    const isSoldOut = alertType === 'RESTOCK_ALERT';
+    const mySub = alertSubsList.find((s) => s.productId === productId && s.enabled) ?? null;
+    toggleAlertMutation.mutate(
+      { productId, subscriptionId: mySub?.id ?? null },
+      {
+        onSuccess: () => {
+          toast.success(
+            mySub
+              ? t('product.alertOff')
+              : t(isSoldOut ? 'product.restockAlertSubscribed' : 'product.priceAlertSubscribed'),
+          );
+        },
+        onError: (err) => {
+          toast.error(getApiErrorMessage(err, t('product.alertFailed')));
+        },
+      },
+    );
+  }, [isAuthenticated, t, toggleAlertMutation, productId, alertSubsList, alertType]);
+
   // real 模式下商品 id 是 uuid（mock 的 p003/p006 等匹配不到），改为同类目优先 + 其他补足
   const pairsWellWith = isMockMode
     ? (allProducts ?? []).filter((p) => PAIRS_WELL_WITH_IDS.includes(p.id))
@@ -93,7 +137,9 @@ export default function ProductDetailPage() {
     useCallback(() => {
       const submittedId = consumeLastSubmittedReviewId();
       if (submittedId) setHighlightReviewId(submittedId);
-    }, []),
+      // 批5 G2 埋点：进详情页即报 VIEW（fire-and-forget，攒批 30s/20 条 flush，失败静默）
+      if (id) trackProductView(id);
+    }, [id]),
   );
 
   // P3-2（批D 审查修复）：同实例换品（非 remount 路径）时重置轮播索引，防分页点残留/计数器错位。
@@ -132,6 +178,14 @@ export default function ProductDetailPage() {
   const variants = getVariantGroups(product.category);
   const reviews = reviewData?.reviews ?? [];
   const reviewSummary = reviewData?.summary;
+
+  const alertEntry = {
+    kind: isSoldOut ? ('restock' as const) : ('price' as const),
+    subscribed: alertSubsList.find((s) => s.productId === product.id && s.enabled) != null,
+    // mutation 进行中禁用防连点；匿名不禁用（点击走引导登录分支）
+    disabled: toggleAlertMutation.isPending,
+    onPress: handleAlertToggle,
+  };
 
   // D1 轮播图源：images[] 优先（mainImage 首图、去重前置），空数组兜底 mainImage 单图；
   // 两者皆空为 []（轮播容器照常渲染防白屏，分页点/计数器隐藏）
@@ -267,6 +321,7 @@ export default function ProductDetailPage() {
               product={product}
               stockState={stockState}
               isSoldOut={isSoldOut}
+              alertEntry={alertEntry}
               variants={variants}
               variantSelection={variantSelection}
               selectVariant={selectVariant}
