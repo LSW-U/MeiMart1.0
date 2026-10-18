@@ -171,7 +171,7 @@ describe('C-P1-5 sanitizeCaptchaSvg（SVG 净化白名单）', () => {
     ['<use> 外部实体引用', '<svg><use href="//evil/sprite#x"/></svg>'],
     ['<animate> SMIL', '<svg><rect><animate attributeName="x"/></rect></svg>'],
     ['<set> SMIL', '<svg><rect><set attributeName="x"/></rect></svg>'],
-    ['>8KB 超长', `<svg>${'x'.repeat(9000)}</svg>`],
+    ['>16KB 超长', `<svg>${'x'.repeat(17000)}</svg>`],
     ['非 <svg 开头', '<div>svg?</div>'],
     ['空/空串', ''],
   ])('拒绝非法 SVG：%s', (_name, bad) => {
@@ -182,6 +182,12 @@ describe('C-P1-5 sanitizeCaptchaSvg（SVG 净化白名单）', () => {
     const good =
       '<svg xmlns="http://www.w3.org/2000/svg"><rect width="120" height="44"/><text>7</text></svg>';
     expect(sanitizeCaptchaSvg(good)).toBe(good);
+  });
+
+  it('后端实测尺寸 svg-captcha 碎线段 path（~10.5KB）在 16KB 限内放行（8KB 误杀回归）', () => {
+    const heavy = `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="50">${'<path fill="#444" d="M50.16 47.10L50.23 47.17"/>'.repeat(200)}</svg>`;
+    expect(heavy.length).toBeGreaterThan(8 * 1024);
+    expect(sanitizeCaptchaSvg(heavy)).toBe(heavy);
   });
 
   it('null/undefined → null（防御后端异常响应）', () => {

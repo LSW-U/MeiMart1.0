@@ -126,7 +126,7 @@
     "welcomeSubReset": "通过短信验证重置密码",
     "forgotPasswordTitle": "忘记密码？",
     "phoneNumber": "手机号",
-    "phonePlaceholder": "+670 7xx xxxx",
+    "phonePlaceholder": "请输入手机号",
     "verificationCode": "验证码",
     "codePlaceholder": "6 位验证码",
     "sendCodeBtn": "发送验证码",

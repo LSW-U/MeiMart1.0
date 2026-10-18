@@ -20,7 +20,9 @@ interface CaptchaInputProps {
 // （SVG 可内嵌 <image xlink:href> 外联、<script>、<foreignObject>、<use href> 引用外部实体、
 // SMIL <animate> 等）。渲染前校验：必须是 <svg 开头 + 尺寸上限 + 黑名单标签/外联 href；
 // 不合法走既有 svg=null 失败态（errors.generic），不渲染。
-const SVG_MAX_BYTES = 8 * 1024;
+// 16KB：后端 svg-captcha 类库碎线段 path 实测单张 ~10.5KB（8KB 误杀正常票据走失败态）；
+// 安全主闸是下方标签黑名单+外联 href（不变），尺寸仅防滥用兜底
+const SVG_MAX_BYTES = 16 * 1024;
 const SVG_FORBIDDEN_TAGS = [
   'image',
   'foreignObject',

@@ -1,9 +1,19 @@
 import { z } from 'zod';
 
+// Why: 后端 user.phone 存 E.164 全串（seed '+67088888888'），findUnique 精确匹配——
+// UI 前缀块只是视觉（Input prefix 不进表单值），裸号提交必 401；统一在 schema 层归一化，
+// 4 个 auth 页（login/login-sms/register/reset）共用此 schema，一处修全生效
 const phoneSchema = z
   .string()
   .min(1, 'Phone is required')
-  .regex(/^(\+?670|0)?\s?\d{7,12}$/, 'Invalid phone number (e.g. +670 7XXX XXXX)');
+  .regex(/^(\+?670|0)?\s?\d{7,12}$/, 'Invalid phone number (e.g. +670 7XXX XXXX)')
+  // '0'-前缀（本机拨号习惯）→ +670；无前缀裸号 → 补 +670；已带 + 的保持原样（去空格）
+  .transform((v) => {
+    const digits = v.replace(/\s+/g, '');
+    if (digits.startsWith('+')) return digits;
+    if (digits.startsWith('0')) return `+670${digits.slice(1)}`;
+    return `+670${digits}`;
+  });
 
 const passwordSchema = z
   .string()

@@ -126,7 +126,7 @@
     "welcomeSubReset": "Redefina a palavra-passe com verificação por SMS",
     "forgotPasswordTitle": "Esqueceu a palavra-passe?",
     "phoneNumber": "NÚMERO DE TELEFONE",
-    "phonePlaceholder": "+670 7xx xxxx",
+    "phonePlaceholder": "Introduza o número de telefone",
     "verificationCode": "CÓDIGO DE VERIFICAÇÃO",
     "codePlaceholder": "Código de 6 dígitos",
     "sendCodeBtn": "Enviar código",
