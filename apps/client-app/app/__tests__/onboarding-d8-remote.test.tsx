@@ -100,15 +100,21 @@ describe('useOnboardingSlides 切换接线（批3 D8）', () => {
     expect(getAllByTestId('icon-storefront').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('拉取失败回退本地 SLIDES：3 dot（s1-s3）+ 无图（icon+渐变）', () => {
+  it('拉取失败回退本地 SLIDES：3 dot（s1-s3）+ 本地文案（t 路径）+ 无图（icon+渐变）', () => {
     (fetchOnboardingSlides as jest.Mock).mockRejectedValue(new Error('network down'));
-    const { getByTestId, queryByTestId } = render(<OnboardingPage />, { wrapper });
+    const { getByTestId, queryByTestId, getByText } = render(<OnboardingPage />, { wrapper });
     expect(getByTestId('dot-s1')).toBeTruthy();
     expect(getByTestId('dot-s2')).toBeTruthy();
     expect(getByTestId('dot-s3')).toBeTruthy();
     expect(queryByTestId('dot-r1')).toBeNull();
     // 本地兜底屏无 imageUrl：不出 SafeImage（回退语义 + D2 断网不白屏）
     expect(queryByTestId('onboarding-image')).toBeNull();
+    // 回退内容锁定为本地 SLIDES 文案（titleKey 走 t('onboarding.titleN')，非远端 JSON 文案）
+    expect(getByText('onboarding.title1')).toBeTruthy();
+    expect(getByText('onboarding.desc3')).toBeTruthy();
+    // 屏数恰为 3：远端内容（2 屏 r1/r2）未混入
+    expect(queryByTestId('dot-r2')).toBeNull();
+    expect(queryByTestId('dot-s4')).toBeNull();
   });
 
   it('空数组同样回退本地 SLIDES（任务书：空 → null → 兜底）', () => {
