@@ -217,7 +217,7 @@ export default function AddressEditPage() {
             }}
           />
         )}
-      </KeyboardAvoidingView>{' '}
+      </KeyboardAvoidingView>
     </SafeAreaWrapper>
   );
 }
