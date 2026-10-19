@@ -2,7 +2,7 @@
 // HTML 行数 283 → RN ~330（含样式），满足 CLAUDE.md 规则 #28 的 30% 门槛
 // Fix-22: PrimaryHeader + tais-pattern + location_on/location_city/person/call/home/arrow_back/check_circle/radio_button_unchecked/edit/delete + uma-lulik 分隔
 // P16: 全部硬编码文案接 i18n（决策 1）+ 结算页选择回传（决策 6）+ 卡片排版收紧（决策 11）
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -32,6 +32,7 @@ import {
   useDeleteAddress,
   useSetDefaultAddress,
 } from '@/services/queries/useAddress';
+import { useFrequentAddressStore } from '@/store/frequentAddressStore';
 import type { Address } from '@/types';
 import { getAddressTagTheme, isAddressTagPreset, type AddressTagPreset } from '@/theme/tagThemes';
 import { parseAddressText } from '@/utils/addressParse';
@@ -52,6 +53,28 @@ export default function AddressListPage() {
   const { data: addresses, isLoading, isError, refetch } = useAddresses();
   const deleteMutation = useDeleteAddress();
   const setDefaultMutation = useSetDefaultAddress();
+
+  // B6 体验完善：本地频次排序（复用 frequentAddressStore counts，只读）→ isDefault → 原序稳定
+  const frequentCounts = useFrequentAddressStore((s) => s.counts);
+  const sortedAddresses = useMemo(() => {
+    if (!addresses) return addresses;
+    return [...addresses].sort((a, b) => {
+      const ca = frequentCounts[a.id] ?? 0;
+      const cb = frequentCounts[b.id] ?? 0;
+      if (ca !== cb) return cb - ca;
+      const da = a.isDefault ? 1 : 0;
+      const db = b.isDefault ? 1 : 0;
+      if (da !== db) return db - da;
+      return 0; // 同频同默认 → 保持原序（Array.prototype.sort 稳定）
+    });
+  }, [addresses, frequentCounts]);
+
+  // 折叠：默认显示前 3 条，其余收进「显示更多」；展开态在 addresses 变化时保持
+  const [expanded, setExpanded] = useState(false);
+  const COLLAPSED_COUNT = 3;
+  const shouldCollapse = !!sortedAddresses && sortedAddresses.length > COLLAPSED_COUNT;
+  const visibleAddresses =
+    shouldCollapse && !expanded ? sortedAddresses?.slice(0, COLLAPSED_COUNT) : sortedAddresses;
 
   const handleDelete = (addr: Address) => {
     // Why: Web 端 Alert.alert 不显示，直接删除 + toast；Native 端用 Alert 确认
@@ -210,9 +233,9 @@ export default function AddressListPage() {
             </Text>
           </View>
 
-          {/* 地址列表 */}
+          {/* 地址列表（B6：频次排序 + 默认折叠 3 条） */}
           <FlatList
-            data={addresses}
+            data={visibleAddresses}
             keyExtractor={(item) => item.id}
             initialNumToRender={6}
             maxToRenderPerBatch={4}
@@ -229,6 +252,39 @@ export default function AddressListPage() {
               />
             )}
           />
+
+          {/* 「显示更多 (N)」/「收起」折叠开关 */}
+          {shouldCollapse && (
+            <Pressable
+              onPress={() => setExpanded((v) => !v)}
+              style={({ pressed }) => [styles.showMoreBtn, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              accessibilityState={{ expanded }}
+              accessibilityLabel={
+                expanded
+                  ? t('address.showLess', { defaultValue: 'Show less' })
+                  : t('address.showMore', {
+                      defaultValue: 'Show more ({{count}})',
+                      count: sortedAddresses!.length - COLLAPSED_COUNT,
+                    })
+              }
+              testID="address-show-more"
+            >
+              <Text style={[styles.showMoreText, { color: colors.primary }]}>
+                {expanded
+                  ? t('address.showLess', { defaultValue: 'Show less' })
+                  : t('address.showMore', {
+                      defaultValue: 'Show more ({{count}})',
+                      count: sortedAddresses!.length - COLLAPSED_COUNT,
+                    })}
+              </Text>
+              <Icon
+                symbol={expanded ? 'chevron_up' : 'expand_more'}
+                size={18}
+                color={colors.primary}
+              />
+            </Pressable>
+          )}
 
           {/* V19：左滑操作提示（删除/设默认不可发现，原型有此提示文案） */}
           {addresses.length > 0 && (
@@ -545,6 +601,18 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: spacing.md,
+  },
+  // B6 折叠开关（「显示更多 / 收起」）
+  showMoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+  },
+  showMoreText: {
+    ...typography['body-sm'],
+    fontWeight: '600',
   },
   // Swipe Actions（P16 决策 8）
   swipeActions: {

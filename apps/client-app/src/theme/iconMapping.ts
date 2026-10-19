@@ -38,6 +38,7 @@ const SYMBOL_TO_MC_LITERAL = {
   delete: 'trash-can',
   edit: 'pencil',
   expand_more: 'chevron-down',
+  chevron_up: 'chevron-up',
   swap_vert: 'swap-vertical',
   favorite: 'heart',
   help: 'help-circle',

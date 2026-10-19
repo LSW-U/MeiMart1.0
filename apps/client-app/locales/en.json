@@ -622,6 +622,8 @@
     "smartPlaceholder": "Maria Silva, 7712 3456, Rua de Lecidere, Dili",
     "parseAndFill": "Parse and Fill",
     "cityPlaceholder": "Dili",
+    "showMore": "Show more ({{count}})",
+    "showLess": "Show less",
     "swipeHint": "Swipe a card to edit / set default / delete"
   },
   "profile": {

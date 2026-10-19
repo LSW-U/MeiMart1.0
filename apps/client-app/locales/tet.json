@@ -622,6 +622,8 @@
     "smartPlaceholder": "Maria Silva, 7712 3456, Rua de Lecidere, Dili",
     "parseAndFill": "Analiza no Preenxe",
     "cityPlaceholder": "Dili",
+    "showMore": "Bele liu mai ({{count}})",
+    "showLess": "Taka",
     "swipeHint": "Dada kartão atu edita / tau padraun / hamos"
   },
   "profile": {
