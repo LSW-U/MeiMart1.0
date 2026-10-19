@@ -69,9 +69,9 @@ export default function AddressListPage() {
     });
   }, [addresses, frequentCounts]);
 
-  // 折叠：默认显示前 3 条，其余收进「显示更多」；展开态在 addresses 变化时保持
+  // 折叠：默认显示前 5 条，其余收进「显示更多」；展开态在 addresses 变化时保持
   const [expanded, setExpanded] = useState(false);
-  const COLLAPSED_COUNT = 3;
+  const COLLAPSED_COUNT = 5;
   const shouldCollapse = !!sortedAddresses && sortedAddresses.length > COLLAPSED_COUNT;
   const visibleAddresses =
     shouldCollapse && !expanded ? sortedAddresses?.slice(0, COLLAPSED_COUNT) : sortedAddresses;
