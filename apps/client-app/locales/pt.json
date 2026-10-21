@@ -689,7 +689,6 @@
     },
     "accountSection": "Conta & Serviços",
     "preferencesSection": "Preferências",
-    "storageSection": "Armazenamento",
     "legalSection": "Privacidade & Termos",
     "profileInfo": "Perfil Pessoal",
     "shippingAddress": "Endereços de Entrega",
@@ -699,11 +698,12 @@
     "cacheCleared": "Cache limpa",
     "cacheClearFailed": "Falha ao limpar a cache",
     "notifOrderUpdates": "Atualizações de pedidos",
-    "notifPromotions": "Promoções",
-    "notifSystem": "Avisos do sistema",
+    "notifPromotions": "Notificações promocionais",
     "notifUpdateFailed": "Falha ao atualizar preferências",
     "addressCount": "{{count}} guardados",
-    "cacheChip": "{{size}} · Toque para limpar"
+    "cacheChip": "{{size}} · Toque para limpar",
+    "defaultPaymentMethod": "Método de pagamento padrão",
+    "defaultPayAuto": "Automático"
   },
   "language": {
     "title": "Selecionar idioma",

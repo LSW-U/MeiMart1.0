@@ -175,6 +175,11 @@ const SYMBOL_TO_MC_LITERAL = {
   timeline: 'timeline', // 售后详情时间线
   two_wheeler: 'motorbike', // 地图骑手点（MC 无 motorcycle，motorbike 同义）
   workspace_premium: 'medal', // 会员等级行（MC 无 premium，medal 表徽章）
+
+  // 设置页扫尾（2026-10-21，用户实测发现圈兜底）：
+  rate_review: 'comment-text-outline', // 意见反馈（MC 无 rate-review，评论气泡贴语义）
+  palette: 'palette', // 主题（MC 同名直译）
+  about: 'information-outline', // 关于行（与版本行 information 区分，去并排重复）
 } satisfies Readonly<Record<string, IconName>>;
 
 const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = SYMBOL_TO_MC_LITERAL;

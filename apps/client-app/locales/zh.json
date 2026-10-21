@@ -689,7 +689,6 @@
     },
     "accountSection": "账号与服务",
     "preferencesSection": "偏好",
-    "storageSection": "存储",
     "legalSection": "隐私与条款",
     "profileInfo": "个人资料",
     "shippingAddress": "收货地址",
@@ -699,11 +698,12 @@
     "cacheCleared": "缓存已清除",
     "cacheClearFailed": "清除缓存失败",
     "notifOrderUpdates": "订单通知",
-    "notifPromotions": "促销活动",
-    "notifSystem": "系统公告",
+    "notifPromotions": "促销推送",
     "notifUpdateFailed": "偏好设置失败，请重试",
     "addressCount": "{{count}} 个",
-    "cacheChip": "{{size}} · 点击清理"
+    "cacheChip": "{{size}} · 点击清理",
+    "defaultPaymentMethod": "默认支付方式",
+    "defaultPayAuto": "自动"
   },
   "language": {
     "title": "选择语言",

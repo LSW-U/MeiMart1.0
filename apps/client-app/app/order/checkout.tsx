@@ -29,11 +29,12 @@ import { useAddresses } from '@/services/queries/useAddress';
 import { useAddressSelectionStore } from '@/store/addressSelectionStore';
 import { useFrequentAddressStore, resolveSmartDefaultAddress } from '@/store/frequentAddressStore';
 import { usePaymentMethods } from '@/services/queries/usePayment';
+import { getDefaultPaymentMethod } from '@/services/paymentPreference';
 import { useCreateOrder } from '@/services/queries/useOrders';
 import { useCoupons } from '@/services/queries/usePromotion';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { formatEta, formatPrice } from '@/utils/format';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 // Why: mock demo 金额（与 cart 页一致）。real 模式由 useCheckoutPreview 一次拿全金额
 //      —— preview.payableAmount 后端已聚合（itemsSubtotal + deliveryFee - discount，传 couponCode 时算折扣）。
@@ -83,19 +84,41 @@ export default function CheckoutPage() {
   // Why: real 模式按默认地址 + 选中券查运费 + 折扣聚合；mock 模式不调（enabled 内已 gate），preview 为 undefined
   const { data: preview } = useCheckoutPreview(defaultAddress?.id, selectedCouponCode);
 
-  const defaultMethodId = paymentMethods?.find((m) => m.isDefault)?.id ?? paymentMethods?.[0]?.id;
-  const [selectedMethod, setSelectedMethod] = useState<string | undefined>(defaultMethodId);
+  // 本地默认支付方式 code 读取（AsyncStorage 异步，挂载后一次性）
+  const [defaultPayCode, setDefaultPayCode] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getDefaultPaymentMethod().then((v) => {
+      if (!cancelled) setDefaultPayCode(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  // 方案甲：设置页本地默认支付方式（code 大写枚举）优先于列表 isDefault；
+  // 列表里没有该 code（渠道下架）或未设置时走原逻辑（isDefault/首项）
+  const preferredMethodId = useMemo(() => {
+    const list = paymentMethods ?? [];
+    if (defaultPayCode) {
+      const hit = list.find(
+        (m) => (m.code ?? m.id.toUpperCase()) === defaultPayCode && m.available !== false,
+      );
+      if (hit) return hit.id;
+    }
+    return list.find((m) => m.isDefault)?.id ?? list[0]?.id;
+  }, [paymentMethods, defaultPayCode]);
+  const [selectedMethod, setSelectedMethod] = useState<string | undefined>(preferredMethodId);
   // C-P1-1: 支付方式列表异步到达后回填选中项。useState 初值只取首渲染值（那时 paymentMethods
   // 多为 undefined → selectedMethod 恒 undefined），列表就绪后如用户尚未手选则选中默认项；
   // 用户已手选（selectedMethod 非空）不覆盖。触发源是外部异步数据（paymentMethods query）到达，
   // 属「派生 state 重置」官方形态，非无条件同步 setState。
   useEffect(() => {
-    if (defaultMethodId) {
+    if (preferredMethodId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- 原因：异步支付方式列表就绪后的回填，prev ?? 哨兵防覆盖用户手选，非无条件同步 setState
-      setSelectedMethod((prev) => prev ?? defaultMethodId);
+      setSelectedMethod((prev) => prev ?? preferredMethodId);
     }
-    // 依赖 defaultMethodId：isDefault 项或首项变化（列表就绪/刷新）时触发回填
-  }, [defaultMethodId]);
+    // 依赖 preferredMethodId：本地偏好/isDefault 项或首项变化（列表就绪/刷新）时触发回填
+  }, [preferredMethodId]);
   // Why: 防止 submit 期间重复点击（Promise.all 查 SKU 时 createOrder.isPending 还是 false）
   const [submitting, setSubmitting] = useState(false);
 

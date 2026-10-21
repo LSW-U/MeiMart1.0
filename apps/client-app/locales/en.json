@@ -689,7 +689,6 @@
     },
     "accountSection": "Account & Services",
     "preferencesSection": "Preferences",
-    "storageSection": "Storage",
     "legalSection": "Privacy & Terms",
     "profileInfo": "Personal Profile",
     "shippingAddress": "Shipping Addresses",
@@ -699,11 +698,12 @@
     "cacheCleared": "Cache cleared",
     "cacheClearFailed": "Failed to clear cache",
     "notifOrderUpdates": "Order updates",
-    "notifPromotions": "Promotions",
-    "notifSystem": "System notices",
+    "notifPromotions": "Promotional pushes",
     "notifUpdateFailed": "Failed to update preferences",
     "addressCount": "{{count}} saved",
-    "cacheChip": "{{size}} · Tap to clear"
+    "cacheChip": "{{size}} · Tap to clear",
+    "defaultPaymentMethod": "Default payment method",
+    "defaultPayAuto": "Auto"
   },
   "language": {
     "title": "Select language",

@@ -689,7 +689,6 @@
     },
     "accountSection": "Konta no Servisu",
     "preferencesSection": "Preferénsia",
-    "storageSection": "Armazenamentu",
     "legalSection": "Privasidade no Termu",
     "profileInfo": "Perfil Pessoal",
     "shippingAddress": "Enderesu Entrega",
@@ -699,11 +698,12 @@
     "cacheCleared": "Kache hamos ona",
     "cacheClearFailed": "Falla hamos kache",
     "notifOrderUpdates": "Atualizasaun pedidu",
-    "notifPromotions": "Promosaun",
-    "notifSystem": "Avizu sistema",
+    "notifPromotions": "Notifikasaun promosaun",
     "notifUpdateFailed": "Falla atualiza preferénsia",
     "addressCount": "Rai tiha ona {{count}}",
-    "cacheChip": "{{size}} · Klik atu hamos"
+    "cacheChip": "{{size}} · Klik atu hamos",
+    "defaultPaymentMethod": "Metodu pagamentu default",
+    "defaultPayAuto": "Automátiku"
   },
   "language": {
     "title": "Hili lingua",

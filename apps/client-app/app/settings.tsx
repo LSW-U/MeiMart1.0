@@ -23,6 +23,9 @@ import {
   useUpdateNotificationPreferences,
 } from '@/services/queries/useNotifications';
 import { Switch } from '@/components/ui/Switch';
+import { usePaymentMethods } from '@/services/queries/usePayment';
+import { getDefaultPaymentMethod, setDefaultPaymentMethod } from '@/services/paymentPreference';
+import { localize, type AppLocale } from '@/i18n';
 import { useEffect, useState, type ReactNode } from 'react';
 
 export default function SettingsPage() {
@@ -42,6 +45,26 @@ export default function SettingsPage() {
   const updatePrefs = useUpdateNotificationPreferences();
 
   const setMode = (mode: 'light' | 'dark' | 'system') => setThemeMode(mode);
+
+  // 默认支付方式（方案甲：本地偏好，2026-10-21）——
+  // 选项来自支付方式列表（登录/未登录都可拉，未登录选了登录后结算页生效）；
+  // null = 未设置（结算页走 isDefault/COD 兜底）
+  const { data: paymentMethods } = usePaymentMethods();
+  const payableMethods = (paymentMethods ?? []).filter((m) => m.available !== false);
+  const [defaultPay, setDefaultPay] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getDefaultPaymentMethod().then((v) => {
+      if (!cancelled) setDefaultPay(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const changeDefaultPay = (code: string | null) => {
+    setDefaultPay(code);
+    void setDefaultPaymentMethod(code);
+  };
 
   // P17 决策 3 —— 真实缓存：挂载统计大小，点击清理后重查（loading → 成功 0 KB / 失败保留）
   const [cacheSize, setCacheSize] = useState<string | null>(null);
@@ -200,6 +223,11 @@ export default function SettingsPage() {
           >
             <SegmentSwitch
               value={themeMode}
+              options={[
+                { v: 'system', label: t('settings.themeMode.system') },
+                { v: 'light', label: t('settings.themeMode.light') },
+                { v: 'dark', label: t('settings.themeMode.dark') },
+              ]}
               onChange={setMode}
               color={colors.primary}
               activeTextColor={colors['on-primary']}
@@ -222,12 +250,28 @@ export default function SettingsPage() {
           {/* P17-B1 通知偏好三分类开关（后端 b8ccfb9）。决策 1：未登录不渲染
               （偏好是登录态能力，GET 不发请求无初值）；跳转通知中心行随之移除，
               与通知中心的循环跳转（设置→通知中心→设置）就此闭环 */}
+          {/* P17-B1 通知偏好开关（后端 b8ccfb9）。决策 1：未登录不渲染
+              （偏好是登录态能力，GET 不发请求无初值）；跳转通知中心行随之移除，
+              与通知中心的循环跳转（设置→通知中心→设置）就此闭环。
+              2026-10-21 UI 简化：系统公告开关并入订单通知——一个开关联动写
+              orderUpdates + system 两字段（PATCH 允许多 key，后端契约零改动），
+              system 行 UI 移除但后端字段保留（老用户既有值随订单开关覆写） */}
           {isAuthenticated &&
-            ([
-              { key: 'orderUpdates' as const, label: 'notifOrderUpdates', testID: 'settings-notifications' },
-              { key: 'promotions' as const, label: 'notifPromotions', testID: 'settings-notifications-promo' },
-              { key: 'system' as const, label: 'notifSystem', testID: 'settings-notifications-system' },
-            ]).map(({ key, label, testID }, idx, arr) => (
+            [
+              {
+                key: 'orderUpdates' as const,
+                label: 'notifOrderUpdates',
+                testID: 'settings-notifications',
+                // 系统公告并入订单通知：一个开关同步控制两个字段
+                payload: (next: boolean) => ({ orderUpdates: next, system: next }),
+              },
+              {
+                key: 'promotions' as const,
+                label: 'notifPromotions',
+                testID: 'settings-notifications-promo',
+                payload: (next: boolean) => ({ promotions: next }),
+              },
+            ].map(({ key, label, testID, payload }, idx, arr) => (
               <RowItem
                 key={key}
                 label={t(`settings.${label}`)}
@@ -237,32 +281,57 @@ export default function SettingsPage() {
                 textColor={colors['on-surface']}
                 subColor={colors['on-surface-variant']}
                 dividerColor={colors['outline-variant']}
-                showDivider={idx < arr.length - 1}
+                // 组内行间有线；末行后面跟着默认支付方式行（渲染时），也要有线
+                showDivider={idx < arr.length - 1 || payableMethods.length > 0}
                 testID={testID}
               >
                 <Switch
                   value={notifPrefs?.[key] ?? true}
-                  onValueChange={(next) => updatePrefs.mutate({ [key]: next })}
-                  disabled={prefsLoading || (updatePrefs.isPending && updatePrefs.variables?.[key] !== undefined)}
+                  onValueChange={(next) => updatePrefs.mutate(payload(next))}
+                  disabled={
+                    prefsLoading ||
+                    (updatePrefs.isPending && updatePrefs.variables?.[key] !== undefined)
+                  }
                   testID={`${testID}-switch`}
                   accessibilityLabel={t(`settings.${label}`)}
                 />
               </RowItem>
             ))}
-        </View>
 
-        {/* 存储（P17 决策 1/3：清除缓存真实数据 Commit 5 接） */}
-        <SectionTitle title={t('settings.storageSection')} color={colors['on-surface-variant']} />
-        <View
-          style={[
-            styles.groupCard,
-            {
-              backgroundColor: colors['surface-container-lowest'],
-              borderColor: colors['outline-variant'],
-            },
-            shadowPresets.sm,
-          ]}
-        >
+          {/* 默认支付方式（方案甲 2026-10-21）：本地偏好，结算页预选；
+              列表未加载/空时整行隐藏（无选项可摆） */}
+          {payableMethods.length > 0 && (
+            <RowItem
+              label={t('settings.defaultPaymentMethod')}
+              icon="payments"
+              iconBg={colors.primary}
+              iconFg={colors['on-primary']}
+              textColor={colors['on-surface']}
+              subColor={colors['on-surface-variant']}
+              dividerColor={colors['outline-variant']}
+              // 后面还有清缓存行，保持组内行间线
+              showDivider
+              testID="settings-default-payment"
+            >
+              <SegmentSwitch
+                value={defaultPay}
+                options={[
+                  { v: null, label: t('settings.defaultPayAuto') },
+                  ...payableMethods.slice(0, 2).map((m) => ({
+                    v: (m.code ?? m.id.toUpperCase()) as string,
+                    label: localize(m.name, locale as AppLocale),
+                  })),
+                ]}
+                onChange={changeDefaultPay}
+                color={colors.primary}
+                activeTextColor={colors['on-primary']}
+                subColor={colors['on-surface-variant']}
+                activeColor={colors['surface-container-low']}
+              />
+            </RowItem>
+          )}
+
+          {/* 清除缓存（原「存储」区块并入偏好组，2026-10-21 UI 精简） */}
           <PressableRow
             label={t('settings.clearCache')}
             icon="delete"
@@ -350,7 +419,7 @@ export default function SettingsPage() {
           </RowItem>
           <PressableRow
             label={t('settings.about')}
-            icon="info"
+            icon="about"
             iconBg={colors.primary}
             iconFg={colors['on-primary']}
             textColor={colors['on-surface']}
@@ -500,34 +569,31 @@ function PressableRow({
   );
 }
 
-function SegmentSwitch({
+function SegmentSwitch<T extends string | null>({
   value,
+  options,
   onChange,
   color,
   activeTextColor,
   subColor,
   activeColor,
 }: {
-  value: 'light' | 'dark' | 'system';
-  onChange: (v: 'light' | 'dark' | 'system') => void;
+  /** null = 自动（跟随列表 isDefault/首项），仅默认支付方式用 */
+  value: T;
+  options: { v: T; label: string }[];
+  onChange: (v: T) => void;
   color: string;
   activeTextColor: string;
   subColor: string;
   activeColor: string;
 }) {
-  const { t } = useTranslation();
-  const options: { v: 'light' | 'dark' | 'system'; label: string }[] = [
-    { v: 'system', label: t('settings.themeMode.system') },
-    { v: 'light', label: t('settings.themeMode.light') },
-    { v: 'dark', label: t('settings.themeMode.dark') },
-  ];
   return (
     <View style={[styles.segment, { backgroundColor: activeColor, borderColor: subColor }]}>
       {options.map((opt) => {
         const active = value === opt.v;
         return (
           <Pressable
-            key={opt.v}
+            key={String(opt.v)}
             onPress={() => onChange(opt.v)}
             style={[styles.segmentItem, { backgroundColor: active ? color : 'transparent' }]}
             accessibilityRole="button"
@@ -554,7 +620,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: {
     padding: layout['container-margin'],
-    paddingBottom: spacing.xxl * 2,
+    // 方案A（2026-10-21）：原 paddingBottom xxl*2 + 页脚 lg 叠出大段空白，收窄到 lg
+    paddingBottom: spacing.lg,
     gap: spacing.sm,
   },
   sectionHeader: {
@@ -650,6 +717,7 @@ const styles = StyleSheet.create({
     ...typography['label-caps'],
     fontSize: 10,
     textAlign: 'center',
-    marginTop: spacing.lg,
+    // 方案A：与收窄后的 scroll paddingBottom 配套，lg → md
+    marginTop: spacing.md,
   },
 });
