@@ -63,6 +63,10 @@ jest.mock('@/store/toastStore', () => ({
   toast: { info: jest.fn(), success: jest.fn(), error: jest.fn() },
 }));
 
+// 方案乙批2：checkout 引入 useProfile（后端偏好优先级链），mock 掉避免真 query client 依赖
+jest.mock('@/services/queries/useUser', () => ({
+  useProfile: () => ({ data: undefined }),
+}));
 jest.mock('@/services/queries/usePayment', () => ({
   usePaymentMethods: () => ({
     data: [{ id: 'COD', name: { en: 'COD' }, icon: 'payments', available: true, isDefault: true }],

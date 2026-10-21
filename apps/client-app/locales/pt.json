@@ -1296,7 +1296,8 @@
     "E-CAPTCHA-001": "Captcha gráfico incorreto, tente novamente",
     "E-RATELIMIT-001": "Muitas tentativas, tente mais tarde",
     "E-SMS-001": "Serviço de SMS temporariamente indisponível",
-    "E-REGISTER-001": "Sessão de registo expirada, solicite um novo código"
+    "E-REGISTER-001": "Sessão de registo expirada, solicite um novo código",
+    "E-USER-010": "Método de pagamento inválido ou indisponível"
   },
   "search": {
     "recent": "Pesquisas Recentes",

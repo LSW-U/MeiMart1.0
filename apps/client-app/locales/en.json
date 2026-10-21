@@ -1296,7 +1296,8 @@
     "E-CAPTCHA-001": "Incorrect graphic captcha, please retry",
     "E-RATELIMIT-001": "Too many attempts, try again later",
     "E-SMS-001": "SMS service temporarily unavailable",
-    "E-REGISTER-001": "Registration session expired, please request a new code"
+    "E-REGISTER-001": "Registration session expired, please request a new code",
+    "E-USER-010": "Invalid or unavailable payment method"
   },
   "search": {
     "recent": "Recent Searches",

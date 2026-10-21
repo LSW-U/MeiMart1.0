@@ -1,11 +1,12 @@
 /**
- * 默认支付方式本地偏好（方案甲，2026-10-21）
+ * 默认支付方式本地偏好（方案甲 2026-10-21 → 方案乙批2 降级为离线缓存 2026-10-22）
  *
- * AsyncStorage 存用户在设置页选的默认支付方式 code（大写枚举，如 'COD'）。
- * checkout 拉到支付方式列表后优先用它预选（列表里没有该 code 时忽略）。
+ * 读写主源已切 profile 接口（user.defaultPaymentMethod，D5）；本文件保留为
+ * AsyncStorage 离线缓存副本：
+ *   - 读：profile 请求失败/离线时回退到这里（checkout 优先级链第二档）
+ *   - 写：PATCH profile 成功后同步更新本地副本（跨页即时生效 + 离线可用）
  *
- * 已知取舍（方案乙文档留档：04-后端记录/三端优化更新/安全隐私/）：
- * 换设备/重装丢失、多端不同步；后端 user.defaultPaymentMethod 就绪后切换。
+ * 旧方案甲语义（本地为唯一真源）已废弃，切换原因见方案 v3 §2。
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

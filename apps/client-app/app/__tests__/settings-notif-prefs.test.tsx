@@ -38,6 +38,13 @@ jest.mock('@/services/queries/useAddress', () => ({
   useAddresses: () => ({ data: [] }),
 }));
 
+// 默认支付方式行（方案乙批2）：settings 页引入 useProfile/useUpdateProfile（读写切 profile），
+// mock 掉避免真 query client 依赖
+jest.mock('@/services/queries/useUser', () => ({
+  useProfile: () => ({ data: undefined }),
+  useUpdateProfile: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
+}));
+
 // 默认支付方式行（方案甲）：mock 支付方式列表 + 本地偏好读写
 jest.mock('@/services/queries/usePayment', () => ({
   usePaymentMethods: () => ({ data: [] }),

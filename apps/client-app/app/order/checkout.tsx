@@ -9,6 +9,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import { useRef, useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
@@ -29,12 +30,12 @@ import { useAddresses } from '@/services/queries/useAddress';
 import { useAddressSelectionStore } from '@/store/addressSelectionStore';
 import { useFrequentAddressStore, resolveSmartDefaultAddress } from '@/store/frequentAddressStore';
 import { usePaymentMethods } from '@/services/queries/usePayment';
+import { useProfile } from '@/services/queries/useUser';
 import { getDefaultPaymentMethod } from '@/services/paymentPreference';
 import { useCreateOrder } from '@/services/queries/useOrders';
 import { useCoupons } from '@/services/queries/usePromotion';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { formatEta, formatPrice } from '@/utils/format';
-import { useEffect, useMemo, useState } from 'react';
 
 // Why: mock demo 金额（与 cart 页一致）。real 模式由 useCheckoutPreview 一次拿全金额
 //      —— preview.payableAmount 后端已聚合（itemsSubtotal + deliveryFee - discount，传 couponCode 时算折扣）。
@@ -84,19 +85,31 @@ export default function CheckoutPage() {
   // Why: real 模式按默认地址 + 选中券查运费 + 折扣聚合；mock 模式不调（enabled 内已 gate），preview 为 undefined
   const { data: preview } = useCheckoutPreview(defaultAddress?.id, selectedCouponCode);
 
-  // 本地默认支付方式 code 读取（AsyncStorage 异步，挂载后一次性）
+  // 默认支付方式偏好（方案乙批2 2026-10-22：优先级链 后端偏好 > 本地缓存 > 默认 COD）。
+  // 后端偏好来自 profile（useProfile，offlineFirst 缓存）；profile 无值时回退 AsyncStorage 本地缓存；
+  // 都无 → 走列表 isDefault（后端 COD isDefault=true）→ 列表为空时不预选（提交 disabled，C-P1-1）
+  const { data: profile } = useProfile();
   const [defaultPayCode, setDefaultPayCode] = useState<string | null>(null);
+  // Why: 后端偏好优先（react-hooks/set-state-in-effect 豁免：profile 是异步外部数据源，
+  // 到达后同步落定派生 state 属「派生 state 重置」官方形态；随后本地缓存为 promise 异步回调，
+  // 非同步 setState）。无值（null=未设置）才读本地离线缓存。profile 未加载（undefined）时
+  // 暂不落定——等 profile 到达或直接降级读本地（本地先到先显示，profile 后到覆盖）
+  const profilePayCode = profile?.defaultPaymentMethod ?? null;
+  const profileLoaded = profile !== undefined;
   useEffect(() => {
-    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 上述豁免原因
+    if (profileLoaded) setDefaultPayCode(profilePayCode);
+    let cancelledLocal = false;
     getDefaultPaymentMethod().then((v) => {
-      if (!cancelled) setDefaultPayCode(v);
+      if (!cancelledLocal) setDefaultPayCode((prev) => prev ?? v);
     });
     return () => {
-      cancelled = true;
+      cancelledLocal = true;
     };
-  }, []);
-  // 方案甲：设置页本地默认支付方式（code 大写枚举）优先于列表 isDefault；
-  // 列表里没有该 code（渠道下架）或未设置时走原逻辑（isDefault/首项）
+  }, [profilePayCode, profileLoaded]);
+  // 优先级链预选（v3 §2.3）：后端偏好/本地缓存命中的渠道必须仍在列表可用集合
+  // （m.available !== false）——后端偏好已被 admin 停用 → 静默降级走 isDefault/首项（默认 COD），
+  // 不得预选死渠道；列表里没有该 code 同样忽略
   const preferredMethodId = useMemo(() => {
     const list = paymentMethods ?? [];
     if (defaultPayCode) {
@@ -107,17 +120,20 @@ export default function CheckoutPage() {
     }
     return list.find((m) => m.isDefault)?.id ?? list[0]?.id;
   }, [paymentMethods, defaultPayCode]);
+  const userSelectedRef = useRef(false);
   const [selectedMethod, setSelectedMethod] = useState<string | undefined>(preferredMethodId);
   // C-P1-1: 支付方式列表异步到达后回填选中项。useState 初值只取首渲染值（那时 paymentMethods
-  // 多为 undefined → selectedMethod 恒 undefined），列表就绪后如用户尚未手选则选中默认项；
-  // 用户已手选（selectedMethod 非空）不覆盖。触发源是外部异步数据（paymentMethods query）到达，
-  // 属「派生 state 重置」官方形态，非无条件同步 setState。
+  // 与偏好链都未就绪 → selectedMethod 多为 undefined），preferredMethodId 就绪后如用户尚未
+  // 手选则选中它；用户已手选（userSelectedRef=true）不覆盖。
+  // 方案乙批2：preferredMethodId 现含偏好链（后端偏好/本地缓存 → isDefault），且 profile 是
+  // 异步 offlineFirst——偏好常晚于列表到达，此时 prev ?? 形态会保留首渲自动选中的 isDefault
+  // 项（prev 已非空），偏好永远压不过 COD。故改为「未手选即跟随 preferredMethodId」：
+  // 偏好/列表任一就绪都重设自动选中值，仅用户点选后才锁定（selectedMethod 非空不足以区分
+  // 自动选中与手选，ref 哨兵可区分）。
   useEffect(() => {
-    if (preferredMethodId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- 原因：异步支付方式列表就绪后的回填，prev ?? 哨兵防覆盖用户手选，非无条件同步 setState
-      setSelectedMethod((prev) => prev ?? preferredMethodId);
-    }
-    // 依赖 preferredMethodId：本地偏好/isDefault 项或首项变化（列表就绪/刷新）时触发回填
+    if (!preferredMethodId || userSelectedRef.current) return;
+    setSelectedMethod(preferredMethodId);
+    // 依赖 preferredMethodId：本地偏好/后端偏好/isDefault 项变化（列表/profile 就绪或刷新）时触发回填
   }, [preferredMethodId]);
   // Why: 防止 submit 期间重复点击（Promise.all 查 SKU 时 createOrder.isPending 还是 false）
   const [submitting, setSubmitting] = useState(false);
@@ -406,7 +422,10 @@ export default function CheckoutPage() {
                     <Pressable
                       key={m.id}
                       testID={`payment-${m.id}`}
-                      onPress={() => setSelectedMethod(m.id)}
+                      onPress={() => {
+                        userSelectedRef.current = true; // 手选哨兵：之后偏好/列表变化不再覆盖
+                        setSelectedMethod(m.id);
+                      }}
                       style={({ pressed }) => [
                         styles.paymentCard,
                         {

@@ -193,6 +193,8 @@ export interface User {
   // Why: P2 §4.2 会员/积分 - 可选，后端不返回时降级（隐藏 GOLD 标签 / 积分显 0）
   memberLevel?: string;
   points?: number;
+  // 默认支付方式（方案乙批2 2026-10-22）：后端大写枚举 code，null/缺省=未设置（回退链后端偏好>本地缓存>默认 COD）
+  defaultPaymentMethod?: string | null;
 }
 
 export interface Category {

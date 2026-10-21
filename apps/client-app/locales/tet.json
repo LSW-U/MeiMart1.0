@@ -1296,7 +1296,8 @@
     "E-CAPTCHA-001": "Kapxa verifikasaun la loos, favor koko fali",
     "E-RATELIMIT-001": "Tentaun baratu demais, koko fali mos",
     "E-SMS-001": "Serviçu SMS la disponível temporáriu, koko fali mos",
-    "E-REGISTER-001": "Sesaun rejistu espira ona, favor husik kódigu foun"
+    "E-REGISTER-001": "Sesaun rejistu espira ona, favor husik kódigu foun",
+    "E-USER-010": "Forma pagamentu invalidu ka la disponivel"
   },
   "search": {
     "recent": "Buka Recente",

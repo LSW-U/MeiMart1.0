@@ -13,6 +13,8 @@ interface ProfileRaw {
   status: string;
   phoneVerified: boolean;
   emailVerified: boolean;
+  // 默认支付方式（方案乙批2）：后端大写枚举，null=未设置
+  defaultPaymentMethod?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,6 +26,7 @@ function transformProfile(raw: ProfileRaw): User {
     phone: raw.phone,
     email: raw.email,
     avatar: raw.avatarUrl ?? undefined,
+    defaultPaymentMethod: raw.defaultPaymentMethod ?? null,
   };
 }
 
@@ -35,7 +38,7 @@ export const userApi = {
     return transformProfile(res.data);
   },
 
-  // Why: 后端 PATCH /client/user/profile 接受 {name?, avatarUrl?, email?}，前端 Partial<User> 多字段做映射
+  // Why: 后端 PATCH /client/user/profile 接受 {name?, avatarUrl?, email?, defaultPaymentMethod?}，前端 Partial<User> 多字段做映射
   async updateProfile(updates: Partial<User>): Promise<User> {
     if (isMockMode) {
       Object.assign(mockDb.user, updates);
@@ -46,6 +49,11 @@ export const userApi = {
     if (updates.email !== undefined) body.email = updates.email;
     // Why: 前端 User.avatar 对应后端 avatarUrl
     if (updates.avatar !== undefined) body.avatarUrl = updates.avatar;
+    // 默认支付方式（方案乙批2 D5）：白名单透传分支——漏掉则 PATCH 静默丢字段；
+    // null 是合法值（清除偏好），用 !== undefined 判定而非 truthy
+    if (updates.defaultPaymentMethod !== undefined) {
+      body.defaultPaymentMethod = updates.defaultPaymentMethod;
+    }
     const res = await api.patch<ProfileRaw>('/client/user/profile', body);
     return transformProfile(res.data);
   },

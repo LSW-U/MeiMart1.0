@@ -16,6 +16,7 @@ import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { useAddresses } from '@/services/queries/useAddress';
 import { toast } from '@/store/toastStore';
+import { toApiErrorText } from '@/utils/apiError';
 import { APP_VERSION } from '@/utils/appInfo';
 import { clearAppCache, getCacheSizeLabel } from '@/services/cache';
 import {
@@ -24,6 +25,7 @@ import {
 } from '@/services/queries/useNotifications';
 import { Switch } from '@/components/ui/Switch';
 import { usePaymentMethods } from '@/services/queries/usePayment';
+import { useProfile, useUpdateProfile } from '@/services/queries/useUser';
 import { getDefaultPaymentMethod, setDefaultPaymentMethod } from '@/services/paymentPreference';
 import { localize, type AppLocale } from '@/i18n';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -46,24 +48,50 @@ export default function SettingsPage() {
 
   const setMode = (mode: 'light' | 'dark' | 'system') => setThemeMode(mode);
 
-  // 默认支付方式（方案甲：本地偏好，2026-10-21）——
-  // 选项来自支付方式列表（登录/未登录都可拉，未登录选了登录后结算页生效）；
-  // null = 未设置（结算页走 isDefault/COD 兜底）
+  // 默认支付方式（方案乙批2 2026-10-22：读写主源切 profile，D5）——
+  // 选项来自支付方式列表（available 渠道）；null = 未设置（结算页走后端偏好>本地缓存>默认 COD 回退链）。
+  // 读：profile 的 defaultPaymentMethod 优先，profile 请求失败/离线回退 AsyncStorage 离线缓存；
+  // 写：PATCH profile（白名单透传字段）成功后 invalidate profile（useUpdateProfile onSettled 现成）
+  // + 同步 AsyncStorage 本地副本（跨页即时生效 + 离线可用）。未登录不渲染（见下方 isAuthenticated 门控）
   const { data: paymentMethods } = usePaymentMethods();
   const payableMethods = (paymentMethods ?? []).filter((m) => m.available !== false);
+  const { data: profile } = useProfile();
+  const updateProfile = useUpdateProfile();
   const [defaultPay, setDefaultPay] = useState<string | null>(null);
+  // Why: 后端偏好 > 本地缓存（离线降级）：profile 未加载/无值时读 AsyncStorage。
+  // react-hooks/set-state-in-effect 豁免：profile 是异步外部数据源，到达后同步落定派生
+  // state 属「派生 state 重置」官方形态；本地缓存为 promise 异步回调，非同步 setState
+  const profilePayCode = profile?.defaultPaymentMethod ?? null;
+  const profileLoaded = profile !== undefined;
   useEffect(() => {
     let cancelled = false;
-    getDefaultPaymentMethod().then((v) => {
-      if (!cancelled) setDefaultPay(v);
-    });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 上述豁免原因
+    if (profileLoaded) setDefaultPay(profilePayCode);
+    getDefaultPaymentMethod()
+      .then((v) => {
+        // prev ?? v：profile 有值时 prev 已落定不覆盖；profile null/未加载才落到本地缓存
+        if (!cancelled) setDefaultPay((prev) => prev ?? v);
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [profilePayCode, profileLoaded]);
   const changeDefaultPay = (code: string | null) => {
     setDefaultPay(code);
+    // 乐观本地副本（profile PATCH 期间 UI 即时反映）。失败语义（P3-1 修注释，2026-10-22）：
+    // useUpdateProfile onError 只回滚 profile query 缓存，本地副本**不回修**——停留新值，
+    // 后端保持旧值；小窗口偏差由下次成功 PATCH 自愈（离线降级档读到的是用户最近一次意图值，
+    // 非资金风险）。UI 已亮新段，故配 onError toast 明确告知失败（P3-2），不静默。
     void setDefaultPaymentMethod(code);
+    updateProfile.mutate(
+      { defaultPaymentMethod: code },
+      {
+        onError: (err) => {
+          toast.error(toApiErrorText(err, t));
+        },
+      },
+    );
   };
 
   // P17 决策 3 —— 真实缓存：挂载统计大小，点击清理后重查（loading → 成功 0 KB / 失败保留）
@@ -282,7 +310,7 @@ export default function SettingsPage() {
                 subColor={colors['on-surface-variant']}
                 dividerColor={colors['outline-variant']}
                 // 组内行间有线；末行后面跟着默认支付方式行（渲染时），也要有线
-                showDivider={idx < arr.length - 1 || payableMethods.length > 0}
+                showDivider={idx < arr.length - 1 || (isAuthenticated && payableMethods.length > 0)}
                 testID={testID}
               >
                 <Switch
@@ -298,9 +326,9 @@ export default function SettingsPage() {
               </RowItem>
             ))}
 
-          {/* 默认支付方式（方案甲 2026-10-21）：本地偏好，结算页预选；
-              列表未加载/空时整行隐藏（无选项可摆） */}
-          {payableMethods.length > 0 && (
+          {/* 默认支付方式（方案乙批2 2026-10-22：读写主源切 profile，未登录不渲染——
+              偏好是登录态能力，与通知偏好同门控；结算页回退链后端偏好>本地缓存>默认 COD） */}
+          {isAuthenticated && payableMethods.length > 0 && (
             <RowItem
               label={t('settings.defaultPaymentMethod')}
               icon="payments"
@@ -327,6 +355,7 @@ export default function SettingsPage() {
                 activeTextColor={colors['on-primary']}
                 subColor={colors['on-surface-variant']}
                 activeColor={colors['surface-container-low']}
+                testIDPrefix="settings-default-payment-segment"
               />
             </RowItem>
           )}
@@ -577,6 +606,7 @@ function SegmentSwitch<T extends string | null>({
   activeTextColor,
   subColor,
   activeColor,
+  testIDPrefix,
 }: {
   /** null = 自动（跟随列表 isDefault/首项），仅默认支付方式用 */
   value: T;
@@ -586,6 +616,8 @@ function SegmentSwitch<T extends string | null>({
   activeTextColor: string;
   subColor: string;
   activeColor: string;
+  /** 选项 Pressable testID 前缀（批2 加，形如 `${prefix}-${String(opt.v)}`；可选，不传不加） */
+  testIDPrefix?: string;
 }) {
   return (
     <View style={[styles.segment, { backgroundColor: activeColor, borderColor: subColor }]}>
@@ -598,6 +630,8 @@ function SegmentSwitch<T extends string | null>({
             style={[styles.segmentItem, { backgroundColor: active ? color : 'transparent' }]}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
+            // 批2（方案乙）：测试定位锚点——外层 SegmentSwitch testID + 选项 key（'null' 表自动档）
+            testID={`${testIDPrefix}-${String(opt.v)}`}
           >
             <Text
               style={{
