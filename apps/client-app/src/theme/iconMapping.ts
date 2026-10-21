@@ -162,6 +162,19 @@ const SYMBOL_TO_MC_LITERAL = {
 
   // 换一批按钮 批2 追修 —— 首页换一批图标（漏映射兜底 circle-outline，用户实测发现）
   refresh: 'refresh',
+
+  // 地址列表 smart recognize 入口（漏映射兜底 circle-outline，用户实测发现第 3 例）——
+  // Material Symbols 与 MC 同名，直译即可（glyphmap 已验证 content-paste 存在）
+  content_paste: 'content-paste',
+
+  // 全量 symbol 交叉扫描补齐（2026-10-20，同款兜底 circle-outline 静默渲染 7 例）
+  campaign: 'bullhorn', // PromoDock 促销条
+  chat: 'chat', // 客服页
+  content_copy: 'content-copy', // 订单详情复制单号
+  login: 'login', // 设置页登录入口
+  timeline: 'timeline', // 售后详情时间线
+  two_wheeler: 'motorbike', // 地图骑手点（MC 无 motorcycle，motorbike 同义）
+  workspace_premium: 'medal', // 会员等级行（MC 无 premium，medal 表徽章）
 } satisfies Readonly<Record<string, IconName>>;
 
 const SYMBOL_TO_MC: Readonly<Record<string, IconName>> = SYMBOL_TO_MC_LITERAL;
