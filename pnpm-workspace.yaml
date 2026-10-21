@@ -11,3 +11,7 @@ allowBuilds:
   unrs-resolver: false
 minimumReleaseAgeExclude:
   - expo-modules-jsi@56.0.14
+overrides:
+  # follow-redirects 2 条 high（GHSA-q3jh-wrc6-jgq8 / GHSA-8r9p-f939-6h3c，凭证头泄露）：
+  # axios ^1.16.0 范围内 1.16.1 已修（semver 可达），真消减不加 allowlist（2026-10-22）
+  'follow-redirects@<1.16.1': '>=1.16.1 <2'
