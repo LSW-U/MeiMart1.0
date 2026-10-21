@@ -436,7 +436,7 @@ export default function OrderResultScreen() {
           accessibilityRole="button"
           accessibilityLabel={t('result.contactSupport')}
         >
-          <Icon symbol="headset_mic" size={20} color={colors.primary} />
+          <Icon symbol="support_agent" size={20} color={colors.primary} />
           <Text style={[typography['body-md'], { color: colors.primary }, styles.supportText]}>
             {t(
               state === 'PAY_FAIL'

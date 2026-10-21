@@ -281,7 +281,7 @@ export default function CheckoutPage() {
             accessibilityRole="button"
             accessibilityLabel={t('checkout.customerService')}
           >
-            <Icon symbol="headset_mic" size={24} color={ON_PRIMARY} />
+            <Icon symbol="support_agent" size={24} color={ON_PRIMARY} />
           </Pressable>
         }
       />

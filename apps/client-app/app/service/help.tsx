@@ -7,7 +7,16 @@ import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import enLocale from '../../locales/en.json';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, serviceEntryThemes, type ServiceEntryThemeKey } from '@/theme';
+import {
+  useTheme,
+  spacing,
+  layout,
+  typography,
+  borderRadius,
+  shadowPresets,
+  serviceEntryThemes,
+  type ServiceEntryThemeKey,
+} from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -38,7 +47,12 @@ const CATEGORIES: HelpCategory[] = [
   { id: 'all', labelKey: 'service.help.cat.all', icon: 'apps', theme: 'info' },
   { id: 'order', labelKey: 'service.help.cat.order', icon: 'receipt_long', theme: 'info' },
   { id: 'payment', labelKey: 'service.help.cat.payment', icon: 'credit_card', theme: 'success' },
-  { id: 'shipping', labelKey: 'service.help.cat.shipping', icon: 'local_shipping', theme: 'warning' },
+  {
+    id: 'shipping',
+    labelKey: 'service.help.cat.shipping',
+    icon: 'local_shipping',
+    theme: 'warning',
+  },
   { id: 'return', labelKey: 'service.help.cat.return', icon: 'history', theme: 'error' },
 ];
 
@@ -52,7 +66,12 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
     <Text>
       {text.slice(0, idx)}
       {/* 审查 Q7 —— RN Text 无法还原原型 mark 的 padding:0 2px + border-radius（方案 §9.4 接受折衷），纯背景色高亮 */}
-      <Text style={{ backgroundColor: colors.semantic['warning-container'], color: colors.semantic.warning }}>
+      <Text
+        style={{
+          backgroundColor: colors.semantic['warning-container'],
+          color: colors.semantic.warning,
+        }}
+      >
         {text.slice(idx, idx + query.length)}
       </Text>
       {text.slice(idx + query.length)}
@@ -84,9 +103,7 @@ export default function HelpCenterPage() {
     return base.filter((id) => {
       const qKey = `service.help.faq.${id}`;
       const aKey = `service.help.faq.a${id.slice(1)}`;
-      const localizedHit =
-        t(qKey).toLowerCase().includes(q) ||
-        t(aKey).toLowerCase().includes(q);
+      const localizedHit = t(qKey).toLowerCase().includes(q) || t(aKey).toLowerCase().includes(q);
       if (localizedHit) return true;
       // en 兜底：zh 环境英文关键词命中；en 文案天然无 [TET] 前缀污染
       const enQuestion = enFaq?.[id as keyof typeof enFaq];
@@ -123,7 +140,11 @@ export default function HelpCenterPage() {
             shadowPresets.sm,
           ]}
         >
-          <Icon symbol="search" size={20} color={searchActive ? colors.primary : colors['on-surface-variant']} />
+          <Icon
+            symbol="search"
+            size={20}
+            color={searchActive ? colors.primary : colors['on-surface-variant']}
+          />
           <TextInput
             value={search}
             onChangeText={setSearch}
@@ -213,7 +234,11 @@ export default function HelpCenterPage() {
                     }}
                     style={({ pressed }) => [
                       styles.catChip,
-                      { backgroundColor: isActive ? colors['surface-container-low'] : colors['surface-container-lowest'] },
+                      {
+                        backgroundColor: isActive
+                          ? colors['surface-container-low']
+                          : colors['surface-container-lowest'],
+                      },
                       isActive && { borderColor: activeColor },
                       pressed && { transform: [{ scale: 0.95 }] },
                     ]}
@@ -222,10 +247,22 @@ export default function HelpCenterPage() {
                     accessibilityLabel={t(cat.labelKey)}
                     testID={`help-cat-${cat.id}`}
                   >
-                    <View style={[styles.catIcon, { backgroundColor: serviceEntryThemes[cat.theme].bg }]}>
-                      <Icon symbol={cat.icon} size={20} color={serviceEntryThemes[cat.theme].iconBg} />
+                    <View
+                      style={[
+                        styles.catIcon,
+                        { backgroundColor: serviceEntryThemes[cat.theme].bg },
+                      ]}
+                    >
+                      <Icon
+                        symbol={cat.icon}
+                        size={20}
+                        color={serviceEntryThemes[cat.theme].iconBg}
+                      />
                     </View>
-                    <Text style={[styles.catLabel, { color: colors['on-surface'] }]} numberOfLines={1}>
+                    <Text
+                      style={[styles.catLabel, { color: colors['on-surface'] }]}
+                      numberOfLines={1}
+                    >
                       {t(cat.labelKey)}
                     </Text>
                     <Text style={[styles.catCount, { color: colors['on-surface-variant'] }]}>
@@ -265,12 +302,7 @@ export default function HelpCenterPage() {
                 </Pressable>
               )}
             </View>
-            <FaqList
-              faqIds={visibleFaqs}
-              expanded={expanded}
-              onToggle={setExpanded}
-              query=""
-            />
+            <FaqList faqIds={visibleFaqs} expanded={expanded} onToggle={setExpanded} query="" />
           </>
         )}
 
@@ -288,7 +320,7 @@ export default function HelpCenterPage() {
           testID="help-contact-cs"
         >
           <View style={[styles.contactIcon, { backgroundColor: colors.primary }]}>
-            <Icon symbol="headset_mic" size={22} color={colors['on-primary']} />
+            <Icon symbol="support_agent" size={22} color={colors['on-primary']} />
           </View>
           <View style={styles.contactInfo}>
             <Text style={[styles.contactTitle, { color: colors['on-surface'] }]}>
@@ -332,12 +364,19 @@ function FaqList({
         return (
           <View
             key={id}
-            style={idx < faqIds.length - 1 ? [styles.faqItem, { borderBottomColor: colors['outline-variant'] }] : styles.faqItem}
+            style={
+              idx < faqIds.length - 1
+                ? [styles.faqItem, { borderBottomColor: colors['outline-variant'] }]
+                : styles.faqItem
+            }
           >
             <Pressable
               testID={`faq-${id}`}
               onPress={() => onToggle(isOpen ? null : id)}
-              style={({ pressed }) => [styles.faqQ, pressed && { backgroundColor: colors['surface-container'] }]}
+              style={({ pressed }) => [
+                styles.faqQ,
+                pressed && { backgroundColor: colors['surface-container'] },
+              ]}
               accessibilityRole="button"
               accessibilityState={{ expanded: isOpen }}
               accessibilityLabel={t(`service.help.faq.${id}`)}
@@ -348,7 +387,12 @@ function FaqList({
                   { backgroundColor: isOpen ? colors.primary : colors['surface-container'] },
                 ]}
               >
-                <Text style={[styles.qBadgeText, { color: isOpen ? colors['on-primary'] : colors.primary }]}>
+                <Text
+                  style={[
+                    styles.qBadgeText,
+                    { color: isOpen ? colors['on-primary'] : colors.primary },
+                  ]}
+                >
                   Q
                 </Text>
               </View>
@@ -365,8 +409,12 @@ function FaqList({
               <View style={styles.faqAInner}>
                 {/* Why: 审查 Q1 —— success 浅底用 success-container token（dark 跟随），
                     替代硬编码 rgba tint */}
-                <View style={[styles.aBadge, { backgroundColor: colors.semantic['success-container'] }]}>
-                  <Text style={[styles.aBadgeText, { color: serviceEntryThemes.success.iconBg }]}>A</Text>
+                <View
+                  style={[styles.aBadge, { backgroundColor: colors.semantic['success-container'] }]}
+                >
+                  <Text style={[styles.aBadgeText, { color: serviceEntryThemes.success.iconBg }]}>
+                    A
+                  </Text>
                 </View>
                 <Text style={[styles.answer, { color: colors['on-surface-variant'] }]}>
                   {t(`service.help.faq.a${id.slice(1)}`)}

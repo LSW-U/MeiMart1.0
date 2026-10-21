@@ -260,7 +260,7 @@ export default function OrdersPage() {
                   accessibilityLabel={t('profile.help')}
                   testID="orders-help"
                 >
-                  <Icon symbol="help" size={24} color={ON_PRIMARY} />
+                  <Icon symbol="support_agent" size={24} color={ON_PRIMARY} />
                 </Pressable>
               </>
             )

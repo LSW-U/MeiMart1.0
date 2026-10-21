@@ -39,7 +39,7 @@ export function Header({ title, orderNo }: { title: string; orderNo?: string }) 
             accessibilityRole="button"
             accessibilityLabel={t('common.help', { defaultValue: 'Help' })}
           >
-            <Icon symbol="help_outline" size={22} color={ON_PRIMARY} />
+            <Icon symbol="support_agent" size={22} color={ON_PRIMARY} />
           </Pressable>
           <Pressable
             onPress={() => {

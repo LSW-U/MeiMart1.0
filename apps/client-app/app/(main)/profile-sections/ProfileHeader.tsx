@@ -28,7 +28,7 @@ export function ProfileHeader() {
               accessibilityRole="button"
               accessibilityLabel={t('profile.customerService')}
             >
-              <Icon symbol="headset" size={24} color={ON_PRIMARY} />
+              <Icon symbol="support_agent" size={24} color={ON_PRIMARY} />
             </Pressable>
             <Pressable
               onPress={() => router.push('/service/notifications')}
@@ -38,7 +38,7 @@ export function ProfileHeader() {
               accessibilityLabel={t('profile.notifications')}
               testID="profile-notifications"
             >
-              <Icon symbol="notifications" size={24} color={ON_PRIMARY} />
+              <Icon symbol="mail" size={24} color={ON_PRIMARY} />
               {(unreadCount ?? 0) > 0 && (
                 // P2-1 修复（方案a）：底色传语义 error 红——Badge label 恒 colors['on-primary']
                 // （light 白字需红底才可读，原 ON_PRIMARY 白底在 light 下白字白底不可见）

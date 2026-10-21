@@ -588,7 +588,7 @@ export default function AfterSalesDetailPage() {
           accessibilityLabel={t('afterSales.contactService')}
           testID="aftersales-cs"
         >
-          <Icon symbol="headset" size={18} color={colors.primary} />
+          <Icon symbol="support_agent" size={18} color={colors.primary} />
           <Text style={[styles.csText, { color: colors.primary }]}>
             {t('afterSales.contactService')}
           </Text>

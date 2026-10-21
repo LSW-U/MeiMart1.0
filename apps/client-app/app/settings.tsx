@@ -173,7 +173,7 @@ export default function SettingsPage() {
           />
           <PressableRow
             label={t('settings.customerService')}
-            icon="headset_mic"
+            icon="support_agent"
             iconBg={colors.primary}
             iconFg={colors['on-primary']}
             textColor={colors['on-surface']}
