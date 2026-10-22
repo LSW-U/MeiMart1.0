@@ -1,18 +1,48 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, promotionThemes, shadowPresets } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
 import type { Promotion } from '@/services/promotion';
+import type { PromotionTheme } from '@/theme';
 import type { PromoDockProps } from './PromoDock.types';
 
-// Why: 模块方案 §2.2 - 卡片圆角 14 / 图标盒圆角 12 / 色条 5px，介于 borderRadius xl(12)/2xl(16) 之间
-const CARD_RADIUS = 14;
-const ICON_BOX_RADIUS = 12;
-const BAR_HEIGHT = 5;
+// Why: 方案五（一+二结合，2026-10-23 人工验收拍板）— Lazada 式彩色裸放大图标（无底盒无色条）
+//      + MercadoLibre 信息卡壳（标题+利益描述+主题色 CTA），横向 ScrollView snap 滑动。
+//      视觉原型：Work-Wiki/.../首页促销停靠栏/促销停靠栏UI方案对比-20261023.html 方案五。
+//      描述/CTA 文案走前端静态 i18n（路线 A→B 拍板：按 theme 查表，契约零改动）。
+
+// Why: 人工验收定稿 — 卡宽由可视区动态二等分（减去 PAD_X×2 + gap），
+//      不滑动时前 2 卡恰好完整露出（第 3 张起才需横滑）。此值为 onLayout 前的兜底。
+const CARD_WIDTH = 172;
+const CARD_GAP = 10;
+// Why: scrollContent 左右 padding（与 track marginHorizontal 同值对齐）
+const PAD_X = 12;
+const CARD_RADIUS = 16;
+const ICON_SIZE = 38;
+// Why: 进度条 4px 高（HTML 稿 .scroll-track），滑块宽 = 可视区/内容总宽比例
+const TRACK_HEIGHT = 4;
+const THUMB_HEIGHT = 4;
+const TRACK_RADIUS = 2;
+// Why: 人工验收定稿 — 进度条仅滑动过程中显示，停止滚动 800ms 后隐藏
+const HIDE_DELAY_MS = 800;
+
+// Why: 方案五新增 i18n key 按 theme 查表（promotion.*Desc / promotion.*Cta，4 语对齐）
+const THEME_TEXT_KEYS: Record<PromotionTheme, { descKey: string; ctaKey: string }> = {
+  deals: { descKey: 'promotion.flashDealsDesc', ctaKey: 'promotion.flashDealsCta' },
+  coupons: { descKey: 'promotion.couponsDesc', ctaKey: 'promotion.couponsCta' },
+  delivery: { descKey: 'promotion.freeShipDesc', ctaKey: 'promotion.freeShipCta' },
+  points: { descKey: 'promotion.pointsDesc', ctaKey: 'promotion.pointsCta' },
+};
 
 export function PromoDock({ promotions, onPress, testID }: PromoDockProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const scrollRef = useRef<ScrollView>(null);
+  const [thumbProgress, setThumbProgress] = useState(0);
+  const [trackVisible, setTrackVisible] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Why: §2.7 空态 - 无活动时不隐藏区块，显示虚线框占位（保持首页结构稳定）
   if (promotions.length === 0) {
@@ -31,11 +61,79 @@ export function PromoDock({ promotions, onPress, testID }: PromoDockProps) {
     );
   }
 
+  // Why: onScroll 每帧算进度（scrollEventThrottle 16）；滚动中显示进度条，停止 800ms 后隐藏
+  const handleScroll = (e: {
+    nativeEvent: {
+      contentOffset: { x: number };
+      contentSize: { width: number };
+      layoutMeasurement: { width: number };
+    };
+  }) => {
+    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+    const maxScroll = contentSize.width - layoutMeasurement.width;
+    if (maxScroll > 0) {
+      setThumbProgress(contentOffset.x / maxScroll);
+    }
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    setTrackVisible(true);
+    hideTimer.current = setTimeout(() => setTrackVisible(false), HIDE_DELAY_MS);
+  };
+
+  // Why: 内容总宽由卡数推导（卡 218 + gap 10），避免依赖 onContentSizeChange 时序
+  const contentWidth = promotions.length * CARD_WIDTH + (promotions.length - 1) * CARD_GAP;
+  const ratio = contentWidth > 0 ? Math.min(1, viewportWidth / contentWidth) : 1;
+
   return (
-    <View style={styles.dock} testID={testID}>
-      {promotions.map((item) => (
-        <PromoCard key={item.id} promotion={item} onPress={onPress} />
-      ))}
+    <View testID={testID}>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={CARD_WIDTH + CARD_GAP}
+        decelerationRate="fast"
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        onLayout={(e) => {
+          // Why: 可视区宽度就绪后算滑块宽占比（可视区/内容总宽）
+          setViewportWidth(e.nativeEvent.layout.width);
+        }}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {promotions.map((item) => (
+          <PromoCard
+            key={item.id}
+            promotion={item}
+            onPress={onPress}
+            width={
+              viewportWidth > 0
+                ? Math.floor((viewportWidth - 2 * PAD_X - CARD_GAP) / 2)
+                : CARD_WIDTH
+            }
+          />
+        ))}
+      </ScrollView>
+      {/* 进度条（选项 B 自绘 + 人工验收定稿：仅滑动中显示，停止 800ms 后隐藏）：灰轨道 + 主题红滑块 */}
+      <View
+        style={[
+          styles.track,
+          { backgroundColor: colors['outline-variant'], opacity: trackVisible ? 1 : 0 },
+        ]}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        <View
+          style={[
+            styles.thumb,
+            {
+              width: `${Math.max(20, ratio * 100)}%` as `${number}%`,
+              backgroundColor: colors.primary,
+              transform: [
+                { translateX: `${thumbProgress * (100 / Math.max(ratio, 0.001) - 100)}%` } as never,
+              ],
+            },
+          ]}
+        />
+      </View>
     </View>
   );
 }
@@ -43,83 +141,96 @@ export function PromoDock({ promotions, onPress, testID }: PromoDockProps) {
 function PromoCard({
   promotion,
   onPress,
+  width,
 }: {
   promotion: Promotion;
   onPress?: (p: Promotion) => void;
+  width: number;
 }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const theme = promotionThemes[promotion.theme];
+  const textKeys = THEME_TEXT_KEYS[promotion.theme];
   return (
     <Pressable
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: colors['surface-container-lowest'] },
+        {
+          width,
+          backgroundColor: colors['surface-container-lowest'],
+          borderColor: colors['outline-variant'],
+        },
         pressed && styles.pressed,
       ]}
       onPress={onPress ? () => onPress(promotion) : undefined}
       accessibilityRole="button"
       accessibilityLabel={t(promotion.titleKey)}
     >
-      <View style={styles.iconWrap}>
-        <View style={[styles.iconBox, { backgroundColor: theme.iconBg }]}>
-          <Icon symbol={promotion.icon} size={24} color={theme.iconColor} />
-        </View>
-        {/* Why: 方案二 - 图标盒底部 5px 色条替代文字标签（DEALS/SAVE），视觉更紧凑 */}
-        <View style={[styles.bar, { backgroundColor: theme.barColor }]} />
+      {/* Lazada 式彩色裸放大图标：无底盒无色条，直接染主题深色 */}
+      <Icon symbol={promotion.icon} size={ICON_SIZE} color={theme.iconColor} />
+      <View style={styles.txt}>
+        <Text style={[styles.title, { color: colors['on-surface'] }]} numberOfLines={1}>
+          {t(promotion.titleKey)}
+        </Text>
+        <Text style={[styles.desc, { color: colors['on-surface-variant'] }]} numberOfLines={1}>
+          {t(textKeys.descKey)}
+        </Text>
+        <Text style={[styles.cta, { color: theme.iconColor }]} numberOfLines={1}>
+          {t(textKeys.ctaKey)}
+        </Text>
       </View>
-      <Text style={[styles.label, { color: colors['on-surface'] }]} numberOfLines={1}>
-        {t(promotion.titleKey)}
-      </Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  // Why: §6.3 - 横排 flex row，4 卡 flex:1 等宽，卡间 gap 8。paddingHorizontal 由外层 section 提供
-  dock: {
-    flexDirection: 'row',
-    gap: spacing.sm,
+  // Why: 横滑内容容器 — 左右小 padding（PAD_X）收窄首卡左缘留白，卡间 gap 10
+  scrollContent: {
+    paddingHorizontal: PAD_X,
+    gap: CARD_GAP,
   },
   card: {
-    flex: 1,
+    width: CARD_WIDTH,
+    flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     paddingVertical: 14,
-    paddingHorizontal: 4,
+    paddingHorizontal: spacing.md,
     borderRadius: CARD_RADIUS,
+    borderWidth: 1,
     ...shadowPresets.sm,
   },
-  // Why: §2.2 按压 scale(0.95) 触觉反馈
+  // Why: 方案五按压 scale(0.95) 沿用现状触觉反馈
   pressed: { transform: [{ scale: 0.95 }] },
-  // Why: iconWrap 包裹 iconBox + bar，relative 定位让 bar absolute bottom
-  iconWrap: {
-    position: 'relative',
-    width: 44,
-    height: 44,
+  txt: {
+    flex: 1,
+    minWidth: 0,
   },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: ICON_BOX_RADIUS,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
+  title: {
+    fontSize: 13.5,
+    fontWeight: '800',
   },
-  // Why: 色条 absolute bottom 0，底部圆角跟 iconBox 对齐
-  bar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: BAR_HEIGHT,
-    borderBottomLeftRadius: ICON_BOX_RADIUS,
-    borderBottomRightRadius: ICON_BOX_RADIUS,
+  desc: {
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 2,
   },
-  label: {
+  cta: {
     fontSize: 11,
     fontWeight: '700',
-    textAlign: 'center',
+    marginTop: 4,
+  },
+  // Why: 进度条轨道 — 卡区下方 10px，4px 高圆角；左右对齐 scrollContent 的 PAD_X
+  track: {
+    marginTop: 10,
+    height: TRACK_HEIGHT,
+    borderRadius: TRACK_RADIUS,
+    marginHorizontal: PAD_X,
+    overflow: 'hidden',
+  },
+  thumb: {
+    height: THUMB_HEIGHT,
+    borderRadius: TRACK_RADIUS,
   },
   empty: {
     flexDirection: 'row',

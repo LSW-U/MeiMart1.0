@@ -64,6 +64,9 @@ const SYMBOL_TO_MC_LITERAL = {
   share: 'share-variant',
   star: 'star',
   star_rate: 'star',
+  // Why: promotions.json 积分入口用 stars（MC 无此名，曾静默兜底成 circle-outline，
+  //      人工验收发现）；人工验收定稿用 gift（积分=奖励礼赠语义）
+  stars: 'gift',
   trending_flat: 'arrow-right',
   trending_up: 'trending-up',
   tune: 'tune',

@@ -206,7 +206,15 @@
     "coupons": "Kupom sira",
     "freeShip": "Entrega gratis",
     "points": "Ponto sira",
-    "empty": "Laiha promosaun ativu agora."
+    "empty": "Laiha promosaun ativu agora.",
+    "flashDealsDesc": "Ofertas lais 12 kada loron, to'o 50% descontu",
+    "couponsDesc": "Kupom 3 atu kole, $3 hamenus se au $15",
+    "freeShipDesc": "Entrega gratis ba pedidu liu husi $20",
+    "pointsDesc": "Rejista kada loron no kole pontos ba premiu",
+    "flashDealsCta": "Bá oferta sira ›",
+    "couponsCta": "Kole agora ›",
+    "freeShipCta": "Aumenta tan ›",
+    "pointsCta": "Rejista ›"
   },
   "category": {
     "food": "Ai-han",

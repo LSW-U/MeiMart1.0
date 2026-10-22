@@ -206,7 +206,15 @@
     "coupons": "Coupons",
     "freeShip": "Free Ship",
     "points": "Points",
-    "empty": "No active promotions right now."
+    "empty": "No active promotions right now.",
+    "flashDealsDesc": "12 flash sales daily, up to 50% off",
+    "couponsDesc": "3 coupons to claim, $3 off over $15",
+    "freeShipDesc": "Free delivery on orders over $20",
+    "pointsDesc": "Check in daily & earn points for rewards",
+    "flashDealsCta": "Shop deals ›",
+    "couponsCta": "Claim now ›",
+    "freeShipCta": "Add more ›",
+    "pointsCta": "Check in ›"
   },
   "category": {
     "food": "Food",

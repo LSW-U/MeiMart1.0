@@ -206,7 +206,15 @@
     "coupons": "Cupões",
     "freeShip": "Frete Grátis",
     "points": "Pontos",
-    "empty": "Sem promoções ativas neste momento."
+    "empty": "Sem promoções ativas neste momento.",
+    "flashDealsDesc": "12 ofertas relâmpago por dia, até 50% de desconto",
+    "couponsDesc": "3 cupões para reclamar, $3 de desconto acima de $15",
+    "freeShipDesc": "Frete grátis em pedidos acima de $20",
+    "pointsDesc": "Check-in diário e ganhe pontos para recompensas",
+    "flashDealsCta": "Ver ofertas ›",
+    "couponsCta": "Reclamar agora ›",
+    "freeShipCta": "Adicionar mais ›",
+    "pointsCta": "Fazer check-in ›"
   },
   "category": {
     "food": "Alimentação",

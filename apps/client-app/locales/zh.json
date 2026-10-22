@@ -206,7 +206,15 @@
     "coupons": "优惠券",
     "freeShip": "免邮",
     "points": "积分",
-    "empty": "暂无进行中的活动"
+    "empty": "暂无进行中的活动",
+    "flashDealsDesc": "每日 12 场闪购，低至 5 折",
+    "couponsDesc": "3 张可领，满 $15 减 $3",
+    "freeShipDesc": "订单满 $20 免配送费",
+    "pointsDesc": "签到领积分，购物再返分",
+    "flashDealsCta": "去抢购 ›",
+    "couponsCta": "去领取 ›",
+    "freeShipCta": "去凑单 ›",
+    "pointsCta": "去签到 ›"
   },
   "category": {
     "food": "食品",
