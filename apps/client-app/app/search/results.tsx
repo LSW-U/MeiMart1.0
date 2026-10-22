@@ -2,7 +2,7 @@
 // HTML → RN 行数比：319 → ~370（含样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 116%）
 // Fix-11: Primary tais-pattern Header + 内嵌只读搜索 + 排序栏 + 结果计数 + Load More
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -58,8 +58,14 @@ export default function SearchResultsPage() {
   // P8-5 F2+F3：sortBy 变重查第一页（决策 2-B），onEndReached 触发 fetchNextPage（决策 3-B）
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useProductSearch(keyword, activeSort);
-  // Why: pages.flatMap 拼接所有已加载页；total 取首页（搜索结果总数，非累计已加载数）
-  const results = data?.pages.flatMap((p) => p.items) ?? [];
+  // Why: pages.flatMap 拼接所有已加载页；total 取首页（搜索结果总数，非累计已加载数）。
+  //   后端 offset 分页排序不稳定时跨页重复商品 → 同 id 渲染两次 duplicate key（home 实证
+  //   20261023），同款按 id 去重防渲染层炸；根治靠后端 ORDER BY tie-breaker。
+  const results = useMemo(() => {
+    const flat = data?.pages.flatMap((p) => p.items) ?? [];
+    const seen = new Set<string>();
+    return flat.filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)));
+  }, [data]);
   const count = data?.pages[0]?.total ?? 0;
 
   // P8-5 F3：ScrollView 触底加载下一页（distanceFromBottom < 200）

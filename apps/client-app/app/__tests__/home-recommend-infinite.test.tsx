@@ -159,6 +159,19 @@ describe('HomePage 推荐板块 — 加载更多三态（批2）', () => {
     expect(queryAllByTestId('masonry-card-p7').length).toBeGreaterThan(0);
   });
 
+  // Why: 后端 offset 分页排序不稳定时跨页重复商品（20261023 real 模式 duplicate key 实证），
+  //   页面层按 id 去重——重复 id 只渲染首次出现，总卡数不涨、无 duplicate key
+  it('跨页重复商品去重：第二页含第一页 id 时只渲染一次', () => {
+    mockPages = [
+      [0, 6],
+      [0, 6], // 模拟后端第 2 页重复返回第 1 页的 6 条（id 同 p1-p6）
+    ];
+    mockHasNextPage = false;
+    const { queryAllByTestId } = setup();
+    // 拼接后 12 项但有 6 个重复 id → 只渲染 6 张卡
+    expect(queryAllByTestId(/masonry-card-/)).toHaveLength(6);
+  });
+
   it('F2 loading 态：isFetchingNextPage → 按钮 disabled（防连点）', () => {
     mockIsFetchingNextPage = true;
     const { getByTestId } = setup();

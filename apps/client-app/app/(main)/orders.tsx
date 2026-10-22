@@ -52,8 +52,14 @@ export default function OrdersPage() {
   const counts = useOrderCounts();
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useOrdersInfinite(active);
-  // Why: useInfiniteQuery 返回 InfiniteData<{items,...}[]>，拍平多页 items 为 Order[]
-  const orders: Order[] = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
+  // Why: useInfiniteQuery 返回 InfiniteData<{items,...}[]>，拍平多页 items 为 Order[]。
+  //   后端 offset 分页排序不稳定时跨页重复 → FlatList duplicate key（home 实证 20261023），
+  //   同款按 id 去重防渲染层炸；根治靠后端 ORDER BY tie-breaker。
+  const orders: Order[] = useMemo(() => {
+    const flat = data?.pages.flatMap((p) => p.items) ?? [];
+    const seen = new Set<string>();
+    return flat.filter((o) => (seen.has(o.id) ? false : (seen.add(o.id), true)));
+  }, [data]);
 
   // 批3：管理模式状态（收藏页/通知页 selectMode 同形态）
   const [selectMode, setSelectMode] = useState(false);
