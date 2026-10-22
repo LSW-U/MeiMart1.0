@@ -286,16 +286,16 @@ export default function HomePage() {
           </View>
         )}
 
-        {/* Tais Divider（保留 HTML 装饰） */}
+        {/* PromoDock - 横排功能停靠栏（V3c 无标题） */}
+        <View style={styles.section}>
+          <PromoDock promotions={promotions ?? []} onPress={handlePromoPress} />
+        </View>
+
+        {/* Tais Divider（保留 HTML 装饰）——人工验收定稿：移至 PromoDock 下方 + 上下留白收窄 */}
         <View style={styles.dividerRow}>
           <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
           <TaisDivider />
           <View style={[styles.dividerLine, { backgroundColor: colors['outline-variant'] }]} />
-        </View>
-
-        {/* PromoDock - 横排功能停靠栏（V3c 无标题，接 TaisDivider 下方） */}
-        <View style={styles.section}>
-          <PromoDock promotions={promotions ?? []} onPress={handlePromoPress} />
         </View>
 
         {/* 推荐商品标题 + 状态行（瀑布流列表主体在 FlatList data） */}
@@ -810,8 +810,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: layout['container-margin'],
-    // Why: P6 S3 - TaisDivider 上下 padding md(16) -> lg(24)，视觉呼吸更充分
-    paddingVertical: spacing.lg,
+    // Why: 人工验收 2026-10-23 定稿——Divider 移至 PromoDock 下方后留白收窄 lg(24) → sm(12)
+    paddingVertical: spacing.sm,
     gap: spacing.md,
     // V15：区块节奏 24px 对齐原型（原误映射 xl(32)）
     marginTop: spacing.lg,
