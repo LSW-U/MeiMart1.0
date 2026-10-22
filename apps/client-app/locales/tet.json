@@ -703,7 +703,8 @@
     "addressCount": "Rai tiha ona {{count}}",
     "cacheChip": "{{size}} · Klik atu hamos",
     "defaultPaymentMethod": "Metodu pagamentu default",
-    "defaultPayAuto": "Automátiku"
+    "defaultPayAuto": "Automátiku",
+    "defaultPaySaved": "Metodu pagamentu default atualizada"
   },
   "language": {
     "title": "Hili lingua",

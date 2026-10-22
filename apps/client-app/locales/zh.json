@@ -703,7 +703,8 @@
     "addressCount": "{{count}} 个",
     "cacheChip": "{{size}} · 点击清理",
     "defaultPaymentMethod": "默认支付方式",
-    "defaultPayAuto": "自动"
+    "defaultPayAuto": "自动",
+    "defaultPaySaved": "默认支付方式已更新"
   },
   "language": {
     "title": "选择语言",

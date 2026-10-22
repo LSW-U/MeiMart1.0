@@ -39,15 +39,21 @@ jest.mock('@/services/queries/useAddress', () => ({
 }));
 
 // 默认支付方式行（方案乙批2）：settings 页引入 useProfile/useUpdateProfile（读写切 profile），
-// mock 掉避免真 query client 依赖
+// mock 掉避免真 query client 依赖；方案A 测试用 mockProfileData 驱动选中态
+let mockProfileData: { defaultPaymentMethod: string | null } | undefined = undefined;
+const mockProfileMutate = jest.fn();
 jest.mock('@/services/queries/useUser', () => ({
-  useProfile: () => ({ data: undefined }),
-  useUpdateProfile: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
+  useProfile: () => ({ data: mockProfileData }),
+  useUpdateProfile: () => ({ mutate: mockProfileMutate, isPending: false, variables: undefined }),
 }));
 
 // 默认支付方式行（方案甲）：mock 支付方式列表 + 本地偏好读写
+const mockPayMethods = [
+  { id: 'pm-1', code: 'COD', name: 'COD', available: true },
+  { id: 'pm-2', code: 'LAISPAY', name: 'LaisPay', available: true },
+];
 jest.mock('@/services/queries/usePayment', () => ({
-  usePaymentMethods: () => ({ data: [] }),
+  usePaymentMethods: () => ({ data: mockPayMethods }),
 }));
 jest.mock('@/services/paymentPreference', () => ({
   getDefaultPaymentMethod: jest.fn().mockResolvedValue(null),
@@ -57,6 +63,11 @@ jest.mock('@/services/paymentPreference', () => ({
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), push: jest.fn(), replace: jest.fn() },
 }));
+
+const { router: mockRouter } = jest.requireMock('expo-router') as {
+  router: { push: ReturnType<typeof jest.fn> };
+};
+const routerPush = mockRouter.push;
 
 jest.mock('@/hooks/useSafeBack', () => ({
   useSafeBack: () => jest.fn(),
@@ -72,8 +83,11 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 beforeEach(() => {
   mockMutate.mockReset();
+  mockProfileMutate.mockReset();
+  routerPush.mockClear();
   mockPrefs = { orderUpdates: true, promotions: true, system: false };
   mockIsAuthenticated = true;
+  mockProfileData = undefined;
 });
 
 describe('SettingsPage 通知偏好（P17-B1，两开关并入形态）', () => {
@@ -103,5 +117,23 @@ describe('SettingsPage 通知偏好（P17-B1，两开关并入形态）', () => 
     const { queryByTestId } = render(<SettingsPage />, { wrapper });
     expect(queryByTestId('settings-notifications')).toBeNull();
     expect(queryByTestId('settings-notifications-promo')).toBeNull();
+  });
+});
+
+describe('SettingsPage 默认支付方式（方案B 独立页形态）', () => {
+  it('行渲染当前值 + 点击跳转 /settings/default-payment', () => {
+    mockProfileData = { defaultPaymentMethod: 'COD' };
+    const { getByTestId, getByText } = render(<SettingsPage />, { wrapper });
+    expect(getByTestId('settings-default-payment')).toBeTruthy();
+    // 行右值显示当前渠道名（payValueLabel 读 payableMethods 找 code）
+    expect(getByText('COD')).toBeTruthy();
+    fireEvent.press(getByTestId('settings-default-payment'));
+    expect(routerPush).toHaveBeenCalledWith('/settings/default-payment');
+  });
+
+  it('未登录不渲染默认支付方式行（偏好是登录态能力，与通知偏好同门控）', () => {
+    mockIsAuthenticated = false;
+    const { queryByTestId } = render(<SettingsPage />, { wrapper });
+    expect(queryByTestId('settings-default-payment')).toBeNull();
   });
 });

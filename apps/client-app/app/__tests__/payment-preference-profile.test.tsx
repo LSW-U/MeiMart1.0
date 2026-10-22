@@ -195,58 +195,19 @@ beforeEach(() => {
   getDefaultPaymentMethod.mockResolvedValue(null);
 });
 
-describe('settings 默认支付方式（方案乙批2：读写切 profile）', () => {
-  it('渲染 available 渠道选项，选中值来自 profile.defaultPaymentMethod', async () => {
+describe('settings 默认支付方式（方案B 独立页形态，2026-10-23 迁移）', () => {
+  it('行渲染当前值 + 点击跳转 /settings/default-payment（选中值来自 profile.defaultPaymentMethod）', async () => {
     mockProfile = { defaultPaymentMethod: 'WECHAT' };
     mockUsePaymentMethods.mockReturnValue({ data: [COD, WECHAT] });
     render(<SettingsPage />, { wrapper });
     const row = await screen.findByTestId('settings-default-payment', {}, { timeout: 2000 });
     expect(row).toBeTruthy();
-    // 选中态来自后端偏好（非本地缓存）
-    const seg = screen.getByTestId('settings-default-payment-segment-WECHAT');
-    expect(seg.props.accessibilityState.selected).toBe(true);
-  });
-
-  it('切换选项 → useUpdateProfile.mutate 透传 defaultPaymentMethod + 本地副本同步（D5）', async () => {
-    mockProfile = { defaultPaymentMethod: null };
-    mockUsePaymentMethods.mockReturnValue({ data: [COD, WECHAT] });
-    render(<SettingsPage />, { wrapper });
-    await screen.findByTestId('settings-default-payment', {}, { timeout: 2000 });
-
-    fireEvent(screen.getByTestId('settings-default-payment-segment-WECHAT'), 'onChange', 'WECHAT');
-    // PATCH 入参透传字段（userApi.updateProfile 白名单映射的调用面）；
-    // 第二参 options.onError = P3-2 失败 toast（toApiErrorText → errors ns 四语文案）
-    expect(mockUpdateProfileMutate).toHaveBeenCalledWith(
-      { defaultPaymentMethod: 'WECHAT' },
-      expect.objectContaining({ onError: expect.any(Function) }),
-    );
-    // P3-2：onError 走 toApiErrorText → toast.error（失败不静默）
-    const { onError } = mockUpdateProfileMutate.mock.calls[0][1] as {
-      onError: (e: unknown) => void;
-    };
-    onError({ response: { data: { error: { code: 'E-USER-010' } } } });
-    const { toast: toastMock } = jest.requireMock('@/store/toastStore') as {
-      toast: { error: jest.Mock };
-    };
-    expect(toastMock.error).toHaveBeenCalledWith('Invalid or unavailable payment method');
-    // 本地副本同步写入
-    expect(setDefaultPaymentMethod).toHaveBeenCalledWith('WECHAT');
-  });
-
-  it('profile 无值（null=未设置）→ 回退 AsyncStorage 本地缓存（离线降级）', async () => {
-    mockProfile = { defaultPaymentMethod: null };
-    mockUsePaymentMethods.mockReturnValue({ data: [COD, WECHAT] });
-    const { getDefaultPaymentMethod } = jest.requireMock('@/services/paymentPreference') as {
-      getDefaultPaymentMethod: jest.Mock;
-    };
-    getDefaultPaymentMethod.mockResolvedValue('COD');
-    render(<SettingsPage />, { wrapper });
-    const seg = await screen.findByTestId(
-      'settings-default-payment-segment-COD',
-      {},
-      { timeout: 2000 },
-    );
-    expect(seg.props.accessibilityState.selected).toBe(true);
+    // 行右值显示当前渠道名（payValueLabel 读 payableMethods 找 code）
+    expect(screen.getByText('WeChat Pay')).toBeTruthy();
+    // 方案B：点击跳独立选择页（原 Modal 已替换）
+    fireEvent.press(row);
+    const { router } = jest.requireMock('expo-router') as { router: { push: jest.Mock } };
+    expect(router.push).toHaveBeenCalledWith('/settings/default-payment');
   });
 
   it('未登录不渲染偏好行（登录态门控，与通知偏好同决策）', () => {

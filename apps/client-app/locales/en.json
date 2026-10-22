@@ -703,7 +703,8 @@
     "addressCount": "{{count}} saved",
     "cacheChip": "{{size}} · Tap to clear",
     "defaultPaymentMethod": "Default payment method",
-    "defaultPayAuto": "Auto"
+    "defaultPayAuto": "Auto",
+    "defaultPaySaved": "Default payment method updated"
   },
   "language": {
     "title": "Select language",

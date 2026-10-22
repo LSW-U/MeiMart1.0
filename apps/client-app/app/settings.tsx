@@ -16,7 +16,6 @@ import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { useAddresses } from '@/services/queries/useAddress';
 import { toast } from '@/store/toastStore';
-import { toApiErrorText } from '@/utils/apiError';
 import { APP_VERSION } from '@/utils/appInfo';
 import { clearAppCache, getCacheSizeLabel } from '@/services/cache';
 import {
@@ -25,8 +24,8 @@ import {
 } from '@/services/queries/useNotifications';
 import { Switch } from '@/components/ui/Switch';
 import { usePaymentMethods } from '@/services/queries/usePayment';
-import { useProfile, useUpdateProfile } from '@/services/queries/useUser';
-import { getDefaultPaymentMethod, setDefaultPaymentMethod } from '@/services/paymentPreference';
+import { useProfile } from '@/services/queries/useUser';
+import { getDefaultPaymentMethod } from '@/services/paymentPreference';
 import { localize, type AppLocale } from '@/i18n';
 import { useEffect, useState, type ReactNode } from 'react';
 
@@ -56,7 +55,6 @@ export default function SettingsPage() {
   const { data: paymentMethods } = usePaymentMethods();
   const payableMethods = (paymentMethods ?? []).filter((m) => m.available !== false);
   const { data: profile } = useProfile();
-  const updateProfile = useUpdateProfile();
   const [defaultPay, setDefaultPay] = useState<string | null>(null);
   // Why: 后端偏好 > 本地缓存（离线降级）：profile 未加载/无值时读 AsyncStorage。
   // react-hooks/set-state-in-effect 豁免：profile 是异步外部数据源，到达后同步落定派生
@@ -77,22 +75,18 @@ export default function SettingsPage() {
       cancelled = true;
     };
   }, [profilePayCode, profileLoaded]);
-  const changeDefaultPay = (code: string | null) => {
-    setDefaultPay(code);
-    // 乐观本地副本（profile PATCH 期间 UI 即时反映）。失败语义（P3-1 修注释，2026-10-22）：
-    // useUpdateProfile onError 只回滚 profile query 缓存，本地副本**不回修**——停留新值，
-    // 后端保持旧值；小窗口偏差由下次成功 PATCH 自愈（离线降级档读到的是用户最近一次意图值，
-    // 非资金风险）。UI 已亮新段，故配 onError toast 明确告知失败（P3-2），不静默。
-    void setDefaultPaymentMethod(code);
-    updateProfile.mutate(
-      { defaultPaymentMethod: code },
-      {
-        onError: (err) => {
-          toast.error(toApiErrorText(err, t));
-        },
-      },
-    );
-  };
+
+  // 行右值：当前选中渠道名（null = 自动）；渠道列表未含该 code 时显示「自动」兜底。
+  // 方案B 2026-10-22：选择 UI 移至独立页 /settings/default-payment（方案A Modal 已替换），
+  // 本页只保留只读 label + 跳转，写路径在共享 changeDefaultPayment（新页同源）
+  const payValueLabel = defaultPay
+    ? payableMethods.find((m) => (m.code ?? m.id.toUpperCase()) === defaultPay) != null
+      ? localize(
+          payableMethods.find((m) => (m.code ?? m.id.toUpperCase()) === defaultPay)!.name,
+          locale as AppLocale,
+        )
+      : t('settings.defaultPayAuto')
+    : t('settings.defaultPayAuto');
 
   // P17 决策 3 —— 真实缓存：挂载统计大小，点击清理后重查（loading → 成功 0 KB / 失败保留）
   const [cacheSize, setCacheSize] = useState<string | null>(null);
@@ -327,37 +321,24 @@ export default function SettingsPage() {
             ))}
 
           {/* 默认支付方式（方案乙批2 2026-10-22：读写主源切 profile，未登录不渲染——
-              偏好是登录态能力，与通知偏好同门控；结算页回退链后端偏好>本地缓存>默认 COD） */}
+              偏好是登录态能力，与通知偏好同门控；结算页回退链后端偏好>本地缓存>默认 COD）。
+              方案B 2026-10-22：行内选择 → 独立选择页 /settings/default-payment
+              （方案A Modal 已替换；写路径共享 changeDefaultPayment，数据链不变） */}
           {isAuthenticated && payableMethods.length > 0 && (
-            <RowItem
+            <PressableRow
               label={t('settings.defaultPaymentMethod')}
               icon="payments"
               iconBg={colors.primary}
               iconFg={colors['on-primary']}
+              value={payValueLabel}
               textColor={colors['on-surface']}
               subColor={colors['on-surface-variant']}
               dividerColor={colors['outline-variant']}
               // 后面还有清缓存行，保持组内行间线
               showDivider
               testID="settings-default-payment"
-            >
-              <SegmentSwitch
-                value={defaultPay}
-                options={[
-                  { v: null, label: t('settings.defaultPayAuto') },
-                  ...payableMethods.slice(0, 2).map((m) => ({
-                    v: (m.code ?? m.id.toUpperCase()) as string,
-                    label: localize(m.name, locale as AppLocale),
-                  })),
-                ]}
-                onChange={changeDefaultPay}
-                color={colors.primary}
-                activeTextColor={colors['on-primary']}
-                subColor={colors['on-surface-variant']}
-                activeColor={colors['surface-container-low']}
-                testIDPrefix="settings-default-payment-segment"
-              />
-            </RowItem>
+              onPress={() => router.push('/settings/default-payment')}
+            />
           )}
 
           {/* 清除缓存（原「存储」区块并入偏好组，2026-10-21 UI 精简） */}
