@@ -100,9 +100,11 @@ export default function CheckoutPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 上述豁免原因
     if (profileLoaded) setDefaultPayCode(profilePayCode);
     let cancelledLocal = false;
-    getDefaultPaymentMethod().then((v) => {
-      if (!cancelledLocal) setDefaultPayCode((prev) => prev ?? v);
-    });
+    getDefaultPaymentMethod()
+      .then((v) => {
+        if (!cancelledLocal) setDefaultPayCode((prev) => prev ?? v);
+      })
+      .catch(() => {});
     return () => {
       cancelledLocal = true;
     };

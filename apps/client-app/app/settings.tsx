@@ -79,13 +79,12 @@ export default function SettingsPage() {
   // 行右值：当前选中渠道名（null = 自动）；渠道列表未含该 code 时显示「自动」兜底。
   // 方案B 2026-10-22：选择 UI 移至独立页 /settings/default-payment（方案A Modal 已替换），
   // 本页只保留只读 label + 跳转，写路径在共享 changeDefaultPayment（新页同源）
-  const payValueLabel = defaultPay
-    ? payableMethods.find((m) => (m.code ?? m.id.toUpperCase()) === defaultPay) != null
-      ? localize(
-          payableMethods.find((m) => (m.code ?? m.id.toUpperCase()) === defaultPay)!.name,
-          locale as AppLocale,
-        )
-      : t('settings.defaultPayAuto')
+  const payValueHit =
+    defaultPay != null
+      ? payableMethods.find((m) => (m.code ?? m.id.toUpperCase()) === defaultPay)
+      : undefined;
+  const payValueLabel = payValueHit
+    ? localize(payValueHit.name, locale as AppLocale)
     : t('settings.defaultPayAuto');
 
   // P17 决策 3 —— 真实缓存：挂载统计大小，点击清理后重查（loading → 成功 0 KB / 失败保留）
@@ -587,7 +586,6 @@ function SegmentSwitch<T extends string | null>({
   activeTextColor,
   subColor,
   activeColor,
-  testIDPrefix,
 }: {
   /** null = 自动（跟随列表 isDefault/首项），仅默认支付方式用 */
   value: T;
@@ -597,8 +595,6 @@ function SegmentSwitch<T extends string | null>({
   activeTextColor: string;
   subColor: string;
   activeColor: string;
-  /** 选项 Pressable testID 前缀（批2 加，形如 `${prefix}-${String(opt.v)}`；可选，不传不加） */
-  testIDPrefix?: string;
 }) {
   return (
     <View style={[styles.segment, { backgroundColor: activeColor, borderColor: subColor }]}>
@@ -611,8 +607,6 @@ function SegmentSwitch<T extends string | null>({
             style={[styles.segmentItem, { backgroundColor: active ? color : 'transparent' }]}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
-            // 批2（方案乙）：测试定位锚点——外层 SegmentSwitch testID + 选项 key（'null' 表自动档）
-            testID={`${testIDPrefix}-${String(opt.v)}`}
           >
             <Text
               style={{
