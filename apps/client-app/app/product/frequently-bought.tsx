@@ -179,12 +179,6 @@ function Header({ title }: { title: string }) {
         <TaisPattern width={390} height={56} opacity={0.1} />
       </View>
       <View style={styles.headerRow}>
-        <View style={styles.headerBtn}>
-          <Icon symbol="history" size={22} color={ON_PRIMARY} />
-        </View>
-        <Text style={styles.headerTitle} accessibilityRole="header" numberOfLines={1}>
-          {title}
-        </Text>
         <Pressable
           onPress={handleBack}
           hitSlop={8}
@@ -194,6 +188,10 @@ function Header({ title }: { title: string }) {
         >
           <Icon symbol="arrow_back" size={24} color={ON_PRIMARY} />
         </Pressable>
+        <Text style={styles.headerTitle} accessibilityRole="header" numberOfLines={1}>
+          {title}
+        </Text>
+        <View style={styles.headerRightPlaceholder} />
       </View>
     </View>
   );
@@ -219,14 +217,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  headerBtnWrap: {
-    width: 40,
-  },
   headerBtn: {
     width: 40,
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Why: 右侧 40px 占位平衡左返回键，保证标题严格居中（product/list 同款）
+  headerRightPlaceholder: {
+    width: 40,
   },
   headerTitle: {
     ...typography.h3,
