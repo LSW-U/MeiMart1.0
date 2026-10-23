@@ -12,36 +12,13 @@ import {
   // C-P3-12：AccessibilityInfo 与 RN 主包合并 import（import/no-duplicates）
   AccessibilityInfo,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
-import { useTheme, textStyle, spacing, gradientPresets, shadowPresets } from '@/theme';
-import { DecorativeCorner } from '@/components/cultural/DecorativeCorner';
-import type { Banner, BannerTheme } from '@/types';
-import type { AppColors } from '@/theme/colors';
+import { textStyle, spacing, useTheme } from '@/theme';
+import type { Banner } from '@/types';
 import type { BannerCarouselProps } from './BannerCarousel.types';
 
 const BANNER_HEIGHT = 180;
-
-const THEME_GRADIENT: Record<BannerTheme, keyof typeof gradientPresets> = {
-  primary: 'primaryFade',
-  emerald: 'emeraldFade',
-  blue: 'blueFade',
-};
-
-// Why: banner 底色从 theme 派生（dark mode 自动适配）。emerald→success、blue→info。
-// 注：emerald 由旧 #065f46 改为 semantic.success #059669（亮绿），肉眼可辨色变；
-// 配套 gradientPresets.emeraldFade 已同步改为 #059669 系（见 gradients.ts）。
-function getBannerBg(theme: BannerTheme, colors: AppColors): string {
-  switch (theme) {
-    case 'primary':
-      return colors.primary;
-    case 'emerald':
-      return colors.semantic.success;
-    case 'blue':
-      return colors.semantic.info;
-  }
-}
 
 export function BannerCarousel({
   banners,
@@ -135,48 +112,40 @@ function BannerCard({
   screenWidth: number;
   onPress?: () => void;
 }) {
-  const { colors } = useTheme();
   const { t } = useTranslation();
+  const { colors } = useTheme();
   // 原因：批1 A4 透传后 Banner.title 是 LocalizableText，渲染层 localize() 取值
   const localize = useLocalizer();
-  const theme = banner.theme ?? 'primary';
-  const gradientPreset = gradientPresets[THEME_GRADIENT[theme]];
-  const bgColor = getBannerBg(theme, colors);
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: bgColor, width: screenWidth - spacing.lg * 2 },
+        {
+          width: screenWidth - spacing.lg * 2,
+          borderColor: colors['outline-variant'],
+        },
         pressed && styles.pressed,
       ]}
       accessibilityRole="button"
       accessibilityLabel={t('home.a11y.banner', { title: localize(banner.title) })}
     >
-      {/* 装饰角花（右上） */}
-      <View style={styles.corner} pointerEvents="none">
-        <DecorativeCorner size={120} variant="light" />
-      </View>
-
-      {/* 背景图（半透明叠加，呼应 HTML 的 opacity-40 mix-blend-overlay） */}
+      {/* 背景图（20261023 定稿：纯图片轮播，无底色无 scrim） */}
       {banner.image ? (
-        <Image source={{ uri: banner.image }} style={styles.bgImage} accessible={false} />
+        <Image
+          source={{ uri: banner.image }}
+          style={styles.bgImage}
+          resizeMode="cover"
+          accessible={false}
+        />
       ) : null}
 
-      {/* 渐变遮罩（左→右深→浅） */}
-      <LinearGradient {...gradientPreset} style={styles.gradient} />
-
-      {/* 文案 + CTA */}
+      {/* 文案（无色底，白字直接叠图——20261023 验收定稿删阴影） */}
       <View style={styles.content}>
-        <Text style={[styles.title, { color: colors['on-primary'] }]} numberOfLines={3}>
+        <Text style={[styles.title, { color: '#ffffff' }]} numberOfLines={3}>
           {localize(banner.title)}
         </Text>
-        {banner.ctaLabel && (
-          <View style={[styles.ctaBtn, { backgroundColor: colors.tertiary }, shadowPresets.lg]}>
-            <Text style={[styles.ctaText, { color: colors['on-primary'] }]}>{banner.ctaLabel}</Text>
-          </View>
-        )}
       </View>
     </Pressable>
   );
@@ -193,24 +162,16 @@ const styles = StyleSheet.create({
     height: BANNER_HEIGHT,
     borderRadius: 24,
     overflow: 'hidden',
+    // 20261023 定稿：纯图片卡加描边（SmallProductCard 同款 outline-variant 1px），
+    // 图片浅色调时与页面背景的边界仍清晰
+    borderWidth: 1,
   },
   pressed: { opacity: 0.92 },
-  corner: {
-    position: 'absolute',
-    right: -16,
-    top: -8,
-    opacity: 0.3,
-  },
   bgImage: {
     position: 'absolute',
     width: '100%',
     height: '100%',
-    opacity: 0.4,
-  },
-  gradient: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
+    // 20261023 定稿：纯图片轮播，图全不透明铺满（resizeMode cover 裁切填满 342×180）
   },
   content: {
     position: 'absolute',
@@ -224,18 +185,6 @@ const styles = StyleSheet.create({
   title: {
     ...textStyle('h2'),
     fontWeight: '700',
-    marginBottom: spacing.sm,
-  },
-  ctaBtn: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  ctaText: {
-    ...textStyle('label-caps'),
-    fontSize: 11,
-    letterSpacing: 0.05,
   },
   dots: {
     flexDirection: 'row',

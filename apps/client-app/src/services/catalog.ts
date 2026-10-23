@@ -44,11 +44,25 @@ function transformCategory(raw: CategoryRaw): Category {
   };
 }
 
-function transformBanner(raw: BannerRaw): Banner {
+// Why: 20261023 banner 观感修复（用户「不要红色」）——real 契约无 theme/cta 字段
+//   （后端 Banner 表仅 imageUrl/alt/linkType/linkValue），原实现全部落 primary 红色路径。
+//   theme 按 index 轮换三色（恢复 mock 时代层次感）；linkType/linkValue 映射成 link
+//   （契约现成字段此前漏接，PRODUCT→/product/{id} 可跳详情；CATEGORY/URL/NONE 暂不导航）。
+const BANNER_THEME_CYCLE: Banner['theme'][] = ['primary', 'emerald', 'blue'];
+
+function transformBanner(raw: BannerRaw, index: number): Banner {
+  const link =
+    raw.linkType === 'PRODUCT' && raw.linkValue
+      ? `/product/${raw.linkValue}`
+      : raw.linkType === 'URL' && raw.linkValue
+        ? raw.linkValue
+        : undefined;
   return {
     id: raw.id,
     image: raw.imageUrl,
     title: (raw.alt ?? {}) as Banner['title'],
+    theme: BANNER_THEME_CYCLE[index % BANNER_THEME_CYCLE.length],
+    link,
   };
 }
 
@@ -63,6 +77,6 @@ export const catalogApi = {
     if (isMockMode) return mockResponse(mockDb.banners);
     // Why: banners 是后端专属端点（onlyActive=true 已由后端 controller 处理）
     const res = await api.get<BannerRaw[]>('/client/banners');
-    return res.data.map(transformBanner);
+    return res.data.map((raw, i) => transformBanner(raw, i));
   },
 };
