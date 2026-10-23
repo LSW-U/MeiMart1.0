@@ -24,6 +24,7 @@ import { PromoDock } from '@/components/business/PromoDock';
 import { SmallProductCard } from '@/components/business/SmallProductCard/SmallProductCard';
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
 import { resolveBadges } from '@/utils/resolveBadges';
+import { dedupeById } from '@/utils/dedupeById';
 import type { Banner, Product } from '@/types';
 import type { Promotion } from '@/services/promotion';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -92,14 +93,10 @@ export default function HomePage() {
     baseOffset: recommendBaseOffset,
     cycle: recommendCycle,
   });
-  const recommendList = useMemo(() => {
-    const flat = recommendPages?.pages.flatMap((p) => p) ?? [];
-    // Why: 后端 offset 分页在排序不稳定时（salesCount 并列无 tie-breaker）跨页会返回重复
-    //   商品，flatMap 拼接后同 id 渲染两次 → React duplicate key 告警（20261023 实证）。
-    //   前端按 id 去重防渲染层炸；根治靠后端 ORDER BY 加 tie-breaker（后端配合项）。
-    const seen = new Set<string>();
-    return flat.filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)));
-  }, [recommendPages]);
+  const recommendList = useMemo(
+    () => dedupeById(recommendPages?.pages.flatMap((p) => p) ?? []),
+    [recommendPages],
+  );
   // Why: §9-4 瀑布流两列分发改 FlatList numColumns（C-P2-10，分发逻辑由列表承担）
   const { data: buyAgainProducts, isFetching: buyAgainFetching } = useBuyAgain({
     limit: BUY_AGAIN_LIMIT,

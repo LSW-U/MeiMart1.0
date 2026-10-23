@@ -29,6 +29,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
 import { SearchBar } from '@/components/business/SearchBar';
 import { resolveBadges } from '@/utils/resolveBadges';
+import { dedupeById } from '@/utils/dedupeById';
 import { toast } from '@/store/toastStore';
 import { useProductSearch, useProducts, type ProductSortKey } from '@/services/queries/useProducts';
 import { trackSearchClick } from '@/services/behavior';
@@ -60,12 +61,8 @@ export default function SearchResultsPage() {
     useProductSearch(keyword, activeSort);
   // Why: pages.flatMap 拼接所有已加载页；total 取首页（搜索结果总数，非累计已加载数）。
   //   后端 offset 分页排序不稳定时跨页重复商品 → 同 id 渲染两次 duplicate key（home 实证
-  //   20261023），同款按 id 去重防渲染层炸；根治靠后端 ORDER BY tie-breaker。
-  const results = useMemo(() => {
-    const flat = data?.pages.flatMap((p) => p.items) ?? [];
-    const seen = new Set<string>();
-    return flat.filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)));
-  }, [data]);
+  //   20261023），按 id 去重防渲染层炸；根治靠后端 ORDER BY tie-breaker（审查 Q4 收敛 util）。
+  const results = useMemo(() => dedupeById(data?.pages.flatMap((p) => p.items) ?? []), [data]);
   const count = data?.pages[0]?.total ?? 0;
 
   // P8-5 F3：ScrollView 触底加载下一页（distanceFromBottom < 200）

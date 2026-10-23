@@ -42,6 +42,7 @@ export function PromoDock({ promotions, onPress, testID }: PromoDockProps) {
   const [thumbProgress, setThumbProgress] = useState(0);
   const [trackVisible, setTrackVisible] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(0);
+  const [trackWidth, setTrackWidth] = useState(0);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Why: §2.7 空态 - 无活动时不隐藏区块，显示虚线框占位（保持首页结构稳定）
@@ -79,8 +80,12 @@ export function PromoDock({ promotions, onPress, testID }: PromoDockProps) {
     hideTimer.current = setTimeout(() => setTrackVisible(false), HIDE_DELAY_MS);
   };
 
-  // Why: 内容总宽由卡数推导（卡 218 + gap 10），避免依赖 onContentSizeChange 时序
-  const contentWidth = promotions.length * CARD_WIDTH + (promotions.length - 1) * CARD_GAP;
+  // Why: 动态卡宽就绪后由可视区推导（与卡宽公式同源，snap 落点不漂移）；
+  //   onLayout 前兜底退回固定值。Q3 修正：方案迭代后卡宽 172/动态 178，注释残留 218 已清。
+  const dynamicCardWidth =
+    viewportWidth > 0 ? Math.floor((viewportWidth - 2 * PAD_X - CARD_GAP) / 2) : CARD_WIDTH;
+  const snapInterval = dynamicCardWidth + CARD_GAP;
+  const contentWidth = promotions.length * dynamicCardWidth + (promotions.length - 1) * CARD_GAP;
   const ratio = contentWidth > 0 ? Math.min(1, viewportWidth / contentWidth) : 1;
 
   return (
@@ -89,7 +94,7 @@ export function PromoDock({ promotions, onPress, testID }: PromoDockProps) {
         ref={scrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
-        snapToInterval={CARD_WIDTH + CARD_GAP}
+        snapToInterval={snapInterval}
         decelerationRate="fast"
         onScroll={handleScroll}
         scrollEventThrottle={16}
@@ -100,16 +105,7 @@ export function PromoDock({ promotions, onPress, testID }: PromoDockProps) {
         contentContainerStyle={styles.scrollContent}
       >
         {promotions.map((item) => (
-          <PromoCard
-            key={item.id}
-            promotion={item}
-            onPress={onPress}
-            width={
-              viewportWidth > 0
-                ? Math.floor((viewportWidth - 2 * PAD_X - CARD_GAP) / 2)
-                : CARD_WIDTH
-            }
-          />
+          <PromoCard key={item.id} promotion={item} onPress={onPress} width={dynamicCardWidth} />
         ))}
       </ScrollView>
       {/* 进度条（选项 B 自绘 + 人工验收定稿：仅滑动中显示，停止 800ms 后隐藏）：灰轨道 + 主题红滑块 */}
@@ -120,6 +116,11 @@ export function PromoDock({ promotions, onPress, testID }: PromoDockProps) {
         ]}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
+        onLayout={(e) => {
+          // Why: Q2 修复——thumb translateX 改数值像素（progress × 可滑区宽），
+          //   百分比 translateX 类型无法表达曾用 as never 强转（规则 36 逃生舱），此写法绕开
+          setTrackWidth(e.nativeEvent.layout.width);
+        }}
       >
         <View
           style={[
@@ -127,9 +128,8 @@ export function PromoDock({ promotions, onPress, testID }: PromoDockProps) {
             {
               width: `${Math.max(20, ratio * 100)}%` as `${number}%`,
               backgroundColor: colors.primary,
-              transform: [
-                { translateX: `${thumbProgress * (100 / Math.max(ratio, 0.001) - 100)}%` } as never,
-              ],
+              // 可滑区 = 轨道宽 − 滑块宽；滑块宽 = ratio × 轨道宽
+              transform: [{ translateX: thumbProgress * Math.max(0, trackWidth * (1 - ratio)) }],
             },
           ]}
         />
