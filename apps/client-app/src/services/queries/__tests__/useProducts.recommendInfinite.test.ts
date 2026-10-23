@@ -4,7 +4,9 @@
  * 验证：
  *   - 翻页推进：pageParam=offset，fetchNextPage → offset=limit，pages 追加不替换
  *   - 短批/空批终止：getNextPageParam 按页长判定（响应无 hasMore，E6 红线）
- *   - epoch 复位（D3 方案 B）：epoch++ 换 queryKey，回首屏重新取第一页，旧 epoch 缓存隔离
+ *   - baseOffset 推进（D3 方案 B → 20261023 real 模式修订）：baseOffset 变 queryKey，
+ *     请求 offset = baseOffset + pageIdx*limit，换到的真是后面一批商品
+ *     （原 epoch++ 重查 offset=0 在后端确定性排序下返回同一批 → 换一批「没反应」实证）
  */
 import { renderHookWithClient, createTestQueryClient } from './testHarness';
 import { act, waitFor } from '@testing-library/react-native';
@@ -27,17 +29,17 @@ describe('useRecommendationsInfinite — 追加式真分页', () => {
     mockGetRecommendations.mockReset();
   });
 
-  it('首屏 offset=0 透传 limit；queryKey 含 epoch 与 limit 位', async () => {
+  it('首屏 offset=0 透传 limit；queryKey 含 baseOffset 与 limit 位', async () => {
     mockGetRecommendations.mockResolvedValue(makePage(0, 6));
     const qc = createTestQueryClient();
     const { result } = renderHookWithClient(
-      () => useRecommendationsInfinite({ limit: 6, epoch: 0 }),
+      () => useRecommendationsInfinite({ limit: 6, baseOffset: 0 }),
       qc,
     );
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockGetRecommendations).toHaveBeenCalledWith({ limit: 6, offset: 0 });
     expect(
-      qc.getQueryCache().find({ queryKey: ['products', 'recommend-infinite', 0, 6] }),
+      qc.getQueryCache().find({ queryKey: ['products', 'recommend-infinite', 0, 0, 6] }),
     ).toBeTruthy();
   });
 
@@ -101,51 +103,85 @@ describe('useRecommendationsInfinite — 追加式真分页', () => {
     expect(result.current.hasNextPage).toBe(false);
   });
 
-  it('epoch 复位（D3 方案 B）：epoch++ 换 queryKey，回首屏重新取第一页', async () => {
+  it('baseOffset 推进（20261023 修订）：baseOffset=6 时请求 offset=6，换到的真是下一批', async () => {
     mockGetRecommendations
-      .mockResolvedValueOnce(makePage(0, 6))
-      .mockResolvedValueOnce(makePage(6, 6))
-      .mockResolvedValueOnce(makePage(0, 6)); // 复位后的首屏
+      .mockResolvedValueOnce(makePage(0, 6)) // baseOffset=0 首屏
+      .mockResolvedValueOnce(makePage(6, 6)); // baseOffset=6 的第一页（真·下一批）
     const qc = createTestQueryClient();
     const { result, rerender } = renderHookWithClient(
-      (p: { epoch: number }) => useRecommendationsInfinite({ limit: 6, epoch: p.epoch }),
+      (p: { baseOffset: number }) =>
+        useRecommendationsInfinite({ limit: 6, baseOffset: p.baseOffset }),
       qc,
-      { epoch: 0 },
+      { baseOffset: 0 },
     );
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect((result.current.data?.pages ?? []).flatMap((p) => p)).toHaveLength(6);
 
-    // epoch++ → 新 queryKey → 新查询从 offset=0 起（回首屏复位）
-    rerender({ epoch: 1 });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockGetRecommendations).toHaveBeenLastCalledWith({ limit: 6, offset: 0 });
-    expect((result.current.data?.pages ?? []).flatMap((p) => p)).toHaveLength(6);
-    // 两个 epoch 是独立缓存条目（精确匹配隔离，cart 的 recommend key 不受影响）
+    // baseOffset 0→6：请求 offset = 6 + 0 = 6（不再是 offset=0 的同一批）
+    // Why: waitFor 数据而非 isSuccess——placeholderData 让新 query 在占位阶段也置
+    //   isSuccess=true（data 还是旧批），等真实新批 ids 到达才算复位完成
+    rerender({ baseOffset: 6 });
+    await waitFor(() =>
+      expect((result.current.data?.pages ?? []).flatMap((p) => p.map((x) => x.id))).toEqual([
+        'p7',
+        'p8',
+        'p9',
+        'p10',
+        'p11',
+        'p12',
+      ]),
+    );
+    expect(mockGetRecommendations).toHaveBeenLastCalledWith({ limit: 6, offset: 6 });
+    // 两个 baseOffset 是独立缓存条目（精确匹配隔离，cart 的 recommend key 不受影响）
     expect(
-      qc.getQueryCache().find({ queryKey: ['products', 'recommend-infinite', 0, 6] }),
+      qc.getQueryCache().find({ queryKey: ['products', 'recommend-infinite', 0, 0, 6] }),
     ).toBeTruthy();
     expect(
-      qc.getQueryCache().find({ queryKey: ['products', 'recommend-infinite', 1, 6] }),
+      qc.getQueryCache().find({ queryKey: ['products', 'recommend-infinite', 6, 0, 6] }),
     ).toBeTruthy();
     expect(qc.getQueryCache().find({ queryKey: ['products', 'recommend'] })).toBeUndefined();
   });
 
-  it('清债微批：placeholderData 换一批瞬间旧 epoch 数据持续渲染（不闪 loading）', async () => {
+  it('baseOffset 推进 + 翻页叠加：pageParam 基于 baseOffset 递增（offset=6→12）', async () => {
     mockGetRecommendations
-      .mockResolvedValueOnce(makePage(0, 6))
-      .mockResolvedValueOnce(makePage(0, 6)); // 复位后的首屏
+      .mockResolvedValueOnce(makePage(6, 6))
+      .mockResolvedValueOnce(makePage(12, 6));
     const qc = createTestQueryClient();
     const { result, rerender } = renderHookWithClient(
-      (p: { epoch: number }) => useRecommendationsInfinite({ limit: 6, epoch: p.epoch }),
+      () => useRecommendationsInfinite({ limit: 6, baseOffset: 6 }),
       qc,
-      { epoch: 0 },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockGetRecommendations).toHaveBeenCalledWith({ limit: 6, offset: 6 });
+    await act(async () => {
+      await result.current.fetchNextPage();
+    });
+    await waitFor(() =>
+      expect(mockGetRecommendations).toHaveBeenLastCalledWith({ limit: 6, offset: 12 }),
+    );
+    // Why: 先 rerender 同步 renderHook 闭包（fetchNextPage 返回值已含 2 页，缓存正确，
+    //   hook 层 data 需一次重渲染才反映），再断言拼接长度
+    rerender({});
+    await waitFor(() => expect(result.current.data?.pages).toHaveLength(2));
+    expect((result.current.data?.pages ?? []).flatMap((p) => p)).toHaveLength(12);
+  });
+
+  it('清债微批：placeholderData 换一批瞬间旧 baseOffset 数据持续渲染（不闪 loading）', async () => {
+    mockGetRecommendations
+      .mockResolvedValueOnce(makePage(0, 6))
+      .mockResolvedValueOnce(makePage(6, 6)); // baseOffset=6 的首屏
+    const qc = createTestQueryClient();
+    const { result, rerender } = renderHookWithClient(
+      (p: { baseOffset: number }) =>
+        useRecommendationsInfinite({ limit: 6, baseOffset: p.baseOffset }),
+      qc,
+      { baseOffset: 0 },
     );
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     const oldIds = (result.current.data?.pages ?? []).flatMap((p) => p.map((x) => x.id));
     expect(oldIds).toHaveLength(6);
 
-    // epoch++ 瞬间：queryKey 换新，fetch 尚未 resolve——placeholderData 让 data 仍是旧数据
-    rerender({ epoch: 1 });
+    // baseOffset 变化瞬间：queryKey 换新，fetch 尚未 resolve——placeholderData 让 data 仍是旧数据
+    rerender({ baseOffset: 6 });
     expect(result.current.data).toBeDefined();
     expect((result.current.data?.pages ?? []).flatMap((p) => p.map((x) => x.id))).toEqual(oldIds);
     // 不闪 fallback 的关键：isLoading=false（placeholderData 有值时 RQ 不置 pending 加载态）
@@ -153,7 +189,7 @@ describe('useRecommendationsInfinite — 追加式真分页', () => {
 
     await waitFor(() =>
       expect(
-        qc.getQueryCache().find({ queryKey: ['products', 'recommend-infinite', 1, 6] }),
+        qc.getQueryCache().find({ queryKey: ['products', 'recommend-infinite', 6, 0, 6] }),
       ).toBeTruthy(),
     );
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -172,21 +208,22 @@ describe('useRecommendationsInfinite — 追加式真分页', () => {
     await waitFor(() => expect(old.result.current.isSuccess).toBe(true));
     expect(old.result.current.data).toEqual(oldRecs);
 
-    // infinite epoch 0→1 翻转两次
+    // infinite baseOffset 0→6 翻转两次
     mockGetRecommendations.mockResolvedValue(makePage(0, 6));
     const inf = renderHookWithClient(
-      (p: { epoch: number }) => useRecommendationsInfinite({ limit: 6, epoch: p.epoch }),
+      (p: { baseOffset: number }) =>
+        useRecommendationsInfinite({ limit: 6, baseOffset: p.baseOffset }),
       qc,
-      { epoch: 0 },
+      { baseOffset: 0 },
     );
     await waitFor(() => expect(inf.result.current.isSuccess).toBe(true));
-    inf.rerender({ epoch: 1 });
+    inf.rerender({ baseOffset: 6 });
     await waitFor(() => expect(inf.result.current.isSuccess).toBe(true));
 
     // ② 旧 hook 缓存/数据不受影响：queryKey ['products','recommend',0] 原样在缓存，数据未变
     expect(qc.getQueryCache().find({ queryKey: ['products', 'recommend', 0] })).toBeTruthy();
     expect(old.result.current.data).toEqual(oldRecs);
     // 旧 hook 缓存数据原样（toEqual 已断言）；此处收敛断言：旧 hook 数据引用未变
-    // （epoch 翻转未触发旧 queryKey 重取——call 计数受 mock 模块共享影响不稳定，弃用）
+    // （baseOffset 翻转未触发旧 queryKey 重取——call 计数受 mock 模块共享影响不稳定，弃用）
   });
 });

@@ -70,7 +70,13 @@ export default function HomePage() {
   //   pages.flatMap 拼全部已加载页，奇偶分列追加后自动重排；换一批改 epoch 复位（D3 方案 B，
   //   epoch 进 queryKey 精确匹配，旧 epoch 缓存 5min 后 GC，零 resetQueries 前缀副作用）。
   //   旧 useRecommendations 保留（cart.tsx 消费中，cart 不改）。
-  const [recommendEpoch, setRecommendEpoch] = useState(0);
+  // Why: 20261023 real 模式修订（原 D3 方案 B epoch++ 失效）：后端推荐是确定性排序
+  //   （salesCount desc / 类目加权），epoch++ 重查 offset=0 每次返回同一批 → placeholderData
+  //   保旧列表 + 新数据相同 → 换一批感知「没反应」。改为 baseOffset 推进 += limit，换到的
+  //   真是后面一批；短批（不足 limit，说明到底）回绕 0。mock 模式下 getRecommendations 透传
+  //   offset 后行为一致（mockCursor 同款回绕语义）。
+  const [recommendBaseOffset, setRecommendBaseOffset] = useState(0);
+  const [recommendCycle, setRecommendCycle] = useState(0);
   const [buyAgainOffset, setBuyAgainOffset] = useState(0);
   const {
     data: recommendPages,
@@ -81,7 +87,11 @@ export default function HomePage() {
     fetchNextPage,
     isFetchingNextPage,
     hasNextPage,
-  } = useRecommendationsInfinite({ limit: RECOMMEND_LIMIT, epoch: recommendEpoch });
+  } = useRecommendationsInfinite({
+    limit: RECOMMEND_LIMIT,
+    baseOffset: recommendBaseOffset,
+    cycle: recommendCycle,
+  });
   const recommendList = useMemo(() => {
     const flat = recommendPages?.pages.flatMap((p) => p) ?? [];
     // Why: 后端 offset 分页在排序不稳定时（salesCount 并列无 tie-breaker）跨页会返回重复
@@ -95,10 +105,32 @@ export default function HomePage() {
     limit: BUY_AGAIN_LIMIT,
     offset: buyAgainOffset,
   });
+  // Why: 换一批循环推进（20261023 第二轮修订）——「prev + 已加载页数」方案在用户先把
+  //   加载更多点到底时失效：baseOffset 仍为 0、短页只在末尾，回绕算出 0 → 同 queryKey
+  //   不重查 → 真·没反应（人工验收实证）。改为「固定步长 + 探测池终点」：
+  //   - 每次换一批 baseOffset += limit（换到的真是下一批，12 批循环 ≈ 池 70 条）
+  //   - 某批返回短页（< limit）说明池到头，记 poolEnd = 该批起点 + 实际条数，
+  //     下一次 next ≥ poolEnd 回绕 0——即使 poolEnd 是加载更多探出来的也成立
+  const recommendPoolEnd = useMemo(() => {
+    const pages = recommendPages?.pages ?? [];
+    if (pages.length === 0) return null;
+    const last = pages[pages.length - 1];
+    if (last.length >= RECOMMEND_LIMIT) return null;
+    return recommendBaseOffset + (pages.length - 1) * RECOMMEND_LIMIT + last.length;
+  }, [recommendPages, recommendBaseOffset]);
   const handleRecommendChangeBatch = useCallback(() => {
-    // D3 方案 B：换一批 = 回首屏复位——epoch++ 换 queryKey，从头取第一页
-    if (!isFetchingRecommend && !isFetchingNextPage) setRecommendEpoch((e) => e + 1);
-  }, [isFetchingRecommend, isFetchingNextPage]);
+    if (!isFetchingRecommend && !isFetchingNextPage) {
+      setRecommendBaseOffset((prev) => {
+        const next = prev + RECOMMEND_LIMIT;
+        if (recommendPoolEnd != null && next >= recommendPoolEnd) {
+          // 回绕回首屏：cycle++ 换全新 queryKey，甩掉 0 号位旧缓存里的多页残留
+          setRecommendCycle((c) => c + 1);
+          return 0;
+        }
+        return next;
+      });
+    }
+  }, [isFetchingRecommend, isFetchingNextPage, recommendPoolEnd]);
   // Why: 首页推荐展示 批2 ——「加载更多」三态：可点 fetchNextPage / isFetchingNextPage
   //   loading（防连点，同换一批按钮范式）/ !hasNextPage 条件渲染移除（D4 按钮消失）
   const handleLoadMore = useCallback(() => {

@@ -44,17 +44,29 @@ export function useRecommendations(opts?: { limit?: number; offset?: number }) {
  * - pageParam=offset（D1 沿用后端 offset/limit 形态），initialPageParam 0
  * - 响应无 hasMore（E6 红线零新增字段），getNextPageParam 按页长判定：满页才有下一页，
  *   短批/空批 → undefined（mock 池 15 条：6+6+3 短批到底，D5）
- * - queryKey 含 epoch 位（D3 方案 B）：换一批 = epoch++，回首屏复位；
- *   精确匹配零跨页副作用（resetQueries 前缀会误伤 cart 的 ['products','recommend',n]，故弃 A）
- * - placeholderData: (previous) => previous（清债微批）：换一批 epoch++ 后旧列表保持渲染直到
- *   新首屏到达，消除复位瞬间 isLoading 闪 fallback；仅影响本 hook，旧 useRecommendations 不动
+ * - queryKey 含 baseOffset 位（D3 方案 B → 20261023 real 模式修订）：换一批 = baseOffset+=limit
+ *   （短批回绕 0，由页面层维护推进），换到的真是后面一批商品——原 epoch 方案在 real 模式下
+ *   失效：后端确定性排序（salesCount desc）使 offset=0 每次返回同一批，epoch++ 重查后
+ *   placeholderData 保持旧列表 + 新数据相同 → 感知「没反应」（20261023 人工验收实证）
+ * - 精确匹配零跨页副作用（resetQueries 前缀会误伤 cart 的 ['products','recommend',n]，故弃 A）
+ * - placeholderData: (previous) => previous（清债微批）：换一批 baseOffset 变化后旧列表保持渲染
+ *   直到新首屏到达，消除复位瞬间 isLoading 闪 fallback；仅影响本 hook，旧 useRecommendations 不动
  * - 旧 useRecommendations 保留并存（cart.tsx:67 消费中，cart 不切）
  */
-export function useRecommendationsInfinite(opts?: { limit?: number; epoch?: number }) {
+export function useRecommendationsInfinite(opts?: {
+  limit?: number;
+  baseOffset?: number;
+  cycle?: number;
+}) {
   const limit = opts?.limit ?? 6;
+  const baseOffset = opts?.baseOffset ?? 0;
   return useInfiniteQuery({
-    queryKey: ['products', 'recommend-infinite', opts?.epoch ?? 0, limit],
-    queryFn: ({ pageParam }) => productApi.getRecommendations({ limit, offset: pageParam }),
+    // Why: cycle 进 queryKey——baseOffset 回绕 0 时旧 key(0) 缓存里可能存着用户之前
+    //   加载到底的多页数据（staleTime 5min 内直接复用），换一批会「显示全部且无按钮」；
+    //   cycle++ 使回绕后的 key 全新，从 6 条干净起步（20261023 人工验收实证）
+    queryKey: ['products', 'recommend-infinite', baseOffset, opts?.cycle ?? 0, limit],
+    queryFn: ({ pageParam }) =>
+      productApi.getRecommendations({ limit, offset: baseOffset + pageParam }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length === limit ? allPages.length * limit : undefined,

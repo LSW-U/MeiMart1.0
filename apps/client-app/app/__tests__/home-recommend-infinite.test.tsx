@@ -5,7 +5,8 @@
  *   - 可点态：hasNextPage=true → 按钮渲染，点击 fetchNextPage 追加 6→12（pages.flatMap）
  *   - loading 态：isFetchingNextPage → 按钮 disabled（防连点，同换一批范式）
  *   - 到底态：hasNextPage=false → 按钮消失（D4 条件渲染移除）
- *   - 换一批复位（D3 方案 B）：点击换一批 → epoch++ → 回首屏 6 条
+ *   - 换一批（D3 方案 B → 20261023 baseOffset 修订）：点击换一批 → baseOffset 推进，
+ *     请求真正的下一批（hook 层 offset 叠加已验证）；页面层断言两按钮语义隔离
  *   - cart 回归：旧 useRecommendations 路径消费不受 epoch 复位影响（hook 层 queryKey 隔离，
  *     页面层用「home 挂载期间 cart hook 的 queryKey 未被触达」断言）
  */
@@ -185,9 +186,9 @@ describe('HomePage 推荐板块 — 加载更多三态（批2）', () => {
     expect(queryByTestId('home-recommend-load-more')).toBeNull();
   });
 
-  it('换一批复位（D3 方案 B）：推荐板块 epoch 状态推进，按钮仍在（回首屏由 hook queryKey 承担）', () => {
+  it('换一批（20261023 baseOffset 修订）：按钮可点且不触 fetchNextPage（两按钮语义隔离）', () => {
     const { getByTestId } = setup();
-    // epoch 复位语义在 hook 层已验证（useProducts.recommendInfinite.test）；
+    // baseOffset 推进语义在 hook 层已验证（useProducts.recommendInfinite.test）；
     // 页面层断言换一批按钮可点且不触 fetchNextPage（两按钮语义隔离）
     expect(getByTestId('home-recommend-change-batch')).toBeTruthy();
     fireEvent.press(getByTestId('home-recommend-change-batch'));
