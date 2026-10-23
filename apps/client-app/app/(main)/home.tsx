@@ -716,8 +716,12 @@ export default function HomePage() {
               </View>
             ) : (
               recommendList.length > RECOMMEND_LIMIT && (
-                <View style={styles.loadMoreRow}>
-                  {/* 方案②：纯文字链（无边框无底，changeBatchBtn 同款范式），点击回干净 6 条 */}
+                // 20261024 人工验收修订：到底态拆左右两端——左侧居中提示「已经到底啦」，
+                // 右侧「收起推荐」文字链（原两态各占一行居中）
+                <View style={styles.recommendEndRow}>
+                  <Text style={[styles.listEndText, { color: colors['on-surface-variant'] }]}>
+                    {t('home.listEnd')}
+                  </Text>
                   <Pressable
                     testID="home-recommend-collapse"
                     onPress={handleRecommendCollapse}
@@ -941,6 +945,20 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   loadMoreText: {
+    ...typography['label-caps'],
+    fontSize: 12,
+  },
+  // Why: 20261024 人工验收——到底态一行两端：提示语居中（flex:1 + textAlign center），
+  //   收起按钮贴右（不复用 loadMoreRow 的纯居中布局）
+  recommendEndRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.lg,
+    paddingHorizontal: layout['container-margin'],
+  },
+  listEndText: {
+    flex: 1,
+    textAlign: 'center',
     ...typography['label-caps'],
     fontSize: 12,
   },

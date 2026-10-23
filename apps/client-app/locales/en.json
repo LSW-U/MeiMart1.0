@@ -182,6 +182,7 @@
     "changeBatch": "Refresh batch",
     "loadMore": "Load more",
     "collapseRecommend": "Collapse",
+    "listEnd": "You’ve reached the end",
     "seeAllCategories": "See all categories",
     "seeAllProducts": "See all products",
     "messagesLabel": "Messages",
