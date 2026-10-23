@@ -143,6 +143,7 @@ function BannerCard({
 
       {/* 文案（无色底，白字直接叠图——20261023 验收定稿删阴影） */}
       <View style={styles.content}>
+        {/* 原因：图上白字固定白不随主题（dark 同值，同 E6/results ON_PRIMARY 模式）；20261023 删阴影后无 scrim，白字直接叠图 */}
         <Text style={[styles.title, { color: '#ffffff' }]} numberOfLines={3}>
           {localize(banner.title)}
         </Text>

@@ -46,7 +46,8 @@ function transformCategory(raw: CategoryRaw): Category {
 
 // Why: 20261023 banner 观感修复（用户「不要红色」）——real 契约无 theme/cta 字段
 //   （后端 Banner 表仅 imageUrl/alt/linkType/linkValue），原实现全部落 primary 红色路径。
-//   theme 按 index 轮换三色（恢复 mock 时代层次感）；linkType/linkValue 映射成 link
+//   UI 已改纯图片卡不再消费色底（BannerCarousel 20261023 定稿），theme 轮换仅作类型兼容
+//   保留（mock 数据同字段，运营若日后要按卡配色可直接消费）；linkType/linkValue 映射成 link
 //   （契约现成字段此前漏接，PRODUCT→/product/{id} 可跳详情；CATEGORY/URL/NONE 暂不导航）。
 const BANNER_THEME_CYCLE: Banner['theme'][] = ['primary', 'emerald', 'blue'];
 
