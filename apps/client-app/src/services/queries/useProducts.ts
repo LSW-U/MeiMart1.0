@@ -49,8 +49,10 @@ export function useRecommendations(opts?: { limit?: number; offset?: number }) {
  *   失效：后端确定性排序（salesCount desc）使 offset=0 每次返回同一批，epoch++ 重查后
  *   placeholderData 保持旧列表 + 新数据相同 → 感知「没反应」（20261023 人工验收实证）
  * - 精确匹配零跨页副作用（resetQueries 前缀会误伤 cart 的 ['products','recommend',n]，故弃 A）
- * - placeholderData: (previous) => previous（清债微批）：换一批 baseOffset 变化后旧列表保持渲染
- *   直到新首屏到达，消除复位瞬间 isLoading 闪 fallback；仅影响本 hook，旧 useRecommendations 不动
+ * - placeholderData 恒 undefined（20261024 人工验收实证「换一批后全商品显示收不回去」）：
+ *   原保占位把旧 key 的多页列表（含加载到底 70 条）顶到新 key 渲染，换一批瞬间页面不收缩、
+ *   连点推进期间一直全量。改恒不占位——换 key 瞬间露 loading 态（换批过渡可感知，合理）；
+ *   fetchNextPage 是同 key 追加不经过此路径，翻页无闪烁不受影响
  * - 旧 useRecommendations 保留并存（cart.tsx:67 消费中，cart 不切）
  */
 export function useRecommendationsInfinite(opts?: {
@@ -70,7 +72,11 @@ export function useRecommendationsInfinite(opts?: {
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length === limit ? allPages.length * limit : undefined,
-    placeholderData: (previous) => previous,
+    // Why: 占位只在「同 key 翻页链」保留——placeholderData 仅在新 key 无数据时被调用，
+    //   返回 previous 会把旧 key 的多页列表（含加载到底的 70 条）原样顶到新 key 渲染
+    //   （20261024 人工验收实证「换一批后全商品显示收不回去」）。换一批/回绕都是换 key
+    //   → 必须返回 undefined 露出 loading 态；fetchNextPage 是同 key 追加，不经过此路径。
+    placeholderData: () => undefined,
     staleTime: 5 * 60 * 1000,
     networkMode: 'offlineFirst',
   });

@@ -165,7 +165,7 @@ describe('useRecommendationsInfinite — 追加式真分页', () => {
     expect((result.current.data?.pages ?? []).flatMap((p) => p)).toHaveLength(12);
   });
 
-  it('清债微批：placeholderData 换一批瞬间旧 baseOffset 数据持续渲染（不闪 loading）', async () => {
+  it('20261024 修订：换一批换 key 瞬间不保旧列表占位（旧 70 条不再顶到新 key，露 loading）', async () => {
     mockGetRecommendations
       .mockResolvedValueOnce(makePage(0, 6))
       .mockResolvedValueOnce(makePage(6, 6)); // baseOffset=6 的首屏
@@ -177,15 +177,13 @@ describe('useRecommendationsInfinite — 追加式真分页', () => {
       { baseOffset: 0 },
     );
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    const oldIds = (result.current.data?.pages ?? []).flatMap((p) => p.map((x) => x.id));
-    expect(oldIds).toHaveLength(6);
 
-    // baseOffset 变化瞬间：queryKey 换新，fetch 尚未 resolve——placeholderData 让 data 仍是旧数据
+    // baseOffset 变化瞬间：queryKey 换新且 fetch 未 resolve——placeholderData 恒 undefined，
+    // 旧 key 数据不得透传到新 key（旧行为把加载到底的多页列表顶到新 key = 「收不回去」bug）
     rerender({ baseOffset: 6 });
-    expect(result.current.data).toBeDefined();
-    expect((result.current.data?.pages ?? []).flatMap((p) => p.map((x) => x.id))).toEqual(oldIds);
-    // 不闪 fallback 的关键：isLoading=false（placeholderData 有值时 RQ 不置 pending 加载态）
-    expect(result.current.isLoading).toBe(false);
+    expect(result.current.data).toBeUndefined();
+    // 露出 loading 态（换批过渡可感知）
+    expect(result.current.isLoading).toBe(true);
 
     await waitFor(() =>
       expect(
