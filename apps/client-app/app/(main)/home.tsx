@@ -17,6 +17,7 @@ import {
   borderRadius,
 } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { BannerCarousel } from '@/components/business/BannerCarousel';
 import { CategoryGrid } from '@/components/business/CategoryGrid';
@@ -63,6 +64,10 @@ const BUY_AGAIN_LIMIT = 4;
 
 export default function HomePage() {
   const { colors } = useTheme();
+  // Why: 底部留白动态算 —— 浮动 BottomNav(56) + 底部手势条 inset + 余量 8。
+  //   原固定 96px 在无手势条环境（模拟器）多出 ~40px 露出成页尾空白（用户验收 20261023）。
+  const insets = useSafeAreaInsets();
+  const bottomReserve = 56 + insets.bottom + 8;
   const { t } = useTranslation();
   const { shouldSkipNonEssential } = useWeakNetworkUI();
   const { data: banners } = useBanners();
@@ -549,7 +554,7 @@ export default function HomePage() {
     () => (
       <ScrollView
         style={[styles.scrollArea, { backgroundColor: colors.background }]}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomReserve }]}
         showsVerticalScrollIndicator={false}
       >
         {renderDashboardHeader()}
@@ -561,6 +566,7 @@ export default function HomePage() {
       </ScrollView>
     ),
     [
+      bottomReserve,
       colors,
       isLoading,
       isError,
@@ -652,7 +658,7 @@ export default function HomePage() {
           //   dashboard 区块/Buy Again 沿用原 header/footer 渲染函数挂 ScrollView
           <ScrollView
             style={[styles.scrollArea, { backgroundColor: colors.background }]}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomReserve }]}
             showsVerticalScrollIndicator={false}
           >
             {renderDashboardHeader()}
@@ -719,7 +725,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 0,
-    paddingBottom: spacing.xxl * 2,
+    // Why: 底部留白 paddingBottom 由 render 期内联注入（styles 静态段读不到组件作用域值）
+    //   原静态 spacing.xxl*2=96px 已删，见 render 处
   },
   headerRow: {
     flexDirection: 'row',
