@@ -30,6 +30,7 @@ import { MasonryProductCard } from '@/components/business/MasonryProductCard/Mas
 import { SearchBar } from '@/components/business/SearchBar';
 import { resolveBadges } from '@/utils/resolveBadges';
 import { dedupeById } from '@/utils/dedupeById';
+import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import { toast } from '@/store/toastStore';
 import { useProductSearch, useProducts, type ProductSortKey } from '@/services/queries/useProducts';
 import { trackSearchClick } from '@/services/behavior';
@@ -76,9 +77,14 @@ export default function SearchResultsPage() {
 
   // P8-6 R1：Recommended 数据源 useProducts（与 P7/home 一致），去重过渡期可接受（方案 §2.4）
   const { data: realProducts } = useProducts();
-  const recommendList = realProducts ?? [];
-  const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
-  const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
+  // Why: useMemo 包一层——下方 splitMasonryBalanced 的 useMemo 依赖它，裸 `?? []`
+  //   每次 render 新引用会击穿 memo（react-hooks/exhaustive-deps 实测警告）
+  const recommendList = useMemo(() => realProducts ?? [], [realProducts]);
+  // Why: 20261023 方案A——奇偶分列改累计高度均衡分列（home 同款 splitMasonryBalanced）
+  const [masonryCol1, masonryCol2] = useMemo(
+    () => splitMasonryBalanced(recommendList),
+    [recommendList],
+  );
   const addToCartMutation = useAddToCart();
   // 批3 P2-2：卡片签名 (product)=>void，直传稳定 handler（消灭内联箭头）
   // 批5 G2 埋点：搜索结果点击 → SEARCH_CLICK（fire-and-forget 攒批上报）后再跳详情

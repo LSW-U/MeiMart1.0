@@ -26,6 +26,7 @@ import { SmallProductCard } from '@/components/business/SmallProductCard/SmallPr
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
 import { resolveBadges } from '@/utils/resolveBadges';
 import { dedupeById } from '@/utils/dedupeById';
+import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import type { Banner, Product } from '@/types';
 import type { Promotion } from '@/services/promotion';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -102,6 +103,9 @@ export default function HomePage() {
     () => dedupeById(recommendPages?.pages.flatMap((p) => p) ?? []),
     [recommendPages],
   );
+  // Why: 20261023 方案A——奇偶分列改累计高度均衡分列（splitMasonryBalanced），
+  //   两列底部差收敛到一张卡内（原 i%2 加载到底左长右短，用户实测）
+  const masonryCols = useMemo(() => splitMasonryBalanced(recommendList), [recommendList]);
   // Why: §9-4 瀑布流两列分发改 FlatList numColumns（C-P2-10，分发逻辑由列表承担）
   const { data: buyAgainProducts, isFetching: buyAgainFetching } = useBuyAgain({
     limit: BUY_AGAIN_LIMIT,
@@ -663,11 +667,13 @@ export default function HomePage() {
           >
             {renderDashboardHeader()}
             <View style={styles.masonryRow}>
+              {/* 方案A（20261023）：i%2 奇偶分列 → 累计高度均衡分列（splitMasonryBalanced）——
+                  原奇偶分列两列高度纯随机，加载到底左列长右列空一截（用户实测） */}
               <View style={styles.masonryCol}>
-                {recommendList.map((item, i) => i % 2 === 0 && renderMasonryItem(item))}
+                {masonryCols[0].map((item) => renderMasonryItem(item))}
               </View>
               <View style={styles.masonryCol}>
-                {recommendList.map((item, i) => i % 2 === 1 && renderMasonryItem(item))}
+                {masonryCols[1].map((item) => renderMasonryItem(item))}
               </View>
             </View>
             {/* Why: 首页推荐展示 批2 ——「加载更多」三态（masonryRow 与 Buy Again 之间）：

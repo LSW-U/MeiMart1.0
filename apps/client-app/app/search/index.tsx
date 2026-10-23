@@ -2,7 +2,7 @@
 // HTML → RN 行数比：337 → ~390（含样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 116%）
 // Fix-10: 重建 5 个缺失模块（Primary Header / Filter Tags / Recent / Popular / Recommended）
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -17,6 +17,7 @@ import { resolveBadges } from '@/utils/resolveBadges';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { useProducts } from '@/services/queries/useProducts';
+import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import { useSearchHot } from '@/services/queries/useSearchHot';
 // C方案（搜索预览）：联想双 hook + 面板组件 + debounce
 import { useSearchSuggest, useSearchProductsSuggest } from '@/services/queries/useSearchSuggest';
@@ -113,10 +114,14 @@ export default function SearchIndexPage() {
   // Why: 用真实商品替换 mock rec-* id，避免 router.push('/product/rec-1') 跳转后 404
   const { data: realProducts } = useProducts();
   // Why: P7 §2.4 R3 - 取全部（原 slice(0,4) 只 4 条不够瀑布流错落）
-  const recommendList = realProducts ?? [];
-  // Why: P7 §2.4 R2 - 两列瀑布流分发（奇偶分列），同 home.tsx masonry 模式
-  const masonryCol1 = recommendList.filter((_, i) => i % 2 === 0);
-  const masonryCol2 = recommendList.filter((_, i) => i % 2 === 1);
+  // Why: useMemo 包一层——下方 splitMasonryBalanced 的 useMemo 依赖它，裸 `?? []`
+  //   每次 render 新引用会击穿 memo（results.tsx 同款处理）
+  const recommendList = useMemo(() => realProducts ?? [], [realProducts]);
+  // Why: 20261023 方案A——奇偶分列改累计高度均衡分列（home/results 同款 splitMasonryBalanced）
+  const [masonryCol1, masonryCol2] = useMemo(
+    () => splitMasonryBalanced(recommendList),
+    [recommendList],
+  );
   // Why: P3 - 热搜榜接后端 GET /client/search/hot（real 数据，rank=idx+1，heat=searchCount）
   //   后端已按 searchCount 降序返（PINNED 前置 + BLOCKED 剔除 + MANUAL 兜底），前端不再派生
   const { data: hotList } = useSearchHot();

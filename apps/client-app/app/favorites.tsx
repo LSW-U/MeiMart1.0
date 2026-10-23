@@ -2,7 +2,7 @@
 // D.12: PrimaryHeader + 视图切换 + 批量管理 + 空状态
 // 网格态：两列瀑布流（MasonryProductCard，与 home/search 统一）；列表态：HorizontalProductCard；
 // 管理态跟随当前视图（D7）：卡片原地变选择态，不切换卡片组件
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -28,6 +28,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useFavorites, useRemoveFavorites } from '@/services/queries/useFavorites';
+import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import { useAddToCart } from '@/services/queries/useCart';
 import { useAuthStore } from '@/store/authStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
@@ -46,6 +47,8 @@ export default function FavoritesPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { data: favorites, isLoading, isError, refetch } = useFavorites();
+  // Why: 20261023 方案A——奇偶分列改累计高度均衡分列（home/search 同款 splitMasonryBalanced）
+  const favoritesCols = useMemo(() => splitMasonryBalanced(favorites ?? []), [favorites]);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { isOffline } = useWeakNetworkUI();
   const removeFavorites = useRemoveFavorites();
@@ -391,11 +394,12 @@ export default function FavoritesPage() {
           contentContainerStyle={[styles.masonryContent, selectMode && styles.listManage]}
         >
           <View style={styles.masonryRow}>
+            {/* 20261023 方案A：奇偶分列改累计高度均衡分列（home/search 同款 splitMasonryBalanced） */}
             <View style={styles.masonryCol}>
-              {favorites.map((item, i) => i % 2 === 0 && renderMasonryItem(item))}
+              {favoritesCols[0].map((item) => renderMasonryItem(item))}
             </View>
             <View style={styles.masonryCol}>
-              {favorites.map((item, i) => i % 2 === 1 && renderMasonryItem(item))}
+              {favoritesCols[1].map((item) => renderMasonryItem(item))}
             </View>
           </View>
         </ScrollView>
