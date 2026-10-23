@@ -719,14 +719,20 @@ export default function HomePage() {
                 // 20261024 人工验收修订：到底态拆左右两端——左侧居中提示「已经到底啦」，
                 // 右侧「收起推荐」文字链（原两态各占一行居中）
                 <View style={styles.recommendEndRow}>
-                  <Text style={[styles.listEndText, { color: colors['on-surface-variant'] }]}>
+                  <Text
+                    style={[styles.listEndText, { color: colors['on-surface-variant'], zIndex: 0 }]}
+                  >
                     {t('home.listEnd')}
                   </Text>
                   <Pressable
                     testID="home-recommend-collapse"
                     onPress={handleRecommendCollapse}
                     disabled={isFetchingRecommend || isFetchingNextPage}
-                    style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
+                    style={({ pressed }) => [
+                      styles.changeBatchBtn,
+                      { zIndex: 1 },
+                      pressed && { opacity: 0.7 },
+                    ]}
                     accessibilityRole="button"
                     accessibilityLabel={t('home.collapseRecommend')}
                   >
@@ -948,16 +954,20 @@ const styles = StyleSheet.create({
     ...typography['label-caps'],
     fontSize: 12,
   },
-  // Why: 20261024 人工验收——到底态一行两端：提示语居中（flex:1 + textAlign center），
-  //   收起按钮贴右（不复用 loadMoreRow 的纯居中布局）
+  // Why: 20261024 人工验收——到底态一行两端。提示语用绝对定位整行居中（原 flex:1 +
+  //   textAlign center 是「剩余空间」居中，右侧按钮占宽把视觉中心左移，实测不居中）；
+  //   收起按钮贴右（zIndex 提到提示语上层，防长文案重叠时按钮不可点）
   recommendEndRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     marginTop: spacing.lg,
     paddingHorizontal: layout['container-margin'],
   },
   listEndText: {
-    flex: 1,
+    position: 'absolute',
+    left: 0,
+    right: 0,
     textAlign: 'center',
     ...typography['label-caps'],
     fontSize: 12,
