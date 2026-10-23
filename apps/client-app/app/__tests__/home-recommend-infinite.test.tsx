@@ -186,6 +186,24 @@ describe('HomePage 推荐板块 — 加载更多三态（批2）', () => {
     expect(queryByTestId('home-recommend-load-more')).toBeNull();
   });
 
+  it('20261024 方案②：到底态且列表 >6 条 → 「收起推荐」文字链出现', () => {
+    mockHasNextPage = false;
+    mockPages = [
+      [0, 6],
+      [6, 6],
+    ]; // 12 条 > 6
+    const { getByTestId, queryByTestId } = setup();
+    expect(queryByTestId('home-recommend-load-more')).toBeNull();
+    expect(getByTestId('home-recommend-collapse')).toBeTruthy();
+  });
+
+  it('20261024 方案②：到底态但列表 ≤6 条 → 收起按钮不渲染（初态无按钮）', () => {
+    mockHasNextPage = false;
+    mockPages = [[0, 6]]; // 6 条 = RECOMMEND_LIMIT，不出现
+    const { queryByTestId } = setup();
+    expect(queryByTestId('home-recommend-collapse')).toBeNull();
+  });
+
   it('换一批（20261023 baseOffset 修订）：按钮可点且不触 fetchNextPage（两按钮语义隔离）', () => {
     const { getByTestId } = setup();
     // baseOffset 推进语义在 hook 层已验证（useProducts.recommendInfinite.test）；

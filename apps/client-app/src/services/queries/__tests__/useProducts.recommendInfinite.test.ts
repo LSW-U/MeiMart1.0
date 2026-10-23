@@ -193,6 +193,31 @@ describe('useRecommendationsInfinite — 追加式真分页', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
 
+  it('20261024 方案A：baseOffset 推进时 cycle 位 +1（换 key 甩掉 5min 内旧整链缓存）', async () => {
+    mockGetRecommendations
+      .mockResolvedValueOnce(makePage(0, 6)) // cycle=0, baseOffset=0 首屏
+      .mockResolvedValueOnce(makePage(6, 6)); // cycle=1, baseOffset=6 新 key 首屏
+    const qc = createTestQueryClient();
+    const { result, rerender } = renderHookWithClient(
+      (p: { baseOffset: number; cycle: number }) =>
+        useRecommendationsInfinite({ limit: 6, baseOffset: p.baseOffset, cycle: p.cycle }),
+      qc,
+      { baseOffset: 0, cycle: 0 },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    // 页面层（方案A）推进 baseOffset 同时 cycle++：queryKey 第三位 0→1，
+    // 旧 key(0,0) 的整链缓存不再被复用（「点击换一批收不回去」缓存泄漏口）
+    rerender({ baseOffset: 6, cycle: 1 });
+    await waitFor(() =>
+      expect(
+        qc.getQueryCache().find({ queryKey: ['products', 'recommend-infinite', 6, 1, 6] }),
+      ).toBeTruthy(),
+    );
+    // 新 key 独立取数：请求 offset=6（不是复用旧 key 数据）
+    expect(mockGetRecommendations).toHaveBeenLastCalledWith({ limit: 6, offset: 6 });
+  });
+
   it('清债微批 H2 cart 回归：旧 useRecommendations 渲染正常 + infinite epoch 变化不触碰旧缓存', async () => {
     const mockGetRecsOld = jest.requireMock('@/services/products').productApi;
     // 旧 hook 独立数据（offset state 路径）

@@ -126,17 +126,29 @@ export default function HomePage() {
   }, [recommendPages, recommendBaseOffset]);
   const handleRecommendChangeBatch = useCallback(() => {
     if (!isFetchingRecommend && !isFetchingNextPage) {
+      // Why: 方案A（20261024 拍板）——每次换一批都 cycle++ 无条件换全新 queryKey。
+      //   原来只在回绕 0 时 cycle++，非回绕推进沿用同 key：5min staleTime 内命中旧缓存，
+      //   若旧 key 之前被「加载更多」拉过全链，整列表（含到底态 70 条）原样复用 →
+      //   「点击换一批收不回去」（placeholderData 泄漏口已在 hook 层 186de81 修，此处堵
+      //   缓存复用口）。cycle++ 后每个 key 至多消费一次，不复用旧整链。
+      setRecommendCycle((c) => c + 1);
       setRecommendBaseOffset((prev) => {
         const next = prev + RECOMMEND_LIMIT;
         if (recommendPoolEnd != null && next >= recommendPoolEnd) {
-          // 回绕回首屏：cycle++ 换全新 queryKey，甩掉 0 号位旧缓存里的多页残留
-          setRecommendCycle((c) => c + 1);
           return 0;
         }
         return next;
       });
     }
   }, [isFetchingRecommend, isFetchingNextPage, recommendPoolEnd]);
+  // Why: 20261024 方案②——「收起推荐」文字链（加载更多到底后出现）：回 baseOffset=0 +
+  //   cycle++ 全新 queryKey，干净 6 条回到初态（无加载更多、无收起按钮）
+  const handleRecommendCollapse = useCallback(() => {
+    if (!isFetchingRecommend && !isFetchingNextPage) {
+      setRecommendCycle((c) => c + 1);
+      setRecommendBaseOffset(0);
+    }
+  }, [isFetchingRecommend, isFetchingNextPage]);
   // Why: 首页推荐展示 批2 ——「加载更多」三态：可点 fetchNextPage / isFetchingNextPage
   //   loading（防连点，同换一批按钮范式）/ !hasNextPage 条件渲染移除（D4 按钮消失）
   const handleLoadMore = useCallback(() => {
@@ -677,8 +689,9 @@ export default function HomePage() {
               </View>
             </View>
             {/* Why: 首页推荐展示 批2 ——「加载更多」三态（masonryRow 与 Buy Again 之间）：
-                hasNextPage 可点追加 / isFetchingNextPage loading 防连点 / 到底按钮消失（D4） */}
-            {hasNextPage && (
+                hasNextPage 可点追加 / isFetchingNextPage loading 防连点 / 20261024 方案②
+                到底态换「收起推荐」文字链（D4 按钮消失改为收起入口，列表 >6 条才出现） */}
+            {hasNextPage ? (
               <View style={styles.loadMoreRow}>
                 <Pressable
                   testID="home-recommend-load-more"
@@ -701,6 +714,25 @@ export default function HomePage() {
                   )}
                 </Pressable>
               </View>
+            ) : (
+              recommendList.length > RECOMMEND_LIMIT && (
+                <View style={styles.loadMoreRow}>
+                  {/* 方案②：纯文字链（无边框无底，changeBatchBtn 同款范式），点击回干净 6 条 */}
+                  <Pressable
+                    testID="home-recommend-collapse"
+                    onPress={handleRecommendCollapse}
+                    disabled={isFetchingRecommend || isFetchingNextPage}
+                    style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('home.collapseRecommend')}
+                  >
+                    <Icon symbol="expand_less" size={16} color={colors.primary} />
+                    <Text style={[styles.loadMoreText, { color: colors.primary }]}>
+                      {t('home.collapseRecommend')}
+                    </Text>
+                  </Pressable>
+                </View>
+              )
             )}
             {renderBundleSection()}
             {renderBuyAgainFooter()}
