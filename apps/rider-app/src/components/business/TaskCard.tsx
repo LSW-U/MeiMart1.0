@@ -113,7 +113,7 @@ export const TaskCard = memo(function TaskCard({
     <View className="relative gap-3 rounded-lg border border-surface-variant bg-surface p-4 shadow-sm">
       {badge ? (
         <View className="absolute -left-2 -top-2 z-10 rounded-sm border border-primary bg-surface px-2 py-1 shadow-sm">
-          <Text className="text-[10px] font-bold text-primary">{badge}</Text>
+          <Text className="text-[11px] font-bold text-primary">{badge}</Text>
         </View>
       ) : null}
 
@@ -211,13 +211,15 @@ export const TaskCard = memo(function TaskCard({
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={items}
-              className="rounded-lg bg-accent-amber px-2 py-1"
+              className="rounded-lg border border-accent-amber/40 bg-accent-amber/15 px-2 py-1"
               onPress={() => showToast(items, 'info')}
             >
               <View className="flex-row items-center gap-1">
-                <Text className="text-sm text-white">{items}</Text>
-                {/* T6 §7.6 A：chevronDown 暗示展开实为 toast，改 info「查看」语义 */}
-                <AppIcon name="info" className="text-sm text-white" size={14} />
+                <Text className="text-sm text-amber-text">{items}</Text>
+                {/* T6 §7.6 A：chevronDown 暗示展开实为 toast，改 info「查看」语义。
+                    审查修复 20261025：colorByClass 无 text-amber-text 分支（兜底灰），
+                    图标色改 color prop 直引（与 status/warn 系同款约束，见 colors.ts E1 注释） */}
+                <AppIcon name="info" color={colors.amberText} size={14} />
               </View>
             </Pressable>
           ) : null}

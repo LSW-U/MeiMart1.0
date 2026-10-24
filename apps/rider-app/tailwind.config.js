@@ -36,6 +36,7 @@ module.exports = {
         'warn-border': '#ffe0b2',
         'warn-text': '#e65100',
         'accent-amber': '#f59e0b',
+        'amber-text': '#92400e',
         'success-deep': '#2d6a2e',
 
         // 中性灰系

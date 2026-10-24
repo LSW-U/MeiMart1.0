@@ -26,6 +26,10 @@ export const colors = {
   // （#137333 / #e65100），AppIcon color prop 场景引用（colorByClass 不含 status/warn 系）
   statusDoneText: '#137333',
   warnText: '#e65100',
+  // R-P0-3（UI 走查 20261024）：商品清单琥珀筹码——白字 on #f59e0b 仅 2.15:1，
+  // 改 15% 浅底 + #92400e 深棕字（实算 ≈6.3:1）；amber 系此前仅 tailwind config 单侧有，双源补齐
+  accentAmber: '#f59e0b',
+  amberText: '#92400e',
 
   // 通知分类色
   notificationTask: '#ff9800',
