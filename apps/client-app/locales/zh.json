@@ -1011,7 +1011,10 @@
     "cancelFailed": "取消失败",
     "a11y": {
       "productItem": "{{label}}：{{name}}"
-    }
+    },
+    "dispute": "对退款有异议",
+    "disputeSubmitted": "已提交异议，将转人工复审",
+    "disputeFailed": "异议提交失败"
   },
   "review": {
     "title": "发表评价",

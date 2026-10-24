@@ -1011,7 +1011,10 @@
     "cancelFailed": "Falla kansela",
     "a11y": {
       "productItem": "{{label}}: {{name}}"
-    }
+    },
+    "dispute": "Reklama refund",
+    "disputeSubmitted": "Reklama tama ona, sei konsulta manual",
+    "disputeFailed": "Reklama falha"
   },
   "review": {
     "title": "Hakerek avaliasaun",

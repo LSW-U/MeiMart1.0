@@ -1011,7 +1011,10 @@
     "cancelFailed": "Falha ao cancelar",
     "a11y": {
       "productItem": "{{label}}: {{name}}"
-    }
+    },
+    "dispute": "Contestar o reembolso",
+    "disputeSubmitted": "Contestação enviada, será revisada manualmente",
+    "disputeFailed": "Falha ao enviar contestação"
   },
   "review": {
     "title": "Escrever avaliação",

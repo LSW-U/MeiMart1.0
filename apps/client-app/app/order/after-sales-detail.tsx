@@ -5,7 +5,7 @@
 // 后端: GET /client/refunds/:id（refund.controller.ts:115）+ POST /client/refunds/:id/cancel（:122）
 //
 // TODO(后续 commit): S1 状态色块多态化 / P1 多商品列表 / T1 时间轴动态化 / WM1 COD 退款区分
-import { StyleSheet, View, Text, ScrollView, Image, Pressable } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
@@ -19,8 +19,9 @@ import { TimelineStep } from '@/components/business/TimelineStep';
 import { Icon } from '@/components/ui/Icon';
 import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { useOrder } from '@/services/queries/useOrders';
-import { useCancelRefund, useRefundDetail } from '@/services/queries/useRefunds';
+import { useCancelRefund, useRefundDetail, useDisputeRefund } from '@/services/queries/useRefunds';
 import { useLocalizer } from '@/i18n';
 import type { LocalizableText } from '@/types';
 import { toast } from '@/store/toastStore';
@@ -63,6 +64,8 @@ export default function AfterSalesDetailPage() {
   // 副：拿商品图片（refund.items 无 image 字段）+ 整单退款时 fallback 商品（refund.items 整单退款为空）
   const { data: order } = useOrder(refund?.orderId);
   const cancelRefund = useCancelRefund();
+  // 缺货批3 D9：system 自动退款异议入口（异议 → 退款回 PENDING 人工复审）
+  const disputeRefund = useDisputeRefund();
 
   if (isLoading) {
     return (
@@ -137,6 +140,10 @@ export default function AfterSalesDetailPage() {
 
   // B1 底部栏状态化（决策 7）：仅 PENDING 可取消（后端 cancelRefund 仅 PENDING 允许，其他阶段 400）
   const canCancel = refund.status === 'PENDING';
+  // 缺货批3 D9：异议入口——system 自动退款（reviewedBy='SYSTEM'）且未异议过可提；
+  // 已异议（disputedAt 非空）后退款回 PENDING 走 canCancel/审核态展示
+  const canDispute =
+    refund.reviewedBy === 'SYSTEM' && refund.status === 'COMPLETED' && refund.disputedAt == null;
 
   // WM1-WM4 COD 退款区分（决策 9）：refundMethod === 'COD' 时骑手上门退现金（系统无钱包/余额基础设施）
   const isCash = refund.refundMethod === 'COD';
@@ -415,10 +422,13 @@ export default function AfterSalesDetailPage() {
                 style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}
               >
                 {item.image && (
-                  <Image
+                  <SafeImage
                     source={{ uri: item.image }}
                     style={styles.productImg}
                     resizeMode="cover"
+                    variant="thumb"
+                    lazy
+                    recyclingKey={item.key}
                   />
                 )}
               </View>
@@ -593,6 +603,41 @@ export default function AfterSalesDetailPage() {
             {t('afterSales.contactService')}
           </Text>
         </Pressable>
+
+        {/* 异议入口（缺货批3 D9）：system 自动退款 COMPLETED 且未异议过显示；异议 → 转人工 */}
+        {canDispute && (
+          <Pressable
+            onPress={() => {
+              disputeRefund
+                .mutateAsync({ id: refund.id })
+                .then(() => {
+                  toast.success(
+                    t('afterSales.disputeSubmitted', { defaultValue: 'Dispute submitted' }),
+                  );
+                })
+                .catch((err: unknown) => {
+                  // onError 已 rollback 乐观，这里只展示错误（409 E-OOS-006 = 不可异议）
+                  toast.error(
+                    err instanceof Error
+                      ? err.message
+                      : t('afterSales.disputeFailed', { defaultValue: 'Dispute failed' }),
+                  );
+                });
+            }}
+            style={({ pressed }) => [
+              styles.cancelBtn,
+              { borderColor: colors.primary },
+              pressed && { transform: [{ scale: 0.98 }] },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('afterSales.dispute', { defaultValue: 'Dispute' })}
+            testID="aftersales-dispute"
+          >
+            <Text style={[styles.csText, { color: colors.primary }]}>
+              {t('afterSales.dispute', { defaultValue: 'Dispute' })}
+            </Text>
+          </Pressable>
+        )}
 
         {/* 取消申请：仅 PENDING 显示（决策 7），调 useCancelRefund（后端 POST /client/refunds/:id/cancel） */}
         {canCancel && (

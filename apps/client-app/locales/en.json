@@ -1011,7 +1011,10 @@
     "cancelFailed": "Cancel failed",
     "a11y": {
       "productItem": "{{label}}: {{name}}"
-    }
+    },
+    "dispute": "Dispute refund",
+    "disputeSubmitted": "Dispute submitted, will be reviewed manually",
+    "disputeFailed": "Dispute failed"
   },
   "review": {
     "title": "Write a review",
