@@ -34,9 +34,6 @@ import { colors } from '../../theme/colors';
 const OOS_REASONS = ['DAMAGED', 'EXPIRED', 'MISSING', 'MISLABELED', 'OTHER'] as const;
 type OosReason = (typeof OOS_REASONS)[number];
 
-/** 取证照片上限（后端契约 max 3，D5 同套语义） */
-const MAX_EVIDENCE_URLS = 3;
-
 export interface OutOfStockDialogProps {
   visible: boolean;
   /** 本单剩余可登记的最大数量（前端无真实数据源，防呆上限；超限由后端 E-OOS-002 拒） */
