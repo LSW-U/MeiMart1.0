@@ -66,6 +66,8 @@ export function useCreateRefund() {
         refundType: payload.refundType ?? 'REFUND_ONLY',
         pickupAt: null,
         pickedAt: null,
+        disputedAt: null,
+        disputeNote: null,
       };
       qc.setQueryData<RefundRaw[]>(REFUNDS_QUERY_KEY, (old) => [optimistic, ...(old ?? [])]);
       return { previous };
@@ -93,6 +95,43 @@ export function useRefundDetail(id: string | undefined) {
     queryFn: () => refundApi.getRefundDetail(id!),
     enabled: isAuthenticated && !!id,
     staleTime: 30_000,
+  });
+}
+
+/**
+ * 对 system 自动退款提异议（缺货批3 D9，异议 → 转人工复审）
+ *
+ * 三件套（规则 25）：onMutate 乐观置 PENDING + disputedAt / onError rollback /
+ * onSettled invalidate（real 数据替换乐观）
+ */
+export function useDisputeRefund() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, note }: { id: string; note?: string }) => refundApi.disputeRefund(id, note),
+    onMutate: async ({ id }) => {
+      const key = refundDetailKey(id);
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<RefundRaw>(key);
+      if (previous) {
+        const optimistic: RefundRaw = {
+          ...previous,
+          status: 'PENDING',
+          disputedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        qc.setQueryData<RefundRaw>(key, optimistic);
+      }
+      return { previous, key };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous && ctx?.key) {
+        qc.setQueryData(ctx.key, ctx.previous);
+      }
+    },
+    onSettled: (_data, _err, vars) => {
+      qc.invalidateQueries({ queryKey: refundDetailKey(vars.id) });
+      qc.invalidateQueries({ queryKey: REFUNDS_QUERY_KEY });
+    },
   });
 }
 

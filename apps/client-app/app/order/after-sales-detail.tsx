@@ -5,7 +5,7 @@
 // 后端: GET /client/refunds/:id（refund.controller.ts:115）+ POST /client/refunds/:id/cancel（:122）
 //
 // TODO(后续 commit): S1 状态色块多态化 / P1 多商品列表 / T1 时间轴动态化 / WM1 COD 退款区分
-import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, Image } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
@@ -19,7 +19,6 @@ import { TimelineStep } from '@/components/business/TimelineStep';
 import { Icon } from '@/components/ui/Icon';
 import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
 import { ErrorState } from '@/components/feedback/ErrorState';
-import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { useOrder } from '@/services/queries/useOrders';
 import { useCancelRefund, useRefundDetail, useDisputeRefund } from '@/services/queries/useRefunds';
 import { useLocalizer } from '@/i18n';
@@ -422,13 +421,10 @@ export default function AfterSalesDetailPage() {
                 style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}
               >
                 {item.image && (
-                  <SafeImage
+                  <Image
                     source={{ uri: item.image }}
                     style={styles.productImg}
                     resizeMode="cover"
-                    variant="thumb"
-                    lazy
-                    recyclingKey={item.key}
                   />
                 )}
               </View>

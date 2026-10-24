@@ -103,6 +103,10 @@ export interface RefundRaw {
   pickupAt: string | null;
   /** 骑手取件完成时间（dispatch PICKED_UP->DELIVERING 写，P14 时间轴 picked 步骤；字段先加，等 ④ dispatch 集成） */
   pickedAt: string | null;
+  /** 用户异议时间（缺货批3 D9）：非空 = 已异议（退款回 PENDING 人工复审） */
+  disputedAt: string | null;
+  /** 用户异议说明（dispute 提交，≤500） */
+  disputeNote: string | null;
 }
 
 export const refundApi = {
@@ -141,6 +145,8 @@ export const refundApi = {
         refundType: payload.refundType ?? 'REFUND_ONLY',
         pickupAt: null,
         pickedAt: null,
+        disputedAt: null,
+        disputeNote: null,
       };
       // mock 延迟模拟网络（让 isPending 生效，提交按钮 disable 防 repeated submit）
       return new Promise((resolve) => setTimeout(() => resolve(mock), 300));
@@ -178,6 +184,8 @@ export const refundApi = {
         refundType: 'REFUND_ONLY',
         pickupAt: null,
         pickedAt: null,
+        disputedAt: null,
+        disputeNote: null,
       };
       return new Promise((resolve) => setTimeout(() => resolve(mock), 200));
     }
@@ -214,11 +222,51 @@ export const refundApi = {
         refundType: 'REFUND_ONLY',
         pickupAt: null,
         pickedAt: null,
+        disputedAt: null,
+        disputeNote: null,
       };
       return new Promise((resolve) => setTimeout(() => resolve(mock), 200));
     }
     // api.ts interceptor 已剥 {success,data} 壳 -> res.data 是业务数据（RefundRaw）
     const res = await api.post<RefundRaw>(`/client/refunds/${id}/cancel`);
+    return res.data;
+  },
+
+  /**
+   * 对 system 自动退款提异议（缺货批3 D9）
+   * POST /client/refunds/:id/dispute → RefundView（status 回 PENDING，disputedAt 留痕）
+   * 后端仅 reviewedBy='SYSTEM' 且未异议过可提（否则 409 E-OOS-006）
+   */
+  async disputeRefund(id: string, note?: string): Promise<RefundRaw> {
+    if (isMockMode) {
+      const mock: RefundRaw = {
+        id,
+        orderId: 'o001',
+        userId: 'mock-user',
+        amount: 0,
+        reason: 'OUT_OF_STOCK',
+        reasonDetail: null,
+        status: 'PENDING',
+        transactionId: null,
+        refundMethod: 'COD',
+        reviewedBy: 'SYSTEM',
+        reviewedAt: new Date().toISOString(),
+        reviewNote: null,
+        completedAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        items: [],
+        photos: [],
+        refundType: 'REFUND_ONLY',
+        pickupAt: null,
+        pickedAt: null,
+        disputedAt: new Date().toISOString(),
+        disputeNote: note ?? null,
+      };
+      return new Promise((resolve) => setTimeout(() => resolve(mock), 200));
+    }
+    // api.ts interceptor 已剥 {success,data} 壳 -> res.data 是业务数据（RefundRaw）
+    const res = await api.post<RefundRaw>(`/client/refunds/${id}/dispute`, { note });
     return res.data;
   },
 };
