@@ -29,10 +29,10 @@ MeiMart 配送骑手端 App，面向东帝汶骑手的任务接单、导航、�
 
 ## 核心文档
 
-| 文档 | 用途 |
-|------|------|
+| 文档                                                     | 用途                                                     |
+| -------------------------------------------------------- | -------------------------------------------------------- |
 | `Obsidian/01-architecture【架构设计】/骑手端项目结构.md` | **架构设计**（完整目录规范、原型映射表、与客户端对齐点） |
-| `Obsidian/01-architecture【架构设计】/规范整理` | 项目整体技术规范 |
+| `Obsidian/01-architecture【架构设计】/规范整理`          | 项目整体技术规范                                         |
 
 ## 项目目录
 
@@ -42,18 +42,18 @@ MeiMart 配送骑手端 App，面向东帝汶骑手的任务接单、导航、�
 
 ## 技术栈现状
 
-| 技术 | 版本 | 状态 |
-|------|------|------|
-| React Native | 0.85.3 | New Architecture 已启用 |
-| Expo | SDK 56 | ✅ |
-| TypeScript | 6.0.3 (strict: true) | ✅ |
-| NativeWind | v4.2.5 | ✅ 使用 className |
-| Zustand | v5 | ✅ 8 个 store |
-| WatermelonDB | v0.28 | ✅ 3 个 Model（Task/Order/OfflineQueueEntry） |
-| TanStack Query | v5 | ⚠️ 已安装但未使用（待接入） |
-| tRPC | v11 | ⚠️ client 已创建但无实际调用 |
-| expo-location | SDK 56 | ✅ 前台定位已接入 |
-| react-native-maps | 1.27.2 | ✅ 用 require() 动态加载（Web 兼容） |
+| 技术              | 版本                 | 状态                                          |
+| ----------------- | -------------------- | --------------------------------------------- |
+| React Native      | 0.85.3               | New Architecture 已启用                       |
+| Expo              | SDK 56               | ✅                                            |
+| TypeScript        | 6.0.3 (strict: true) | ✅                                            |
+| NativeWind        | v4.2.5               | ✅ 使用 className                             |
+| Zustand           | v5                   | ✅ 8 个 store                                 |
+| WatermelonDB      | v0.28                | ✅ 3 个 Model（Task/Order/OfflineQueueEntry） |
+| TanStack Query    | v5                   | ⚠️ 已安装但未使用（待接入）                   |
+| tRPC              | v11                  | ⚠️ client 已创建但无实际调用                  |
+| expo-location     | SDK 56               | ✅ 前台定位已接入                             |
+| react-native-maps | 1.27.2               | ✅ 用 require() 动态加载（Web 兼容）          |
 
 ## 关键路径
 
@@ -68,16 +68,16 @@ MeiMart 配送骑手端 App，面向东帝汶骑手的任务接单、导航、�
 
 ```typescript
 export const colors = {
-  background: '#fff8f7',   // 全局背景
-  surface: '#ffffff',      // 卡片/容器背景
-  primary: '#720003',      // 品牌色（深红）
-  primarySoft: '#ffe9e6',  // 品牌色浅版
-  border: '#f7ddd9',       // 边框
-  text: '#261816',         // 主文字
-  textMuted: '#59413d',    // 次要文字
-  success: '#137a3a',      // 成功/在线
-  warning: '#b25a00',      // 警告
-  danger: '#961813',       // 危险/下线
+  background: '#fff8f7', // 全局背景
+  surface: '#ffffff', // 卡片/容器背景
+  primary: '#720003', // 品牌色（深红）
+  primarySoft: '#ffe9e6', // 品牌色浅版
+  border: '#f7ddd9', // 边框
+  text: '#261816', // 主文字
+  textMuted: '#59413d', // 次要文字
+  success: '#137a3a', // 成功/在线
+  warning: '#b25a00', // 警告
+  danger: '#961813', // 危险/下线
 };
 ```
 
@@ -171,13 +171,18 @@ export const colors = {
 
 > 更新于 2026-08-13：P0/P1 已清零，P2 颜色 + a11y 第一批完工。
 
-| 优先级 | 问题 | 状态 |
-|--------|------|------|
-| P0 | `useBackgroundTask.ts` 空壳 | ✅ 已修（`6c0123a`） |
-| P0 | TanStack Query 装了没用 | ✅ 已接入（hooks 全走 RQ） |
-| P0 | `QueryClientProvider` 未接入 | ✅ 已接入（`AppProviders`） |
-| P1 | 零测试覆盖 | ✅ 28 测试（sync/useTask/useDelivery/task/task-flow，删 useUpdateTaskStatus 死代码 3 case） |
-| P1 | 无 ESLint 配置 | ✅ 已配（门禁绿） |
-| P2 | 硬编码颜色 | 🔶 组件层 ✅（`1b4c85e` 7 组件）+ 页面层第一批（49 文件 className 高频 #hex → tailwind token）；剩 inline #hex（placeholderTextColor/color 属性）+ 无映射值（status/特殊色，待评估） |
-| P2 | a11y 覆盖率低 | 🔶 六批 + 审查修复完工（51 交互元素 + TaskDetailHeader 共享组件 5 Pressable + 4 Switch + 6 tab selected state + Text link）；剩 AppIcon ~86 调用方未传 label + QrScanner 死代码英文残留 |
-| ~~P2~~ | ~~tRPC client 死代码~~ | ❌ 条目过时已删（rider-app 无 tRPC，早已用 openapi 类型 + `api.ts` fetch） |
+| 优先级 | 问题                         | 状态                                                                                                                                                                                    |
+| ------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0     | `useBackgroundTask.ts` 空壳  | ✅ 已修（`6c0123a`）                                                                                                                                                                    |
+| P0     | TanStack Query 装了没用      | ✅ 已接入（hooks 全走 RQ）                                                                                                                                                              |
+| P0     | `QueryClientProvider` 未接入 | ✅ 已接入（`AppProviders`）                                                                                                                                                             |
+| P1     | 零测试覆盖                   | ✅ 28 测试（sync/useTask/useDelivery/task/task-flow，删 useUpdateTaskStatus 死代码 3 case）                                                                                             |
+| P1     | 无 ESLint 配置               | ✅ 已配（门禁绿）                                                                                                                                                                       |
+| P2     | 硬编码颜色                   | 🔶 组件层 ✅（`1b4c85e` 7 组件）+ 页面层第一批（49 文件 className 高频 #hex → tailwind token）；剩 inline #hex（placeholderTextColor/color 属性）+ 无映射值（status/特殊色，待评估）    |
+| P2     | a11y 覆盖率低                | 🔶 六批 + 审查修复完工（51 交互元素 + TaskDetailHeader 共享组件 5 Pressable + 4 Switch + 6 tab selected state + Text link）；剩 AppIcon ~86 调用方未传 label + QrScanner 死代码英文残留 |
+| ~~P2~~ | ~~tRPC client 死代码~~       | ❌ 条目过时已删（rider-app 无 tRPC，早已用 openapi 类型 + `api.ts` fetch）                                                                                                              |
+
+### 图片渲染规范（轻量化省流批2 增补）
+
+- **新图片组件必须走 SafeImage 封装**（`src/components/ui/SafeImage`），禁止在业务代码直接 `import { Image } from 'expo-image'`（或 react-native Image）。列表/卡片渲染点用 `variant="thumb"`（消费服务端 `-thumb` 缩略图，失败自动回退原图）+ `lazy`（列表项；native 侧落地为 priority='low'）+ `recyclingKey`（FlatList 场景传稳定 id）；大图预览/本地图预览用默认 `variant="full"`。
+- **新依赖必须过体积预算**（轻量化省流批3 增补）：引入新 npm 依赖前，跑 `node scripts/budget-check.mjs`（repo 根，以 client-app 为口径）验证 JS bundle（hbc）不超 8.7MB 基线（8.5MB 实测 + 200KB 余量），超限即 CI 红（ci.yml size-budget job）。口径只管 JS bundle，字体/静态资产不在内。

@@ -133,3 +133,20 @@ jobs:
           # 拦截语义由 allowlist 决定而非级别
           pnpm audit --audit-level=moderate --json > /tmp/audit.json || true
           node scripts/gate/audit-check.mjs /tmp/audit.json scripts/gate/audit-allowlist.json
+
+  # 轻量化省流批3（方案v2 D3/D5）：包体积预算门禁。JS bundle（hbc）超 8.7MB
+  # （基线 8.5MB 实测 20261024 + 200KB 余量）即红；口径只管 JS bundle，
+  # 字体/静态资产不在内。红/绿双向演示证据见审查记录（BUDGET_BYTES 降阈值 → exit 1）。
+  size-budget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Bundle size budget (hbc vs 8.7MB)
+        run: node scripts/budget-check.mjs

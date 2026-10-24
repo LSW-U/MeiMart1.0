@@ -48,3 +48,19 @@ bash scripts/sync-api.sh rider-app
 - ✅ **本地 cp 脚本**：简单直接，单人开发够用，零依赖
 
 参考：`MeiMart` repo 的 `W2-COLLABORATION.md` §跨 repo 协作。
+
+## budget-check.mjs（轻量化省流批3）
+
+包体积预算门禁：`npx expo export --platform android` 产出 dist/ 后，解析 metadata.json 中 android JS bundle（hbc）字节数 vs 预算 **8.7MB**，超预算 exit 1。CI 在 `.github/workflows/ci.yml` 的 `size-budget` job 自动拦截。
+
+基线口径（批3 P3-3 补注）：8.7MB = 8.5MB + 200KB 余量。其中 8,496,734 B 为批3 改动前基线（20261024 实测）；批3 落地后复核实测 8,500,600 B（SafeImage thumb 改造净增 ~3.8KB），仍在预算内。
+
+### 用法
+
+```bash
+node scripts/budget-check.mjs                # 完整导出 + 校验（CI 用）
+SKIP_EXPORT=1 node scripts/budget-check.mjs  # 复用既有 dist/（本地调试）
+BUDGET_BYTES=8400000 node scripts/budget-check.mjs  # 反向验证：降阈值演示红
+```
+
+口径（方案v2 D3 拍板）：只管 JS bundle（hbc），字体/静态资产不在内。

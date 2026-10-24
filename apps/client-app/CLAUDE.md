@@ -398,3 +398,11 @@ echo "✅ CP5 全部通过"
 ### app/ 目录拆分规范（批5 审查裁决）
 
 42. **app/ 下子目录仅允许页面 sections 拆分**（如 `app/product/product-detail/`、`app/order/order-detail/`、`app/(main)/profile-sections/`），用于承载超长页面的 sections/主文件拆分；**禁止任何 `.test` 文件放 `app/` 下**（expo-router 会把 `.test.tsx` 注册成路由，真机 hermes 启动即崩）。测试统一放 `app/__tests__/`（页面级）或 `src/**/__tests__/`（组件/hooks 级）。
+
+### 图片渲染规范（轻量化省流批2 增补）
+
+43. **新图片组件必须走 SafeImage 封装**，禁止在业务代码直接 `import { Image } from 'expo-image'`（或 react-native Image）。列表/卡片渲染点用 `variant="thumb"`（消费服务端 `-thumb` 缩略图，失败自动回退原图）+ `lazy`（列表项）+ `recyclingKey`（FlatList 场景传稳定 id）；大图预览/详情轮播用默认 `variant="full"`。例外：本地 file:// 预览（拍照回显）走 full（toThumbUrl 对非 http(s) 本就原样返回）。
+
+### 体积预算规范（轻量化省流批3 增补）
+
+44. **新依赖必须过体积预算**：引入新 npm 依赖（尤其整包工具库如 lodash/moment）前，跑 `node scripts/budget-check.mjs`（repo 根）验证 JS bundle（hbc）不超 8.7MB 基线（8.5MB 实测 + 200KB 余量），超限即 CI 红（`.github/workflows/ci.yml` size-budget job）。口径只管 JS bundle，字体/静态资产不在内。
