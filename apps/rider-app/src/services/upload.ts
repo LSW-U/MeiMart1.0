@@ -76,4 +76,9 @@ export const riderUploadApi = {
   async licenseImage(fileUri: string, mimeType: string): Promise<UploadResult> {
     return uploadTo('common/rider/uploads/license-image', fileUri, mimeType, 'license');
   },
+
+  /** 任务/缺货取证图（≥300×200 任意比例，缺货履约闭环批1 P2-2 拍照取证；端点批2 2026-10-01 已就绪） */
+  async taskEvidence(fileUri: string, mimeType: string): Promise<UploadResult> {
+    return uploadTo('common/rider/uploads/task-evidence', fileUri, mimeType, 'evidence');
+  },
 };
