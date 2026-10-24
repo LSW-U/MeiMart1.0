@@ -47,7 +47,7 @@ export function UploadTile({
         </View>
         <View className={compact ? 'items-center' : ''}>
           {/* P3-2（批B 修复）：disabled=上传中时 title 换成 common.uploading（消费批A 预留 key） */}
-          <Text className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+          <Text className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
             {disabled ? t('common.uploading') : title}
           </Text>
           {error && errorHint ? (

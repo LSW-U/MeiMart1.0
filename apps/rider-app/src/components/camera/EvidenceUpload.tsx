@@ -26,11 +26,11 @@ export function EvidenceExample({ label, type }: EvidenceExampleProps) {
     <View className="gap-1">
       <View className="aspect-square items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-low">
         <AppIcon color={colors.outline} name={type === 'door' ? 'dropoff' : 'orders'} size={28} />
-        <Text className="text-[9px] font-semibold uppercase tracking-wider text-on-surface-variant">
+        <Text className="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">
           {type === 'door' ? t('sign.doorExample') : t('sign.packageExample')}
         </Text>
       </View>
-      <Text className="text-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+      <Text className="text-center text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
         {label}
       </Text>
     </View>

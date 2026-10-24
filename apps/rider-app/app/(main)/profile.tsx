@@ -166,31 +166,31 @@ export default function ProfilePage() {
       <View className="mx-5 mb-8 mt-4 overflow-hidden rounded-[24px] border border-surface-container-high bg-surface-container-high px-6 py-8 shadow-sm">
         <View className="flex-row items-center justify-between">
           <View className="flex-1 items-center">
-            <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+            <Text className="mb-1 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">
               {t('profile.orders')}
             </Text>
             <Text className="text-4xl font-medium text-primary">{todayCount}</Text>
-            <Text className="mt-1 text-[9px] font-bold uppercase text-outline">
+            <Text className="mt-1 text-[11px] font-bold uppercase text-outline">
               {t('profile.today')}
             </Text>
           </View>
           <View className="h-12 w-px bg-outline-variant" />
           <View className="flex-[1.2] items-center px-2">
-            <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+            <Text className="mb-1 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">
               {t('profile.earnings')}
             </Text>
             <Text className="text-4xl font-bold text-primary">{todayIncome}</Text>
-            <Text className="mt-1 text-[9px] font-bold uppercase text-outline">
+            <Text className="mt-1 text-[11px] font-bold uppercase text-outline">
               {t('profile.today')}
             </Text>
           </View>
           <View className="h-12 w-px bg-outline-variant" />
           <View className="flex-1 items-center">
-            <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+            <Text className="mb-1 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">
               {t('profile.totalDeliveries')}
             </Text>
             <Text className="text-4xl font-medium text-primary">{totalDeliveries}</Text>
-            <Text className="mt-1 text-[9px] font-bold uppercase text-outline">
+            <Text className="mt-1 text-[11px] font-bold uppercase text-outline">
               {t('profile.totalDeliveriesSub')}
             </Text>
           </View>

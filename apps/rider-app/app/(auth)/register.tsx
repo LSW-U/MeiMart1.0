@@ -244,7 +244,7 @@ export default function RegisterPage() {
                 <AppIcon name="rider" className="text-2xl text-white" />
               </View>
               <View>
-                <Text className="mb-1 text-[10px] font-bold uppercase leading-none tracking-wider text-white/80">
+                <Text className="mb-1 text-[11px] font-bold uppercase leading-none tracking-wider text-white/80">
                   {t('auth.register.partner')}
                 </Text>
                 <Text className="text-xl font-semibold text-white">{t('auth.register.role')}</Text>
