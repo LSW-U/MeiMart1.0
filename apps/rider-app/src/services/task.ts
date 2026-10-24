@@ -35,8 +35,16 @@ const initialTasks: DeliveryTask[] = [
     note: 'Hand to concierge, ask for guest Room 312.',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    pickup: { title: 'Heritage Bakery (Dili Center)', address: 'Rua 15 de Outubro, Dili', contactName: 'Bakery Pickup Desk' },
-    dropoff: { title: 'Hotel Timor - Lobby', address: 'Avenida Marechal Carmona, Dili', contactName: 'Concierge' },
+    pickup: {
+      title: 'Heritage Bakery (Dili Center)',
+      address: 'Rua 15 de Outubro, Dili',
+      contactName: 'Bakery Pickup Desk',
+    },
+    dropoff: {
+      title: 'Hotel Timor - Lobby',
+      address: 'Avenida Marechal Carmona, Dili',
+      contactName: 'Concierge',
+    },
     deliveryFee: 900,
     // 距离计费批次1（2026-08-27）mock 明细：base 500 + distance 400 = 900
     //   billingDistanceKm=4.0（仓库→地址），freeKm=2，perKmFee=50 → (4-2)×50=100... mock 简化不严守公式，
@@ -69,8 +77,17 @@ const initialTasks: DeliveryTask[] = [
     note: 'Call on arrival. Do not leave at door.',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    pickup: { title: 'Lita Store (Colmera)', address: 'Rua de Colmera, Dili', contactName: 'Lita Front Desk' },
-    dropoff: { title: 'UNTL Campus - Faculty Office', address: 'Avenida Cidade de Lisboa, Dili', contactName: 'Faculty Reception', contactPhone: '+670 7755 4072' },
+    pickup: {
+      title: 'Lita Store (Colmera)',
+      address: 'Rua de Colmera, Dili',
+      contactName: 'Lita Front Desk',
+    },
+    dropoff: {
+      title: 'UNTL Campus - Faculty Office',
+      address: 'Avenida Cidade de Lisboa, Dili',
+      contactName: 'Faculty Reception',
+      contactPhone: '+670 7755 4072',
+    },
     deliveryFee: 1000,
     baseFee: 600,
     distanceFee: 400,
@@ -102,8 +119,17 @@ const initialTasks: DeliveryTask[] = [
     note: 'Return pickup: defective item, original order #099.',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    pickup: { title: 'Customer (Return Pickup)', address: 'Avenida Bispo Medeiros, Dili', contactName: 'Customer', contactPhone: '+670 7744 1000' },
-    dropoff: { title: 'Warehouse Return Center', address: 'Rua de Colmera, Dili', contactName: 'Warehouse Desk' },
+    pickup: {
+      title: 'Customer (Return Pickup)',
+      address: 'Avenida Bispo Medeiros, Dili',
+      contactName: 'Customer',
+      contactPhone: '+670 7744 1000',
+    },
+    dropoff: {
+      title: 'Warehouse Return Center',
+      address: 'Rua de Colmera, Dili',
+      contactName: 'Warehouse Desk',
+    },
     deliveryFee: 800,
     baseFee: 500,
     distanceFee: 300,
@@ -260,7 +286,10 @@ export const taskApi = {
     return fromView(res.data);
   },
 
-  async pickup(id: string, body: { note?: string; evidenceUrls?: string[] }): Promise<DeliveryTask> {
+  async pickup(
+    id: string,
+    body: { note?: string; evidenceUrls?: string[] },
+  ): Promise<DeliveryTask> {
     if (isMockMode) {
       return mockDelay(await mutateMockStatus(id, 'PICKED_UP'), 400);
     }
@@ -282,7 +311,8 @@ export const taskApi = {
       const task = findMockTask(id);
       if (!task) throw new Error(`Task not found: ${id}`);
       // mock 校验对齐后端 E-DISPATCH-020（仅 return 可调）
-      if (task.taskType !== 'return') throw new Error('E-DISPATCH-020: startDelivering only for return task');
+      if (task.taskType !== 'return')
+        throw new Error('E-DISPATCH-020: startDelivering only for return task');
       return mockDelay(await mutateMockStatus(id, 'DELIVERING'), 400);
     }
     const res = await api.post<DeliveryTask>(
@@ -292,7 +322,10 @@ export const taskApi = {
     return fromView(res.data);
   },
 
-  async deliver(id: string, body: { collectedAmount?: number; note?: string; evidenceUrls?: string[] }): Promise<DeliveryTask> {
+  async deliver(
+    id: string,
+    body: { collectedAmount?: number; note?: string; evidenceUrls?: string[] },
+  ): Promise<DeliveryTask> {
     if (isMockMode) {
       return mockDelay(await mutateMockStatus(id, 'DELIVERED'), 400);
     }
@@ -322,14 +355,40 @@ export const taskApi = {
     if (isMockMode) {
       const active = getMockTasks().some(
         (task) =>
-          task.status === 'ASSIGNED' ||
-          task.status === 'PICKED_UP' ||
-          task.status === 'DELIVERING',
+          task.status === 'ASSIGNED' || task.status === 'PICKED_UP' || task.status === 'DELIVERING',
       );
       return mockDelay(active, 200);
     }
     const lists = await this.getLists();
     return lists.pickups.length > 0 || lists.deliveries.length > 0;
+  },
+
+  /**
+   * 缺货履约闭环批1（2026-10-24）：骑手兜底部分缺登记
+   * POST /rider/orders/:id/out-of-stock（窗口 OUT_FOR_DELIVERY，仅部分缺 D12）。
+   * P2-2（审查 20261024）：body 扩替代建议/取证 URL（后端契约 RiderOutOfStockRequest 已含，
+   * 骑手端只传字符串名/URL，suggestionItemId 由任务详情项选择生成——items 为 string[] 无 id，
+   * 简化版 UI 不传，字段保留供契约对齐）。
+   * mock 模式：本地无校验语义，直接返回成功（不落 mock 任务状态）。
+   */
+  async reportOutOfStock(
+    orderId: string,
+    body: {
+      outOfStockQty: number;
+      reason: string;
+      note?: string;
+      evidenceUrls?: string[];
+      suggestionItemId?: string;
+    },
+  ): Promise<{ itemId: string; orderId: string; outOfStockQty: number; orderCancelled: boolean }> {
+    if (isMockMode) {
+      return mockDelay(
+        { itemId: 'mock-item', orderId, outOfStockQty: body.outOfStockQty, orderCancelled: false },
+        300,
+      );
+    }
+    const res = await api.post(`/rider/orders/${encodeURIComponent(orderId)}/out-of-stock`, body);
+    return res.data;
   },
 };
 

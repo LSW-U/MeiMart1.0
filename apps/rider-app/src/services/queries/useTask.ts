@@ -136,3 +136,30 @@ export function useStartDelivering() {
   });
 }
 
+/**
+ * 缺货履约闭环批1（2026-10-24）：骑手兜底部分缺登记 mutation
+ * 成功后刷任务列表 + 详情（后端可能已同步登记，下批退款批3 消费项级字段）。
+ */
+export function useReportOutOfStock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      body,
+    }: {
+      orderId: string;
+      body: {
+        outOfStockQty: number;
+        reason: string;
+        note?: string;
+        evidenceUrls?: string[]; // P2-2（审查 20261024）：拍照取证 URL ≤3
+        suggestionItemId?: string;
+      };
+    }) => taskApi.reportOutOfStock(orderId, body),
+    onSettled: (_data, _error, variables) => {
+      void queryClient.invalidateQueries({ queryKey: taskListsKey });
+      void queryClient.invalidateQueries({ queryKey: ['tasks', 'detail'] });
+      void variables;
+    },
+  });
+}

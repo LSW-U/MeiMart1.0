@@ -1308,7 +1308,12 @@
     "E-RATELIMIT-001": "Too many attempts, try again later",
     "E-SMS-001": "SMS service temporarily unavailable",
     "E-REGISTER-001": "Registration session expired, please request a new code",
-    "E-USER-010": "Invalid or unavailable payment method"
+    "E-USER-010": "Invalid or unavailable payment method",
+    "E-OOS-001": "Out-of-stock reporting window is invalid for this order status",
+    "E-OOS-002": "Invalid out-of-stock quantity or suggestion item",
+    "E-OOS-003": "This item already has an out-of-stock report",
+    "E-OOS-004": "Full shortage can only be reported at picking stage (rider stage allows partial only)",
+    "E-OOS-005": "Invalid evidence photos (max 3, must be URLs uploaded via this platform)"
   },
   "search": {
     "recent": "Recent Searches",

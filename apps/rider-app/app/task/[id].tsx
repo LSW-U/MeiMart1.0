@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Linking, ScrollView, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { useState } from 'react';
 
 import { TaskCard } from '../../src/components/business/TaskCard';
@@ -7,13 +7,15 @@ import { TaskDetailHeader } from '../../src/components/business/TaskDetailHeader
 import { BottomActionBar } from '../../src/components/layout/BottomActionBar';
 // 批B B2：接单失败 E-DEPOSIT-201/202 弹保证金拦截弹窗（复用 B1 公共组件，替代 networkError toast）
 import { DepositBlockDialog } from '../../src/components/feedback/DepositBlockDialog';
+// 缺货履约闭环批1（2026-10-24）：骑手兜底部分缺登记弹窗
+import { OutOfStockDialog } from '../../src/components/feedback/OutOfStockDialog';
 import { QueryBoundary } from '../../src/components/feedback/QueryBoundary';
 import { showToast } from '../../src/components/feedback/Toast';
 import { useGoBack } from '../../src/hooks/useGoBack';
 import { useNetwork } from '../../src/hooks/useNetwork';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { ApiError } from '../../src/services/api';
-import { useAcceptTask, useTask } from '../../src/services/queries/useTask';
+import { useAcceptTask, useReportOutOfStock, useTask } from '../../src/services/queries/useTask';
 import { useRiderSettings } from '../../src/services/queries/useSettings';
 import type { DutyStatus } from '../../src/services/settings';
 import { getTaskAction } from '../../src/services/task-flow';
@@ -101,6 +103,9 @@ export default function TaskDetailPage() {
     refetch,
   } = useTask(id);
   const acceptTask = useAcceptTask();
+  // 缺货履约闭环批1：骑手兜底部分缺登记（窗口 OUT_FOR_DELIVERY ⇔ 任务 DELIVERING）
+  const reportOos = useReportOutOfStock();
+  const [oosOpen, setOosOpen] = useState(false);
   const { isOffline } = useNetwork();
   const taskData: DeliveryTask | null = task ?? null;
   const action = taskData ? getTaskAction(taskData) : undefined;
@@ -205,6 +210,21 @@ export default function TaskDetailPage() {
         >
           {(detail) => (
             <>
+              {/* 缺货履约闭环批1：配送中（订单 OUT_FOR_DELIVERY）开放部分缺登记入口 */}
+              {detail.status === 'DELIVERING' ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setOosOpen(true)}
+                  className="mb-3 rounded-xl border border-warn-border bg-warn-bg px-4 py-3"
+                >
+                  <Text className="text-sm font-bold" style={{ color: colors.statusWarningText }}>
+                    {t('tasks.oos.action')}
+                  </Text>
+                  <Text className="mt-0.5 text-xs" style={{ color: colors.statusWarningText }}>
+                    {t('tasks.oos.desc')}
+                  </Text>
+                </Pressable>
+              ) : null}
               {detail.status === 'DELIVERED' || detail.status === 'FAILED' ? (
                 <View
                   className="mb-3 rounded-xl border p-3"
@@ -310,6 +330,45 @@ export default function TaskDetailPage() {
           onGoDeposit={() => router.push('/settings/deposit/pay')}
         />
       )}
+      {/* 缺货履约闭环批1：骑手兜底部分缺登记（仅 DELIVERING 态可报，D12 全缺后端 E-OOS-004 拒）
+          maxQty：前端无「本单剩余可登记量」数据源（DeliveryTask.items 为 string[] 无 quantity，
+          DeliveryTaskView 不透传订单明细），保持防呆上限 9999；超限由后端 E-OOS-002 拒
+          → qtyError 明示（P2-2/P3-4，审查 20261024）
+          itemNames：P2-2 项选择展示态——items 无 item id 不可点选，展示供骑手对照 */}
+      <OutOfStockDialog
+        visible={oosOpen}
+        maxQty={9999}
+        itemNames={taskData?.items}
+        submitting={reportOos.isPending}
+        onDismiss={() => setOosOpen(false)}
+        onSubmit={(body) => {
+          if (!taskData?.orderId) return;
+          reportOos.mutate(
+            { orderId: taskData.orderId, body },
+            {
+              onSuccess: () => {
+                setOosOpen(false);
+                showToast(t('tasks.oos.success'), 'success');
+                void refetch();
+              },
+              onError: (e) => {
+                // P3-4（审查 20261024）：E-OOS-001 窗口 / 002 数量 / 003 重复 / 004 全缺 /
+                // 005 取证非法——按 code 差异化，其余兜底 failed
+                const code = e instanceof ApiError ? e.code : '';
+                const key: TranslationKey =
+                  code === 'E-OOS-001'
+                    ? 'tasks.oos.windowError'
+                    : code === 'E-OOS-002'
+                      ? 'tasks.oos.qtyError'
+                      : code === 'E-OOS-004'
+                        ? 'tasks.oos.partialOnly'
+                        : 'tasks.oos.failed';
+                showToast(t(key), 'error');
+              },
+            },
+          );
+        }}
+      />
     </View>
   );
 }

@@ -26,6 +26,8 @@ const showToastMock = showToast as jest.Mock;
 const mockRefetch = jest.fn();
 const mockMutateAsync = jest.fn();
 const mockAccept = jest.fn();
+// 缺货履约闭环批1：useReportOutOfStock.mutate mock
+const mockOosMutate = jest.fn();
 const mockBack = jest.fn();
 // 批B B2：router.push 捕获（拦截弹窗「前往缴纳」→ /settings/deposit/pay 跳转断言）
 const mockPush = jest.fn();
@@ -85,6 +87,8 @@ jest.mock('../../../src/services/queries/useTask', () => ({
     refetch: mockRefetch,
   }),
   useAcceptTask: () => ({ mutateAsync: mockAccept, isPending: false }),
+  // 缺货履约闭环批1：骑手兜底部分缺登记 hook mock
+  useReportOutOfStock: () => ({ mutate: mockOosMutate, isPending: false }),
 }));
 
 jest.mock('../../../src/services/queries/useSettings', () => ({

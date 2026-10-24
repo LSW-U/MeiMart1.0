@@ -1308,7 +1308,12 @@
     "E-RATELIMIT-001": "Muitas tentativas, tente mais tarde",
     "E-SMS-001": "Serviço de SMS temporariamente indisponível",
     "E-REGISTER-001": "Sessão de registo expirada, solicite um novo código",
-    "E-USER-010": "Método de pagamento inválido ou indisponível"
+    "E-USER-010": "Método de pagamento inválido ou indisponível",
+    "E-OOS-001": "O estado do pedido não permite registar falta de stock",
+    "E-OOS-002": "Quantidade de falta ou item sugerido inválido",
+    "E-OOS-003": "Este item já tem registo de falta de stock",
+    "E-OOS-004": "Falta total só pode ser registada na fase de separação (fase de entrega apenas parcial)",
+    "E-OOS-005": "Fotos de evidência inválidas (máx. 3, têm de ser URLs enviados por esta plataforma)"
   },
   "search": {
     "recent": "Pesquisas Recentes",

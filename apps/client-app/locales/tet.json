@@ -1308,7 +1308,12 @@
     "E-RATELIMIT-001": "Tentaun baratu demais, koko fali mos",
     "E-SMS-001": "Serviçu SMS la disponível temporáriu, koko fali mos",
     "E-REGISTER-001": "Sesaun rejistu espira ona, favor husik kódigu foun",
-    "E-USER-010": "Forma pagamentu invalidu ka la disponivel"
+    "E-USER-010": "Forma pagamentu invalidu ka la disponivel",
+    "E-OOS-001": "Status pedidu la permite rejistu produtu foun",
+    "E-OOS-002": "Kuantidade foun ka item sujestaun la loos",
+    "E-OOS-003": "Item ne'e rejistu ona foun",
+    "E-OOS-004": "Foun tomak bele rejistu deit iha fase pick (fase rider bele parcial deit)",
+    "E-OOS-005": "Foto evidénsia la loos (máximu 3, tenke URL husi plataforma ne'e)"
   },
   "search": {
     "recent": "Buka Recente",
