@@ -45,7 +45,8 @@ export function DeliveryProgressBar({ step, labels, success = false }: DeliveryP
                   state === 'done'
                     ? { backgroundColor: colors.success }
                     : state === 'active'
-                      ? { backgroundColor: 'transparent' }
+                      ? // 审查修复 20261025：success 终态第 3 点与绿字标签同色（原 active 红，成功页红绿打架）
+                        { backgroundColor: success && n === 3 ? colors.success : colors.primary }
                       : undefined
                 }
               >
@@ -55,7 +56,7 @@ export function DeliveryProgressBar({ step, labels, success = false }: DeliveryP
               </View>
               <Text
                 className={
-                  'text-[10px] font-semibold ' +
+                  'text-[11px] font-semibold ' +
                   (success && n === 3
                     ? 'font-bold'
                     : state === 'active'
