@@ -31,6 +31,8 @@ const mockRefund: RefundRaw = {
   refundType: 'REFUND_ONLY',
   pickupAt: null,
   pickedAt: null,
+  disputedAt: null,
+  disputeNote: null,
 };
 
 describe('useCreateRefund', () => {
