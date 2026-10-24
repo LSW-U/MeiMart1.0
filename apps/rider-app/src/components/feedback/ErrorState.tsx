@@ -1,6 +1,7 @@
 import { Text, View } from 'react-native';
 
 import { Button } from '../ui/Button';
+import { defaultHitSlop } from '../../theme/commonPresets';
 
 type ErrorStateProps = {
   message: string;
@@ -14,13 +15,29 @@ type ErrorStateProps = {
  * ErrorState —— 请求失败提示（B3 升级为 QueryBoundary 的 error 态载体，§5 规格）
  * 边框 border-error/40、标题 text-error、重试用 Button、容器 role=alert。
  */
-export function ErrorState({ message, title = 'Something went wrong', actionLabel, onAction }: ErrorStateProps) {
+export function ErrorState({
+  message,
+  title = 'Something went wrong',
+  actionLabel,
+  onAction,
+}: ErrorStateProps) {
   return (
-    <View accessibilityRole="alert" className="rounded-2xl border border-error/40 bg-surface p-4" testID="error-state">
+    <View
+      accessibilityRole="alert"
+      className="rounded-2xl border border-error/40 bg-surface p-4"
+      testID="error-state"
+    >
       <Text className="text-sm font-extrabold text-error">{title}</Text>
       <Text className="mt-1.5 text-xs leading-relaxed text-on-surface-variant">{message}</Text>
       {actionLabel && onAction ? (
-        <Button className="mt-3 h-9 self-start px-3.5" textClassName="text-xs" onPress={onAction}>{actionLabel}</Button>
+        <Button
+          className="mt-3 h-11 self-start px-3.5"
+          textClassName="text-xs"
+          hitSlop={defaultHitSlop}
+          onPress={onAction}
+        >
+          {actionLabel}
+        </Button>
       ) : null}
     </View>
   );

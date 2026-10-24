@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
-import { colors } from "../../theme/colors";
+import { colors } from '../../theme/colors';
+import { defaultHitSlop } from '../../theme/commonPresets';
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
@@ -35,7 +36,18 @@ const dotColor: Record<DutyStatus, string> = {
   offDuty: 'bg-dot-off',
 };
 
-export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, dutyLoading, newTasksLabel, pickupsLabel, deliveriesLabel, onDutyPress, onMenuPress, onTabChange }: TaskDetailHeaderProps) {
+export function TaskDetailHeader({
+  activeTab,
+  dutyStatus,
+  dutyStatusLabel,
+  dutyLoading,
+  newTasksLabel,
+  pickupsLabel,
+  deliveriesLabel,
+  onDutyPress,
+  onMenuPress,
+  onTabChange,
+}: TaskDetailHeaderProps) {
   const router = useRouter();
   const { data: unread = 0 } = useUnreadCount();
   const { t } = useTranslation();
@@ -55,7 +67,13 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, dutyL
   // 不接 Pressable、隐藏 chevronDown（无展开语义），切班集中在列表页做
   const dutyArea: ReactElement =
     typeof onDutyPress === 'function' ? (
-      <Pressable accessibilityRole="button" accessibilityLabel={label} className="flex-row items-center gap-2 rounded-full border border-primary-container bg-surface px-4 py-1" onPress={onDutyPress}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        className="min-h-11 flex-row items-center gap-2 rounded-full border border-primary-container bg-surface px-4 py-1"
+        hitSlop={defaultHitSlop}
+        onPress={onDutyPress}
+      >
         <View className={`h-2 w-2 rounded-full ${dotClass}`} />
         <Text className="text-xl font-bold text-on-surface">{label}</Text>
         <AppIcon name="chevronDown" color={colors.textMuted} size={18} />
@@ -70,11 +88,26 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, dutyL
   return (
     <View className="border-b border-surface-variant bg-surface-container px-5 pb-1 pt-2">
       <View className="h-12 flex-row items-center justify-between">
-        <Pressable accessibilityRole="button" accessibilityLabel={t('common.menu')} className="rounded-full p-1" onPress={onMenuPress}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('common.menu')}
+          className="min-h-11 min-w-11 items-center justify-center rounded-full p-1"
+          hitSlop={defaultHitSlop}
+          onPress={onMenuPress}
+        >
           <AppIcon name="menu" className="text-2xl text-on-surface-variant" />
         </Pressable>
         {dutyArea}
-        <Pressable accessibilityRole="button" accessibilityLabel={t('notification.title')} accessibilityHint={unread > 0 ? t('notification.unreadCount', { count: unread }) : undefined} className="relative rounded-full p-1" onPress={() => router.push('/notifications')}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('notification.title')}
+          accessibilityHint={
+            unread > 0 ? t('notification.unreadCount', { count: unread }) : undefined
+          }
+          className="relative min-h-11 min-w-11 items-center justify-center rounded-full p-1"
+          hitSlop={defaultHitSlop}
+          onPress={() => router.push('/notifications')}
+        >
           <AppIcon name="notification" className="text-2xl text-on-surface-variant" />
           {unread > 0 ? (
             <View className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-surface-container bg-dot-unread" />
@@ -86,9 +119,24 @@ export function TaskDetailHeader({ activeTab, dutyStatus, dutyStatusLabel, dutyL
           {tabs.map((tab) => {
             const active = activeTab === tab.key;
             return (
-              <Pressable accessibilityRole="button" accessibilityLabel={tab.label} accessibilityState={{ selected: active }} className="pb-1" key={tab.key} onPress={() => onTabChange?.(tab.key)}>
-                <Text className={`text-base font-semibold ${active ? 'text-primary-container' : 'text-on-surface-variant'}`}>{tab.label}</Text>
-                {active ? <View className="mt-1 h-0.5 rounded-full bg-primary-container" /> : <View className="mt-1 h-0.5 rounded-full bg-transparent" />}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={tab.label}
+                accessibilityState={{ selected: active }}
+                className="pb-1"
+                key={tab.key}
+                onPress={() => onTabChange?.(tab.key)}
+              >
+                <Text
+                  className={`text-base font-semibold ${active ? 'text-primary-container' : 'text-on-surface-variant'}`}
+                >
+                  {tab.label}
+                </Text>
+                {active ? (
+                  <View className="mt-1 h-0.5 rounded-full bg-primary-container" />
+                ) : (
+                  <View className="mt-1 h-0.5 rounded-full bg-transparent" />
+                )}
               </Pressable>
             );
           })}

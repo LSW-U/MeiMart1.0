@@ -10,6 +10,7 @@ import { MapView } from '../../../src/components/map/MapView';
 import { Button } from '../../../src/components/ui';
 import { AppIcon } from '../../../src/components/ui/AppIcon';
 import { colors } from '../../../src/theme/colors';
+import { defaultHitSlop } from '../../../src/theme/commonPresets';
 import { useNetwork } from '../../../src/hooks/useNetwork';
 import { useTranslation } from '../../../src/i18n/useTranslation';
 import { ApiError } from '../../../src/services/api';
@@ -155,7 +156,7 @@ export default function TaskNavigatePage() {
                     收入 success 绿（原型 .map-eta-fee），副标题 = 距离 · 配送中 */}
                 <View className="absolute bottom-3 left-3 right-3 flex-row items-center justify-between rounded-xl bg-surface px-4 py-3 shadow-md">
                   <View className="gap-0.5">
-                    <Text className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                    <Text className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
                       {t('tasks.etaLabel')}
                     </Text>
                     <Text className="text-[22px] font-extrabold leading-tight text-primary">
@@ -167,7 +168,7 @@ export default function TaskNavigatePage() {
                     </Text>
                   </View>
                   <View className="items-end gap-0.5">
-                    <Text className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                    <Text className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
                       {t('flow.totalEarnings')}
                     </Text>
                     <Text className="text-xl font-extrabold" style={{ color: colors.success }}>
@@ -175,7 +176,7 @@ export default function TaskNavigatePage() {
                         decimals: (taskData.fee ?? 0) % 100 === 0 ? 0 : 1,
                       })}
                     </Text>
-                    <Text className="text-[10px] text-outline">{taskData.orderId}</Text>
+                    <Text className="text-[11px] text-outline">{taskData.orderId}</Text>
                   </View>
                 </View>
               </View>
@@ -216,7 +217,7 @@ export default function TaskNavigatePage() {
                         <Text className="mt-1 text-sm text-on-surface-variant">
                           {taskData.pickup.address}
                         </Text>
-                        <Text className="mt-2 self-start rounded-lg bg-surface-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                        <Text className="mt-2 self-start rounded-lg bg-surface-container px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
                           {t('flow.storePickup')}
                         </Text>
                       </View>
@@ -245,7 +246,7 @@ export default function TaskNavigatePage() {
                         {/* T4 审查修复 P3-1（原型 .route-tag.dropoff）：送货上门 tag（对称 pickup 到店取货）。
                             原型 bg tertiary-soft 是幽灵 token，用 bg-surface-container + tertiary 文字色 */}
                         <Text
-                          className="mt-2 self-start rounded-lg bg-surface-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                          className="mt-2 self-start rounded-lg bg-surface-container px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider"
                           style={{ color: colors.tertiary }}
                         >
                           {t('tasks.doorDelivery')}
@@ -280,7 +281,7 @@ export default function TaskNavigatePage() {
                               accessibilityRole="button"
                               accessibilityState={{ disabled: !taskData.dropoff.contactPhone }}
                               className={
-                                'h-10 w-10 items-center justify-center rounded-[10px]' +
+                                'h-11 w-10 items-center justify-center rounded-[10px]' +
                                 (taskData.dropoff.contactPhone ? '' : ' bg-neutral-bg')
                               }
                               style={
@@ -288,6 +289,7 @@ export default function TaskNavigatePage() {
                                   ? { backgroundColor: colors.success }
                                   : undefined
                               }
+                              hitSlop={defaultHitSlop}
                               disabled={!taskData.dropoff.contactPhone}
                               onPress={() => void handleCallCustomer()}
                             >
@@ -304,8 +306,9 @@ export default function TaskNavigatePage() {
                               accessibilityHint={t('tasks.chatComingSoon')}
                               accessibilityLabel={t('tasks.chat')}
                               accessibilityRole="button"
-                              className="h-10 w-10 items-center justify-center rounded-[10px]"
+                              className="h-11 w-10 items-center justify-center rounded-[10px]"
                               style={{ backgroundColor: colors.info }}
+                              hitSlop={defaultHitSlop}
                               onPress={() => showToast(t('tasks.chatComingSoon'), 'info')}
                             >
                               <AppIcon color={colors.surface} name="chat" size={18} />
@@ -347,7 +350,7 @@ export default function TaskNavigatePage() {
                         {/* 审查修复 P3-2（原型 .note-label）：label 补 info 图标 */}
                         <View className="mb-1 flex-row items-center gap-1">
                           <AppIcon className="text-primary" name="info" size={10} />
-                          <Text className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                          <Text className="text-[11px] font-bold uppercase tracking-widest text-primary">
                             {t('flow.customerNote')}
                           </Text>
                         </View>
