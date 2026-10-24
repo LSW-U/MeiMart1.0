@@ -10,7 +10,15 @@ import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, layout, typography, shadowPresets, borderRadius } from '@/theme';
+import {
+  useTheme,
+  spacing,
+  layout,
+  typography,
+  shadowPresets,
+  borderRadius,
+  textStyle,
+} from '@/theme';
 import { APP_VERSION } from '@/utils/appInfo';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -470,10 +478,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   memberBadgeText: {
+    ...textStyle('badge-caps'),
     color: ON_PRIMARY,
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.6,
   },
   // 非会员灰度态（始终显示会员标志，但不活跃）
   memberBadgeMuted: {

@@ -13,7 +13,7 @@
 import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useTheme, borderRadius } from '@/theme';
+import { useTheme, borderRadius, textStyle } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
@@ -131,7 +131,8 @@ export function PhotoUploadTile({
           accessibilityRole="button"
           accessibilityLabel={deleteA11yLabel ?? t('afterSales.deletePhotoA11y')}
           testID={removeTestID ?? (testID ? `${testID}-remove` : undefined)}
-          hitSlop={8}
+          // P0-7：20px 视觉钮 + 12 外扩 = 44 达标（defaultHitSlop 的 8 不够此处）
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
           <Icon symbol="close" size={12} color="#ffffff" />
         </Pressable>
@@ -175,8 +176,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   errorText: {
+    ...textStyle('badge-caps'),
     color: '#ffffff',
-    fontSize: 9,
     textAlign: 'center',
   },
   retryBtn: {

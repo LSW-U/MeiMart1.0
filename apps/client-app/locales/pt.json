@@ -819,7 +819,8 @@
     "section": {
       "deliveryAddress": "Endereço de entrega",
       "paymentMethod": "Método de pagamento",
-      "orderSummary": "Resumo do pedido"
+      "orderSummary": "Resumo do pedido",
+      "summaryDivider": "RESUMO"
     },
     "placingOrder": "A fazer pedido...",
     "address": {

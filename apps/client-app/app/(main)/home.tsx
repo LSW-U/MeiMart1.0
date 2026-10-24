@@ -15,6 +15,7 @@ import {
   shadowPresets,
   gradientPresets,
   borderRadius,
+  defaultHitSlop,
 } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -633,6 +634,7 @@ export default function HomePage() {
             <Pressable
               testID="home-messages"
               onPress={() => router.push('/service/notifications')}
+              hitSlop={defaultHitSlop}
               style={styles.msgBtn}
               accessibilityRole="button"
               accessibilityLabel={t('home.messagesLabel')}

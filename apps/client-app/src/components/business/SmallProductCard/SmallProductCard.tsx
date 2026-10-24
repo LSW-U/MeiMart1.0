@@ -1,6 +1,13 @@
 import { memo } from 'react';
 import { Pressable, View, Text, StyleSheet } from 'react-native';
-import { useTheme, spacing, borderRadius, typography, shadowPresets } from '@/theme';
+import {
+  useTheme,
+  spacing,
+  borderRadius,
+  typography,
+  shadowPresets,
+  defaultHitSlop,
+} from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -65,6 +72,7 @@ export const SmallProductCard = memo(function SmallProductCard({
         {/* Why: 统一加购按钮 - 32² 圆形 999 primary + 白 add（废弃 add_shopping_cart，方案 §2.2） */}
         <Pressable
           onPress={handleAdd}
+          hitSlop={defaultHitSlop}
           style={({ pressed }) => [
             styles.addBtn,
             { backgroundColor: colors.primary },

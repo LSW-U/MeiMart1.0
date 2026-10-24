@@ -49,10 +49,7 @@ export function BottomNav({ activeTab, onTabPress, testID }: BottomNavProps) {
               )}
             </View>
             <Text
-              style={[
-                textStyle('label-caps'),
-                { color, fontSize: 10, fontWeight: isActive ? '700' : '400' },
-              ]}
+              style={[textStyle('label-caps-sm'), { color, fontWeight: isActive ? '700' : '400' }]}
             >
               {t(item.labelKey)}
             </Text>

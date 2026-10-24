@@ -16,6 +16,7 @@ import { MasonryProductCard } from '@/components/business/MasonryProductCard/Mas
 import { resolveBadges } from '@/utils/resolveBadges';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { Badge } from '@/components/ui/Badge';
 import { useProducts } from '@/services/queries/useProducts';
 import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import { useSearchHot } from '@/services/queries/useSearchHot';
@@ -254,17 +255,15 @@ export default function SearchIndexPage() {
                   accessibilityLabel={t('cart.a11y.itemCount', { count: cartCount })}
                 >
                   <Icon symbol="shopping_cart" size={24} color={ON_PRIMARY} />
+                  {/* P0-6：自绘白底+primary 字角标 dark 1.70:1 不可读 → Badge error 底（对齐 home 已验证方案） */}
                   {cartCount > 0 && (
-                    <View
-                      style={[
-                        styles.cartBadge,
-                        { backgroundColor: '#ffffff', borderColor: colors.primary },
-                      ]}
-                    >
-                      <Text style={[styles.cartBadgeText, { color: colors.primary }]}>
-                        {cartCount > 99 ? '99+' : cartCount}
-                      </Text>
-                    </View>
+                    <Badge
+                      count={cartCount}
+                      variant="number"
+                      color={colors.semantic.error}
+                      accessibilityLabel={t('cart.a11y.itemCount', { count: cartCount })}
+                      style={styles.cartBadge}
+                    />
                   )}
                 </Pressable>
               </View>
@@ -535,22 +534,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // P8 复刻 results：购物车角标（白底红字红边，backgroundColor/color 动态内联）
+  // P0-6：角标本体走 Badge（error 底 + on-primary 字），这里只留定位（原白底红字红边形态废弃）
   cartBadge: {
     position: 'absolute',
     top: 4,
     right: 2,
-    minWidth: 16,
-    height: 16,
-    paddingHorizontal: 3,
-    borderRadius: 999,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cartBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
+    zIndex: 10,
   },
   filterTagsWrap: {
     paddingTop: spacing.lg,

@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
+import { useTheme, textStyle, spacing, borderRadius, shadowPresets, defaultHitSlop } from '@/theme';
 import { useLocalizer } from '@/i18n';
 import { formatPrice } from '@/utils/format';
 
@@ -14,14 +14,15 @@ import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 type BadgeColorEntry = { bg: string; fg: string; pill?: boolean };
 
 // Why: badge 配色从 useTheme 派生（dark mode 自动适配），不再用模块级硬编码常量。
-// top-rated 映射到 semantic.warning (#F57C00，旧 #f59e0b 偏黄)，肉眼可辨色变。
+// P0-4：fresh/top-rated 底走 badge-* 白字安全档（light #047857/#B45309 ≈5.2/4.7:1，
+// 原 semantic.success/warning 配白字仅 3.77/2.70:1；dark 复用亮色配 on-primary 深字）。
 function useBadgeColors(): Record<ProductBadgeVariant, BadgeColorEntry> {
   const { colors } = useTheme();
   return {
-    fresh: { bg: colors.semantic.success, fg: colors['on-primary'] },
+    fresh: { bg: colors.semantic['badge-success'], fg: colors['on-primary'] },
     'best-seller': { bg: colors.primary, fg: colors['on-primary'] },
     new: { bg: colors.tertiary, fg: colors['on-primary'] },
-    'top-rated': { bg: colors.semantic.warning, fg: colors['on-primary'] },
+    'top-rated': { bg: colors.semantic['badge-warning'], fg: colors['on-primary'] },
     local: { bg: `${colors.primary}1A`, fg: colors.primary, pill: true }, // 1A = ~10% opacity
   };
 }
@@ -127,6 +128,7 @@ function ProductCardBase({
         <Pressable
           style={[styles.favoriteBtn, { backgroundColor: colors['surface-container-lowest'] }]}
           onPress={onFavoritePress ? () => onFavoritePress(product) : undefined}
+          hitSlop={defaultHitSlop}
           accessibilityRole="button"
           accessibilityLabel={
             isFavorite
@@ -190,9 +192,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   badgeText: {
-    fontSize: 8,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    ...textStyle('badge-caps'),
     textTransform: 'uppercase',
   },
   favoriteBtn: {

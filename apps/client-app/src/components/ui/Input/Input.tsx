@@ -54,7 +54,8 @@ export function Input({
           {
             // P29 原型 .field-input：1.5px var(--outline) 描边 + surface-lowest 白底 + err 怄 error；
             // ⚠️ HTML 变量名与 RN token 名错位：HTML --outline(#fae8e6)=RN surface-variant，
-            // HTML --outline-v(#e1bfba)=RN outline-variant（边框用前者，placeholder 用后者）
+            // HTML --outline-v(#e1bfba)=RN outline-variant（边框用前者；placeholder 已改独立
+            // placeholder token——P0-2：outline-variant 对白底 1.70:1 不达标）
             backgroundColor: hasError
               ? colors['error-container']
               : variant === 'bare'
@@ -91,7 +92,7 @@ export function Input({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={colors['outline-variant']}
+          placeholderTextColor={colors.placeholder}
           secureTextEntry={secureTextEntry}
           editable={!disabled}
           autoCapitalize="none"

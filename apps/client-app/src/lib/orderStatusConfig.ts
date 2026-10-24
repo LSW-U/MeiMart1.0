@@ -82,7 +82,8 @@ const SEMANTIC_PILL_KEYS: Record<
     dot: keyof AppColors['semantic'];
   }
 > = {
-  warning: { bg: 'warning-container', fg: 'warning', dot: 'warning' },
+  // P0-4：warning pill 前景改 on-warning（原 #F57C00 on #fef3c7 仅 2.43:1 → #7a3d00 ≈7:1；dark #fde68a on #78350f）。dot 不动。
+  warning: { bg: 'warning-container', fg: 'on-warning', dot: 'warning' },
   info: { bg: 'info-container', fg: 'info', dot: 'info' },
   success: { bg: 'success-container', fg: 'success', dot: 'success' },
   error: { bg: 'error-container', fg: 'error', dot: 'error' },

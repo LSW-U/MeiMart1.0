@@ -819,7 +819,8 @@
     "section": {
       "deliveryAddress": "收货地址",
       "paymentMethod": "支付方式",
-      "orderSummary": "订单明细"
+      "orderSummary": "订单明细",
+      "summaryDivider": "金额汇总"
     },
     "placingOrder": "下单中...",
     "address": {

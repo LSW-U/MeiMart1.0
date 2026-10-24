@@ -1,6 +1,13 @@
 import { memo } from 'react';
 import { Pressable, View, Text, StyleSheet } from 'react-native';
-import { useTheme, spacing, borderRadius, typography, shadowPresets } from '@/theme';
+import {
+  useTheme,
+  spacing,
+  borderRadius,
+  typography,
+  shadowPresets,
+  defaultHitSlop,
+} from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -118,6 +125,7 @@ export const MasonryProductCard = memo(function MasonryProductCard({
           ) : (
             <Pressable
               onPress={handleAdd}
+              hitSlop={defaultHitSlop}
               style={({ pressed }) => [
                 styles.addBtn,
                 { backgroundColor: colors.primary },

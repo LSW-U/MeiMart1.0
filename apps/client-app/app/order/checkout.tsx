@@ -601,7 +601,7 @@ export default function CheckoutPage() {
                       style={[styles.dashedLine, { borderBottomColor: colors['outline-variant'] }]}
                     />
                     <Text style={[styles.summaryDividerLabel, { color: colors.outline }]}>
-                      SUMMARY
+                      {t('checkout.section.summaryDivider')}
                     </Text>
                     <View
                       style={[styles.dashedLine, { borderBottomColor: colors['outline-variant'] }]}

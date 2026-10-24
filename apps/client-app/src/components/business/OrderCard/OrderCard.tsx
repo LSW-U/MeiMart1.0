@@ -102,9 +102,7 @@ function OrderCardBase({
         <View style={styles.headerRight}>
           <View style={[styles.statusPill, { backgroundColor: pill.bg }]}>
             <View style={[styles.statusDot, { backgroundColor: pill.dot }]} />
-            <Text style={[textStyle('label-caps'), { color: pill.fg, fontSize: 10 }]}>
-              {statusLabel}
-            </Text>
+            <Text style={[textStyle('label-caps-sm'), { color: pill.fg }]}>{statusLabel}</Text>
           </View>
         </View>
       </View>

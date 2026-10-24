@@ -34,7 +34,8 @@ export interface StatusBannerTheme {
 export const statusBannerPalettes: Record<StatusBannerPaletteKey, StatusBannerTheme> = {
   // 待付款 / 待确认 / 已确认 / 已拣货 / 配送中（蓝橙系）
   pending: {
-    badgeBg: '#F97316',
+    // P0-4（D3 拍板）：白字对比度 #F97316(2.80:1)→#B45309(4.66:1)；单套色板无 dark 变体，改值即两主题同步
+    badgeBg: '#B45309',
     bannerBg: 'rgba(59,130,246,0.08)',
     bannerBorder: 'rgba(59,130,246,0.25)',
     bannerIcon: '#1d4ed8',

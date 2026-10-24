@@ -819,7 +819,8 @@
     "section": {
       "deliveryAddress": "Delivery address",
       "paymentMethod": "Payment method",
-      "orderSummary": "Order summary"
+      "orderSummary": "Order summary",
+      "summaryDivider": "SUMMARY"
     },
     "placingOrder": "Placing order...",
     "address": {

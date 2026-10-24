@@ -13,13 +13,7 @@
  */
 
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  type TextStyle,
-} from 'react-native';
+import { View, Text, ScrollView, Pressable, type TextStyle } from 'react-native';
 import { Link, type Href } from 'expo-router';
 import { useTheme, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -66,13 +60,41 @@ const THEME_COLORS = [
 
 // Typography 展示
 const TYPOGRAPHY_TOKENS: { key: string; label: string; style: TextStyle }[] = [
-  { key: 'h1', label: 'H1 标题', style: { fontSize: 32, fontWeight: '700', fontFamily: 'NotoSerif' } },
-  { key: 'h2', label: 'H2 标题', style: { fontSize: 24, fontWeight: '700', fontFamily: 'NotoSerif' } },
-  { key: 'h3', label: 'H3 标题', style: { fontSize: 20, fontWeight: '600', fontFamily: 'NotoSerif' } },
-  { key: 'body-lg', label: '正文-大', style: { fontSize: 18, fontWeight: '400', fontFamily: 'PlusJakartaSans' } },
-  { key: 'body-md', label: '正文-中', style: { fontSize: 16, fontWeight: '400', fontFamily: 'PlusJakartaSans' } },
-  { key: 'body-sm', label: '正文-小', style: { fontSize: 14, fontWeight: '400', fontFamily: 'PlusJakartaSans' } },
-  { key: 'price-display', label: '价格展示', style: { fontSize: 20, fontWeight: '700', fontFamily: 'PlusJakartaSans' } },
+  {
+    key: 'h1',
+    label: 'H1 标题',
+    style: { fontSize: 32, fontWeight: '700', fontFamily: 'NotoSerif' },
+  },
+  {
+    key: 'h2',
+    label: 'H2 标题',
+    style: { fontSize: 24, fontWeight: '700', fontFamily: 'NotoSerif' },
+  },
+  {
+    key: 'h3',
+    label: 'H3 标题',
+    style: { fontSize: 20, fontWeight: '600', fontFamily: 'NotoSerif' },
+  },
+  {
+    key: 'body-lg',
+    label: '正文-大',
+    style: { fontSize: 18, fontWeight: '400', fontFamily: 'PlusJakartaSans' },
+  },
+  {
+    key: 'body-md',
+    label: '正文-中',
+    style: { fontSize: 16, fontWeight: '400', fontFamily: 'PlusJakartaSans' },
+  },
+  {
+    key: 'body-sm',
+    label: '正文-小',
+    style: { fontSize: 14, fontWeight: '400', fontFamily: 'PlusJakartaSans' },
+  },
+  {
+    key: 'price-display',
+    label: '价格展示',
+    style: { fontSize: 20, fontWeight: '700', fontFamily: 'PlusJakartaSans' },
+  },
 ];
 
 const SPACING_TOKENS = [
@@ -95,13 +117,26 @@ const RADIUS_TOKENS = [
   { key: '2xl', label: '2xl', value: 16 },
 ];
 
+// P0-8（方案 v2 D8）：内部预览页禁止进生产——生产直接渲染 null（路由注册但零内容）。
+// 守卫必须在导出组件、且 hook（useTheme/useState…）随原函数体整体下沉到 PreviewIndexContent——
+// 直接在函数头插 return 会触发 react-hooks/rules-of-hooks 判红。
 export default function PreviewIndex() {
+  if (!__DEV__) return null;
+  return <PreviewIndexContent />;
+}
+
+function PreviewIndexContent() {
   const { colors } = useTheme();
-  const [activeTab, setActiveTab] = useState<'pages' | 'colors' | 'typography' | 'spacing'>('pages');
+  const [activeTab, setActiveTab] = useState<'pages' | 'colors' | 'typography' | 'spacing'>(
+    'pages',
+  );
 
   return (
     <SafeAreaWrapper>
-      <ScrollView style={{ flex: 1, backgroundColor: '#fff' }} contentContainerStyle={{ padding: 20 }}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: '#fff' }}
+        contentContainerStyle={{ padding: 20 }}
+      >
         {/* 标题 */}
         <Text style={[typography.h1, { color: colors.primary, marginBottom: 4 }]}>
           MeiMart UI 预览器
@@ -112,12 +147,14 @@ export default function PreviewIndex() {
 
         {/* Tab 切换 */}
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
-          {([
-            { key: 'pages', label: '📱 页面' },
-            { key: 'colors', label: '🎨 色板' },
-            { key: 'typography', label: '📝 字体' },
-            { key: 'spacing', label: '📏 间距' },
-          ] as const).map((tab) => (
+          {(
+            [
+              { key: 'pages', label: '📱 页面' },
+              { key: 'colors', label: '🎨 色板' },
+              { key: 'typography', label: '📝 字体' },
+              { key: 'spacing', label: '📏 间距' },
+            ] as const
+          ).map((tab) => (
             <Pressable
               key={tab.key}
               onPress={() => setActiveTab(tab.key)}
@@ -128,11 +165,13 @@ export default function PreviewIndex() {
                 backgroundColor: activeTab === tab.key ? colors.primary : '#f0f0f0',
               }}
             >
-              <Text style={{
-                fontSize: 13,
-                fontWeight: '600',
-                color: activeTab === tab.key ? '#fff' : '#666',
-              }}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '600',
+                  color: activeTab === tab.key ? '#fff' : '#666',
+                }}
+              >
                 {tab.label}
               </Text>
             </Pressable>
@@ -170,7 +209,9 @@ export default function PreviewIndex() {
         {/* 色板 */}
         {activeTab === 'colors' && (
           <View style={{ gap: 12 }}>
-            <Text style={[typography.h3, { marginBottom: 8 }]}>Theme 色板（改后复制值回 colors.ts）</Text>
+            <Text style={[typography.h3, { marginBottom: 8 }]}>
+              Theme 色板（改后复制值回 colors.ts）
+            </Text>
             {THEME_COLORS.map((color) => (
               <View
                 key={color.key}
@@ -210,49 +251,132 @@ export default function PreviewIndex() {
             <Text style={[typography.h3, { marginTop: 16, marginBottom: 8 }]}>组件预览</Text>
 
             {/* 按钮预览 */}
-            <View style={{ gap: 8, padding: 16, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#e5e5e5' }}>
+            <View
+              style={{
+                gap: 8,
+                padding: 16,
+                backgroundColor: '#fff',
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: '#e5e5e5',
+              }}
+            >
               <Text style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>按钮</Text>
               <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                <View style={{ backgroundColor: '#961813', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8 }}>
+                <View
+                  style={{
+                    backgroundColor: '#961813',
+                    paddingVertical: 12,
+                    paddingHorizontal: 24,
+                    borderRadius: 8,
+                  }}
+                >
                   <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>主按钮</Text>
                 </View>
-                <View style={{ backgroundColor: '#b83228', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8 }}>
+                <View
+                  style={{
+                    backgroundColor: '#b83228',
+                    paddingVertical: 12,
+                    paddingHorizontal: 24,
+                    borderRadius: 8,
+                  }}
+                >
                   <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>容器按钮</Text>
                 </View>
-                <View style={{ backgroundColor: 'transparent', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8, borderWidth: 1, borderColor: '#961813' }}>
-                  <Text style={{ color: '#961813', fontWeight: '700', fontSize: 16 }}>描边按钮</Text>
+                <View
+                  style={{
+                    backgroundColor: 'transparent',
+                    paddingVertical: 12,
+                    paddingHorizontal: 24,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: '#961813',
+                  }}
+                >
+                  <Text style={{ color: '#961813', fontWeight: '700', fontSize: 16 }}>
+                    描边按钮
+                  </Text>
                 </View>
               </View>
             </View>
 
             {/* 卡片预览 */}
-            <View style={{ gap: 8, padding: 16, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#e5e5e5' }}>
+            <View
+              style={{
+                gap: 8,
+                padding: 16,
+                backgroundColor: '#fff',
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: '#e5e5e5',
+              }}
+            >
               <Text style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>商品卡片</Text>
-              <View style={{ backgroundColor: '#fff', borderRadius: 8, padding: 16, borderWidth: 1, borderColor: '#f7ddd9' }}>
-                <View style={{ width: '100%', height: 120, backgroundColor: '#f0f0f0', borderRadius: 8, marginBottom: 12 }} />
-                <Text style={{ fontSize: 16, fontWeight: '700', fontFamily: 'NotoSerif', color: '#261816' }}>
+              <View
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 8,
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: '#f7ddd9',
+                }}
+              >
+                <View
+                  style={{
+                    width: '100%',
+                    height: 120,
+                    backgroundColor: '#f0f0f0',
+                    borderRadius: 8,
+                    marginBottom: 12,
+                  }}
+                />
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '700',
+                    fontFamily: 'NotoSerif',
+                    color: '#261816',
+                  }}
+                >
                   新鲜苹果 1kg
                 </Text>
                 <Text style={{ fontSize: 20, fontWeight: '700', color: '#961813', marginTop: 4 }}>
                   $3.50
                 </Text>
-                <Text style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
-                  ⭐ 4.8 · 已售 320
-                </Text>
+                <Text style={{ fontSize: 12, color: '#999', marginTop: 4 }}>⭐ 4.8 · 已售 320</Text>
               </View>
             </View>
 
             {/* 文化色预览 */}
-            <View style={{ gap: 8, padding: 16, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#e5e5e5' }}>
+            <View
+              style={{
+                gap: 8,
+                padding: 16,
+                backgroundColor: '#fff',
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: '#e5e5e5',
+              }}
+            >
               <Text style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>东帝汶文化色</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <View style={{ backgroundColor: '#D4A030', padding: 12, borderRadius: 8 }}>
                   <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>金色 Gold</Text>
                 </View>
                 <View style={{ backgroundColor: '#F97316', padding: 12, borderRadius: 8 }}>
-                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>橙色 Orange</Text>
+                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>
+                    橙色 Orange
+                  </Text>
                 </View>
-                <View style={{ backgroundColor: '#FAF7F2', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#e5e5e5' }}>
+                <View
+                  style={{
+                    backgroundColor: '#FAF7F2',
+                    padding: 12,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: '#e5e5e5',
+                  }}
+                >
                   <Text style={{ color: '#261816', fontSize: 12, fontWeight: '700' }}>暖白</Text>
                 </View>
               </View>
@@ -307,13 +431,18 @@ export default function PreviewIndex() {
                   borderColor: '#e5e5e5',
                 }}
               >
-                <View style={{ width: token.value, height: 24, backgroundColor: '#961813', borderRadius: 2 }} />
+                <View
+                  style={{
+                    width: token.value,
+                    height: 24,
+                    backgroundColor: '#961813',
+                    borderRadius: 2,
+                  }}
+                />
                 <Text style={{ fontSize: 13, fontWeight: '600', color: '#333' }}>
                   {token.label}
                 </Text>
-                <Text style={{ fontSize: 12, color: '#999' }}>
-                  {token.value}px
-                </Text>
+                <Text style={{ fontSize: 12, color: '#999' }}>{token.value}px</Text>
               </View>
             ))}
 
@@ -332,13 +461,18 @@ export default function PreviewIndex() {
                   borderColor: '#e5e5e5',
                 }}
               >
-                <View style={{ width: 48, height: 48, backgroundColor: '#961813', borderRadius: token.value }} />
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    backgroundColor: '#961813',
+                    borderRadius: token.value,
+                  }}
+                />
                 <Text style={{ fontSize: 13, fontWeight: '600', color: '#333' }}>
                   {token.label}
                 </Text>
-                <Text style={{ fontSize: 12, color: '#999' }}>
-                  {token.value}px
-                </Text>
+                <Text style={{ fontSize: 12, color: '#999' }}>{token.value}px</Text>
               </View>
             ))}
           </View>

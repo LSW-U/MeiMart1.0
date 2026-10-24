@@ -23,6 +23,8 @@ export type TypographyKey =
   | 'body-md'
   | 'body-sm'
   | 'label-caps'
+  | 'label-caps-sm'
+  | 'badge-caps'
   | 'price-display';
 
 export const typography: Record<TypographyKey, TypographyToken> = {
@@ -68,6 +70,23 @@ export const typography: Record<TypographyKey, TypographyToken> = {
     lineHeight: 12 * 1.2,
     fontWeight: '700',
     letterSpacing: 12 * 0.05,
+  },
+  // 审查批A判断题1：11px 语义小标签档——P0-3 的 10→11 抬升值收敛进 token，
+  // 消除 OrderCard pill / BottomNav 标签 / StatusBadge 文字三处内联 fontSize:11 魔法数
+  'label-caps-sm': {
+    fontFamily: fontFamilies.sans,
+    fontSize: 11,
+    lineHeight: 11 * 1.2,
+    fontWeight: '700',
+    letterSpacing: 11 * 0.05,
+  },
+  // P0-3：全站徽章字号下限（7/8/9px 微字号统一抬升至此；textStyle() 解析 Bold 后缀）
+  'badge-caps': {
+    fontFamily: fontFamilies.sans,
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   'price-display': {
     fontFamily: fontFamilies.sans,

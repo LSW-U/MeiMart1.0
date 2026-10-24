@@ -819,7 +819,8 @@
     "section": {
       "deliveryAddress": "Enderesu entrega",
       "paymentMethod": "Métodu paga",
-      "orderSummary": "Rezumu pedidu"
+      "orderSummary": "Rezumu pedidu",
+      "summaryDivider": "REZUMU"
     },
     "placingOrder": "Halo pedidu hela...",
     "address": {

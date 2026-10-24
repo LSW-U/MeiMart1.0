@@ -20,6 +20,12 @@ type SemanticColors = {
   'info-container': string;
   warning: string;
   'warning-container': string;
+  /** P0-4：warning 浅容器上的前景文字（light 深棕 on #fef3c7 ≈7:1；dark 浅琥珀 on #78350f） */
+  'on-warning': string;
+  /** P0-4：白字徽章安全绿底（light 加深 #047857 ≈5.2:1；dark 复用 success 亮色配 on-primary 深字） */
+  'badge-success': string;
+  /** P0-4：白字徽章安全橙底（light 加深 #B45309 ≈4.7:1；dark 复用 warning 亮色配 on-primary 深字） */
+  'badge-warning': string;
   error: string;
   'error-container': string;
   /** 折扣 / 省钱 / 安全支付提示（纯绿 green-600，区别于 emerald 系 success） */
@@ -103,6 +109,8 @@ export type AppColors = {
   'inverse-on-surface': string;
   outline: string;
   'outline-variant': string;
+  /** P0-2：输入框占位符文字色（原 outline-variant #e1bfba 对白底仅 1.70:1） */
+  placeholder: string;
   cultural: CulturalColors;
   semantic: SemanticColors;
   onboarding: OnboardingColors;
@@ -164,6 +172,8 @@ export const lightColors: AppColors = {
   // Outline Palette
   outline: '#8d706c',
   'outline-variant': '#e1bfba',
+  // P0-2：占位符独立 token（outline-variant 对白底 1.70:1 不达标；取 outline 同值 4.35:1）
+  placeholder: '#8d706c',
 
   // 文化装饰色（非配置内联色值）
   cultural: {
@@ -184,6 +194,10 @@ export const lightColors: AppColors = {
     'info-container': '#dbeafe',
     warning: '#F57C00',
     'warning-container': '#fef3c7',
+    // P0-4：白×橙/浅底组合清零——pill 前景走 on-warning，徽章底走 badge-*（dark 取值见下）
+    'on-warning': '#7a3d00',
+    'badge-success': '#047857',
+    'badge-warning': '#B45309',
     error: '#C62828',
     'error-container': '#fee2e2',
     // 折扣 / 省钱 / 安全支付（green-600/50，纯绿，与 emerald 系 success 区分）
@@ -271,6 +285,8 @@ export const darkColors: AppColors = {
   // Outline Palette
   outline: '#9c8c89',
   'outline-variant': '#59413d',
+  // P0-2：对 dark surface-container-lowest #1a1413 ≈5.7:1（取 dark outline 同值）
+  placeholder: '#9c8c89',
 
   // 文化装饰色（暗色版调整亮度）
   cultural: {
@@ -291,6 +307,10 @@ export const darkColors: AppColors = {
     'info-container': '#1e3a8a',
     warning: '#FFB74D',
     'warning-container': '#78350f',
+    // P0-4 dark：on-warning 浅琥珀 on #78350f ≈7:1；badge-* 复用亮色配 on-primary(#690005) 深字
+    'on-warning': '#fde68a',
+    'badge-success': '#34D399',
+    'badge-warning': '#FFB74D',
     error: '#EF9A9A',
     'error-container': '#7f1d1d',
     positive: '#4ADE80',

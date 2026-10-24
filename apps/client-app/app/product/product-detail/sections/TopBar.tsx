@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
+import { Badge } from '@/components/ui/Badge';
 import { TABS, type TabKey } from '../shared';
 
 export function TopBar({
@@ -88,15 +89,15 @@ export function TopBar({
         accessibilityLabel={translate('cart.title')}
       >
         <Icon symbol="shopping_cart" size={24} color={colors['primary-container']} />
+        {/* P0-6：自绘白底+primary 字角标 dark 1.70:1 不可读 → Badge error 底（对齐 home 消息角标已验证方案） */}
         {cartCount > 0 && (
-          <View
-            style={styles.cartBadge}
+          <Badge
+            count={cartCount}
+            variant="number"
+            color={colors.semantic.error}
             accessibilityLabel={translate('cart.a11y.itemCount', { count: cartCount })}
-          >
-            <Text style={[styles.cartBadgeText, { color: colors.primary }]}>
-              {cartCount > 99 ? '99+' : cartCount}
-            </Text>
-          </View>
+            style={styles.cartBadge}
+          />
         )}
       </Pressable>
     </View>
@@ -118,24 +119,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // P0-6：角标本体走 Badge（error 底 + on-primary 字），这里只留定位（原白底红字形态废弃）
   cartBadge: {
     position: 'absolute',
     top: 2,
     right: 0,
-    minWidth: 18,
-    height: 18,
-    paddingHorizontal: 4,
-    borderRadius: 9,
-    // Why: 白底红字（统一 results 角标，用户要求），字色渲染处动态 colors.primary
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
     zIndex: 10,
-  },
-  cartBadgeText: {
-    // color 渲染处动态 colors.primary（白底红字，统一 results）
-    fontSize: 10,
-    fontWeight: '700',
   },
   tabsWrap: {
     flex: 1,

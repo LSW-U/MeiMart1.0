@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  // Why: P6 §2.3 角标 - absolute top:-2 right:-2，7px 700 白字，1.5px surface-lowest 边框
+  // Why: P6 §2.3 角标 - absolute top:-2 right:-2，白字走 badge-caps（P0-3：7px→10px），1.5px surface-lowest 边框
   badge: {
     position: 'absolute',
     top: -2,
@@ -199,9 +199,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   badgeText: {
+    ...textStyle('badge-caps'),
     color: '#ffffff',
-    fontSize: 7,
-    fontWeight: '700',
   },
   label: {
     textAlign: 'center',
