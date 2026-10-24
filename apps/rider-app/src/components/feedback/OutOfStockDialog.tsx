@@ -209,7 +209,11 @@ export function OutOfStockDialog({
             >
               {submitting || uploading ? t('tasks.oos.submitting') : t('tasks.oos.submit')}
             </Button>
-            <Button className="border border-outline bg-transparent" onPress={onDismiss}>
+            <Button
+              className="border border-outline bg-transparent"
+              textClassName="text-on-surface"
+              onPress={onDismiss}
+            >
               {t('common.cancel')}
             </Button>
           </ScrollView>

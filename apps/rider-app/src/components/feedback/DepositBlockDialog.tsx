@@ -74,7 +74,11 @@ export function DepositBlockDialog({
             <Button className="bg-primary-container" onPress={onGoDeposit}>
               {t('tasks.deposit.goDeposit')}
             </Button>
-            <Button className="border border-outline bg-transparent" onPress={onDismiss}>
+            <Button
+              className="border border-outline bg-transparent"
+              textClassName="text-on-surface"
+              onPress={onDismiss}
+            >
               {t('tasks.deposit.later')}
             </Button>
           </>
@@ -96,11 +100,19 @@ export function DepositBlockDialog({
               {t('tasks.deposit.pendingMessage', { amount: pendingAmount ?? '' })}
             </Text>
             {onViewRequest ? (
-              <Button className="border-warning border bg-transparent" onPress={onViewRequest}>
+              <Button
+                className="border-warning border bg-transparent"
+                textClassName="text-on-surface"
+                onPress={onViewRequest}
+              >
                 {t('tasks.deposit.viewRequest')}
               </Button>
             ) : null}
-            <Button className="border border-outline bg-transparent" onPress={onDismiss}>
+            <Button
+              className="border border-outline bg-transparent"
+              textClassName="text-on-surface"
+              onPress={onDismiss}
+            >
               {t('tasks.deposit.gotIt')}
             </Button>
           </>

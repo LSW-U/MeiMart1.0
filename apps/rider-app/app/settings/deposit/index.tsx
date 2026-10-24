@@ -345,6 +345,7 @@ export default function DepositPage() {
           <Button
             accessibilityLabel={t('deposit.records.title')}
             className="border border-outline bg-transparent"
+            textClassName="text-on-surface"
             onPress={() => router.push('/settings/deposit/records')}
           >
             <Text className="text-sm font-semibold text-on-surface-variant">
