@@ -84,6 +84,18 @@
     {
       "key": "postcss-selector-parser@1241232::GHSA-rj75-hqrm-r3gf",
       "reason": "moderate：选择器解析二次复杂度 CPU 耗尽。postcss 传递依赖（构建期），不进 App 包"
+    },
+    {
+      "key": "zod@1243066::GHSA-mrhx-c7xc-m3w5",
+      "reason": "high：Zod 超大 constrained collections 校验内存耗尽。zod 4.4.3 为直接依赖（react-hook-form resolver 链）+ eslint-plugin-react-hooks（开发期）；补丁版 >=4.6.6 跨 minor 升级需回归验证，超出范围另行立项"
+    },
+    {
+      "key": "fast-uri@1243098::GHSA-w74x-v6f9-j3xg",
+      "reason": "moderate：URI scheme 伪装（percent-encoded scheme decoding）。fast-uri 3.1.6 ← ajv ← @commitlint/config-validator，纯开发期工具链不进 App 包；等上游 ajv 消减"
+    },
+    {
+      "key": "fast-uri@1243104::GHSA-wjr9-j795-jxcr",
+      "reason": "moderate：host confusion（unchecked WHATWG host canonicalization）。同上 ajv/commitlint 开发期链，不进 App 包"
     }
   ]
 }
