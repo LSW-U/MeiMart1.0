@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
@@ -15,6 +14,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
 import { textStyle, spacing, useTheme } from '@/theme';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import type { Banner } from '@/types';
 import type { BannerCarouselProps } from './BannerCarousel.types';
 
@@ -133,10 +133,13 @@ function BannerCard({
     >
       {/* 背景图（20261023 定稿：纯图片轮播，无底色无 scrim） */}
       {banner.image ? (
-        <Image
+        <SafeImage
           source={{ uri: banner.image }}
           style={styles.bgImage}
           resizeMode="cover"
+          variant="thumb"
+          lazy
+          recyclingKey={banner.id}
           accessible={false}
         />
       ) : null}

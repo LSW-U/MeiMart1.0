@@ -1,10 +1,11 @@
 import { memo } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/format';
 import { useLocalizer } from '@/i18n';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import type { ReviewItemProps } from './ReviewItem.types';
 
 // C-P2-10: React.memo——评论列表项重渲隔离（props 浅比较）
@@ -65,10 +66,13 @@ export const ReviewItem = memo(function ReviewItem({ review, onPress, testID }: 
       {review.images && review.images.length > 0 && (
         <View style={styles.imageRow}>
           {review.images.slice(0, 4).map((uri) => (
-            <Image
+            <SafeImage
               key={uri}
               source={{ uri }}
               style={[styles.reviewImage, { borderRadius: borderRadius.sm }]}
+              variant="thumb"
+              lazy
+              recyclingKey={uri}
               accessible={false}
             />
           ))}

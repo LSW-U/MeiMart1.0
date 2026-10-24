@@ -7,7 +7,6 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
-  Image,
 } from 'react-native';
 import { useRef, useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
@@ -24,6 +23,7 @@ import { businessError } from '@/services/cart';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { CouponPicker } from '@/components/business/CouponPicker/CouponPicker';
 import { useCart, useCheckoutPreview, useClearCart } from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
@@ -561,7 +561,13 @@ export default function CheckoutPage() {
                     selectedItems.map((item) => (
                       <View key={item.id} style={styles.summaryItemRow}>
                         {/* U2 加 40×40 缩略图 */}
-                        <Image source={{ uri: item.product.image }} style={styles.summaryThumb} />
+                        <SafeImage
+                          source={{ uri: item.product.image }}
+                          style={styles.summaryThumb}
+                          variant="thumb"
+                          lazy
+                          recyclingKey={item.id}
+                        />
                         <View style={styles.summaryItemInfo}>
                           <Text
                             style={[styles.summaryItemName, { color: colors['on-surface'] }]}

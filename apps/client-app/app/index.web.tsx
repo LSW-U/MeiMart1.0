@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { Image } from 'expo-image';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography } from '@/theme';
@@ -69,10 +69,10 @@ export default function SplashPage() {
       </View>
 
       <View style={styles.heroWrap}>
-        <Image
+        <SafeImage
           source={HERO_IMAGE}
           style={styles.heroImage}
-          contentFit="contain"
+          resizeMode="contain"
           transition={300}
           recyclingKey="mei-mart-hero"
         />

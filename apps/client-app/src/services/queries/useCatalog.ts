@@ -1,14 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { catalogApi } from '@/services/catalog';
+import { CATALOG_TTL } from '@/services/offline/catalogPolicy';
 
 // Why: 批1 A4 透传（裁决 B）后分类/banner 名称不再在 service 层烘焙（原样透传多语 Record），
 //      渲染层 localize() 取值——切语言无需换 key 重查，key 去掉 locale 段
 //      （消灭同一数据按语言分裂的 N 份缓存，也顺带消除 staleTime 内旧语言命中问题）。
+// 轻量化省流批2：目录类走分层 TTL（catalogPolicy.ts），断网冷启动目录可浏览（A5）
 export function useCategories() {
   return useQuery({
     queryKey: ['categories'],
     queryFn: () => catalogApi.getCategories(),
-    staleTime: 30 * 60 * 1000,
+    staleTime: CATALOG_TTL.categories,
     networkMode: 'offlineFirst',
   });
 }
@@ -17,7 +19,7 @@ export function useBanners() {
   return useQuery({
     queryKey: ['banners'],
     queryFn: () => catalogApi.getBanners(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: CATALOG_TTL.banners,
     networkMode: 'offlineFirst',
   });
 }

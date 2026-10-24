@@ -11,10 +11,11 @@
  * 复用点：after-sales-apply / review / feedback / profile-edit 4 调用点（批B 改动2）。
  */
 import { useMemo } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme, borderRadius } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 import type { PhotoUploadTileProps } from './PhotoUploadTile.types';
 
@@ -82,7 +83,11 @@ export function PhotoUploadTile({
   // ── 三态图片位 ──
   return (
     <View style={[styles.box, boxStyle, { backgroundColor: colors['surface-container'] }]}>
-      {uri ? <Image source={{ uri }} style={styles.img} resizeMode="cover" /> : null}
+      {/* 批2：uri 是本地上传预览（file://）/刚回传的远端 URL；variant=full + toThumbUrl
+          对 file:// 原样返回，远端 URL 走 -thumb——上传预览 72×72 无需拉原图 */}
+      {uri ? (
+        <SafeImage source={{ uri }} style={styles.img} resizeMode="cover" variant="thumb" />
+      ) : null}
 
       {state === 'uploading' && (
         <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.45)' }]}>

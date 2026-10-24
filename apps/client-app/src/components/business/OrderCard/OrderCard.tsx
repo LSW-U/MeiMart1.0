@@ -1,11 +1,12 @@
 import { memo } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius, shadowPresets } from '@/theme';
 import { useLocalizer } from '@/i18n';
 import { PriceText } from '@/components/ui/PriceText';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { ORDER_STATUS_VISUAL, getStatusPill, getOrderActions } from '@/lib/orderStatusConfig';
 import type { OrderCardProps, OrderAction } from './OrderCard.types';
 
@@ -135,9 +136,12 @@ function OrderCardBase({
                   },
                 ]}
               >
-                <Image
+                <SafeImage
                   source={{ uri: item.product.image }}
                   style={styles.thumbImg}
+                  variant="thumb"
+                  lazy
+                  recyclingKey={item.id}
                   accessible={false}
                   accessibilityLabel={localize(item.product.name)}
                 />

@@ -49,7 +49,14 @@ export const MasonryProductCard = memo(function MasonryProductCard({
         { height: imageHeight, backgroundColor: colors['surface-container'] },
       ]}
     >
-      <SafeImage source={{ uri: product.image }} style={styles.image} />
+      {/* 批3 P2-2：瀑布流卡片（排除区外的管理态卡片），thumb+lazy+recyclingKey */}
+      <SafeImage
+        source={{ uri: product.image }}
+        style={styles.image}
+        variant="thumb"
+        lazy
+        recyclingKey={product.id}
+      />
       {badge && !selectMode && (
         <View style={[styles.badge, { backgroundColor: colors.primary }]}>
           <Text style={styles.badgeText}>{badge.label}</Text>

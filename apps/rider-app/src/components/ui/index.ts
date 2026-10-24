@@ -5,6 +5,7 @@ export { Button } from './Button';
 export { Card } from './Card';
 export { Input } from './Input';
 export { Modal } from './Modal';
+export { SafeImage } from './SafeImage';
 export { Skeleton } from './Skeleton';
 export { SwipeButton } from './SwipeButton';
 export { UploadTile } from './UploadTile';

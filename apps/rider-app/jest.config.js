@@ -106,6 +106,9 @@ module.exports = {
         // T3：EvidenceUpload（pickup/sign）require('expo-image-picker') 拉原生相机，
         // jsdom 无 runtime；桩成可控 mock（权限/拍照结果可注入）
         '^expo-image-picker$': '<rootDir>/src/test/expo-image-picker.mock.js',
+        // 轻量化省流批2：SafeImage import expo-image（ESM 发布，web project 不 transform →
+        // "Unexpected token 'export'"）。桩成可渲染 host 壳（与 react-native.mock 同款）。
+        '^expo-image$': '<rootDir>/src/test/expo-image.mock.js',
         // T1 审查 P3-1（tasks 页测试）：babel-preset-expo 把 process.env.EXPO_PUBLIC_*
         // 编译成 require('expo/virtual/env')（ESM 发布，web project 不 transform →
         // "Unexpected token 'export'"）。桩成 CJS env 透传 process.env（与真包语义一致）。

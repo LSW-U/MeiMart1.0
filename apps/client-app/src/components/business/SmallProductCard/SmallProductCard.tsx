@@ -48,7 +48,13 @@ export const SmallProductCard = memo(function SmallProductCard({
         accessibilityLabel={t('product.viewItem', { name })}
       >
         <View style={[styles.imageWrap, { backgroundColor: colors['surface-container'] }]}>
-          <SafeImage source={{ uri: product.image }} style={styles.image} />
+          <SafeImage
+            source={{ uri: product.image }}
+            style={styles.image}
+            variant="thumb"
+            lazy
+            recyclingKey={product.id}
+          />
         </View>
         <Text style={[styles.name, { color: colors['on-surface'] }]} numberOfLines={1}>
           {name}

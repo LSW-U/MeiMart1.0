@@ -43,7 +43,13 @@ export const HorizontalProductCard = memo(function HorizontalProductCard({
     <>
       {selectMode ? (
         <View style={styles.imageWrap}>
-          <SafeImage source={{ uri: product.image }} style={styles.image} />
+          <SafeImage
+            source={{ uri: product.image }}
+            style={styles.image}
+            variant="thumb"
+            lazy
+            recyclingKey={product.id}
+          />
         </View>
       ) : (
         <Pressable
@@ -54,7 +60,13 @@ export const HorizontalProductCard = memo(function HorizontalProductCard({
           accessibilityLabel={t('product.viewItem', { name })}
         >
           <View style={styles.imageWrap}>
-            <SafeImage source={{ uri: product.image }} style={styles.image} />
+            <SafeImage
+              source={{ uri: product.image }}
+              style={styles.image}
+              variant="thumb"
+              lazy
+              recyclingKey={product.id}
+            />
           </View>
         </Pressable>
       )}

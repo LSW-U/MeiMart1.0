@@ -8,7 +8,6 @@ import {
   Text,
   TextInput,
   ScrollView,
-  Image,
   Pressable,
   PanResponder,
   Animated,
@@ -31,6 +30,7 @@ import { Switch } from '@/components/ui/Switch';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { PriceText } from '@/components/ui/PriceText';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { useOrder } from '@/services/queries/useOrders';
 import { useSubmitReview, useOrderReviews } from '@/services/queries/useReviews';
 import { uploadsApi } from '@/services/uploads';
@@ -51,6 +51,8 @@ import { reviewSchema, type ReviewValues } from '@/forms/schemas/service';
 
 // Why: TAGS 用 i18n key 渲染 Chip，提交时需还原为存储标识（quality/fresh 等，与 reviews.json 对齐）
 const REVIEW_TAG_PREFIX = 'review.tag.';
+// 批2 替换时提取的两处同值 unsplash 兜底图（原裸 Image 内联字面量，行为不变）
+const REVIEW_FALLBACK_IMG = 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=100';
 // Why: 与后端 GoodsReviewTag 枚举对齐（snake_case，RB1 commit 9e33d79），
 //      real POST tags 不匹配枚举会 400。商品详情页 product/[id].tsx:992 同用 review.tag.${tag} 渲染。
 const TAGS = [
@@ -406,13 +408,12 @@ export default function OrderReviewPage() {
                           : localize(it.product.name)
                       }
                     >
-                      <Image
-                        source={{
-                          uri:
-                            it.product.image ||
-                            'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=100',
-                        }}
+                      <SafeImage
+                        source={{ uri: it.product.image || REVIEW_FALLBACK_IMG }}
                         style={styles.productTabImg}
+                        variant="thumb"
+                        lazy
+                        recyclingKey={it.id}
                       />
                       <Text
                         style={[
@@ -461,14 +462,12 @@ export default function OrderReviewPage() {
           </View>
           <View style={styles.productRow}>
             <View style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}>
-              <Image
-                source={{
-                  uri:
-                    product?.image ??
-                    'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=200',
-                }}
+              <SafeImage
+                source={{ uri: product?.image ?? REVIEW_FALLBACK_IMG }}
                 style={styles.productImg}
                 resizeMode="cover"
+                variant="thumb"
+                recyclingKey={product?.id}
               />
             </View>
             <View style={styles.productTextBox}>

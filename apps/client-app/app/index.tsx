@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { Image } from 'expo-image';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -110,10 +110,10 @@ export default function SplashPage() {
       </View>
 
       <View style={styles.heroWrap}>
-        <Image
+        <SafeImage
           source={HERO_IMAGE}
           style={styles.heroImage}
-          contentFit="contain"
+          resizeMode="contain"
           transition={300}
           recyclingKey="mei-mart-hero"
         />

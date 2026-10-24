@@ -24,7 +24,12 @@ type RiderStatusTag = 'ON_THE_WAY' | 'ARRIVED';
 // Why: 配送中（PICKED/OUT_FOR_DELIVERY）→ ON THE WAY；已送达（DELIVERED*/COMPLETED）→ ARRIVED；其余不显标签
 export function getRiderStatusTag(status: OrderStatus): RiderStatusTag | null {
   if (status === 'PICKED' || status === 'OUT_FOR_DELIVERY') return 'ON_THE_WAY';
-  if (status === 'DELIVERED_PAID' || status === 'DELIVERED_UNPAID' || status === 'DELIVERED' || status === 'COMPLETED') {
+  if (
+    status === 'DELIVERED_PAID' ||
+    status === 'DELIVERED_UNPAID' ||
+    status === 'DELIVERED' ||
+    status === 'COMPLETED'
+  ) {
     return 'ARRIVED';
   }
   return null;
@@ -44,34 +49,57 @@ export function RiderCard({ rider, orderStatus }: { rider: RiderInfo; orderStatu
   // Why: rating 后端返 string（Decimal normalize 去 0），转换层 Number 后用 Intl.NumberFormat locale 感知格式化（非 toFixed 硬拼）
   const ratingText =
     rider.rating != null
-      ? new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rider.rating)
+      ? new Intl.NumberFormat(i18n.language, {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }).format(rider.rating)
       : '--';
   // Why: ON_THE_WAY 用 primary-container 配色族，ARRIVED 用 surface-variant（与 banner 配色协调）
   const tagColors =
     statusTag === 'ON_THE_WAY'
-      ? { bg: colors['primary-container'], text: colors['on-primary-container'], border: colors['outline-variant'] }
-      : { bg: colors['surface-variant'], text: colors['on-surface-variant'], border: colors['outline-variant'] };
+      ? {
+          bg: colors['primary-container'],
+          text: colors['on-primary-container'],
+          border: colors['outline-variant'],
+        }
+      : {
+          bg: colors['surface-variant'],
+          text: colors['on-surface-variant'],
+          border: colors['outline-variant'],
+        };
   return (
     <View
       style={[
         styles.card,
-        { backgroundColor: colors['surface-container-lowest'], borderColor: colors['outline-variant'] },
+        {
+          backgroundColor: colors['surface-container-lowest'],
+          borderColor: colors['outline-variant'],
+        },
       ]}
     >
       <View style={[styles.avatar, { backgroundColor: colors['primary-container'] }]}>
         {rider.avatar ? (
-          <SafeImage source={{ uri: rider.avatar }} style={styles.avatarImg} />
+          // 批3 P2-2：骑手头像走 thumb + lazy（RiderInfo 无 id，单卡非列表不传 recyclingKey）
+          <SafeImage source={{ uri: rider.avatar }} style={styles.avatarImg} variant="thumb" lazy />
         ) : (
           <Icon symbol="person" size={28} color={colors['on-primary']} />
         )}
       </View>
       <View style={styles.info}>
         <View style={styles.nameRow}>
-          <Text style={[styles.bodyMdBold, { color: colors['on-surface'], flex: 1 }]} numberOfLines={1}>
+          <Text
+            style={[styles.bodyMdBold, { color: colors['on-surface'], flex: 1 }]}
+            numberOfLines={1}
+          >
             {rider.name ?? t('order.riderDefault', { defaultValue: 'Delivery Rider' })}
           </Text>
           {statusTag ? (
-            <View style={[styles.statusTag, { backgroundColor: tagColors.bg, borderColor: tagColors.border }]}>
+            <View
+              style={[
+                styles.statusTag,
+                { backgroundColor: tagColors.bg, borderColor: tagColors.border },
+              ]}
+            >
               <Text style={[styles.statusTagText, { color: tagColors.text }]}>
                 {statusTag === 'ON_THE_WAY'
                   ? t('order.riderOnTheWay', { defaultValue: 'ON THE WAY' })
@@ -141,7 +169,13 @@ const styles = StyleSheet.create({
   statusTagText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.4 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   ratingText: { fontSize: 12 },
-  callBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  callBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   bodyMdBold: { fontSize: 14, fontWeight: '700' },
   bodySm: { fontSize: 12 },
 });

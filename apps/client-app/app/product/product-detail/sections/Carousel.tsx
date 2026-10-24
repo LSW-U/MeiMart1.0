@@ -1,9 +1,10 @@
 // 图片轮播（D-V4：对齐 P1 优化原型 slide 380px 满屏宽 + 分页圆点 + play 按钮）
 // 批5 拆分：从 app/product/[id].tsx 原样搬移，行为零变更
-import { ScrollView, View, Text, Image, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useTheme, spacing } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { SCREEN_WIDTH, CAROUSEL_HEIGHT } from '../shared';
 
 export function Carousel({
@@ -28,13 +29,16 @@ export function Carousel({
         }}
         scrollEventThrottle={16}
       >
-        {/* D1 批D：真实多图轮播（images[]，mainImage 首图兜底）——替换假三图（同图×3 + 计数器 /3 硬编码） */}
+        {/* D1 批D：真实多图轮播（images[]，mainImage 首图兜底）——替换假三图（同图×3 + 计数器 /3 硬编码）
+            批2：详情大图走原图（variant=full，600px 缩略图会糊），activeImage 首屏 priority 高 */}
         {images.map((uri, i) => (
-          <Image
+          <SafeImage
             key={i}
             source={{ uri }}
             style={{ width: SCREEN_WIDTH, height: CAROUSEL_HEIGHT }}
             resizeMode="cover"
+            recyclingKey={`${uri}-${i}`}
+            lazy={i !== activeImage}
           />
         ))}
       </ScrollView>

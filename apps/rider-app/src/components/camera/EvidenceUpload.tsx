@@ -4,6 +4,7 @@ import { Platform, Pressable, Text, View } from 'react-native';
 import { precheckImage, PrecheckError } from '@meimart/upload-core';
 
 import { AppIcon } from '../ui/AppIcon';
+import { SafeImage } from '../ui/SafeImage';
 import { colors } from '../../theme/colors';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -70,7 +71,7 @@ function EvidenceUploadNative({
 }: EvidenceUploadProps) {
   const { t } = useTranslation();
   const ImagePicker = require('expo-image-picker');
-  const { Image, Pressable } = require('react-native');
+  const { Pressable } = require('react-native');
 
   const takePhoto = async () => {
     try {
@@ -121,7 +122,7 @@ function EvidenceUploadNative({
         onPress={() => void takePhoto()}
       >
         {captured && photoUri ? (
-          <Image className="h-full w-full" resizeMode="cover" source={{ uri: photoUri }} />
+          <SafeImage className="h-full w-full" resizeMode="cover" source={{ uri: photoUri }} />
         ) : (
           <>
             <Text className="mb-1 text-4xl text-outline">{placeholderLabel}</Text>

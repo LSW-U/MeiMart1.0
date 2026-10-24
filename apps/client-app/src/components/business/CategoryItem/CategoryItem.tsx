@@ -1,9 +1,10 @@
 import { memo, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
 import { useTheme, textStyle, spacing } from '@/theme';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { toIconName } from '@/types';
 import type { CategoryItemProps, CategoryItemSize } from './CategoryItem.types';
 
@@ -65,9 +66,12 @@ export const CategoryItem = memo(function CategoryItem({
         ]}
       >
         {hasImage ? (
-          <Image
-            source={{ uri: category.image }}
+          <SafeImage
+            source={{ uri: category.image! }}
             style={styles.image}
+            variant="thumb"
+            lazy
+            recyclingKey={category.id}
             accessible={false}
             testID={testID ? `${testID}-image` : 'category-item-image'}
             onError={() => setImageError(true)}

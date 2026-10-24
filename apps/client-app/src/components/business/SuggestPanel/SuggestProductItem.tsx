@@ -34,7 +34,14 @@ export function SuggestProductItem({ product, onPress, testID }: SuggestProductI
       accessibilityLabel={t('product.viewItem', { name })}
     >
       <View style={[styles.imageWrap, { backgroundColor: colors['surface-container'] }]}>
-        <SafeImage source={{ uri: product.image }} style={styles.image} />
+        {/* 批3 P2-2：建议列表项，thumb+lazy+recyclingKey */}
+        <SafeImage
+          source={{ uri: product.image }}
+          style={styles.image}
+          variant="thumb"
+          lazy
+          recyclingKey={product.id}
+        />
       </View>
       <View style={styles.info}>
         <Text style={[styles.name, { color: colors['on-surface'] }]} numberOfLines={2}>

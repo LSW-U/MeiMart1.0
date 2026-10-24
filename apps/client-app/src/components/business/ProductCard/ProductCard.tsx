@@ -88,7 +88,15 @@ function ProductCardBase({
         accessibilityLabel={t('product.a11y.cardItem', { name, price: formatPrice(product.price) })}
       >
         <View style={[styles.imageWrap, { backgroundColor: colors['surface-container-lowest'] }]}>
-          <SafeImage source={{ uri: product.image }} style={styles.image} accessible={false} />
+          {/* 批3 P2-2：商品卡片主流量面，走服务端缩略图 + 列表懒加载 + 回收复用 */}
+          <SafeImage
+            source={{ uri: product.image }}
+            style={styles.image}
+            variant="thumb"
+            lazy
+            recyclingKey={product.id}
+            accessible={false}
+          />
           {badge && <BadgeCorner badge={badge} entry={badgeColors[badge.variant]} />}
         </View>
         <View style={styles.info}>

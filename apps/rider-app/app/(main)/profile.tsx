@@ -1,8 +1,8 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { AppIcon } from '../../src/components/ui';
+import { AppIcon, SafeImage } from '../../src/components/ui';
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { SimplePageHeader } from '../../src/components/layout/SimplePageHeader';
 import { useAuth } from '../../src/hooks/useAuth';
@@ -130,10 +130,12 @@ export default function ProfilePage() {
           {/* P1 §3.3：头像兜底——avatarUrl 为空渲染 AppIcon rider 默认头像（tier-gold-soft 圆底） */}
           <View className="h-24 w-24 rounded-full bg-tier-gold-soft p-[3px]">
             {rider?.avatarUrl ? (
-              <Image
+              <SafeImage
                 className="h-full w-full rounded-full border-2 border-surface"
                 resizeMode="cover"
                 source={{ uri: rider.avatarUrl }}
+                variant="thumb"
+                recyclingKey={rider.avatarUrl}
               />
             ) : (
               <View className="h-full w-full items-center justify-center rounded-full border-2 border-surface">

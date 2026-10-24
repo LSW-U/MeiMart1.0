@@ -1,11 +1,12 @@
 import { memo } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
 import { useLocalizer } from '@/i18n';
 import { PriceText } from '@/components/ui/PriceText';
 import { Checkbox } from '@/components/ui/Checkbox';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import type { CartItemRowProps } from './CartItemRow.types';
 
 function CartItemRowBase({
@@ -53,7 +54,14 @@ function CartItemRowBase({
         accessibilityLabel={onItemPress ? t('cart.a11y.viewItem', { name }) : undefined}
       >
         <View style={[styles.imageWrap, { backgroundColor: colors['surface-container'] }]}>
-          <Image source={{ uri: product.image }} style={styles.image} accessible={false} />
+          <SafeImage
+            source={{ uri: product.image }}
+            style={styles.image}
+            variant="thumb"
+            lazy
+            recyclingKey={product.id}
+            accessible={false}
+          />
         </View>
         <View style={styles.info}>
           <Text
@@ -91,9 +99,7 @@ function CartItemRowBase({
           >
             <MaterialCommunityIcons name="minus" size={18} color={colors.primary} />
           </Pressable>
-          <Text
-            style={[textStyle('body-sm'), { color: colors['on-surface'], fontWeight: '700' }]}
-          >
+          <Text style={[textStyle('body-sm'), { color: colors['on-surface'], fontWeight: '700' }]}>
             {quantity}
           </Text>
           <Pressable

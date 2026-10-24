@@ -1,7 +1,8 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
 import type { AvatarProps, AvatarSize } from './Avatar.types';
 
@@ -38,9 +39,11 @@ export function Avatar({
       ]}
     >
       {uri ? (
-        <Image
+        <SafeImage
           source={{ uri }}
           style={{ width: dimension, height: dimension, borderRadius: dimension / 2 }}
+          variant="thumb"
+          recyclingKey={uri}
           accessibilityLabel={t('common.avatarImage')}
         />
       ) : (

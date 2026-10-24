@@ -67,7 +67,12 @@ describe('CategoryItem', () => {
       <CategoryItem category={{ ...category, image: 'https://cdn.example.com/a.png' }} />,
       { wrapper },
     );
-    // 第一张加载失败 → imageError=true → fallback 图标（'coffee'）渲染
+    // 批2 variant="thumb"：第一次 onError = -thumb 缺失 → 组件内回退原图（不外抛）
+    act(() => {
+      getByTestId('category-item-image').props.onError({ nativeEvent: { error: 'mock' } });
+    });
+    expect(queryByText('coffee')).toBeNull();
+    // 第二次 onError = 原图也失败 → 透传调用方 → imageError=true → fallback 图标（'coffee'）渲染
     act(() => {
       getByTestId('category-item-image').props.onError({ nativeEvent: { error: 'mock' } });
     });

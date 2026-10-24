@@ -4,7 +4,7 @@
 // Fix-15: Primary tais-pattern Header + 侧栏图标 + Daily Deals + 分类标题 + TaisDivider + HOT PRODUCTS + VIEW ALL + Skeleton
 // 优化: 商品卡片整体可点击跳转 + 加购按钮真正加购 + 真实商品替换 mock + 商品网格 2 列 8 个
 import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, View, Text, Pressable, ScrollView, Image } from 'react-native';
+import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
@@ -204,7 +204,14 @@ export default function CategoriesPage() {
                             },
                           ]}
                         >
-                          <SafeImage source={{ uri: sub.image ?? '' }} style={styles.subImage} />
+                          {/* 批3 P2-2：子分类图，thumb+lazy+recyclingKey（同侧栏） */}
+                          <SafeImage
+                            source={{ uri: sub.image ?? '' }}
+                            style={styles.subImage}
+                            variant="thumb"
+                            lazy
+                            recyclingKey={sub.id}
+                          />
                         </View>
                         <Text
                           style={[
@@ -408,9 +415,12 @@ function SidebarItem({
       accessibilityLabel={localize(category.name)}
     >
       {hasImage ? (
-        <Image
-          source={{ uri: category.image }}
+        <SafeImage
+          source={{ uri: category.image! }}
           style={styles.sidebarImage}
+          variant="thumb"
+          lazy
+          recyclingKey={category.id}
           onError={() => setImageError(true)}
           accessible={false}
         />

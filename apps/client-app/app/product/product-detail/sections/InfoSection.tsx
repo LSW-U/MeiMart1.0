@@ -1,11 +1,12 @@
 // 商品详情信息区：Header Info（双标签+标题+价格+库存+仓库+步进器）/ 断货 banner /
 // Delivery 卡 / 规格选择器 / Details 图文卡
 // 批5 拆分：从 app/product/[id].tsx 原样搬移，行为零变更
-import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
 import { Icon } from '@/components/ui/Icon';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { formatCompactNumber, formatPrice } from '@/utils/format';
 import type { Product, LocalizableText } from '@/types';
 import type { StockState } from '../shared';
@@ -389,7 +390,13 @@ export function InfoSection({
           </Text>
         </View>
         <View style={[styles.detailVideo, shadowPresets.md]}>
-          <Image source={{ uri: product.image }} style={styles.detailVideoImg} resizeMode="cover" />
+          <SafeImage
+            source={{ uri: product.image }}
+            style={styles.detailVideoImg}
+            resizeMode="cover"
+            variant="thumb"
+            recyclingKey={product.id}
+          />
         </View>
         <View style={styles.detailTextWrap}>
           <Text style={[styles.detailH2, { color: colors['on-surface'] }]}>

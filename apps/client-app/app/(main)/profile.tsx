@@ -133,9 +133,11 @@ export default function ProfilePage() {
                 accessibilityLabel={t('profile.edit')}
               >
                 <View style={styles.avatarNewWrap}>
+                  {/* 批3 P2-2：头像走 thumb（单例非列表，不传 recyclingKey/lazy） */}
                   <SafeImage
                     source={{ uri: user.avatar ?? DEFAULT_AVATAR }}
                     style={styles.avatarNew}
+                    variant="thumb"
                   />
                 </View>
                 <View style={styles.memberText}>

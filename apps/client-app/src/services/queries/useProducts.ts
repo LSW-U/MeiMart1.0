@@ -1,6 +1,7 @@
 import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { productApi, type FrequentBundle } from '@/services/products';
 import { useAuthStore } from '@/store/authStore';
+import { CATALOG_TTL } from '@/services/offline/catalogPolicy';
 
 /**
  * 排序方式（P8 决策 2-B 后端排序，与后端 ProductSortBy enum 一致）
@@ -12,7 +13,8 @@ export function useProducts() {
   return useQuery({
     queryKey: ['products'],
     queryFn: () => productApi.getProducts(),
-    staleTime: 5 * 60 * 1000,
+    // 轻量化省流批2 P2-1：目录分层 TTL（原硬编码 5min）
+    staleTime: CATALOG_TTL.productList,
     networkMode: 'offlineFirst',
   });
 }
@@ -22,7 +24,8 @@ export function useProduct(id: string | undefined) {
     queryKey: ['product', id],
     queryFn: () => productApi.getProduct(id as string),
     enabled: Boolean(id),
-    staleTime: 5 * 60 * 1000,
+    // 轻量化省流批2 P2-1：目录分层 TTL（原硬编码 5min，详情档保守 10min）
+    staleTime: CATALOG_TTL.productDetail,
     networkMode: 'offlineFirst',
   });
 }
@@ -140,7 +143,8 @@ export function useProductsByCategory(categoryId: string | undefined) {
     queryKey: ['products', 'category', categoryId],
     queryFn: () => productApi.getByCategory(categoryId as string),
     enabled: Boolean(categoryId),
-    staleTime: 5 * 60 * 1000,
+    // 轻量化省流批2 P2-1：目录分层 TTL（分类商品列表档，原硬编码 5min）
+    staleTime: CATALOG_TTL.productList,
     networkMode: 'offlineFirst',
   });
 }

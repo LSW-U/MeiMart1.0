@@ -198,11 +198,13 @@ describe('头像兜底（P1 §3.3）', () => {
     expect(container.querySelector('[data-testid="icon-bike-fast"]')).not.toBeNull();
   });
 
-  it('avatarUrl 有值 → 渲染 Image（source.uri 为该 URL）', () => {
+  it('avatarUrl 有值 → 渲染 SafeImage（expo-image host，source.uri 为该 URL）', () => {
     const { container } = renderPage();
-    const img = container.querySelector('[data-rn-host="Image"]');
+    // 轻量化省流批2：profile 头像收编进 SafeImage（内部走 expo-image），
+    // host 壳标记从 data-rn-host="Image" 变为 "ExpoImage"
+    const img = container.querySelector('[data-rn-host="ExpoImage"]');
     expect(img).not.toBeNull();
-    expect(img?.getAttribute('data-prop-source')).toContain('https://example.com/a.png');
+    expect(img?.getAttribute('data-prop-source')).toContain('https://example.com/a-thumb.png');
   });
 });
 

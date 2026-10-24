@@ -9,7 +9,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
-  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -26,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
+import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -375,10 +375,13 @@ export default function AfterSalesApplyPage() {
                     style={[styles.itemThumb, { backgroundColor: colors['surface-container'] }]}
                   >
                     {it.product.image ? (
-                      <Image
+                      <SafeImage
                         source={{ uri: it.product.image }}
                         style={styles.productImg}
                         resizeMode="cover"
+                        variant="thumb"
+                        lazy
+                        recyclingKey={it.id}
                       />
                     ) : null}
                   </View>
