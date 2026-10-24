@@ -28,7 +28,8 @@ function hostProps(container: HTMLElement, host: string): Record<string, string 
   if (!el) throw new Error(`host ${host} not rendered`);
   const props: Record<string, string | undefined> = {};
   for (const attr of Array.from(el.attributes)) {
-    if (attr.name.startsWith('data-prop-')) props[attr.name.slice('data-prop-'.length)] = attr.value;
+    if (attr.name.startsWith('data-prop-'))
+      props[attr.name.slice('data-prop-'.length)] = attr.value;
   }
   return props;
 }
@@ -38,7 +39,8 @@ function prop(props: Record<string, string | undefined>, name: string): string |
   return props[name] ?? props[name.toLowerCase()];
 }
 
-const pressButton = (container: HTMLElement) => fireEvent.click(container.querySelector('[data-rn-host="Pressable"]') as HTMLElement);
+const pressButton = (container: HTMLElement) =>
+  fireEvent.click(container.querySelector('[data-rn-host="Pressable"]') as HTMLElement);
 
 beforeEach(() => {
   pressSpy.mockClear();
@@ -54,7 +56,9 @@ describe('Button 默认态', () => {
 
   it('accessibilityState 默认无 disabled/busy', () => {
     const { container } = renderButton();
-    expect(prop(hostProps(container, 'Pressable'), 'accessibilityState')).toBe(JSON.stringify({ disabled: false, busy: false }));
+    expect(prop(hostProps(container, 'Pressable'), 'accessibilityState')).toBe(
+      JSON.stringify({ disabled: false, busy: false }),
+    );
   });
 });
 
@@ -69,7 +73,9 @@ describe('Button loading 态', () => {
 
   it('accessibilityState.busy = true', () => {
     const { container } = renderButton({ loading: true });
-    expect(prop(hostProps(container, 'Pressable'), 'accessibilityState')).toBe(JSON.stringify({ disabled: true, busy: true }));
+    expect(prop(hostProps(container, 'Pressable'), 'accessibilityState')).toBe(
+      JSON.stringify({ disabled: true, busy: true }),
+    );
   });
 
   it('pending 期间连点全部阻断，loading 解除后可点且只触发一次', () => {
@@ -97,7 +103,9 @@ describe('Button disabled 态', () => {
 
   it('accessibilityState.disabled = true 且无 spinner', () => {
     const { container } = renderButton({ disabled: true });
-    expect(prop(hostProps(container, 'Pressable'), 'accessibilityState')).toBe(JSON.stringify({ disabled: true, busy: false }));
+    expect(prop(hostProps(container, 'Pressable'), 'accessibilityState')).toBe(
+      JSON.stringify({ disabled: true, busy: false }),
+    );
     expect(container.querySelector('[data-rn-host="ActivityIndicator"]')).toBeNull();
   });
 });
@@ -105,7 +113,9 @@ describe('Button disabled 态', () => {
 describe('Button loading + disabled 并存', () => {
   it('disabled/busy 均正确', () => {
     const { container } = renderButton({ loading: true, disabled: true });
-    expect(prop(hostProps(container, 'Pressable'), 'accessibilityState')).toBe(JSON.stringify({ disabled: true, busy: true }));
+    expect(prop(hostProps(container, 'Pressable'), 'accessibilityState')).toBe(
+      JSON.stringify({ disabled: true, busy: true }),
+    );
   });
 });
 
@@ -123,5 +133,23 @@ describe('Button a11y 与 spinner 颜色', () => {
   it('indicatorColor 正确用于 spinner', () => {
     const { container } = renderButton({ loading: true, indicatorColor: '#ff0000' });
     expect(prop(hostProps(container, 'ActivityIndicator'), 'color')).toBe('#ff0000');
+  });
+});
+
+// 审查修复 20261025（R-P0-5）：hitSlop 透传契约钉住——传入原样到达内层 Pressable、
+// 缺省不挂（既有 30+ 调用方零影响），防止后续重构悄悄吞掉该通道
+describe('Button hitSlop 透传', () => {
+  it('传入 hitSlop 原样透传到内层 Pressable', () => {
+    const { container } = renderButton({ hitSlop: { top: 8, bottom: 8, left: 8, right: 8 } });
+    expect(prop(hostProps(container, 'Pressable'), 'hitSlop')).toBe(
+      JSON.stringify({ top: 8, bottom: 8, left: 8, right: 8 }),
+    );
+  });
+
+  it('缺省不挂 hitSlop（既有调用方零影响契约）', () => {
+    const { container } = renderButton();
+    // host 壳把显式 undefined prop 序列化为字符串 "undefined"（propToAttr 的 String 兜底）；
+    // 契约钉的是「不出现任何 hitSlop 数值」，即值停留在这个透传 undefined 形态
+    expect(prop(hostProps(container, 'Pressable'), 'hitSlop')).toBe('undefined');
   });
 });

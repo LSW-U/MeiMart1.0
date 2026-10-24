@@ -57,20 +57,21 @@ module.exports = {
       transformIgnorePatterns: [
         'node_modules/(?!(.pnpm/)?((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|nativewind|react-native-svg))',
       ],
-      // queries hooks + ui/feedback/layout 组件 + app 页面测试归 web project（jsdom），rn project 跳过
+      // queries hooks + ui/feedback/layout/business 组件 + app 页面测试归 web project（jsdom），rn project 跳过
       // 注意：页面测试文件在 src/test/pages/（不放 app/——expo-router 会把 .test.tsx 当路由模块
       // 打进 bundle，真机 hermes 无 jest 全局直接 ReferenceError 崩启动）
-      testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/', '/src/services/queries/', '/src/components/ui/', '/src/components/feedback/', '/src/components/layout/', '/src/test/pages/', '/app/', '/src/services/push-token.test.ts'],
+      testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/', '/src/services/queries/', '/src/components/ui/', '/src/components/feedback/', '/src/components/layout/', '/src/components/business/', '/src/test/pages/', '/app/', '/src/services/push-token.test.ts'],
     },
     {
       displayName: 'web',
       testEnvironment: 'jsdom',
       // react-native index.js 顶层读 __DEV__，jsdom 无 RN runtime 需注入（jest-expo preset 同款）
       globals: { __DEV__: true },
-      // queries hooks + ui/feedback/layout 组件 + app 页面测试归 web project（jsdom + @testing-library/react）
+      // queries hooks + ui/feedback/layout/business 组件 + app 页面测试归 web project（jsdom + @testing-library/react）
       // 页面测试 2026-08-20 从 app/** 迁到 src/test/pages/**：expo-router 扫描 app/ 时把 .test.tsx
       // 注册为路由（.test 后缀不剥），真机加载模块顶层 jest.mock 即崩（jest is not defined）
-      testMatch: ['<rootDir>/src/services/queries/**/*.test.tsx', '<rootDir>/src/components/ui/**/*.test.tsx', '<rootDir>/src/components/feedback/**/*.test.tsx', '<rootDir>/src/components/layout/**/*.test.tsx', '<rootDir>/src/test/pages/**/*.test.tsx', '<rootDir>/src/services/push-token.test.ts'],
+      // business/ 2026-10-25 审查修复接入：首个组件测试 DeliveryProgressBar（R-P0-2 圆点色）
+      testMatch: ['<rootDir>/src/services/queries/**/*.test.tsx', '<rootDir>/src/components/ui/**/*.test.tsx', '<rootDir>/src/components/feedback/**/*.test.tsx', '<rootDir>/src/components/layout/**/*.test.tsx', '<rootDir>/src/components/business/**/*.test.tsx', '<rootDir>/src/test/pages/**/*.test.tsx', '<rootDir>/src/services/push-token.test.ts'],
       // 不复用项目 babel.config.js（含 nativewind/babel，会把 JSX 改写成 nativewind jsx-runtime
       // → 拉入 react-native → jsdom 炸）。用 babel-preset-expo 单 preset（已顶层装、处理 TS+JSX），
       // configFile:false 跳过 babel.config.js，nativewind 插件不参与 → JSX 走标准 react runtime。
