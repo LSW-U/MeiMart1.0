@@ -444,6 +444,24 @@ function OrderItemRow({
           <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
             {t('order.qtyLabel', { defaultValue: 'Qty' })}: {item.quantity}
           </Text>
+          {/* 缺货履约闭环批2（2026-10-24）：缺货项标记（A4 前置）——批1 后端 OrderItem
+              透出 outOfStockQty（可空），推送深链跳本页可见。null = 未登记缺货隐藏 */}
+          {item.outOfStockQty != null ? (
+            <View
+              accessibilityRole="text"
+              accessibilityLabel={t('order.outOfStockBadgeA11y', {
+                defaultValue: 'Item out of stock',
+              })}
+              style={[styles.oosBadge, { backgroundColor: colors['error-container'] }]}
+            >
+              <Text style={[styles.oosBadgeText, { color: colors.error }]}>
+                {t('order.outOfStockBadge', {
+                  qty: item.outOfStockQty,
+                  defaultValue: 'Out of stock ×{{qty}}',
+                })}
+              </Text>
+            </View>
+          ) : null}
         </View>
         <Text style={[styles.priceDisplay, { color: colors.primary }]}>
           {formatPrice(item.product.price * item.quantity)}
@@ -582,6 +600,18 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     borderWidth: 1,
     padding: spacing.sm,
+  },
+  // 缺货履约闭环批2：缺货标记 badge（自起点小胶囊，error-container 底 + error 字）
+  oosBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  oosBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   itemImageWrap: {
     width: 80,

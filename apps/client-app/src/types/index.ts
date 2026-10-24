@@ -65,6 +65,9 @@ export interface CartItem {
   selected: boolean;
   // Why: 用户加购时选的规格（如「500g」「大份」），有则在小卡片分类下展示，无则隐藏
   spec?: string;
+  // 缺货履约闭环批2（2026-10-24）：缺货登记数量（可空——null/undefined = 未登记缺货，
+  // 订单详情页据此渲染缺货 badge；购物车等场景恒 null 不受影响）
+  outOfStockQty?: number | null;
 }
 
 export interface Address {

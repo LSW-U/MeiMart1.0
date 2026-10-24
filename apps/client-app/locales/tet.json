@@ -543,7 +543,9 @@
     "deleted": "Pedidu {{count}} hapah",
     "deleteFailed": "Hah falha, favor koko fali",
     "deleteTitle": "Hah Pedidu",
-    "deleteConfirm": "Hah pedidu {{count}} ne'ebé selecionado? La bele fila fali."
+    "deleteConfirm": "Hah pedidu {{count}} ne'ebé selecionado? La bele fila fali.",
+    "outOfStockBadge": "Sasan mamuk ×{{qty}}",
+    "outOfStockBadgeA11y": "Sasan mamuk"
   },
   "tracking": {
     "title": "Segue Pedidu",

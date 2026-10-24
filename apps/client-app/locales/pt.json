@@ -543,7 +543,9 @@
     "deleted": "{{count}} pedido(s) eliminado(s)",
     "deleteFailed": "Falha ao eliminar, tente novamente",
     "deleteTitle": "Eliminar pedidos",
-    "deleteConfirm": "Eliminar os {{count}} pedido(s) selecionados? Esta ação não pode ser revertida."
+    "deleteConfirm": "Eliminar os {{count}} pedido(s) selecionados? Esta ação não pode ser revertida.",
+    "outOfStockBadge": "Esgotado ×{{qty}}",
+    "outOfStockBadgeA11y": "Produto em falta"
   },
   "tracking": {
     "title": "Rastreio do pedido",

@@ -20,6 +20,9 @@ interface OrderItemRaw {
   unitPrice: number;
   quantity: number;
   subtotal: number;
+  // 缺货履约闭环批2（2026-10-24）：批1 后端 OrderItem 已透出缺货标记（可空，向后兼容），
+  // 透传给详情页渲染缺货 badge；null/缺失 = 未登记缺货
+  outOfStockQty?: number | null;
 }
 
 interface OrderRaw {
@@ -106,6 +109,8 @@ function transformOrderItem(raw: OrderItemRaw): CartItem {
     },
     quantity: raw.quantity ?? 1,
     selected: true,
+    // 批2：缺货数量透传（null = 未登记缺货，详情页按 null/undefined 隐藏 badge）
+    outOfStockQty: raw.outOfStockQty ?? null,
   };
 }
 

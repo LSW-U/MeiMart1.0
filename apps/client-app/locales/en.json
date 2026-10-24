@@ -543,7 +543,9 @@
     "deleted": "{{count}} order(s) deleted",
     "deleteFailed": "Failed to delete, please retry",
     "deleteTitle": "Delete Orders",
-    "deleteConfirm": "Delete {{count}} selected order(s)? This cannot be undone."
+    "deleteConfirm": "Delete {{count}} selected order(s)? This cannot be undone.",
+    "outOfStockBadge": "Out of stock ×{{qty}}",
+    "outOfStockBadgeA11y": "Item out of stock"
   },
   "tracking": {
     "title": "Order Tracking",

@@ -543,7 +543,9 @@
     "deleted": "已删除 {{count}} 个订单",
     "deleteFailed": "删除失败，请重试",
     "deleteTitle": "删除订单",
-    "deleteConfirm": "删除已选的 {{count}} 个订单？此操作不可恢复。"
+    "deleteConfirm": "删除已选的 {{count}} 个订单？此操作不可恢复。",
+    "outOfStockBadge": "缺货 ×{{qty}}",
+    "outOfStockBadgeA11y": "商品缺货"
   },
   "tracking": {
     "title": "订单追踪",
