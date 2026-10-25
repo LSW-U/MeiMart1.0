@@ -192,11 +192,12 @@ describe('Button variant 档位', () => {
     expect(textClass(container)).toContain('text-on-surface');
   });
 
-  it('调用方 className 后置覆盖（border-warning 盖过 outline 默认边色）', () => {
-    const { container } = renderButton({ variant: 'outline', className: 'border-warning' });
+  it('outline-warning 具名档（批C 参数化，替代 className 顺序覆盖）', () => {
+    const { container } = renderButton({ variant: 'outline-warning' });
     const cls = boxClass(container);
-    // 后置覆盖语义：两个 border 色类并存，warning 在字符串尾部（NativeWind 后者生效，
-    // 与批A「h-9 盖 h-14」同款已被本仓验证的顺序约定）
-    expect(cls.indexOf('border-warning')).toBeGreaterThan(cls.indexOf('border-outline'));
+    expect(cls).toContain('border-warning');
+    expect(cls).toContain('bg-transparent');
+    expect(cls).not.toContain('border-outline');
+    expect(textClass(container)).toContain('text-on-surface');
   });
 });

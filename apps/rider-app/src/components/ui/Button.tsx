@@ -22,8 +22,9 @@ type ButtonProps = {
   hitSlop?: PressableProps['hitSlop'];
   // R-P1-6（走查 20261024 · D1 拍板）：档位 sm=h-11/14px、md=h-14/16px、lg=h-14/18px；
   // 无 variant 维持 h-14、默认字号 12→14（30+ 调用方零布局风险）；
-  // outline=描边透明底深字（收编批A 治标 4 处）；调用方 className 后置可覆盖（如 border-warning）
-  variant?: 'sm' | 'md' | 'lg' | 'outline';
+  // outline=描边透明底深字（收编批A 治标 4 处）；批C（20261025）加 outline-warning 具名档
+  // （原 border-warning className 顺序覆盖参数化，消除隐藏耦合）；className 后置仍可覆盖其他值
+  variant?: 'sm' | 'md' | 'lg' | 'outline' | 'outline-warning';
 };
 
 export function Button({
@@ -44,7 +45,8 @@ export function Button({
   const inactive = disabled || loading;
   const sizeBox = variant === 'sm' ? 'h-11' : 'h-14';
   const sizeText = variant === 'md' ? 'text-base' : variant === 'lg' ? 'text-lg' : 'text-sm';
-  const isOutline = variant === 'outline';
+  const isOutline = variant === 'outline' || variant === 'outline-warning';
+  const outlineBorder = variant === 'outline-warning' ? 'border-warning' : 'border-outline';
   return (
     <Pressable
       accessibilityRole="button"
@@ -52,7 +54,7 @@ export function Button({
         accessibilityLabel ?? (typeof children === 'string' ? children : undefined)
       }
       accessibilityState={{ disabled: inactive, busy: loading }}
-      className={`${sizeBox} flex-row items-center justify-center gap-2 rounded-lg ${isOutline ? 'border border-outline bg-transparent' : 'bg-primary'} active:scale-[0.98] ${className}`}
+      className={`${sizeBox} flex-row items-center justify-center gap-2 rounded-lg ${isOutline ? `border ${outlineBorder} bg-transparent` : 'bg-primary'} active:scale-[0.98] ${className}`}
       disabled={inactive}
       onPress={onPress}
       hitSlop={hitSlop}

@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 
-import { AppIcon, Button } from '../ui';
+import { AppIcon, Button, formBackdropClass, Modal } from '../ui';
 import { useTranslation } from '../../i18n/useTranslation';
 import { colors } from '../../theme/colors';
 
@@ -44,69 +44,74 @@ export function DepositBlockDialog({
 }: DepositBlockDialogProps) {
   const { t } = useTranslation();
 
-  if (!visible) return null;
-
   return (
-    <View className="absolute inset-0 items-center justify-center bg-black/50 px-8">
-      <View className="w-full max-w-[280px] gap-4 rounded-3xl bg-surface p-6 shadow-xl">
-        {reason === 'unpaid' || reason === 'tierLimit' ? (
-          // 三态①未缴（HTML：直跳缴纳页，非 settings；明示 ≥$1 可接单）
-          // P3-1 tierLimit：已缴但本单金额超档位上限——同结构换标题/正文，CTA 语义不变
-          <>
-            <View className="mx-auto h-14 w-14 items-center justify-center rounded-full bg-status-danger-bg">
-              <AppIcon
-                accessibilityLabel={t(
-                  reason === 'tierLimit' ? 'tasks.deposit.tierLimitTitle' : 'tasks.deposit.title',
-                )}
-                color={colors.danger}
-                name="deposit"
-                size={28}
-              />
-            </View>
-            <Text className="text-center text-lg font-bold text-on-surface">
-              {t(reason === 'tierLimit' ? 'tasks.deposit.tierLimitTitle' : 'tasks.deposit.title')}
-            </Text>
-            <Text className="text-center text-sm leading-6 text-on-surface-variant">
-              {reason === 'tierLimit'
-                ? t('tasks.deposit.tierLimitMessage', { amount: pendingAmount ?? '' })
-                : t('tasks.deposit.messageV2')}
-            </Text>
-            <Button className="bg-primary-container" onPress={onGoDeposit}>
-              {t('tasks.deposit.goDeposit')}
+    // 批C（20261025）：迁 ui/Modal 基座（R-P1-13 渐进收尾）——原绝对定位遮罩遮不住
+    // 导航栏/BottomActionBar，NativeModal 修复；视觉参数（black/50、280px、shadow-xl）原样保留
+    <Modal
+      backdropClassName={formBackdropClass}
+      backdropCloseLabel={t('common.close')}
+      contentClassName="gap-4"
+      sheetClassName="w-full max-w-[280px] rounded-3xl bg-surface p-6 shadow-xl"
+      visible={visible}
+      onClose={onDismiss}
+    >
+      {reason === 'unpaid' || reason === 'tierLimit' ? (
+        // 三态①未缴（HTML：直跳缴纳页，非 settings；明示 ≥$1 可接单）
+        // P3-1 tierLimit：已缴但本单金额超档位上限——同结构换标题/正文，CTA 语义不变
+        <>
+          <View className="mx-auto h-14 w-14 items-center justify-center rounded-full bg-status-danger-bg">
+            <AppIcon
+              accessibilityLabel={t(
+                reason === 'tierLimit' ? 'tasks.deposit.tierLimitTitle' : 'tasks.deposit.title',
+              )}
+              color={colors.danger}
+              name="deposit"
+              size={28}
+            />
+          </View>
+          <Text className="text-center text-lg font-bold text-on-surface">
+            {t(reason === 'tierLimit' ? 'tasks.deposit.tierLimitTitle' : 'tasks.deposit.title')}
+          </Text>
+          <Text className="text-center text-sm leading-6 text-on-surface-variant">
+            {reason === 'tierLimit'
+              ? t('tasks.deposit.tierLimitMessage', { amount: pendingAmount ?? '' })
+              : t('tasks.deposit.messageV2')}
+          </Text>
+          <Button className="bg-primary-container" onPress={onGoDeposit}>
+            {t('tasks.deposit.goDeposit')}
+          </Button>
+          {/* R-P1-6：批A textClassName 治标收编为 outline 变体 */}
+          <Button variant="outline" onPress={onDismiss}>
+            {t('tasks.deposit.later')}
+          </Button>
+        </>
+      ) : (
+        // 三态②PENDING（HTML：已提交 $X 等待 admin 确认）
+        <>
+          <View className="mx-auto h-14 w-14 items-center justify-center rounded-full bg-status-warning-bg">
+            <AppIcon
+              accessibilityLabel={t('tasks.deposit.pendingTitle')}
+              color={colors.warning}
+              name="clock"
+              size={28}
+            />
+          </View>
+          <Text className="text-center text-lg font-bold text-on-surface">
+            {t('tasks.deposit.pendingTitle')}
+          </Text>
+          <Text className="text-center text-sm leading-6 text-on-surface-variant">
+            {t('tasks.deposit.pendingMessage', { amount: pendingAmount ?? '' })}
+          </Text>
+          {onViewRequest ? (
+            <Button variant="outline-warning" onPress={onViewRequest}>
+              {t('tasks.deposit.viewRequest')}
             </Button>
-            {/* R-P1-6：批A textClassName 治标收编为 outline 变体 */}
-            <Button variant="outline" onPress={onDismiss}>
-              {t('tasks.deposit.later')}
-            </Button>
-          </>
-        ) : (
-          // 三态②PENDING（HTML：已提交 $X 等待 admin 确认）
-          <>
-            <View className="mx-auto h-14 w-14 items-center justify-center rounded-full bg-status-warning-bg">
-              <AppIcon
-                accessibilityLabel={t('tasks.deposit.pendingTitle')}
-                color={colors.warning}
-                name="clock"
-                size={28}
-              />
-            </View>
-            <Text className="text-center text-lg font-bold text-on-surface">
-              {t('tasks.deposit.pendingTitle')}
-            </Text>
-            <Text className="text-center text-sm leading-6 text-on-surface-variant">
-              {t('tasks.deposit.pendingMessage', { amount: pendingAmount ?? '' })}
-            </Text>
-            {onViewRequest ? (
-              <Button className="border-warning" variant="outline" onPress={onViewRequest}>
-                {t('tasks.deposit.viewRequest')}
-              </Button>
-            ) : null}
-            <Button variant="outline" onPress={onDismiss}>
-              {t('tasks.deposit.gotIt')}
-            </Button>
-          </>
-        )}
-      </View>
-    </View>
+          ) : null}
+          <Button variant="outline" onPress={onDismiss}>
+            {t('tasks.deposit.gotIt')}
+          </Button>
+        </>
+      )}
+    </Modal>
   );
 }

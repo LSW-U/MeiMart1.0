@@ -6,7 +6,7 @@
  * 端点：POST /rider/orders/:id/out-of-stock；全缺禁报（D12，后端 E-OOS-004），
  * UI 侧文案提示「整单全部缺货只能由仓库登记」。
  *
- * 样式沿用 DepositBlockDialog 绝对定位遮罩先例（仓内无 react-native Modal 使用先例）；
+ * 批C（20261025）起走 ui/Modal 基座（原 RN Modal 自管 backdrop 已收编）；
  * 数量输入用 TextInput（pay.tsx 金额输入同款）。
  *
  * P2-2（审查 20261024）补齐任务书明文三项：
@@ -21,11 +21,11 @@
  * 上限 9999；数量超限由后端 E-OOS-002 拒 → tasks.oos.qtyError 明示（P3-4 连带修复）。
  */
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { EvidenceUpload } from '../camera/EvidenceUpload';
 import { showToast } from '../feedback/Toast';
-import { Button } from '../ui';
+import { Button, formBackdropClass, Modal } from '../ui';
 import { useTranslation, type TranslationKey } from '../../i18n/useTranslation';
 import { riderUploadApi } from '../../services/upload';
 import { colors } from '../../theme/colors';
@@ -90,132 +90,121 @@ export function OutOfStockDialog({
     setEvidenceUrl(null);
   }
 
-  if (!visible) return null;
-
   return (
-    // 仓内无 Modal 使用先例，沿用 DepositBlockDialog 绝对定位遮罩 + RN Modal 双保险：
-    // Modal 保证覆盖导航栏（任务页底部有 BottomActionBar）
-    <Modal transparent animationType="fade" visible onRequestClose={onDismiss}>
-      <Pressable
-        className="flex-1 items-center justify-center bg-black/50 px-8"
-        onPress={onDismiss}
-      >
-        <Pressable className="max-h-[85%] w-full max-w-[340px] gap-3 rounded-3xl bg-surface p-6 shadow-xl">
-          <ScrollView contentContainerClassName="gap-3">
-            <Text
-              accessibilityRole="header"
-              className="text-center text-lg font-bold text-on-surface"
-            >
-              {t('tasks.oos.title')}
-            </Text>
-            <Text className="text-center text-sm leading-6 text-on-surface-variant">
-              {t('tasks.oos.desc')}
-            </Text>
+    // 批C（20261025）：迁 ui/Modal 基座（R-P1-13 渐进收尾）——backdrop 关闭 / alert 语义 /
+    // 阻冒泡进基座；NativeModal 覆盖导航栏（任务页底部有 BottomActionBar）语义保留，
+    // 视觉参数（black/50、340px、max-h-85%、shadow-xl）不变
+    <Modal
+      backdropClassName={formBackdropClass}
+      backdropCloseLabel={t('common.cancel')}
+      sheetClassName="max-h-[85%] w-full max-w-[340px] rounded-3xl bg-surface p-6 shadow-xl"
+      visible={visible}
+      onClose={onDismiss}
+    >
+      <ScrollView contentContainerClassName="gap-3">
+        <Text accessibilityRole="header" className="text-center text-lg font-bold text-on-surface">
+          {t('tasks.oos.title')}
+        </Text>
+        <Text className="text-center text-sm leading-6 text-on-surface-variant">
+          {t('tasks.oos.desc')}
+        </Text>
 
-            {/* P2-2 项选择（展示态）：items 为 string[] 无 id/quantity，不可点选——
+        {/* P2-2 项选择（展示态）：items 为 string[] 无 id/quantity，不可点选——
                 后端按「首个未登记项」落账，展示列表供骑手对照 */}
-            {itemNames && itemNames.length > 0 ? (
-              <View className="gap-1">
-                <Text className="text-sm font-medium text-on-surface">
-                  {t('tasks.oos.itemLabel')}
-                </Text>
-                <Text className="rounded-lg border border-outline bg-surface px-3 py-2 text-sm text-on-surface-variant">
-                  {itemNames.join(' · ')}
-                </Text>
-                <Text className="text-xs text-on-surface-variant">{t('tasks.oos.itemHint')}</Text>
-              </View>
-            ) : null}
-
-            <Text className="text-sm font-medium text-on-surface">{t('tasks.oos.qtyLabel')}</Text>
-            <TextInput
-              accessibilityLabel={t('tasks.oos.qtyLabel')}
-              className="rounded-lg border border-outline bg-surface px-3 py-2 text-on-surface"
-              keyboardType="number-pad"
-              value={qty}
-              onChangeText={setQty}
-              placeholder={`1-${maxQty}`}
-              maxLength={String(maxQty).length}
-            />
-
-            <Text className="text-sm font-medium text-on-surface">
-              {t('tasks.oos.reasonLabel')}
+        {itemNames && itemNames.length > 0 ? (
+          <View className="gap-1">
+            <Text className="text-sm font-medium text-on-surface">{t('tasks.oos.itemLabel')}</Text>
+            <Text className="rounded-lg border border-outline bg-surface px-3 py-2 text-sm text-on-surface-variant">
+              {itemNames.join(' · ')}
             </Text>
-            <View className="flex-row flex-wrap gap-2">
-              {OOS_REASONS.map((r) => (
-                <Pressable
-                  key={r}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: reason === r }}
-                  onPress={() => setReason(r)}
-                  className={`rounded-full border px-3 py-1.5 ${
-                    reason === r
-                      ? 'border-primary bg-primary-container'
-                      : 'border-outline bg-surface'
-                  }`}
-                >
-                  <Text
-                    className="text-xs"
-                    style={{ color: reason === r ? colors.primaryContainer : colors.textMuted }}
-                  >
-                    {t(`tasks.oos.reason.${r}` as TranslationKey)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <Text className="text-xs text-on-surface-variant">{t('tasks.oos.itemHint')}</Text>
+          </View>
+        ) : null}
 
-            <Text className="text-sm font-medium text-on-surface">{t('tasks.oos.noteLabel')}</Text>
-            <TextInput
-              accessibilityLabel={t('tasks.oos.noteLabel')}
-              className="rounded-lg border border-outline bg-surface px-3 py-2 text-on-surface"
-              multiline
-              value={note}
-              onChangeText={setNote}
-              maxLength={200}
-            />
+        <Text className="text-sm font-medium text-on-surface">{t('tasks.oos.qtyLabel')}</Text>
+        <TextInput
+          accessibilityLabel={t('tasks.oos.qtyLabel')}
+          className="rounded-lg border border-outline bg-surface px-3 py-2 text-on-surface"
+          keyboardType="number-pad"
+          value={qty}
+          onChangeText={setQty}
+          placeholder={`1-${maxQty}`}
+          maxLength={String(maxQty).length}
+        />
 
-            {/* P2-2 拍照取证：EvidenceUpload 组件复用（相机权限/预校验/双端内建） */}
-            <EvidenceUpload
-              title={t('tasks.oos.photoLabel')}
-              actionLabel={uploading ? t('tasks.oos.photoUploading') : t('tasks.oos.photoAdd')}
-              capturedLabel={uploading ? t('tasks.oos.photoUploading') : t('tasks.oos.photoAdd')}
-              captured={photoUri != null && evidenceUrl != null}
-              photoUri={photoUri ?? undefined}
-              onPress={(uri) => void handlePhoto(uri)}
-            />
-            {photoUri != null ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t('tasks.oos.photoRemove')}
-                onPress={removePhoto}
-                className="self-start"
-              >
-                <Text className="text-xs" style={{ color: colors.error }}>
-                  {t('tasks.oos.photoRemove')}
-                </Text>
-              </Pressable>
-            ) : null}
-
-            <Button
-              className="bg-primary-container"
-              disabled={!qtyValid || submitting || uploading}
-              onPress={() =>
-                onSubmit({
-                  outOfStockQty: qtyNum,
-                  reason,
-                  note: note.trim() || undefined,
-                  evidenceUrls: evidenceUrl ? [evidenceUrl] : undefined,
-                })
-              }
+        <Text className="text-sm font-medium text-on-surface">{t('tasks.oos.reasonLabel')}</Text>
+        <View className="flex-row flex-wrap gap-2">
+          {OOS_REASONS.map((r) => (
+            <Pressable
+              key={r}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: reason === r }}
+              onPress={() => setReason(r)}
+              className={`rounded-full border px-3 py-1.5 ${
+                reason === r ? 'border-primary bg-primary-container' : 'border-outline bg-surface'
+              }`}
             >
-              {submitting || uploading ? t('tasks.oos.submitting') : t('tasks.oos.submit')}
-            </Button>
-            {/* R-P1-6：批A textClassName 治标收编为 outline 变体 */}
-            <Button variant="outline" onPress={onDismiss}>
-              {t('common.cancel')}
-            </Button>
-          </ScrollView>
-        </Pressable>
-      </Pressable>
+              <Text
+                className="text-xs"
+                style={{ color: reason === r ? colors.primaryContainer : colors.textMuted }}
+              >
+                {t(`tasks.oos.reason.${r}` as TranslationKey)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text className="text-sm font-medium text-on-surface">{t('tasks.oos.noteLabel')}</Text>
+        <TextInput
+          accessibilityLabel={t('tasks.oos.noteLabel')}
+          className="rounded-lg border border-outline bg-surface px-3 py-2 text-on-surface"
+          multiline
+          value={note}
+          onChangeText={setNote}
+          maxLength={200}
+        />
+
+        {/* P2-2 拍照取证：EvidenceUpload 组件复用（相机权限/预校验/双端内建） */}
+        <EvidenceUpload
+          title={t('tasks.oos.photoLabel')}
+          actionLabel={uploading ? t('tasks.oos.photoUploading') : t('tasks.oos.photoAdd')}
+          capturedLabel={uploading ? t('tasks.oos.photoUploading') : t('tasks.oos.photoAdd')}
+          captured={photoUri != null && evidenceUrl != null}
+          photoUri={photoUri ?? undefined}
+          onPress={(uri) => void handlePhoto(uri)}
+        />
+        {photoUri != null ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('tasks.oos.photoRemove')}
+            onPress={removePhoto}
+            className="self-start"
+          >
+            <Text className="text-xs" style={{ color: colors.error }}>
+              {t('tasks.oos.photoRemove')}
+            </Text>
+          </Pressable>
+        ) : null}
+
+        <Button
+          className="bg-primary-container"
+          disabled={!qtyValid || submitting || uploading}
+          onPress={() =>
+            onSubmit({
+              outOfStockQty: qtyNum,
+              reason,
+              note: note.trim() || undefined,
+              evidenceUrls: evidenceUrl ? [evidenceUrl] : undefined,
+            })
+          }
+        >
+          {submitting || uploading ? t('tasks.oos.submitting') : t('tasks.oos.submit')}
+        </Button>
+        {/* R-P1-6：批A textClassName 治标收编为 outline 变体 */}
+        <Button variant="outline" onPress={onDismiss}>
+          {t('common.cancel')}
+        </Button>
+      </ScrollView>
     </Modal>
   );
 }
