@@ -45,7 +45,10 @@ export type AppIconName =
   | 'clock'
   | 'gift'
   | 'cash'
-  | 'plus';
+  | 'plus'
+  | 'arrowRight'
+  | 'web'
+  | 'wechat';
 
 type MaterialIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -110,6 +113,11 @@ const icons: Record<AppIconName, MaterialIconName> = {
   cash: 'hand-coin-outline',
   // E2 §3.1: 绑定入口 + 图标（plus，glyphmap 已验证 984085）
   plus: 'plus',
+  // R-P1-10/12（走查 20261024）：字符图标清零 + 渠道图标语义——arrowRight（SwipeButton
+  // 箭头）、web（PAYPAL 渠道）、wechat（WECHAT 渠道，MC 原生有）；glyphmap 已验证 983124/984479/984593
+  arrowRight: 'arrow-right',
+  web: 'web',
+  wechat: 'wechat',
 };
 
 // 适配层：调用方 className 用 text-primary 等 token，映射到 theme colors（颜色迁移后无遗留 #hex）

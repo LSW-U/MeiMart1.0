@@ -144,7 +144,7 @@ export function OrderHistoryCard({
       <View className="flex-row items-center justify-between border-t border-surface-variant pt-3">
         <View>
           <Text
-            className={`text-xs font-bold uppercase tracking-wider text-outline ${muted ? 'opacity-60' : ''}`}
+            className={`text-xs font-bold uppercase tracking-wider text-on-surface-variant ${muted ? 'opacity-60' : ''}`}
           >
             {incomeLabel}
           </Text>
@@ -152,7 +152,11 @@ export function OrderHistoryCard({
             {income}
           </Text>
         </View>
-        <Text className="text-sm font-bold text-primary">{viewDetailsLabel} ›</Text>
+        <View className="flex-row items-center gap-1">
+          <Text className="text-sm font-bold text-primary">{viewDetailsLabel}</Text>
+          {/* R-P1-10（走查 20261024）：› 字符改 chevronRight（系统字体豆腐块风险） */}
+          <AppIcon className="text-primary" name="chevronRight" size={16} />
+        </View>
       </View>
     </Pressable>
   );

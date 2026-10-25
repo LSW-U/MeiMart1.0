@@ -250,7 +250,8 @@ export default function RegisterPage() {
                 <Text className="text-xl font-semibold text-white">{t('auth.register.role')}</Text>
               </View>
             </View>
-            <Text className="text-2xl text-white/50">▣</Text>
+            {/* R-P1-10（走查 20261024）：装饰 ▣ 改 AppIcon（豆腐块风险）；white/50 无 token，取最近档 text-white/60（colorByClass 映射 surface60，同 SwipeButton 终值） */}
+            <AppIcon className="text-2xl text-white/60" name="rider" />
           </View>
 
           <View className="gap-6">
@@ -371,7 +372,7 @@ export default function RegisterPage() {
               <UploadTile
                 error={uploads.license === 'error'}
                 errorHint={uploadHints.license}
-                icon="ID"
+                icon="document"
                 selected={uploads.license === 'done'}
                 disabled={uploads.license === 'uploading'}
                 subtitle={t('auth.register.driverLicenseLocal')}
@@ -385,7 +386,7 @@ export default function RegisterPage() {
                     compact
                     error={uploads.biFront === 'error'}
                     errorHint={uploadHints.biFront}
-                    icon="ID"
+                    icon="document"
                     selected={uploads.biFront === 'done'}
                     disabled={uploads.biFront === 'uploading'}
                     title={t('auth.register.biFront')}
@@ -398,7 +399,7 @@ export default function RegisterPage() {
                     compact
                     error={uploads.biBack === 'error'}
                     errorHint={uploadHints.biBack}
-                    icon="ID"
+                    icon="document"
                     selected={uploads.biBack === 'done'}
                     disabled={uploads.biBack === 'uploading'}
                     title={t('auth.register.biBack')}
@@ -410,7 +411,7 @@ export default function RegisterPage() {
               <UploadTile
                 error={uploads.vehicle === 'error'}
                 errorHint={uploadHints.vehicle}
-                icon="VR"
+                icon="rider"
                 selected={uploads.vehicle === 'done'}
                 disabled={uploads.vehicle === 'uploading'}
                 subtitle={t('auth.register.vehicleRegistrationLocal')}
@@ -452,9 +453,9 @@ export default function RegisterPage() {
           <View className="gap-6">
             <Button
               className="h-16 rounded-2xl"
+              variant="lg"
               disabled={loading}
               loading={loading}
-              textClassName="text-lg"
               onPress={() => void register()}
             >
               {loading ? t('flow.processing') : t('auth.register.submit')}

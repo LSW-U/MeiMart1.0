@@ -2,12 +2,13 @@ import type { TranslationKey } from '../../i18n/useTranslation';
 
 import { Pressable, Text, View } from 'react-native';
 
-import { AppIcon } from './AppIcon';
+import { AppIcon, type AppIconName } from './AppIcon';
 
 type UploadTileProps = {
   title: string;
   subtitle?: string;
-  icon: string;
+  /** R-P1-10（走查 20261024）：icon 由任意字符改 AppIconName（字符随系统字体走，豆腐块风险） */
+  icon: AppIconName;
   selected: boolean;
   /** 上传中防重入（upload 模块批A）：disabled 时不可点，透明度降 */
   disabled?: boolean;
@@ -43,7 +44,7 @@ export function UploadTile({
     >
       <View className={`${compact ? 'items-center' : 'flex-row items-center gap-3'}`}>
         <View className="h-10 w-10 items-center justify-center rounded-lg bg-surface-container">
-          <Text className="text-xl text-primary">{icon}</Text>
+          <AppIcon className="text-xl text-primary" name={icon} size={22} />
         </View>
         <View className={compact ? 'items-center' : ''}>
           {/* P3-2（批B 修复）：disabled=上传中时 title 换成 common.uploading（消费批A 预留 key） */}
@@ -71,7 +72,7 @@ export function UploadTile({
         ) : selected ? (
           <AppIcon className="text-xl text-primary" name="check" size={22} />
         ) : (
-          <Text className="text-xl text-outline">{t('auth.register.cam')}</Text>
+          <Text className="text-xl text-on-surface-variant">{t('auth.register.cam')}</Text>
         )
       ) : null}
     </Pressable>

@@ -2,6 +2,9 @@ import type { ReactNode } from 'react';
 import { useRef } from 'react';
 import { Pressable, Text } from 'react-native';
 
+import { AppIcon } from './AppIcon';
+import { colors } from '../../theme/colors';
+
 type SwipeButtonProps = {
   children: ReactNode;
   disabled?: boolean;
@@ -38,7 +41,8 @@ export function SwipeButton({ children, disabled = false, onPress }: SwipeButton
       className={`h-14 w-full flex-row items-center justify-center rounded-lg ${disabled ? 'bg-primary-container opacity-50' : 'bg-primary-container'}`}
     >
       <Text className="text-base font-bold uppercase tracking-widest text-white">{children}</Text>
-      <Text className="ml-2 text-xl text-white/80">→</Text>
+      {/* R-P1-10（走查 20261024）：→ 字符改 AppIcon（系统字体豆腐块风险）；ml-2 走 style（className 不作布局用） */}
+      <AppIcon color={colors.surface60} name="arrowRight" size={22} style={{ marginLeft: 8 }} />
     </Pressable>
   );
 }

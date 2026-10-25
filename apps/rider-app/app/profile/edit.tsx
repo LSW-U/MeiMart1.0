@@ -337,7 +337,7 @@ export default function ProfileEditPage() {
               <UploadTile
                 error={uploads.license === 'error'}
                 errorHint={uploadHints.license}
-                icon="ID"
+                icon="document"
                 selected={uploads.license === 'done'}
                 disabled={uploads.license === 'uploading'}
                 subtitle={t('auth.register.driverLicenseLocal')}
@@ -351,7 +351,7 @@ export default function ProfileEditPage() {
                     compact
                     error={uploads.biFront === 'error'}
                     errorHint={uploadHints.biFront}
-                    icon="ID"
+                    icon="document"
                     selected={uploads.biFront === 'done'}
                     disabled={uploads.biFront === 'uploading'}
                     title={t('auth.register.biFront')}
@@ -364,7 +364,7 @@ export default function ProfileEditPage() {
                     compact
                     error={uploads.biBack === 'error'}
                     errorHint={uploadHints.biBack}
-                    icon="ID"
+                    icon="document"
                     selected={uploads.biBack === 'done'}
                     disabled={uploads.biBack === 'uploading'}
                     title={t('auth.register.biBack')}
@@ -376,7 +376,7 @@ export default function ProfileEditPage() {
               <UploadTile
                 error={uploads.vehicle === 'error'}
                 errorHint={uploadHints.vehicle}
-                icon="VR"
+                icon="rider"
                 selected={uploads.vehicle === 'done'}
                 disabled={uploads.vehicle === 'uploading'}
                 subtitle={t('auth.register.vehicleRegistrationLocal')}
@@ -392,9 +392,9 @@ export default function ProfileEditPage() {
             <View>
               <Button
                 className="h-16 rounded-2xl"
+                variant="lg"
                 disabled={updateProfile.isPending}
                 loading={updateProfile.isPending}
-                textClassName="text-lg"
                 onPress={() => void saveProfile()}
               >
                 {t('auth.register.saveProfile')}

@@ -56,12 +56,12 @@ function RadioDot({ checked }: RadioDotProps) {
   );
 }
 
-/** 渠道图标映射（AppIconName 联合类型内既有名，审查 P2-1 修：globe 不存在会静默空渲染） */
+/** 渠道图标映射——R-P1-12（走查 20261024）：WECHAT 用 MC 原生 wechat、PAYPAL 用 web（原 chat/shield 语义错位） */
 const CHANNEL_ICON: Record<PayoutChannel, AppIconName> = {
   BANK_TRANSFER: 'bank',
-  WECHAT: 'chat',
+  WECHAT: 'wechat',
   ALIPAY: 'wallet',
-  PAYPAL: 'shield',
+  PAYPAL: 'web',
 };
 
 export function WithdrawForm({
@@ -109,7 +109,7 @@ export function WithdrawForm({
             keyboardType="numeric"
             accessibilityLabel={amountLabel}
             placeholder={amountPlaceholder}
-            placeholderTextColor={colors.outline}
+            placeholderTextColor={colors.textMuted}
             value={amount}
             onChangeText={onAmountChange}
             testID="withdraw-amount-input"
@@ -169,7 +169,7 @@ export function WithdrawForm({
           className="rounded-lg border-2 border-outline-variant bg-surface px-4 py-2 text-base text-on-surface"
           accessibilityLabel={accountLabel}
           placeholder={accountPlaceholder}
-          placeholderTextColor={colors.outline}
+          placeholderTextColor={colors.textMuted}
           value={account}
           onChangeText={onAccountChange}
           autoCapitalize="none"
@@ -187,7 +187,7 @@ export function WithdrawForm({
           className="rounded-lg border border-outline-variant bg-surface px-4 py-2 text-base text-on-surface"
           accessibilityLabel={holderNameLabel}
           placeholder={holderNameLabel}
-          placeholderTextColor={colors.outline}
+          placeholderTextColor={colors.textMuted}
           value={holderName}
           onChangeText={onHolderNameChange}
           testID="withdraw-holder-input"
@@ -198,7 +198,7 @@ export function WithdrawForm({
               className="flex-1 rounded-lg border border-outline-variant bg-surface px-4 py-2 text-base text-on-surface"
               accessibilityLabel={bankNameLabel}
               placeholder={bankNameLabel}
-              placeholderTextColor={colors.outline}
+              placeholderTextColor={colors.textMuted}
               value={bankName}
               onChangeText={onBankNameChange}
               testID="withdraw-bankname-input"
@@ -207,7 +207,7 @@ export function WithdrawForm({
               className="flex-1 rounded-lg border border-outline-variant bg-surface px-4 py-2 text-base text-on-surface"
               accessibilityLabel={branchNameLabel}
               placeholder={branchNameLabel}
-              placeholderTextColor={colors.outline}
+              placeholderTextColor={colors.textMuted}
               value={branchName}
               onChangeText={onBranchNameChange}
               testID="withdraw-branch-input"
