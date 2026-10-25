@@ -13,7 +13,8 @@ import type { CategoryItemProps, CategoryItemSize } from './CategoryItem.types';
 //   以 HTML 原型 L59 `border-radius:50%` 为准 -> 圆形（radius = box/2）
 export const SIZE_MAP = {
   sm: { box: 48, icon: 24, fontSize: 11 },
-  md: { box: 56, icon: 28, fontSize: 10 },
+  // P2-28：md 10→12（原 sm=11 > md=10 倒挂；sm=11/md=12/lg=14 单调递增，md 为首页主力档）
+  md: { box: 56, icon: 28, fontSize: 12 },
   lg: { box: 72, icon: 36, fontSize: 14 },
 } as const;
 

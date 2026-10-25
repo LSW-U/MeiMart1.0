@@ -29,6 +29,9 @@ export function BannerCarousel({
   testID,
 }: BannerCarouselProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  // 原因：批1 A4 透传后 Banner.title 是 LocalizableText，渲染层 localize() 取值（P2-27 容器 label 用）
+  const localize = useLocalizer();
   // C-P3-12（批4）：模块级 Dimensions.get 改 hook——旋转/分屏时宽度跟随，不再固化首帧
   const { width: screenWidth } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -48,7 +51,7 @@ export function BannerCarousel({
     const timer = setInterval(() => {
       setActiveIndex((prev) => {
         const next = (prev + 1) % banners.length;
-        scrollRef.current?.scrollTo({ x: next * screenWidth, animated: true });
+        scrollToIndex(next);
         return next;
       });
     }, autoPlayInterval);
@@ -60,10 +63,16 @@ export function BannerCarousel({
     setActiveIndex(idx);
   };
 
+  // 审查批C判断题1：autoplay 与圆点跳页共用同一滚动（原两处 scrollTo 形状重复）
+  const scrollToIndex = (i: number) => {
+    scrollRef.current?.scrollTo({ x: i * screenWidth, animated: true });
+  };
+
   if (banners.length === 0) return null;
 
   return (
-    <View testID={testID} accessibilityRole="image">
+    // P2-27：容器补 a11y label（首张 banner 标题）——原 role="image" 无 label 读屏静默
+    <View testID={testID} accessibilityRole="image" accessibilityLabel={localize(banners[0].title)}>
       <ScrollView
         ref={scrollRef}
         horizontal
@@ -85,9 +94,20 @@ export function BannerCarousel({
       {showDots && banners.length > 1 && (
         <View style={styles.dots}>
           {banners.map((b, i) => (
-            <View
+            // P2-27：圆点从纯装饰 View 改可点 Pressable（跳页 + 「第 n 张共 m 张」a11y + selected 态）
+            <Pressable
               key={b.id}
               testID={`dot-${i}`}
+              onPress={() => {
+                setActiveIndex(i);
+                scrollToIndex(i);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t('home.a11y.bannerDot', {
+                index: i + 1,
+                total: banners.length,
+              })}
+              accessibilityState={{ selected: i === activeIndex }}
               style={[
                 styles.dot,
                 i === activeIndex && styles.dotActive,

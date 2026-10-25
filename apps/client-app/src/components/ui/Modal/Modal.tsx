@@ -72,7 +72,7 @@ export function Modal({
         // Web：backdrop View（div）+ onClick target 检查（仅点 backdrop 空白关闭，点 dialog 不关闭）。
         // dialog View（div）可含 close Pressable（button）+ body 子 Pressable，不嵌套 button。
         <WebBackdrop
-          style={styles.backdrop}
+          style={[styles.backdrop, { backgroundColor: colors.scrim }]}
           onClick={(e) => {
             if (dismissable && e.target === e.currentTarget) onClose?.();
           }}
@@ -91,7 +91,7 @@ export function Modal({
       ) : (
         // native：backdrop Pressable 点击关闭 + dialog Pressable stopPropagation 防点 dialog 误关（native 不报 button 嵌套）
         <Pressable
-          style={styles.backdrop}
+          style={[styles.backdrop, { backgroundColor: colors.scrim }]}
           onPress={() => dismissable && onClose?.()}
           accessibilityRole="button"
           accessibilityLabel={t('common.closeDialog')}
@@ -114,7 +114,7 @@ export function Modal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    // P2-32：scrim 走 token（原 rgba(0,0,0,0.5) 字面量；bg 渲染期注入 colors.scrim）
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,

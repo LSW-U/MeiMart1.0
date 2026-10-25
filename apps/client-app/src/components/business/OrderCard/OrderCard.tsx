@@ -50,10 +50,11 @@ function OrderCardBase({
           Web 409 修复：selectDisabled（非终态）圆圈置灰不显勾，提示不可删 */}
       {selectMode && (
         <View
-          style={[
-            styles.selectCircle,
-            { alignSelf: 'flex-end', marginRight: spacing.md, marginTop: spacing.sm },
-          ]}
+          style={{
+            alignSelf: 'flex-end',
+            marginRight: spacing.md,
+            marginTop: spacing.sm,
+          }}
         >
           <View
             style={[
@@ -270,8 +271,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
   },
-  // 批3：管理模式选择圆圈外层占位（对齐通知页 22² 规格）
-  selectCircle: {},
+  // 批3：管理模式选择圆圈外层占位（对齐通知页 22² 规格；P2-30 删空样式对象 selectCircle:{}，定位直接内联）
   selectCircleInner: {
     width: 22,
     height: 22,

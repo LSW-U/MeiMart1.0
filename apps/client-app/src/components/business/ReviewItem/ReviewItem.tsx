@@ -70,7 +70,7 @@ export const ReviewItem = memo(function ReviewItem({ review, onPress, testID }: 
             <SafeImage
               key={uri}
               source={{ uri }}
-              style={[styles.reviewImage, { borderRadius: borderRadius.sm }]}
+              style={[styles.reviewImage, { borderRadius: borderRadius.md }]}
               variant="thumb"
               lazy
               recyclingKey={uri}

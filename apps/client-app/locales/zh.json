@@ -202,7 +202,8 @@
     "reorderLabel": "再次购买 {{name}}",
     "unreadBadge": "你有 {{count}} 条未读消息",
     "a11y": {
-      "banner": "横幅：{{title}}"
+      "banner": "横幅：{{title}}",
+      "bannerDot": "跳转到第 {{index}} 张，共 {{total}} 张"
     }
   },
   "promotion": {

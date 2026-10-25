@@ -988,6 +988,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout['container-margin'],
     marginBottom: spacing.md,
   },
-  // Why: 可点击主体（图片+名称+价格）
-  // Why: 加购按钮行，靠右对齐
 });

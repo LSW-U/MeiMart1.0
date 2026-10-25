@@ -202,7 +202,8 @@
     "reorderLabel": "Reencomendar {{name}}",
     "unreadBadge": "Você tem {{count}} notificações não lidas",
     "a11y": {
-      "banner": "Banner: {{title}}"
+      "banner": "Banner: {{title}}",
+      "bannerDot": "Ir para o banner {{index}} de {{total}}"
     }
   },
   "promotion": {

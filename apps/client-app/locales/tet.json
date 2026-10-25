@@ -202,7 +202,8 @@
     "reorderLabel": "Sosa fali {{name}}",
     "unreadBadge": "Ita iha {{count}} notifikasaun seidauk lee",
     "a11y": {
-      "banner": "Banner: {{title}}"
+      "banner": "Banner: {{title}}",
+      "bannerDot": "Ba banner {{index}} husi {{total}}"
     }
   },
   "promotion": {

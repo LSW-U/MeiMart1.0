@@ -18,6 +18,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { memo } from 'react';
 import { View, type AccessibilityRole, type ViewStyle } from 'react-native';
 import { symbolToMc, type IconName } from '@/theme/iconMapping';
+import { useTheme } from '@/theme';
 
 export type IconProps = {
   /** Material Symbols 名称（HTML 原型风格），自动映射 */
@@ -37,12 +38,14 @@ function IconImpl({
   symbol,
   name,
   size = 24,
-  color = '#000',
+  color,
   accessibilityLabel,
   accessibilityRole = 'image',
   testID,
   style,
 }: IconProps) {
+  // P2-31：默认色 '#000'→on-surface 随主题（dark 底上黑点不可见；35 处不传 color 的调用随之修复）
+  const { colors } = useTheme();
   if (!symbol && !name) {
     throw new Error('Icon requires either `symbol` or `name` prop');
   }
@@ -56,7 +59,11 @@ function IconImpl({
       accessibilityRole={accessibilityRole}
       style={style}
     >
-      <MaterialCommunityIcons name={resolvedName} size={size} color={color} />
+      <MaterialCommunityIcons
+        name={resolvedName}
+        size={size}
+        color={color ?? colors['on-surface']}
+      />
     </View>
   );
 }

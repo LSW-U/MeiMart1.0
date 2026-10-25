@@ -25,13 +25,7 @@ export function Switch({
   const knobBg = colors.surface;
 
   const row = (
-    <View
-      style={[
-        styles.track,
-        { backgroundColor: trackBg, opacity: disabled ? 0.5 : 1 },
-        value && styles.trackOn,
-      ]}
-    >
+    <View style={[styles.track, { backgroundColor: trackBg, opacity: disabled ? 0.5 : 1 }]}>
       <View
         style={[
           styles.knob,
@@ -97,7 +91,6 @@ const styles = StyleSheet.create({
     padding: PADDING,
     justifyContent: 'center',
   },
-  trackOn: {},
   knob: {
     width: KNOB,
     height: KNOB,

@@ -202,7 +202,8 @@
     "reorderLabel": "Reorder {{name}}",
     "unreadBadge": "You have {{count}} unread notifications",
     "a11y": {
-      "banner": "Banner: {{title}}"
+      "banner": "Banner: {{title}}",
+      "bannerDot": "Go to banner {{index}} of {{total}}"
     }
   },
   "promotion": {

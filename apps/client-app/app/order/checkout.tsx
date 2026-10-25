@@ -491,7 +491,10 @@ export default function CheckoutPage() {
                 })}
                 {/* 批B 占位渠道"即将上线"区：可见不可选（点击提示暂未开通），与后端 R2 下单拒绝同口径 */}
                 {comingSoonMethods.length > 0 && (
-                  <View testID="coming-soon-block" style={styles.comingSoonBlock}>
+                  <View
+                    testID="coming-soon-block"
+                    style={[styles.comingSoonBlock, { borderTopColor: colors['outline-variant'] }]}
+                  >
                     <Text style={[styles.comingSoonTitle, { color: colors.outline }]}>
                       {t('payment.methods.comingSoonTitle')}
                     </Text>
@@ -685,7 +688,7 @@ export default function CheckoutPage() {
         </ScrollView>
         {/* U5 submitting overlay：覆盖内容区，不挡底部栏（底部栏在 overlay 之后渲染，置顶可见） */}
         {submitting && (
-          <View style={styles.submitOverlay}>
+          <View style={[styles.submitOverlay, { backgroundColor: colors.scrim }]}>
             <View
               style={[
                 styles.submitOverlayCard,
@@ -789,7 +792,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.4)', // 原因：submitting 半透明遮罩，light/dark 通用
+    // P2-32：scrim 走 token（原 rgba(0,0,0,0.4) 字面量；bg 渲染期注入 colors.scrim）
   },
   submitOverlayCard: {
     paddingHorizontal: spacing.xl,
@@ -870,7 +873,8 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     borderTopWidth: 1.5,
     borderStyle: 'dashed',
-    borderTopColor: 'rgba(0,0,0,0.12)', // 原因：固定淡边框（outline-variant 会随主题翻色，这里 light/dark 统一弱化）
+    // P2-33（主理人拍板 2026-10-26）：虚线随主题 outline-variant（原固定 rgba(0,0,0,0.12) dark ≈1.1:1 不可见；
+    // 放弃原「light/dark 统一弱化」意图，dark 可见性优先；运行确认 #5 真机复核。bg 渲染期注入
   },
   comingSoonTitle: {
     ...typography['label-caps'],

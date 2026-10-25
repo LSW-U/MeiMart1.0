@@ -90,14 +90,15 @@ export function PhotoUploadTile({
       ) : null}
 
       {state === 'uploading' && (
-        <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.45)' }]}>
+        <View style={[styles.overlay, { backgroundColor: colors.scrim }]}>
           <ActivityIndicator size="small" color="#ffffff" />
           <Text style={styles.progressText}>{`${Math.round(progress)}%`}</Text>
         </View>
       )}
 
+      {/* P2-32：错误遮罩与上传遮罩统一 scrim token（原 0.55/0.45 两档各写） */}
       {state === 'error' && (
-        <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.55)' }]}>
+        <View style={[styles.overlay, { backgroundColor: colors.scrim }]}>
           <Icon symbol="error_outline" size={18} color="#ffffff" />
           {resolvedError ? (
             <Text style={styles.errorText} numberOfLines={2}>

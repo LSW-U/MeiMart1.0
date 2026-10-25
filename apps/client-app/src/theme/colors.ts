@@ -111,6 +111,8 @@ export type AppColors = {
   'outline-variant': string;
   /** P0-2：输入框占位符文字色（原 outline-variant #e1bfba 对白底仅 1.70:1） */
   placeholder: string;
+  /** P2-32：弹层遮罩统一档（原 Modal/PhotoUploadTile/checkout 四档 0.4~0.55 各写，单值收编） */
+  scrim: string;
   cultural: CulturalColors;
   semantic: SemanticColors;
   onboarding: OnboardingColors;
@@ -174,6 +176,8 @@ export const lightColors: AppColors = {
   'outline-variant': '#e1bfba',
   // P0-2：占位符独立 token（outline-variant 对白底 1.70:1 不达标；取 outline 同值 4.35:1）
   placeholder: '#8d706c',
+  // P2-32：弹层遮罩单档收编（双主题同值）
+  scrim: 'rgba(0,0,0,0.5)',
 
   // 文化装饰色（非配置内联色值）
   cultural: {
@@ -287,6 +291,8 @@ export const darkColors: AppColors = {
   'outline-variant': '#59413d',
   // P0-2：对 dark surface-container-lowest #1a1413 ≈5.7:1（取 dark outline 同值）
   placeholder: '#9c8c89',
+  // P2-32：弹层遮罩单档收编（双主题同值）
+  scrim: 'rgba(0,0,0,0.5)',
 
   // 文化装饰色（暗色版调整亮度）
   cultural: {
