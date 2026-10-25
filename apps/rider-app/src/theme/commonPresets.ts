@@ -13,3 +13,10 @@ export const defaultHitSlop = {
   left: 8,
   right: 8,
 } as const;
+
+/**
+ * 44px 实热区最小尺寸档（图标钮等小控件的 min 尺寸下限）。
+ * 批A 审查 smell #2 兑现（审查 20261025 复核补做）：魔法串收编进预设，
+ * 与 defaultHitSlop 同居单源；消费方 className={`relative ${touchTargetClass} ...`}。
+ */
+export const touchTargetClass = 'min-h-11 min-w-11';

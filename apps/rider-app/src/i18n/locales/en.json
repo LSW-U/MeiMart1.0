@@ -214,7 +214,7 @@
   "deposit.records.channelOnline": "Online",
   "deposit.records.emptyDescription": "Your deposit requests will appear here",
   "deposit.records.emptyTitle": "No records yet",
-  "deposit.records.entry": "View deposit records ›",
+  "deposit.records.entry": "View deposit records",
   "deposit.records.modifiedAmount": "📝 Requested {requested} → confirmed {confirmed}",
   "deposit.records.resubmit": "Resubmit",
   "deposit.records.riderNotePrefix": "📝 Note: ",

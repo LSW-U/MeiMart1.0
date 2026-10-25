@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { colors } from '../../theme/colors';
-import { defaultHitSlop } from '../../theme/commonPresets';
+import { defaultHitSlop, touchTargetClass } from '../../theme/commonPresets';
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
@@ -91,7 +91,7 @@ export function TaskDetailHeader({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('common.menu')}
-          className="min-h-11 min-w-11 items-center justify-center rounded-full p-1"
+          className={`${touchTargetClass} items-center justify-center rounded-full p-1`}
           hitSlop={defaultHitSlop}
           onPress={onMenuPress}
         >
@@ -104,7 +104,7 @@ export function TaskDetailHeader({
           accessibilityHint={
             unread > 0 ? t('notification.unreadCount', { count: unread }) : undefined
           }
-          className="relative min-h-11 min-w-11 items-center justify-center rounded-full p-1"
+          className={`relative ${touchTargetClass} items-center justify-center rounded-full p-1`}
           hitSlop={defaultHitSlop}
           onPress={() => router.push('/notifications')}
         >

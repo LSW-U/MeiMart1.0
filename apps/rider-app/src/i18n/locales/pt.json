@@ -214,7 +214,7 @@
   "deposit.records.channelOnline": "Online",
   "deposit.records.emptyDescription": "Os seus pedidos de depósito aparecerão aqui",
   "deposit.records.emptyTitle": "Ainda não há registos",
-  "deposit.records.entry": "Ver registos de depósito ›",
+  "deposit.records.entry": "Ver registos de depósito",
   "deposit.records.modifiedAmount": "📝 Pedido {requested} → confirmado {confirmed}",
   "deposit.records.resubmit": "Submeter novamente",
   "deposit.records.riderNotePrefix": "📝 Nota: ",

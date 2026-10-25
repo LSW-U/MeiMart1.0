@@ -214,7 +214,7 @@
   "deposit.records.channelOnline": "线上缴纳",
   "deposit.records.emptyDescription": "您的保证金申请记录将显示在这里",
   "deposit.records.emptyTitle": "暂无记录",
-  "deposit.records.entry": "查看缴存记录 ›",
+  "deposit.records.entry": "查看缴存记录",
   "deposit.records.modifiedAmount": "📝 申请 {requested} → 确认 {confirmed}",
   "deposit.records.resubmit": "重新提交",
   "deposit.records.riderNotePrefix": "📝 骑手说明：",

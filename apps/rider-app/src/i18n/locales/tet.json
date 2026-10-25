@@ -214,7 +214,7 @@
   "deposit.records.channelOnline": "Online",
   "deposit.records.emptyDescription": "Ita-nia pedidu depositu sei aparece iha ne'e",
   "deposit.records.emptyTitle": "Seidauk iha rekordu",
-  "deposit.records.entry": "Haree rekordu depositu ›",
+  "deposit.records.entry": "Haree rekordu depositu",
   "deposit.records.modifiedAmount": "📝 Pedidu {requested} → konfirmadu {confirmed}",
   "deposit.records.resubmit": "Submete Fali",
   "deposit.records.riderNotePrefix": "📝 Nota: ",

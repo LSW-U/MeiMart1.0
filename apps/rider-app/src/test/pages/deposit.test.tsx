@@ -251,7 +251,7 @@ describe('已缴纳态（拍板 3 + 4 + E）', () => {
     const { getByText, getAllByText } = renderPage();
 
     expect(getByText('追加缴纳（提升上限）')).toBeTruthy();
-    expect(getAllByText('查看缴存记录 ›').length).toBe(1);
+    expect(getAllByText('查看缴存记录').length).toBe(1);
 
     fireEvent.click(
       getByText('追加缴纳（提升上限）').closest('[data-rn-host="Pressable"]') as HTMLElement,
@@ -346,7 +346,7 @@ describe('PENDING 态（拍板 3 + 5）', () => {
     expect(getByText('待确认保证金')).toBeTruthy();
     expect(getByText('请前往 Dili 服务中心 缴纳 $100.00，admin 确认后即时生效。')).toBeTruthy();
     // 记录入口仍只一个（拍板 4）
-    expect(queryAllByText('查看缴存记录 ›').length).toBe(1);
+    expect(queryAllByText('查看缴存记录').length).toBe(1);
     // 页脚优先 pending
     expect(getByText('待确认期间暂按原上限接单')).toBeTruthy();
   });

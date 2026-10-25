@@ -214,7 +214,7 @@
   "deposit.records.channelOnline": "Online",
   "deposit.records.emptyDescription": "Permintaan deposit Anda akan muncul di sini",
   "deposit.records.emptyTitle": "Belum ada catatan",
-  "deposit.records.entry": "Lihat catatan deposit ›",
+  "deposit.records.entry": "Lihat catatan deposit",
   "deposit.records.modifiedAmount": "📝 Diminta {requested} → dikonfirmasi {confirmed}",
   "deposit.records.resubmit": "Kirim ulang",
   "deposit.records.riderNotePrefix": "📝 Catatan: ",
