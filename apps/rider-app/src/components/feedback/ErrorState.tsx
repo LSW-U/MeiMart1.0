@@ -31,8 +31,8 @@ export function ErrorState({
       <Text className="mt-1.5 text-xs leading-relaxed text-on-surface-variant">{message}</Text>
       {actionLabel && onAction ? (
         <Button
-          className="mt-3 h-11 self-start px-3.5"
-          textClassName="text-xs"
+          className="mt-3 self-start px-3.5"
+          variant="sm"
           hitSlop={defaultHitSlop}
           onPress={onAction}
         >

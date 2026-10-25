@@ -74,18 +74,15 @@ export function DepositBlockDialog({
             <Button className="bg-primary-container" onPress={onGoDeposit}>
               {t('tasks.deposit.goDeposit')}
             </Button>
-            <Button
-              className="border border-outline bg-transparent"
-              textClassName="text-on-surface"
-              onPress={onDismiss}
-            >
+            {/* R-P1-6：批A textClassName 治标收编为 outline 变体 */}
+            <Button variant="outline" onPress={onDismiss}>
               {t('tasks.deposit.later')}
             </Button>
           </>
         ) : (
           // 三态②PENDING（HTML：已提交 $X 等待 admin 确认）
           <>
-            <View className="bg-status-warning-bg mx-auto h-14 w-14 items-center justify-center rounded-full">
+            <View className="mx-auto h-14 w-14 items-center justify-center rounded-full bg-status-warning-bg">
               <AppIcon
                 accessibilityLabel={t('tasks.deposit.pendingTitle')}
                 color={colors.warning}
@@ -100,19 +97,11 @@ export function DepositBlockDialog({
               {t('tasks.deposit.pendingMessage', { amount: pendingAmount ?? '' })}
             </Text>
             {onViewRequest ? (
-              <Button
-                className="border-warning border bg-transparent"
-                textClassName="text-on-surface"
-                onPress={onViewRequest}
-              >
+              <Button className="border-warning" variant="outline" onPress={onViewRequest}>
                 {t('tasks.deposit.viewRequest')}
               </Button>
             ) : null}
-            <Button
-              className="border border-outline bg-transparent"
-              textClassName="text-on-surface"
-              onPress={onDismiss}
-            >
+            <Button variant="outline" onPress={onDismiss}>
               {t('tasks.deposit.gotIt')}
             </Button>
           </>

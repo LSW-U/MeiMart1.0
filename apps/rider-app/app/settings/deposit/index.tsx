@@ -341,11 +341,10 @@ export default function DepositPage() {
             </Button>
           )}
 
-          {/* 记录入口 —— 详情页仅此一个（拍板 4） */}
+          {/* 记录入口 —— 详情页仅此一个（拍板 4）；R-P1-6：治标收编 outline 变体 */}
           <Button
             accessibilityLabel={t('deposit.records.title')}
-            className="border border-outline bg-transparent"
-            textClassName="text-on-surface"
+            variant="outline"
             onPress={() => router.push('/settings/deposit/records')}
           >
             <Text className="text-sm font-semibold text-on-surface-variant">

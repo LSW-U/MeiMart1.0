@@ -153,3 +153,50 @@ describe('Button hitSlop 透传', () => {
     expect(prop(hostProps(container, 'Pressable'), 'hitSlop')).toBe('undefined');
   });
 });
+
+// R-P1-6（走查 20261024 · D1 拍板）：variant 档位契约——sm=h-11/14px、md=h-14/16px、
+// lg=h-14/18px、outline=描边透明底深字（收编批A治标）；缺省 h-14 + 默认字号 12→14
+describe('Button variant 档位', () => {
+  const boxClass = (container: HTMLElement) => hostProps(container, 'Pressable').classname ?? '';
+  const textClass = (container: HTMLElement) =>
+    container.querySelector('[data-rn-host="Text"]')?.getAttribute('data-prop-classname') ?? '';
+
+  it('缺省：h-14 + text-sm（默认字号 12→14，高度不动）', () => {
+    const { container } = renderButton();
+    expect(boxClass(container)).toContain('h-14');
+    expect(boxClass(container)).toContain('bg-primary');
+    expect(textClass(container)).toContain('text-sm');
+    expect(textClass(container)).not.toContain('text-xs');
+  });
+
+  it('sm：h-11 + text-sm', () => {
+    const { container } = renderButton({ variant: 'sm' });
+    expect(boxClass(container)).toContain('h-11');
+    expect(textClass(container)).toContain('text-sm');
+  });
+
+  it('md：h-14 + text-base；lg：h-14 + text-lg', () => {
+    const md = renderButton({ variant: 'md' });
+    expect(boxClass(md.container)).toContain('h-14');
+    expect(textClass(md.container)).toContain('text-base');
+    const lg = renderButton({ variant: 'lg' });
+    expect(boxClass(lg.container)).toContain('h-14');
+    expect(textClass(lg.container)).toContain('text-lg');
+  });
+
+  it('outline：border-outline + bg-transparent + 深字（批A 治标收编）', () => {
+    const { container } = renderButton({ variant: 'outline' });
+    expect(boxClass(container)).toContain('border-outline');
+    expect(boxClass(container)).toContain('bg-transparent');
+    expect(boxClass(container)).not.toContain('bg-primary');
+    expect(textClass(container)).toContain('text-on-surface');
+  });
+
+  it('调用方 className 后置覆盖（border-warning 盖过 outline 默认边色）', () => {
+    const { container } = renderButton({ variant: 'outline', className: 'border-warning' });
+    const cls = boxClass(container);
+    // 后置覆盖语义：两个 border 色类并存，warning 在字符串尾部（NativeWind 后者生效，
+    // 与批A「h-9 盖 h-14」同款已被本仓验证的顺序约定）
+    expect(cls.indexOf('border-warning')).toBeGreaterThan(cls.indexOf('border-outline'));
+  });
+});

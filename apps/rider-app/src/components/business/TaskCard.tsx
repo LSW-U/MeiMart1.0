@@ -102,12 +102,14 @@ export const TaskCard = memo(function TaskCard({
       : undefined;
   // T6 §7.1 A：无电话时按钮可见但降级（描边灰 + opacity），点击 toast 提示原因
   const hasContact = contactSuffix !== undefined;
-  // T2 审查 P3-1：default=进行中（tertiary-container+clock）/ neutral=已送达（outline，原型 --neutral 同值）/ error=配送失败
+  // T2 审查 P3-1：default=进行中（tertiary-container+clock）/ neutral=已送达 / error=配送失败
+  // R-P1-9（走查 20261024 拍板）：neutral 终态时间文字从 text-outline（4.50:1 卡线）改
+  // text-on-surface-variant——outline 此后只留描边/禁用语义（原型 --neutral 同值例外已裁）
   const timeTextClass =
     timeTone === 'error'
       ? 'text-error'
       : timeTone === 'neutral'
-        ? 'text-outline'
+        ? 'text-on-surface-variant'
         : 'text-tertiary-container';
   return (
     <View className="relative gap-3 rounded-lg border border-surface-variant bg-surface p-4 shadow-sm">
@@ -239,9 +241,10 @@ export const TaskCard = memo(function TaskCard({
           <Button
             accessibilityLabel={actionLabel}
             className="w-full"
-            // B2 裁决 B：active 卡主 CTA 对齐原型 tc-btn-main 15px/800（text-base font-extrabold），
-            // 仅此一处覆盖，不动 Button 默认（其他 30+ 调用方维持 text-xs 统一规格）
-            textClassName="text-base font-extrabold"
+            // B2 裁决 B：active 卡主 CTA 对齐原型 tc-btn-main 15px/800——R-P1-6 起走
+            // variant="md"（h-14/text-base）+ extrabold，不再裸 textClassName 覆盖默认档
+            variant="md"
+            textClassName="font-extrabold"
             disabled={actionDisabled || actionPending}
             onPress={onAction}
           >
@@ -279,7 +282,8 @@ export const TaskCard = memo(function TaskCard({
           </View>
         </View>
       ) : (
-        <Button className="mt-1 bg-primary-container" textClassName="text-xl" onPress={onAction}>
+        // R-P1-6（走查 20261024）：new 接单钮 text-xl(28)→variant lg(18)，对齐任务书
+        <Button className="mt-1 bg-primary-container" variant="lg" onPress={onAction}>
           {actionLabel}
         </Button>
       )}

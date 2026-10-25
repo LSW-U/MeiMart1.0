@@ -209,11 +209,8 @@ export function OutOfStockDialog({
             >
               {submitting || uploading ? t('tasks.oos.submitting') : t('tasks.oos.submit')}
             </Button>
-            <Button
-              className="border border-outline bg-transparent"
-              textClassName="text-on-surface"
-              onPress={onDismiss}
-            >
+            {/* R-P1-6：批A textClassName 治标收编为 outline 变体 */}
+            <Button variant="outline" onPress={onDismiss}>
               {t('common.cancel')}
             </Button>
           </ScrollView>
