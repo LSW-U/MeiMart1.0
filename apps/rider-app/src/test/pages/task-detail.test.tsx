@@ -160,7 +160,7 @@ describe('终态 banner（T2 §3.4）', () => {
         el.textContent === '已送达' &&
         (el.getAttribute('data-prop-classname') ?? '').includes('text-lg'),
     );
-    expect(timeText?.getAttribute('data-prop-classname')).toContain('text-outline');
+    expect(timeText?.getAttribute('data-prop-classname')).toContain('text-on-surface-variant');
     expect(container.querySelector('[data-testid="icon-clock-outline"]')).toBeNull();
   });
 

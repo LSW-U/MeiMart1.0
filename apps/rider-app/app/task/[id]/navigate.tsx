@@ -176,7 +176,7 @@ export default function TaskNavigatePage() {
                         decimals: (taskData.fee ?? 0) % 100 === 0 ? 0 : 1,
                       })}
                     </Text>
-                    <Text className="text-[11px] text-outline">{taskData.orderId}</Text>
+                    <Text className="text-[11px] text-on-surface-variant">{taskData.orderId}</Text>
                   </View>
                 </View>
               </View>
@@ -221,7 +221,7 @@ export default function TaskNavigatePage() {
                           {t('flow.storePickup')}
                         </Text>
                       </View>
-                      <Text className="text-xs font-bold uppercase tracking-wider text-outline">
+                      <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                         {/* D3（R-P3-3）：distanceKm 是 pickup→dropoff 全程推算值，展示诚实文案
                             （原 pickupDistance 偏移伪装「距你 X km」已删） */}
                         {t('common.totalDistance', {
@@ -316,7 +316,7 @@ export default function TaskNavigatePage() {
                           </View>
                         </View>
                       </View>
-                      <Text className="text-xs font-bold uppercase tracking-wider text-outline">
+                      <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                         {formatDistance(taskData.distanceKm)}
                       </Text>
                     </View>

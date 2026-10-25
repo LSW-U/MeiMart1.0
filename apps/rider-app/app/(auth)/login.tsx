@@ -148,7 +148,8 @@ export default function LoginPage() {
       contentContainerClassName="min-h-full items-center justify-center px-5 py-12"
     >
       <View className="mb-6 flex-row items-center gap-1">
-        <Text className="text-3xl text-primary">▣</Text>
+        {/* R-P1-10（走查 20261024）：▣ 随系统字体走（Android 豆腐块风险），改 AppIcon（D3 拍板复用 rider 名） */}
+        <AppIcon color={colors.primary} name="rider" size={30} />
         <Text className="text-xl font-bold text-primary">{t('app.name')}</Text>
       </View>
 
@@ -335,7 +336,7 @@ export default function LoginPage() {
               className="mt-2 items-center"
               onPress={() => void mockLogin()}
             >
-              <Text className="text-xs text-outline">[DEV] 快速登录骑手账号</Text>
+              <Text className="text-xs text-on-surface-variant">[DEV] 快速登录骑手账号</Text>
             </Pressable>
           )}
         </View>
@@ -362,7 +363,9 @@ export default function LoginPage() {
           onPress={() => router.push('/help')}
         >
           <AppIcon color={colors.outline} name="help" size={14} />
-          <Text className="text-[11px] font-bold text-outline">{t('auth.login.help')}</Text>
+          <Text className="text-[11px] font-bold text-on-surface-variant">
+            {t('auth.login.help')}
+          </Text>
         </Pressable>
         <View className="h-3 w-px bg-outline-variant" />
         <Pressable
@@ -372,7 +375,7 @@ export default function LoginPage() {
           onPress={switchLanguage}
         >
           <AppIcon color={colors.outline} name="language" size={14} />
-          <Text className="text-[11px] font-bold text-outline">
+          <Text className="text-[11px] font-bold text-on-surface-variant">
             {t('auth.login.languageSwitch', { language: nextLanguageLabel })}
           </Text>
         </Pressable>

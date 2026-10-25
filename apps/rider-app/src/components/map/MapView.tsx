@@ -92,7 +92,9 @@ function MapViewPlaceholder({ pickup, delivery }: MapViewProps) {
             ? `${pickup.title ?? 'P'} → ${delivery.title ?? 'D'}`
             : t('map.placeholderTitle')}
         </Text>
-        <Text className="mt-1 text-[11px] text-outline">{t('map.placeholderPlatform')}</Text>
+        <Text className="mt-1 text-[11px] text-on-surface-variant">
+          {t('map.placeholderPlatform')}
+        </Text>
       </View>
     </View>
   );

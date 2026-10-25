@@ -9,7 +9,10 @@ import { colors } from '../../src/theme/colors';
 import type { OrderHistoryItem } from '../../src/types/order';
 import { formatCurrency, formatDistance } from '../../src/utils/format';
 
-const statusToneMap: Record<OrderHistoryItem['status'], 'history.status.completed' | 'history.status.cancelled' | 'history.status.transferred'> = {
+const statusToneMap: Record<
+  OrderHistoryItem['status'],
+  'history.status.completed' | 'history.status.cancelled' | 'history.status.transferred'
+> = {
   completed: 'history.status.completed',
   cancelled: 'history.status.cancelled',
   transferred: 'history.status.transferred',
@@ -37,7 +40,10 @@ function OrderDetailBody({ order }: { order: OrderHistoryItem }) {
   const tone = statusColorMap[order.status];
 
   return (
-    <ScrollView className="flex-1" contentContainerClassName="mx-auto w-full max-w-md px-4 pb-12 pt-4">
+    <ScrollView
+      className="flex-1"
+      contentContainerClassName="mx-auto w-full max-w-md px-4 pb-12 pt-4"
+    >
       <View className="mb-4 rounded-2xl border border-outline-variant bg-surface p-5 shadow-sm">
         <View className="flex-row items-center justify-between">
           <Text className="text-lg font-bold text-on-surface">{order.orderNo}</Text>
@@ -47,19 +53,27 @@ function OrderDetailBody({ order }: { order: OrderHistoryItem }) {
             </Text>
           </View>
         </View>
-        <Text className="mt-3 text-xs text-outline">{t('order.detail.completedAt')}</Text>
-        <Text className="text-sm font-medium text-on-surface">{formatDateTime(order.completedAt)}</Text>
+        <Text className="mt-3 text-xs text-on-surface-variant">
+          {t('order.detail.completedAt')}
+        </Text>
+        <Text className="text-sm font-medium text-on-surface">
+          {formatDateTime(order.completedAt)}
+        </Text>
       </View>
 
       <View className="mb-4 rounded-2xl border border-outline-variant bg-surface p-5 shadow-sm">
         <View className="mb-4">
-          <Text className="text-xs font-bold uppercase tracking-wider text-primary">{t('order.detail.pickup')}</Text>
+          <Text className="text-xs font-bold uppercase tracking-wider text-primary">
+            {t('order.detail.pickup')}
+          </Text>
           <Text className="mt-1 text-base font-bold text-on-surface">{order.pickupName}</Text>
           <Text className="mt-1 text-sm text-on-surface-variant">{order.pickupAddress}</Text>
         </View>
         <View className="h-px bg-surface-variant" />
         <View className="mt-4">
-          <Text className="text-xs font-bold uppercase tracking-wider text-primary">{t('order.detail.dropoff')}</Text>
+          <Text className="text-xs font-bold uppercase tracking-wider text-primary">
+            {t('order.detail.dropoff')}
+          </Text>
           <Text className="mt-1 text-base font-bold text-on-surface">{order.dropoffName}</Text>
           <Text className="mt-1 text-sm text-on-surface-variant">{order.dropoffAddress}</Text>
         </View>
@@ -67,20 +81,30 @@ function OrderDetailBody({ order }: { order: OrderHistoryItem }) {
 
       <View className="mb-4 flex-row gap-3">
         <View className="flex-1 rounded-2xl border border-outline-variant bg-surface p-4 shadow-sm">
-          <Text className="text-xs text-outline">{t('order.detail.distance')}</Text>
-          <Text className="mt-1 text-lg font-bold text-on-surface">{formatDistance(order.distanceKm)}</Text>
+          <Text className="text-xs text-on-surface-variant">{t('order.detail.distance')}</Text>
+          <Text className="mt-1 text-lg font-bold text-on-surface">
+            {formatDistance(order.distanceKm)}
+          </Text>
         </View>
         <View className="flex-1 rounded-2xl border border-outline-variant bg-surface p-4 shadow-sm">
-          <Text className="text-xs text-outline">{t('order.detail.duration')}</Text>
+          <Text className="text-xs text-on-surface-variant">{t('order.detail.duration')}</Text>
           <Text className="mt-1 text-lg font-bold text-on-surface">
-            {order.durationMinutes > 0 ? t('order.detail.minutes', { minutes: order.durationMinutes }) : '—'}
+            {order.durationMinutes > 0
+              ? t('order.detail.minutes', { minutes: order.durationMinutes })
+              : '—'}
           </Text>
         </View>
       </View>
 
       <View className="rounded-2xl border border-primary bg-surface-container-low p-5 shadow-sm">
-        <Text className="text-xs font-bold uppercase tracking-wider text-primary">{t('order.detail.income')}</Text>
-        <Text className="mt-1 text-2xl font-bold text-primary">{order.income > 0 ? formatCurrency(order.income, t('common.currency')) : t('history.noIncome')}</Text>
+        <Text className="text-xs font-bold uppercase tracking-wider text-primary">
+          {t('order.detail.income')}
+        </Text>
+        <Text className="mt-1 text-2xl font-bold text-primary">
+          {order.income > 0
+            ? formatCurrency(order.income, t('common.currency'))
+            : t('history.noIncome')}
+        </Text>
       </View>
     </ScrollView>
   );

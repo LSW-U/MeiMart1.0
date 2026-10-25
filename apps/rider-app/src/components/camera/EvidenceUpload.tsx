@@ -125,7 +125,7 @@ function EvidenceUploadNative({
           <SafeImage className="h-full w-full" resizeMode="cover" source={{ uri: photoUri }} />
         ) : (
           <>
-            <Text className="mb-1 text-4xl text-outline">{placeholderLabel}</Text>
+            <Text className="mb-1 text-4xl text-on-surface-variant">{placeholderLabel}</Text>
             <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
               {actionLabel}
             </Text>
@@ -215,7 +215,7 @@ function EvidenceUploadWeb({
           <img src={photoUri} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <>
-            <Text className="mb-1 text-4xl text-outline">{placeholderLabel}</Text>
+            <Text className="mb-1 text-4xl text-on-surface-variant">{placeholderLabel}</Text>
             <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
               {actionLabel}
             </Text>

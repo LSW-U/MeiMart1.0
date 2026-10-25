@@ -104,7 +104,7 @@ function NotificationTimeText({
   formatTime: (t: number) => string;
 }) {
   useMinuteTick();
-  return <Text className="mt-2 text-xs text-outline">{formatTime(timestamp)}</Text>;
+  return <Text className="mt-2 text-xs text-on-surface-variant">{formatTime(timestamp)}</Text>;
 }
 
 export default function NotificationsPage() {

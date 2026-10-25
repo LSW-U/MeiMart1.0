@@ -53,7 +53,7 @@ function MenuItem({
       {!danger ? (
         <View className="flex-row items-center gap-2">
           {badge ? <View className="h-2.5 w-2.5 rounded-full bg-dot-unread" /> : null}
-          <Text className="text-outline">›</Text>
+          <AppIcon color={colors.textMuted} name="chevronRight" size={20} />
         </View>
       ) : null}
     </Pressable>
@@ -170,7 +170,7 @@ export default function ProfilePage() {
               {t('profile.orders')}
             </Text>
             <Text className="text-4xl font-medium text-primary">{todayCount}</Text>
-            <Text className="mt-1 text-[11px] font-bold uppercase text-outline">
+            <Text className="mt-1 text-[11px] font-bold uppercase text-on-surface-variant">
               {t('profile.today')}
             </Text>
           </View>
@@ -180,7 +180,7 @@ export default function ProfilePage() {
               {t('profile.earnings')}
             </Text>
             <Text className="text-4xl font-bold text-primary">{todayIncome}</Text>
-            <Text className="mt-1 text-[11px] font-bold uppercase text-outline">
+            <Text className="mt-1 text-[11px] font-bold uppercase text-on-surface-variant">
               {t('profile.today')}
             </Text>
           </View>
@@ -190,7 +190,7 @@ export default function ProfilePage() {
               {t('profile.totalDeliveries')}
             </Text>
             <Text className="text-4xl font-medium text-primary">{totalDeliveries}</Text>
-            <Text className="mt-1 text-[11px] font-bold uppercase text-outline">
+            <Text className="mt-1 text-[11px] font-bold uppercase text-on-surface-variant">
               {t('profile.totalDeliveriesSub')}
             </Text>
           </View>

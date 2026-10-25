@@ -32,7 +32,7 @@ export function LegalPage({ titleKey, bodyKey, versionKey, icon, backLabel }: Le
         </View>
         <View className="rounded-2xl border border-surface-container bg-surface p-5 shadow-sm">
           <Text className="text-sm leading-6 text-on-surface-variant">{t(bodyKey)}</Text>
-          <Text className="mt-4 text-xs text-outline">{t(versionKey)}</Text>
+          <Text className="mt-4 text-xs text-on-surface-variant">{t(versionKey)}</Text>
         </View>
       </ScrollView>
     </View>
