@@ -45,7 +45,13 @@ export function BottomNav({ activeTab, onTabPress, testID }: BottomNavProps) {
             <View style={styles.iconWrapper}>
               <MaterialCommunityIcons name={toIconName(item.icon)} size={24} color={color} />
               {item.key === 'cart' && cartCount > 0 && (
-                <Badge count={cartCount} variant="number" style={styles.badge} />
+                // P1-21：底导购物车角标底色统一语义 error 红（原默认 primary，与其他角标形态分裂）
+                <Badge
+                  count={cartCount}
+                  variant="number"
+                  color={colors.semantic.error}
+                  style={styles.badge}
+                />
               )}
             </View>
             <Text

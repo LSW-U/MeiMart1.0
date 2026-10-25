@@ -4,6 +4,7 @@ import {
   useTheme,
   spacing,
   borderRadius,
+  textStyle,
   typography,
   shadowPresets,
   defaultHitSlop,
@@ -210,7 +211,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     padding: spacing.md,
-    borderRadius: borderRadius.lg,
+    // P1-9：商品卡家族两档约定之 xl(12)
+    borderRadius: borderRadius.xl,
     borderWidth: 1,
   },
   // Why: 选中态 2px primary 边（与 Masonry 管理态一致，P19 .selected-card）
@@ -231,7 +233,8 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 999,
   },
-  badgeText: { ...typography['label-caps'], fontSize: 10, fontWeight: '700' },
+  // P1-10：徽章文字统一 badge-caps token
+  badgeText: { ...textStyle('badge-caps') },
   // Why: 方案 §2.2 - 名 body-sm/600/on-surface，numberOfLines 2
   name: { ...typography['body-sm'], fontWeight: '600', minHeight: 36 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },

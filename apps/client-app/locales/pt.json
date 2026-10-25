@@ -69,7 +69,9 @@
       "locationChip": "Localização: {{location}}",
       "selectField": "Selecionar {{label}}, atual {{value}}",
       "selectOption": "Selecionar {{option}}",
-      "none": "nenhum"
+      "none": "nenhum",
+      "newNotification": "Nova notificação",
+      "notificationCount": "{{count}} notificações"
     },
     "dialog": "Diálogo",
     "dialogContent": "Conteúdo do diálogo",

@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { useTheme } from '@/theme';
+import { useTheme, borderRadius, shadowPresets } from '@/theme';
 
 import type { CardProps } from './Card.types';
 
@@ -23,13 +23,8 @@ export function Card({
           borderColor: colors['outline-variant'],
           padding,
         },
-        elevated && {
-          shadowColor: colors['on-surface'],
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: 2 },
-          elevation: 2,
-        },
+        // P1-13：elevated 阴影改走 presets.card（原内联五参数已收编）；shadowColor 沿用 on-surface 色调
+        elevated && [shadowPresets.card, { shadowColor: colors['on-surface'] }],
         style,
       ]}
     >
@@ -60,7 +55,8 @@ export function Card({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 8,
+    // P1-9：容器卡两档约定之 lg(8)——原裸数字 8 收进 token
+    borderRadius: borderRadius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
   },

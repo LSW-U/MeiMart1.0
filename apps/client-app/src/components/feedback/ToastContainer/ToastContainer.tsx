@@ -3,7 +3,7 @@
 import { StyleSheet, View, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToastStore } from '@/store/toastStore';
-import { useTheme, spacing, shadowPresets, borderRadius } from '@/theme';
+import { useTheme, spacing, shadowPresets, borderRadius, zIndex } from '@/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ToastType } from '@/store/toastStore';
 
@@ -56,7 +56,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    zIndex: 9999,
+    // P1-20：全局最高层走 zIndex token（原 9999 字面量收编）
+    zIndex: zIndex.toast,
   },
   toast: {
     flexDirection: 'row',

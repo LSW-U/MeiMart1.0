@@ -16,7 +16,7 @@ import { MasonryProductCard } from '@/components/business/MasonryProductCard/Mas
 import { resolveBadges } from '@/utils/resolveBadges';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
-import { Badge } from '@/components/ui/Badge';
+import { CartIconButton } from '@/components/business/CartIconButton/CartIconButton';
 import { useProducts } from '@/services/queries/useProducts';
 import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import { useSearchHot } from '@/services/queries/useSearchHot';
@@ -37,6 +37,9 @@ import { useLocalizer } from '@/i18n';
 const ON_PRIMARY = '#ffffff';
 // Why: 金底黑字固定（热搜榜 rank 3 amber 底），dark 不变（同 home.tsx ON_AMBER 模式）
 const ON_AMBER = '#000000';
+
+// P1-17：搜索 header 高度单源（headerWrap/headerBg/TaisPattern/suggestWrap 四点耦合，原 90 魔法数四处复制）
+const SEARCH_HEADER_H = 90;
 
 // Why: P3 联调（2026-07-31）- 热搜榜接后端 GET /client/search/hot，删 POPULAR_SEARCHES 写死 + fallbackSales 派生
 //   后端返 { word, searchCount }[]，rank=idx+1，heat=searchCount 格式化，word 是实际词非 i18n key
@@ -206,7 +209,7 @@ export default function SearchIndexPage() {
           {/* 底色块（被锯齿底边裁掉下半部分形成 zigzag） */}
           <View style={[styles.headerBg, { backgroundColor: colors.primary }]}>
             <View style={styles.headerPattern} pointerEvents="none">
-              <TaisPattern width={390} height={90} opacity={0.2} />
+              <TaisPattern width={390} height={SEARCH_HEADER_H} opacity={0.2} />
             </View>
           </View>
           {/* 锯齿底边覆盖（让 header 下方背景透出锯齿形状） */}
@@ -246,26 +249,16 @@ export default function SearchIndexPage() {
                 />
               </View>
               <View style={styles.toolbarRight}>
-                {/* P8 复刻 results 顶部：删客服，只留购物车 + 白底红字角标 */}
-                <Pressable
+                {/* P8 复刻 results 顶部：删客服，只留购物车——P1-21 收敛 CartIconButton（error 红角标） */}
+                <CartIconButton
+                  count={cartCount}
+                  iconColor={ON_PRIMARY}
                   onPress={() => router.push('/cart')}
-                  hitSlop={8}
-                  style={styles.toolbarBtn}
-                  accessibilityRole="button"
                   accessibilityLabel={t('cart.a11y.itemCount', { count: cartCount })}
-                >
-                  <Icon symbol="shopping_cart" size={24} color={ON_PRIMARY} />
-                  {/* P0-6：自绘白底+primary 字角标 dark 1.70:1 不可读 → Badge error 底（对齐 home 已验证方案） */}
-                  {cartCount > 0 && (
-                    <Badge
-                      count={cartCount}
-                      variant="number"
-                      color={colors.semantic.error}
-                      accessibilityLabel={t('cart.a11y.itemCount', { count: cartCount })}
-                      style={styles.cartBadge}
-                    />
-                  )}
-                </Pressable>
+                  style={styles.toolbarBtn}
+                  hitSlop={8}
+                  badgeStyle={styles.cartBadge}
+                />
               </View>
             </View>
           </View>
@@ -451,7 +444,7 @@ export default function SearchIndexPage() {
           </View>
         )}
       </ScrollView>
-      {/* C方案 §4.4 - SuggestPanel 挂 ScrollView 同级 absolute（top:90=headerWrap 高度），不随滚动 */}
+      {/* C方案 §4.4 - SuggestPanel 挂 ScrollView 同级 absolute（top:SEARCH_HEADER_H=headerWrap 高度），不随滚动 */}
       {showSuggest && (
         <View style={styles.suggestWrap} pointerEvents="box-none">
           <SuggestPanel
@@ -476,14 +469,14 @@ const styles = StyleSheet.create({
   },
   headerWrap: {
     position: 'relative',
-    height: 90,
+    height: SEARCH_HEADER_H,
     overflow: 'hidden',
   },
   headerBg: {
     // Why: 改 relative（原 absolute）-- TaisPattern 的 absolute container 在 absolute parent 内 right:0 解析异常（左半边塌缩）。
     //   对齐 PrimaryHeader 的 relative header，让 TaisPattern 全宽撑满
     position: 'relative',
-    height: 90,
+    height: SEARCH_HEADER_H,
     overflow: 'hidden',
   },
   headerPattern: {
@@ -652,10 +645,10 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.md,
   },
-  // C方案 §4.4 - SuggestPanel 定位锚点：ScrollView 同级 absolute，top:90=headerWrap 高度
+  // C方案 §4.4 - SuggestPanel 定位锚点：ScrollView 同级 absolute，top:SEARCH_HEADER_H=headerWrap 高度
   suggestWrap: {
     position: 'absolute',
-    top: 90,
+    top: SEARCH_HEADER_H,
     left: layout['container-margin'],
     right: layout['container-margin'],
     zIndex: 10,

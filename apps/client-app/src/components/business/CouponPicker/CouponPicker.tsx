@@ -247,7 +247,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   leftMin: {
-    fontSize: 9,
+    // P1-10：微字号下限 10（非徽章文本，保持自身常规字重语义）
+    fontSize: 10,
     textAlign: 'center',
     opacity: 0.85,
   },

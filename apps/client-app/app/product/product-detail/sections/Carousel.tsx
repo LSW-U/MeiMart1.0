@@ -1,9 +1,7 @@
-// 图片轮播（D-V4：对齐 P1 优化原型 slide 380px 满屏宽 + 分页圆点 + play 按钮）
+// 图片轮播（D-V4：对齐 P1 优化原型 slide 380px 满屏宽 + 分页圆点）
 // 批5 拆分：从 app/product/[id].tsx 原样搬移，行为零变更
 import { ScrollView, View, Text, StyleSheet } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { useTheme, spacing } from '@/theme';
-import { Icon } from '@/components/ui/Icon';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { SCREEN_WIDTH, CAROUSEL_HEIGHT } from '../shared';
 
@@ -66,13 +64,8 @@ export function Carousel({
           </Text>
         </View>
       )}
-      {/* U5: Play 按钮缩到右上小尺寸——仅装饰性标识（pointerEvents="none" 且无 onPress，
-          当前非可点视频入口；真实视频接入时需补 onPress 与 pointerEvents 调整） */}
-      <View style={styles.playWrap} pointerEvents="none">
-        <BlurView intensity={30} tint="light" style={styles.playBtn}>
-          <Icon symbol="play_arrow" size={20} color={colors['on-primary']} />
-        </BlurView>
-      </View>
+      {/* P1-26：装饰性 play 按钮已删——pointerEvents="none" 不可点却可见，违反「可见即可点」；
+          视频上线后恢复并补 onPress + a11y（原 playWrap/playBtn 样式见 git 历史） */}
     </View>
   );
 }
@@ -103,25 +96,6 @@ const styles = StyleSheet.create({
   dotIdle: {
     width: 6,
     backgroundColor: 'rgba(255,255,255,0.5)',
-  },
-  playWrap: {
-    position: 'absolute',
-    // D-V4：原型 .carousel .play top:12px right:12px
-    top: 12,
-    right: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  playBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.5)',
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
   },
   imageCounter: {
     position: 'absolute',

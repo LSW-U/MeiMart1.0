@@ -21,12 +21,12 @@ export function ErrorState({ message, onRetry, retryLabel, testID }: ErrorStateP
       </Text>
       {onRetry && (
         // T2-B: 兜底文案接 i18n（原 'Retry' 英文硬编码，E10 合规）
+        // P1-11：Button 类型已收紧 style（实现本就不消费）；容器 gap 已承担间距
         <Button
           label={retryLabel ?? t('common.retry')}
           variant="outline"
           size="md"
           onPress={onRetry}
-          style={styles.retry}
         />
       )}
     </View>
@@ -41,5 +41,4 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.xl,
   },
-  retry: { marginTop: spacing.sm },
 });

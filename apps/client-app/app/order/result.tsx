@@ -468,13 +468,11 @@ export default function OrderResultScreen() {
               label={t('result.viewOrder')}
               onPress={goOrderDetail}
               accessibilityHint={t('result.viewOrder')}
-              style={styles.actionBtn}
             />
             <Button
               label={t('result.continueShopping')}
               onPress={goHome}
               accessibilityHint={t('result.continueShopping')}
-              style={styles.actionBtn}
             />
           </>
         )}
@@ -486,13 +484,11 @@ export default function OrderResultScreen() {
               onPress={handleCancel}
               loading={cancelOrder.isPending}
               accessibilityHint={t('common.cancel')}
-              style={styles.actionBtn}
             />
             <Button
               label={t('result.payNow')}
               onPress={goOrderDetail}
               accessibilityHint={t('result.payNow')}
-              style={styles.actionBtn}
             />
           </>
         )}
@@ -504,13 +500,11 @@ export default function OrderResultScreen() {
               onPress={handleCancel}
               loading={cancelOrder.isPending}
               accessibilityHint={t('common.cancel')}
-              style={styles.actionBtn}
             />
             <Button
               label={t('result.retryPay')}
               onPress={goOrderDetail}
               accessibilityHint={t('result.retryPay')}
-              style={styles.actionBtn}
             />
           </>
         )}
@@ -521,13 +515,11 @@ export default function OrderResultScreen() {
               label={t('result.backHome')}
               onPress={goHome}
               accessibilityHint={t('result.backHome')}
-              style={styles.actionBtn}
             />
             <Button
               label={t('result.reorder')}
               onPress={goHome}
               accessibilityHint={t('result.reorder')}
-              style={styles.actionBtn}
             />
           </>
         )}
@@ -538,13 +530,11 @@ export default function OrderResultScreen() {
               label={t('result.backHome')}
               onPress={goHome}
               accessibilityHint={t('result.backHome')}
-              style={styles.actionBtn}
             />
             <Button
               label={t('result.reorder')}
               onPress={goHome}
               accessibilityHint={t('result.reorder')}
-              style={styles.actionBtn}
             />
           </>
         )}
@@ -639,6 +629,4 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     // A-P2-5: hex 移除——backgroundColor 由使用处运行时注入（同 cart 底栏 surface-container-lowest 先例）
   },
-  // 主理人实测反馈：按钮改靠右（原 flex:1 等宽铺满偏左视觉），不再拉伸、按内容自适应宽
-  actionBtn: { flex: 0 },
 });

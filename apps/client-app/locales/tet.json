@@ -69,7 +69,9 @@
       "locationChip": "Localizasaun: {{location}}",
       "selectField": "Hili {{label}}, daudaun {{value}}",
       "selectOption": "Hili {{option}}",
-      "none": "la iha"
+      "none": "la iha",
+      "newNotification": "Notifikasaun foun",
+      "notificationCount": "{{count}} notifikasaun"
     },
     "dialog": "Dialogu",
     "dialogContent": "Konteúdu dialogu",

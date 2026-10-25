@@ -69,7 +69,9 @@
       "locationChip": "位置：{{location}}",
       "selectField": "选择{{label}}，当前 {{value}}",
       "selectOption": "选择{{option}}",
-      "none": "无"
+      "none": "无",
+      "newNotification": "新通知",
+      "notificationCount": "{{count}} 条通知"
     },
     "dialog": "对话框",
     "dialogContent": "对话框内容",

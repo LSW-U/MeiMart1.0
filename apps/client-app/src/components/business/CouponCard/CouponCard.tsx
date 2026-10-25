@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { useTheme, spacing, borderRadius, typography } from '@/theme';
+import { useTheme, spacing, borderRadius, typography, textStyle } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { formatCouponValue } from '@/utils/coupon';
 import type { ClientCoupon } from '@/services/promotion';
@@ -29,14 +29,7 @@ function typeLabel(coupon: ClientCoupon, t: TFunction): string {
   }
 }
 
-export function CouponCard({
-  coupon,
-  onUse,
-  action,
-  onClaim,
-  claiming,
-  testID,
-}: CouponCardProps) {
+export function CouponCard({ coupon, onUse, action, onClaim, claiming, testID }: CouponCardProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const discountLabel = formatCouponValue(coupon, t);
@@ -129,10 +122,7 @@ export function CouponCard({
         </Text>
         {isValid && coupon.description && (
           // D2：描述非空展示一行，空值隐藏（不造假文案）
-          <Text
-            style={[styles.desc, { color: colors['on-surface-variant'] }]}
-            numberOfLines={1}
-          >
+          <Text style={[styles.desc, { color: colors['on-surface-variant'] }]} numberOfLines={1}>
             {coupon.description}
           </Text>
         )}
@@ -178,34 +168,32 @@ export function CouponCard({
         )}
         {/* Why: action='claim'（领券中心）显示「领取」；默认 available 态显示「去逛逛」
                 （决策 3A：跳首页，不再承诺「立即核销」）；used/expired 不可用无按钮 */}
-        {action === 'claim' ? (
-          onClaim && (
-            <Button
-              label={
-                claiming
-                  ? t('claim.claiming', { defaultValue: 'Claiming…' })
-                  : t('claim.claimBtn', { defaultValue: 'Claim' })
-              }
-              variant="primary"
-              size="sm"
-              loading={claiming}
-              disabled={claiming}
-              onPress={() => onClaim(coupon)}
-            />
-          )
-        ) : (
-          isValid &&
-          onUse && (
-            <View style={styles.actions}>
+        {action === 'claim'
+          ? onClaim && (
               <Button
-                label={t('coupons.goBrowse', { defaultValue: 'Go browse' })}
+                label={
+                  claiming
+                    ? t('claim.claiming', { defaultValue: 'Claiming…' })
+                    : t('claim.claimBtn', { defaultValue: 'Claim' })
+                }
                 variant="primary"
                 size="sm"
-                onPress={() => onUse(coupon)}
+                loading={claiming}
+                disabled={claiming}
+                onPress={() => onClaim(coupon)}
               />
-            </View>
-          )
-        )}
+            )
+          : isValid &&
+            onUse && (
+              <View style={styles.actions}>
+                <Button
+                  label={t('coupons.goBrowse', { defaultValue: 'Go browse' })}
+                  variant="primary"
+                  size="sm"
+                  onPress={() => onUse(coupon)}
+                />
+              </View>
+            )}
       </View>
     </View>
   );
@@ -232,9 +220,8 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   type: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 1,
+    // P1-10：9px→badge-caps token（uppercase/opacity 为本位语义保留）
+    ...textStyle('badge-caps'),
     textTransform: 'uppercase',
     opacity: 0.8,
   },
@@ -259,9 +246,8 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '5deg' }],
   },
   stampText: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 1,
+    // P1-10：9px→badge-caps token
+    ...textStyle('badge-caps'),
     textTransform: 'uppercase',
   },
   body: {

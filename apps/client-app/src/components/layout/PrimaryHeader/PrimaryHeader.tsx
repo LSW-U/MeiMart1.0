@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme, typography, spacing, layout, shadowPresets } from '@/theme';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { LocationChip } from '@/components/business/LocationChip/LocationChip';
 import type { PrimaryHeaderProps } from './PrimaryHeader.types';
 
 export function PrimaryHeader({
@@ -59,20 +60,9 @@ export function PrimaryHeader({
           </Text>
         </View>
 
-        {/* Why: 位置胶囊浮在 header 右侧（title 和 rightActions 之间），半透明白底圆角 */}
+        {/* Why: 位置胶囊浮在 header 右侧（title 和 rightActions 之间）——P1-15 收敛 business/LocationChip */}
         {showLocation && locationLabel && (
-          <Pressable
-            onPress={onLocationPress}
-            style={styles.locationChip}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.a11y.locationChip', { location: locationLabel })}
-          >
-            <Icon symbol="location_on" size={13} color={colors['on-primary']} />
-            <Text style={[styles.locationText, { color: colors['on-primary'] }]} numberOfLines={1}>
-              {locationLabel}
-            </Text>
-            <Icon symbol="expand_more" size={13} color={colors['on-primary']} />
-          </Pressable>
+          <LocationChip label={locationLabel} onPress={onLocationPress} />
         )}
 
         {rightActions ? (
@@ -137,22 +127,6 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h3,
     fontWeight: '700',
-  },
-  // Why: 位置胶囊 - 半透明白底圆角，浮在 header 右侧
-  locationChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-    borderRadius: 999,
-    maxWidth: 150,
-  },
-  locationText: {
-    ...typography['body-sm'],
-    fontSize: 12,
-    flexShrink: 1,
   },
   rightActions: {
     flexDirection: 'row',

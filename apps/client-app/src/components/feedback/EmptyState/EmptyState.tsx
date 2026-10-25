@@ -39,14 +39,9 @@ export function EmptyState({
           {description}
         </Text>
       )}
+      {/* P1-11：Button 类型已收紧 style（实现本就不消费）；容器 gap 已承担间距，原 action marginTop 移除 */}
       {actionLabel && onAction && (
-        <Button
-          label={actionLabel}
-          variant="primary"
-          size="md"
-          onPress={onAction}
-          style={styles.action}
-        />
+        <Button label={actionLabel} variant="primary" size="md" onPress={onAction} />
       )}
     </View>
   );
@@ -60,5 +55,4 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.xl,
   },
-  action: { marginTop: spacing.sm },
 });

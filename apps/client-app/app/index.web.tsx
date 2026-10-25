@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, typography } from '@/theme';
+import { useTheme, spacing, typography, fontFamilies } from '@/theme';
 import { DiamondPattern } from '@/components/cultural/DiamondPattern';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
@@ -134,7 +134,8 @@ const styles = StyleSheet.create({
   },
   logoText: {
     color: '#ffffff',
-    fontFamily: 'Noto Serif',
+    // P1-24 补修（审查批B Spec-a）：'Noto Serif'（带空格）注册名不匹配——同 profile 真bug
+    fontFamily: fontFamilies.serif,
     fontSize: 32,
     fontWeight: '700',
     fontStyle: 'italic',

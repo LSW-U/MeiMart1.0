@@ -3,7 +3,8 @@ import type { PressableProps } from 'react-native';
 export type ButtonVariant = 'primary' | 'secondary' | 'text' | 'outline' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps extends Omit<PressableProps, 'children'> {
+// P1-11：Omit 追加 'style'——实现不消费 style，误传一律编译报错（原 EmptyState 传 marginTop 静默失效）
+export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   /** 按钮变体 */
   variant?: ButtonVariant;
   /** 按钮尺寸 */

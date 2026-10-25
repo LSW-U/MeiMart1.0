@@ -69,7 +69,9 @@
       "locationChip": "Location: {{location}}",
       "selectField": "Select {{label}}, current {{value}}",
       "selectOption": "Select {{option}}",
-      "none": "none"
+      "none": "none",
+      "newNotification": "New notification",
+      "notificationCount": "{{count}} notifications"
     },
     "dialog": "Dialog",
     "dialogContent": "Dialog content",

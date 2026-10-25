@@ -11,6 +11,7 @@ import {
 import { useRef, useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
@@ -51,6 +52,9 @@ const ON_PRIMARY = '#ffffff';
 export default function CheckoutPage() {
   const handleBack = useSafeBack();
   const { colors } = useTheme();
+  // P1-22：底栏高度实算——onLayout 实测 + safe area inset，替 scroll paddingBottom:140 魔法耦合
+  const insets = useSafeAreaInsets();
+  const [bottomBarH, setBottomBarH] = useState(0);
   const { t, i18n: i18nInstance } = useTranslation();
   const localize = useLocalizer();
   const { isOffline } = useWeakNetworkUI();
@@ -304,7 +308,10 @@ export default function CheckoutPage() {
         }
       />
       <View style={styles.contentWrap}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={[styles.scroll, { paddingBottom: bottomBarH + spacing.md }]}
+        >
           {/* DELIVERY ADDRESS 卡 */}
           <View
             style={[
@@ -701,9 +708,16 @@ export default function CheckoutPage() {
           {
             backgroundColor: colors['surface-container-lowest'],
             borderColor: colors['outline-variant'],
+            // P1-22：safe area 下缘实算（原固定高度覆盖不到手势条机型）
+            paddingBottom: spacing.sm + insets.bottom,
           },
           shadowPresets.md,
         ]}
+        onLayout={(e) => {
+          // P1-22：实测底栏总高（含 inset 下缘）注入 scroll 底部留白（+md 间距）
+          const h = Math.ceil(e.nativeEvent.layout.height);
+          setBottomBarH((prev) => (prev === h ? prev : h));
+        }}
       >
         <View style={styles.priceInfo}>
           <View style={styles.secureRow}>
@@ -762,7 +776,7 @@ export default function CheckoutPage() {
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: spacing.md, gap: spacing.lg, paddingBottom: 140 },
+  scroll: { padding: spacing.md, gap: spacing.lg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   headerBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   // U5 内容区包裹层（承载 submitting overlay 绝对定位）
@@ -805,7 +819,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography['label-caps'],
     fontSize: 15, // U7 11→13→15 提升可读性 + 用户要求 Delivery address 字体大一点（3 section 共用统一）
-    fontWeight: '800', // 用户要求加粗（label-caps 默认 700，覆盖 800）
+    fontWeight: '700', // P1-19：800→700（字体仅加载 R/SB/B 三档，800 失真）；label-caps 默认即 700
   },
   section: { gap: spacing.sm },
   // U6 地址卡与支付+摘要分组：detailGroup 内部紧凑
@@ -985,7 +999,8 @@ const styles = StyleSheet.create({
   },
   divider: { width: 1, height: 40 },
   payBtn: {
-    paddingVertical: spacing.sm + 2,
+    // P1-19：sm+2 魔法算式→md（16×2+文案 ≈47px，达 44px 触控线）
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
     ...shadowPresets.md,
@@ -993,7 +1008,6 @@ const styles = StyleSheet.create({
   payBtnText: {
     color: ON_PRIMARY,
     ...typography['label-caps'],
-    fontSize: 13,
     fontWeight: '700',
   },
 });

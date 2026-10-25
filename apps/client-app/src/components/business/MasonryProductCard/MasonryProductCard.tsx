@@ -4,6 +4,7 @@ import {
   useTheme,
   spacing,
   borderRadius,
+  textStyle,
   typography,
   shadowPresets,
   defaultHitSlop,
@@ -186,7 +187,8 @@ export const MasonryProductCard = memo(function MasonryProductCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: borderRadius.lg,
+    // P1-9：商品卡家族两档约定之 xl(12)（原 lg=8 并入统一档）
+    borderRadius: borderRadius.xl,
     borderWidth: 1,
     overflow: 'hidden',
   },
@@ -206,7 +208,8 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 999,
   },
-  badgeText: { ...typography['label-caps'], fontSize: 10, fontWeight: '700', color: '#ffffff' },
+  // P1-10：徽章文字统一 badge-caps token（原 label-caps 降 10px 的内联覆盖）
+  badgeText: { ...textStyle('badge-caps'), color: '#ffffff' },
   // Why: P19 原型 .select-circle —— 22² 圆圈右上角，白底 90% 透明 + outline 边；选中 primary 底
   selectCircle: {
     position: 'absolute',

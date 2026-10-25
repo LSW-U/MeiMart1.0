@@ -15,7 +15,7 @@ const OFFSET = 8;
 // 文字两侧留白需 > OFFSET 斜切量，保证首尾字符不被平行四边形斜边压住
 const TEXT_PAD = 14;
 
-export function StatusBadge({ text, backgroundColor, testID }: StatusBadgeProps) {
+export function StatusBadge({ text, backgroundColor, textColor, testID }: StatusBadgeProps) {
   // Why: a11y 标签前缀 i18n（Status: XXX），避免读屏对 zh/tet 用户读英文
   const { t } = useTranslation();
   const [w, setW] = useState(MIN_W);
@@ -45,7 +45,7 @@ export function StatusBadge({ text, backgroundColor, testID }: StatusBadgeProps)
         />
       </Svg>
       <Text
-        style={styles.text}
+        style={[styles.text, textColor ? { color: textColor } : undefined]}
         numberOfLines={1}
         onLayout={(e) => {
           // Text 布局宽（含 paddingHorizontal）即徽章需宽；仅值变化时 setState 防循环
@@ -74,8 +74,8 @@ const styles = StyleSheet.create({
   },
   text: {
     paddingHorizontal: TEXT_PAD,
-    // Why: 文字色固定白——bg 由调用方传入饱和色（#B45309 / #059669 等，不随 theme 变），
-    // 文字须保持固定高对比色。dark mode 适配需改为 textColor prop 由调用方传，留 follow-up。
+    // Why: 文字色默认白——bg 由调用方传入饱和色（#B45309 / #059669 等，不随 theme 变），
+    // 白字两主题恒高对比；P1-16 起支持 textColor prop 覆盖（dark 适配入口，见 types 注释）。
     color: '#ffffff',
     // 审查批A判断题1：11px 档收敛 label-caps-sm token（textStyle 解析 Bold 字族后缀，
     // 替代 typography 直铺 + 内联 fontSize，三处 11 魔法数单一来源化）

@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/Button';
 import type { ProductBadge, ProductBadgeVariant, ProductCardProps } from './ProductCard.types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 
-type BadgeColorEntry = { bg: string; fg: string; pill?: boolean };
+// P1-10：徽章形态统一胶囊——pill 差异化字段废弃（原非 pill 分支 borderRadius:2 尖角矩形）
+type BadgeColorEntry = { bg: string; fg: string };
 
 // Why: badge 配色从 useTheme 派生（dark mode 自动适配），不再用模块级硬编码常量。
 // P0-4：fresh/top-rated 底走 badge-* 白字安全档（light #047857/#B45309 ≈5.2/4.7:1，
@@ -23,7 +24,7 @@ function useBadgeColors(): Record<ProductBadgeVariant, BadgeColorEntry> {
     'best-seller': { bg: colors.primary, fg: colors['on-primary'] },
     new: { bg: colors.tertiary, fg: colors['on-primary'] },
     'top-rated': { bg: colors.semantic['badge-warning'], fg: colors['on-primary'] },
-    local: { bg: `${colors.primary}1A`, fg: colors.primary, pill: true }, // 1A = ~10% opacity
+    local: { bg: `${colors.primary}1A`, fg: colors.primary }, // 1A = ~10% opacity
   };
 }
 
@@ -34,7 +35,8 @@ function BadgeCorner({ badge, entry }: { badge: ProductBadge; entry: BadgeColorE
         styles.badge,
         {
           backgroundColor: entry.bg,
-          borderRadius: entry.pill ? 999 : 2,
+          // P1-10：统一胶囊 999
+          borderRadius: 999,
         },
       ]}
     >

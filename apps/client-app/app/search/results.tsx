@@ -24,6 +24,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
+import { CartIconButton } from '@/components/business/CartIconButton/CartIconButton';
 import { Skeleton } from '@/components/ui/Skeleton';
 // P8-6 R3/R5：Recommended 复用 MasonryProductCard + resolveBadges（与首页/P7 统一）
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
@@ -364,32 +365,16 @@ function Header({
           />
         </View>
 
-        {/* 购物车 + 角标 */}
-        <Pressable
+        {/* 购物车 + 角标——P1-21 收敛 CartIconButton（原自绘白底红边角标废弃，统一 error 红 Badge） */}
+        <CartIconButton
+          count={cartCount}
+          iconColor={ON_PRIMARY}
           onPress={() => router.push('/cart')}
-          hitSlop={8}
-          style={styles.headerBtn}
-          accessibilityRole="button"
           accessibilityLabel={t('cart.a11y.itemCount', { count: cartCount })}
-        >
-          <Icon symbol="shopping_cart" size={24} color={ON_PRIMARY} />
-          {cartCount > 0 && (
-            <View
-              style={[
-                styles.cartBadge,
-                {
-                  // Why: 白底红字红边（用户要求），底固定白不随主题，字/边用 primary 红
-                  backgroundColor: '#ffffff',
-                  borderColor: colors.primary,
-                },
-              ]}
-            >
-              <Text style={[styles.cartBadgeText, { color: colors.primary }]}>
-                {cartCount > 99 ? '99+' : cartCount}
-              </Text>
-            </View>
-          )}
-        </Pressable>
+          style={styles.headerBtn}
+          hitSlop={8}
+          badgeStyle={styles.cartBadge}
+        />
       </View>
     </View>
   );
@@ -427,20 +412,11 @@ const styles = StyleSheet.create({
   searchBarInline: {
     flex: 1,
   },
+  // P1-21：角标本体走 CartIconButton/Badge，这里只留定位（原白底红边自绘形态废弃）
   cartBadge: {
     position: 'absolute',
     top: 4,
     right: 2,
-    width: 16,
-    height: 16,
-    borderRadius: 999,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cartBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
   },
   scrollContent: {
     padding: layout['container-margin'],

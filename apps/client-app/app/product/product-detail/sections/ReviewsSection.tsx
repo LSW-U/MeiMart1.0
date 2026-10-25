@@ -3,7 +3,7 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useLocalizer } from '@/i18n';
-import { useTheme, spacing, typography, borderRadius } from '@/theme';
+import { useTheme, spacing, typography, borderRadius, fontFamilies } from '@/theme';
 import { toast } from '@/store/toastStore';
 import { Icon } from '@/components/ui/Icon';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -310,7 +310,8 @@ const styles = StyleSheet.create({
   ratingBig: {
     fontSize: 32,
     fontWeight: '700',
-    fontFamily: 'Noto Serif',
+    // P1-24 补修（审查批B Spec-a）：'Noto Serif'（带空格）注册名不匹配——同 profile 真bug
+    fontFamily: fontFamilies.serif,
   },
   ratingCount: {
     ...typography['body-sm'],

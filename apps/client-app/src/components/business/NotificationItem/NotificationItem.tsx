@@ -577,7 +577,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pline: { flex: 1, height: 2 },
-  plabel: { fontSize: 9, fontWeight: '600' },
+  // P1-10：微字号下限 10（进度标签非徽章，保持 600 字重）
+  plabel: { fontSize: 10, fontWeight: '600' },
   // 骑手行
   deliveryRow: {
     flexDirection: 'row',
@@ -647,7 +648,8 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
   },
-  discountText: { fontSize: 9, fontWeight: '700' },
+  // P1-10：9px→badge-caps token（折扣角标 700 系）
+  discountText: { ...textStyle('badge-caps') },
   // 满减
   fulfillRow: {
     flexDirection: 'row',

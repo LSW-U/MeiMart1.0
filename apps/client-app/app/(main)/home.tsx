@@ -25,6 +25,7 @@ import { CategoryGrid } from '@/components/business/CategoryGrid';
 import { PromoDock } from '@/components/business/PromoDock';
 import { SmallProductCard } from '@/components/business/SmallProductCard/SmallProductCard';
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
+import { LocationChip } from '@/components/business/LocationChip/LocationChip';
 import { resolveBadges } from '@/utils/resolveBadges';
 import { dedupeById } from '@/utils/dedupeById';
 import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
@@ -619,18 +620,13 @@ export default function HomePage() {
                 {t('home.appName')}
               </Text>
             </View>
-            <Pressable
+            {/* P1-15：位置胶囊收敛 business/LocationChip（原与 PrimaryHeader 双份复制）；
+                home 深红渐变 header 不随主题，传固定白；a11y 统一 locationChip 模板 */}
+            <LocationChip
+              label={t('home.locationLabel')}
               onPress={() => router.push('/address/map')}
-              style={styles.locationChip}
-              accessibilityRole="button"
-              accessibilityLabel={t('home.locationLabel')}
-            >
-              <Icon symbol="location_on" size={13} color={ON_PRIMARY} />
-              <Text style={styles.locationText} numberOfLines={1}>
-                {t('home.locationLabel')}
-              </Text>
-              <Icon symbol="expand_more" size={13} color={ON_PRIMARY} />
-            </Pressable>
+              color={ON_PRIMARY}
+            />
             <Pressable
               testID="home-messages"
               onPress={() => router.push('/service/notifications')}
@@ -797,23 +793,7 @@ const styles = StyleSheet.create({
     color: ON_PRIMARY,
     fontWeight: '700',
   },
-  // Why: 位置胶囊 - 和 PrimaryHeader 统一样式，半透明白底圆角
-  locationChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-    borderRadius: 999,
-    maxWidth: 150,
-  },
-  locationText: {
-    ...typography['body-sm'],
-    color: ON_PRIMARY,
-    fontSize: 12,
-    flexShrink: 1,
-  },
+  // P1-15：位置胶囊样式随组件收敛至 business/LocationChip（此处副本删除）
   msgBtn: {
     position: 'relative',
     padding: spacing.xs,
@@ -988,7 +968,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginHorizontal: layout['container-margin'],
     padding: spacing.md,
-    borderRadius: borderRadius?.lg ?? 16,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
   },
   bundleAddAllBtn: {

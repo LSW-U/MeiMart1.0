@@ -60,7 +60,8 @@ export const ReviewItem = memo(function ReviewItem({ review, onPress, testID }: 
           </View>
         </View>
       </View>
-      <Text style={[textStyle('body-md'), { color: colors['on-surface'] }]}>
+      {/* P1-18：长评截 4 行（整卡 onPress 承接全文详情） */}
+      <Text style={[textStyle('body-md'), { color: colors['on-surface'] }]} numberOfLines={4}>
         {localize(review.content)}
       </Text>
       {review.images && review.images.length > 0 && (

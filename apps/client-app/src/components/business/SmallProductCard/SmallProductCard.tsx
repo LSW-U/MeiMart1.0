@@ -92,7 +92,8 @@ const styles = StyleSheet.create({
   card: {
     width: 140,
     padding: spacing.sm,
-    borderRadius: borderRadius.lg,
+    // P1-9：商品卡家族两档约定之 xl(12)
+    borderRadius: borderRadius.xl,
     borderWidth: 1,
   },
   main: { gap: spacing.xs },

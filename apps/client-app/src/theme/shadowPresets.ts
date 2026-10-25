@@ -34,43 +34,52 @@ export type ShadowPreset = {
 
 const baseShadowColor = '#000';
 
-export const shadowPresets: Record<'sm' | 'md' | 'lg' | 'xl' | 'umaLulik', ShadowPreset> = {
-  sm: {
-    shadowColor: baseShadowColor,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  md: {
-    shadowColor: baseShadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  lg: {
-    shadowColor: baseShadowColor,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  xl: {
-    shadowColor: baseShadowColor,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.16,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  umaLulik: {
-    shadowColor: '#59413d',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 0,
-    elevation: 4,
-  },
-} as const;
+export const shadowPresets: Record<'sm' | 'md' | 'lg' | 'xl' | 'card' | 'umaLulik', ShadowPreset> =
+  {
+    sm: {
+      shadowColor: baseShadowColor,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    // P1-13：Card elevated 原内联五参数收编（0.05/8/(0,2)/elev2，介于 sm/md 之间，取原值保视觉零回归）
+    card: {
+      shadowColor: baseShadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    md: {
+      shadowColor: baseShadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    lg: {
+      shadowColor: baseShadowColor,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    xl: {
+      shadowColor: baseShadowColor,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.16,
+      shadowRadius: 16,
+      elevation: 10,
+    },
+    umaLulik: {
+      shadowColor: '#59413d',
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 0,
+      elevation: 4,
+    },
+  } as const;
 
 export type ShadowPresetKey = keyof typeof shadowPresets;
 

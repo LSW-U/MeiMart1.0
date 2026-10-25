@@ -18,6 +18,7 @@ import {
   shadowPresets,
   borderRadius,
   textStyle,
+  fontFamilies,
 } from '@/theme';
 import { APP_VERSION } from '@/utils/appInfo';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -320,7 +321,8 @@ export default function ProfilePage() {
           </View>
 
           {/* 2. Discover 快捷功能宫格（透明底 primary 图标，Invite/Seller 标 NEW，§3.3） */}
-          <Text style={[styles.sectionLabel, { color: colors.outline }]}>
+          {/* P1-23：outline 4.35:1 → on-surface-variant 9.03:1（11px 小字达 AA） */}
+          <Text style={[styles.sectionLabel, { color: colors['on-surface-variant'] }]}>
             {t('profile.sectionDiscover')}
           </Text>
           <View
@@ -349,7 +351,8 @@ export default function ProfilePage() {
           </View>
 
           {/* 3. Account & Service 单卡（圆角色块图标，§3.4） */}
-          <Text style={[styles.sectionLabel, { color: colors.outline }]}>
+          {/* P1-23：outline 4.35:1 → on-surface-variant 9.03:1（11px 小字达 AA） */}
+          <Text style={[styles.sectionLabel, { color: colors['on-surface-variant'] }]}>
             {t('profile.sectionAccount')}
           </Text>
           <View
@@ -525,12 +528,12 @@ const styles = StyleSheet.create({
   pointsNum: {
     fontSize: 16,
     fontWeight: '700',
-    fontFamily: 'Noto Serif',
+    fontFamily: fontFamilies.serif,
   },
   pointsNumMuted: {
     fontSize: 16,
     fontWeight: '700',
-    fontFamily: 'Noto Serif',
+    fontFamily: fontFamilies.serif,
   },
   pointsLabel: {
     fontSize: 11,

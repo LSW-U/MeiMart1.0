@@ -33,6 +33,18 @@ export const defaultHitSlop = {
 } as const;
 
 /**
+ * 层叠层级（P1-20）：base 页内基础浮层 / raised 顶栏·角标 / overlay 全屏浮层 / toast 全局提示
+ * Why: 全库 zIndex 36 处无约定（0/1/2/10/15/20/9999 七档并存）——统一阶梯，
+ *   孤例（15/20）收编 overlay，既有 0/1/2/10 规律位维持字面量不强改。
+ */
+export const zIndex = {
+  base: 1,
+  raised: 10,
+  overlay: 20,
+  toast: 9999,
+} as const;
+
+/**
  * 默认文本截断规则（2 行 + 尾部省略）
  * Why: 商品名/地址/评价等动态文本统一截断，避免布局溢出
  */

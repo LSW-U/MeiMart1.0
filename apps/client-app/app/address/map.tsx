@@ -19,7 +19,7 @@ import { router } from 'expo-router';
 import * as Location from 'expo-location';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius, zIndex } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader/PrimaryHeader';
@@ -553,7 +553,8 @@ const styles = StyleSheet.create({
     top: layout['container-margin'],
     left: layout['container-margin'],
     right: layout['container-margin'],
-    zIndex: 20,
+    // P1-20：孤例 20 收编 overlay 档
+    zIndex: zIndex.overlay,
   },
   searchBox: {
     flexDirection: 'row',
@@ -597,7 +598,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: spacing.md,
     right: spacing.md,
-    zIndex: 15,
+    // P1-20：孤例 15 收编 overlay（与 searchFloat 同层；两者屏幕位置不重叠，同值安全）
+    zIndex: zIndex.overlay,
   },
   controlBtn: {
     width: 40,

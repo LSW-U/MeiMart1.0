@@ -199,7 +199,8 @@ export const OrderCard = memo(OrderCardBase);
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: borderRadius['2xl'],
+    // P1-9：订单卡并入商品卡家族 xl(12) 档（原 '2xl'=16 孤档废弃，全库卡体仅 xl/lg 两档）
+    borderRadius: borderRadius.xl,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
   },
