@@ -23,6 +23,9 @@ type MapViewProps = {
 const DEFAULT_LAT = -8.5569;
 const DEFAULT_LNG = 125.5603;
 
+/** R-P2-22（走查 20261024）：地图高度常量（原两处裸 320） */
+const MAP_HEIGHT = 320;
+
 function MapViewNative({
   pickup,
   delivery,
@@ -47,7 +50,7 @@ function MapViewNative({
   return (
     <MapViewRN
       className="w-full"
-      style={{ height: 320 }}
+      style={{ height: MAP_HEIGHT }}
       initialRegion={initialRegion}
       onRegionChange={onRegionChange}
       provider={PROVIDER_DEFAULT}
@@ -83,7 +86,12 @@ function MapViewNative({
 function MapViewPlaceholder({ pickup, delivery }: MapViewProps) {
   const { t } = useTranslation();
   return (
-    <View className="w-full items-center justify-center bg-surface-frame" style={{ height: 320 }}>
+    <View
+      accessibilityLabel={t('map.placeholderTitle')}
+      accessibilityRole="image"
+      className="w-full items-center justify-center bg-surface-frame"
+      style={{ height: MAP_HEIGHT }}
+    >
       <View className="items-center gap-2">
         <Text className="text-4xl text-primary/40">{t('map.placeholderBadge')}</Text>
         <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
