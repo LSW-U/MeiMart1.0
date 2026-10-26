@@ -6,7 +6,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import type { DutyStatus } from '../../services/settings';
 import { useUnreadCount } from '../../services/queries/useNotifications';
-import { AppIcon } from '../ui';
+import { AppIcon, Tabs } from '../ui';
 import { useTranslation } from '../../i18n/useTranslation';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
@@ -75,13 +75,13 @@ export function TaskDetailHeader({
         onPress={onDutyPress}
       >
         <View className={`h-2 w-2 rounded-full ${dotClass}`} />
-        <Text className="text-xl font-bold text-on-surface">{label}</Text>
+        <Text className="text-base font-bold text-on-surface">{label}</Text>
         <AppIcon name="chevronDown" color={colors.textMuted} size={18} />
       </Pressable>
     ) : (
       <View className="flex-row items-center gap-2 rounded-full border border-primary-container bg-surface px-4 py-1">
         <View className={`h-2 w-2 rounded-full ${dotClass}`} />
-        <Text className="text-xl font-bold text-on-surface">{label}</Text>
+        <Text className="text-base font-bold text-on-surface">{label}</Text>
       </View>
     );
 
@@ -115,32 +115,14 @@ export function TaskDetailHeader({
         </Pressable>
       </View>
       {activeTab && newTasksLabel && pickupsLabel && deliveriesLabel ? (
-        <View className="mt-2 flex-row gap-6 border-b border-surface-variant">
-          {tabs.map((tab) => {
-            const active = activeTab === tab.key;
-            return (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={tab.label}
-                accessibilityState={{ selected: active }}
-                className="pb-1"
-                key={tab.key}
-                onPress={() => onTabChange?.(tab.key)}
-              >
-                <Text
-                  className={`text-base font-semibold ${active ? 'text-primary-container' : 'text-on-surface-variant'}`}
-                >
-                  {tab.label}
-                </Text>
-                {active ? (
-                  <View className="mt-1 h-0.5 rounded-full bg-primary-container" />
-                ) : (
-                  <View className="mt-1 h-0.5 rounded-full bg-transparent" />
-                )}
-              </Pressable>
-            );
-          })}
-        </View>
+        // R-P2-17/24（走查 20261024）：tab 语义（tablist/tab）+ 指示线规格收编 Tabs 单源（h-0.5 统一）
+        <Tabs
+          active={activeTab}
+          className="mt-2 gap-6 border-b border-surface-variant"
+          itemClassName="pb-1"
+          tabs={tabs}
+          onChange={(key) => onTabChange?.(key)}
+        />
       ) : null}
     </View>
   );

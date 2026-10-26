@@ -5,6 +5,7 @@ export { Button } from './Button';
 export { Card } from './Card';
 export { Input } from './Input';
 export { formBackdropClass, Modal } from './Modal';
+export { Tabs } from './Tabs';
 export { SafeImage } from './SafeImage';
 export { Skeleton } from './Skeleton';
 export { SwipeButton } from './SwipeButton';

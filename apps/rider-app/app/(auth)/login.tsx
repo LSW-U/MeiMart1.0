@@ -5,7 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, Switch, Text, View } from 're
 
 import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { showToast } from '../../src/components/feedback/Toast';
-import { AppIcon, Button, Card, Input } from '../../src/components/ui';
+import { AppIcon, Button, Card, Input, Tabs } from '../../src/components/ui';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useTranslation } from '../../src/i18n/useTranslation';
 import { isValidPhone } from '../../src/services/auth';
@@ -161,36 +161,20 @@ export default function LoginPage() {
           </Text>
         </View>
 
-        <View className="flex-row border-b border-outline-variant">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('auth.login.passwordTab')}
-            accessibilityState={{ selected: isPassword }}
-            className="flex-1 py-4"
-            onPress={() => setMode('password')}
-          >
-            <Text
-              className={`text-center text-xs font-bold tracking-wider ${isPassword ? 'text-primary' : 'text-on-surface-variant'}`}
-            >
-              {t('auth.login.passwordTab')}
-            </Text>
-            {isPassword ? <View className="mt-3 h-[3px] rounded-full bg-primary" /> : null}
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('auth.login.smsTab')}
-            accessibilityState={{ selected: !isPassword }}
-            className="flex-1 py-4"
-            onPress={() => setMode('sms')}
-          >
-            <Text
-              className={`text-center text-xs font-bold tracking-wider ${!isPassword ? 'text-primary' : 'text-on-surface-variant'}`}
-            >
-              {t('auth.login.smsTab')}
-            </Text>
-            {!isPassword ? <View className="mt-3 h-[3px] rounded-full bg-primary" /> : null}
-          </Pressable>
-        </View>
+        {/* R-P2-17/24（走查 20261024）：双模切换收编 Tabs（tablist/tab 语义 + 指示线
+            h-0.5 统一——原 3px，视觉微变；字号档 sm 保留登录场景差异） */}
+        <Tabs
+          active={mode}
+          className="border-b border-outline-variant"
+          itemClassName="flex-1 py-4"
+          size="sm"
+          tabs={[
+            { key: 'password', label: t('auth.login.passwordTab') },
+            { key: 'sms', label: t('auth.login.smsTab') },
+          ]}
+          tone="primary"
+          onChange={setMode}
+        />
 
         <View className="gap-4">
           <Input
