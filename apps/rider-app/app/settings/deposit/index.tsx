@@ -58,7 +58,7 @@ function heroVisual(state: 'paid' | 'unpaid' | 'pending') {
     case 'paid':
       return {
         gradient: depositHeroGradients.paid,
-        border: 'border-[#b8e0c4]',
+        border: 'border-success-border',
         amount: 'text-success-deep',
       };
     case 'pending':

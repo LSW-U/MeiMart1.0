@@ -228,7 +228,7 @@ describe('已缴纳态（拍板 3 + 4 + E）', () => {
     // T8 渐变二期：hero 背景改 LinearGradient（原型 linear-gradient(135deg,#e6f4ea,#dcf5e3)）
     const hero = getByText('已缴纳保证金').closest('[data-rn-host="LinearGradient"]');
     expect(hero?.getAttribute('data-prop-colors')).toBe(JSON.stringify(['#e6f4ea', '#dcf5e3']));
-    expect(hero?.getAttribute('data-prop-className')).toContain('border-[#b8e0c4]');
+    expect(hero?.getAttribute('data-prop-className')).toContain('border-success-border');
     // §2.2：金额 text-success-deep（替换幽灵 success 文字色 class）
     const amount = getByText('$50.00').closest('[data-rn-host="Text"]');
     expect(amount?.getAttribute('data-prop-className')).toContain('text-success-deep');

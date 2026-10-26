@@ -60,6 +60,8 @@ export const colors = {
   warnBg: '#fff3e0',
   warnBorder: '#ffe0b2',
   successDeep: '#2d6a2e',
+  // R-P2-19（走查 20261024）：paid 态 hero 边框（原全库 theme 外唯一硬编码 hex 收编）
+  successBorder: '#b8e0c4',
   neutralBg: '#e2e3e2',
   neutral: '#636565',
   neutralMuted: '#5d5f5f',

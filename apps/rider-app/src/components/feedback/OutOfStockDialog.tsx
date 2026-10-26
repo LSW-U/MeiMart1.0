@@ -97,7 +97,7 @@ export function OutOfStockDialog({
     <Modal
       backdropClassName={formBackdropClass}
       backdropCloseLabel={t('common.cancel')}
-      sheetClassName="max-h-[85%] w-full max-w-[340px] rounded-3xl bg-surface p-6 shadow-xl"
+      sheetClassName="max-h-[85%] w-full max-w-[400px] rounded-3xl bg-surface p-6 shadow-xl"
       visible={visible}
       onClose={onDismiss}
     >
@@ -133,7 +133,11 @@ export function OutOfStockDialog({
         />
 
         <Text className="text-sm font-medium text-on-surface">{t('tasks.oos.reasonLabel')}</Text>
-        <View className="flex-row flex-wrap gap-2">
+        <View
+          accessibilityLabel={t('tasks.oos.reasonLabel')}
+          accessibilityRole="radiogroup"
+          className="flex-row flex-wrap gap-2"
+        >
           {OOS_REASONS.map((r) => (
             <Pressable
               key={r}
