@@ -370,6 +370,8 @@ export default function LoginPage() {
         okLabel={t('auth.login.featureInProgress.ok')}
         title={t('auth.login.featureInProgress.title')}
         visible={featureInProgressVisible}
+        // P3-1：无 cancel 按钮，backdrop 读屏标签不能 fallback 到「确定」——传关闭语义
+        backdropCloseLabel={t('common.close')}
         onCancel={() => setFeatureInProgressVisible(false)}
         onOk={() => setFeatureInProgressVisible(false)}
       />

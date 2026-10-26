@@ -581,6 +581,8 @@ export default function TasksPage() {
         okLabel={t('duty.block.ok')}
         title={t('duty.block.title')}
         visible={blockVisible}
+        // P3-1：无 cancel 按钮，backdrop 读屏标签不能 fallback 到「确定」——传关闭语义
+        backdropCloseLabel={t('common.close')}
         onCancel={() => setBlockVisible(false)}
         onOk={() => setBlockVisible(false)}
       />

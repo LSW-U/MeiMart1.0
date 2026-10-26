@@ -93,7 +93,7 @@ export function OutOfStockDialog({
   return (
     // 批C（20261025）：迁 ui/Modal 基座（R-P1-13 渐进收尾）——backdrop 关闭 / alert 语义 /
     // 阻冒泡进基座；NativeModal 覆盖导航栏（任务页底部有 BottomActionBar）语义保留，
-    // 视觉参数（black/50、340px、max-h-85%、shadow-xl）不变
+    // 视觉参数（black/50、max-h-85%、shadow-xl）不变；卡宽 340→400px（e81e568，对齐客户端 Modal）
     <Modal
       backdropClassName={formBackdropClass}
       backdropCloseLabel={t('common.cancel')}

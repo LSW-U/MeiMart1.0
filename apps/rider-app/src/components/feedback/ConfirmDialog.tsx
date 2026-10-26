@@ -8,6 +8,12 @@ type ConfirmDialogProps = {
   message: string;
   okLabel: string;
   cancelLabel?: string;
+  /**
+   * backdrop 关闭面的读屏标签（P3-1 修复 20261026）：无 cancelLabel 时 backdrop 点击仍是
+   * 取消语义，原 fallback okLabel 读屏念「确定」与行为不一致；调用方传关闭语义文案
+   * （如 t('common.close')）。缺省保留 okLabel 兜底（不破坏既有调用方）。
+   */
+  backdropCloseLabel?: string;
   tone?: 'default' | 'danger';
   onOk: () => void;
   onCancel: () => void;
@@ -19,6 +25,7 @@ export function ConfirmDialog({
   message,
   okLabel,
   cancelLabel,
+  backdropCloseLabel,
   tone = 'default',
   onOk,
   onCancel,
@@ -30,7 +37,11 @@ export function ConfirmDialog({
   // backdrop 关闭/alert 语义/阻冒泡进基座，本组件只留标题/正文/动作行
   // backdrop 读屏标签走 props 注入（纯展示组件不 import i18n）：backdrop 关闭=取消语义
   return (
-    <Modal backdropCloseLabel={cancelLabel ?? okLabel} visible={visible} onClose={onCancel}>
+    <Modal
+      backdropCloseLabel={backdropCloseLabel ?? cancelLabel ?? okLabel}
+      visible={visible}
+      onClose={onCancel}
+    >
       <Text className="text-lg font-bold text-on-surface">{title}</Text>
       <Text className="mt-3 text-sm leading-6 text-on-surface-variant">{message}</Text>
       <View className="mt-6 flex-row gap-3">
