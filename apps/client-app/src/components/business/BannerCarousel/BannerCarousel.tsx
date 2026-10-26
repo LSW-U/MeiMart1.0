@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -46,6 +46,15 @@ export function BannerCarousel({
     return () => sub.remove();
   }, []);
 
+  // 审查批C判断题1：autoplay 与圆点跳页共用同一滚动（原两处 scrollTo 形状重复）
+  // 审查修复 Q1：useCallback 入 autoplay effect 依赖，消除 exhaustive-deps warning 与隐性 stale 闭包风险
+  const scrollToIndex = useCallback(
+    (i: number) => {
+      scrollRef.current?.scrollTo({ x: i * screenWidth, animated: true });
+    },
+    [screenWidth],
+  );
+
   useEffect(() => {
     if (!autoPlay || reduceMotion || banners.length <= 1) return;
     const timer = setInterval(() => {
@@ -56,16 +65,11 @@ export function BannerCarousel({
       });
     }, autoPlayInterval);
     return () => clearInterval(timer);
-  }, [autoPlay, autoPlayInterval, reduceMotion, banners.length, screenWidth]);
+  }, [autoPlay, autoPlayInterval, reduceMotion, banners.length, screenWidth, scrollToIndex]);
 
   const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
     setActiveIndex(idx);
-  };
-
-  // 审查批C判断题1：autoplay 与圆点跳页共用同一滚动（原两处 scrollTo 形状重复）
-  const scrollToIndex = (i: number) => {
-    scrollRef.current?.scrollTo({ x: i * screenWidth, animated: true });
   };
 
   if (banners.length === 0) return null;
