@@ -23,6 +23,11 @@ for (const [k, v] of Object.entries(colors)) {
 }
 
 module.exports = {
+  // R-P1-11 回滚（20261026）：原判「死配置」有误——darkMode 决定 react-native-css-interop
+  // 配色策略；删后落默认 'media'，其 web runtime 的 colorScheme.set（含自身 MutationObserver
+  // 自动路径）即 throw "Cannot manually set color scheme"。恢复 class 策略（本库无 dark:
+  // 类消费，class 下恒 light，等效锁亮色，与批B 前行为一致）。
+  darkMode: 'class',
   content: ['./app/**/*.{js,jsx,ts,tsx}', './src/**/*.{js,jsx,ts,tsx}'],
   presets: [require('nativewind/preset')],
   theme: {
