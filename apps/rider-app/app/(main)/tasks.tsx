@@ -479,9 +479,14 @@ export default function TasksPage() {
         renderItem={renderTaskItem}
         keyExtractor={keyTaskId}
         ListEmptyComponent={
+          // R-P2-21（走查 20261024）：任务空态接图标 +「切换状态」CTA——打开 DutyStatusMenu
+          //（文案复用 duty.menu.title，零新增 i18n key）
           <EmptyState
-            title={t(emptyMeta[activeTab].title)}
+            actionLabel={t('duty.menu.title')}
             description={t(emptyMeta[activeTab].desc)}
+            iconName="orders"
+            title={t(emptyMeta[activeTab].title)}
+            onAction={() => setMenuVisible(true)}
           />
         }
 
@@ -495,8 +500,8 @@ export default function TasksPage() {
               }
               void refetchTasks();
             }}
-            colors={[colors.danger]}
-            tintColor={colors.danger}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
       />
