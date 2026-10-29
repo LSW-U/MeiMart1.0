@@ -39,7 +39,10 @@ describe('PhotoUploadTile', () => {
   });
 
   it('renders error state with message and retry', () => {
-    const { getByText } = renderWithTheme(
+    // R2 批2 补强（fake-green 基线退出）：错误态断言从纯 toBeTruthy 扩为
+    //   「错误文案渲染 + 重试钮（network 态专属）+ 删除钮仍在 + a11y 语义」，
+    //   并负向断言 network 态不该出现的添加钮不存在（state 翻转才渲染）。
+    const { getByText, getByLabelText, queryByLabelText } = renderWithTheme(
       <PhotoUploadTile
         state="error"
         uri="file:///tmp/a.jpg"
@@ -47,11 +50,20 @@ describe('PhotoUploadTile', () => {
         errorKind="network"
         errorMessage="Upload failed"
         retryLabel="Retry"
+        retryA11yLabel="Retry upload"
         onRetry={() => {}}
         onDelete={() => {}}
+        deleteA11yLabel="Delete photo"
       />,
     );
     expect(getByText('Upload failed')).toBeTruthy();
-    expect(getByText('Retry')).toBeTruthy();
+    expect(getByLabelText('Retry upload')).toBeTruthy();
+    expect(getByLabelText('Delete photo')).toBeTruthy();
+    // 负向：error 态不渲染「添加」入口（仅 empty 态有）
+    expect(queryByLabelText('Add photo')).toBeNull();
+    // 负向：错误文案非空（errorMessage 透传，空串渲染空 <Text> 也算失败）
+    expect(getByText('Upload failed').props.children).toBe('Upload failed');
+    // 负向：错误文案 numberOfLines=2（错误区两行截断防长文案撑爆贴片，批2 P3-3 审查注记）
+    expect(getByText('Upload failed').props.numberOfLines).toBe(2);
   });
 });

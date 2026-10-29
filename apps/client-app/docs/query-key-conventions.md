@@ -59,6 +59,24 @@
 5. 若域根属于登录用户私有数据，检查 `src/services/offline/persist.ts`
    `EXCLUDED_PREFIXES` 是否需要加排除（PII 治理口径）。
 
+## 缓存分级（批2 D14 落档）
+
+`STALE_TIME` 表即分级表（key + 分级单一真源，不另立分级文件），四档口径：
+
+| 档位       | 值                 | 域                                                                                                                                                                                                                                                                                 |
+| ---------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 静态档     | 24h                | 走 RQ 的静态运营数据。**本仓现状无 24h 级 RQ 域**——onboardingSlides 原值 1h，按原值迁移未拔高；档位备而未用，新静态域接入时对齐 24h                                                                                                                                                |
+| 目录档     | 沿用 `CATALOG_TTL` | categories 24h / banners 12h / productList 30min / productDetail 10min（catalogPolicy.ts 单源，断网冷启动目录可浏览）                                                                                                                                                              |
+| 价格库存档 | 30s                | checkoutPreview / couponValidate / availableCoupons / refundDetail / ticketDetail / orderReviews / notifications（价格/库存/状态敏感，反复进出短缓存）                                                                                                                             |
+| 动态短档   | 60s~10min          | recommend / buyAgain / frequentBundle（5min，价格敏感防旧价）/ search 系（60s）/ orders / cart / coupons / reviews / refunds / profile / addresses / payments / favorites / subscriptions / notificationPrefs（60s）/ promotions（10min）/ warehouseAvailability / orderEta（60s） |
+
+**不适用（不进表）**：`app/legal/[type].tsx` 不走 react-query（无 useQuery，纯静态渲染）
+——给不存在 RQ 的页写 staleTime 是死配置（D14）。其余非 RQ 数据同理不进表。
+另注：全局 queryClient 默认 60s（`src/providers/queryClient.ts:30`）是批1 前既有的
+全局基线，**不属域级分级表口径**（本表只记域级档位）。本表口径下「域级 staleTime
+字面量 = 0」。无限滚动收编例外（search/product-list/favorites 前提不符）登记见
+`docs/offset-infinite-exceptions.md`。
+
 ## 消费方 import
 
 key 从 `@/lib/queryKeys` import。旧模块（useCart/useOrders/usePromotion/useFavorites/

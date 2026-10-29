@@ -1,6 +1,8 @@
 import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { productApi, type FrequentBundle } from '@/services/products';
 import { useAuthStore } from '@/store/authStore';
+import { useOffsetInfinite } from '@/hooks/useOffsetInfinite';
+import type { Product } from '@/types';
 import {
   STALE_TIME,
   PRODUCTS_QUERY_KEY,
@@ -76,23 +78,20 @@ export function useRecommendationsInfinite(opts?: {
 }) {
   const limit = opts?.limit ?? 6;
   const baseOffset = opts?.baseOffset ?? 0;
-  return useInfiniteQuery({
+  return useOffsetInfinite<Product>({
     // Why: cycle 进 queryKey——baseOffset 回绕 0 时旧 key(0) 缓存里可能存着用户之前
     //   加载到底的多页数据（staleTime 5min 内直接复用），换一批会「显示全部且无按钮」；
     //   cycle++ 使回绕后的 key 全新，从 6 条干净起步（20261023 人工验收实证）
     queryKey: PRODUCT_RECOMMEND_INFINITE_KEY(baseOffset, opts?.cycle ?? 0, limit),
-    queryFn: ({ pageParam }) =>
-      productApi.getRecommendations({ limit, offset: baseOffset + pageParam }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.length === limit ? allPages.length * limit : undefined,
-    // Why: 占位只在「同 key 翻页链」保留——placeholderData 仅在新 key 无数据时被调用，
-    //   返回 previous 会把旧 key 的多页列表（含加载到底的 70 条）原样顶到新 key 渲染
+    // baseOffset 折进闭包：pageParam 是批内相对 offset（0/6/12…），请求时叠加
+    fetchPage: (offset) => productApi.getRecommendations({ limit, offset: baseOffset + offset }),
+    limit,
+    // Why: 占位恒关（keepPreviousData=false 默认）——placeholderData 仅在新 key 无数据时
+    //   生效，保占位会把旧 key 的多页列表（含加载到底的 70 条）原样顶到新 key 渲染
     //   （20261024 人工验收实证「换一批后全商品显示收不回去」）。换一批/回绕都是换 key
-    //   → 必须返回 undefined 露出 loading 态；fetchNextPage 是同 key 追加，不经过此路径。
-    placeholderData: () => undefined,
+    //   → 必须露 loading 态；fetchNextPage 是同 key 追加，不经过此路径。
+    keepPreviousData: false,
     staleTime: STALE_TIME.recommend,
-    networkMode: 'offlineFirst',
   });
 }
 
@@ -135,6 +134,11 @@ export function useFrequentBundle(limit = 5) {
  * - onEndReached 调 fetchNextPage 取下一页（getNextPageParam 按 hasMore 判断）
  * - mock 模式 hasMore=false，不触发第二页（一次性返全部）
  * - pages.flatMap(p => p.items) 拼接所有已加载页；pages[0].total 是搜索结果总数
+ *
+ * 批2 D4：queryFn 形态是 page 式（page 从 1 起 + hasMore 终止），与 offset+短批终止
+ * 模型不同——**不收编** useOffsetInfinite（hasMore 语义不是页长可判定的，换 hook 需
+ * 后端改 offset 形态或前端造 hasMore→offset 折算，均超批2 范围）。保持 useInfiniteQuery
+ * 原实现不变。
  */
 export function useProductSearch(keyword: string, sortBy: ProductSortKey = 'all') {
   return useInfiniteQuery({

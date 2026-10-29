@@ -19,6 +19,19 @@ import { CATALOG_TTL } from '@/services/offline/catalogPolicy';
 // ============================================================================
 // staleTime 伴随导出（D15）：key 与缓存分级单一真源，hook 内消费，不另立分级文件。
 // 值 = 各 hook 现行 staleTime（批1 原值迁移，不改任何查询语义）。
+//
+// 缓存分级（批2 D14 落档）——四档口径，全表只收实际走 RQ 的域：
+//   静态档   24h：走 RQ 的静态运营数据（onboardingSlides 60*60*1000 原值即 1h——
+//           低于 24h，**按原值迁移不拔高**；本仓现无 24h 级 RQ 域，档位备而未用）
+//   目录档   沿用 CATALOG_TTL（categories 24h / banners 12h / productList 30min /
+//           productDetail 10min，catalogPolicy.ts 单源）
+//   价格库存 30s：productDetail 内价格/库存敏感子域（checkoutPreview/couponValidate/
+//           availableCoupons/refundDetail/ticketDetail/orderReviews/notifications）
+//   动态短档  60s~10min：recommend/buyAgain/frequentBundle/search系/orders/cart 等
+//           现行值（批1 原值迁移）
+//   不适用：app/legal/[type].tsx 不走 react-query（无 useQuery，纯静态渲染）——
+//   不进本表（D14：给不存在 RQ 的页写 staleTime 是死配置）；登记见
+//   docs/offset-infinite-exceptions.md 同批文档。
 // ============================================================================
 export const STALE_TIME = {
   // 目录类（沿用 CATALOG_TTL 分层，断网冷启动目录可浏览）
@@ -119,6 +132,14 @@ export const PROMOTIONS_QUERY_KEY = ['promotions'] as const;
 
 // ============================================================================
 // orders 订单
+// Why（批2 P3 补指针）：批1 收编时两项裁决的依据——
+//   1) 不设 locale 段：订单列表/详情文案由渲染层 localize() 取多语 Record
+//      （约定文档「必填维度」：纯透传多语的数据不进 key），后端不按
+//      Accept-Language 切片订单内容。
+//   2) 详情落 ORDERS 前缀（orderDetailKey 挂 ['orders'] 下而非独立 'order' 域根）：
+//      useCreateOrder/useCancelOrder/useDeleteOrders onSettled 对 ORDERS_QUERY_KEY
+//      做前缀失效，详情/列表/计数一并在内；且 persist.ts EXCLUDED_PREFIXES
+//      以第一段 'orders' 排除订单私有数据落盘，拆域根会双双失守。
 // ============================================================================
 export const ORDERS_QUERY_KEY = ['orders'] as const;
 export const ORDERS_COUNTS_KEY = [...ORDERS_QUERY_KEY, 'counts'] as const;

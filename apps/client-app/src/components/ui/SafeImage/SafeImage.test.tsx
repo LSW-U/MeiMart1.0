@@ -115,7 +115,7 @@ describe('SafeImage', () => {
     });
 
     it('thumb 加载失败 → 回退原图（fallback-to-full，不直接进占位）', () => {
-      const { getByTestId, rerender } = render(
+      const { getByTestId } = render(
         <SafeImage
           source={{ uri: 'http://s:9000/b/products/a.jpg' }}
           variant="thumb"
