@@ -106,3 +106,10 @@ export type DeliveryTask = {
 // Report issue 端点的 reason 枚举
 export type ReportIssueReason =
   'CUSTOMER_UNREACHABLE' | 'CUSTOMER_REJECTED' | 'ADDRESS_NOT_FOUND' | 'TRAFFIC_ACCIDENT' | 'OTHER';
+
+/**
+ * 替换品批2 工单化（2026-10-29 D20）：reportIssue 响应增量字段（只增不改）。
+ * 后端 DeliveryTaskView 本身无此字段——仅 report-issue 端点响应 data 带 ticketNo。
+ * 调用方用 `ReportIssueResult`（DeliveryTask + ticketNo）接收回显。
+ */
+export type ReportIssueResult = DeliveryTask & { ticketNo?: string };

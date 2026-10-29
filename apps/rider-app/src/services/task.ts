@@ -1,4 +1,9 @@
-import type { DeliveryTask, ReportIssueReason, TaskStatus } from '@/src/types/task';
+import type {
+  DeliveryTask,
+  ReportIssueReason,
+  ReportIssueResult,
+  TaskStatus,
+} from '@/src/types/task';
 
 import { api, buildQuery, isMockMode } from './api';
 
@@ -336,14 +341,18 @@ export const taskApi = {
     return fromView(res.data);
   },
 
+  // 替换品批2 工单化（2026-10-29 D20）：响应 data 增量 ticketNo（工单号 TKxxx 回显），原 task 字段语义不变
   async reportIssue(
     id: string,
     body: { reason: ReportIssueReason; note?: string; evidenceUrls?: string[] },
-  ): Promise<DeliveryTask> {
+  ): Promise<ReportIssueResult> {
     if (isMockMode) {
-      return mockDelay(await mutateMockStatus(id, 'FAILED'), 400);
+      return mockDelay(
+        { ...(await mutateMockStatus(id, 'FAILED')), ticketNo: 'TK20261029000001' },
+        400,
+      );
     }
-    const res = await api.post<DeliveryTask>(
+    const res = await api.post<ReportIssueResult>(
       `/rider/dispatch/tasks/${encodeURIComponent(id)}/report-issue`,
       body,
     );

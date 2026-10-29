@@ -698,7 +698,8 @@
     "scan": "Digitalizar",
     "pointsUnit": "Pontos",
     "featureComingSoon": "Funcionalidade em breve",
-    "unreadBadge": "Você tem {{count}} notificações não lidas"
+    "unreadBadge": "Você tem {{count}} notificações não lidas",
+    "tickets": "Meus Tickets"
   },
   "settings": {
     "title": "Definições",
@@ -1357,7 +1358,8 @@
     "E-OOS-002": "Quantidade de falta ou item sugerido inválido",
     "E-OOS-003": "Este item já tem registo de falta de stock",
     "E-OOS-004": "Falta total só pode ser registada na fase de separação (fase de entrega apenas parcial)",
-    "E-OOS-005": "Fotos de evidência inválidas (máx. 3, têm de ser URLs enviados por esta plataforma)"
+    "E-OOS-005": "Fotos de evidência inválidas (máx. 3, têm de ser URLs enviados por esta plataforma)",
+    "E-TICKET-001": "Ticket não encontrado"
   },
   "search": {
     "recent": "Pesquisas Recentes",
@@ -1411,6 +1413,34 @@
   "notifications": {
     "a11y": {
       "notificationItem": "{{title}}, {{time}}"
+    }
+  },
+  "tickets": {
+    "title": "Meus Tickets",
+    "detailTitle": "Detalhe do Ticket",
+    "empty": "Nenhum ticket ainda",
+    "emptyDesc": "Tickets criados a partir de problemas de entrega aparecem aqui",
+    "status": {
+      "OPEN": "Aberto",
+      "IN_PROGRESS": "Em andamento",
+      "RESOLVED": "Resolvido",
+      "CLOSED": "Fechado"
+    },
+    "type": {
+      "CUSTOMER_UNREACHABLE": "Cliente incontactável",
+      "CUSTOMER_REJECTED": "Cliente recusou",
+      "ADDRESS_NOT_FOUND": "Endereço não encontrado",
+      "TRAFFIC_ACCIDENT": "Acidente de trânsito",
+      "OTHER": "Outro",
+      "FEEDBACK": "Feedback"
+    },
+    "typeLabel": "Tipo",
+    "resolveDueLabel": "Prazo de resolução",
+    "createdAtLabel": "Criado em",
+    "timelineTitle": "Progresso",
+    "noEvents": "Sem registos ainda",
+    "a11y": {
+      "item": "Ticket {{ticketNo}}, {{status}}"
     }
   }
 }

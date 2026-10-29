@@ -56,9 +56,16 @@ export interface FunctionItem {
   isError?: boolean;
 }
 
-// P2 §3.4: 登录态功能菜单只留 地址/帮助/设置/退出（收藏/优惠券已合并到 usercard 统计条）
+// P2 §3.4: 登录态功能菜单只留 地址/我的工单/帮助/设置/退出（收藏/优惠券已合并到 usercard 统计条）
 export const FUNCTION_ITEMS: FunctionItem[] = [
   { id: 'address', labelKey: 'address.list', icon: 'location_on', route: '/address/list' },
+  // 替换品批2 工单化（2026-10-29）：我的工单入口（reportIssue 旁路建单的查询侧）
+  {
+    id: 'tickets',
+    labelKey: 'profile.tickets',
+    icon: 'confirmation_number',
+    route: '/(main)/tickets',
+  },
   { id: 'help', labelKey: 'profile.help', icon: 'help', route: '/service/help' },
   { id: 'settings', labelKey: 'profile.settings', icon: 'settings', route: '/settings' },
   { id: 'logout', labelKey: 'profile.logout', icon: 'logout', isError: true },

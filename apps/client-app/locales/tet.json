@@ -698,7 +698,8 @@
     "scan": "Skanea",
     "pointsUnit": "Ponto",
     "featureComingSoon": "Funsaun sei mai kedas",
-    "unreadBadge": "Ita iha {{count}} notifikasaun seidauk lee"
+    "unreadBadge": "Ita iha {{count}} notifikasaun seidauk lee",
+    "tickets": "Tiket mìn"
   },
   "settings": {
     "title": "Konfigurasaun",
@@ -1357,7 +1358,8 @@
     "E-OOS-002": "Kuantidade foun ka item sujestaun la loos",
     "E-OOS-003": "Item ne'e rejistu ona foun",
     "E-OOS-004": "Foun tomak bele rejistu deit iha fase pick (fase rider bele parcial deit)",
-    "E-OOS-005": "Foto evidénsia la loos (máximu 3, tenke URL husi plataforma ne'e)"
+    "E-OOS-005": "Foto evidénsia la loos (máximu 3, tenke URL husi plataforma ne'e)",
+    "E-TICKET-001": "Tiket la hetan"
   },
   "search": {
     "recent": "Buka Recente",
@@ -1411,6 +1413,34 @@
   "notifications": {
     "a11y": {
       "notificationItem": "{{title}}, {{time}}"
+    }
+  },
+  "tickets": {
+    "title": "Tiket mìn",
+    "detailTitle": "Detallu tiket",
+    "empty": "Seidauk iha tiket",
+    "emptyDesc": "Tiket husi problema entrega bele haree iha nee",
+    "status": {
+      "OPEN": "Rai hela",
+      "IN_PROGRESS": "Prosesu hela",
+      "RESOLVED": "Resolve tiha ona",
+      "CLOSED": "Taka tiha ona"
+    },
+    "type": {
+      "CUSTOMER_UNREACHABLE": "La konsegue kontakto kliente",
+      "CUSTOMER_REJECTED": "Kliente rejeita",
+      "ADDRESS_NOT_FOUND": "Enderesu la hetan",
+      "TRAFFIC_ACCIDENT": "Akidente tranzitu",
+      "OTHER": "Seluk",
+      "FEEDBACK": "Feedback"
+    },
+    "typeLabel": "Tipu",
+    "resolveDueLabel": "Prazu resolve",
+    "createdAtLabel": "Kria iha",
+    "timelineTitle": "Progresu",
+    "noEvents": "Seidauk iha rejistu",
+    "a11y": {
+      "item": "Tiket {{ticketNo}}, {{status}}"
     }
   }
 }

@@ -698,7 +698,8 @@
     "scan": "扫码",
     "pointsUnit": "积分",
     "featureComingSoon": "功能即将上线",
-    "unreadBadge": "你有 {{count}} 条未读消息"
+    "unreadBadge": "你有 {{count}} 条未读消息",
+    "tickets": "我的工单"
   },
   "settings": {
     "title": "设置",
@@ -1357,7 +1358,8 @@
     "E-OOS-002": "缺货数量或替代建议项无效",
     "E-OOS-003": "该商品项已登记过缺货",
     "E-OOS-004": "整单缺货只能在拣货阶段登记（骑手配送阶段仅允许部分缺货）",
-    "E-OOS-005": "取证照片无效（最多 3 张，须为本平台上传的 URL）"
+    "E-OOS-005": "取证照片无效（最多 3 张，须为本平台上传的 URL）",
+    "E-TICKET-001": "工单不存在"
   },
   "search": {
     "recent": "最近搜索",
@@ -1411,6 +1413,34 @@
   "notifications": {
     "a11y": {
       "notificationItem": "{{title}}，{{time}}"
+    }
+  },
+  "tickets": {
+    "title": "我的工单",
+    "detailTitle": "工单详情",
+    "empty": "暂无工单",
+    "emptyDesc": "配送异常生成的工单会显示在这里",
+    "status": {
+      "OPEN": "待处理",
+      "IN_PROGRESS": "处理中",
+      "RESOLVED": "已解决",
+      "CLOSED": "已关闭"
+    },
+    "type": {
+      "CUSTOMER_UNREACHABLE": "联系不上客户",
+      "CUSTOMER_REJECTED": "客户拒收",
+      "ADDRESS_NOT_FOUND": "地址找不到",
+      "TRAFFIC_ACCIDENT": "交通事故",
+      "OTHER": "其他",
+      "FEEDBACK": "反馈"
+    },
+    "typeLabel": "类型",
+    "resolveDueLabel": "解决时限",
+    "createdAtLabel": "创建时间",
+    "timelineTitle": "处理进度",
+    "noEvents": "暂无处理记录",
+    "a11y": {
+      "item": "工单 {{ticketNo}}，{{status}}"
     }
   }
 }

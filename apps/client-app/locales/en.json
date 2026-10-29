@@ -698,7 +698,8 @@
     "scan": "Scan",
     "pointsUnit": "Points",
     "featureComingSoon": "Feature coming soon",
-    "unreadBadge": "You have {{count}} unread notifications"
+    "unreadBadge": "You have {{count}} unread notifications",
+    "tickets": "My Tickets"
   },
   "settings": {
     "title": "Settings",
@@ -1357,7 +1358,8 @@
     "E-OOS-002": "Invalid out-of-stock quantity or suggestion item",
     "E-OOS-003": "This item already has an out-of-stock report",
     "E-OOS-004": "Full shortage can only be reported at picking stage (rider stage allows partial only)",
-    "E-OOS-005": "Invalid evidence photos (max 3, must be URLs uploaded via this platform)"
+    "E-OOS-005": "Invalid evidence photos (max 3, must be URLs uploaded via this platform)",
+    "E-TICKET-001": "Ticket not found"
   },
   "search": {
     "recent": "Recent Searches",
@@ -1411,6 +1413,34 @@
   "notifications": {
     "a11y": {
       "notificationItem": "{{title}}, {{time}}"
+    }
+  },
+  "tickets": {
+    "title": "My Tickets",
+    "detailTitle": "Ticket Detail",
+    "empty": "No tickets yet",
+    "emptyDesc": "Issue tickets created from delivery problems appear here",
+    "status": {
+      "OPEN": "Open",
+      "IN_PROGRESS": "In progress",
+      "RESOLVED": "Resolved",
+      "CLOSED": "Closed"
+    },
+    "type": {
+      "CUSTOMER_UNREACHABLE": "Customer unreachable",
+      "CUSTOMER_REJECTED": "Customer rejected",
+      "ADDRESS_NOT_FOUND": "Address not found",
+      "TRAFFIC_ACCIDENT": "Traffic accident",
+      "OTHER": "Other",
+      "FEEDBACK": "Feedback"
+    },
+    "typeLabel": "Type",
+    "resolveDueLabel": "Resolve by",
+    "createdAtLabel": "Created",
+    "timelineTitle": "Timeline",
+    "noEvents": "No events yet",
+    "a11y": {
+      "item": "Ticket {{ticketNo}}, {{status}}"
     }
   }
 }
