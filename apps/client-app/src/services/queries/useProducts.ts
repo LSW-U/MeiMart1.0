@@ -1,7 +1,18 @@
 import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { productApi, type FrequentBundle } from '@/services/products';
 import { useAuthStore } from '@/store/authStore';
-import { CATALOG_TTL } from '@/services/offline/catalogPolicy';
+import {
+  STALE_TIME,
+  PRODUCTS_QUERY_KEY,
+  PRODUCT_DETAIL_KEY,
+  PRODUCT_RECOMMEND_KEY,
+  PRODUCT_RECOMMEND_INFINITE_KEY,
+  PRODUCT_BUY_AGAIN_KEY,
+  PRODUCT_FREQUENT_BUNDLE_KEY,
+  PRODUCT_SEARCH_KEY,
+  PRODUCTS_BY_CATEGORY_KEY,
+  PRODUCT_WAREHOUSE_AVAILABILITY_KEY,
+} from '@/lib/queryKeys';
 
 /**
  * 排序方式（P8 决策 2-B 后端排序，与后端 ProductSortBy enum 一致）
@@ -11,21 +22,21 @@ export type ProductSortKey = 'all' | 'bestSelling' | 'priceAsc' | 'newArrivals';
 
 export function useProducts() {
   return useQuery({
-    queryKey: ['products'],
+    queryKey: PRODUCTS_QUERY_KEY,
     queryFn: () => productApi.getProducts(),
     // 轻量化省流批2 P2-1：目录分层 TTL（原硬编码 5min）
-    staleTime: CATALOG_TTL.productList,
+    staleTime: STALE_TIME.productList,
     networkMode: 'offlineFirst',
   });
 }
 
 export function useProduct(id: string | undefined) {
   return useQuery({
-    queryKey: ['product', id],
+    queryKey: PRODUCT_DETAIL_KEY(id),
     queryFn: () => productApi.getProduct(id as string),
     enabled: Boolean(id),
     // 轻量化省流批2 P2-1：目录分层 TTL（原硬编码 5min，详情档保守 10min）
-    staleTime: CATALOG_TTL.productDetail,
+    staleTime: STALE_TIME.productDetail,
     networkMode: 'offlineFirst',
   });
 }
@@ -34,9 +45,9 @@ export function useProduct(id: string | undefined) {
 //   refetch 只能刷当前批，无法表达「看第 2 批」）；批间缓存天然隔离，翻回上一批吃缓存。
 export function useRecommendations(opts?: { limit?: number; offset?: number }) {
   return useQuery({
-    queryKey: ['products', 'recommend', opts?.offset ?? 0],
+    queryKey: PRODUCT_RECOMMEND_KEY(opts?.offset ?? 0),
     queryFn: () => productApi.getRecommendations(opts),
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.recommend,
     networkMode: 'offlineFirst',
   });
 }
@@ -69,7 +80,7 @@ export function useRecommendationsInfinite(opts?: {
     // Why: cycle 进 queryKey——baseOffset 回绕 0 时旧 key(0) 缓存里可能存着用户之前
     //   加载到底的多页数据（staleTime 5min 内直接复用），换一批会「显示全部且无按钮」；
     //   cycle++ 使回绕后的 key 全新，从 6 条干净起步（20261023 人工验收实证）
-    queryKey: ['products', 'recommend-infinite', baseOffset, opts?.cycle ?? 0, limit],
+    queryKey: PRODUCT_RECOMMEND_INFINITE_KEY(baseOffset, opts?.cycle ?? 0, limit),
     queryFn: ({ pageParam }) =>
       productApi.getRecommendations({ limit, offset: baseOffset + pageParam }),
     initialPageParam: 0,
@@ -80,16 +91,16 @@ export function useRecommendationsInfinite(opts?: {
     //   （20261024 人工验收实证「换一批后全商品显示收不回去」）。换一批/回绕都是换 key
     //   → 必须返回 undefined 露出 loading 态；fetchNextPage 是同 key 追加，不经过此路径。
     placeholderData: () => undefined,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.recommend,
     networkMode: 'offlineFirst',
   });
 }
 
 export function useBuyAgain(opts?: { limit?: number; offset?: number; enabled?: boolean }) {
   return useQuery({
-    queryKey: ['products', 'buy-again', opts?.offset ?? 0],
+    queryKey: PRODUCT_BUY_AGAIN_KEY(opts?.offset ?? 0),
     queryFn: () => productApi.getBuyAgain(opts),
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.buyAgain,
     networkMode: 'offlineFirst',
     // 批3 P2-2：默认 true（home 换一批对匿名照常出销量切片）；B1 清单页传
     // enabled: isAuthenticated——匿名不请求（后端兜底切片不是「你常买的」，白打+错位展示）
@@ -108,9 +119,9 @@ export function useBuyAgain(opts?: { limit?: number; offset?: number; enabled?: 
 export function useFrequentBundle(limit = 5) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery<FrequentBundle>({
-    queryKey: ['products', 'frequent-bundle', limit],
+    queryKey: PRODUCT_FREQUENT_BUNDLE_KEY(limit),
     queryFn: () => productApi.getFrequentBundle(limit),
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.frequentBundle,
     networkMode: 'offlineFirst',
     // 匿名不请求（端点匿名也返空组合，但省一次请求；登录后自动重查）
     enabled: isAuthenticated,
@@ -127,24 +138,24 @@ export function useFrequentBundle(limit = 5) {
  */
 export function useProductSearch(keyword: string, sortBy: ProductSortKey = 'all') {
   return useInfiniteQuery({
-    queryKey: ['products', 'search', keyword, sortBy],
+    queryKey: PRODUCT_SEARCH_KEY(keyword, sortBy),
     queryFn: ({ pageParam }) => productApi.search(keyword, { page: pageParam, sortBy }),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length + 1 : undefined),
     enabled: keyword.trim().length > 0,
     placeholderData: keepPreviousData,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.search,
     networkMode: 'offlineFirst',
   });
 }
 
 export function useProductsByCategory(categoryId: string | undefined) {
   return useQuery({
-    queryKey: ['products', 'category', categoryId],
+    queryKey: PRODUCTS_BY_CATEGORY_KEY(categoryId),
     queryFn: () => productApi.getByCategory(categoryId as string),
     enabled: Boolean(categoryId),
     // 轻量化省流批2 P2-1：目录分层 TTL（分类商品列表档，原硬编码 5min）
-    staleTime: CATALOG_TTL.productList,
+    staleTime: STALE_TIME.productList,
     networkMode: 'offlineFirst',
   });
 }
@@ -162,10 +173,10 @@ export function useWarehouseAvailability(
   lng: number | null,
 ) {
   return useQuery({
-    queryKey: ['product', id, 'warehouse-availability', lat, lng],
+    queryKey: PRODUCT_WAREHOUSE_AVAILABILITY_KEY(id, lat, lng),
     queryFn: () => productApi.getWarehouseAvailability(id as string, lat as number, lng as number),
     enabled: Boolean(id) && lat != null && lng != null,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.warehouseAvailability,
     networkMode: 'offlineFirst',
   });
 }

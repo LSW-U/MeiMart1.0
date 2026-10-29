@@ -5,19 +5,27 @@ import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';
 import { getApiErrorMessage } from '@/utils/error';
 import type { Notification } from '@/types';
+import {
+  STALE_TIME,
+  NOTIFICATIONS_QUERY_KEY,
+  UNREAD_COUNT_QUERY_KEY,
+  notificationsListKey,
+  NOTIFICATION_PREFS_KEY,
+} from '@/lib/queryKeys';
+
+// key 定义集中迁 @/lib/queryKeys（批1 收编）；re-export 保持调用方 import 路径不变。
+// 语义注解（原位保留）：列表 key 派生自 NOTIFICATIONS_QUERY_KEY 加 'all'/'unread' 后缀，
+// 必须显式常量不能用纯前缀 setQueriesData —— UNREAD_COUNT_QUERY_KEY 共享同一前缀，
+// 纯前缀匹配会把 number 未读数喂给 .map() 崩溃；key 已去 locale 段（批1 A4 透传）。
+export {
+  NOTIFICATIONS_QUERY_KEY,
+  UNREAD_COUNT_QUERY_KEY,
+  notificationsListKey,
+  NOTIFICATION_PREFS_KEY,
+} from '@/lib/queryKeys';
 
 // Why: 从 useUser.ts 拆出来，notifications 模块自包含（service + hook 都在）
 // 同时新增 useUnreadCount（首页 badge）+ useMarkAllNotificationsRead（消息中心一键已读）
-export const NOTIFICATIONS_QUERY_KEY = ['user', 'notifications'] as const;
-export const UNREAD_COUNT_QUERY_KEY = ['user', 'notifications', 'unread-count'] as const;
-
-// Why: 列表 queryKey 派生自 NOTIFICATIONS_QUERY_KEY 加 'all' / 'unread' 后缀。
-// 必须显式常量，不能用纯前缀 setQueriesData —— UNREAD_COUNT_QUERY_KEY 共享同一前缀，
-// 纯前缀匹配会把 number 类型的未读数也喂给 .map() 导致崩溃。
-// 批1 A4 透传（裁决 B）：title/body 原样透传 LocalizableText，渲染层 localize() 取值——
-// key 去掉 locale 段，切语言不再换 key 重查（未读数/偏好本就无多语内容）。
-export const notificationsListKey = (onlyUnread: boolean) =>
-  [...NOTIFICATIONS_QUERY_KEY, onlyUnread ? 'unread' : 'all'] as const;
 
 interface NotificationSnapshot {
   all?: Notification[];
@@ -47,7 +55,7 @@ export function useNotifications(onlyUnread = false) {
   return useQuery({
     queryKey: notificationsListKey(onlyUnread),
     queryFn: () => notificationsApi.list(onlyUnread),
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.notifications,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated, // 未登录时不请求
   });
@@ -58,7 +66,7 @@ export function useUnreadCount() {
   return useQuery({
     queryKey: UNREAD_COUNT_QUERY_KEY,
     queryFn: () => notificationsApi.getUnreadCount(),
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.notifications,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated, // 未登录时不请求
   });
@@ -175,14 +183,13 @@ export function useDeleteNotifications() {
 
 // Why: 与 NOTIFICATIONS_QUERY_KEY（['user','notifications']）前缀不同，互不误伤
 //      （后端列表/未读数按偏好过滤是副作用，更新偏好后主动 invalidate 列表前缀）
-export const NOTIFICATION_PREFS_KEY = ['user', 'notification-preferences'] as const;
 
 export function useNotificationPreferences() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: NOTIFICATION_PREFS_KEY,
     queryFn: () => notificationsApi.getPreferences(),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.notificationPrefs,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated, // 未登录时不请求
   });

@@ -1,0 +1,12 @@
+# 并行工单 queryKey 语义归属 ledger（D16，批1）
+
+> 背景：方案v2 D7 拍板「不抢收并行工单 key，登记 ledger」→ D16 修订为「key 已随批1
+> 收编进 `src/lib/queryKeys.ts`，ledger 只记语义归属，不记 key 白名单」。
+
+| key 族                                                                                                     | factory 出口                                  | 语义归属                                                                                                          | 说明                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ORDERS_QUERY_KEY` 系派生（`ordersListKey` / `orderInfiniteKey` / `orderDetailKey` / `ORDERS_COUNTS_KEY`） | `src/lib/queryKeys.ts`（orders 段）           | **替换品工单·会话2**（下单 SPECIFY 选品 + 详情确认弹层，commit `a285a63` 2026-10-29）                             | `useDecideSuggestion`（useOrders.ts）的 onSettled 用 `ORDERS_QUERY_KEY` 前缀 + `orderDetailKey(vars.orderId)` 精确串失效；批1 只迁 key 表达式，未动 mutation 语义。工单会话收口后需做一次语义复核（确认派生 key 无新增）                                                                                                                                  |
+| `TICKETS_QUERY_KEY` / `ticketDetailKey` / `ticketEventsKey`（+ `STALE_TIME.tickets`）                      | `src/lib/queryKeys.ts` L195-199（tickets 段） | **替换品批2 工单会话**（「我的工单」tickets 功能，并行进行中；key 随批1 收编进 factory，收编时该会话尚未 commit） | key + STALE_TIME 已入 factory（2026-10-29 批1 顺手收编）；`src/services/tickets.ts` / `useTickets.ts` / `app/(main)/tickets*` / locales / shared.ts 菜单项均属该会话工作树产物，**批1 不含**（审查报告 P1 拆分前提）。工单会话收口后需语义复核：确认 tickets 域派生 key 无新增、mock 接入收口（含 gate-mock `tickets.ts:10 mockDb` 逃逸裁决 R1 归该会话） |
+
+维护约定：后续并行会话若在 orders 域新增派生 key，随该会话代码自然落 factory；
+本表更新归属行，不设白名单豁免（V1-3 grep 归零口径对 orders 域照常生效）。

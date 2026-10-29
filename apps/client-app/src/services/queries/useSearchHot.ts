@@ -11,6 +11,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { useLocale } from '@/i18n';
+import { STALE_TIME, SEARCH_HOT_KEY } from '@/lib/queryKeys';
 
 export interface HotSearchItem {
   /** 实际搜索词（normalize 后，如 'apple'），非 i18n key */
@@ -24,12 +25,12 @@ export function useSearchHot(limit = 6) {
   //      locale 入 key —— 切语言后旧缓存不命中，按新语言重查（同 categories 缓存 bug 批量修复）
   const locale = useLocale();
   return useQuery({
-    queryKey: ['search-hot', locale, limit],
+    queryKey: SEARCH_HOT_KEY(locale, limit),
     queryFn: async () => {
       const res = await api.get<HotSearchItem[]>('/client/search/hot', { params: { limit } });
       return res.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.searchHot,
     networkMode: 'offlineFirst',
   });
 }

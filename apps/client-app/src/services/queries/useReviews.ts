@@ -8,6 +8,22 @@ import {
 } from '@/services/reviews';
 import { useProfile } from '@/services/queries/useUser';
 import type { Review } from '@/types';
+import {
+  STALE_TIME,
+  REVIEWS_ROOT_KEY,
+  REVIEWS_QUERY_KEY,
+  ORDER_REVIEWS_ROOT_KEY,
+  ORDER_REVIEWS_KEY,
+} from '@/lib/queryKeys';
+
+// key 定义集中迁 @/lib/queryKeys（批1 收编）；re-export 保持调用方 import 路径不变。
+// 语义注解（原位保留）：根常量供 onSettled 前缀失效用，避免裸字面量漂移（审查报告 F3 建议）。
+export {
+  REVIEWS_ROOT_KEY,
+  REVIEWS_QUERY_KEY,
+  ORDER_REVIEWS_ROOT_KEY,
+  ORDER_REVIEWS_KEY,
+} from '@/lib/queryKeys';
 
 // Why: §8 评论模块 - hook 层。query 按 productId 拉评论 + 聚合 summary；
 //      mutation 乐观更新（评论立即置顶 + 评分即时更新，§11.2）。
@@ -15,10 +31,6 @@ import type { Review } from '@/types';
 // Why: 批1 A4 透传（裁决 B）后评论 content 不再烘焙（原样透传 LocalizableText），
 //      渲染层 localize() 取值——key 去掉 locale 段，切语言不再换 key 重查。
 //      根常量供 onSettled 前缀失效用，避免裸字面量漂移（审查报告 F3 建议）
-export const REVIEWS_ROOT_KEY = ['reviews'] as const;
-export const ORDER_REVIEWS_ROOT_KEY = ['order-reviews'] as const;
-
-export const REVIEWS_QUERY_KEY = (productId: string) => [...REVIEWS_ROOT_KEY, productId] as const;
 
 // Why: §11.2 - 跨页提交（review.tsx -> product 页）后，新评论绿色置顶高亮。
 //      提交时写入，详情页 focus 时 consume 一次（读后即清，避免重复高亮）。
@@ -34,7 +46,7 @@ export function useReviews(productId: string | undefined) {
   return useQuery({
     queryKey: REVIEWS_QUERY_KEY(productId ?? ''),
     queryFn: () => reviewsApi.getByProduct(productId as string),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.reviews,
     networkMode: 'offlineFirst',
     enabled: Boolean(productId),
   });
@@ -44,13 +56,12 @@ export function useReviews(productId: string | undefined) {
  * 订单所有评价（P15 多商品：判断已评商品，后端 GET /client/orders/:id/reviews）
  * staleTime 30s：评价页反复进出，短缓存减少重复请求；提交后 submit onSuccess invalidate 刷新
  */
-export const ORDER_REVIEWS_KEY = (orderId: string) => [...ORDER_REVIEWS_ROOT_KEY, orderId] as const;
 
 export function useOrderReviews(orderId: string) {
   return useQuery({
     queryKey: ORDER_REVIEWS_KEY(orderId),
     queryFn: () => reviewsApi.listOrderReviews(orderId),
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.orderReviews,
     networkMode: 'offlineFirst',
     enabled: Boolean(orderId),
   });

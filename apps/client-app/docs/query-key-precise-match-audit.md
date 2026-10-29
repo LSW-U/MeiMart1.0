@@ -1,0 +1,37 @@
+# 精确匹配依赖清单（V1-5，批1 key 收编核对）
+
+> 口径：key 迁 factory 不改任何查询/失效语义。逐点核对了全仓
+> `invalidateQueries / setQueriesData / getQueriesData / setQueryData / getQueryData /
+cancelQueries / refetchQueries / removeQueries` 中受迁移影响的 key 形态。
+> 核对日期：2026-10-29，基线 HEAD `a285a63`。
+
+## 结论总表
+
+| #   | 位置                                                                                   | key 形态                                                                                        | 迁移后形态                                                      | 语义判定                                                                                              |
+| --- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 1   | useOrders.ts useCreateOrder/useCancelOrder/useDeleteOrders onMutate/onSettled          | `ORDERS_QUERY_KEY`（['orders'] 前缀）                                                           | 不变（re-export 同一常量）                                      | 前缀语义保留，setQueriesData 回调 Array.isArray 守卫原样 ✅                                           |
+| 2   | useOrders.ts useDeleteOrders counts 乐观                                               | `[...ORDERS_QUERY_KEY,'counts']` 精确                                                           | `ORDERS_COUNTS_KEY`（同字面值 as const）                        | 精确匹配值不变（TS 结构相同，get/setQueryData 命中一致）✅                                            |
+| 3   | useOrders.ts useDecideSuggestion onSettled                                             | `ORDERS_QUERY_KEY` 前缀 + `orderDetailKey(orderId)` 精确                                        | 同左（factory re-export）                                       | **并行工单 key（ledger 已记归属）**，未动 mutation 逻辑 ✅                                            |
+| 4   | useCart.ts 全部 mutation                                                               | `CART_ROOT_KEY` 前缀 invalidate + `CART_QUERY_KEY()` 精确                                       | factory re-export                                               | 前缀/精确两种用法均保留 ✅                                                                            |
+| 5   | app/product/[id].tsx:248                                                               | `CART_ROOT_KEY` invalidate                                                                      | import 自 useCart re-export（路径不变）                         | 前缀语义 ✅                                                                                           |
+| 6   | app/profile/edit.tsx:132-140                                                           | `PROFILE_QUERY_KEY` get/setQueryData 精确                                                       | import 自 useUser re-export                                     | 精确语义 ✅                                                                                           |
+| 7   | useNotifications.ts markRead/markAll/delete onMutate                                   | `notificationsListKey(false/true)` 逐精确 key + `UNREAD_COUNT_QUERY_KEY` 精确                   | factory re-export                                               | **勿改前缀**：纯前缀会把 number 未读数喂 .map() 崩溃（文件头注解保留）✅                              |
+| 8   | useNotifications.ts onSettled / useUpdateNotificationPreferences.onSuccess             | `NOTIFICATIONS_QUERY_KEY` 前缀 invalidate（覆盖 all/unread/unread-count）                       | 不变                                                            | 前缀语义 ✅                                                                                           |
+| 9   | useFavorites.ts / useAddress.ts / useRefunds.ts / useUser.ts / useReviews.ts mutations | 根常量前缀 invalidate + factory 精确 get/set                                                    | factory re-export                                               | ✅                                                                                                    |
+| 10  | usePromotion.ts useClaimCoupon                                                         | `AVAILABLE_COUPONS_KEY` 精确 get/set/cancel + `COUPONS_QUERY_KEY('available')` 前缀 invalidate  | factory re-export；onSuccess→onSettled（D17）                   | 领券中心 key 与卡包 key 第二段错位（'available-templates' vs 'available'）保证不互伤，收编后值不变 ✅ |
+| 11  | useSubscriptions.ts invalidate                                                         | `['subscriptions', type]` → `SUBSCRIPTIONS_KEY(type)`                                           | 同字面值                                                        | ✅                                                                                                    |
+| 12  | useRefunds.ts cancelRefund/disputeRefund                                               | `refundDetailKey(id)` 精确 invalidate + `REFUNDS_QUERY_KEY` 前缀                                | factory re-export                                               | ✅                                                                                                    |
+| 13  | useReviews.ts submitReview onSettled                                                   | `REVIEWS_ROOT_KEY` + `ORDER_REVIEWS_ROOT_KEY` 双前缀                                            | factory re-export                                               | ✅                                                                                                    |
+| 14  | src/services/offline/persist.ts EXCLUDED_PREFIXES                                      | `['orders']`/`['cart']`/`['addresses']`/`['refunds']`/`['user','notifications']` 等域根字符串表 | 未触碰                                                          | key 第一段值收编后全部未变，排除表继续精确命中 ✅                                                     |
+| 15  | src/services/offline/catalogPolicy.ts isCatalogQueryKey                                | 第一段 ∈ {categories,banners,products,product}                                                  | 未触碰；products/product 根值不变                               | ✅                                                                                                    |
+| 16  | useProducts.ts 五元组 recommend-infinite key                                           | `['products','recommend-infinite',baseOffset,cycle,limit]`                                      | `PRODUCT_RECOMMEND_INFINITE_KEY(baseOffset, cycle, limit)` 同序 | 测试断言字面量一致（useProducts.recommendInfinite.test 7 处 find 精确串通过）✅                       |
+| 17  | usePagination.ts                                                                       | `queryKey` 由调用方注入（透传，无字面量）                                                       | 未触碰                                                          | 无迁移面 ✅                                                                                           |
+| 18  | 测试文件 18 处字面量（find/assert 精确串）                                             | `['orders']`/`['user','notifications']`/recommend 系等                                          | 未改（断言的就是字面值，且值未变）                              | 全部通过 ✅                                                                                           |
+
+## 兼容性说明
+
+- `ORDER_ETA_KEY(orderId)`：`useOrderEta` key `['order-eta', orderId]` 单点无外部消费，
+  收编后无精确/前缀依赖变化。
+- 未发现任何**依赖旧形态**的精确匹配点需要上报（触发点①未触发）。
+- RQ v5 语义核查：invalidate 前缀匹配、onSettled 在 onSuccess 被 cancel 场景仍执行
+  （D17 依据）、setQueriesData 前缀行为——均与现实现一致，无 API 差异（触发点②未触发）。

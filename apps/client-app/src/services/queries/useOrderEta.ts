@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { orderApi } from '@/services/orders';
 import type { OrderStatus } from '@/types';
+import { STALE_TIME, ORDER_ETA_KEY } from '@/lib/queryKeys';
 
 // Why: 只有配送阶段（已拣货/配送中）才存在 DeliveryTask（含 estimatedArrival）。
 //      CONFIRMED 及之前无 task，不查（避免无谓请求）。
@@ -13,14 +14,14 @@ const ETA_STATUSES: ReadonlySet<OrderStatus> = new Set(['PICKED', 'OUT_FOR_DELIV
 export function useOrderEta(orderId: string | undefined, status: OrderStatus) {
   const enabled = !!orderId && ETA_STATUSES.has(status);
   return useQuery({
-    queryKey: ['order-eta', orderId],
+    queryKey: ORDER_ETA_KEY(orderId),
     queryFn: async () => {
       if (!orderId) return null;
       const tracking = await orderApi.getTracking(orderId);
       return tracking.task?.estimatedArrival ?? null;
     },
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.orderEta,
     networkMode: 'offlineFirst',
   });
 }

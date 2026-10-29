@@ -1,17 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { favoritesApi } from '@/services/favorites';
 import { useAuthStore } from '@/store/authStore';
+import { STALE_TIME, FAVORITES_QUERY_KEY } from '@/lib/queryKeys';
 import type { Product } from '@/types';
 
+// key 定义集中迁 @/lib/queryKeys（批1 收编）；re-export 保持调用方 import 路径不变。
+export { FAVORITES_QUERY_KEY } from '@/lib/queryKeys';
+
 // Why: 从 useUser.ts 拆出来，favorites 模块自包含（service + hook 都在）
-export const FAVORITES_QUERY_KEY = ['user', 'favorites'] as const;
 
 export function useFavorites() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: FAVORITES_QUERY_KEY,
     queryFn: () => favoritesApi.list(),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.favorites,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated, // 未登录时不请求
   });
@@ -48,12 +51,8 @@ export function useRemoveFavorites() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (productIds: string[]): Promise<{ failedIds: string[]; okCount: number }> => {
-      const results = await Promise.allSettled(
-        productIds.map((id) => favoritesApi.toggle(id)),
-      );
-      const failedIds = productIds.filter(
-        (_, i) => results[i].status === 'rejected',
-      );
+      const results = await Promise.allSettled(productIds.map((id) => favoritesApi.toggle(id)));
+      const failedIds = productIds.filter((_, i) => results[i].status === 'rejected');
       return { failedIds, okCount: productIds.length - failedIds.length };
     },
     onMutate: async (productIds) => {

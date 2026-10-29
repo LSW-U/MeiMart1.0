@@ -7,27 +7,22 @@ import {
   type OrderGroupKey,
   type OrderTabKey,
 } from '@/lib/orderStatusConfig';
-import type { OrderStatus, Order } from '@/types';
+import type { Order, OrderStatus } from '@/types';
+import {
+  ORDERS_QUERY_KEY,
+  ORDERS_COUNTS_KEY,
+  ordersListKey,
+  orderInfiniteKey,
+  orderDetailKey,
+  STALE_TIME,
+} from '@/lib/queryKeys';
 
-export const ORDERS_QUERY_KEY = ['orders'] as const;
+// key 定义集中迁 @/lib/queryKeys（批1 收编）；re-export 保持调用方 import 路径不变。
+// 语义注解（原位保留）：批1 A4 透传后 key 去 locale 段；详情 key 落 ORDERS 前缀
+// （审查报告 20260901 F1），onMutate 前缀 setQueriesData 命中详情有 Array.isArray 守卫安全。
+export { ORDERS_QUERY_KEY, ordersListKey, orderInfiniteKey, orderDetailKey } from '@/lib/queryKeys';
 
 const ORDERS_PAGE_SIZE = 20;
-
-// Why: 批1 A4 透传（裁决 B）后订单商品名不再烘焙（transformOrderItem 原样透传多语 Record），
-//      渲染层 localize() 取值——key 去掉 locale 段，切语言不再换 key 重查；
-//      乐观更新走前缀 setQueriesData 天然兼容。
-export const ordersListKey = (status: OrderStatus[] | 'all') =>
-  [...ORDERS_QUERY_KEY, status ?? 'all'] as const;
-
-export const orderInfiniteKey = (tab: OrderTabKey) =>
-  [...ORDERS_QUERY_KEY, 'infinite', tab] as const;
-
-// Why: 详情 key 必须落在 ORDERS_QUERY_KEY 前缀下（审查报告 20260901 F1）——useCreateOrder/
-//      useCancelOrder 的 onSettled 只 invalidate ['orders'] 前缀，原 ['order', locale, id] 根是
-//      单数不在前缀内，取消订单后已打开的详情页不失效（预存在 bug，本次连根修）。
-//      挪入前缀后 onMutate 的 setQueriesData 也会前缀命中详情条目，但回调有 Array.isArray
-//      守卫（详情是单对象非数组）原样返回，安全。
-export const orderDetailKey = (id: string) => [...ORDERS_QUERY_KEY, 'detail', id] as const;
 
 // Why: 兼容不依赖分页的旧组件（如 useOrderCounts 派生计数），返回 Order[]，单页 limit=20。
 // P12 Commit 2: status 改成 OrderStatus[]（支持多状态过滤），'all' 表示不过滤。
@@ -39,7 +34,7 @@ export function useOrders(status?: OrderStatus[] | 'all') {
       const res = await orderApi.getOrders(status);
       return res.items;
     },
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.orders,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated, // 未登录时不请求
   });
@@ -51,9 +46,9 @@ export function useOrders(status?: OrderStatus[] | 'all') {
 export function useOrderCounts(): Record<OrderGroupKey, number> {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { data } = useQuery({
-    queryKey: [...ORDERS_QUERY_KEY, 'counts'],
+    queryKey: ORDERS_COUNTS_KEY,
     queryFn: () => orderApi.getOrderCounts(),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.orders,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated,
   });
@@ -76,7 +71,7 @@ export function useOrdersInfinite(tab: OrderTabKey = 'all') {
     queryFn: ({ pageParam }) => orderApi.getOrders(statuses, pageParam, ORDERS_PAGE_SIZE),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextCursor : undefined),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.orders,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated, // 未登录时不请求
   });
@@ -219,7 +214,7 @@ export function useDeleteOrders() {
       });
       // counts 乐观递减：counts 以 OrderStatus 为键（useOrderCounts 按 ORDER_STATUS_GROUPS
       // 聚合成组角标），按被删订单的状态逐条 -1
-      const countsKey = [...ORDERS_QUERY_KEY, 'counts'] as const;
+      const countsKey = ORDERS_COUNTS_KEY;
       const rawCounts = qc.getQueryData<Record<string, number>>(countsKey);
       if (rawCounts) {
         const next = { ...rawCounts };

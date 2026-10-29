@@ -3,6 +3,7 @@ import { searchSuggestApi, type SuggestWord } from '@/services/searchSuggest';
 import { productApi } from '@/services/products';
 import { useLocale } from '@/i18n';
 import type { Product } from '@/types';
+import { STALE_TIME, SEARCH_SUGGEST_KEY, SEARCH_PRODUCTS_SUGGEST_KEY } from '@/lib/queryKeys';
 
 /**
  * 搜索词联想 hook - C方案 §4.2（双 hook 并行之 1：词联想）
@@ -26,10 +27,10 @@ export function useSearchSuggest(
   //      按当前 locale 派生词。locale 入 key —— 切语言后按新语言重查（同 categories 缓存 bug 批量修复）
   const locale = useLocale();
   return useQuery<SuggestWord[], Error>({
-    queryKey: ['search-suggest', locale, prefix],
+    queryKey: SEARCH_SUGGEST_KEY(locale, prefix),
     queryFn: () => searchSuggestApi.getSuggest(prefix, 5),
     enabled: enabled && prefix.trim().length >= 2,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.suggest,
     networkMode: 'offlineFirst',
     placeholderData: keepPreviousData,
   });
@@ -50,13 +51,13 @@ export function useSearchProductsSuggest(
   //      但 real/mock 语义一致起见仍入 key（mock 分支按 locale 过滤商品名）
   const locale = useLocale();
   return useQuery<Product[], Error>({
-    queryKey: ['search-products-suggest', locale, prefix],
+    queryKey: SEARCH_PRODUCTS_SUGGEST_KEY(locale, prefix),
     queryFn: async () => {
       const res = await productApi.search(prefix, { pageSize: 3 });
       return res.items;
     },
     enabled: enabled && prefix.trim().length >= 2,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.suggest,
     networkMode: 'offlineFirst',
     placeholderData: keepPreviousData,
   });

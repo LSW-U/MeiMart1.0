@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { refundApi, type CreateRefundPayload, type RefundRaw } from '@/services/refunds';
 import { useAuthStore } from '@/store/authStore';
+import { STALE_TIME, REFUNDS_QUERY_KEY, refundDetailKey } from '@/lib/queryKeys';
 
-export const REFUNDS_QUERY_KEY = ['refunds'] as const;
+// key 定义集中迁 @/lib/queryKeys（批1 收编）；re-export 保持调用方 import 路径不变。
+// 语义注解（原位保留）：详情 key ['refunds', id] 与列表 ['refunds'] 父子关系，前缀失效可同时命中。
+export { REFUNDS_QUERY_KEY, refundDetailKey } from '@/lib/queryKeys';
 
 /**
  * 单个 refund 详情 queryKey（P14 useRefundDetail 用）
  * 形如 ['refunds', id]，与列表 key ['refunds'] 是父子关系（invalidate 前缀可同时失效）
  */
-export const refundDetailKey = (id: string) => ['refunds', id] as const;
 
 /**
  * 用户退款列表（profile「退款售后」入口）
@@ -22,7 +24,7 @@ export function useRefunds() {
   return useQuery({
     queryKey: REFUNDS_QUERY_KEY,
     queryFn: () => refundApi.listUserRefunds(),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.refunds,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated,
   });
@@ -94,7 +96,7 @@ export function useRefundDetail(id: string | undefined) {
     queryKey: refundDetailKey(id ?? ''),
     queryFn: () => refundApi.getRefundDetail(id!),
     enabled: isAuthenticated && !!id,
-    staleTime: 30_000,
+    staleTime: STALE_TIME.refundDetail,
   });
 }
 

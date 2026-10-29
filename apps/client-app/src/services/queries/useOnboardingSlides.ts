@@ -7,12 +7,13 @@
  */
 import { useQuery } from '@tanstack/react-query';
 import { fetchOnboardingSlides } from '@/services/onboarding';
+import { STALE_TIME, ONBOARDING_SLIDES_KEY } from '@/lib/queryKeys';
 
 export function useOnboardingSlides() {
   return useQuery({
-    queryKey: ['onboarding', 'slides'],
+    queryKey: ONBOARDING_SLIDES_KEY,
     queryFn: fetchOnboardingSlides,
-    staleTime: 60 * 60 * 1000,
+    staleTime: STALE_TIME.onboardingSlides,
     networkMode: 'offlineFirst',
     // Why: 失败/空表都归一为 null（回退语义），组件侧 `remoteSlides ?? SLIDES` 单一判空
     select: (data) => (data && data.length > 0 ? data : null),

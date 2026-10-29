@@ -2,8 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { addressApi } from '@/services/address';
 import { useAuthStore } from '@/store/authStore';
 import type { Address } from '@/types';
+import { STALE_TIME, ADDRESSES_QUERY_KEY } from '@/lib/queryKeys';
 
-export const ADDRESSES_QUERY_KEY = ['addresses'] as const;
+// key 定义集中迁 @/lib/queryKeys（批1 收编）；re-export 保持调用方 import 路径不变。
+export { ADDRESSES_QUERY_KEY } from '@/lib/queryKeys';
 
 function enforceSingleDefault(addresses: Address[], defaultId?: string): Address[] {
   if (defaultId === undefined) return addresses;
@@ -15,7 +17,7 @@ export function useAddresses() {
   return useQuery({
     queryKey: ADDRESSES_QUERY_KEY,
     queryFn: () => addressApi.getAddresses(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.addresses,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated, // 未登录时不请求
   });

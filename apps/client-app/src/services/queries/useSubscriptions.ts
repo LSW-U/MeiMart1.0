@@ -5,6 +5,7 @@ import {
   type SubscriptionItem,
 } from '@/services/subscriptions';
 import { useAuthStore } from '@/store/authStore';
+import { STALE_TIME, SUBSCRIPTIONS_KEY } from '@/lib/queryKeys';
 
 /**
  * 我的提醒订阅（C7/C8，客户画像批5）
@@ -15,10 +16,10 @@ import { useAuthStore } from '@/store/authStore';
 export function useAlertSubscriptions(type: AlertSubscriptionType) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery<SubscriptionItem[]>({
-    queryKey: ['subscriptions', type],
+    queryKey: SUBSCRIPTIONS_KEY(type),
     queryFn: () => alertSubscriptionApi.listMine(type),
     enabled: isAuthenticated,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.subscriptions,
     networkMode: 'offlineFirst',
   });
 }
@@ -42,7 +43,7 @@ export function useToggleAlertSubscription(type: AlertSubscriptionType) {
       }
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['subscriptions', type] });
+      void queryClient.invalidateQueries({ queryKey: SUBSCRIPTIONS_KEY(type) });
     },
   });
 }

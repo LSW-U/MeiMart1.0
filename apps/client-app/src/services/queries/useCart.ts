@@ -2,18 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartApi, businessError } from '@/services/cart';
 import { isMockMode } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
+import { STALE_TIME, CART_ROOT_KEY, CART_QUERY_KEY, CHECKOUT_PREVIEW_KEY } from '@/lib/queryKeys';
 import type { Cart, CartItem, Product } from '@/types';
 
-export const CART_ROOT_KEY = ['cart'] as const;
-
-// Why: 批1 A4 透传（裁决 B）后购物车商品名不再在 service 层烘焙（transformCartItem 原样
-//      透传多语 Record），渲染层 localize() 取值——切语言无需换 key 重查，key 去掉 locale
-//      段（消灭同一购物车按语言分裂的 N 份缓存）。保留 factory 形态，调用方不变。
-export const CART_QUERY_KEY = () => [...CART_ROOT_KEY] as const;
-
 // Why: 结算预览按地址 + 券码查（运费/仓库匹配/折扣），地址或券变 → key 变 → 自动重查
-export const CHECKOUT_PREVIEW_KEY = (addressId: string, couponCode: string) =>
-  ['checkout-preview', addressId, couponCode] as const;
+// （key 定义集中迁 @/lib/queryKeys，此处 re-export 保持调用方 import 路径不变）
+export { CART_ROOT_KEY, CART_QUERY_KEY, CHECKOUT_PREVIEW_KEY } from '@/lib/queryKeys';
 
 function recomputeTotals(cart: Cart, items: CartItem[]): Cart {
   const selectedItems = items.filter((i) => i.selected);
@@ -30,7 +24,7 @@ export function useCart() {
   return useQuery({
     queryKey: CART_QUERY_KEY(),
     queryFn: () => cartApi.getCart(),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.cart,
     networkMode: 'offlineFirst',
     enabled: isAuthenticated, // 未登录时不请求，避免 401
   });
@@ -45,7 +39,7 @@ export function useCheckoutPreview(addressId: string | undefined, couponCode?: s
   return useQuery({
     queryKey: CHECKOUT_PREVIEW_KEY(addressId ?? '', code),
     queryFn: () => cartApi.checkoutPreview(addressId as string, code || undefined),
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.checkoutPreview,
     networkMode: 'offlineFirst',
     enabled: !isMockMode && isAuthenticated && Boolean(addressId),
   });
