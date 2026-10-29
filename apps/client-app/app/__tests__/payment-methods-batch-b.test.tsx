@@ -107,6 +107,8 @@ jest.mock('@/services/queries/useOrders', () => ({
   useCreateOrder: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useOrder: (...args: unknown[]) => mockUseOrder(...args),
   useCancelOrder: () => ({ mutate: jest.fn(), isPending: false }),
+  // 替换品批1：详情页新增 hook，测试 mock 补齐（不影响断言）
+  useDecideSuggestion: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock('@/services/queries/useCart', () => ({
@@ -440,7 +442,12 @@ describe('批1 T3 支付方式接线验收', () => {
       expect(card.props.accessibilityRole).toBe('button');
     }
     // 全空时可选区无任何 radio 卡（COD 也被标 available:false）
-    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+    // 替换品批1：checkout 新增替换策略卡也用 radio role——本断言收窄到「支付渠道」分区
+    //（策略卡 testID=replacement-policy-*，不在 payment-<id> 命名空间）
+    const paymentRadios = screen
+      .queryAllByRole('radio')
+      .filter((r) => !String(r.props.testID ?? '').startsWith('replacement-policy-'));
+    expect(paymentRadios).toHaveLength(0);
   });
 
   it('选中值提交 = code 大写枚举（checkout.tsx toUpperCase 通道断言）', async () => {

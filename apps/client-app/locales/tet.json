@@ -548,7 +548,31 @@
     "deleteTitle": "Hah Pedidu",
     "deleteConfirm": "Hah pedidu {{count}} ne'ebé selecionado? La bele fila fali.",
     "outOfStockBadge": "Sasan mamuk ×{{qty}}",
-    "outOfStockBadgeA11y": "Sasan mamuk"
+    "outOfStockBadgeA11y": "Sasan mamuk",
+    "suggestion": {
+      "pendingBadge": "Saran troka — toke atu deside",
+      "reviewA11y": "Lee saran troka",
+      "acceptedBadge": "Troka tiha ona",
+      "declinedBadge": "Saran troka rejeita tiha",
+      "title": "Saran troka",
+      "desc": "Produtu {{name}} ×{{qty}} mamuk. Armazen sujere troka ho presu hanesan ka kiak liu.",
+      "accept": "Simu",
+      "decline": "Rejeita & foun devolde",
+      "acceptA11y": "Simu troka",
+      "declineA11y": "Rejeita no foun devolde",
+      "modalA11y": "Konfirmasaun saran troka",
+      "acceptedToast": "Troka konfirmadu",
+      "declinedToast": "Rejeita — foun devolde prosesa",
+      "refundToast": "Foun devolde diferensa ${{amount}} emis ona",
+      "pendingBadgeA11y": "Saran troka hein desizaun, toke atu deside",
+      "originalLabel": "Produtu originais",
+      "replacementLabel": "Sujestaun troka",
+      "priceDiff": "Diferensa prezu",
+      "diffSave": "Ita economy {{amount}}",
+      "diffCharge": "Sei paga {{amount}} menus",
+      "diffEqual": "Prezu hanesan — laiha cobrança extra",
+      "note": "Se troka fó prezu kiak liu originais, diferensa sei reembolso automátiku."
+    }
   },
   "tracking": {
     "title": "Segue Pedidu",
@@ -853,7 +877,18 @@
     "confirmAndPay": "KONFIRMA NO PAGA ${{amount}}",
     "customerService": "Servisu Kliente",
     "orderFailed": "Falla halo pedidu. Favor koko fali.",
-    "orderPlaced": "Pedidu halo ho suksesu"
+    "orderPlaced": "Pedidu halo ho suksesu",
+    "replacement": {
+      "sectionTitle": "Wainhira produtu mamuk",
+      "allow": "Simu saran troka armazen",
+      "allowDesc": "Armazen bele troka ho produtu besik presu hanesan ka kiak liu",
+      "specify": "Hili troka ne'ebe autoriza",
+      "specifyDesc": "Marka produtu saida maka armazen bele troka",
+      "none": "De'it foun devolde",
+      "noneDesc": "La troka — produtu mamuk foun devolde direta",
+      "pickHint": "Hili produtu troka ne'ebe autoriza ({{count}} hili tiha)",
+      "specifyEmpty": "Hili minimum ida produtu troka, ka muda opseloken seluk"
+    }
   },
   "result": {
     "title": "Paga ho suksesu",

@@ -37,6 +37,8 @@ jest.mock('react-i18next', () => ({
 jest.mock('@/services/queries/useOrders', () => ({
   useOrder: (...args: unknown[]) => mockUseOrder(...args),
   useCancelOrder: () => ({ mutate: jest.fn(), isPending: false }),
+  // 替换品批1：详情页新增 hook，测试 mock 补齐（不影响断言）
+  useDecideSuggestion: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock('@/services/queries/useOrderEta', () => ({

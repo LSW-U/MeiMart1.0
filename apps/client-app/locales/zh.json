@@ -548,7 +548,31 @@
     "deleteTitle": "删除订单",
     "deleteConfirm": "删除已选的 {{count}} 个订单？此操作不可恢复。",
     "outOfStockBadge": "缺货 ×{{qty}}",
-    "outOfStockBadgeA11y": "商品缺货"
+    "outOfStockBadgeA11y": "商品缺货",
+    "suggestion": {
+      "pendingBadge": "有替换建议 — 点击处理",
+      "pendingBadgeA11y": "有替换建议待确认，点击处理",
+      "reviewA11y": "查看替换建议",
+      "acceptedBadge": "已替换",
+      "declinedBadge": "已拒绝替换",
+      "title": "替换建议",
+      "desc": "商品 {{name}} ×{{qty}} 缺货，仓库建议以同价或更低价的相近商品替换。",
+      "accept": "接受替换",
+      "decline": "拒绝并退款",
+      "acceptA11y": "接受替换",
+      "declineA11y": "拒绝并退款",
+      "modalA11y": "替换建议确认",
+      "acceptedToast": "已确认替换",
+      "declinedToast": "已拒绝，退款处理中",
+      "refundToast": "差价 ${{amount}} 已发起退款",
+      "originalLabel": "原商品",
+      "replacementLabel": "建议替换为",
+      "priceDiff": "价格差额",
+      "diffSave": "为您节省 {{amount}}",
+      "diffCharge": "将少收 {{amount}}",
+      "diffEqual": "价格相同，无需补差",
+      "note": "若替换品价格低于原商品，差额将自动退款。"
+    }
   },
   "tracking": {
     "title": "订单追踪",
@@ -853,7 +877,18 @@
     "confirmAndPay": "确认并支付 ${{amount}}",
     "customerService": "客服",
     "orderFailed": "下单失败，请重试",
-    "orderPlaced": "下单成功"
+    "orderPlaced": "下单成功",
+    "replacement": {
+      "sectionTitle": "商品缺货时",
+      "allow": "接受仓库建议的替换品",
+      "allowDesc": "仓库可用同价或更低价的相近商品替换",
+      "specify": "自选可接受的替换品",
+      "specifyDesc": "勾选允许仓库替换的商品范围",
+      "none": "仅退款",
+      "noneDesc": "不替换，缺货商品直接退款",
+      "pickHint": "勾选允许的替换品（已选 {{count}}）",
+      "specifyEmpty": "请至少勾选一个替换品，或改选其他选项"
+    }
   },
   "result": {
     "title": "支付成功",

@@ -548,7 +548,31 @@
     "deleteTitle": "Eliminar pedidos",
     "deleteConfirm": "Eliminar os {{count}} pedido(s) selecionados? Esta ação não pode ser revertida.",
     "outOfStockBadge": "Esgotado ×{{qty}}",
-    "outOfStockBadgeA11y": "Produto em falta"
+    "outOfStockBadgeA11y": "Produto em falta",
+    "suggestion": {
+      "pendingBadge": "Sugestão de substituição — toque para decidir",
+      "reviewA11y": "Rever sugestão de substituição",
+      "acceptedBadge": "Substituído",
+      "declinedBadge": "Substituição recusada",
+      "title": "Sugestão de substituição",
+      "desc": "O item {{name}} ×{{qty}} está esgotado. O armazém sugere uma substituição pelo mesmo preço ou menor.",
+      "accept": "Aceitar",
+      "decline": "Recusar e reembolsar",
+      "acceptA11y": "Aceitar substituição",
+      "declineA11y": "Recusar e reembolsar",
+      "modalA11y": "Confirmação de sugestão de substituição",
+      "acceptedToast": "Substituição confirmada",
+      "declinedToast": "Recusada — reembolso em processamento",
+      "refundToast": "Reembolso da diferença de ${{amount}} emitido",
+      "pendingBadgeA11y": "Sugestão de substituição pendente, toque para decidir",
+      "originalLabel": "Item original",
+      "replacementLabel": "Substituição sugerida",
+      "priceDiff": "Diferença de preço",
+      "diffSave": "Você economiza {{amount}}",
+      "diffCharge": "Você pagará {{amount}} menos",
+      "diffEqual": "Mesmo preço — sem cobrança extra",
+      "note": "Se a substituição custar menos que o item original, a diferença será reembolsada automaticamente."
+    }
   },
   "tracking": {
     "title": "Rastreio do pedido",
@@ -853,7 +877,18 @@
     "confirmAndPay": "CONFIRMAR E PAGAR ${{amount}}",
     "customerService": "Apoio ao Cliente",
     "orderFailed": "Falha ao fazer o pedido. Tente novamente.",
-    "orderPlaced": "Pedido feito com sucesso"
+    "orderPlaced": "Pedido feito com sucesso",
+    "replacement": {
+      "sectionTitle": "Se itens estiverem esgotados",
+      "allow": "Aceitar substituição sugerida",
+      "allowDesc": "O armazém pode substituir por item similar pelo mesmo preço ou menor",
+      "specify": "Escolher substituições permitidas",
+      "specifyDesc": "Selecione quais itens o armazém pode substituir",
+      "none": "Apenas reembolso",
+      "noneDesc": "Sem substituição — itens esgotados são reembolsados",
+      "pickHint": "Escolha itens de substituição permitidos ({{count}} selecionados)",
+      "specifyEmpty": "Escolha pelo menos um item, ou mude de opção"
+    }
   },
   "result": {
     "title": "Pagamento bem-sucedido",

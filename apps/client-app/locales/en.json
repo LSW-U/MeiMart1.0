@@ -548,7 +548,31 @@
     "deleteTitle": "Delete Orders",
     "deleteConfirm": "Delete {{count}} selected order(s)? This cannot be undone.",
     "outOfStockBadge": "Out of stock ×{{qty}}",
-    "outOfStockBadgeA11y": "Item out of stock"
+    "outOfStockBadgeA11y": "Item out of stock",
+    "suggestion": {
+      "pendingBadge": "Replacement suggestion — tap to decide",
+      "pendingBadgeA11y": "Replacement suggestion pending, tap to decide",
+      "reviewA11y": "Review replacement suggestion",
+      "acceptedBadge": "Replaced",
+      "declinedBadge": "Replacement declined",
+      "title": "Replacement suggestion",
+      "desc": "Item {{name}} ×{{qty}} is out of stock. Warehouse suggests a replacement at the same or lower price.",
+      "accept": "Accept",
+      "decline": "Decline & refund",
+      "acceptA11y": "Accept replacement",
+      "declineA11y": "Decline and refund",
+      "modalA11y": "Replacement suggestion confirmation",
+      "acceptedToast": "Replacement confirmed",
+      "declinedToast": "Declined — refund processing",
+      "refundToast": "Refund ${{amount}} issued for the price difference",
+      "originalLabel": "Original item",
+      "replacementLabel": "Suggested replacement",
+      "priceDiff": "Price difference",
+      "diffSave": "You save {{amount}}",
+      "diffCharge": "You will pay {{amount}} less",
+      "diffEqual": "Same price — no extra charge",
+      "note": "If the replacement costs less than the original, the difference will be refunded automatically."
+    }
   },
   "tracking": {
     "title": "Order Tracking",
@@ -853,7 +877,18 @@
     "confirmAndPay": "CONFIRM & PAY ${{amount}}",
     "customerService": "Customer Service",
     "orderFailed": "Failed to place order. Please try again.",
-    "orderPlaced": "Order placed successfully"
+    "orderPlaced": "Order placed successfully",
+    "replacement": {
+      "sectionTitle": "If items are out of stock",
+      "allow": "Accept suggested replacement",
+      "allowDesc": "Warehouse may swap with a similar item at the same or lower price",
+      "specify": "Choose allowed replacements",
+      "specifyDesc": "Pick which items the warehouse may substitute",
+      "none": "Refund only",
+      "noneDesc": "No replacement — out-of-stock items are refunded",
+      "pickHint": "Pick allowed replacement items ({{count}} selected)",
+      "specifyEmpty": "Pick at least one replacement item, or switch to another option"
+    }
   },
   "result": {
     "title": "Payment Success",

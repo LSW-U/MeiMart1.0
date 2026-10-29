@@ -68,6 +68,12 @@ export interface CartItem {
   // 缺货履约闭环批2（2026-10-24）：缺货登记数量（可空——null/undefined = 未登记缺货，
   // 订单详情页据此渲染缺货 badge；购物车等场景恒 null 不受影响）
   outOfStockQty?: number | null;
+  // 替换品批1（2026-10-29）：建议决策状态（可空——null/undefined = 无建议）；
+  // 详情页 PENDING 渲染确认弹层，ACCEPTED/DECLINED 渲染结果徽标
+  suggestionStatus?: 'PENDING' | 'ACCEPTED' | 'DECLINED' | null;
+  suggestionDecidedAt?: string | null;
+  // 替换品批1 P2-3 修复（2026-10-29）：建议目标摘要（原/替对比 + 差额行数据源，可空）
+  suggestionItem?: { name: unknown; image: string | null; unitPrice: number } | null;
 }
 
 export interface Address {
@@ -185,6 +191,10 @@ export interface Order {
   // Why: 预约单（保证金批A T5-c / 批D D2）— 打烊时段下单的该仓下一次开门时间 ISO；即时单 null。
   //     result 页标注"接受预约 · {time} 可配送"
   scheduledFor?: string | null;
+  // 替换品批1（2026-10-29 D9/D13）：下单替换策略（缺省/后端未升级 = null，前端按 ALLOW 展示）
+  // + SPECIFY 白名单（仅 SPECIFY 有值）
+  replacementPolicy?: 'ALLOW' | 'SPECIFY' | 'NONE' | null;
+  allowedReplacementSkuIds?: string[] | null;
 }
 
 export interface User {

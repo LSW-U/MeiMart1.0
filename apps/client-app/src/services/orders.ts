@@ -23,6 +23,13 @@ interface OrderItemRaw {
   // 缺货履约闭环批2（2026-10-24）：批1 后端 OrderItem 已透出缺货标记（可空，向后兼容），
   // 透传给详情页渲染缺货 badge；null/缺失 = 未登记缺货
   outOfStockQty?: number | null;
+  // 替换品批1（2026-10-29）：PENDING 建议待决策标记（可空）——详情页据此渲染确认弹层；
+  // suggestionDecidedAt 仅展示用（决策时间）
+  suggestionStatus?: 'PENDING' | 'ACCEPTED' | 'DECLINED' | null;
+  suggestionDecidedAt?: string | null;
+  // 替换品批1 P2-3 修复（2026-10-29）：建议目标摘要（契约只增，可空向后兼容）——
+  // 确认弹层渲染真实原/替对比 + 差额行的数据源（D1 clamp min 由前端明示）
+  suggestionItem?: { name: unknown; image: string | null; unitPrice: number } | null;
 }
 
 interface OrderRaw {
@@ -38,6 +45,10 @@ interface OrderRaw {
   deliveryAddress: unknown;
   remark: string | null;
   riderId: string | null;
+  // 替换品批1（2026-10-29 D9/D13）：下单替换策略 + SPECIFY 白名单（可空，向后兼容）——
+  // checkout SPECIFY UI 与详情页提示用；缺省 = 后端未升级（降级为 ALLOW 展示）
+  replacementPolicy?: 'ALLOW' | 'SPECIFY' | 'NONE' | null;
+  allowedReplacementSkuIds?: string[] | null;
   // Why: P10 §3.5 + P11 §3.2 骑手详情（后端项 1 方案 A：getOrderDetail include rider，toOrderWithRelations 平铺 avatarUrl + rating toString；real 模式 rider=null 时整个 undefined）
   rider?: {
     id: string;
@@ -92,6 +103,10 @@ interface CreateOrderPayload {
   addressId: string;
   remark?: string;
   paymentMethod: string;
+  // 替换品批1（2026-10-29 D9/D13）：下单替换策略 + SPECIFY 白名单（可选，缺省后端默认 ALLOW；
+  // superRefine 约束：SPECIFY ⇒ 白名单非空，非 SPECIFY ⇒ 禁传白名单）
+  replacementPolicy?: 'ALLOW' | 'SPECIFY' | 'NONE';
+  allowedReplacementSkuIds?: string[];
 }
 
 // Why: 后端 OrderItem 扁平结构，前端 CartItem 需要嵌套 Product；构造最小 Product 避免再 fetch 详情
@@ -111,6 +126,11 @@ function transformOrderItem(raw: OrderItemRaw): CartItem {
     selected: true,
     // 批2：缺货数量透传（null = 未登记缺货，详情页按 null/undefined 隐藏 badge）
     outOfStockQty: raw.outOfStockQty ?? null,
+    // 替换品批1（2026-10-29）：建议决策状态透传（null/undefined = 无建议，详情页不渲染弹层）
+    suggestionStatus: raw.suggestionStatus ?? null,
+    suggestionDecidedAt: raw.suggestionDecidedAt ?? null,
+    // P2-3 修复：建议目标摘要透传（分→元由弹层渲染层换算，与原项口径一致走 raw 分）
+    suggestionItem: raw.suggestionItem ?? null,
   };
 }
 
@@ -168,6 +188,9 @@ function transformOrder(raw: OrderRaw): Order {
     estimatedCnyAmount: raw.estimatedCnyAmount ?? null,
     // Why: 预约单标注（保证金批A T5-c / 批D D2）：scheduledFor 非空 = 走了预约（开门后可配送）
     scheduledFor: raw.scheduledFor ?? null,
+    // 替换品批1（2026-10-29 D9/D13）：替换策略透传（缺省降级 ALLOW，详情页/checkout 按 ALLOW 展示）
+    replacementPolicy: raw.replacementPolicy ?? null,
+    allowedReplacementSkuIds: raw.allowedReplacementSkuIds ?? null,
   };
 }
 
@@ -264,6 +287,39 @@ export const orderApi = {
     // 对象仅 items/金额/状态；详情/列表端点才 include events）。createOrder 下单后本地
     // 无事件流可展示，归一化补空数组后走 transformOrder（详情页事件流由 getOrder 提供）。
     return transformOrder({ ...res.data, events: res.data.events ?? [] });
+  },
+
+  // 替换品批1（2026-10-29 D5/D8/D1）：建议决策结果（refundedAmount 分→元在页面层折算展示）
+  async decideSuggestion(
+    orderId: string,
+    itemId: string,
+    input: { accept: boolean; replacementItemId?: string },
+  ): Promise<{
+    itemId: string;
+    orderId: string;
+    suggestionStatus: 'ACCEPTED' | 'DECLINED';
+    replacementItemId: string | null;
+    refundedAmount: number;
+  }> {
+    if (isMockMode) {
+      // mock：原地改 mockDb 内 items 状态（无 suggestionStatus 数据时仅回执）
+      void mockDb;
+      return mockResponse({
+        itemId,
+        orderId,
+        suggestionStatus: (input.accept ? 'ACCEPTED' : 'DECLINED') as 'ACCEPTED' | 'DECLINED',
+        replacementItemId: input.replacementItemId ?? null,
+        refundedAmount: 0,
+      });
+    }
+    const res = await api.post<{
+      itemId: string;
+      orderId: string;
+      suggestionStatus: 'ACCEPTED' | 'DECLINED';
+      replacementItemId: string | null;
+      refundedAmount: number;
+    }>(`/client/orders/${orderId}/items/${itemId}/suggestion/decision`, input);
+    return res.data;
   },
 
   async cancelOrder(id: string, reason?: string): Promise<Order> {

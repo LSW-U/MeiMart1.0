@@ -144,6 +144,23 @@ export default function CheckoutPage() {
   // Why: 防止 submit 期间重复点击（Promise.all 查 SKU 时 createOrder.isPending 还是 false）
   const [submitting, setSubmitting] = useState(false);
 
+  // 替换品批1（2026-10-29 D9/D13）：下单替换策略 + SPECIFY 白名单选品。
+  // Why: 默认 ALLOW（后端同默认）；SPECIFY 打开选品面板，从购物车商品里勾选可接受的替换品
+  //（白名单 SKU 集合随单提交，后端 superRefine 强校验 SPECIFY⇒白名单非空）
+  const [replacementPolicy, setReplacementPolicy] = useState<'ALLOW' | 'SPECIFY' | 'NONE'>('ALLOW');
+  const [showSpecPicker, setShowSpecPicker] = useState(false);
+  const [allowedSkuIds, setAllowedSkuIds] = useState<string[]>([]);
+  // SPECIFY 切换时初始化白名单 = 当前选中项的 skuId（自身默认可替换为同 SKU 缺货时的同款是非法的，
+  // 后端会拒自指；这里给用户从购物车里挑其他品的起点——默认全不选，用户至少勾一个才能提交）
+  const toggleSpecPick = (skuId: string | undefined) => {
+    if (!skuId) return;
+    setAllowedSkuIds((prev) =>
+      prev.includes(skuId) ? prev.filter((id) => id !== skuId) : [...prev, skuId],
+    );
+  };
+  // 提交守卫：SPECIFY 必须至少勾 1 个白名单 SKU（与后端 superRefine 同口径的前置拦截）
+  const specifyInvalid = replacementPolicy === 'SPECIFY' && allowedSkuIds.length === 0;
+
   // Why: 批B 支付枚举补位（微信支付预留）— available=false 为占位渠道（WECHAT_GLOBAL/ALIPAY_CN/
   // LOCAL_PSP），渲染到"即将上线"区且不可选中（点击提示暂未开通）；后端 createOrder 同口径拒绝（R2）。
   // available undefined 视为可用（旧 mock 数据兼容）。
@@ -219,6 +236,11 @@ export default function CheckoutPage() {
         toast.error(t('checkout.selectAddress'));
         return;
       }
+      // 替换品批1（D9/D13）：SPECIFY 白名单空 → 拦截（后端 superRefine 也会拒，这里前置提示）
+      if (specifyInvalid) {
+        toast.error(t('checkout.replacement.specifyEmpty'));
+        return;
+      }
       // C-P2-9: 后端 createOrder 期望 skuId——购物车 transformCartItem 已透传 product.defaultSkuId
       //（CartItemView.skuId），直接用，不再逐项 getProduct 查详情（原 N 次额外请求）。
       // defaultSkuId 缺失（旧缓存/mock 无 skuId 数据）时兜底查一次详情。
@@ -238,6 +260,12 @@ export default function CheckoutPage() {
         payload: {
           addressId: defaultAddress.id,
           paymentMethod,
+          // 替换品批1（D9/D13）：策略随单提交；SPECIFY 带白名单，其他策略不带（后端禁传）
+          ...(replacementPolicy === 'SPECIFY'
+            ? { replacementPolicy: 'SPECIFY' as const, allowedReplacementSkuIds: allowedSkuIds }
+            : replacementPolicy === 'NONE'
+              ? { replacementPolicy: 'NONE' as const }
+              : {}),
         },
         totalPrice: finalTotal,
       });
@@ -543,6 +571,112 @@ export default function CheckoutPage() {
                         <Icon symbol="hourglass_top" size={18} color={colors.outline} />
                       </Pressable>
                     ))}
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {/* 替换品批1（2026-10-29 D9/D13）：缺货替换策略选择卡 */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
+                {t('checkout.replacement.sectionTitle')}
+              </Text>
+              <View
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: colors['surface-container-lowest'],
+                    borderColor: colors['outline-variant'],
+                  },
+                ]}
+              >
+                {(
+                  [
+                    {
+                      key: 'ALLOW',
+                      labelKey: 'checkout.replacement.allow',
+                      descKey: 'checkout.replacement.allowDesc',
+                    },
+                    {
+                      key: 'SPECIFY',
+                      labelKey: 'checkout.replacement.specify',
+                      descKey: 'checkout.replacement.specifyDesc',
+                    },
+                    {
+                      key: 'NONE',
+                      labelKey: 'checkout.replacement.none',
+                      descKey: 'checkout.replacement.noneDesc',
+                    },
+                  ] as const
+                ).map((opt) => {
+                  const selected = replacementPolicy === opt.key;
+                  return (
+                    <Pressable
+                      key={opt.key}
+                      testID={`replacement-policy-${opt.key}`}
+                      onPress={() => {
+                        setReplacementPolicy(opt.key);
+                        if (opt.key === 'SPECIFY') setShowSpecPicker(true);
+                      }}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected }}
+                      style={styles.replacementOptionRow}
+                    >
+                      <Icon
+                        symbol={selected ? 'radio_button_checked' : 'radio_button_unchecked'}
+                        size={20}
+                        color={selected ? colors.primary : colors.outline}
+                      />
+                      <View style={styles.replacementOptionText}>
+                        <Text style={[styles.paymentName, { color: colors['on-surface'] }]}>
+                          {t(opt.labelKey)}
+                        </Text>
+                        <Text
+                          style={[styles.paymentSubtitle, { color: colors['on-surface-variant'] }]}
+                        >
+                          {t(opt.descKey)}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+                {replacementPolicy === 'SPECIFY' && (
+                  <View style={styles.specPickerBox}>
+                    <Text style={[styles.paymentSubtitle, { color: colors['on-surface-variant'] }]}>
+                      {t('checkout.replacement.pickHint', { count: allowedSkuIds.length })}
+                    </Text>
+                    {selectedItems.map((item) => {
+                      const picked =
+                        item.product.defaultSkuId != null &&
+                        allowedSkuIds.includes(item.product.defaultSkuId);
+                      return (
+                        <Pressable
+                          key={item.id}
+                          testID={`spec-pick-${item.id}`}
+                          onPress={() => toggleSpecPick(item.product.defaultSkuId)}
+                          accessibilityRole="checkbox"
+                          accessibilityState={{ checked: picked }}
+                          style={styles.replacementOptionRow}
+                        >
+                          <Icon
+                            symbol={picked ? 'check_box' : 'check_box_outline_blank'}
+                            size={20}
+                            color={picked ? colors.primary : colors.outline}
+                          />
+                          <Text
+                            style={[styles.paymentName, { color: colors['on-surface'] }]}
+                            numberOfLines={1}
+                          >
+                            {localize(item.product.name)}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                    {specifyInvalid && (
+                      <Text style={[styles.stockWarn, { color: colors.semantic.warning }]}>
+                        {t('checkout.replacement.specifyEmpty')}
+                      </Text>
+                    )}
                   </View>
                 )}
               </View>
@@ -905,6 +1039,21 @@ const styles = StyleSheet.create({
 
   // Order Summary
   summaryBody: { gap: spacing.sm },
+  // 替换品批1：策略选择卡（radio 行 + SPECIFY 选品盒）
+  replacementOptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  replacementOptionText: { flex: 1 },
+  specPickerBox: {
+    marginTop: spacing.xs,
+    paddingTop: spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(0,0,0,0.08)',
+    gap: spacing.xs,
+  },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

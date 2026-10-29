@@ -142,6 +142,31 @@ export function useCreateOrder() {
   });
 }
 
+// ============================================================================
+// 替换品批1（2026-10-29 D5/D8/D1）：替换建议决策 mutation
+// Why: 详情页确认弹层双按钮共用；成功后 invalidate 本单 + 列表（金额/快照已原地改写）
+// ============================================================================
+export function useDecideSuggestion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      itemId,
+      input,
+    }: {
+      orderId: string;
+      itemId: string;
+      input: { accept: boolean; replacementItemId?: string };
+    }) => orderApi.decideSuggestion(orderId, itemId, input),
+    onSettled: (_data, _err, vars) => {
+      void qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
+      if (vars?.orderId) {
+        void qc.invalidateQueries({ queryKey: orderDetailKey(vars.orderId) });
+      }
+    },
+  });
+}
+
 export function useCancelOrder() {
   const qc = useQueryClient();
   return useMutation({

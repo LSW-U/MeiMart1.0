@@ -4,6 +4,13 @@
 > `Work-Wiki/_inbox/04-后端记录/三端优化更新/后端联调需求批次/执行日志/批0-证据归档-20261003.md`（curl 实测 + openapi 契约核对证据）。
 > 摘要：§二.1 createOrder items、§二.2 geocode、§二.4 defaultSkuId、§三.2 payments/methods 均**已在后端 main@5087325 落地并实测通过**（来源=W7/批B 提前落地）；§二.3 支付方式枚举由 /client/payments/methods 端点方案取代。仍开放：多语补 tet（§九.2）、W6 rider earnings/withdraw（§九.1）、search 多语化（§九.3）。
 > 本文件保留作需求溯源记录，不再作为现状权威源更新。
+>
+> 🔄 **后续状态刷新（2026-10-07 复验）**：上方「仍开放」三项**已完成两项**——
+> - **§九.1 W6 骑手收入/提现端点 → ✅ 已闭环**：后端 `ccaa26b`（earnings summary/transactions + withdrawals POST/GET）；前端 `d11b7a1` 接线（`FORCE_MOCK=false`）。实测三端点 200、越权 403。
+> - **§九.2 商品/分类 tet + 五语键集 → ✅ 已闭环**：后端 `8f02501` + 前端 `dda5912`。实测商品 20/20、分类 24/24 含 tet（`name keys=[en,id,pt,tet,zh]`）。
+> - **§九.3 search 多语化 → ⏳ 仍开放**（`useSearchSuggest.ts:29,53` queryKey 仍含 locale，待后端跨语检索）。
+> 另：§九.5 geo 限流实际由全局过滤器返回 **`E-HTTP-429`**（非域内 `E-COMMON-004`）；前端 `apiError.ts` 的 429 状态兜底已覆盖，用户可见文案正确。
+> 现状权威记录见 Obsidian《后端联调需求批次》与《前端接线收尾》两个模块的验收清单。
 
 > 本文档记录前端联调过程中发现的后端问题、需要的接口、期望的响应格式。请后端逐一处理。
 >

@@ -15,6 +15,7 @@ import {
   Pressable,
   Platform,
 } from 'react-native';
+import { useState } from 'react';
 import * as expoClipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -37,7 +38,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { StatusBadge } from '@/components/business/StatusBadge';
 import { Icon } from '@/components/ui/Icon';
-import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
+import { useOrder, useCancelOrder, useDecideSuggestion } from '@/services/queries/useOrders';
 import { useOrderEta } from '@/services/queries/useOrderEta';
 import { toast } from '@/store/toastStore';
 import type { CartItem, LocalizableText } from '@/types';
@@ -46,6 +47,10 @@ import { STATUS_VISUAL } from './order-detail/shared';
 import { Header } from './order-detail/sections/Header';
 import { Timeline } from './order-detail/sections/Timeline';
 import { BottomActions } from './order-detail/sections/BottomActions';
+
+// Why: 弹层 Accept 按钮固定白字（primary 红底）——dark 模式 on-primary 翻暗红会裂色，
+// 同 checkout.tsx ON_PRIMARY 口径
+const ON_PRIMARY_SUGGESTION = '#ffffff';
 
 // === Page ===
 
@@ -57,9 +62,14 @@ export default function OrderDetailPage() {
   const { colors } = useTheme();
   const { data: order, isLoading, isError, refetch } = useOrder(id);
   const cancelMutation = useCancelOrder();
+  // 替换品批1（2026-10-29 D5/D8/D1）：建议决策 mutation（确认弹层双按钮共用）
+  const decideSuggestion = useDecideSuggestion();
   // P10：轻量 ETA（仅 PICKED/OUT_FOR_DELIVERY 发请求）。hooks 规则 —— 必须在早返回之前无条件调用，
   // status 用 order?.status 兜底（loading 阶段 order 为 undefined）。
   const { data: eta } = useOrderEta(id, order?.status ?? 'PENDING_PAYMENT');
+  // 替换品批1（2026-10-29）：PENDING 建议确认弹层状态（null = 关闭；值 = 待决策的 item）。
+  // hooks 规则 —— 必须在早返回之前无条件调用（eslint react-hooks/rules-of-hooks）。
+  const [suggestionTarget, setSuggestionTarget] = useState<CartItem | null>(null);
 
   if (isLoading) {
     return (
@@ -118,6 +128,46 @@ export default function OrderDetailPage() {
   );
   const activeIndex = timelineSteps.findIndex((s) => s.state === 'active');
   const timelineProgress = activeIndex < 0 ? 1 : (activeIndex + 1) / timelineSteps.length;
+
+  const handleDecide = (accept: boolean) => {
+    if (!suggestionTarget || !order) return;
+    decideSuggestion.mutate(
+      { orderId: order.id, itemId: suggestionTarget.id, input: { accept } },
+      {
+        onSuccess: (res) => {
+          setSuggestionTarget(null);
+          if (accept) {
+            toast.success(
+              t('order.suggestion.acceptedToast', {
+                defaultValue: 'Replacement confirmed',
+              }),
+            );
+            if (res.refundedAmount > 0) {
+              toast.success(
+                t('order.suggestion.refundToast', {
+                  amount: formatPrice(res.refundedAmount / 100),
+                  defaultValue: 'Refund ${{amount}} issued for the price difference',
+                }),
+              );
+            }
+          } else {
+            toast.success(
+              t('order.suggestion.declinedToast', {
+                defaultValue: 'Declined — refund processing',
+              }),
+            );
+          }
+        },
+        onError: (err) => {
+          const errCode = (err as { response?: { data?: { error?: { code?: string } } } })?.response
+            ?.data?.error?.code;
+          toast.error(
+            errCode ? t(`errors.${errCode}`, { defaultValue: String(errCode) }) : t('common.error'),
+          );
+        },
+      },
+    );
+  };
 
   const cancel = () => {
     // Why: Web 端 Alert 不显示，直接取消 + toast；Native 端用 Alert 确认
@@ -303,9 +353,23 @@ export default function OrderDetailPage() {
               item={item}
               localize={localize}
               onPress={() => router.push(`/product/${item.product.id}`)}
+              onDecide={
+                item.suggestionStatus === 'PENDING' ? () => setSuggestionTarget(item) : undefined
+              }
             />
           ))}
         </View>
+
+        {/* 替换品批1（2026-10-29 D5/D8）：PENDING 建议确认弹层（原品/替换品对比 + 差额明示） */}
+        <SuggestionConfirmModal
+          visible={suggestionTarget != null}
+          item={suggestionTarget}
+          localize={localize}
+          busy={decideSuggestion.isPending}
+          onAccept={() => handleDecide(true)}
+          onDecline={() => handleDecide(false)}
+          onClose={() => setSuggestionTarget(null)}
+        />
 
         {/* Order Summary Card（HTML 第 240-258 行） */}
         <View
@@ -409,10 +473,12 @@ function OrderItemRow({
   item,
   localize,
   onPress,
+  onDecide,
 }: {
   item: CartItem;
   localize: (text: LocalizableText) => string;
   onPress: () => void;
+  onDecide?: () => void;
 }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -462,12 +528,234 @@ function OrderItemRow({
               </Text>
             </View>
           ) : null}
+          {/* 替换品批1（2026-10-29）：建议状态徽标——PENDING 可点开确认弹层；
+              ACCEPTED/DECLINED 只读结果。null = 无建议不渲染 */}
+          {item.suggestionStatus === 'PENDING' ? (
+            <Pressable
+              onPress={onDecide}
+              hitSlop={4}
+              accessibilityRole="button"
+              accessibilityLabel={t('order.suggestion.reviewA11y', {
+                defaultValue: 'Review replacement suggestion',
+              })}
+              style={[styles.oosBadge, { backgroundColor: colors['primary-container'] }]}
+            >
+              <Text style={[styles.oosBadgeText, { color: colors.primary }]}>
+                {t('order.suggestion.pendingBadge', {
+                  defaultValue: 'Replacement suggestion — tap to decide',
+                })}
+              </Text>
+            </Pressable>
+          ) : item.suggestionStatus === 'ACCEPTED' ? (
+            <View
+              accessibilityRole="text"
+              style={[styles.oosBadge, { backgroundColor: colors['primary-container'] }]}
+            >
+              <Text style={[styles.oosBadgeText, { color: colors.primary }]}>
+                {t('order.suggestion.acceptedBadge', { defaultValue: 'Replaced' })}
+              </Text>
+            </View>
+          ) : item.suggestionStatus === 'DECLINED' ? (
+            <View
+              accessibilityRole="text"
+              style={[styles.oosBadge, { backgroundColor: colors['surface-variant'] }]}
+            >
+              <Text style={[styles.oosBadgeText, { color: colors['on-surface-variant'] }]}>
+                {t('order.suggestion.declinedBadge', { defaultValue: 'Replacement declined' })}
+              </Text>
+            </View>
+          ) : null}
         </View>
         <Text style={[styles.priceDisplay, { color: colors.primary }]}>
           {formatPrice(item.product.price * item.quantity)}
         </Text>
       </View>
     </Pressable>
+  );
+}
+
+// 替换品批1（2026-10-29 D5/D8）：PENDING 建议确认弹层。
+// Why: P2-3 修复（2026-10-29）——后端契约增补 item.suggestionItem 摘要（目标行快照，
+// 决策前真实替换价），弹层渲染真实原/替两行对比 + 差额行（D1 clamp min：替换价 ≤ 原价，
+// 差额只降不升，前端明示）。suggestionItem 缺失时（后端未升级）降级为单行展示。
+function SuggestionConfirmModal({
+  visible,
+  item,
+  localize,
+  busy,
+  onAccept,
+  onDecline,
+  onClose,
+}: {
+  visible: boolean;
+  item: CartItem | null;
+  localize: (text: LocalizableText) => string;
+  busy: boolean;
+  onAccept: () => void;
+  onDecline: () => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  if (!visible || !item) return null;
+  const suggestion = item.suggestionItem ?? null;
+  // 差额（元）：原价 − 替换价 ≥ 0（D1 clamp）；>0 退款 / =0 同价
+  const diff =
+    suggestion != null ? Math.round(item.product.price * 100) - suggestion.unitPrice : null; // 分
+  return (
+    <View
+      style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.45)' }]}
+      accessibilityLabel={t('order.suggestion.modalA11y', {
+        defaultValue: 'Replacement suggestion confirmation',
+      })}
+    >
+      <View
+        style={[
+          styles.modalCard,
+          {
+            backgroundColor: colors['surface-container-lowest'],
+            borderColor: colors['outline-variant'],
+          },
+        ]}
+      >
+        <Text style={[styles.modalTitle, { color: colors['on-surface'] }]}>
+          {t('order.suggestion.title', { defaultValue: 'Replacement suggestion' })}
+        </Text>
+        <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
+          {t('order.suggestion.desc', {
+            name: localize(item.product.name),
+            qty: item.quantity,
+            defaultValue:
+              'Item {{name}} ×{{qty}} is out of stock. Warehouse suggests a replacement at the same or lower price.',
+          })}
+        </Text>
+        {suggestion != null ? (
+          // 真对比：原项行 + 替换项行 + 差额行（P2-3）
+          <View style={styles.modalCompare}>
+            <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
+              {t('order.suggestion.originalLabel', { defaultValue: 'Original item' })}
+            </Text>
+            <View style={styles.modalItemRow}>
+              <View style={[styles.itemImageWrap, { backgroundColor: colors['surface-variant'] }]}>
+                <SafeImage source={{ uri: item.product.image }} style={styles.itemImage} />
+              </View>
+              <View style={styles.flex1}>
+                <Text style={[styles.itemName, { color: colors['on-surface'] }]} numberOfLines={2}>
+                  {localize(item.product.name)}
+                </Text>
+                <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
+                  {t('order.qtyLabel', { defaultValue: 'Qty' })}: {item.quantity}
+                </Text>
+              </View>
+              <Text style={[styles.priceDisplay, { color: colors['on-surface'] }]}>
+                {formatPrice(item.product.price * item.quantity)}
+              </Text>
+            </View>
+            <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
+              {t('order.suggestion.replacementLabel', { defaultValue: 'Suggested replacement' })}
+            </Text>
+            <View style={styles.modalItemRow}>
+              <View style={[styles.itemImageWrap, { backgroundColor: colors['surface-variant'] }]}>
+                <SafeImage
+                  source={{ uri: suggestion.image ?? item.product.image }}
+                  style={styles.itemImage}
+                />
+              </View>
+              <View style={styles.flex1}>
+                <Text style={[styles.itemName, { color: colors['on-surface'] }]} numberOfLines={2}>
+                  {localize((suggestion.name ?? {}) as LocalizableText)}
+                </Text>
+                <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
+                  {t('order.qtyLabel', { defaultValue: 'Qty' })}: {item.quantity}
+                </Text>
+              </View>
+              <Text style={[styles.priceDisplay, { color: colors.primary }]}>
+                {formatPrice((suggestion.unitPrice * item.quantity) / 100)}
+              </Text>
+            </View>
+            {diff != null && (
+              <View style={styles.modalDiffRow}>
+                <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
+                  {t('order.suggestion.priceDiff', { defaultValue: 'Price difference' })}
+                </Text>
+                <Text style={[styles.bodyMdBold, { color: colors.primary }]}>
+                  {diff > 0
+                    ? t('order.suggestion.diffSave', {
+                        amount: formatPrice((diff * item.quantity) / 100),
+                        defaultValue: 'You save {{amount}}',
+                      })
+                    : t('order.suggestion.diffEqual', {
+                        defaultValue: 'Same price — no extra charge',
+                      })}
+                </Text>
+              </View>
+            )}
+            <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
+              {t('order.suggestion.note', {
+                defaultValue:
+                  'If the replacement costs less than the original, the difference will be refunded automatically.',
+              })}
+            </Text>
+          </View>
+        ) : (
+          // 降级：无 suggestionItem 摘要 → 单行展示当前项（后端未升级）
+          <View style={styles.modalItemRow}>
+            <View style={[styles.itemImageWrap, { backgroundColor: colors['surface-variant'] }]}>
+              <SafeImage source={{ uri: item.product.image }} style={styles.itemImage} />
+            </View>
+            <View style={styles.flex1}>
+              <Text style={[styles.itemName, { color: colors['on-surface'] }]} numberOfLines={2}>
+                {localize(item.product.name)}
+              </Text>
+              <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
+                {t('order.qtyLabel', { defaultValue: 'Qty' })}: {item.quantity}
+              </Text>
+            </View>
+            <Text style={[styles.priceDisplay, { color: colors.primary }]}>
+              {formatPrice(item.product.price * item.quantity)}
+            </Text>
+          </View>
+        )}
+        <View style={styles.modalActions}>
+          <Pressable
+            onPress={onDecline}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={t('order.suggestion.declineA11y', {
+              defaultValue: 'Decline and refund',
+            })}
+            style={[
+              styles.modalBtn,
+              { backgroundColor: colors['surface-variant'], opacity: busy ? 0.5 : 1 },
+            ]}
+          >
+            <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
+              {t('order.suggestion.decline', { defaultValue: 'Decline & refund' })}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={onAccept}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={t('order.suggestion.acceptA11y', {
+              defaultValue: 'Accept replacement',
+            })}
+            style={[styles.modalBtn, { backgroundColor: colors.primary, opacity: busy ? 0.5 : 1 }]}
+          >
+            <Text style={[styles.bodyMdBold, { color: ON_PRIMARY_SUGGESTION }]}>
+              {t('order.suggestion.accept', { defaultValue: 'Accept' })}
+            </Text>
+          </Pressable>
+        </View>
+        <Pressable onPress={onClose} hitSlop={8} accessibilityRole="button" disabled={busy}>
+          <Text
+            style={[styles.bodySm, { color: colors['on-surface-variant'], textAlign: 'center' }]}
+          >
+            {t('common.cancel', { defaultValue: 'Cancel' })}
+          </Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -612,6 +900,55 @@ const styles = StyleSheet.create({
   oosBadgeText: {
     fontSize: 11,
     fontWeight: '600',
+  },
+  // 替换品批1：建议确认弹层（全屏遮罩 + 底部卡片，避免引新依赖照 Modal 语义手写）
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+    zIndex: 100,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: borderRadius.xl,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  modalTitle: {
+    ...typography.h3,
+    fontWeight: '700',
+  },
+  modalItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  // P2-3：真对比块（两行商品 + 差额行）纵向间距
+  modalCompare: {
+    gap: spacing.xs,
+  },
+  modalDiffRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  modalBtn: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
   },
   itemImageWrap: {
     width: 80,
