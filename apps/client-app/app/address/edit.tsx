@@ -23,6 +23,7 @@ import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader/PrimaryHeader';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { Icon } from '@/components/ui/Icon';
 import { Switch } from '@/components/ui/Switch';
 import { Modal } from '@/components/ui/Modal';
@@ -112,15 +113,9 @@ export default function AddressEditPage() {
         style={{ flex: 1, position: 'relative' }}
       >
         {/* N-P1-3①：列表查询中渲染骨架不渲染表单（避免拿旧 prefill 闪现） */}
+        {/* 批2 阶段2（D8 审计裁定 4）：自实现 3 色条骨架换 PageSkeleton(list)，只换组件不动结构 */}
         {isLoading ? (
-          <View style={styles.skeletonWrap} testID="addr-edit-loading">
-            {[0, 1, 2].map((row) => (
-              <View
-                key={row}
-                style={[styles.skeletonBar, { backgroundColor: colors['surface-container-high'] }]}
-              />
-            ))}
-          </View>
+          <PageSkeleton variant="list" rows={3} testID="addr-edit-loading" />
         ) : isEditing && !existing ? (
           /* N-P1-3③：编辑态 id 有值但数据查不到 → 页内错误态（D2），绝不静默回退 create */
           <View style={styles.errorWrap} testID="addr-edit-notfound">
@@ -782,15 +777,6 @@ const styles = StyleSheet.create({
     padding: layout['container-margin'],
     paddingBottom: 120,
     gap: spacing.lg,
-  },
-  // N-P1-3：查询骨架
-  skeletonWrap: {
-    padding: layout['container-margin'],
-    gap: spacing.lg,
-  },
-  skeletonBar: {
-    height: 56,
-    borderRadius: borderRadius.xl,
   },
   // N-P1-3：编辑态数据查不到的页内错误态
   errorWrap: {

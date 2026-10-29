@@ -51,6 +51,7 @@ import { toast } from '@/store/toastStore';
 import { useAuthStore } from '@/store/authStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { safeRoutePush } from '@meimart/nav-core';
 
 // Why: 红底白字固定（header primary 渐变底 + 红色 badge 底），dark 不变
@@ -576,8 +577,12 @@ export default function HomePage() {
         showsVerticalScrollIndicator={false}
       >
         {renderDashboardHeader()}
-        {isLoading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
-        {isError && <ErrorState message={t('errors.products')} onRetry={() => refetch()} />}
+        {/* 批2 阶段2（D8 审计裁定 2）：fallback 内 isLoading 换 PageSkeleton(list)，不整页吞 */}
+        {isLoading ? (
+          <PageSkeleton variant="list" rows={4} />
+        ) : (
+          <ErrorState message={t('errors.products')} onRetry={() => refetch()} />
+        )}
         {/* #7B：fallback 态 Buy Again 仍渲染（与 FlatList Footer 同源，板块不丢） */}
         {renderBundleSection()}
         {renderBuyAgainFooter()}
@@ -587,7 +592,6 @@ export default function HomePage() {
       bottomReserve,
       colors,
       isLoading,
-      isError,
       refetch,
       renderDashboardHeader,
       renderBundleSection,
@@ -896,9 +900,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     paddingHorizontal: layout['container-margin'],
     marginBottom: spacing.md,
-  },
-  loader: {
-    paddingVertical: spacing.lg,
   },
   hScroll: {
     paddingHorizontal: layout['container-margin'],

@@ -408,16 +408,17 @@ describe('批D 商品详情整合', () => {
   });
 
   describe('T3 弱网/空态（联调验收 §6）', () => {
-    it('聚合接口 pending（isLoading）→ loading 占位 + TopBar，不白屏', () => {
+    it('聚合接口 pending（isLoading）→ PageSkeleton 骨架屏（批2 阶段2 换组件）+ TopBar，不白屏', () => {
       setupWithQueryState({ isLoading: true });
-      expect(screen.getByText('common.loading')).toBeTruthy();
+      // loading 纯文字位已换 PageSkeleton(detail)（D8 审计裁定）
+      expect(screen.root.findByProps({ testID: 'page-skeleton' })).toBeTruthy();
       // 页面结构完整：顶栏可交互（返回/分享按钮渲染）而非空白
       expect(screen.getByLabelText('common.goBack')).toBeTruthy();
     });
 
     it('慢接口恢复：loading → loaded rerender 后内容出现（转换不白屏）', () => {
       const { rerender } = setupWithQueryState({ isLoading: true });
-      expect(screen.getByText('common.loading')).toBeTruthy();
+      expect(screen.root.findByProps({ testID: 'page-skeleton' })).toBeTruthy();
       mockUseProduct.mockReturnValue({
         data: makeProduct(),
         isLoading: false,
@@ -431,7 +432,7 @@ describe('批D 商品详情整合', () => {
       );
       // 品名在页面出现 3 处（分享/标题/评论区），用 getAllByText 断言至少渲染一处
       expect(screen.getAllByText('Fresh Red Fuji Apple').length).toBeGreaterThan(0);
-      expect(screen.queryByText('common.loading')).toBeNull();
+      expect(screen.root.findAllByProps({ testID: 'page-skeleton' })).toHaveLength(0);
     });
 
     it('接口失败/超时（isError）→ ErrorState 降级（product.notFound + 可重试），不白屏', () => {

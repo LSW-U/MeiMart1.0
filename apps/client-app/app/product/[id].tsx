@@ -13,6 +13,7 @@ import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { Icon } from '@/components/ui/Icon';
 import { useProduct, useProducts, useWarehouseAvailability } from '@/services/queries/useProducts';
 import {
@@ -156,9 +157,8 @@ export default function ProductDetailPage() {
       <SafeAreaWrapper edges={['top', 'bottom']} style={{ backgroundColor: colors.background }}>
         <StatusBarConfig />
         <TopBar activeTab={activeTab} onTabPress={() => {}} onBack={handleBack} />
-        <View style={styles.center}>
-          <Text style={{ color: colors['on-surface-variant'] }}>{t('common.loading')}</Text>
-        </View>
+        {/* 批2 阶段2（D8 审计）：loading 纯文字位换 PageSkeleton(detail)，只换组件不动结构 */}
+        <PageSkeleton variant="detail" />
       </SafeAreaWrapper>
     );
   }
@@ -501,10 +501,5 @@ const styles = StyleSheet.create({
     ...typography['label-caps'],
     fontSize: 14,
     fontWeight: '700',
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

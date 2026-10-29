@@ -4,15 +4,7 @@
 //   + 近过期提醒 + 分 tab 空态（含未登录）+ 领券入口视觉降级
 //   券卡视觉字段（type/cap/desc/chips/去逛逛）归《优惠券卡片模块》方案，本页只调 props
 import { useState, useMemo } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  FlatList,
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-} from 'react-native';
+import { StyleSheet, View, Text, FlatList, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +15,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { CouponCard } from '@/components/business/CouponCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { Icon } from '@/components/ui/Icon';
 import { useCoupons } from '@/services/queries/usePromotion';
 import { useAuthStore } from '@/store/authStore';
@@ -216,10 +209,9 @@ export default function CouponsPage() {
         </View>
       )}
 
+      {/* 批2 阶段2（D8 审计）：loading spinner 换 PageSkeleton(list)，只换组件不动结构 */}
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        <PageSkeleton variant="list" rows={4} />
       ) : isError ? (
         <ErrorState message={t('coupons.loadError')} onRetry={() => refetch()} />
       ) : filtered.length === 0 ? (
@@ -362,10 +354,5 @@ const styles = StyleSheet.create({
   list: {
     padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

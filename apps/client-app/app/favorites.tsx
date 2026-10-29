@@ -9,7 +9,6 @@ import {
   Text,
   FlatList,
   ScrollView,
-  ActivityIndicator,
   Pressable,
   Alert,
   Platform,
@@ -33,6 +32,7 @@ import { useAddToCart } from '@/services/queries/useCart';
 import { useAuthStore } from '@/store/authStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { OfflineBanner } from '@/components/feedback/OfflineBanner';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { toast } from '@/store/toastStore';
 import { getApiErrorMessage } from '@/utils/error';
 import { resolveBadges } from '@/utils/resolveBadges';
@@ -344,10 +344,9 @@ export default function FavoritesPage() {
         </View>
       )}
 
+      {/* 批2 阶段2（D8 审计）：loading spinner 换 PageSkeleton(list)，只换组件不动结构 */}
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        <PageSkeleton variant="list" rows={5} />
       ) : isError ? (
         <ErrorState message={t('favorites.loadError')} onRetry={() => refetch()} />
       ) : !favorites || favorites.length === 0 ? (
@@ -577,10 +576,5 @@ const styles = StyleSheet.create({
   masonryCol: {
     flex: 1,
     gap: spacing.md,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

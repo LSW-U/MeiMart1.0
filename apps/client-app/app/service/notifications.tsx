@@ -7,7 +7,6 @@ import {
   View,
   Text,
   SectionList,
-  ActivityIndicator,
   Pressable,
   ScrollView,
   Alert,
@@ -24,6 +23,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { NotificationItem, TickerProvider } from '@/components/business/NotificationItem';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { Icon } from '@/components/ui/Icon';
 import { toast } from '@/store/toastStore';
 import {
@@ -400,10 +400,9 @@ export default function NotificationsPage() {
         </ScrollView>
       </View>
 
+      {/* 批2 阶段2（D8 审计）：loading spinner 换 PageSkeleton(list)，只换组件不动结构 */}
       {isLoading && isAuthenticated ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        <PageSkeleton variant="list" rows={5} />
       ) : isError ? (
         <ErrorState message={t('errors.notifications')} onRetry={() => refetch()} />
       ) : filtered.length === 0 ? (
@@ -668,10 +667,5 @@ const styles = StyleSheet.create({
   list: {
     padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

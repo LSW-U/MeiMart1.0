@@ -5,16 +5,7 @@
 // 批5 拆分（C-P3-14）：STATUS_VISUAL/ON_PRIMARY 抽到 order-detail/shared.tsx，
 //   Header/Timeline/BottomActions（含 handleRepeatOrder）抽到 order-detail/sections/。
 //   主文件保留路由壳 + 数据组装 + OrderItemRow/SummaryRow，行为零变更（纯搬移）。
-import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  Platform,
-} from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Alert, Pressable, Platform } from 'react-native';
 import { useState } from 'react';
 import * as expoClipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -36,6 +27,7 @@ import { useLocalizer } from '@/i18n';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { StatusBadge } from '@/components/business/StatusBadge';
 import { Icon } from '@/components/ui/Icon';
 import { useOrder, useCancelOrder, useDecideSuggestion } from '@/services/queries/useOrders';
@@ -79,9 +71,8 @@ export default function OrderDetailPage() {
       >
         <StatusBarConfig />
         <Header title={t('order.detail')} />
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        {/* 批2 阶段2（D8 审计）：loading spinner 换 PageSkeleton(detail)，只换组件不动结构 */}
+        <PageSkeleton variant="detail" />
       </SafeAreaWrapper>
     );
   }
@@ -773,11 +764,6 @@ const styles = StyleSheet.create({
     padding: layout['container-margin'],
     gap: spacing.md,
     paddingBottom: 120,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   flex1: { flex: 1 },
   card: {

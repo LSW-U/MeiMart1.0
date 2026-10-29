@@ -190,9 +190,9 @@ describe('批3 B1 常购清单页', () => {
     expect(screen.getByText('home.frequentlyBoughtEmptyDesc')).toBeTruthy();
   });
 
-  it('loading 态 → LoadingOverlay（progressbar）', () => {
+  it('loading 态 → PageSkeleton 骨架屏（批2 阶段2 换组件）', () => {
     mockBuyAgain = { isLoading: true };
     render(<FrequentlyBoughtPage />, { wrapper });
-    expect(screen.root.findByProps({ accessibilityRole: 'progressbar' })).toBeTruthy();
+    expect(screen.root.findByProps({ testID: 'page-skeleton' })).toBeTruthy();
   });
 });

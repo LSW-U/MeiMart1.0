@@ -8,7 +8,6 @@ import {
   View,
   Text,
   FlatList,
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -23,6 +22,7 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { EmptyState } from '@/components/feedback/EmptyState';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader/PrimaryHeader';
 import { Icon } from '@/components/ui/Icon';
 import { toast } from '@/store/toastStore';
@@ -157,10 +157,9 @@ export default function AddressListPage() {
         }
       />
 
+      {/* 批2 阶段2（D8 审计）：loading spinner 换 PageSkeleton(list)，只换组件不动结构 */}
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        <PageSkeleton variant="list" rows={4} />
       ) : isError ? (
         <ErrorState
           message={t('address.loadFailed', { defaultValue: 'Failed to load addresses' })}
@@ -541,11 +540,6 @@ const styles = StyleSheet.create({
   scroll: {
     padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyBox: {
     flex: 1,

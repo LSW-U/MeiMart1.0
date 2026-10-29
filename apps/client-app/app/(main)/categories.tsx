@@ -12,6 +12,7 @@ import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { EmptyState } from '@/components/feedback/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Icon } from '@/components/ui/Icon';
 import { HorizontalProductCard } from '@/components/business/HorizontalProductCard/HorizontalProductCard';
@@ -311,11 +312,8 @@ export default function CategoriesPage() {
               {prodError ? (
                 <ErrorState message={t('errors.products')} onRetry={() => prodRefetch()} />
               ) : !products || products.length === 0 ? (
-                <View style={styles.emptyWrap}>
-                  <Text style={[styles.emptyText, { color: colors['on-surface-variant'] }]}>
-                    {t('category.empty')}
-                  </Text>
-                </View>
+                /* 批2 阶段2（D8 审计裁定 3）：自实现空态 Text 换 EmptyState（loading 局部骨架保留豁免） */
+                <EmptyState title={t('category.empty')} icon="magnify" />
               ) : (
                 <View style={styles.hotListColumn}>
                   {/* §9-2 横向化 - 竖版双列 → 纵向列表 HorizontalProductCard */}
@@ -622,13 +620,6 @@ const styles = StyleSheet.create({
   // Why: §9-2 横向化 - 纵向列表
   hotListColumn: {
     gap: spacing.md,
-  },
-  emptyWrap: {
-    paddingVertical: spacing.xxl,
-    alignItems: 'center',
-  },
-  emptyText: {
-    ...typography['body-md'],
   },
   viewAllBtn: {
     width: '100%',

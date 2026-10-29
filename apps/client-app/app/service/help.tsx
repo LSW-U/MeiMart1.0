@@ -20,6 +20,7 @@ import {
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
+import { EmptyState } from '@/components/feedback/EmptyState';
 import { Icon } from '@/components/ui/Icon';
 
 const FAQ_IDS = ['q1', 'q2', 'q3', 'q4', 'q5'] as const;
@@ -179,24 +180,13 @@ export default function HelpCenterPage() {
               </Text>
             </View>
             {visibleFaqs.length === 0 ? (
-              /* 空态：search_off + noResult + 引导（原型 .empty） */
-              <View
-                style={[
-                  styles.empty,
-                  { backgroundColor: colors['surface-container-lowest'] },
-                  shadowPresets.sm,
-                ]}
-              >
-                <View style={styles.emptyIconWrap}>
-                  <Icon symbol="search_off" size={44} color={colors['on-surface-variant']} />
-                </View>
-                <Text style={[styles.emptyTitle, { color: colors['on-surface'] }]}>
-                  {t('service.help.noResult')}
-                </Text>
-                <Text style={[styles.emptyDesc, { color: colors['on-surface-variant'] }]}>
-                  {t('service.help.noResultDesc')}
-                </Text>
-              </View>
+              /* 批2 阶段2（D8 审计裁定 6）：自实现空态面板换 EmptyState；
+                 icon search_off 经 symbolToMc 映射为 magnify-close（P21 Q2 先例） */
+              <EmptyState
+                title={t('service.help.noResult')}
+                description={t('service.help.noResultDesc')}
+                icon="search_off"
+              />
             ) : (
               <FaqList
                 faqIds={visibleFaqs}
@@ -569,28 +559,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 21,
     flex: 1,
-  },
-  // 搜索空态（原型 .empty）
-  empty: {
-    borderRadius: borderRadius.xl,
-    paddingVertical: spacing.xxl + 4,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-  },
-  emptyIconWrap: {
-    opacity: 0.35,
-  },
-  emptyTitle: {
-    ...typography['body-md'],
-    fontWeight: '600',
-    marginTop: spacing.sm + 2,
-  },
-  emptyDesc: {
-    ...typography['body-sm'],
-    fontSize: 12,
-    marginTop: spacing.xs,
-    lineHeight: 18,
-    textAlign: 'center',
   },
   // 联系 CTA（原型 .contact-bar：紧凑横排白底）
   contactRow: {

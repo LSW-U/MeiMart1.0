@@ -13,7 +13,7 @@ import { useTheme, spacing, layout, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { EmptyState } from '@/components/feedback/EmptyState';
-import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
@@ -90,7 +90,8 @@ export default function FrequentlyBoughtPage() {
       >
         <StatusBarConfig />
         <Header title={headerTitle} />
-        <LoadingOverlay visible />
+        {/* 批2 阶段2（D8 审计）：loading 遮罩换 PageSkeleton(grid)，只换组件不动结构 */}
+        <PageSkeleton variant="grid" />
       </SafeAreaWrapper>
     );
   }

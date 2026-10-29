@@ -25,7 +25,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { CartIconButton } from '@/components/business/CartIconButton/CartIconButton';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 // P8-6 R3/R5：Recommended 复用 MasonryProductCard + resolveBadges（与首页/P7 统一）
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
 import { SearchBar } from '@/components/business/SearchBar';
@@ -236,24 +236,8 @@ export default function SearchResultsPage() {
       <Header key={params.q} initialKeyword={params.q ?? ''} onSubmitSearch={handleSubmitSearch} />
 
       {isLoading ? (
-        // P8-3 F1 骨架屏：4 卡片占位（图片+名+价），替代 spinner，视觉延续性好
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent}>
-          <View style={[styles.sortWrap, { borderColor: colors['outline-variant'] }]}>
-            <Skeleton width={80} height={32} radius={8} />
-            <Skeleton width={60} height={32} radius={8} />
-          </View>
-          <View style={styles.grid}>
-            {[0, 1, 2, 3].map((i) => (
-              <View key={i} style={styles.gridCell}>
-                <View style={styles.skeletonCard}>
-                  <Skeleton width="100%" height={140} radius={8} />
-                  <Skeleton width="80%" height={14} variant="text" />
-                  <Skeleton width="50%" height={16} variant="text" />
-                </View>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
+        // 批2 阶段2（D8 审计）：自实现 4 卡骨架拼装换 PageSkeleton(grid)，shimmer 流光统一
+        <PageSkeleton variant="grid" />
       ) : isError ? (
         <ErrorState message={t('errors.products')} onRetry={() => refetch()} />
       ) : !results || results.length === 0 ? (
@@ -474,9 +458,6 @@ const styles = StyleSheet.create({
   },
   loadMoreText: {
     ...typography['body-sm'],
-  },
-  skeletonCard: {
-    gap: spacing.sm,
   },
   // P8-6 R4：Recommended 两列瀑布流（同 home.tsx / P7 search/index masonry 模式）
   // A-P2-2：原 scrollContent 的横向 padding 由 footerSection 承担（FlatList footer 无页级 padding）

@@ -4,16 +4,7 @@
 // Fix-19: Primary tais-pattern Header + 商品缩略图 + TaisDivider + You May Also Like + Checkout Bar
 import { useCallback, useMemo, useState } from 'react';
 import { formatPrice } from '@/utils/format';
-import {
-  StyleSheet,
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-  Platform,
-} from 'react-native';
+import { StyleSheet, View, Text, Pressable, ScrollView, Alert, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
@@ -44,6 +35,7 @@ import { useCoupons } from '@/services/queries/usePromotion';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import type { CartItem } from '@/types';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 
 // Why: "PEOPLE ALSO BOUGHT" 推荐改用真实商品（避免 mock id 'p003' 跳转详情 404）
 // 换一批按钮（批2 推广至购物车页 2026-10-17）：offset 步进翻页，短批回绕 offset=0；
@@ -248,10 +240,9 @@ export default function CartPage() {
         />
 
         {isOffline && <OfflineBanner />}
+        {/* 批2 阶段2（D8 审计）：loading 位换 PageSkeleton(list)，只换组件不动结构 */}
         {isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <PageSkeleton variant="list" rows={5} />
         ) : isError ? (
           // T2-B: 401 已由全局 QueryCache onError → clearAuth → RootAuthGate 跳登录兜底（queryClient.ts），
           // 此处只处理非 401 错误（500/网络）
@@ -718,11 +709,6 @@ const styles = StyleSheet.create({
     color: ON_PRIMARY,
     ...typography['label-caps'],
     fontWeight: '700',
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyBox: {
     flex: 1,

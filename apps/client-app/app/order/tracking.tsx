@@ -31,7 +31,7 @@ import { PriceText } from '@/components/ui/PriceText';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { StatusBadge } from '@/components/business/StatusBadge';
 import { Icon } from '@/components/ui/Icon';
-import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useOrderTracking } from '@/services/queries/useTracking';
 import { toast } from '@/store/toastStore';
@@ -107,7 +107,8 @@ export default function DeliveryTrackingPage() {
       >
         <StatusBarConfig />
         <Header title={t('tracking.title', { defaultValue: 'Order Tracking' })} />
-        <LoadingOverlay visible />
+        {/* 批2 阶段2（D8 审计）：loading 遮罩换 PageSkeleton(detail)，只换组件不动结构 */}
+        <PageSkeleton variant="detail" />
       </SafeAreaWrapper>
     );
   }

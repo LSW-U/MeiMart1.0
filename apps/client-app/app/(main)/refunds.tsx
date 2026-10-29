@@ -2,15 +2,7 @@
 // 数据源：useRefunds（GET /client/refunds -> RefundRaw[]），useCreateRefund 乐观更新联动
 // 点击退款卡跳 /order/after-sales-detail（P14 售后详情页，传 refund.id）
 import { useState } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  FlatList,
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-} from 'react-native';
+import { StyleSheet, View, Text, FlatList, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -29,6 +21,7 @@ import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import type { RefundRaw } from '@/services/refunds';
 import type { AppColors } from '@/theme';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 
 // 原因：状态色块上的固定白字（pending/approved 底色），dark 模式不变（同 cart.tsx ON_PRIMARY）
 const ON_PRIMARY = '#ffffff';
@@ -123,10 +116,9 @@ export default function RefundsPage() {
           </ScrollView>
         </View>
 
+        {/* 批2 阶段2（D8 审计）：loading 位换 PageSkeleton(list)，只换组件不动结构 */}
         {isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <PageSkeleton variant="list" rows={5} />
         ) : isError ? (
           <ErrorState message={t('errors.generic')} onRetry={() => refetch()} />
         ) : filtered.length === 0 ? (
@@ -233,11 +225,6 @@ const styles = StyleSheet.create({
   tabText: {
     ...typography['body-sm'],
     fontWeight: '600',
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyBox: {
     flex: 1,

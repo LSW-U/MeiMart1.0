@@ -17,7 +17,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { PriceText } from '@/components/ui/PriceText';
 import { TimelineStep } from '@/components/business/TimelineStep';
 import { Icon } from '@/components/ui/Icon';
-import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useOrder } from '@/services/queries/useOrders';
 import { useCancelRefund, useRefundDetail, useDisputeRefund } from '@/services/queries/useRefunds';
@@ -74,7 +74,8 @@ export default function AfterSalesDetailPage() {
       >
         <StatusBarConfig />
         <PrimaryHeader title={t('afterSales.detailTitle')} showBack onBackPress={handleBack} />
-        <LoadingOverlay visible />
+        {/* 批2 阶段2（D8 审计）：loading 遮罩换 PageSkeleton(detail)，只换组件不动结构 */}
+        <PageSkeleton variant="detail" />
       </SafeAreaWrapper>
     );
   }

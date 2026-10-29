@@ -32,7 +32,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { PriceText } from '@/components/ui/PriceText';
-import { LoadingOverlay } from '@/components/feedback/LoadingOverlay';
+import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { toast } from '@/store/toastStore';
 import { getApiErrorMessage } from '@/utils/error';
@@ -147,7 +147,8 @@ export default function AfterSalesApplyPage() {
       >
         <StatusBarConfig />
         <PrimaryHeader title={t('afterSales.applyTitle')} showBack onBackPress={handleBack} />
-        <LoadingOverlay visible />
+        {/* 批2 阶段2（D8 审计）：loading 遮罩换 PageSkeleton(detail)，只换组件不动结构 */}
+        <PageSkeleton variant="detail" />
       </SafeAreaWrapper>
     );
   }
