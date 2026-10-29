@@ -1,0 +1,4 @@
+{
+  "entries": [],
+  "_note": "批3 基线建立时点（HEAD 9d2bd29）全仓 symbol 字面量与 iconMapping.ts 差集为 0，无存量记账项。新增未映射 symbol 会被拦截：正向修法 = 在 src/theme/iconMapping.ts 加映射（MC 无对应时选近语义图标并注释）。"
+}

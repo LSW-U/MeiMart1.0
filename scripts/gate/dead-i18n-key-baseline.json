@@ -1,0 +1,789 @@
+{
+  "entries": [
+    {
+      "key": "address.delete",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.cancelNotSupported",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.contactLabel",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.mockProduct",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.mockReason",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.reasons.changeMind",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.reasons.damaged",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.reasons.deliveryTooSlow",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.reasons.expired",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.reasons.other",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.reasons.outOfStock",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.reasons.quality",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.reasons.qualityIssue",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.reasons.shortage",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.reasons.wrongItem",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.selectReason",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.submittedTitle",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.timeline.cashDelivered",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.timeline.cashDelivering",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.timeline.cashDeliveringDesc",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.timeline.completed",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.timeline.refundProcessing",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.timeline.refundProcessingDesc",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.timeline.reviewing",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.timeline.reviewingDesc",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "afterSales.uploading",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "app.name",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "app.tagline",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.agreeTerms",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.confirmPassword",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.errors.codeSent",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.errors.invalidPassword",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.errors.invalidPhone",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.loginWithPassword",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.loginWithSms",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.newPassword",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.notice",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.phone",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.pwdHintMedium",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.pwdHintStrong",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.pwdHintWeak",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.pwdMedium",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.pwdStrong",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.pwdWeak",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.register",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.relogin",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.sendCode",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "auth.smsCode",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "cart.delete",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "cart.goShopping",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "cart.offlineBlock",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "cart.removeAction",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "cart.removeConfirm",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "cart.removeWithNameConfirm",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "cart.selectAll",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "cart.selectedCount",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "cart.title",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "cart.total",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.beauty",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.beautyTitle",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.crafts",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.craftsTitle",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.dealsA11y",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.dealsSub",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.dealsTitle",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.fashion",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.fashionTitle",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.food",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.foodTitle",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.freshProduce",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.home",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.homeTitle",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.localSnacks",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.tech",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "category.techTitle",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "checkout.coupon.minOrder",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "checkout.itemQty",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "checkout.payment.alipay",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "checkout.payment.card",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "checkout.payment.cash",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "checkout.payment.laispay",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "checkout.payment.wechat",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "checkout.submit",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.editAvatarHint",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.empty",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.finish",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.network.offline",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.network.restored",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.network.weak",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.notice",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.previous",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.resetApp",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.save",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.share",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.submit",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.submitted",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.view",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "common.viewAvatarHint",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "coupons.empty",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "coupons.emptyDesc",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "home.flashSale",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "home.newArrivals",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "home.reorderLabel",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "home.search",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "onboarding.tagline.cooperative",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "onboarding.tagline.market",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.a11y.productItem",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.actions.confirm",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.actions.refund",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.createdAtLabel",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.empty",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.itemViewLabel",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.list",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.progress",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.status.paid",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.status.refunding",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.statusHint.cancelled",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.statusHint.delivered",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.statusHint.paid",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.statusHint.pending",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.statusHint.refunding",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.statusHint.shipped",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.statusLabel",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.suggestion.diffCharge",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.suggestion.pendingBadgeA11y",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "order.trackingNo",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.badgeFresh",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.description",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.favorited",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.priceAlertSubscribed",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.restockAlertSubscribed",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.spec100g",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.spec10kg",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.spec1kg",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.spec250g",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.spec500g",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.spec5kg",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.specCoarse",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.specFine",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.specGrind",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.specMedium",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.specWeight",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.specWholeBean",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.specification",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.stock",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.tab.details",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.tab.product",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.tab.recommended",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "product.tab.reviews",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "profile.about",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "profile.addresses",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "profile.feedback",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "profile.language",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "profile.pointsValue",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "profile.theme",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "profileEdit.emailInvalid",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "profileEdit.nameRequired",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "profileEdit.nameTooLong",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "profileEdit.phonePlaceholder",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "result.acceptingReservationGeneric",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "result.countdownDesc",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "result.expiredDesc",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "result.orderAmount",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "result.orderSupport",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "result.payFailReason",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "result.paySupport",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "result.title",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "review.a11y.photoThumb",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "review.addPhoto",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "review.fillContent",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "review.rating.bad",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "review.rating.good",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "review.rating.great",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "review.rating.okay",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "review.rating.terrible",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "review.successTitle",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.feedback.types.feature",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.feedback.types.order",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.feedback.types.other",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.feedback.types.payment",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.feedback.types.product",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.feedback.types.shipping",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.feedback.uploading",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.help.hotTitle",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.help.intro",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.notifications.a11y.settings",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.notifications.cta.confirmReplacement",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.notifications.cta.viewOrder",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.notifications.distance",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.notifications.endsIn",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.notifications.remaining",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.notifications.timeEarlier",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.notifications.timeToday",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.notifications.timeYesterday",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "service.workHours",
+      "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "splash.welcome",
+      "reason": "存量（批3 基线建立时点）"
+    }
+  ],
+  "_note": "批3 基线建立时点（HEAD 9d2bd29）死 key 196 个（存量记账，不拦截）。清理须「删 key 与删引用原子 commit」，逐批吸收时同步删本基线条目。"
+}

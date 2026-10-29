@@ -55,6 +55,10 @@ jobs:
           pnpm -F mei-mart-app check:a11y
           # 第四轮修复 P0-1：mock PII 扫描门禁（手机号/中文人名，双向验证 6 处精确命中）
           pnpm -F mei-mart-app run check:gate-pii
+          # 数据层工程治理批3：icon symbol 映射门禁 + 死 i18n key 门禁
+          # （Q6 语义：存量记账不拦截 / 新增拦截，基线见 scripts/gate/*-baseline.json）
+          pnpm -F mei-mart-app run check:gate-icon
+          pnpm -F mei-mart-app run check:gate-dead-key
 
   # 批次1 审查 P1-1 修复：原 job 不 install + 配置在 apps/client-app/ 子目录 +
   # PR 时校验 feature branch 多条中间 commit，三重失效。squash-merge 工作流下

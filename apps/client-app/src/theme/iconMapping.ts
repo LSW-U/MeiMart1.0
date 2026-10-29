@@ -197,7 +197,15 @@ const FALLBACK_NAME = 'circle-outline' as IconName;
  * @returns MaterialCommunityIcons name（如 'cart'）；未知返回兜底图标
  */
 export function symbolToMc(symbolName: string): IconName {
-  return SYMBOL_TO_MC[symbolName] ?? FALLBACK_NAME;
+  const resolved = SYMBOL_TO_MC[symbolName];
+  if (!resolved) {
+    // 批3 D8：缺映射 dev 告警（历史上 3 次静默兜底 circle-outline 均用户实测才暴露：
+    // stars / refresh / content_paste）。兜底保留防运行时崩溃；编译期由
+    // scripts/gate/icon-symbol-check.py 拦截（存量记账/新增拦截）。
+    if (__DEV__) console.warn('[icon] unmapped symbol', symbolName);
+    return FALLBACK_NAME;
+  }
+  return resolved;
 }
 
 export type { IconName };

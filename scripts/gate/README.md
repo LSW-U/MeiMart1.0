@@ -6,10 +6,14 @@ Q6 语义（总指挥拍板）：**存量记账不拦截 / 新增拦截**。两�
 |---|---|---|---|
 | `mock-escape-check.py` | 两端 `check:gate-mock` | FORCE_MOCK / pay-mock / 恒mock / mockDb（测试文件与 mockDb.ts 定义豁免） | `mock-escape-baseline.json`（键=文件::模式） |
 | `fake-green-check.py` | 两端 `check:gate-fake-green` | 失败语义用例名（error/fail/404/…）× 仅 toBeTruthy 断言 | `fake-green-baseline.json`（键=文件::标题前24字） |
+| `icon-symbol-check.py` | client `check:gate-icon`（数据层批3 D8） | JSX `symbol="…"` / 对象 `symbol: '…'` / `symbolToMc('…')` 字面量 vs `iconMapping.ts` 映射表差集 | `icon-symbol-baseline.json`（键=文件::symbol） |
+| `dead-i18n-key-check.py` | client `check:gate-dead-key`（数据层批3 D9） | locales/en.json key vs 代码引用差集（`t()` + `labelKey` 等 *Key 间接引用 + mocks/data JSON + 动态前缀放行） | `dead-i18n-key-baseline.json`（键=key 名） |
 
 - 存量命中 → 计数输出 exit 0；基线外新增 → exit 1 列明 文件:行。
 - 新增逃逸/假绿处置：修掉，或带豁免理由写入对应 baseline（reason 字段）。
 - 基线项已无命中时脚本会提示同步删基线（不拦截）。
+- dead-i18n-key 特别提示（脚本输出自带）：**删 key 与删引用须原子 commit**
+  （分 commit 会互打 check-i18n-keys 的 ERR 线与本门禁）。
 
 同批 B1：`check-i18n-keys.py`（两端各自 scripts/）新增 B1 记账段
 （service 层 `{ zh:` 烘焙字面量 + 硬编码中文兜底），默认记账 exit 0，`--strict` 才拦截
