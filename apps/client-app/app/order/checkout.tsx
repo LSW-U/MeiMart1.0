@@ -148,7 +148,6 @@ export default function CheckoutPage() {
   // Why: 默认 ALLOW（后端同默认）；SPECIFY 打开选品面板，从购物车商品里勾选可接受的替换品
   //（白名单 SKU 集合随单提交，后端 superRefine 强校验 SPECIFY⇒白名单非空）
   const [replacementPolicy, setReplacementPolicy] = useState<'ALLOW' | 'SPECIFY' | 'NONE'>('ALLOW');
-  const [showSpecPicker, setShowSpecPicker] = useState(false);
   const [allowedSkuIds, setAllowedSkuIds] = useState<string[]>([]);
   // SPECIFY 切换时初始化白名单 = 当前选中项的 skuId（自身默认可替换为同 SKU 缺货时的同款是非法的，
   // 后端会拒自指；这里给用户从购物车里挑其他品的起点——默认全不选，用户至少勾一个才能提交）
