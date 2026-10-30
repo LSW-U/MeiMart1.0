@@ -1,4 +1,4 @@
-import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { productApi, type FrequentBundle } from '@/services/products';
 import { useAuthStore } from '@/store/authStore';
 import { useOffsetInfinite } from '@/hooks/useOffsetInfinite';
@@ -131,25 +131,34 @@ export function useFrequentBundle(limit = 5) {
  * 搜索结果无限分页 hook（P8 决策 2-B 后端排序 + 决策 3-B 真实分页）
  *
  * - sortBy 变 → queryKey 变 → 自动重查第一页（切换排序触发重新搜索）
- * - onEndReached 调 fetchNextPage 取下一页（getNextPageParam 按 hasMore 判断）
- * - mock 模式 hasMore=false，不触发第二页（一次性返全部）
+ * - onEndReached 调 fetchNextPage 取下一页
+ * - mock 模式一次性返全部（短批/hasMore=false → hasNextPage=false 不触发第二页）
  * - pages.flatMap(p => p.items) 拼接所有已加载页；pages[0].total 是搜索结果总数
  *
- * 批2 D4：queryFn 形态是 page 式（page 从 1 起 + hasMore 终止），与 offset+短批终止
- * 模型不同——**不收编** useOffsetInfinite（hasMore 语义不是页长可判定的，换 hook 需
- * 后端改 offset 形态或前端造 hasMore→offset 折算，均超批2 范围）。保持 useInfiniteQuery
- * 原实现不变。
+ * 前端接线批 批1 D3（方案v1 20261030）：迁 useOffsetInfinite，消费后端已交付的
+ * /client/products/search offset+limit 契约（bb1820d：双口径互斥，传 offset/limit 走
+ * offset 分页 skip=offset，limit 默认 20/max 100；offset=0&limit=20 与 page=1 结果集一致）。
+ *
+ * - offset 推进：pageParam 即 offset（0→20→40…），limit=20 对齐后端默认页大小
+ * - 满页短批终止：页长判定（items.length === limit 才有下一页），hasNextPage 收尾正确；
+ *   后端 offset 口径仍返 hasMore/total，但前端以页长判定为准（方案 §六 风险项拍板）
+ * - 行为等价红线：页形状保持 {items,total,hasMore}（itemsOf 提业务数组做满页判定），
+ *   消费方 results.tsx 的 pages.flatMap(p=>p.items)/pages[0].total 与两个页面测试的
+ *   hook 层 mock 形状零改动；首屏同 sortBy 结果与迁移前一致（B1.2 测试断言）
+ * - keepPreviousData: true 沿用迁移前 placeholderData（换 keyword 保旧列表防闪烁）
+ * - exceptions 文档 search 例外行已摘除（docs/offset-infinite-exceptions.md）
  */
+const SEARCH_PAGE_LIMIT = 20;
+
 export function useProductSearch(keyword: string, sortBy: ProductSortKey = 'all') {
-  return useInfiniteQuery({
+  return useOffsetInfinite<Product, { items: Product[]; hasMore: boolean; total: number }>({
     queryKey: PRODUCT_SEARCH_KEY(keyword, sortBy),
-    queryFn: ({ pageParam }) => productApi.search(keyword, { page: pageParam, sortBy }),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length + 1 : undefined),
+    fetchPage: (offset) => productApi.search(keyword, { offset, limit: SEARCH_PAGE_LIMIT, sortBy }),
+    itemsOf: (page) => page.items,
+    limit: SEARCH_PAGE_LIMIT,
     enabled: keyword.trim().length > 0,
-    placeholderData: keepPreviousData,
+    keepPreviousData: true,
     staleTime: STALE_TIME.search,
-    networkMode: 'offlineFirst',
   });
 }
 

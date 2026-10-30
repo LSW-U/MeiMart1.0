@@ -253,7 +253,15 @@ export const productApi = {
 
   async search(
     keyword: string,
-    opts?: { page?: number; pageSize?: number; sortBy?: string },
+    opts?: {
+      page?: number;
+      pageSize?: number;
+      /** offset 口径（前端接线批 批1 D3 20261030）：与 page 互斥，useProductSearch 消费 */
+      offset?: number;
+      /** offset 口径页大小（后端默认 20/max 100），仅与 offset 配合 */
+      limit?: number;
+      sortBy?: string;
+    },
   ): Promise<{ items: Product[]; hasMore: boolean; total: number }> {
     if (isMockMode) {
       const lower = keyword.toLowerCase();
@@ -268,11 +276,16 @@ export const productApi = {
     }
     // Why: 保留 hasMore/total（之前丢掉导致无法真实分页），P8 决策 3-B
     // Why: C方案 §6 F1 - 补 pageSize 透传（联想 pageSize=3），P8 useProductSearch 不传 pageSize 行为不变
+    // Why: 前端接线批 批1 D3 20261030 - 补 offset/limit 透传（后端 bb1820d 双口径：
+    //   传 offset/limit 任一即走 offset 分页 skip=offset；联想 useSearchProductsSuggest
+    //   只传 pageSize 走 page 口径行为不变）
     const res = await api.get<ProductListResponse>('/client/products/search', {
       params: {
         keyword,
         ...(opts?.page && { page: opts.page }),
         ...(opts?.pageSize && { pageSize: opts.pageSize }),
+        ...(opts?.offset !== undefined && { offset: opts.offset }),
+        ...(opts?.limit !== undefined && { limit: opts.limit }),
         ...(opts?.sortBy && { sortBy: opts.sortBy }),
       },
     });
