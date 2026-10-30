@@ -615,7 +615,6 @@ export default function CheckoutPage() {
                       testID={`replacement-policy-${opt.key}`}
                       onPress={() => {
                         setReplacementPolicy(opt.key);
-                        if (opt.key === 'SPECIFY') setShowSpecPicker(true);
                       }}
                       accessibilityRole="radio"
                       accessibilityState={{ selected }}
