@@ -204,7 +204,10 @@
     "a11y": {
       "banner": "Banner: {{title}}",
       "bannerDot": "Ir para o banner {{index}} de {{total}}"
-    }
+    },
+    "frequentlyBoughtAllAdded": "{{count}} itens adicionados ao carrinho",
+    "frequentlyBoughtPartialAdded": "{{ok}} itens adicionados, {{failed}} não adicionados (ignorados)",
+    "frequentlyBoughtAllFailed": "Falha ao adicionar ao carrinho"
   },
   "promotion": {
     "flashDeals": "Ofertas Relâmpago",
@@ -853,7 +856,9 @@
     "placingOrder": "A fazer pedido...",
     "address": {
       "change": "Alterar",
-      "changeA11y": "Alterar endereço"
+      "changeA11y": "Alterar endereço",
+      "addNew": "Novo endereço",
+      "addNewA11y": "Adicionar novo endereço sem sair do checkout"
     },
     "summary": {
       "subtotal": "Subtotal",
@@ -889,6 +894,15 @@
       "noneDesc": "Sem substituição — itens esgotados são reembolsados",
       "pickHint": "Escolha itens de substituição permitidos ({{count}} selecionados)",
       "specifyEmpty": "Escolha pelo menos um item, ou mude de opção"
+    },
+    "addressModal": {
+      "title": "Novo endereço",
+      "nameRequired": "Indique o nome do destinatário",
+      "phoneRequired": "Indique o número de telefone",
+      "phoneInvalid": "Número de telefone inválido (e.g. 7712 3456)",
+      "detailRequired": "Indique o endereço detalhado",
+      "savedSelected": "Endereço guardado e selecionado",
+      "parseFailed": "Não foi possível reconhecer nome ou telefone"
     }
   },
   "result": {
@@ -1331,6 +1345,7 @@
     "E-AUTH-001": "Falha na autenticação, entre novamente",
     "E-AUTH-002": "Token expirado",
     "E-AUTH-003": "Sem permissão de acesso",
+    "E-ORDER-001": "Endereço de entrega sem localização — escolha um ponto no mapa em Editar Endereço",
     "notFoundTitle": "Página não encontrada",
     "notFoundDesc": "A página não existe",
     "openLinkFailed": "Não foi possível abrir a app para este link",

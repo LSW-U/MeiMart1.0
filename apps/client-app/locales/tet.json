@@ -204,7 +204,10 @@
     "a11y": {
       "banner": "Banner: {{title}}",
       "bannerDot": "Ba banner {{index}} husi {{total}}"
-    }
+    },
+    "frequentlyBoughtAllAdded": "{{count}} sasan tau iha karrinho",
+    "frequentlyBoughtPartialAdded": "{{ok}} tau iha karrinho, {{failed}} la tau (skip)",
+    "frequentlyBoughtAllFailed": "Falla tau iha karrinho"
   },
   "promotion": {
     "flashDeals": "Ofertas lais",
@@ -853,7 +856,9 @@
     "placingOrder": "Halo pedidu hela...",
     "address": {
       "change": "Troka",
-      "changeA11y": "Troka enderesu"
+      "changeA11y": "Troka enderesu",
+      "addNew": "Enderesu foun",
+      "addNewA11y": "Aumenta enderesu foun la sai husi checkout"
     },
     "summary": {
       "subtotal": "Subtotal",
@@ -889,6 +894,15 @@
       "noneDesc": "La troka — produtu mamuk foun devolde direta",
       "pickHint": "Hili produtu troka ne'ebe autoriza ({{count}} hili tiha)",
       "specifyEmpty": "Hili minimum ida produtu troka, ka muda opseloken seluk"
+    },
+    "addressModal": {
+      "title": "Enderesu foun",
+      "nameRequired": "Presiza rezebedór naran",
+      "phoneRequired": "Presiza telefone",
+      "phoneInvalid": "Telefone la los (e.g. 7712 3456)",
+      "detailRequired": "Presiza enderesu detalhadu",
+      "savedSelected": "Enderesu rai ona no hili tiha ona",
+      "parseFailed": "La konsege rekoñese naran ka telefone"
     }
   },
   "result": {
@@ -1331,6 +1345,7 @@
     "E-AUTH-001": "Autentikasaun falla, favor tama fali",
     "E-AUTH-002": "Token espira ona",
     "E-AUTH-003": "La iha permisu asesaun",
+    "E-ORDER-001": "Enderesu presiza lokalizasaun — hili ponto iha mapa iha Pajina Edisaun Enderesu",
     "notFoundTitle": "Pájina la hetan",
     "notFoundDesc": "Pájina la iha",
     "openLinkFailed": "La bele loke aplikasaun ba link ne'e",

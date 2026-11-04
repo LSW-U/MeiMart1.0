@@ -204,7 +204,10 @@
     "a11y": {
       "banner": "Banner: {{title}}",
       "bannerDot": "Go to banner {{index}} of {{total}}"
-    }
+    },
+    "frequentlyBoughtAllAdded": "{{count}} items added to cart",
+    "frequentlyBoughtPartialAdded": "{{ok}} items added, {{failed}} not added (skipped)",
+    "frequentlyBoughtAllFailed": "Failed to add to cart"
   },
   "promotion": {
     "flashDeals": "Flash Deals",
@@ -853,7 +856,9 @@
     "placingOrder": "Placing order...",
     "address": {
       "change": "Change",
-      "changeA11y": "Change address"
+      "changeA11y": "Change address",
+      "addNew": "New address",
+      "addNewA11y": "Add a new address without leaving checkout"
     },
     "summary": {
       "subtotal": "Subtotal",
@@ -889,6 +894,15 @@
       "noneDesc": "No replacement — out-of-stock items are refunded",
       "pickHint": "Pick allowed replacement items ({{count}} selected)",
       "specifyEmpty": "Pick at least one replacement item, or switch to another option"
+    },
+    "addressModal": {
+      "title": "New address",
+      "nameRequired": "Recipient name is required",
+      "phoneRequired": "Phone number is required",
+      "phoneInvalid": "Invalid phone number (e.g. 7712 3456)",
+      "detailRequired": "Address detail is required",
+      "savedSelected": "Address saved and selected",
+      "parseFailed": "Could not recognize name or phone"
     }
   },
   "result": {
@@ -1331,6 +1345,7 @@
     "E-AUTH-001": "Authentication failed, please log in again",
     "E-AUTH-002": "Token expired",
     "E-AUTH-003": "No permission to access",
+    "E-ORDER-001": "Delivery address is missing location — pick a point on the map in Address Edit",
     "notFoundTitle": "Page not found",
     "notFoundDesc": "The page does not exist",
     "openLinkFailed": "Could not open the app for this link",

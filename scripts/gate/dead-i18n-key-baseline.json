@@ -783,6 +783,22 @@
     {
       "key": "splash.welcome",
       "reason": "存量（批3 基线建立时点）"
+    },
+    {
+      "key": "checkout.addressModal.nameRequired",
+      "reason": "zod schema 校验 message（运行时经 FormInput tError→t() 渲染，静态扫描不可见；业务增强批1 5.5）"
+    },
+    {
+      "key": "checkout.addressModal.phoneRequired",
+      "reason": "zod schema 校验 message（运行时经 FormInput tError→t() 渲染，静态扫描不可见；业务增强批1 5.5）"
+    },
+    {
+      "key": "checkout.addressModal.phoneInvalid",
+      "reason": "zod schema 校验 message（运行时经 FormInput tError→t() 渲染，静态扫描不可见；业务增强批1 5.5）"
+    },
+    {
+      "key": "checkout.addressModal.detailRequired",
+      "reason": "zod schema 校验 message（运行时经 FormInput tError→t() 渲染，静态扫描不可见；业务增强批1 5.5）"
     }
   ],
   "_note": "批3 基线建立时点（HEAD 9d2bd29）死 key 196 个（存量记账，不拦截）。清理须「删 key 与删引用原子 commit」，逐批吸收时同步删本基线条目。"

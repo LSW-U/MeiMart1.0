@@ -204,7 +204,10 @@
     "a11y": {
       "banner": "横幅：{{title}}",
       "bannerDot": "跳转到第 {{index}} 张，共 {{total}} 张"
-    }
+    },
+    "frequentlyBoughtAllAdded": "成功加购 {{count}} 项",
+    "frequentlyBoughtPartialAdded": "加购成功 {{ok}} 项，{{failed}} 项失败已跳过",
+    "frequentlyBoughtAllFailed": "加购失败"
   },
   "promotion": {
     "flashDeals": "限时特惠",
@@ -853,7 +856,9 @@
     "placingOrder": "下单中...",
     "address": {
       "change": "修改",
-      "changeA11y": "修改地址"
+      "changeA11y": "修改地址",
+      "addNew": "新增地址",
+      "addNewA11y": "新增地址，不离开结算页"
     },
     "summary": {
       "subtotal": "小计",
@@ -889,6 +894,15 @@
       "noneDesc": "不替换，缺货商品直接退款",
       "pickHint": "勾选允许的替换品（已选 {{count}}）",
       "specifyEmpty": "请至少勾选一个替换品，或改选其他选项"
+    },
+    "addressModal": {
+      "title": "新增地址",
+      "nameRequired": "请填写收货人",
+      "phoneRequired": "请填写手机号",
+      "phoneInvalid": "手机号格式不正确（如 7712 3456）",
+      "detailRequired": "请填写详细地址",
+      "savedSelected": "地址已保存并选中",
+      "parseFailed": "未能识别出姓名或电话"
     }
   },
   "result": {
@@ -1331,6 +1345,7 @@
     "E-AUTH-001": "认证失败，请重新登录",
     "E-AUTH-002": "Token 已过期",
     "E-AUTH-003": "无权限访问",
+    "E-ORDER-001": "配送地址缺少定位，请在地址编辑页选择地图点位",
     "notFoundTitle": "页面不存在",
     "notFoundDesc": "您访问的页面不存在",
     "openLinkFailed": "无法打开对应应用",

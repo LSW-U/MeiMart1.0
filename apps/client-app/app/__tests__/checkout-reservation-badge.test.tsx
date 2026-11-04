@@ -98,6 +98,8 @@ jest.mock('@/services/queries/useCart', () => ({
 
 jest.mock('@/services/queries/useAddress', () => ({
   useAddresses: () => ({ data: [], isLoading: false, isError: false }),
+  // 业务增强批1 5.5：checkout 引入 CheckoutAddressModal 消费 useCreateAddress，补 mock
+  useCreateAddress: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock('@/components/business/CouponPicker/CouponPicker', () => ({

@@ -5,11 +5,11 @@
 // 排序口径：后端聚合频次 desc + last_at desc（R-a 同源），前端不重排（P3-1 一致性红线）。
 // 交互：HorizontalProductCard 纵向列（§9-3 与 product/list 统一）+ 一键重购加购（每卡单独加购，
 //   沿用 handleAdd 错误映射三态：SOLD_OUT / STOCK_EXCEEDED / getApiErrorMessage）。
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, layout, typography } from '@/theme';
+import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { EmptyState } from '@/components/feedback/EmptyState';
@@ -49,6 +49,8 @@ export default function FrequentlyBoughtPage() {
     enabled: isAuthenticated,
   });
   const addMutation = useAddToCart();
+  // 一键加购全部进行中标志（防连点）
+  const [batchPending, setBatchPending] = useState(false);
 
   // Why: 与 product/list handleAdd 同款三态错误映射（第四轮批4 P3 一致口径）
   const handleAdd = useCallback(
@@ -77,6 +79,50 @@ export default function FrequentlyBoughtPage() {
     },
     [addMutation, t],
   );
+
+  // 业务增强批1 5.4（方案v2 2026-11-05）：一键加购全部
+  // ⚠️ 批量语义与 home 组合购 handleBundleAddAll（app/(main)/home.tsx:184-218，任一失败即停）
+  //    有意区分：常购清单是多商品批量复购，跳过售罄/超限/网络失败项继续加可用项，
+  //    收尾统一结果 toast（全成 / 部分成 X+Y / 全败），不逐条弹错——转化目标优先。
+  //    复用 useAddToCart 的 onMutate/onError/onSuccess 三件套（mutateAsync 走同一 mutation，
+  //    乐观更新/回滚/invalidate 不双写，规则 26）。
+  const handleAddAll = useCallback(() => {
+    if (batchPending || !products || products.length === 0) return;
+    setBatchPending(true);
+    (async () => {
+      let ok = 0;
+      let failed = 0;
+      for (const item of products) {
+        try {
+          await addMutation.mutateAsync({ product: item, quantity: 1 });
+          ok += 1;
+        } catch {
+          // 跳过失败项（SOLD_OUT/STOCK_EXCEEDED/网络错）继续加可用项——部分成功不回滚，
+          // 缓存一致性由 useAddToCart onMutate 回滚 + onSettled invalidate 校准
+          failed += 1;
+        }
+      }
+      if (ok === 0) {
+        toast.error(t('home.frequentlyBoughtAllFailed', { defaultValue: 'Failed to add to cart' }));
+      } else if (failed > 0) {
+        toast.success(
+          t('home.frequentlyBoughtPartialAdded', {
+            ok,
+            failed,
+            defaultValue: '{{ok}} added, {{failed}} skipped',
+          }),
+        );
+      } else {
+        toast.success(
+          t('home.frequentlyBoughtAllAdded', {
+            count: ok,
+            defaultValue: '{{count}} items added to cart',
+          }),
+        );
+      }
+      setBatchPending(false);
+    })();
+  }, [batchPending, products, addMutation, t]);
 
   const handleCardPress = useCallback((p: Product) => router.push(`/product/${p.id}`), []);
 
@@ -153,6 +199,25 @@ export default function FrequentlyBoughtPage() {
         <Text style={[styles.orderHint, { color: colors['on-surface-variant'] }]}>
           {t('home.frequentlyBoughtOrderHint')}
         </Text>
+        {/* 业务增强批1 5.4：一键加购全部（进行中禁用防连点） */}
+        <Pressable
+          testID="fb-add-all"
+          onPress={handleAddAll}
+          disabled={batchPending}
+          style={({ pressed }) => [
+            styles.addAllBtn,
+            { backgroundColor: colors.primary },
+            (pressed || batchPending) && { opacity: 0.7 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t('home.bundleAddAll', { defaultValue: 'Add all to cart' })}
+          accessibilityState={{ disabled: batchPending }}
+        >
+          <Icon symbol="add_shopping_cart" size={18} color={ON_PRIMARY} />
+          <Text style={[styles.addAllText, { color: ON_PRIMARY }]}>
+            {t('home.bundleAddAll', { defaultValue: 'Add all to cart' })}
+          </Text>
+        </Pressable>
         <View style={styles.listColumn}>
           {products.map((product) => (
             <HorizontalProductCard
@@ -242,6 +307,20 @@ const styles = StyleSheet.create({
   },
   listColumn: {
     gap: spacing.md,
+  },
+  // 5.4 一键加购全部（header primary 红底 → 页内主色实心胶囊，同 cart 结算条语系）
+  addAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    height: 40,
+    borderRadius: borderRadius.full,
+    marginBottom: spacing.md,
+  },
+  addAllText: {
+    ...typography['body-sm'],
+    fontWeight: '700',
   },
   scrollContent: {
     padding: layout['container-margin'],

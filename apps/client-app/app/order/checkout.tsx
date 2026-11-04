@@ -26,6 +26,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { CouponPicker } from '@/components/business/CouponPicker/CouponPicker';
+import { CheckoutAddressModal } from '@/components/business/CheckoutAddressModal/CheckoutAddressModal';
 import { useCart, useCheckoutPreview, useClearCart } from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
 import { useAddressSelectionStore } from '@/store/addressSelectionStore';
@@ -84,6 +85,8 @@ export default function CheckoutPage() {
   // Why: real 模式选券 —— selectedCouponCode 驱动 preview 重查（key 含 couponCode），后端聚合 discount
   const [selectedCouponCode, setSelectedCouponCode] = useState<string | undefined>(undefined);
   const [showCouponModal, setShowCouponModal] = useState(false);
+  // 业务增强批1 5.5：页内快速新增地址 Modal（保存后自动选中，留在 checkout）
+  const [addressModalVisible, setAddressModalVisible] = useState(false);
   // Why: 券列表（Modal 数据源，real + mock 都拉，mock 走 mockDb 适配）
   const { data: coupons } = useCoupons();
   // Why: real 模式按默认地址 + 选中券查运费 + 折扣聚合；mock 模式不调（enabled 内已 gate），preview 为 undefined
@@ -443,6 +446,22 @@ export default function CheckoutPage() {
               </View>
             )}
           </View>
+
+          {/* 业务增强批1 5.5：页内快速新增地址入口（不离开下单链路，Modal 内完成保存+自动选中；
+              只动地址区块，replacement 三选一区块不改动） */}
+          <Pressable
+            testID="checkout-add-address-entry"
+            onPress={() => setAddressModalVisible(true)}
+            hitSlop={8}
+            style={({ pressed }) => [styles.addAddressEntry, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('checkout.address.addNewA11y')}
+          >
+            <Icon symbol="add" size={16} color={colors.primary} />
+            <Text style={[styles.addAddressText, { color: colors.primary }]}>
+              {t('checkout.address.addNew')}
+            </Text>
+          </Pressable>
 
           {/* U6 支付 + 摘要紧凑分组（gap md），地址卡独立留 lg 间距 */}
           <View style={styles.detailGroup}>
@@ -906,6 +925,11 @@ export default function CheckoutPage() {
         selectedCode={selectedCouponCode}
         onSelect={setSelectedCouponCode}
       />
+      {/* 业务增强批1 5.5：快速新增地址 Modal（保存→写列表→自动选中→留在 checkout） */}
+      <CheckoutAddressModal
+        visible={addressModalVisible}
+        onClose={() => setAddressModalVisible(false)}
+      />
     </SafeAreaWrapper>
   );
 }
@@ -988,6 +1012,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   noAddress: { ...typography['body-md'], flex: 1 },
+  // 5.5 快速新增地址文字链（地址卡底部，与「更换」图标按钮并列入口）
+  addAddressEntry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+  },
+  addAddressText: {
+    ...typography['body-sm'],
+    fontWeight: '600',
+  },
 
   // Payment
   paymentList: { gap: spacing.sm },
