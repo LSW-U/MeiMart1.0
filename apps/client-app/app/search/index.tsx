@@ -186,14 +186,16 @@ export default function SearchIndexPage() {
     router.push({ pathname: '/search/results', params: { q: trimmed } });
   };
 
-  // Filter Tags 联动（2026-11-05 拍板方案A）：分类胶囊跳结果页带 categoryId，空词+纯分类过滤
-  //   （后端 listProducts categoryId 过滤独立于 keyword；useProductSearch enabled 已放行空词+分类）。
-  //   __ALL__ 清除过滤回全量——也跳结果页（展示全部 ACTIVE 商品，同分类选择的浏览语义）。
+  // Filter Tags 联动（2026-11-05 拍板方案A；P3-2 审查 20261105 修订为词+分类组合保留）：
+  //   分类胶囊跳结果页带 categoryId + 当前输入词（query 非空时组合 AND 过滤——后端
+  //   listProducts categoryId 与 keyword ILIKE 独立条件天然 AND；空词则纯分类浏览，
+  //   recordSearch 有 if(kw) 守卫不记热搜）。__ALL__ 清除分类过滤（词仍保留）。
   const onPressFilterTag = (tag: string) => {
     setActiveTag(tag);
+    const q = query.trim();
     router.push({
       pathname: '/search/results',
-      ...(tag === '__ALL__' ? { params: { q: '' } } : { params: { q: '', categoryId: tag } }),
+      params: { q, ...(tag !== '__ALL__' && { categoryId: tag }) },
     });
   };
 
