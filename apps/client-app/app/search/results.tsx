@@ -119,8 +119,11 @@ export default function SearchResultsPage() {
     .slice(0, 3)
     .map((item) => ({ word: item.word, searchCount: item.searchCount }));
   // P8-5 F2+F3：sortBy 变重查第一页（决策 2-B），onEndReached 触发 fetchNextPage（决策 3-B）
+  // 20261105 空词「全部」修复（用户拍板：显示全部商品）：结果页是显式浏览入口，allowEmpty
+  //   放行空词空分类——后端空词 search 返全量（live 验证 total=70），与「浏览全部」语义一致；
+  //   index 页初始态不传 allowEmpty 仍拦（不发无意义请求）。
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useProductSearch(keyword, activeSort, categoryId);
+    useProductSearch(keyword, activeSort, categoryId, { allowEmpty: true });
   // Why: pages.flatMap 拼接所有已加载页；total 取首页（搜索结果总数，非累计已加载数）。
   //   后端 offset 分页排序不稳定时跨页重复商品 → 同 id 渲染两次 duplicate key（home 实证
   //   20261023），按 id 去重防渲染层炸；根治靠后端 ORDER BY tie-breaker（审查 Q4 收敛 util）。

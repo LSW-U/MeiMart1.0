@@ -160,11 +160,14 @@ export function useProductSearch(
   keyword: string,
   sortBy: ProductSortKeyWithPending = 'all',
   categoryId?: string,
+  opts?: { allowEmpty?: boolean },
 ) {
   // Filter Tags 联动（2026-11-05）：空词+分类合法（后端 listProducts categoryId 过滤独立于
   //   keyword ILIKE，recordSearch 有 if(kw) 守卫纯分类浏览不记热搜）——enabled 两条路径放行：
   //   有词（原语义）或有分类（新）。两者皆空仍拦（首页初始态不发请求）。
-  const hasQuery = keyword.trim().length > 0 || Boolean(categoryId);
+  // 20261105 增补：结果页空词点「全部」胶囊也是合法浏览（后端空词 search 返全量，
+  //   live 验证 total=70）——结果页传 allowEmpty 放行；index 页初始态不传仍拦。
+  const hasQuery = keyword.trim().length > 0 || Boolean(categoryId) || Boolean(opts?.allowEmpty);
   return useOffsetInfinite<Product, { items: Product[]; hasMore: boolean; total: number }>({
     queryKey: PRODUCT_SEARCH_KEY(keyword, sortBy, categoryId ?? ''),
     fetchPage: (offset) =>

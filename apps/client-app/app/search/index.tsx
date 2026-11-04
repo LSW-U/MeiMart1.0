@@ -18,7 +18,7 @@ import { shouldSuggest } from '@/utils/searchSuggestGate';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { CartIconButton } from '@/components/business/CartIconButton/CartIconButton';
-import { useProducts } from '@/services/queries/useProducts';
+import { useRecommendationsInfinite } from '@/services/queries/useProducts';
 import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import { useSearchHot } from '@/services/queries/useSearchHot';
 // C方案（搜索预览）：联想双 hook + 面板组件 + debounce
@@ -118,11 +118,44 @@ export default function SearchIndexPage() {
   const { data: cart } = useCart();
   const cartCount = cart?.totalItems ?? 0;
   // Why: 用真实商品替换 mock rec-* id，避免 router.push('/product/rec-1') 跳转后 404
-  const { data: realProducts } = useProducts();
-  // Why: P7 §2.4 R3 - 取全部（原 slice(0,4) 只 4 条不够瀑布流错落）
-  // Why: useMemo 包一层——下方 splitMasonryBalanced 的 useMemo 依赖它，裸 `?? []`
-  //   每次 render 新引用会击穿 memo（results.tsx 同款处理）
-  const recommendList = useMemo(() => realProducts ?? [], [realProducts]);
+  // 20261105 拍板：推荐区限 5 条 + 换一批——复用 home 的 useRecommendationsInfinite 模式
+  //   （baseOffset/cycle 双 state + 短批探底回绕 + cycle++ 无条件换 key 堵缓存复用口）；
+  //   原 useProducts 全量渲染（70 条）废弃。SEARCH_RECOMMEND_LIMIT=5 满足 3-5 条约束，
+  //   5 条分两列（3+2）错落比 3/4 条视觉更好。
+  const SEARCH_RECOMMEND_LIMIT = 5;
+  const [recommendBaseOffset, setRecommendBaseOffset] = useState(0);
+  const [recommendCycle, setRecommendCycle] = useState(0);
+  const { data: recommendPages, isFetching: isFetchingRecommend } = useRecommendationsInfinite({
+    limit: SEARCH_RECOMMEND_LIMIT,
+    baseOffset: recommendBaseOffset,
+    cycle: recommendCycle,
+  });
+  const recommendList = useMemo(() => {
+    const pages = recommendPages?.pages ?? [];
+    return pages.length > 0 ? pages[pages.length - 1] : [];
+  }, [recommendPages]);
+  // 短批探池终点（home.tsx 同款）：某批 < limit 说明池到头，记 poolEnd 供回绕判定
+  const recommendPoolEnd = useMemo(() => {
+    const pages = recommendPages?.pages ?? [];
+    if (pages.length === 0) return null;
+    const last = pages[pages.length - 1];
+    if (last.length >= SEARCH_RECOMMEND_LIMIT) return null;
+    return recommendBaseOffset + (pages.length - 1) * SEARCH_RECOMMEND_LIMIT + last.length;
+  }, [recommendPages, recommendBaseOffset]);
+  // Why: cycle++ 无条件换全新 queryKey（home 方案A 实证：沿用同 key 在 staleTime 内命中
+  //   旧缓存导致「换一批收不回去」）；baseOffset += limit，next ≥ poolEnd 回绕 0
+  const handleRecommendChangeBatch = useCallback(() => {
+    if (!isFetchingRecommend) {
+      setRecommendCycle((c) => c + 1);
+      setRecommendBaseOffset((prev) => {
+        const next = prev + SEARCH_RECOMMEND_LIMIT;
+        if (recommendPoolEnd != null && next >= recommendPoolEnd) {
+          return 0;
+        }
+        return next;
+      });
+    }
+  }, [isFetchingRecommend, recommendPoolEnd]);
   // Why: 20261023 方案A——奇偶分列改累计高度均衡分列（home/results 同款 splitMasonryBalanced）
   const [masonryCol1, masonryCol2] = useMemo(
     () => splitMasonryBalanced(recommendList),
@@ -433,9 +466,36 @@ export default function SearchIndexPage() {
         {/* Recommended for You（P7 §2.4: MasonryProductCard 两列瀑布流，与首页统一）- C方案 §4.6: showSuggest 时隐藏 */}
         {!showSuggest && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-              {t('search.recommended')}
-            </Text>
+            {/* 标题行 + 换一批按钮（home.tsx 同款 UI：refresh 图标 + isFetching 防连点） */}
+            <View style={styles.recommendHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+                {t('search.recommended')}
+              </Text>
+              {recommendList.length > 0 && (
+                <Pressable
+                  testID="search-recommend-change-batch"
+                  onPress={handleRecommendChangeBatch}
+                  disabled={isFetchingRecommend}
+                  style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('home.changeBatch')}
+                >
+                  <Icon
+                    symbol="refresh"
+                    size={16}
+                    color={isFetchingRecommend ? colors.outline : colors.primary}
+                  />
+                  <Text
+                    style={[
+                      styles.changeBatchText,
+                      { color: isFetchingRecommend ? colors.outline : colors.primary },
+                    ]}
+                  >
+                    {t('home.changeBatch')}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
             {recommendList.length > 0 && (
               <View style={styles.masonryRow}>
                 <View style={styles.masonryCol}>
@@ -586,6 +646,21 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.h3,
+    fontWeight: '600',
+  },
+  // 20261105 推荐区标题行 + 换一批按钮（home.tsx changeBatchBtn 同款规格）
+  recommendHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  changeBatchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  changeBatchText: {
+    fontSize: 13,
     fontWeight: '600',
   },
   clearAllText: {
