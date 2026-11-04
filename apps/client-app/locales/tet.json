@@ -550,6 +550,9 @@
     "deleteFailed": "Hah falha, favor koko fali",
     "deleteTitle": "Hah Pedidu",
     "deleteConfirm": "Hah pedidu {{count}} ne'ebé selecionado? La bele fila fali.",
+    "searchPlaceholder": "Buka ho numeru pedidu",
+    "searchNoResultTitle": "La iha pedidu ne'ebe pus",
+    "searchNoResultDesc": "La iha pedidu ho numeru ne'ebe inklui \"{{q}}\"",
     "outOfStockBadge": "Sasan mamuk ×{{qty}}",
     "outOfStockBadgeA11y": "Sasan mamuk",
     "suggestion": {

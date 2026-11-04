@@ -550,6 +550,9 @@
     "deleteFailed": "Failed to delete, please retry",
     "deleteTitle": "Delete Orders",
     "deleteConfirm": "Delete {{count}} selected order(s)? This cannot be undone.",
+    "searchPlaceholder": "Search by order number",
+    "searchNoResultTitle": "No matching orders",
+    "searchNoResultDesc": "No orders with number containing \"{{q}}\"",
     "outOfStockBadge": "Out of stock ×{{qty}}",
     "outOfStockBadgeA11y": "Item out of stock",
     "suggestion": {

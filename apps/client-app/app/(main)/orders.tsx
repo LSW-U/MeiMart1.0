@@ -23,6 +23,7 @@ import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { OrderCard } from '@/components/business/OrderCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { SearchBar } from '@/components/business/SearchBar/SearchBar';
 import { TaisDivider } from '@/components/cultural/TaisDivider';
 import { Icon } from '@/components/ui/Icon';
 import {
@@ -60,6 +61,17 @@ export default function OrdersPage() {
     () => dedupeById(data?.pages.flatMap((p) => p.items) ?? []),
     [data],
   );
+
+  // 5.2 订单号搜索（业务增强批2，P-v2-3）：后端 /client/orders 无 keyword 参数（已核实
+  //   orderApi.getOrders 仅 status/cursor/limit），前端本地过滤过渡——输入仅按订单号
+  //   orderNo contains 匹配已加载订单（P28 立项后端 keyword 后再迁移服务端搜索）；
+  //   不扩收货人/地址字段。与状态 Tab 组合叠加：Tab 先圈定状态集，搜索在集合内过滤。
+  const [searchText, setSearchText] = useState('');
+  const visibleOrders: Order[] = useMemo(() => {
+    const q = searchText.trim().toLowerCase();
+    if (!q) return orders;
+    return orders.filter((o) => o.orderNo.toLowerCase().includes(q));
+  }, [orders, searchText]);
 
   // 批3：管理模式状态（收藏页/通知页 selectMode 同形态）
   const [selectMode, setSelectMode] = useState(false);
@@ -362,31 +374,55 @@ export default function OrdersPage() {
             onAction={() => router.push('/(main)/home')}
           />
         ) : (
-          <FlatList
-            data={orders}
-            keyExtractor={(item) => item.id}
-            initialNumToRender={6}
-            maxToRenderPerBatch={4}
-            windowSize={5}
-            contentContainerStyle={styles.list}
-            onEndReached={() => {
-              if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-            }}
-            onEndReachedThreshold={0.3}
-            ListFooterComponent={
-              isFetchingNextPage ? (
-                <View style={styles.footerLoading}>
-                  <ActivityIndicator size="small" color={colors.primary} />
-                </View>
-              ) : null
-            }
-            ItemSeparatorComponent={() => (
-              <View style={styles.dividerWrap}>
-                <TaisDivider />
+          <>
+            {/* 5.2 订单号搜索框：本地过滤过渡（见 visibleOrders 注释）；selectMode 下隐藏防误触 */}
+            {!selectMode && (
+              <View style={styles.searchWrap}>
+                <SearchBar
+                  value={searchText}
+                  onChange={setSearchText}
+                  variant="card"
+                  placeholder={t('order.searchPlaceholder')}
+                  testID="orders-search"
+                />
               </View>
             )}
-            renderItem={renderItem}
-          />
+            {visibleOrders.length === 0 ? (
+              // 搜索命中空态：复用 EmptyState 组件族（与整体空态区分文案，不清空输入可改词重搜）
+              <EmptyState
+                title={t('order.searchNoResultTitle')}
+                description={t('order.searchNoResultDesc', { q: searchText.trim() })}
+                icon="search_off"
+                testID="orders-search-empty"
+              />
+            ) : (
+              <FlatList
+                data={visibleOrders}
+                keyExtractor={(item) => item.id}
+                initialNumToRender={6}
+                maxToRenderPerBatch={4}
+                windowSize={5}
+                contentContainerStyle={styles.list}
+                onEndReached={() => {
+                  if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+                }}
+                onEndReachedThreshold={0.3}
+                ListFooterComponent={
+                  isFetchingNextPage ? (
+                    <View style={styles.footerLoading}>
+                      <ActivityIndicator size="small" color={colors.primary} />
+                    </View>
+                  ) : null
+                }
+                ItemSeparatorComponent={() => (
+                  <View style={styles.dividerWrap}>
+                    <TaisDivider />
+                  </View>
+                )}
+                renderItem={renderItem}
+              />
+            )}
+          </>
         )}
 
         {/* 批3：管理栏底部悬浮（favorites.tsx manageBar 同款规格）——全选 + 删除 */}
@@ -558,6 +594,11 @@ const styles = StyleSheet.create({
     right: spacing.md,
     height: 2,
     borderRadius: 1,
+  },
+  // 5.2 搜索框容器（SearchBar 卡片变体，与列表同边距对齐）
+  searchWrap: {
+    paddingHorizontal: layout['container-margin'],
+    paddingTop: spacing.md,
   },
   list: {
     padding: layout['container-margin'],

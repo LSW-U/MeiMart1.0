@@ -550,6 +550,9 @@
     "deleteFailed": "Falha ao eliminar, tente novamente",
     "deleteTitle": "Eliminar pedidos",
     "deleteConfirm": "Eliminar os {{count}} pedido(s) selecionados? Esta ação não pode ser revertida.",
+    "searchPlaceholder": "Pesquisar por número do pedido",
+    "searchNoResultTitle": "Nenhum pedido correspondente",
+    "searchNoResultDesc": "Nenhum pedido com número contendo \"{{q}}\"",
     "outOfStockBadge": "Esgotado ×{{qty}}",
     "outOfStockBadgeA11y": "Produto em falta",
     "suggestion": {

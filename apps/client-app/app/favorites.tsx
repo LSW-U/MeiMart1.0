@@ -3,16 +3,7 @@
 // 网格态：两列瀑布流（MasonryProductCard，与 home/search 统一）；列表态：HorizontalProductCard；
 // 管理态跟随当前视图（D7）：卡片原地变选择态，不切换卡片组件
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  FlatList,
-  ScrollView,
-  Pressable,
-  Alert,
-  Platform,
-} from 'react-native';
+import { StyleSheet, View, Text, FlatList, Pressable, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -47,8 +38,20 @@ export default function FavoritesPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { data: favorites, isLoading, isError, refetch } = useFavorites();
-  // Why: 20261023 方案A——奇偶分列改累计高度均衡分列（home/search 同款 splitMasonryBalanced）
+  // Why: 20261023 方案A——奇偶分列改累计高度均衡分列（home/search 同款 splitMasonryBalanced）；
+  //   1.2 虚拟化（业务增强批2，P-v2-2 分列行化）：保留分列算法，两列组装成「行数组」
+  //   （每行 = 左右各一张卡的容器）喂 FlatList numColumns=1——瀑布流视觉零变化 + 真虚拟化
+  //   （ScrollView 全量渲染退役，offset-infinite-exceptions.md 红线已摘登记）。
+  //   ⚠️ 禁止 numColumns=2 扁平网格（破坏瀑布流高度错落视觉，方案已否决）。
   const favoritesCols = useMemo(() => splitMasonryBalanced(favorites ?? []), [favorites]);
+  const masonryRows = useMemo(() => {
+    const rows: { left?: Product; right?: Product }[] = [];
+    const len = Math.max(favoritesCols[0].length, favoritesCols[1].length);
+    for (let i = 0; i < len; i += 1) {
+      rows.push({ left: favoritesCols[0][i], right: favoritesCols[1][i] });
+    }
+    return rows;
+  }, [favoritesCols]);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { isOffline } = useWeakNetworkUI();
   const removeFavorites = useRemoveFavorites();
@@ -386,22 +389,30 @@ export default function FavoritesPage() {
           renderItem={renderListItem}
         />
       ) : (
-        // 网格态：两列瀑布流（复用 home/search 的 MasonryProductCard 奇偶分列模式，高度档位错落）
-        // Why: 收藏数通常 < 100，ScrollView 全量渲染可接受（home/search 同款取舍）；
-        //      管理态跟随视图原地变选择态（右上角 select-circle + 选中红边），不切换卡片组件
-        <ScrollView
+        // 网格态：两列瀑布流 → 分列行化喂单列 FlatList（1.2 虚拟化，P-v2-2）：
+        // 每行渲染左右两张 MasonryProductCard（列短时一侧可空），行级虚拟化回收不可视行；
+        // 管理态跟随视图原地变选择态（右上角 select-circle + 选中红边），不切换卡片组件
+        <FlatList
+          data={masonryRows}
+          keyExtractor={(row, idx) =>
+            `${row.left?.id ?? 'empty'}-${row.right?.id ?? 'empty'}-${idx}`
+          }
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
+          // 管理态勾选依赖 selected（列表态 extraData 同因，审查 Q1）
+          extraData={selected}
+          key="masonry"
           contentContainerStyle={[styles.masonryContent, selectMode && styles.listManage]}
-        >
-          <View style={styles.masonryRow}>
-            {/* 20261023 方案A：奇偶分列改累计高度均衡分列（home/search 同款 splitMasonryBalanced） */}
-            <View style={styles.masonryCol}>
-              {favoritesCols[0].map((item) => renderMasonryItem(item))}
+          renderItem={({ item: row }) => (
+            <View style={styles.masonryRow}>
+              <View style={styles.masonryCol}>{row.left ? renderMasonryItem(row.left) : null}</View>
+              <View style={styles.masonryCol}>
+                {row.right ? renderMasonryItem(row.right) : null}
+              </View>
             </View>
-            <View style={styles.masonryCol}>
-              {favoritesCols[1].map((item) => renderMasonryItem(item))}
-            </View>
-          </View>
-        </ScrollView>
+          )}
+        />
       )}
 
       {/* 管理栏底部悬浮（原型 .manage-bar{position:sticky;bottom:0;border-top}）：全选 + 删除 */}
