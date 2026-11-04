@@ -156,6 +156,24 @@ export default function SearchIndexPage() {
       });
     }
   }, [isFetchingRecommend, recommendPoolEnd]);
+  // 20261105 空批回绕（渲染期 setState，[id].tsx:150 先例模式，非 effect）：limit 整除池长时
+  //   （池 70 / limit 5 = 14 批）末批仍满页 → poolEnd 记不到 → 再换一批 offset 越界返空批 →
+  //   推荐区闪空（「点到最后推荐全消失」实证）。空批落地时自动回绕 baseOffset=0 + cycle++
+  //   一次性修正；prev 值比对防循环（回绕后末批非空不再触发）。
+  const [prevEmptyBatchOffset, setPrevEmptyBatchOffset] = useState<number | null>(null);
+  const lastBatch = recommendPages?.pages?.[recommendPages.pages.length - 1];
+  if (
+    recommendBaseOffset > 0 &&
+    lastBatch != null &&
+    lastBatch.length === 0 &&
+    !isFetchingRecommend
+  ) {
+    if (prevEmptyBatchOffset !== recommendBaseOffset) {
+      setPrevEmptyBatchOffset(recommendBaseOffset);
+      setRecommendBaseOffset(0);
+      setRecommendCycle((c) => c + 1);
+    }
+  }
   // Why: 20261023 方案A——奇偶分列改累计高度均衡分列（home/results 同款 splitMasonryBalanced）
   const [masonryCol1, masonryCol2] = useMemo(
     () => splitMasonryBalanced(recommendList),

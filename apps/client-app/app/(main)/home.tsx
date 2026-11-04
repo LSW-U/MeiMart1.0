@@ -144,6 +144,25 @@ export default function HomePage() {
       });
     }
   }, [isFetchingRecommend, isFetchingNextPage, recommendPoolEnd]);
+  // 20261105 空批回绕（渲染期 setState，[id].tsx:150 先例模式，非 effect）：limit 整除池长时
+  //   末批仍满页 → poolEnd 记不到 → 再换一批 offset 越界返空批 → 推荐区闪空（search 页
+  //   70/5=14 整除实证）。空批落地时自动回绕 baseOffset=0 + cycle++ 一次性修正；prev 值
+  //   比对防循环。search index/results 同款。
+  const [prevEmptyBatchOffset, setPrevEmptyBatchOffset] = useState<number | null>(null);
+  const lastBatch = recommendPages?.pages?.[recommendPages.pages.length - 1];
+  if (
+    recommendBaseOffset > 0 &&
+    lastBatch != null &&
+    lastBatch.length === 0 &&
+    !isFetchingRecommend &&
+    !isFetchingNextPage
+  ) {
+    if (prevEmptyBatchOffset !== recommendBaseOffset) {
+      setPrevEmptyBatchOffset(recommendBaseOffset);
+      setRecommendBaseOffset(0);
+      setRecommendCycle((c) => c + 1);
+    }
+  }
   // Why: 20261024 方案②——「收起推荐」文字链（加载更多到底后出现）：回 baseOffset=0 +
   //   cycle++ 全新 queryKey，干净 6 条回到初态（无加载更多、无收起按钮）
   const handleRecommendCollapse = useCallback(() => {
