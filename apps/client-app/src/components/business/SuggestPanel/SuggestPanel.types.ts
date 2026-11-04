@@ -15,6 +15,11 @@ export interface SuggestPanelProps {
   words: SuggestWordData[];
   /** 商品联想列表（top 3，空则隐藏商品区） */
   products: Product[];
+  /**
+   * 是否显示商品联想区（默认 true）。产品拍板 2026-11-04：联想只留词，两页（search/index
+   * 与 search/results）均传 false 关商品区——SuggestProductItem 组件保留待恢复混合模式。
+   */
+  showProducts?: boolean;
   /** 当前输入（空态 CTA 显示「回车查看 'xxx' 结果」，方案 §7.4） */
   query: string;
   /** 是否加载中（词+商品都 loading 且无旧数据时显示加载态，方案 §4.5） */

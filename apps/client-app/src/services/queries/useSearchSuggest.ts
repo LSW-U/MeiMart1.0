@@ -2,6 +2,7 @@ import { useQuery, keepPreviousData, type UseQueryResult } from '@tanstack/react
 import { searchSuggestApi, type SuggestWord } from '@/services/searchSuggest';
 import { productApi } from '@/services/products';
 import { useLocale } from '@/i18n';
+import { shouldSuggest } from '@/utils/searchSuggestGate';
 import type { Product } from '@/types';
 import { STALE_TIME, SEARCH_SUGGEST_KEY, SEARCH_PRODUCTS_SUGGEST_KEY } from '@/lib/queryKeys';
 
@@ -29,7 +30,7 @@ export function useSearchSuggest(
   return useQuery<SuggestWord[], Error>({
     queryKey: SEARCH_SUGGEST_KEY(locale, prefix),
     queryFn: () => searchSuggestApi.getSuggest(prefix, 5),
-    enabled: enabled && prefix.trim().length >= 2,
+    enabled: enabled && shouldSuggest(prefix),
     staleTime: STALE_TIME.suggest,
     networkMode: 'offlineFirst',
     placeholderData: keepPreviousData,
@@ -56,7 +57,7 @@ export function useSearchProductsSuggest(
       const res = await productApi.search(prefix, { pageSize: 3 });
       return res.items;
     },
-    enabled: enabled && prefix.trim().length >= 2,
+    enabled: enabled && shouldSuggest(prefix),
     staleTime: STALE_TIME.suggest,
     networkMode: 'offlineFirst',
     placeholderData: keepPreviousData,

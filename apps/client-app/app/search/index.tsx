@@ -14,6 +14,7 @@ import { SearchBar } from '@/components/business/SearchBar';
 // Why: P7 §2.4 R1 - Recommended 统一用 MasonryProductCard（与首页同一组件），删旧 ProductCard
 import { MasonryProductCard } from '@/components/business/MasonryProductCard/MasonryProductCard';
 import { resolveBadges } from '@/utils/resolveBadges';
+import { shouldSuggest } from '@/utils/searchSuggestGate';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { CartIconButton } from '@/components/business/CartIconButton/CartIconButton';
@@ -21,7 +22,7 @@ import { useProducts } from '@/services/queries/useProducts';
 import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import { useSearchHot } from '@/services/queries/useSearchHot';
 // C方案（搜索预览）：联想双 hook + 面板组件 + debounce
-import { useSearchSuggest, useSearchProductsSuggest } from '@/services/queries/useSearchSuggest';
+import { useSearchSuggest } from '@/services/queries/useSearchSuggest';
 import { SuggestPanel } from '@/components/business/SuggestPanel';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useCategories } from '@/services/queries/useCatalog';
@@ -101,7 +102,8 @@ export default function SearchIndexPage() {
   // C方案 §4.1/§4.5 - suggestOpen 控制面板显隐（失焦收起），debounce 300ms 防抖
   const [suggestOpen, setSuggestOpen] = useState(true);
   const debouncedQuery = useDebounce(query, 300);
-  const showSuggest = suggestOpen && query.trim().length >= 2;
+  // 联想门槛单源 shouldSuggest（2026-11-04：CJK 单字放行，'米' 不再被 length>=2 误拦）
+  const showSuggest = suggestOpen && shouldSuggest(query);
   // Why: P7 I7 - Filter Tags 改 useCategories() 动态分类，首项 "All"（t('common.all')）
   // 原因：批1 A4 透传后 name 是 LocalizableText——tag 用 id 作 key/匹配键，显示走 localize()
   const localize = useLocalizer();
@@ -135,21 +137,21 @@ export default function SearchIndexPage() {
     heat:
       item.searchCount >= 1000 ? `${(item.searchCount / 1000).toFixed(1)}k` : `${item.searchCount}`,
   }));
-  // C方案 §4.2 - 联想双 hook 并行（接 debouncedQuery，非 raw query；showSuggest 控制 enabled）
+  // C方案 §4.2 - 词联想（接 debouncedQuery，非 raw query；showSuggest 控制 enabled）
+  // 产品拍板 2026-11-04：联想只留词——商品联想 hook（useSearchProductsSuggest）摘除，
+  //   省一次 keystroke 白打的 /search?pageSize=3 ILIKE 查询；恢复混合模式见 SuggestPanel.showProducts
   const { data: suggestWords, isLoading: isWordsLoading } = useSearchSuggest(
     debouncedQuery,
     showSuggest,
   );
-  const { data: suggestProducts, isLoading: isProductsLoading } = useSearchProductsSuggest(
-    debouncedQuery,
-    showSuggest,
-  );
+  const isProductsLoading = false;
   // Why: 两都 loading 且无 keepPreviousData 才显加载态（方案 §4.5）
   // Why: 长度先解构到独立变量——v5 UseQueryResult 的 data 与 isLoading 是 discriminated 字段，
   //   在 `isWordsLoading && suggestWords?.length` 链中 tsc 会把 data narrow 到 undefined→never，
   //   先取 length 到 const number 再进 && 链可避开 correlated narrowing
   const wordsLen = suggestWords?.length ?? 0;
-  const productsLen = suggestProducts?.length ?? 0;
+  // 产品拍板 2026-11-04：商品区关闭，productsLen 恒 0（isSuggestLoading 公式保留结构，回开时填回）
+  const productsLen = 0;
   const isSuggestLoading =
     isWordsLoading && isProductsLoading && wordsLen === 0 && productsLen === 0;
   // C方案 §7.4 - 空态 fallback 复用 hotList（slice 3 作 chips 补位）
@@ -175,6 +177,10 @@ export default function SearchIndexPage() {
     }
     // Why: P7 F1 - 搜索提交时记录到 Recent（AsyncStorage 持久化）
     addRecent(trimmed);
+    // Why: 20261105 验收修复——提交后必须收起面板。收起唯一另一路径是 onBlur，但 web 端
+    //   router.push 跳转不触发 input blur（headless 实证：点联想词跳 results 后 SuggestPanel
+    //   仍 zIndex:10 叠在结果页上）；expo-router 栈式导航下本页不卸载，必须显式关。
+    setSuggestOpen(false);
     router.push({ pathname: '/search/results', params: { q: trimmed } });
   };
 
@@ -449,7 +455,8 @@ export default function SearchIndexPage() {
         <View style={styles.suggestWrap} pointerEvents="box-none">
           <SuggestPanel
             words={suggestWords ?? []}
-            products={suggestProducts ?? []}
+            products={[]}
+            showProducts={false}
             query={query}
             isLoading={isSuggestLoading}
             hotFallback={hotFallback}

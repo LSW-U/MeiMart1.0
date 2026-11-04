@@ -39,6 +39,18 @@ jest.mock('@/services/queries/useProducts', () => ({
   useProducts: (...args: unknown[]) => mockUseProducts(...args),
 }));
 
+// F3 结果页联想接入：新增页面级 hooks 全 mock（本测试只取证虚拟化，联想非其职责）
+jest.mock('@/services/queries/useSearchSuggest', () => ({
+  useSearchSuggest: () => ({ data: [], isLoading: false }),
+  useSearchProductsSuggest: () => ({ data: [], isLoading: false }),
+}));
+jest.mock('@/services/queries/useSearchHot', () => ({
+  useSearchHot: () => ({ data: [] }),
+}));
+jest.mock('@/hooks/useRecentSearches', () => ({
+  useRecentSearches: () => ({ addRecent: jest.fn() }),
+}));
+
 jest.mock('@/services/queries/useCart', () => ({
   useAddToCart: () => ({ mutate: jest.fn(), isPending: false }),
   useCart: () => ({ data: { totalItems: 0 }, isLoading: false, isError: false }),

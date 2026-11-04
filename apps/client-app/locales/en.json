@@ -1359,7 +1359,9 @@
     "E-OOS-003": "This item already has an out-of-stock report",
     "E-OOS-004": "Full shortage can only be reported at picking stage (rider stage allows partial only)",
     "E-OOS-005": "Invalid evidence photos (max 3, must be URLs uploaded via this platform)",
-    "E-TICKET-001": "Ticket not found"
+    "E-TICKET-001": "Ticket not found",
+    "E-TICKET-002": "Ticket status transition is not allowed",
+    "E-TICKET-003": "Ticket is already in this status"
   },
   "search": {
     "recent": "Recent Searches",
@@ -1369,6 +1371,7 @@
     "sort": {
       "bestSelling": "Best Selling",
       "priceAsc": "Price: Low to High",
+      "priceDesc": "Price: High to Low",
       "newArrivals": "New Arrivals",
       "a11y": "Sort by {{label}}"
     },

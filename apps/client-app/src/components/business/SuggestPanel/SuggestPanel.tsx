@@ -21,6 +21,7 @@ import type { SuggestPanelProps } from './SuggestPanel.types';
 export function SuggestPanel({
   words,
   products,
+  showProducts = true,
   query,
   isLoading,
   hotFallback,
@@ -33,14 +34,19 @@ export function SuggestPanel({
   const { t } = useTranslation();
 
   const hasWords = words.length > 0;
-  const hasProducts = products.length > 0;
+  // 产品拍板 2026-11-04：showProducts=false 整体关商品区（词+商品混合模式保留，默认 true 向后兼容）
+  const hasProducts = showProducts && products.length > 0;
   const allEmpty = !hasWords && !hasProducts;
 
   // 方案 §4.5 - 加载中且无旧数据 → 加载态（keepPreviousData 由父组件保留，此时 words/products 非空走分区渲染）
   if (isLoading && allEmpty) {
     return (
       <View
-        style={[styles.panel, { backgroundColor: colors['surface-container-lowest'] }, shadowPresets.lg]}
+        style={[
+          styles.panel,
+          { backgroundColor: colors['surface-container-lowest'] },
+          shadowPresets.lg,
+        ]}
         testID={testID}
         accessibilityRole="search"
       >
@@ -55,11 +61,19 @@ export function SuggestPanel({
 
   return (
     <View
-      style={[styles.panel, { backgroundColor: colors['surface-container-lowest'] }, shadowPresets.lg]}
+      style={[
+        styles.panel,
+        { backgroundColor: colors['surface-container-lowest'] },
+        shadowPresets.lg,
+      ]}
       testID={testID}
       accessibilityRole="search"
     >
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {hasWords && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>

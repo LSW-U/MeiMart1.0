@@ -52,6 +52,24 @@ describe('SuggestPanel', () => {
     expect(getByLabelText('View Product p1')).toBeTruthy();
   });
 
+  // 产品拍板 2026-11-04：联想只留词——showProducts=false 整体隐藏商品区（含分隔线与商品区标题）
+  it('hides products section when showProducts=false (words only)', () => {
+    const { queryByText, queryByLabelText, getByText } = render(
+      <SuggestPanel
+        words={[{ word: 'apple', searchCount: 1300 }]}
+        products={[mockProduct('p1')]}
+        showProducts={false}
+        query="app"
+        onWordPress={jest.fn()}
+        onProductPress={jest.fn()}
+      />,
+      { wrapper },
+    );
+    expect(getByText('apple')).toBeTruthy(); // 词区照常
+    expect(queryByText('Popular Products')).toBeNull();
+    expect(queryByLabelText('View Product p1')).toBeNull();
+  });
+
   it('hides word section when words empty, shows products only', () => {
     const { queryByText, getByLabelText } = render(
       <SuggestPanel

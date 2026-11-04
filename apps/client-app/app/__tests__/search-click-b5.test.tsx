@@ -74,6 +74,21 @@ jest.mock('@/services/queries/useCart', () => ({
   useAddToCart: () => ({ mutate: jest.fn() }),
 }));
 
+// F3 结果页联想接入：新增页面级 hooks 全 mock（本测试只取证 SEARCH_CLICK 埋点）
+jest.mock('@/services/queries/useSearchSuggest', () => ({
+  useSearchSuggest: () => ({ data: [], isLoading: false }),
+  useSearchProductsSuggest: () => ({ data: [], isLoading: false }),
+}));
+jest.mock('@/services/queries/useSearchHot', () => ({
+  useSearchHot: () => ({ data: [] }),
+}));
+jest.mock('@/hooks/useRecentSearches', () => ({
+  useRecentSearches: () => ({ addRecent: jest.fn() }),
+}));
+jest.mock('@/components/business/SuggestPanel', () => ({
+  SuggestPanel: () => null,
+}));
+
 jest.mock('@/store/toastStore', () => ({
   toast: { info: jest.fn(), success: jest.fn(), error: jest.fn() },
 }));

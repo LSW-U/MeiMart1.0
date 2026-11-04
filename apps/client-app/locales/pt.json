@@ -1359,7 +1359,9 @@
     "E-OOS-003": "Este item já tem registo de falta de stock",
     "E-OOS-004": "Falta total só pode ser registada na fase de separação (fase de entrega apenas parcial)",
     "E-OOS-005": "Fotos de evidência inválidas (máx. 3, têm de ser URLs enviados por esta plataforma)",
-    "E-TICKET-001": "Ticket não encontrado"
+    "E-TICKET-001": "Ticket não encontrado",
+    "E-TICKET-002": "Transição de estado do ticket não permitida",
+    "E-TICKET-003": "O ticket já se encontra neste estado"
   },
   "search": {
     "recent": "Pesquisas Recentes",
@@ -1369,6 +1371,7 @@
     "sort": {
       "bestSelling": "Mais Vendidos",
       "priceAsc": "Preço: Do Menor ao Maior",
+      "priceDesc": "Preço: Do Maior ao Menor",
       "newArrivals": "Novidades",
       "a11y": "Ordenar por {{label}}"
     },

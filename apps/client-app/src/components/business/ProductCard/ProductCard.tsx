@@ -59,6 +59,7 @@ function ProductCardBase({
   onPress,
   onAddToCart,
   badge,
+  imageHeight,
   showFavorite = false,
   isFavorite = false,
   onFavoritePress,
@@ -90,7 +91,14 @@ function ProductCardBase({
         accessibilityRole="button"
         accessibilityLabel={t('product.a11y.cardItem', { name, price: formatPrice(product.price) })}
       >
-        <View style={[styles.imageWrap, { backgroundColor: colors['surface-container-lowest'] }]}>
+        {/* Why: imageHeight 传值时改固定高（原型 h-44=176），缺省保持正方形 aspectRatio:1 */}
+        <View
+          style={[
+            styles.imageWrap,
+            imageHeight !== undefined && { height: imageHeight },
+            { backgroundColor: colors['surface-container-lowest'] },
+          ]}
+        >
           {/* 批3 P2-2：商品卡片主流量面，走服务端缩略图 + 列表懒加载 + 回收复用 */}
           <SafeImage
             source={{ uri: product.image }}

@@ -21,6 +21,12 @@ import {
  * - all 综合 / bestSelling 销量 / priceAsc 价格升 / newArrivals 上新
  */
 export type ProductSortKey = 'all' | 'bestSelling' | 'priceAsc' | 'newArrivals';
+/**
+ * priceDesc（价格从高到低，盒马式 6 档方案②）：后端 8ea63c2 已支持（SORT_BY_ORDERBY
+ *   priceDesc: [{priceMin:'desc'}]，openapi 枚举同步，sync-api 版本戳 8ea63c2）。
+ * UI 档位已放开（results.tsx PRICE_DESC_ENABLED=true）。
+ */
+export type ProductSortKeyWithPending = ProductSortKey | 'priceDesc';
 
 export function useProducts() {
   return useQuery({
@@ -150,7 +156,7 @@ export function useFrequentBundle(limit = 5) {
  */
 const SEARCH_PAGE_LIMIT = 20;
 
-export function useProductSearch(keyword: string, sortBy: ProductSortKey = 'all') {
+export function useProductSearch(keyword: string, sortBy: ProductSortKeyWithPending = 'all') {
   return useOffsetInfinite<Product, { items: Product[]; hasMore: boolean; total: number }>({
     queryKey: PRODUCT_SEARCH_KEY(keyword, sortBy),
     fetchPage: (offset) => productApi.search(keyword, { offset, limit: SEARCH_PAGE_LIMIT, sortBy }),

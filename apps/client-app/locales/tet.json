@@ -1359,7 +1359,9 @@
     "E-OOS-003": "Item ne'e rejistu ona foun",
     "E-OOS-004": "Foun tomak bele rejistu deit iha fase pick (fase rider bele parcial deit)",
     "E-OOS-005": "Foto evidénsia la loos (máximu 3, tenke URL husi plataforma ne'e)",
-    "E-TICKET-001": "Tiket la hetan"
+    "E-TICKET-001": "Tiket la hetan",
+    "E-TICKET-002": "Mudansa estatus tiket la permite",
+    "E-TICKET-003": "Tiket tiha ona iha estatus ida nee"
   },
   "search": {
     "recent": "Buka Recente",
@@ -1369,6 +1371,7 @@
     "sort": {
       "bestSelling": "Faan Di'ak Liu",
       "priceAsc": "Presu: Kiak to'o Boot",
+      "priceDesc": "Presu: Boot to'o Kiak",
       "newArrivals": "Sasan Foun",
       "a11y": "Ordena tuir {{label}}"
     },
