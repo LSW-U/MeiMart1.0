@@ -56,16 +56,22 @@ jest.mock('@/services/queries/useProducts', () => ({
     hasNextPage: false,
     isFetchingNextPage: false,
   }),
-  useProducts: () => ({
-    data: [
-      {
-        id: 'rp001',
-        name: { en: 'Rec Product', zh: '推荐品', tet: 'Rec', pt: 'Rec' },
-        price: 8,
-        image: 'img',
-        category: 'c002',
-      },
-    ],
+  // 20261105：推荐区迁 useRecommendationsInfinite（限5条+换一批），useProducts 摘除
+  useRecommendationsInfinite: () => ({
+    data: {
+      pages: [
+        [
+          {
+            id: 'rp001',
+            name: { en: 'Rec Product', zh: '推荐品', tet: 'Rec', pt: 'Rec' },
+            price: 8,
+            image: 'img',
+            category: 'c002',
+          },
+        ],
+      ],
+    },
+    isFetching: false,
   }),
 }));
 

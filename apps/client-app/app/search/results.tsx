@@ -38,7 +38,7 @@ import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import { toast } from '@/store/toastStore';
 import {
   useProductSearch,
-  useProducts,
+  useRecommendationsInfinite,
   type ProductSortKeyWithPending,
 } from '@/services/queries/useProducts';
 import { useSearchSuggest } from '@/services/queries/useSearchSuggest';
@@ -74,11 +74,14 @@ const WEB_MAX_WIDTH = 720;
 
 export default function SearchResultsPage() {
   const { colors } = useTheme();
-  const params = useLocalSearchParams<{ q: string; categoryId?: string }>();
+  const params = useLocalSearchParams<{ q: string; categoryId?: string; preset?: string }>();
   // Filter Tags 联动（2026-11-05）：index 页分类胶囊跳入带 categoryId（q 可空）——
   //   空词+纯分类过滤（后端 listProducts 独立支持），useProductSearch enabled 已放行此路径
   const categoryId =
     typeof params.categoryId === 'string' && params.categoryId ? params.categoryId : undefined;
+  // 20261105 拍板（2A）：preset=分类展示名，仅供搜索框回填（initialKeyword 用），不进
+  //   keyword——防把分类名误当搜索词再查一遍（污染结果计数+热搜记账）。
+  const preset = typeof params.preset === 'string' && params.preset ? params.preset : '';
   const keyword = useDebounce(params.q ?? '', 300);
   const { t } = useTranslation();
   // activeSort 类型取 ProductSortKeyWithPending（含 priceDesc）——档位 UI 先行，
@@ -159,11 +162,42 @@ export default function SearchResultsPage() {
     }
   };
 
-  // P8-6 R1：Recommended 数据源 useProducts（与 P7/home 一致），去重过渡期可接受（方案 §2.4）
-  const { data: realProducts } = useProducts();
-  // Why: useMemo 包一层——下方 splitMasonryBalanced 的 useMemo 依赖它，裸 `?? []`
-  //   每次 render 新引用会击穿 memo（react-hooks/exhaustive-deps 实测警告）
-  const recommendList = useMemo(() => realProducts ?? [], [realProducts]);
+  // 20261105 拍板（1A）：推荐区同 index.tsx 迁 useRecommendationsInfinite——原 useProducts
+  //   全量 70 条废弃，限 5 条 + 换一批（baseOffset/cycle 双 state + 短批探底回绕 + cycle++
+  //   无条件换 key 堵缓存复用口，home/index 同款三连）。1A 拍板不加结果排除：「推荐」独立
+  //   于搜索结果，与 home 同语义，重叠可接受。
+  const SEARCH_RECOMMEND_LIMIT = 5;
+  const [recommendBaseOffset, setRecommendBaseOffset] = useState(0);
+  const [recommendCycle, setRecommendCycle] = useState(0);
+  const { data: recommendPages, isFetching: isFetchingRecommend } = useRecommendationsInfinite({
+    limit: SEARCH_RECOMMEND_LIMIT,
+    baseOffset: recommendBaseOffset,
+    cycle: recommendCycle,
+  });
+  const recommendList = useMemo(() => {
+    const pages = recommendPages?.pages ?? [];
+    return pages.length > 0 ? pages[pages.length - 1] : [];
+  }, [recommendPages]);
+  // 短批探池终点（home.tsx 同款）：某批 < limit 说明池到头，记 poolEnd 供回绕判定
+  const recommendPoolEnd = useMemo(() => {
+    const pages = recommendPages?.pages ?? [];
+    if (pages.length === 0) return null;
+    const last = pages[pages.length - 1];
+    if (last.length >= SEARCH_RECOMMEND_LIMIT) return null;
+    return recommendBaseOffset + (pages.length - 1) * SEARCH_RECOMMEND_LIMIT + last.length;
+  }, [recommendPages, recommendBaseOffset]);
+  const handleRecommendChangeBatch = useCallback(() => {
+    if (!isFetchingRecommend) {
+      setRecommendCycle((c) => c + 1);
+      setRecommendBaseOffset((prev) => {
+        const next = prev + SEARCH_RECOMMEND_LIMIT;
+        if (recommendPoolEnd != null && next >= recommendPoolEnd) {
+          return 0;
+        }
+        return next;
+      });
+    }
+  }, [isFetchingRecommend, recommendPoolEnd]);
   // Why: 20261023 方案A——奇偶分列改累计高度均衡分列（home 同款 splitMasonryBalanced）
   const [masonryCol1, masonryCol2] = useMemo(
     () => splitMasonryBalanced(recommendList),
@@ -217,6 +251,7 @@ export default function SearchResultsPage() {
 
   // P8-7: 顶部搜索框可编辑（同 P7 SearchBar + 麦克风）
   // Why: Header 用 key={params.q} 重挂载同步搜索词，避免 effect setState（react-hooks 规则）
+  // 20261105（2A）：initialKeyword 可为 preset（分类展示名回填）——框里有词方便改；q 语义不动
   const { addRecent } = useRecentSearches();
   const handleSubmitSearch = (q: string) => {
     const trimmed = q.trim();
@@ -227,6 +262,7 @@ export default function SearchResultsPage() {
       return;
     }
     // P7 F1：搜索提交记录 Recent（AsyncStorage 持久化，index 页同款）
+    // 2A 边界：preset 回填词被直接提交时也记 Recent（用户主动点了搜索=真实意图），可接受
     addRecent(trimmed);
     // Why: 提交后必须收起面板（P1-1 审查 20261105）——Header key={params.q} 重挂载不触发
     //   onBlur，onSuggestBlur 的 200ms 收起不跑，面板会叠在新结果上（index.tsx 同款修复）。
@@ -242,9 +278,34 @@ export default function SearchResultsPage() {
   const renderRecommended = () =>
     recommendList.length > 0 ? (
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-          {t('search.recommended')}
-        </Text>
+        {/* 标题行 + 换一批按钮（index.tsx/home.tsx 同款：refresh 图标 + isFetching 防连点） */}
+        <View style={styles.recommendHeaderRow}>
+          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+            {t('search.recommended')}
+          </Text>
+          <Pressable
+            testID="search-results-recommend-change-batch"
+            onPress={handleRecommendChangeBatch}
+            disabled={isFetchingRecommend}
+            style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.changeBatch')}
+          >
+            <Icon
+              symbol="refresh"
+              size={16}
+              color={isFetchingRecommend ? colors.outline : colors.primary}
+            />
+            <Text
+              style={[
+                styles.changeBatchText,
+                { color: isFetchingRecommend ? colors.outline : colors.primary },
+              ]}
+            >
+              {t('home.changeBatch')}
+            </Text>
+          </Pressable>
+        </View>
         <View style={styles.masonryRow}>
           <View style={styles.masonryCol}>
             {masonryCol1.map((product) => (
@@ -351,7 +412,7 @@ export default function SearchResultsPage() {
       >
         <Header
           key={params.q}
-          initialKeyword={params.q ?? ''}
+          initialKeyword={params.q || preset}
           onSubmitSearch={handleSubmitSearch}
           onSuggestTyping={(q) => {
             // P2-1：Header 回传 live 文本（面板联想源），并重开面板
@@ -646,6 +707,21 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.h3,
+    fontWeight: '600',
+  },
+  // 20261105 推荐区标题行 + 换一批按钮（index.tsx 同款规格）
+  recommendHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  changeBatchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  changeBatchText: {
+    fontSize: 13,
     fontWeight: '600',
   },
   masonryRow: {

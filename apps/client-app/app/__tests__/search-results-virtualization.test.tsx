@@ -23,7 +23,7 @@ import type { Product } from '@/types';
 import SearchResultsPage from '../../app/search/results';
 
 const mockUseProductSearch = jest.fn();
-const mockUseProducts = jest.fn();
+const mockUseRecommendations = jest.fn();
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
@@ -36,7 +36,8 @@ jest.mock('react-i18next', () => ({
 
 jest.mock('@/services/queries/useProducts', () => ({
   useProductSearch: (...args: unknown[]) => mockUseProductSearch(...args),
-  useProducts: (...args: unknown[]) => mockUseProducts(...args),
+  // 20261105：推荐区迁 useRecommendationsInfinite（限5条+换一批），useProducts 摘除
+  useRecommendationsInfinite: (...args: unknown[]) => mockUseRecommendations(...args),
 }));
 
 // F3 结果页联想接入：新增页面级 hooks 全 mock（本测试只取证虚拟化，联想非其职责）
@@ -90,7 +91,10 @@ describe('C-P2-10 FlatList 虚拟化渲染计数（P3-3 证据）', () => {
       hasNextPage: false,
       isFetchingNextPage: false,
     });
-    mockUseProducts.mockReturnValue({ data: [] });
+    mockUseRecommendations.mockReturnValue({
+      data: { pages: [[]] },
+      isFetching: false,
+    });
 
     render(<SearchResultsPage />, {
       wrapper: ({ children }: { children: React.ReactNode }) => (

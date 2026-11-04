@@ -223,12 +223,21 @@ export default function SearchIndexPage() {
   //   分类胶囊跳结果页带 categoryId + 当前输入词（query 非空时组合 AND 过滤——后端
   //   listProducts categoryId 与 keyword ILIKE 独立条件天然 AND；空词则纯分类浏览，
   //   recordSearch 有 if(kw) 守卫不记热搜）。__ALL__ 清除分类过滤（词仍保留）。
+  // 20261105 拍板（2A）：分类胶囊跳转带 preset=分类展示名——结果页搜索框回填该词方便改；
+  //   params.q 语义不动（q 仍是真实搜索词，空就是空），preset 只做框内回填展示，
+  //   不进 keyword/结果计数/热搜记账（防把分类名误当 keyword 再搜污染数据）。
   const onPressFilterTag = (tag: string) => {
     setActiveTag(tag);
     const q = query.trim();
     router.push({
       pathname: '/search/results',
-      params: { q, ...(tag !== '__ALL__' && { categoryId: tag }) },
+      params: {
+        q,
+        ...(tag !== '__ALL__' && {
+          categoryId: tag,
+          preset: localize(categories?.find((c) => c.id === tag)?.name ?? ''),
+        }),
+      },
     });
   };
 
