@@ -186,6 +186,17 @@ export default function SearchIndexPage() {
     router.push({ pathname: '/search/results', params: { q: trimmed } });
   };
 
+  // Filter Tags 联动（2026-11-05 拍板方案A）：分类胶囊跳结果页带 categoryId，空词+纯分类过滤
+  //   （后端 listProducts categoryId 过滤独立于 keyword；useProductSearch enabled 已放行空词+分类）。
+  //   __ALL__ 清除过滤回全量——也跳结果页（展示全部 ACTIVE 商品，同分类选择的浏览语义）。
+  const onPressFilterTag = (tag: string) => {
+    setActiveTag(tag);
+    router.push({
+      pathname: '/search/results',
+      ...(tag === '__ALL__' ? { params: { q: '' } } : { params: { q: '', categoryId: tag } }),
+    });
+  };
+
   // Why: P7 §2.4 - Recommended 加购（同 home.tsx handleBuyAgainAddToCart）
   // Why: 批3 P2-2 —— 卡片签名 (product)=>void，回调 useCallback 直传（消灭内联箭头）
   const handleAddToCart = useCallback(
@@ -286,7 +297,7 @@ export default function SearchIndexPage() {
                   return (
                     <Pressable
                       key={tag}
-                      onPress={() => setActiveTag(tag)}
+                      onPress={() => onPressFilterTag(tag)}
                       style={[
                         styles.filterTag,
                         active

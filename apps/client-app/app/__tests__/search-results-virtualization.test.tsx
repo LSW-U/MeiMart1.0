@@ -47,6 +47,11 @@ jest.mock('@/services/queries/useSearchSuggest', () => ({
 jest.mock('@/services/queries/useSearchHot', () => ({
   useSearchHot: () => ({ data: [] }),
 }));
+// Filter Tags 联动（20261105）：页面新增 useCategories（分类名显示）——本测试只取证虚拟化，mock 掉
+jest.mock('@/services/queries/useCatalog', () => ({
+  useCategories: () => ({ data: [] }),
+}));
+// useLocalizer 走 useSyncExternalStore（无 QueryClient 依赖），无需 mock
 jest.mock('@/hooks/useRecentSearches', () => ({
   useRecentSearches: () => ({ addRecent: jest.fn() }),
 }));

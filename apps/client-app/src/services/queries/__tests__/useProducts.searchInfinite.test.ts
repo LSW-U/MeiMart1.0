@@ -132,4 +132,30 @@ describe('useProductSearch — offset 分页（前端接线批 批1 D3）', () =
     renderHookWithClient(() => useProductSearch('   '), qc);
     expect(mockSearch).not.toHaveBeenCalled();
   });
+
+  it('Filter Tags 联动（20261105）：空词+categoryId 合法请求（enabled 放行），透传分类参数', async () => {
+    mockSearch.mockResolvedValue(makePage(0, 5, 5));
+    const qc = createTestQueryClient();
+    const { result } = renderHookWithClient(() => useProductSearch('', 'all', 'c004'), qc);
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockSearch).toHaveBeenCalledWith('', {
+      offset: 0,
+      limit: 20,
+      sortBy: 'all',
+      categoryId: 'c004',
+    });
+  });
+
+  it('Filter Tags 联动：keyword+categoryId 组合 AND 过滤（两参同传）', async () => {
+    mockSearch.mockResolvedValue(makePage(0, 3, 3));
+    const qc = createTestQueryClient();
+    const { result } = renderHookWithClient(() => useProductSearch('rice', 'priceAsc', 'c004'), qc);
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockSearch).toHaveBeenCalledWith('rice', {
+      offset: 0,
+      limit: 20,
+      sortBy: 'priceAsc',
+      categoryId: 'c004',
+    });
+  });
 });

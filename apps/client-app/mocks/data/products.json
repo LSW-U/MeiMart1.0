@@ -276,5 +276,113 @@
     },
     "createdAt": "2026-08-05T00:00:00Z",
     "defaultSkuId": "sku-p015"
+  },
+  {
+    "id": "p016",
+    "name": {
+      "zh": "泰国香米 2kg",
+      "en": "Thai Jasmine Rice 2kg",
+      "tet": "Arroz Jasmim Tailândia 2kg"
+    },
+    "price": 32.5,
+    "originalPrice": 39.0,
+    "image": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400",
+    "category": "c004",
+    "rating": 4.7,
+    "salesCount": 1100,
+    "stock": 45,
+    "description": {
+      "zh": "泰国进口香米，粒粒分明",
+      "en": "Imported Thai jasmine rice, fluffy grains",
+      "tet": "Arroz importadu Tailândia, diak"
+    },
+    "createdAt": "2026-08-06T00:00:00Z",
+    "defaultSkuId": "sku-p016"
+  },
+  {
+    "id": "p017",
+    "name": {
+      "zh": "糙米 1kg",
+      "en": "Brown Rice 1kg",
+      "tet": "Arroz Integral 1kg"
+    },
+    "price": 18.9,
+    "image": "https://images.unsplash.com/photo-1516684732162-798a0062be99?w=400",
+    "category": "c004",
+    "rating": 4.5,
+    "salesCount": 420,
+    "stock": 30,
+    "description": {
+      "zh": "高纤糙米，健康首选",
+      "en": "High-fiber brown rice, a healthy pick",
+      "tet": "Arroz fibra aas, isin diak"
+    },
+    "createdAt": "2026-08-07T00:00:00Z",
+    "defaultSkuId": "sku-p017"
+  },
+  {
+    "id": "p018",
+    "name": {
+      "zh": "糯米 1kg",
+      "en": "Glutinous Rice 1kg",
+      "tet": "Arroz Glutinózu 1kg"
+    },
+    "price": 15.5,
+    "originalPrice": 19.0,
+    "image": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400",
+    "category": "c004",
+    "rating": 4.6,
+    "salesCount": 350,
+    "stock": 25,
+    "description": {
+      "zh": "软糯香甜，适合粽子甜品",
+      "en": "Soft and sweet, great for zongzi and desserts",
+      "tet": "Mamuk i metin, diak ba Document"
+    },
+    "createdAt": "2026-08-08T00:00:00Z",
+    "defaultSkuId": "sku-p018"
+  },
+  {
+    "id": "p019",
+    "name": {
+      "zh": "小米 500g",
+      "en": "Millet 500g",
+      "tet": "Milhetu 500g"
+    },
+    "price": 12.0,
+    "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400",
+    "category": "c004",
+    "rating": 4.4,
+    "salesCount": 210,
+    "stock": 20,
+    "description": {
+      "zh": "北方小米，煮粥佳品",
+      "en": "Northern millet, perfect for porridge",
+      "tet": "Milhetu ba kanja"
+    },
+    "createdAt": "2026-08-09T00:00:00Z",
+    "defaultSkuId": "sku-p019"
+  },
+  {
+    "id": "p020",
+    "name": {
+      "zh": "燕麦片 1kg",
+      "en": "Rolled Oats 1kg",
+      "tet": "Aveia 1kg"
+    },
+    "price": 21.9,
+    "originalPrice": 26.0,
+    "image": "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=400",
+    "category": "c004",
+    "rating": 4.8,
+    "salesCount": 1500,
+    "stock": 60,
+    "description": {
+      "zh": "即食燕麦，早餐好搭档",
+      "en": "Quick-cook oats, a great breakfast",
+      "tet": "Aveia ba rain lok"
+    },
+    "createdAt": "2026-08-10T00:00:00Z",
+    "defaultSkuId": "sku-p020"
   }
 ]

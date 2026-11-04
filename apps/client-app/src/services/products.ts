@@ -261,11 +261,16 @@ export const productApi = {
       /** offset 口径页大小（后端默认 20/max 100），仅与 offset 配合 */
       limit?: number;
       sortBy?: string;
+      /** 分类过滤（2026-11-05 Filter Tags 联动）：空词+分类合法，后端 listProducts 既有过滤 */
+      categoryId?: string;
     },
   ): Promise<{ items: Product[]; hasMore: boolean; total: number }> {
     if (isMockMode) {
       const lower = keyword.toLowerCase();
       const filtered = withMockCategoryTop3(mockDb.products).filter((p) => {
+        // Why: categoryId 过滤（20261105 Filter Tags 联动）——mock 商品 category 是分类 id
+        //   （p.category === 'c004'，getByCategory 同款匹配先例）；与关键词 AND 组合
+        if (opts?.categoryId && p.category !== opts.categoryId) return false;
         const name = pickLocalized(p.name, getCurrentLocale());
         return name.toLowerCase().includes(lower);
       });
@@ -287,6 +292,7 @@ export const productApi = {
         ...(opts?.offset !== undefined && { offset: opts.offset }),
         ...(opts?.limit !== undefined && { limit: opts.limit }),
         ...(opts?.sortBy && { sortBy: opts.sortBy }),
+        ...(opts?.categoryId && { categoryId: opts.categoryId }),
       },
     });
     return {

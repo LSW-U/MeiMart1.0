@@ -156,13 +156,27 @@ export function useFrequentBundle(limit = 5) {
  */
 const SEARCH_PAGE_LIMIT = 20;
 
-export function useProductSearch(keyword: string, sortBy: ProductSortKeyWithPending = 'all') {
+export function useProductSearch(
+  keyword: string,
+  sortBy: ProductSortKeyWithPending = 'all',
+  categoryId?: string,
+) {
+  // Filter Tags 联动（2026-11-05）：空词+分类合法（后端 listProducts categoryId 过滤独立于
+  //   keyword ILIKE，recordSearch 有 if(kw) 守卫纯分类浏览不记热搜）——enabled 两条路径放行：
+  //   有词（原语义）或有分类（新）。两者皆空仍拦（首页初始态不发请求）。
+  const hasQuery = keyword.trim().length > 0 || Boolean(categoryId);
   return useOffsetInfinite<Product, { items: Product[]; hasMore: boolean; total: number }>({
-    queryKey: PRODUCT_SEARCH_KEY(keyword, sortBy),
-    fetchPage: (offset) => productApi.search(keyword, { offset, limit: SEARCH_PAGE_LIMIT, sortBy }),
+    queryKey: PRODUCT_SEARCH_KEY(keyword, sortBy, categoryId ?? ''),
+    fetchPage: (offset) =>
+      productApi.search(keyword, {
+        offset,
+        limit: SEARCH_PAGE_LIMIT,
+        sortBy,
+        ...(categoryId && { categoryId }),
+      }),
     itemsOf: (page) => page.items,
     limit: SEARCH_PAGE_LIMIT,
-    enabled: keyword.trim().length > 0,
+    enabled: hasQuery,
     keepPreviousData: true,
     staleTime: STALE_TIME.search,
   });

@@ -4,12 +4,14 @@
 // Fix-11: Primary tais-pattern Header + 内嵌只读搜索 + 排序栏 + 结果计数 + Load More
 import { useCallback, useMemo, useState } from 'react';
 import {
+  Platform,
   StyleSheet,
   View,
   Text,
   FlatList,
   Pressable,
   ScrollView,
+  type LayoutChangeEvent,
   type NativeScrollEvent,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -41,8 +43,11 @@ import {
 } from '@/services/queries/useProducts';
 import { useSearchSuggest } from '@/services/queries/useSearchSuggest';
 import { useSearchHot } from '@/services/queries/useSearchHot';
+import { useCategories } from '@/services/queries/useCatalog';
 import { SuggestPanel } from '@/components/business/SuggestPanel';
 import { useRecentSearches } from '@/hooks/useRecentSearches';
+import { useLocalizer } from '@/i18n';
+import { buildSortOptions } from '@/utils/searchSortOptions';
 import { trackSearchClick } from '@/services/behavior';
 import { useCart, useAddToCart } from '@/services/queries/useCart';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -58,21 +63,22 @@ const ON_PRIMARY = '#ffffff';
 //   openapi 枚举，live 验证 sortBy=priceDesc 200 且 priceMin 降序），档位放开。
 //   回退开关：后端若回滚，改回 false 即置灰（前端 narrowing 兜底仍防误发）。
 const PRICE_DESC_ENABLED = true;
-const SORT_OPTIONS: {
-  key: ProductSortKeyWithPending;
-  labelKey: string;
-  disabled?: boolean;
-}[] = [
-  { key: 'all', labelKey: 'common.all' },
-  { key: 'bestSelling', labelKey: 'search.sort.bestSelling' },
-  { key: 'priceAsc', labelKey: 'search.sort.priceAsc' },
-  { key: 'priceDesc', labelKey: 'search.sort.priceDesc', disabled: !PRICE_DESC_ENABLED },
-  { key: 'newArrivals', labelKey: 'search.sort.newArrivals' },
-];
+// P3-3（20261105）：SORT_OPTIONS 移 src/utils/searchSortOptions.ts 纯函数（disabled 分支补测），
+//   此处仅保留回退开关常量，语义同前（后端 8ea63c2 已交付 priceDesc，回滚改 false 即置灰）。
+const SORT_OPTIONS = buildSortOptions(PRICE_DESC_ENABLED);
+
+// 拍板项3（20261105）：web 端结果页限宽居中——大屏两列网格拉满屏不可读（rice 仅 1 条结果
+//   时卡片独吃整行尤甚）。720px 常见 web 阅读宽；native 不生效。宽值经 onLayout 量测天然
+//   参与 cellBasis 计算，无需在 cellBasis 特判。
+const WEB_MAX_WIDTH = 720;
 
 export default function SearchResultsPage() {
   const { colors } = useTheme();
-  const params = useLocalSearchParams<{ q: string }>();
+  const params = useLocalSearchParams<{ q: string; categoryId?: string }>();
+  // Filter Tags 联动（2026-11-05）：index 页分类胶囊跳入带 categoryId（q 可空）——
+  //   空词+纯分类过滤（后端 listProducts 独立支持），useProductSearch enabled 已放行此路径
+  const categoryId =
+    typeof params.categoryId === 'string' && params.categoryId ? params.categoryId : undefined;
   const keyword = useDebounce(params.q ?? '', 300);
   const { t } = useTranslation();
   // activeSort 类型取 ProductSortKeyWithPending（含 priceDesc）——档位 UI 先行，
@@ -114,12 +120,32 @@ export default function SearchResultsPage() {
     .map((item) => ({ word: item.word, searchCount: item.searchCount }));
   // P8-5 F2+F3：sortBy 变重查第一页（决策 2-B），onEndReached 触发 fetchNextPage（决策 3-B）
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useProductSearch(keyword, activeSort);
+    useProductSearch(keyword, activeSort, categoryId);
   // Why: pages.flatMap 拼接所有已加载页；total 取首页（搜索结果总数，非累计已加载数）。
   //   后端 offset 分页排序不稳定时跨页重复商品 → 同 id 渲染两次 duplicate key（home 实证
   //   20261023），按 id 去重防渲染层炸；根治靠后端 ORDER BY tie-breaker（审查 Q4 收敛 util）。
   const results = useMemo(() => dedupeById(data?.pages.flatMap((p) => p.items) ?? []), [data]);
   const count = data?.pages[0]?.total ?? 0;
+
+  // Filter Tags 联动（2026-11-05）：结果计数行显示分类名（纯分类浏览时 q 为空，标题只有计数）。
+  //   index.tsx 同款口径：批1 A4 透传后 name 是 LocalizableText，显示走 localize()
+  const localize = useLocalizer();
+  const { data: categories } = useCategories();
+  const categoryLabel = categoryId
+    ? localize(categories?.find((c) => c.id === categoryId)?.name ?? '')
+    : '';
+
+  // P3-4 拍板（20261105）：flexBasis 精确像素替代 48.5% 近似——onLayout 量 FlatList 容器宽，
+  //   扣 scrollContent 两侧 container-margin（padding 作用在内容上，行容器实际可用宽 =
+  //   容器宽 - 2×margin），算 (可用宽 - gutter) / 2，单卡尾行与双卡行永远等宽（48.5% 近似
+  //   依赖 columnGap 吃容差，换 gutter 值会漂）。量测前回退 48.5% 占位（首帧一致，回调后
+  //   重渲染切精确值）。web 端容器限宽（WEB_MAX_WIDTH）天然参与量测，无需特判。
+  const [gridWidth, setGridWidth] = useState<number | null>(null);
+  const handleGridLayout = useCallback((e: LayoutChangeEvent) => {
+    setGridWidth(e.nativeEvent.layout.width);
+  }, []);
+  const cellBasis =
+    gridWidth !== null ? (gridWidth - layout['container-margin'] * 2 - layout.gutter) / 2 : '48.5%';
 
   // P8-5 F3：ScrollView 触底加载下一页（distanceFromBottom < 200）
   const handleScroll = ({ nativeEvent }: { nativeEvent: NativeScrollEvent }) => {
@@ -173,7 +199,7 @@ export default function SearchResultsPage() {
   //   ProductCard onPress 签名是 (product) => void（非 () => void），直接传稳定 router 跳转。
   const renderResultItem = useCallback(
     ({ item }: { item: Product }) => (
-      <View style={styles.gridCell}>
+      <View style={[styles.gridCell, { flexBasis: cellBasis as number }]}>
         {/* C-P3-10（批4 修复）：徽章走 resolveBadges 真实口径（Recommended 区同款），宁缺毋假 */}
         <ProductCard
           product={item}
@@ -183,7 +209,7 @@ export default function SearchResultsPage() {
         />
       </View>
     ),
-    [t, handleCardPress],
+    [t, handleCardPress, cellBasis],
   );
 
   // P8-7: 顶部搜索框可编辑（同 P7 SearchBar + 麦克风）
@@ -299,111 +325,122 @@ export default function SearchResultsPage() {
           </ScrollView>
         </View>
 
-        {/* Results Found 计数 */}
+        {/* Results Found 计数——纯分类浏览（q 空）时显示分类名前缀 */}
         <Text style={[styles.countText, { color: colors['on-surface-variant'] }]}>
-          {t('search.resultCount', { count })}
+          {categoryLabel
+            ? `${categoryLabel} · ${t('search.resultCount', { count })}`
+            : t('search.resultCount', { count })}
         </Text>
       </>
     ),
-    [colors, count, handleSortPress, t, activeSort],
+    [colors, count, handleSortPress, t, activeSort, categoryLabel],
   );
 
   return (
     <SafeAreaWrapper edges={['bottom']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <StatusBarConfig />
-      <Header
-        key={params.q}
-        initialKeyword={params.q ?? ''}
-        onSubmitSearch={handleSubmitSearch}
-        onSuggestTyping={(q) => {
-          // P2-1：Header 回传 live 文本（面板联想源），并重开面板
-          setLiveQuery(q);
-          setSuggestOpen(true);
-        }}
-        onSuggestBlur={() => setTimeout(() => setSuggestOpen(false), 200)}
-      />
-
-      {/* F3：SuggestPanel 挂 Header 同级 absolute——top 动态算（header 红底自治 insets.top，
-          不可复用 index 页固定 SEARCH_HEADER_H 常量），不随内容滚动，词提交复用 handleSubmitSearch。 */}
-      {showSuggest && (
-        <View
-          style={[styles.suggestWrap, { top: insets.top + spacing.sm * 2 + 48 }]}
-          pointerEvents="box-none"
-        >
-          <SuggestPanel
-            words={suggestWords ?? []}
-            products={[]}
-            showProducts={false}
-            query={liveQuery}
-            isLoading={isSuggestLoading}
-            hotFallback={hotFallback}
-            onWordPress={handleSubmitSearch}
-            onProductPress={(p) => router.push(`/product/${p.id}`)}
-            onHotFallbackPress={handleSubmitSearch}
-          />
-        </View>
-      )}
-
-      {isLoading ? (
-        // 批2 阶段2（D8 审计）：自实现 4 卡骨架拼装换 PageSkeleton(grid)，shimmer 流光统一
-        <PageSkeleton variant="grid" />
-      ) : isError ? (
-        <ErrorState message={t('errors.products')} onRetry={() => refetch()} />
-      ) : !results || results.length === 0 ? (
-        // P8-6: empty 也给推荐延伸浏览（用户决策 2026-08-04）
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
-          <EmptyState
-            title={t('search.noResultTitle')}
-            description={t('search.noResultDesc', { q: params.q ?? '' })}
-            icon="package-variant"
-          />
-          {/* F1：empty 分支补 footerSection 同款横向 padding（结果分支由 FlatList footer 承担） */}
-          <View style={styles.footerSection}>{renderRecommended()}</View>
-        </ScrollView>
-      ) : (
-        // A-P2-2: 单列表容器——FlatList 直接承担滚动（虚拟化生效），筛选/计数挂
-        //   ListHeaderComponent，Load More/Recommended 挂 ListFooterComponent
-        <FlatList
-          style={{ flex: 1 }}
-          data={results}
-          keyExtractor={(item: Product) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.grid}
-          contentContainerStyle={styles.scrollContent}
-          renderItem={renderResultItem}
-          ListHeaderComponent={renderListHeader}
-          ListFooterComponent={
-            <View style={styles.footerSection}>
-              {/* P8-5 F3 真实分页：hasNextPage 时显示 Load More，无更多隐藏（替假 spinner） */}
-              {(hasNextPage || isFetchingNextPage) && (
-                <View style={styles.loadMore}>
-                  <View
-                    style={[
-                      styles.spinner,
-                      {
-                        borderColor: colors.outline,
-                        borderTopColor: colors.primary,
-                      },
-                    ]}
-                  />
-                  <Text style={[styles.loadMoreText, { color: colors['on-surface-variant'] }]}>
-                    {t('search.loadingMore')}
-                  </Text>
-                </View>
-              )}
-
-              {/* P8-6 R2/R4：Recommended 瀑布流，分页结束后（!hasNextPage）显示，避免穿插每页底部 */}
-              {!hasNextPage && renderRecommended()}
-            </View>
-          }
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          showsVerticalScrollIndicator={false}
-          initialNumToRender={6}
-          maxToRenderPerBatch={4}
-          windowSize={5}
+      <View
+        style={
+          Platform.OS === 'web'
+            ? { width: '100%' as const, maxWidth: WEB_MAX_WIDTH, alignSelf: 'center', flex: 1 }
+            : { flex: 1 }
+        }
+      >
+        <Header
+          key={params.q}
+          initialKeyword={params.q ?? ''}
+          onSubmitSearch={handleSubmitSearch}
+          onSuggestTyping={(q) => {
+            // P2-1：Header 回传 live 文本（面板联想源），并重开面板
+            setLiveQuery(q);
+            setSuggestOpen(true);
+          }}
+          onSuggestBlur={() => setTimeout(() => setSuggestOpen(false), 200)}
         />
-      )}
+
+        {/* F3：SuggestPanel 挂 Header 同级 absolute——top 动态算（header 红底自治 insets.top，
+          不可复用 index 页固定 SEARCH_HEADER_H 常量），不随内容滚动，词提交复用 handleSubmitSearch。 */}
+        {showSuggest && (
+          <View
+            style={[styles.suggestWrap, { top: insets.top + spacing.sm * 2 + 48 }]}
+            pointerEvents="box-none"
+          >
+            <SuggestPanel
+              words={suggestWords ?? []}
+              products={[]}
+              showProducts={false}
+              query={liveQuery}
+              isLoading={isSuggestLoading}
+              hotFallback={hotFallback}
+              onWordPress={handleSubmitSearch}
+              onProductPress={(p) => router.push(`/product/${p.id}`)}
+              onHotFallbackPress={handleSubmitSearch}
+            />
+          </View>
+        )}
+
+        {isLoading ? (
+          // 批2 阶段2（D8 审计）：自实现 4 卡骨架拼装换 PageSkeleton(grid)，shimmer 流光统一
+          <PageSkeleton variant="grid" />
+        ) : isError ? (
+          <ErrorState message={t('errors.products')} onRetry={() => refetch()} />
+        ) : !results || results.length === 0 ? (
+          // P8-6: empty 也给推荐延伸浏览（用户决策 2026-08-04）
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+            <EmptyState
+              title={t('search.noResultTitle')}
+              description={t('search.noResultDesc', { q: params.q ?? '' })}
+              icon="package-variant"
+            />
+            {/* F1：empty 分支补 footerSection 同款横向 padding（结果分支由 FlatList footer 承担） */}
+            <View style={styles.footerSection}>{renderRecommended()}</View>
+          </ScrollView>
+        ) : (
+          // A-P2-2: 单列表容器——FlatList 直接承担滚动（虚拟化生效），筛选/计数挂
+          //   ListHeaderComponent，Load More/Recommended 挂 ListFooterComponent
+          <FlatList
+            style={{ flex: 1 }}
+            data={results}
+            keyExtractor={(item: Product) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.grid}
+            contentContainerStyle={styles.scrollContent}
+            renderItem={renderResultItem}
+            onLayout={handleGridLayout}
+            ListHeaderComponent={renderListHeader}
+            ListFooterComponent={
+              <View style={styles.footerSection}>
+                {/* P8-5 F3 真实分页：hasNextPage 时显示 Load More，无更多隐藏（替假 spinner） */}
+                {(hasNextPage || isFetchingNextPage) && (
+                  <View style={styles.loadMore}>
+                    <View
+                      style={[
+                        styles.spinner,
+                        {
+                          borderColor: colors.outline,
+                          borderTopColor: colors.primary,
+                        },
+                      ]}
+                    />
+                    <Text style={[styles.loadMoreText, { color: colors['on-surface-variant'] }]}>
+                      {t('search.loadingMore')}
+                    </Text>
+                  </View>
+                )}
+
+                {/* P8-6 R2/R4：Recommended 瀑布流，分页结束后（!hasNextPage）显示，避免穿插每页底部 */}
+                {!hasNextPage && renderRecommended()}
+              </View>
+            }
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={false}
+            initialNumToRender={6}
+            maxToRenderPerBatch={4}
+            windowSize={5}
+          />
+        )}
+      </View>
     </SafeAreaWrapper>
   );
 }
@@ -577,10 +614,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   gridCell: {
-    // Why: flexBasis 48.5% 不用 flex:1（20261105 验收方案①）——flex:1 在奇数尾行单卡时
-    //   独吃整行宽（实测 cell 716 vs 双卡 352）卡片拉长；flexBasis 定宽后单卡停在左列，
-    //   宽度与双卡行一致（右侧自然留白，盒马式网格）。48.5% = (100% - gutter 12px)/2 近似，
-    //   columnGap 12 吃掉剩余 ~3% 中的一半，双卡行实测仍 352 宽不回退。
+    // Why: P3-4 拍板（20261105）flexBasis 改运行时注入精确像素（renderResultItem 内联覆盖，
+    //   见 cellBasis 计算）——此处的 48.5% 仅作 onLayout 回调前的首帧占位（量测前回退值）。
+    //   flex:1 在奇数尾行单卡时独吃整行宽（实测 cell 716 vs 双卡 352）卡片拉长；flexBasis
+    //   定宽后单卡停在左列，宽度与双卡行一致（右侧自然留白，盒马式网格）。
     flexBasis: '48.5%',
   },
   loadMore: {

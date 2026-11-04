@@ -63,17 +63,19 @@ describe('productApi 换一批 — mock 分支游标切片 + 越界回绕', () =
     mockApiGet.mockClear();
   });
 
-  it('offset=0/6/12 三批互不重叠（15 条池、limit 6）', async () => {
+  it('offset=0/6/12 三批互不重叠（池 20 条、limit 6；取 30 内短批——池扩容后 18 仍是短批信号）', async () => {
     const b1: Product[] = await productApi.getRecommendations({ limit: 6, offset: 0 });
     const b2: Product[] = await productApi.getRecommendations({ limit: 6, offset: 6 });
     const b3: Product[] = await productApi.getRecommendations({ limit: 6, offset: 12 });
-    const ids = new Set([...b1, ...b2, ...b3].map((p) => p.id));
-    expect(ids.size).toBe(b1.length + b2.length + b3.length);
-    expect(b3.length).toBeLessThan(6); // 末批短批 → 视图层回绕信号
+    const b4: Product[] = await productApi.getRecommendations({ limit: 6, offset: 18 });
+    const ids = new Set([...b1, ...b2, ...b3, ...b4].map((p) => p.id));
+    expect(ids.size).toBe(b1.length + b2.length + b3.length + b4.length);
+    expect(b4.length).toBeLessThan(6); // 末批短批 → 视图层回绕信号
   });
 
   it('offset 越界（≥池长）回绕 0（与视图层短批回绕语义一致）', async () => {
-    const wrapped: Product[] = await productApi.getRecommendations({ limit: 6, offset: 18 });
+    // 池 20 条（扩 seed 20261105 +5）→ offset=24（≥20）越界回绕
+    const wrapped: Product[] = await productApi.getRecommendations({ limit: 6, offset: 24 });
     const first: Product[] = await productApi.getRecommendations({ limit: 6, offset: 0 });
     expect(wrapped.map((p) => p.id)).toEqual(first.map((p) => p.id));
   });

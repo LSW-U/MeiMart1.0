@@ -101,8 +101,9 @@ export const PRODUCT_RECOMMEND_INFINITE_KEY = (baseOffset: number, cycle: number
 export const PRODUCT_BUY_AGAIN_KEY = (offset: number) => ['products', 'buy-again', offset] as const;
 export const PRODUCT_FREQUENT_BUNDLE_KEY = (limit: number) =>
   ['products', 'frequent-bundle', limit] as const;
-export const PRODUCT_SEARCH_KEY = (keyword: string, sortBy: string) =>
-  ['products', 'search', keyword, sortBy] as const;
+// categoryId（2026-11-05 Filter Tags 联动）：第三维度隔离缓存——同词同排序不同分类不得串 key
+export const PRODUCT_SEARCH_KEY = (keyword: string, sortBy: string, categoryId = '') =>
+  ['products', 'search', keyword, sortBy, categoryId] as const;
 export const PRODUCTS_BY_CATEGORY_KEY = (categoryId: string | undefined) =>
   ['products', 'category', categoryId] as const;
 export const PRODUCT_WAREHOUSE_AVAILABILITY_KEY = (
