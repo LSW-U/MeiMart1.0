@@ -153,6 +153,8 @@ export default function SearchIndexPage() {
   // 产品拍板 2026-11-04：商品区关闭，productsLen 恒 0（isSuggestLoading 公式保留结构，回开时填回）
   const productsLen = 0;
   const isSuggestLoading =
+    // P3-2 审查登记（20261105）：isProductsLoading 恒 false → 整式当前恒 false（加载态死路）；
+    //   商品联想回开时此式即恢复生效。
     isWordsLoading && isProductsLoading && wordsLen === 0 && productsLen === 0;
   // C方案 §7.4 - 空态 fallback 复用 hotList（slice 3 作 chips 补位）
   const hotFallback = (hotList ?? [])

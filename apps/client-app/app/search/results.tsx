@@ -86,14 +86,17 @@ export default function SearchResultsPage() {
   //   会让结果页自己的面板挂载即弹出叠在结果上（headless 实证 top:64 zIndex:10 面板残留）；
   //   面板只应在用户于结果页搜索框输入时出现（onSuggestTyping 重开）。
   const [suggestOpen, setSuggestOpen] = useState(false);
-  const debouncedQuery = useDebounce(params.q ?? '', 300);
+  // P2-1 审查修复（20261105）：live query 提升到页面层——面板/联想 hook 必须接用户正在敲的
+  //   文本（Header 内部 state 之前未上提，面板弹出显示的是旧 params.q 的联想）。index.tsx
+  //   同款口径：showSuggest/面板 query 用 live，useProductSearch 仍用 debounce(params.q)。
+  const [liveQuery, setLiveQuery] = useState('');
   // 联想门槛单源 shouldSuggest（2026-11-04：CJK 单字放行，'米' 不再被 length>=2 误拦）
-  const showSuggest = suggestOpen && shouldSuggest(debouncedQuery);
+  const showSuggest = suggestOpen && shouldSuggest(liveQuery);
   // F3：面板 top 需动态让出红底 header（header 自治 insets.top，见 Header 组件）
   const insets = useSafeAreaInsets();
   const { data: hotList } = useSearchHot();
   const { data: suggestWords, isLoading: isWordsLoading } = useSearchSuggest(
-    debouncedQuery,
+    liveQuery,
     showSuggest,
   );
   const isProductsLoading = false;
@@ -102,6 +105,8 @@ export default function SearchResultsPage() {
   // 产品拍板 2026-11-04：商品区关闭，productsLen 恒 0（isSuggestLoading 公式保留结构，回开时填回）
   const productsLen = 0;
   const isSuggestLoading =
+    // P3-2 审查登记（20261105）：isProductsLoading 恒 false → 整式当前恒 false（加载态死路，
+    //   SuggestPanel 靠 words 空 + wordsLen 0 自然走空态）；商品联想回开时此式即恢复生效。
     isWordsLoading && isProductsLoading && wordsLen === 0 && productsLen === 0;
   // C方案 §7.4 - 空态 fallback 复用 hotList（slice 3 作 chips 补位，index.tsx 同款）
   const hotFallback = (hotList ?? [])
@@ -194,6 +199,9 @@ export default function SearchResultsPage() {
     }
     // P7 F1：搜索提交记录 Recent（AsyncStorage 持久化，index 页同款）
     addRecent(trimmed);
+    // Why: 提交后必须收起面板（P1-1 审查 20261105）——Header key={params.q} 重挂载不触发
+    //   onBlur，onSuggestBlur 的 200ms 收起不跑，面板会叠在新结果上（index.tsx 同款修复）。
+    setSuggestOpen(false);
     // Why: setParams 刷新当前页（useProductSearch 自动重查），避免 push 堆路由栈
     router.setParams({ q: trimmed });
   };
@@ -307,7 +315,11 @@ export default function SearchResultsPage() {
         key={params.q}
         initialKeyword={params.q ?? ''}
         onSubmitSearch={handleSubmitSearch}
-        onSuggestTyping={() => setSuggestOpen(true)}
+        onSuggestTyping={(q) => {
+          // P2-1：Header 回传 live 文本（面板联想源），并重开面板
+          setLiveQuery(q);
+          setSuggestOpen(true);
+        }}
         onSuggestBlur={() => setTimeout(() => setSuggestOpen(false), 200)}
       />
 
@@ -322,7 +334,7 @@ export default function SearchResultsPage() {
             words={suggestWords ?? []}
             products={[]}
             showProducts={false}
-            query={debouncedQuery}
+            query={liveQuery}
             isLoading={isSuggestLoading}
             hotFallback={hotFallback}
             onWordPress={handleSubmitSearch}
@@ -398,6 +410,8 @@ export default function SearchResultsPage() {
 
 // Primary tais-pattern Header + 可编辑搜索框（P8-7 改 SearchBar，同 P7）
 // F3：新增 onSuggestTyping/onSuggestBlur 透传——输入重开联想面板、失焦延迟收起（index.tsx 同款时序）
+// P2-1（20261105）：onSuggestTyping 回传 live 文本——面板联想源需要用户正在敲的文本，
+//   该文本此前只在 Header 内部 state，页面层拿不到（面板显示旧词联想）
 function Header({
   initialKeyword,
   onSubmitSearch,
@@ -406,7 +420,7 @@ function Header({
 }: {
   initialKeyword: string;
   onSubmitSearch: (q: string) => void;
-  onSuggestTyping: () => void;
+  onSuggestTyping: (q: string) => void;
   onSuggestBlur: () => void;
 }) {
   const { colors } = useTheme();
@@ -446,8 +460,8 @@ function Header({
             value={query}
             onChange={(q) => {
               setQuery(q);
-              // F3：输入时重新打开面板（onBlur 延迟收起后重新输入需重开，index.tsx 同款）
-              onSuggestTyping();
+              // F3：输入时重新打开面板 + 回传 live 文本（P2-1，onBlur 延迟收起后重新输入需重开）
+              onSuggestTyping(q);
             }}
             onBlur={onSuggestBlur}
             onSubmit={onSubmitSearch}
