@@ -148,6 +148,9 @@ export default function HomePage() {
   //   末批仍满页 → poolEnd 记不到 → 再换一批 offset 越界返空批 → 推荐区闪空（search 页
   //   70/5=14 整除实证）。空批落地时自动回绕 baseOffset=0 + cycle++ 一次性修正；prev 值
   //   比对防循环。search index/results 同款。
+  // Why: 20261105 审查 P2-1——回绕时 prev 必须清回 null 而非留存当前 offset：整除场景
+  //   poolEnd 每圈都探不到，第二圈同 offset 再踩空批时 prev(70)===offset(70) 会使守卫
+  //   失效二次闪空。清 null 后守卫每圈重新生效（回绕后 data 变 undefined 不会连环触发）。
   const [prevEmptyBatchOffset, setPrevEmptyBatchOffset] = useState<number | null>(null);
   const lastBatch = recommendPages?.pages?.[recommendPages.pages.length - 1];
   if (
@@ -158,7 +161,7 @@ export default function HomePage() {
     !isFetchingNextPage
   ) {
     if (prevEmptyBatchOffset !== recommendBaseOffset) {
-      setPrevEmptyBatchOffset(recommendBaseOffset);
+      setPrevEmptyBatchOffset(null);
       setRecommendBaseOffset(0);
       setRecommendCycle((c) => c + 1);
     }
