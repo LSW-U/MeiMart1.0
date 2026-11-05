@@ -415,7 +415,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm + 2,
     paddingBottom: spacing.xxl * 2,
   },
-  // 网格瀑布流容器（同 home.tsx masonryRow/masonryCol 模式）
+  // 对称网格容器：行容器横向 gap 分列 + marginBottom 行距（FlatList 行距先例，rowGap 不触发）；
+  // home/search 仍是 masonryCol 纵向堆叠多卡的瀑布流，与本页对称网格不同构
   masonryContent: {
     padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
