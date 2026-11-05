@@ -22,7 +22,6 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Icon } from '@/components/ui/Icon';
 import { useFavorites, useRemoveFavorites } from '@/services/queries/useFavorites';
-import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import { useAddToCart } from '@/services/queries/useCart';
 import { useAuthStore } from '@/store/authStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
@@ -41,20 +40,25 @@ export default function FavoritesPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { data: favorites, isLoading, isError, refetch } = useFavorites();
-  // Why: 20261023 方案A——奇偶分列改累计高度均衡分列（home/search 同款 splitMasonryBalanced）；
-  //   1.2 虚拟化（业务增强批2，P-v2-2 分列行化）：保留分列算法，两列组装成「行数组」
-  //   （每行 = 左右各一张卡的容器）喂 FlatList numColumns=1——瀑布流视觉零变化 + 真虚拟化
+  // Why: 1.2 虚拟化（业务增强批2，P-v2-2 分列行化）：商品组装成「行数组」
+  //   （每行 = 左右各一张卡的容器）喂 FlatList numColumns=1——真虚拟化
   //   （ScrollView 全量渲染退役，offset-infinite-exceptions.md 红线已摘登记）。
-  //   ⚠️ 禁止 numColumns=2 扁平网格（破坏瀑布流高度错落视觉，方案已否决）。
-  const favoritesCols = useMemo(() => splitMasonryBalanced(favorites ?? []), [favorites]);
+  // 20261105 改版（方案甲，用户拍板）：瀑布流错落 → 左右对称等高网格——
+  //   用户两轮实测（4/6 个收藏）瀑布流行化后行距呆板/挤在一起（错落三档在小数据量下
+  //   节奏随机，交错配对救不了），拍板放弃错落改对称：每行左右两卡等高
+  //   （uniformImageHeight=168 固定中档），行距统一 spacing.md。
+  //   虚拟化保留：仍行化喂 FlatList numColumns=1（行 = 左右对半两卡容器），
+  //   offset-infinite-exceptions.md 口径不变（FlatList 真虚拟化）。
+  //   ⚠️ splitMasonryBalanced/高矮交错配对已删（对称网格不需要分列算法）。
+  const UNIFORM_IMAGE_HEIGHT = 168;
   const masonryRows = useMemo(() => {
     const rows: { left?: Product; right?: Product }[] = [];
-    const len = Math.max(favoritesCols[0].length, favoritesCols[1].length);
-    for (let i = 0; i < len; i += 1) {
-      rows.push({ left: favoritesCols[0][i], right: favoritesCols[1][i] });
+    const items = favorites ?? [];
+    for (let i = 0; i < items.length; i += 2) {
+      rows.push({ left: items[i], right: items[i + 1] });
     }
     return rows;
-  }, [favoritesCols]);
+  }, [favorites]);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { isOffline } = useWeakNetworkUI();
   const removeFavorites = useRemoveFavorites();
@@ -240,6 +244,7 @@ export default function FavoritesPage() {
         onAddToCart={handleCardAdd}
         selectMode={selectMode}
         isSelected={selected.has(item.id)}
+        uniformImageHeight={UNIFORM_IMAGE_HEIGHT}
         testID={`favorites-masonry-${item.id}`}
       />
     ),
@@ -415,12 +420,14 @@ const styles = StyleSheet.create({
     padding: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
   },
+  // Why: 行距用 marginBottom 不用 rowGap（FlatList 行容器不消费 gap；先例见 memory 行距坑）；
+  // 旧瀑布流行距来自 masonryCol 纵向堆叠 gap，行化后 col 只装单卡，纵向间距必须挂回行容器
   masonryRow: {
     flexDirection: 'row',
     gap: spacing.md,
+    marginBottom: spacing.md,
   },
   masonryCol: {
     flex: 1,
-    gap: spacing.md,
   },
 });

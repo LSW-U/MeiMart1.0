@@ -4,8 +4,8 @@
  * 覆盖：
  * 1. P0 渲染计数断言：大收藏集（60 项 → 30 行）下首屏渲染行数不随总量全量增长
  *    （FlatList 虚拟化窗口，仅可视窗 + 缓冲；ScrollView 全量渲染时代 60 卡全渲染）
- * 2. 分列行化视觉等价：每行左右两卡成对出现（行内左卡 id 与 splitMasonryBalanced
- *    分列结果一致——列序保持原相对顺序）
+ * 2. 对称网格行化（20261105 方案甲，用户拍板）：每行 = 原序相邻两张卡 [i, i+1]，
+ *    行序 = 数据序（瀑布流分列算法 splitMasonryBalanced 已弃用，favorites 不再引用）
  * 3. 奇数项收尾行：一侧可空（右列缺卡不炸、不渲染空卡）
  * 4. 列表态不受影响：切列表后 FlatList data 仍为 Product[]（HorizontalProductCard）
  */
@@ -16,7 +16,6 @@ import { ThemeProvider } from '@/theme';
 import * as favoritesQueries from '@/services/queries/useFavorites';
 import { useAuthStore } from '@/store/authStore';
 import FavoritesPage from '../favorites';
-import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import type { Product } from '@/types';
 
 jest.mock('react-i18next', () => ({
@@ -104,21 +103,16 @@ describe('favorites 网格虚拟化（1.2 分列行化）', () => {
     expect(count120).toBe(count60);
   });
 
-  it('分列行化视觉等价：行内左右两卡与 splitMasonryBalanced 分列一致（列序保持）', () => {
+  it('对称网格行化（20261105 方案甲）：每行 = 原序相邻两张卡 [i, i+1]，行序 = 数据序', () => {
     mockFavorites(bigFavorites);
     const { getAllByTestId } = render(<FavoritesPage />, { wrapper });
     const renderedIds = getAllByTestId(/^favorites-masonry-vp\d+$/)
       .map((n) => String(n.props.testID).replace('favorites-masonry-', ''))
       .slice(0, 12);
-    // splitMasonryBalanced 决定每行左右：行 i = 左列第 i 项 + 右列第 i 项
-    const [colL, colR] = splitMasonryBalanced(bigFavorites);
+    // 方案甲（用户拍板）：瀑布流错落改对称等高网格——不再分列（splitMasonryBalanced 已弃），
+    // 行 i = favorites[2i] + favorites[2i+1]（原序相邻配对），渲染序列 = 数据原序
     const expectedPairs: string[] = [];
-    const rows = Math.max(Math.ceil(renderedIds.length / 2), 0);
-    for (let i = 0; i < rows; i += 1) {
-      if (colL[i]) expectedPairs.push(colL[i].id);
-      if (colR[i]) expectedPairs.push(colR[i].id);
-    }
-    // 首屏渲染序列 = 逐行 [左,右] 交替（行序 = 分列序）
+    for (let i = 0; i < renderedIds.length; i += 1) expectedPairs.push(bigFavorites[i].id);
     expect(renderedIds).toEqual(expectedPairs);
   });
 

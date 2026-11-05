@@ -20,5 +20,10 @@ export interface MasonryProductCardProps {
    */
   selectMode?: boolean;
   isSelected?: boolean;
+  /**
+   * 20261105（favorites 对称网格改版）：固定图片高度（px）——传入后覆盖 id charCode
+   * 三档错落选档，行内左右卡等高（对称网格）。不传保持瀑布流错落（home/search 不受影响）。
+   */
+  uniformImageHeight?: number;
   testID?: string;
 }

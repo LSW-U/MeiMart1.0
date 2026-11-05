@@ -34,6 +34,7 @@ export const MasonryProductCard = memo(function MasonryProductCard({
   badge,
   selectMode = false,
   isSelected = false,
+  uniformImageHeight,
   testID,
 }: MasonryProductCardProps) {
   const { colors } = useTheme();
@@ -44,9 +45,10 @@ export const MasonryProductCard = memo(function MasonryProductCard({
   const handlePress = () => onPress(product);
   const handleLongPress = onLongPress ? () => onLongPress(product) : undefined;
   const handleAdd = () => onAddToCart(product);
-  // Why: 按 id charCode 选高度档位（稳定，同商品总同高度，避免切换重排）
+  // Why: 按 id charCode 选高度档位（稳定，同商品总同高度，避免切换重排）；
+  //      uniformImageHeight 传入时覆盖（favorites 对称网格：行内左右等高）
   const heightIdx = product.id.charCodeAt(0) % HEIGHT_VARIANTS.length;
-  const imageHeight = HEIGHT_VARIANTS[heightIdx];
+  const imageHeight = uniformImageHeight ?? HEIGHT_VARIANTS[heightIdx];
 
   // Why: 管理态整卡单 Pressable（图+信息区全可点，内层降级 View 无嵌套）；
   //      常态保持分区可点（图/名各自跳详情，add 独立——P0 模式）
