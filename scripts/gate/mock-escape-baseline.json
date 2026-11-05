@@ -96,6 +96,10 @@
     {
       "key": "apps/client-app/src/services/onboarding.ts::mockDb",
       "reason": "远端配置引导页 c9c9a88 存量，onboarding 运行时 mock 切换为既定架构（注释提及，非运行时）"
+    },
+    {
+      "key": "apps/client-app/src/services/tickets.ts::mockDb",
+      "reason": "工单化批2（106e6d3）service 层 mock 分支：对齐仓内 service 惯例（isMockMode 显式开关内返回 mock 数据，只读查询三端点），非运行时逃逸；总指挥 20261017 终验入账"
     }
   ]
 }
