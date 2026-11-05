@@ -467,4 +467,26 @@ describe('批D 商品详情整合', () => {
       expect(screen.getAllByText('Fresh Red Fuji Apple').length).toBeGreaterThan(0); // 主体不白屏
     });
   });
+
+  describe('3.5 reanimated 进场动画（业务增强批3）', () => {
+    it('动画容器挂载不崩溃，页面主体正常渲染（reanimated mock 下 Animated.View 透传）', () => {
+      setup({});
+      // 动画包裹 Carousel + 内容 Canvas：品名（3 处渲染）与轮播计数器均应在文档树内
+      expect(screen.getAllByText('Fresh Red Fuji Apple').length).toBeGreaterThan(0);
+      expect(screen.queryByText(/\/\d+$/)).toBeNull(); // 默认仅 mainImage 单图：计数器隐藏（同 D1 兜底用例）
+    });
+
+    it('loading 早退分支不包动画容器（PageSkeleton 直接渲染，无品名/计数器）', () => {
+      setupWithQueryState({ data: null, isLoading: true });
+      // PageSkeleton 内外两层均带 page-skeleton testID（组件实现），断言存在即可
+      expect(screen.root.findAllByProps({ testID: 'page-skeleton' }).length).toBeGreaterThan(0);
+      expect(screen.queryByText('Fresh Red Fuji Apple')).toBeNull();
+    });
+
+    it('a11y 不退化：加购按钮 accessibilityLabel 仍在（动画容器不吞可访问树）', () => {
+      setup({});
+      expect(screen.getByLabelText('product.addToCart')).toBeTruthy();
+      expect(screen.getByLabelText('product.buyNow')).toBeTruthy();
+    });
+  });
 });

@@ -2,13 +2,17 @@
 // D.12: PrimaryHeader + 视图切换 + 批量管理 + 空状态
 // 网格态：两列瀑布流（MasonryProductCard，与 home/search 统一）；列表态：HorizontalProductCard；
 // 管理态跟随当前视图（D7）：卡片原地变选择态，不切换卡片组件
+// 业务增强批3 拆分（1.1）：页面壳 + favorites/sections/{Toolbar,ManageBar} + favorites/shared.tsx——
+//   工具栏（计数+视图切换）与底部管理栏（全选+删除）抽 sections，VIEW_STORAGE_KEY 抽 shared；
+//   主文件保留路由壳 + 数据组装 + 列表/网格渲染，行为零变更（纯搬移，先例：order/[id].tsx 批5 同款）。
+// 行数比例（规则28）：壳 426 + Toolbar 106 + ManageBar 115 = 647 ≥ 30% 门槛（FavoriteListPage.html 为 0 字节空文件，规则 31 已登记 docs/empty-html-files.md，无比例基线，对齐 P19 实施时口径）。
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View, Text, FlatList, Pressable, Alert, Platform } from 'react-native';
+import { StyleSheet, View, Text, Pressable, FlatList, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
+import { useTheme, spacing, layout, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -28,10 +32,9 @@ import { toast } from '@/store/toastStore';
 import { getApiErrorMessage } from '@/utils/error';
 import { resolveBadges } from '@/utils/resolveBadges';
 import type { Product } from '@/types';
-
-// Why: 视图偏好持久化（P19 D2），键名对齐现有 meimart.recentSearches / meimart.locale 风格
-const VIEW_STORAGE_KEY = 'meimart.favorites.view';
-type FavoritesView = 'grid' | 'list';
+import { VIEW_STORAGE_KEY, type FavoritesView } from './favorites/shared';
+import { FavoritesToolbar } from './favorites/sections/Toolbar';
+import { ManageBar } from './favorites/sections/ManageBar';
 
 export default function FavoritesPage() {
   const handleBack = useSafeBack();
@@ -293,58 +296,7 @@ export default function FavoritesPage() {
 
       {/* 工具栏（原型 fav-tools）：左计数 · 右网格/列表切换；管理态隐藏（选择优先） */}
       {!selectMode && favorites && favorites.length > 0 && (
-        <View style={styles.toolsBar}>
-          <View style={styles.toolsCount}>
-            <Icon symbol="favorite" size={13} color={colors.primary} />
-            <Text style={[styles.toolsCountText, { color: colors['on-surface-variant'] }]}>
-              {t('favorites.countHint', {
-                count: favorites.length,
-                defaultValue: `{{count}} item(s) in your favorites`,
-              })}
-            </Text>
-          </View>
-          <View
-            style={[styles.viewSwitch, { borderColor: colors['outline-variant'] }]}
-            accessibilityRole="tablist"
-          >
-            {[
-              {
-                key: 'grid' as FavoritesView,
-                icon: 'grid_view',
-                label: t('favorites.a11y.gridView'),
-              },
-              {
-                key: 'list' as FavoritesView,
-                icon: 'view_list',
-                label: t('favorites.a11y.listView'),
-              },
-            ].map(({ key, icon, label }) => {
-              const active = view === key;
-              return (
-                <Pressable
-                  key={key}
-                  onPress={() => switchView(key)}
-                  style={[
-                    styles.viewBtn,
-                    {
-                      backgroundColor: active ? colors.primary : colors['surface-container-lowest'],
-                    },
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel={label}
-                  accessibilityState={active ? { selected: true } : undefined}
-                  testID={`favorites-view-${key}`}
-                >
-                  <Icon
-                    symbol={icon}
-                    size={18}
-                    color={active ? colors['on-primary'] : colors['on-surface-variant']}
-                  />
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
+        <FavoritesToolbar count={favorites.length} view={view} switchView={switchView} />
       )}
 
       {/* 批2 阶段2（D8 审计）：loading spinner 换 PageSkeleton(list)，只换组件不动结构 */}
@@ -415,69 +367,18 @@ export default function FavoritesPage() {
         />
       )}
 
-      {/* 管理栏底部悬浮（原型 .manage-bar{position:sticky;bottom:0;border-top}）：全选 + 删除 */}
-      {selectMode && (
-        <View
-          style={[
-            styles.manageBar,
-            {
-              backgroundColor: colors['surface-container-lowest'],
-              borderTopColor: colors['outline-variant'],
-            },
-          ]}
-        >
-          <Pressable
-            onPress={() => {
-              if (!favorites) return;
-              const all = new Set(favorites.map((f) => f.id));
-              setSelected(selected.size === favorites.length ? new Set() : all);
-            }}
-            style={styles.manageBarBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.selectAll')}
-          >
-            <Icon
-              symbol={
-                favorites && selected.size === favorites.length
-                  ? 'check_circle'
-                  : 'radio_button_unchecked'
-              }
-              size={20}
-              color={colors.primary}
-            />
-            <Text style={[styles.manageBarText, { color: colors['on-surface'] }]}>
-              {/* Why: 审查 Q2 —— 可见文案与 a11y label（common.selectAll）对齐，原型 :138 是「全选」 */}
-              {t('common.selectAll')}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={removeSelected}
-            disabled={selected.size === 0 || removeFavorites.isPending}
-            style={({ pressed }) => [
-              styles.manageBarDelete,
-              {
-                backgroundColor:
-                  selected.size === 0 || removeFavorites.isPending
-                    ? colors['outline-variant']
-                    : colors.error,
-                opacity: selected.size === 0 || removeFavorites.isPending ? 0.5 : 1,
-              },
-              pressed && { transform: [{ scale: 0.98 }] },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.delete')}
-            accessibilityState={
-              selected.size === 0 || removeFavorites.isPending ? { disabled: true } : undefined
-            }
-            testID="favorites-batch-delete"
-          >
-            <Icon symbol="delete" size={18} color={colors['on-primary']} />
-            <Text style={[styles.manageBarDeleteText, { color: colors['on-primary'] }]}>
-              {t('common.delete')} ({selected.size})
-            </Text>
-          </Pressable>
-        </View>
+      {/* 管理栏底部悬浮：全选 + 删除（抽 ManageBar section，本批 1.1 拆分） */}
+      {selectMode && favorites && (
+        <ManageBar
+          selectedCount={selected.size}
+          totalCount={favorites.length}
+          toggleSelectAll={() => {
+            const all = new Set(favorites.map((f) => f.id));
+            setSelected(selected.size === favorites.length ? new Set() : all);
+          }}
+          removeSelected={removeSelected}
+          removePending={removeFavorites.isPending}
+        />
       )}
     </SafeAreaWrapper>
   );
@@ -499,72 +400,6 @@ const styles = StyleSheet.create({
     ...typography['label-caps'],
     fontWeight: '700',
     fontSize: 13,
-  },
-  manageBar: {
-    // Why: 底部悬浮（原型 .manage-bar position:sticky bottom:0）——absolute 挂 SafeAreaWrapper
-    //      （RN Web View 默认 relative），盖在列表上沿；bottom 0 落在 safe area 内（edges 含 bottom）
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: layout['container-margin'],
-    paddingVertical: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  manageBarBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  manageBarText: {
-    ...typography['body-md'],
-    fontWeight: '600',
-  },
-  manageBarDelete: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.md,
-  },
-  manageBarDeleteText: {
-    // Why: on-primary 运行时注入（error 红底白字，同上）
-    ...typography['label-caps'],
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  toolsBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: layout['container-margin'],
-    // Why: 距 PrimaryHeader 太近（用户反馈），xs(4) → 10 → 16（spacing.md，再上调一档看效果）
-    paddingVertical: spacing.md,
-  },
-  toolsCount: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  toolsCountText: {
-    ...typography['label-caps'],
-    fontSize: 10,
-  },
-  viewSwitch: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
-  },
-  viewBtn: {
-    width: 36,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   // 管理态列表：底部悬浮管理栏 ~48px + 间距
   listManage: {

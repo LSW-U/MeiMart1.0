@@ -4,9 +4,15 @@
 // 批5 拆分（C-P3-14）：sections/hooks 抽到 product-detail/ 子目录——
 //   shared.tsx（常量/纯函数/StarsRow）、sections/{TopBar,Carousel,InfoSection,ReviewsSection,RelatedProductsSection}
 //   主文件保留路由壳 + 数据组装 + 底部操作栏，行为零变更（纯搬移）。
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Share } from 'react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
@@ -142,6 +148,22 @@ export default function ProductDetailPage() {
       if (id) trackProductView(id);
     }, [id]),
   );
+
+  // 业务增强批3（3.5 最小范围）：内容区进场动画——商品详情主体（Carousel + 内容 Canvas）
+  // 挂载后淡入 + 轻微上移（240ms ease-out）；loading/error 早退分支不动画（骨架屏照旧）。
+  // Why not 布局动画/共享元素：共享元素转场需 react-native-screens 转场协议改造导航栈，
+  // 超出本批最小范围（任务书 R3 限定 reanimated 已依赖、仅动本文件），按渐入渐现实现。
+  const contentOpacity = useSharedValue(0);
+  const contentTranslate = useSharedValue(8);
+  useEffect(() => {
+    // 动画值推进只发生在 effect/回调内（非渲染期），符合 react-hooks purity 规则
+    contentOpacity.value = withTiming(1, { duration: 240, easing: Easing.out(Easing.ease) });
+    contentTranslate.value = withTiming(0, { duration: 240, easing: Easing.out(Easing.ease) });
+  }, [contentOpacity, contentTranslate]);
+  const contentAnimStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+    transform: [{ translateY: contentTranslate.value }],
+  }));
 
   // P3-2（批D 审查修复）：同实例换品（非 remount 路径）时重置轮播索引，防分页点残留/计数器错位。
   // Why not useEffect: react-hooks/set-state-in-effect 禁止 effect 内同步 setState（级联渲染）；
@@ -308,53 +330,56 @@ export default function ProductDetailPage() {
         />
 
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          {/* Image Carousel（D-V4：对齐 P1 优化原型 slide 380px 满屏宽 + 分页圆点 + play 按钮） */}
-          <Carousel
-            images={carouselImages}
-            activeImage={activeImage}
-            onImageIndexChange={setActiveImage}
-          />
-
-          {/* Content Canvas */}
-          <View style={styles.canvas}>
-            <InfoSection
-              product={product}
-              stockState={stockState}
-              isSoldOut={isSoldOut}
-              alertEntry={alertEntry}
-              variants={variants}
-              variantSelection={variantSelection}
-              selectVariant={selectVariant}
-              warehouseData={warehouseData ?? null}
-              warehouseText={warehouseText}
-              warehouseColor={warehouseColor}
-              quantity={quantity}
-              qtyMax={qtyMax}
-              decQty={decQty}
-              incQty={incQty}
-              defaultAddr={defaultAddr}
-              localize={localize}
+          {/* 3.5 进场动画容器：Carousel + 内容 Canvas（loading/error 早退分支不包，骨架屏无动画） */}
+          <Animated.View style={[{ flex: 1 }, contentAnimStyle]}>
+            {/* Image Carousel（D-V4：对齐 P1 优化原型 slide 380px 满屏宽 + 分页圆点 + play 按钮） */}
+            <Carousel
+              images={carouselImages}
+              activeImage={activeImage}
+              onImageIndexChange={setActiveImage}
             />
 
-            {/* §8 评论模块 - useReviews 驱动：评分卡（count>0）/ 加载骨架 / 空态 */}
-            <ReviewsSection
-              reviewsLoading={reviewsLoading}
-              reviewSummary={reviewSummary}
-              reviews={reviews}
-              highlightReviewId={highlightReviewId}
-              isSoldOut={isSoldOut}
-              formatRelTime={formatRelTime}
-              writeReview={writeReview}
-            />
+            {/* Content Canvas */}
+            <View style={styles.canvas}>
+              <InfoSection
+                product={product}
+                stockState={stockState}
+                isSoldOut={isSoldOut}
+                alertEntry={alertEntry}
+                variants={variants}
+                variantSelection={variantSelection}
+                selectVariant={selectVariant}
+                warehouseData={warehouseData ?? null}
+                warehouseText={warehouseText}
+                warehouseColor={warehouseColor}
+                quantity={quantity}
+                qtyMax={qtyMax}
+                decQty={decQty}
+                incQty={incQty}
+                defaultAddr={defaultAddr}
+                localize={localize}
+              />
 
-            {/* {t('product.pairsWellWith')} / {t('product.relatedProducts')} 横滑 */}
-            <RelatedProductsSection
-              pairsWellWith={pairsWellWith}
-              youMayLike={youMayLike}
-              localize={localize}
-              addRelatedToCart={addRelatedToCart}
-            />
-          </View>
+              {/* §8 评论模块 - useReviews 驱动：评分卡（count>0）/ 加载骨架 / 空态 */}
+              <ReviewsSection
+                reviewsLoading={reviewsLoading}
+                reviewSummary={reviewSummary}
+                reviews={reviews}
+                highlightReviewId={highlightReviewId}
+                isSoldOut={isSoldOut}
+                formatRelTime={formatRelTime}
+                writeReview={writeReview}
+              />
+
+              {/* {t('product.pairsWellWith')} / {t('product.relatedProducts')} 横滑 */}
+              <RelatedProductsSection
+                pairsWellWith={pairsWellWith}
+                youMayLike={youMayLike}
+                localize={localize}
+                addRelatedToCart={addRelatedToCart}
+              />
+            </View>
+          </Animated.View>
         </ScrollView>
 
         {/* Sticky Bottom Actions — U4 三键：收藏(48px) + 立即购买(flex:1描边) + 加购(flex:1) */}
