@@ -41,6 +41,56 @@ jest.mock('@react-native-community/netinfo', () => ({
   fetch: () => Promise.resolve({ isConnected: true, isInternetReachable: true }),
 }));
 
+// Mock @shopify/flash-list（搜索结果页瀑布流批 20261106：结果区迁 FlashList masonry 后的
+// 测试基建，netinfo mock 同款先例）。jsdom 下 FlashList 依赖 native AutoLayoutView/CellContainer
+// 会崩；且 masonry 虚拟化依赖真实视口。这里语义 mock：透传 props 的普通组件 + 按
+// numColumns 分行渲染 renderItem（保留 FlatList 式「renderItem 确实消费 data」的结构取证
+// 能力，页面测试/virtualization 计数断言继续可用）。masonry 单列平铺即可（测试不验证分列）。
+jest.mock('@shopify/flash-list', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const MockFlashList = (props: any) => {
+    const { data, renderItem, numColumns = 1, ListHeaderComponent, ListFooterComponent } = props;
+    // 取证挂钩：虚拟化/布局 props 挂 host 节点会被 react-test-renderer 丢弃，塞进
+    // dataAttrs（testID 同节点）供测试断言（numColumns/masonry/drawDistance/data）
+    const dataAttrs = {
+      'data-num-columns': numColumns,
+      'data-masonry': props.masonry === true ? 'true' : 'false',
+      'data-draw-distance': String(props.drawDistance ?? ''),
+      'data-count': data?.length ?? 0,
+    };
+    const rows = [];
+    for (let i = 0; i < (data?.length ?? 0); i += numColumns) {
+      const rowItems = data.slice(i, i + numColumns);
+      rows.push(
+        React.createElement(
+          View,
+          { key: `row-${i}` },
+          rowItems.map((item: unknown, j: number) =>
+            React.createElement(View, { key: `cell-${i + j}` }, renderItem({ item, index: i + j })),
+          ),
+        ),
+      );
+    }
+    // ListHeader/Footer 支持组件引用与 element 两种形态：组件引用套 View 调用收敛
+    // （页面 renderListHeader 返回 Fragment 多节点，直接当组件类型会以 View 形态误挂）；
+    // element 原样保留。
+    const asChild = (Comp: unknown, key: string) => {
+      if (React.isValidElement(Comp))
+        return React.cloneElement(Comp as React.ReactElement, { key });
+      return React.createElement(View, { key }, React.createElement(Comp as React.FC));
+    };
+    const headerEl = ListHeaderComponent ? asChild(ListHeaderComponent, 'header') : null;
+    const footerEl = ListFooterComponent ? asChild(ListFooterComponent, 'footer') : null;
+    return React.createElement(
+      View,
+      { testID: props.testID ?? 'mock-flashlist', ...dataAttrs },
+      [headerEl, ...rows, footerEl].filter(Boolean),
+    );
+  };
+  return { __esModule: true, FlashList: MockFlashList };
+});
+
 // Mock react-native-reanimated（业务增强批3 3.5：商品详情页动画引入 reanimated 后的测试基建）。
 // 官方 lib/module/mock.js 是 ESM（import 语法）jsdom 下 require 失败，且其内部 useSharedValue
 // 依赖 Proxy，行为不完全等价——这里手写最小语义 mock：shared value 用普通对象，animated style

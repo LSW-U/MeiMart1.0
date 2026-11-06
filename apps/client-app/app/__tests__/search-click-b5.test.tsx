@@ -154,7 +154,7 @@ describe('搜索结果页 SEARCH_CLICK 埋点（批5 G2）', () => {
         <SearchResultsPage />
       </ThemeProvider>,
     );
-    fireEvent(screen.getByTestId('result-card-sp001'), 'touchEnd');
+    fireEvent(screen.getByTestId('rec-card-sp001'), 'touchEnd');
     expect(mockTrackSearchClick).toHaveBeenCalledWith('sp001');
   });
 

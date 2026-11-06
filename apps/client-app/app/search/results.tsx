@@ -8,12 +8,16 @@ import {
   StyleSheet,
   View,
   Text,
-  FlatList,
   Pressable,
   ScrollView,
-  type LayoutChangeEvent,
   type NativeScrollEvent,
 } from 'react-native';
+// 20261106 用户拍板：结果区等高网格 → 瀑布流（FlashList v2 masonry，保留全虚拟化）。
+//   MasonryProductCard 高度档位由卡片自算，masonry 布局按实际渲染高自动收敛列高
+//   （optimizeItemArrangement 默认开，替代推荐区手写 splitMasonryBalanced）。
+//   ⚠️ v2 仅 New Architecture（RN 0.85.3 已硬编码默认开，scripts/cocoapods/new_architecture.rb:162）。
+//   单页试点：home/favorites/search-index 推荐区不动（仍 splitMasonryBalanced 手动分列）。
+import { FlashList } from '@shopify/flash-list';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -21,7 +25,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
-import { ProductCard } from '@/components/business/ProductCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
@@ -141,17 +144,8 @@ export default function SearchResultsPage() {
     ? localize(categories?.find((c) => c.id === categoryId)?.name ?? '')
     : '';
 
-  // P3-4 拍板（20261105）：flexBasis 精确像素替代 48.5% 近似——onLayout 量 FlatList 容器宽，
-  //   扣 scrollContent 两侧 container-margin（padding 作用在内容上，行容器实际可用宽 =
-  //   容器宽 - 2×margin），算 (可用宽 - gutter) / 2，单卡尾行与双卡行永远等宽（48.5% 近似
-  //   依赖 columnGap 吃容差，换 gutter 值会漂）。量测前回退 48.5% 占位（首帧一致，回调后
-  //   重渲染切精确值）。web 端容器限宽（WEB_MAX_WIDTH）天然参与量测，无需特判。
-  const [gridWidth, setGridWidth] = useState<number | null>(null);
-  const handleGridLayout = useCallback((e: LayoutChangeEvent) => {
-    setGridWidth(e.nativeEvent.layout.width);
-  }, []);
-  const cellBasis =
-    gridWidth !== null ? (gridWidth - layout['container-margin'] * 2 - layout.gutter) / 2 : '48.5%';
+  // P3-4 拍板（20261105）flexBasis 精确像素方案随等高网格一并摘除（20261106 瀑布流改造）：
+  //   masonry 列宽由 FlashList 布局分配，无「单卡尾行 flexBasis」问题，onLayout 量测不再需要。
 
   // P8-5 F3：ScrollView 触底加载下一页（distanceFromBottom < 200）
   const handleScroll = ({ nativeEvent }: { nativeEvent: NativeScrollEvent }) => {
@@ -251,23 +245,23 @@ export default function SearchResultsPage() {
   );
   const handleCardAdd = handleAddToCart;
 
-  // A-P2-2: 结果网格 FlatList(numColumns=2) 现直接承担页面滚动（旧版嵌
-  //   ScrollView(scrollEnabled=false) 内，虚拟化失效全量挂载）。
-  //   行为零变更：行容器样式承接原 grid/gridCell（半 gutter 列 padding + 行距）；
-  //   ProductCard onPress 签名是 (product) => void（非 () => void），直接传稳定 router 跳转。
+  // A-P2-2: 结果网格旧注释（行容器样式承接 grid/gridCell）随瀑布流改造失效（20261106）：
+  //   masonry 列内卡片满宽，无行容器/flexBasis 概念；ProductCard onPress 签名是
+  //   (product) => void（非 () => void），直接传稳定 router 跳转（保留语义备忘）。
+  // 20261106 瀑布流改造：ProductCard(imageHeight=176) 等高网格 → MasonryProductCard 错落卡片。
+  //   FlashList masonry renderItem 拿到整列宽（(可用宽 - gutter)/2 已由布局算好），卡片满宽即可，
+  //   不再需要 P3-4 的 flexBasis 精确像素/onLayout 量测（handleGridLayout/gridWidth/cellBasis 摘除）。
   const renderResultItem = useCallback(
     ({ item }: { item: Product }) => (
-      <View style={[styles.gridCell, { flexBasis: cellBasis as number }]}>
-        {/* C-P3-10（批4 修复）：徽章走 resolveBadges 真实口径（Recommended 区同款），宁缺毋假 */}
-        <ProductCard
-          product={item}
-          badge={resolveBadges(item, t)[0]}
-          onPress={handleCardPress}
-          imageHeight={176}
-        />
-      </View>
+      // C-P3-10（批4 修复）：徽章走 resolveBadges 真实口径（Recommended 区同款），宁缺毋假
+      <MasonryProductCard
+        product={item}
+        badge={resolveBadges(item, t)[0]}
+        onPress={handleCardPress}
+        onAddToCart={handleCardAdd}
+      />
     ),
-    [t, handleCardPress, cellBasis],
+    [t, handleCardPress, handleCardAdd],
   );
 
   // P8-7: 顶部搜索框可编辑（同 P7 SearchBar + 麦克风）
@@ -481,17 +475,19 @@ export default function SearchResultsPage() {
             <View style={styles.footerSection}>{renderRecommended()}</View>
           </ScrollView>
         ) : (
-          // A-P2-2: 单列表容器——FlatList 直接承担滚动（虚拟化生效），筛选/计数挂
-          //   ListHeaderComponent，Load More/Recommended 挂 ListFooterComponent
-          <FlatList
+          // A-P2-2: 单列表容器——FlashList 直接承担滚动（虚拟化生效），筛选/计数挂
+          //   ListHeaderComponent，Load More/Recommended 挂 ListFooterComponent。
+          // 20261106 瀑布流：numColumns=2 + masonry（列高按实际渲染收敛），MasonryProductCard
+          //   错落卡片；排序切换触发重查 → data 换引用重排，列内卡片跳位属已知代价（用户接受）。
+          //   onScroll 分页沿旧 FlatList 手势语义（scrollEventThrottle 16 + distanceFromBottom<200）。
+          <FlashList
             style={{ flex: 1 }}
             data={results}
-            keyExtractor={(item: Product) => item.id}
+            masonry
             numColumns={2}
-            columnWrapperStyle={styles.grid}
+            keyExtractor={(item: Product) => item.id}
             contentContainerStyle={styles.scrollContent}
             renderItem={renderResultItem}
-            onLayout={handleGridLayout}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={
               <View style={styles.footerSection}>
@@ -520,9 +516,9 @@ export default function SearchResultsPage() {
             onScroll={handleScroll}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
-            initialNumToRender={6}
-            maxToRenderPerBatch={4}
-            windowSize={5}
+            // v2 无 initialNumToRender（v1 遗留 prop 已删）；渲染窗口由 drawDistance 控制，
+            //   默认值偏低（250）对瀑布流长列表偏保守，设 400 保证快速滑动预渲染缓冲
+            drawDistance={400}
           />
         )}
       </View>
@@ -686,24 +682,6 @@ const styles = StyleSheet.create({
   countText: {
     ...typography['body-sm'],
     marginBottom: spacing.lg,
-  },
-  grid: {
-    // FlatList numColumns=2 行容器。方案A 20261105 对齐原型（SearchResultPage.html:195
-    //   grid-cols-2 gap-x-gutter gap-y-lg）：列 gap 12（gutter）+ 行距 24（lg，原型 gap-y-lg），
-    //   行列异值——原 gap:16 单值两向同吃，列偏宽行偏窄（用户实测体感）。20261104 方案B 废弃。
-    // 旧负 margin + gridCell 半 padding 组合删除：与 columnGap 双重叠加（列间实测 16≠原型 12）。
-    // 行距必须用 marginBottom：columnWrapperStyle 的行是兄弟节点（各自独立 flex 容器），
-    //   rowGap 打在行容器上永不触发（headless 实测行间贴死 0px，20261105 验收打回）。
-    flexDirection: 'row',
-    columnGap: layout.gutter,
-    marginBottom: spacing.lg,
-  },
-  gridCell: {
-    // Why: P3-4 拍板（20261105）flexBasis 改运行时注入精确像素（renderResultItem 内联覆盖，
-    //   见 cellBasis 计算）——此处的 48.5% 仅作 onLayout 回调前的首帧占位（量测前回退值）。
-    //   flex:1 在奇数尾行单卡时独吃整行宽（实测 cell 716 vs 双卡 352）卡片拉长；flexBasis
-    //   定宽后单卡停在左列，宽度与双卡行一致（右侧自然留白，盒马式网格）。
-    flexBasis: '48.5%',
   },
   loadMore: {
     paddingVertical: spacing.xl * 1.5,
