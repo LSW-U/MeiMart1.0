@@ -249,17 +249,23 @@ export default function SearchResultsPage() {
   //   masonry 列内卡片满宽，无行容器/flexBasis 概念；ProductCard onPress 签名是
   //   (product) => void（非 () => void），直接传稳定 router 跳转（保留语义备忘）。
   // 20261106 瀑布流改造：ProductCard(imageHeight=176) 等高网格 → MasonryProductCard 错落卡片。
-  //   FlashList masonry renderItem 拿到整列宽（(可用宽 - gutter)/2 已由布局算好），卡片满宽即可，
-  //   不再需要 P3-4 的 flexBasis 精确像素/onLayout 量测（handleGridLayout/gridWidth/cellBasis 摘除）。
+  //   FlashList masonry renderItem 拿到整列宽，卡片满宽即可，不再需要 P3-4 的 flexBasis/
+  //   onLayout 量测（handleGridLayout/gridWidth/cellBasis 摘除）。
+  // 20261107 间距修复：FlashList v2 masonry 布局管理器无 gap 概念（MasonryLayoutManager.js
+  //   columnHeights 直接累加 height、x 按 boundedSize/maxColumns 切分，源码核实）——间距打在
+  //   renderItem 包裹层：列内行距 marginBottom(md=12) + 列间 paddingHorizontal 半 gutter(6)
+  //   两列合成 gutter(12)；scrollContent 横向 padding 减半 gutter 补偿，屏幕边缘保持 20px。
   const renderResultItem = useCallback(
     ({ item }: { item: Product }) => (
-      // C-P3-10（批4 修复）：徽章走 resolveBadges 真实口径（Recommended 区同款），宁缺毋假
-      <MasonryProductCard
-        product={item}
-        badge={resolveBadges(item, t)[0]}
-        onPress={handleCardPress}
-        onAddToCart={handleCardAdd}
-      />
+      <View style={styles.masonryCell}>
+        {/* C-P3-10（批4 修复）：徽章走 resolveBadges 真实口径（Recommended 区同款），宁缺毋假 */}
+        <MasonryProductCard
+          product={item}
+          badge={resolveBadges(item, t)[0]}
+          onPress={handleCardPress}
+          onAddToCart={handleCardAdd}
+        />
+      </View>
     ),
     [t, handleCardPress, handleCardAdd],
   );
@@ -651,8 +657,17 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   scrollContent: {
-    padding: layout['container-margin'],
+    // 20261107 瀑布流间距：横向 padding 减半 gutter（ renderItem masonryCell 各自带另一半，
+    //   见 renderResultItem 注释）——两列卡片间列距合成 gutter(12)，屏幕边缘保持 container-margin(20)
+    paddingHorizontal: layout['container-margin'] - layout.gutter / 2,
+    paddingTop: layout['container-margin'],
     paddingBottom: spacing.xxl * 2,
+  },
+  // 20261107 瀑布流 masonry 卡片包裹层：列内行距 marginBottom（home masonryCol gap 同值
+  //   spacing.md）+ 列间半 gutter（两列合成 gutter 12）。FlashList masonry 无原生 gap prop。
+  masonryCell: {
+    marginBottom: spacing.md,
+    paddingHorizontal: layout.gutter / 2,
   },
   // A-P2-2：ListFooterComponent 的 Recommended 区左对齐外边距（原 scrollContent padding 由 header 承担）
   footerSection: {
