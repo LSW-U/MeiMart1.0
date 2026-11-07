@@ -126,6 +126,16 @@ const scrollNearBottom = (distance: number) => ({
   },
 });
 
+// 构造距顶 offsetY 的滚动事件（回顶按钮显隐断言用，同款形状）
+const scrollToOffset = (offsetY: number) => ({
+  nativeEvent: {
+    contentSize: { height: 2000, width: 400 },
+    layoutMeasurement: { height: 800, width: 400 },
+    contentOffset: { x: 0, y: offsetY },
+    contentInset: { top: 0, bottom: 0, left: 0, right: 0 },
+  },
+});
+
 describe('HomePage 推荐板块 — 触底自动加载（20261107 拍板）', () => {
   beforeEach(() => {
     mockPages = [[0, 6]];
@@ -189,23 +199,45 @@ describe('HomePage 推荐板块 — 触底自动加载（20261107 拍板）', ()
     expect(queryAllByTestId(/masonry-card-/)).toHaveLength(6);
   });
 
-  it('20261024 方案②：到底态且列表 >6 条 → 「收起推荐」文字链出现', () => {
+  it('20261108 拍板：到底态且列表 >6 条 → 提示语渲染、收起按钮已删（不渲染）', () => {
     mockHasNextPage = false;
     mockPages = [
       [0, 6],
       [6, 6],
     ]; // 12 条 > 6
     const { queryByTestId, getByText } = setup();
-    expect(queryByTestId('home-recommend-collapse')).toBeTruthy();
-    // 到底提示语同行渲染（左中右布局：提示居中、收起贴右）
+    // 到底提示语保留（居中单元素）
     expect(getByText('home.listEnd')).toBeTruthy();
+    // 20261108：收起按钮随「回顶悬浮按钮」方案删除
+    expect(queryByTestId('home-recommend-collapse')).toBeNull();
   });
 
-  it('20261024 方案②：到底态但列表 ≤6 条 → 收起按钮不渲染（初态无按钮）', () => {
+  it('20261108 拍板：到底态但列表 ≤6 条 → 提示语不渲染（初态无到底行）', () => {
     mockHasNextPage = false;
     mockPages = [[0, 6]]; // 6 条 = RECOMMEND_LIMIT，不出现
-    const { queryByTestId } = setup();
-    expect(queryByTestId('home-recommend-collapse')).toBeNull();
+    const { queryByText } = setup();
+    expect(queryByText('home.listEnd')).toBeNull();
+  });
+
+  it('20261108 方案A：滚过一屏（>600px）→ 回顶悬浮按钮出现', () => {
+    const { getByTestId, queryByTestId } = setup();
+    expect(queryByTestId('home-back-to-top')).toBeNull(); // 顶部初态无按钮
+    act(() => {
+      fireEvent.scroll(getByTestId('home-recommend-scroll'), scrollToOffset(700));
+    });
+    expect(queryByTestId('home-back-to-top')).toBeTruthy();
+  });
+
+  it('20261108 方案A：滚回一屏内（≤600px）→ 回顶按钮消失', () => {
+    const { getByTestId, queryByTestId } = setup();
+    act(() => {
+      fireEvent.scroll(getByTestId('home-recommend-scroll'), scrollToOffset(700));
+    });
+    expect(queryByTestId('home-back-to-top')).toBeTruthy();
+    act(() => {
+      fireEvent.scroll(getByTestId('home-recommend-scroll'), scrollToOffset(100));
+    });
+    expect(queryByTestId('home-back-to-top')).toBeNull();
   });
 
   it('换一批（20261023 baseOffset 修订）：按钮可点且不触 fetchNextPage（两按钮语义隔离）', () => {

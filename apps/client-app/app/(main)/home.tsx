@@ -12,7 +12,7 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -165,27 +165,34 @@ export default function HomePage() {
       setRecommendCycle((c) => c + 1);
     }
   }
-  // Why: 20261024 方案②——「收起推荐」文字链（加载更多到底后出现）：回 baseOffset=0 +
-  //   cycle++ 全新 queryKey，干净 6 条回到初态（无加载更多、无收起按钮）
-  const handleRecommendCollapse = useCallback(() => {
-    if (!isFetchingRecommend && !isFetchingNextPage) {
-      setRecommendCycle((c) => c + 1);
-      setRecommendBaseOffset(0);
-    }
-  }, [isFetchingRecommend, isFetchingNextPage]);
+  // Why: 20261108 拍板——「收起推荐」按钮删除（重置语义废弃，改右下角回顶悬浮按钮，
+  //   纯导航不重置列表）。原 handleRecommendCollapse 整块移除。
+  // Why: 20261108 拍板方案A——「收起推荐」删除，改右下角悬浮回顶按钮（纯导航语义，
+  //   不重置推荐列表）。scrollRef 供 scrollTo({y:0})；showBackTop 在滚过一屏后置 true
+  //   （值变化才 setState，非每帧刷新，onScroll 内静默翻转）
+  const scrollRef = useRef<ScrollView>(null);
+  const [showBackTop, setShowBackTop] = useState(false);
   // Why: 20261107 拍板——「加载更多」按钮改触底自动加载（onScroll 距底 <400px 触发），
   //   守卫同款：hasNextPage 且非加载中才追加，防连点重复请求
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  // 回顶按钮出现阈值：滚过一屏（600px≈典型屏高下限）才出现，回顶后自动消失
+  const BACK_TOP_THRESHOLD = 600;
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentSize, layoutMeasurement, contentOffset } = e.nativeEvent;
       const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
       if (distanceFromBottom < LOAD_MORE_THRESHOLD) handleLoadMore();
+      // 回顶按钮显隐：仅布尔翻转时 setState（RN ScrollView 连续滚动事件，避免每帧重渲）
+      const next = contentOffset.y > BACK_TOP_THRESHOLD;
+      setShowBackTop((prev) => (prev === next ? prev : next));
     },
     [handleLoadMore],
   );
+  const handleBackToTop = useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, []);
   // Why: 客户画像批3 B8 常买组合（2026-10-18）——useFrequentBundle 拉打包组合（seed+伙伴），
   //   空组合（匿名/无历史/无共现/门禁关）整块隐藏；一键整包加购走 addToCartMutation 逐个 mutate
   const { data: bundle } = useFrequentBundle();
@@ -600,6 +607,7 @@ export default function HomePage() {
           //   虚拟化（A-P2-2 动机），推荐位量级一页 20 条内可接受（收藏页同款取舍）；
           //   dashboard 区块/Buy Again 沿用原 header/footer 渲染函数挂 ScrollView
           <ScrollView
+            ref={scrollRef}
             style={[styles.scrollArea, { backgroundColor: colors.background }]}
             contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomReserve }]}
             showsVerticalScrollIndicator={false}
@@ -621,42 +629,42 @@ export default function HomePage() {
               </View>
             </View>
             {/* Why: 20261107 拍板——「加载更多」按钮改触底自动加载，按钮删除；加载中在列表尾部
-                露小 spinner（追加过渡可感知）；20261024 方案②到底态「已经到底啦+收起推荐」保留 */}
+                露小 spinner（追加过渡可感知）；到底态只留提示语（20261108 收起按钮删） */}
             {isFetchingNextPage && (
               <View style={styles.loadMoreRow}>
                 <ActivityIndicator size="small" color={colors.primary} />
               </View>
             )}
+            {/* Why: 20261108 拍板——「收起推荐」按钮删除，到底态只留居中提示语；重置路径
+                由右下角悬浮回顶按钮承接（纯导航，列表不清空） */}
             {!hasNextPage && recommendList.length > RECOMMEND_LIMIT && (
-              // 20261024 人工验收修订：到底态拆左右两端——左侧居中提示「已经到底啦」，
-              // 右侧「收起推荐」文字链（原两态各占一行居中）
               <View style={styles.recommendEndRow}>
-                <Text
-                  style={[styles.listEndText, { color: colors['on-surface-variant'], zIndex: 0 }]}
-                >
+                <Text style={[styles.listEndText, { color: colors['on-surface-variant'] }]}>
                   {t('home.listEnd')}
                 </Text>
-                <Pressable
-                  testID="home-recommend-collapse"
-                  onPress={handleRecommendCollapse}
-                  disabled={isFetchingRecommend || isFetchingNextPage}
-                  style={({ pressed }) => [
-                    styles.changeBatchBtn,
-                    { zIndex: 1 },
-                    pressed && { opacity: 0.7 },
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('home.collapseRecommend')}
-                >
-                  <Icon symbol="expand_less" size={16} color={colors.primary} />
-                  <Text style={[styles.loadMoreText, { color: colors.primary }]}>
-                    {t('home.collapseRecommend')}
-                  </Text>
-                </Pressable>
               </View>
             )}
             {renderBundleSection()}
           </ScrollView>
+        )}
+        {/* 20261108 拍板方案A：右下角悬浮回顶按钮（滚过一屏出现，纯导航 scrollTo y:0，
+            不重置推荐列表）。绝对定位浮在 BottomNav 上方（bottomReserve 已含 nav+inset+8 余量）；
+            dashboardFallback 态列表短不显示（showBackTop 仅主 ScrollView onScroll 翻转） */}
+        {showBackTop && (
+          <Pressable
+            testID="home-back-to-top"
+            onPress={handleBackToTop}
+            style={({ pressed }) => [
+              styles.backToTopBtn,
+              { bottom: bottomReserve + 8, backgroundColor: colors['surface-container-lowest'] },
+              shadowPresets.md,
+              pressed && { opacity: 0.7 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.backToTop')}
+          >
+            <Icon symbol="expand_less" size={24} color={colors.primary} />
+          </Pressable>
         )}
       </SafeAreaWrapper>
     </PageErrorBoundary>
@@ -831,23 +839,27 @@ const styles = StyleSheet.create({
     ...typography['label-caps'],
     fontSize: 12,
   },
-  // Why: 20261024 人工验收——到底态一行两端。提示语用绝对定位整行居中（原 flex:1 +
-  //   textAlign center 是「剩余空间」居中，右侧按钮占宽把视觉中心左移，实测不居中）；
-  //   收起按钮贴右（zIndex 提到提示语上层，防长文案重叠时按钮不可点）
+  // Why: 20261108 拍板——收起按钮删除后到底态只剩提示语，行回归单元素居中（原两端布局
+  //   与 absolute 定位都是为右侧按钮服务的，一并简化）
   recommendEndRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
     marginTop: spacing.lg,
     paddingHorizontal: layout['container-margin'],
   },
   listEndText: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
     textAlign: 'center',
     ...typography['label-caps'],
     fontSize: 12,
+  },
+  // Why: 20261108 拍板方案A——右下角悬浮回顶按钮（44×44 圆形，浮在 BottomNav 上方）
+  backToTopBtn: {
+    position: 'absolute',
+    right: layout['container-margin'],
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buyAgainSection: {
     // Why: P6 S5 - Buy Again marginTop xl(32) -> lg(24)，页尾区块视觉收束
