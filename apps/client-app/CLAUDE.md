@@ -405,4 +405,4 @@ echo "✅ CP5 全部通过"
 
 ### 体积预算规范（轻量化省流批3 增补）
 
-44. **新依赖必须过体积预算**：引入新 npm 依赖（尤其整包工具库如 lodash/moment）前，跑 `node scripts/budget-check.mjs`（repo 根）验证 JS bundle（hbc）不超 8.7MB 基线（8.5MB 实测 + 200KB 余量），超限即 CI 红（`.github/workflows/ci.yml` size-budget job）。口径只管 JS bundle，字体/静态资产不在内。
+44. **新依赖必须过体积预算**：引入新 npm 依赖（尤其整包工具库如 lodash/moment）前，跑 `node scripts/budget-check.mjs`（repo 根）验证 JS bundle（hbc）不超基线（当前 8.8MB，20261107 flash-list 迁移后重测，基线随实测演进——具体值以 `scripts/budget-check.mjs` 的 DEFAULT_BUDGET_BYTES 为准），超限即 CI 红（`.github/workflows/ci.yml` size-budget job）。超限处置：重测基线并调 DEFAULT_BUDGET_BYTES（注释留痕），禁止静默放水。口径只管 JS bundle，字体/静态资产不在内。

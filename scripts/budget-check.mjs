@@ -28,7 +28,10 @@ const METADATA = join(APP_DIR, 'dist', 'metadata.json');
 // D3 拍板：8.7MB = 8.5MB 基线 + 200KB 余量（十进制 MB）。
 // 基线口径（批3 P3-3 审查补注）：8,496,734 B 为批3 改动前基线（20261024 实测）；
 // 批3 落地后复核实测 8,500,600 B（SafeImage thumb 改造净增 ~3.8KB），仍在预算内。
-const DEFAULT_BUDGET_BYTES = 8_700_000;
+// 20261107 基线重测（调度拍板，搜索瀑布流审查 P2-1）：flash-list 迁移后 hbc 实测
+// 8,701,316 B，超旧预算 1,316 B——flash-list v2 纯 JS（tslib 单依赖，无 native 代码），
+// 净增 ~200KB 属功能依赖合理增长，重测基线=实测值上浮 100KB 余量 → 8,800,000 B。
+const DEFAULT_BUDGET_BYTES = 8_800_000;
 const budgetBytes = process.env.BUDGET_BYTES
   ? Number(process.env.BUDGET_BYTES)
   : DEFAULT_BUDGET_BYTES;

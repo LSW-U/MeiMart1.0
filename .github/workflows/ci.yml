@@ -138,9 +138,10 @@ jobs:
           pnpm audit --audit-level=moderate --json > /tmp/audit.json || true
           node scripts/gate/audit-check.mjs /tmp/audit.json scripts/gate/audit-allowlist.json
 
-  # 轻量化省流批3（方案v2 D3/D5）：包体积预算门禁。JS bundle（hbc）超 8.7MB
-  # （基线 8.5MB 实测 20261024 + 200KB 余量）即红；口径只管 JS bundle，
-  # 字体/静态资产不在内。红/绿双向演示证据见审查记录（BUDGET_BYTES 降阈值 → exit 1）。
+  # 轻量化省流批3（方案v2 D3/D5）：包体积预算门禁。JS bundle（hbc）超预算即红；
+  # 口径只管 JS bundle，字体/静态资产不在内。红/绿双向演示证据见审查记录
+  # （BUDGET_BYTES 降阈值 → exit 1）。基线随实测重测调整（当前 8.8MB，
+  # 20261107 搜索瀑布流 flash-list 迁移后重测，见 scripts/budget-check.mjs 注释）。
   size-budget:
     runs-on: ubuntu-latest
     steps:
@@ -152,5 +153,5 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Bundle size budget (hbc vs 8.7MB)
+      - name: Bundle size budget (hbc vs baseline)
         run: node scripts/budget-check.mjs
