@@ -1,14 +1,12 @@
 /**
- * 首页推荐展示 批2：home 推荐板块追加式分页 + 「加载更多」三态（方案v2 20261017）
+ * 首页推荐板块：追加式分页 + 触底自动加载（20261107 拍板，替代「加载更多」按钮）
  *
- * 验证（对齐验收线 F2/F3/F6）：
- *   - 可点态：hasNextPage=true → 按钮渲染，点击 fetchNextPage 追加 6→12（pages.flatMap）
- *   - loading 态：isFetchingNextPage → 按钮 disabled（防连点，同换一批范式）
- *   - 到底态：hasNextPage=false → 按钮消失（D4 条件渲染移除）
- *   - 换一批（D3 方案 B → 20261023 baseOffset 修订）：点击换一批 → baseOffset 推进，
- *     请求真正的下一批（hook 层 offset 叠加已验证）；页面层断言两按钮语义隔离
- *   - cart 回归：旧 useRecommendations 路径消费不受 epoch 复位影响（hook 层 queryKey 隔离，
- *     页面层用「home 挂载期间 cart hook 的 queryKey 未被触达」断言）
+ * 验证：
+ *   - 触底自动加载：ScrollView onScroll 距底 <400px → fetchNextPage 追加 6→12
+ *   - 守卫：hasNextPage=false 不触发；isFetchingNextPage 中不重复触发
+ *   - 到底态：hasNextPage=false 且列表 >6 条 → 「收起推荐」文字链 + 到底提示
+ *   - 换一批（baseOffset 修订）：点击换一批 → baseOffset 推进，与翻页语义隔离
+ *   - cart 回归：旧 useRecommendations 路径消费不受影响（hook 层 queryKey 隔离）
  */
 import React from 'react';
 import { render, fireEvent, act } from '@testing-library/react-native';
@@ -57,7 +55,6 @@ jest.mock('@/services/queries/useProducts', () => ({
     isFetchingNextPage: mockIsFetchingNextPage,
     hasNextPage: mockHasNextPage,
   }),
-  useBuyAgain: () => ({ data: [], isFetching: false }),
   // 批3 B8：home 现调用 useFrequentBundle，缺 mock 会 undefined 崩
   useFrequentBundle: () => ({ data: undefined }),
 }));
@@ -95,11 +92,6 @@ jest.mock('@/store/toastStore', () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
-jest.mock('@/store/authStore', () => ({
-  useAuthStore: (selector: (s: { isAuthenticated: boolean }) => boolean) =>
-    selector({ isAuthenticated: true }),
-}));
-
 // MasonryProductCard 依赖重（图标/渐变），页面级测试桩化——只断言卡片 testID 分发
 jest.mock('@/components/business/MasonryProductCard/MasonryProductCard', () => {
   const { View } = require('react-native');
@@ -124,7 +116,17 @@ const setup = () =>
     </ThemeProvider>,
   );
 
-describe('HomePage 推荐板块 — 加载更多三态（批2）', () => {
+// 构造 onScroll nativeEvent：距底 distance px（contentSize - viewport - offset）
+const scrollNearBottom = (distance: number) => ({
+  nativeEvent: {
+    contentSize: { height: 2000, width: 400 },
+    layoutMeasurement: { height: 800, width: 400 },
+    contentOffset: { x: 0, y: 2000 - 800 - distance },
+    contentInset: { top: 0, bottom: 0, left: 0, right: 0 },
+  },
+});
+
+describe('HomePage 推荐板块 — 触底自动加载（20261107 拍板）', () => {
   beforeEach(() => {
     mockPages = [[0, 6]];
     mockHasNextPage = true;
@@ -132,32 +134,46 @@ describe('HomePage 推荐板块 — 加载更多三态（批2）', () => {
     mockFetchNextPage.mockClear();
   });
 
-  it('F2 可点态：首屏 6 张卡片 + 按钮渲染；点击触发 fetchNextPage', () => {
-    const { getByTestId, queryAllByTestId } = setup();
-    expect(getByTestId('home-recommend-load-more')).toBeTruthy();
-    // 首屏 6 张卡片（pages.flatMap 拼第一页）
+  it('触底触发：距底 <400px → fetchNextPage；追加后 6→12 张卡片', () => {
+    const { getByTestId, queryAllByTestId, rerender } = setup();
     expect(queryAllByTestId(/masonry-card-/)).toHaveLength(6);
 
     act(() => {
-      fireEvent.press(getByTestId('home-recommend-load-more'));
+      fireEvent.scroll(getByTestId('home-recommend-scroll'), scrollNearBottom(100));
     });
     expect(mockFetchNextPage).toHaveBeenCalledTimes(1);
-  });
-
-  it('F2 追加断言：fetchNextPage 后 6→12 张卡片（分列重排由 masonryRow 承担）', () => {
-    const { getByTestId, queryAllByTestId, rerender } = setup();
-    act(() => {
-      fireEvent.press(getByTestId('home-recommend-load-more'));
-    });
     rerender(
       <ThemeProvider>
         <HomePage />
       </ThemeProvider>,
     );
-    const cards = queryAllByTestId(/masonry-card-/);
-    expect(cards).toHaveLength(12);
-    // F3 奇偶分列：第 1 条落左列（索引 0 偶数）、追加的第 7 条仍按索引落列
-    expect(queryAllByTestId('masonry-card-p7').length).toBeGreaterThan(0);
+    expect(queryAllByTestId(/masonry-card-/)).toHaveLength(12);
+  });
+
+  it('未触底不触发：距底 ≥400px → 不调 fetchNextPage', () => {
+    const { getByTestId } = setup();
+    act(() => {
+      fireEvent.scroll(getByTestId('home-recommend-scroll'), scrollNearBottom(500));
+    });
+    expect(mockFetchNextPage).not.toHaveBeenCalled();
+  });
+
+  it('守卫：hasNextPage=false → 触底也不调 fetchNextPage', () => {
+    mockHasNextPage = false;
+    const { getByTestId } = setup();
+    act(() => {
+      fireEvent.scroll(getByTestId('home-recommend-scroll'), scrollNearBottom(100));
+    });
+    expect(mockFetchNextPage).not.toHaveBeenCalled();
+  });
+
+  it('守卫：isFetchingNextPage=true → 触底不重复触发（防连点）', () => {
+    mockIsFetchingNextPage = true;
+    const { getByTestId } = setup();
+    act(() => {
+      fireEvent.scroll(getByTestId('home-recommend-scroll'), scrollNearBottom(100));
+    });
+    expect(mockFetchNextPage).not.toHaveBeenCalled();
   });
 
   // Why: 后端 offset 分页排序不稳定时跨页重复商品（20261023 real 模式 duplicate key 实证），
@@ -173,28 +189,14 @@ describe('HomePage 推荐板块 — 加载更多三态（批2）', () => {
     expect(queryAllByTestId(/masonry-card-/)).toHaveLength(6);
   });
 
-  it('F2 loading 态：isFetchingNextPage → 按钮 disabled（防连点）', () => {
-    mockIsFetchingNextPage = true;
-    const { getByTestId } = setup();
-    const btn = getByTestId('home-recommend-load-more');
-    expect(btn.props.accessibilityState?.disabled ?? btn.props.disabled).toBe(true);
-  });
-
-  it('F2 到底态：hasNextPage=false → 按钮消失（D4 条件渲染移除）', () => {
-    mockHasNextPage = false;
-    const { queryByTestId } = setup();
-    expect(queryByTestId('home-recommend-load-more')).toBeNull();
-  });
-
   it('20261024 方案②：到底态且列表 >6 条 → 「收起推荐」文字链出现', () => {
     mockHasNextPage = false;
     mockPages = [
       [0, 6],
       [6, 6],
     ]; // 12 条 > 6
-    const { getByTestId, queryByTestId, getByText } = setup();
-    expect(queryByTestId('home-recommend-load-more')).toBeNull();
-    expect(getByTestId('home-recommend-collapse')).toBeTruthy();
+    const { queryByTestId, getByText } = setup();
+    expect(queryByTestId('home-recommend-collapse')).toBeTruthy();
     // 到底提示语同行渲染（左中右布局：提示居中、收起贴右）
     expect(getByText('home.listEnd')).toBeTruthy();
   });
@@ -219,16 +221,6 @@ describe('HomePage 推荐板块 — 加载更多三态（批2）', () => {
     // home 切 infinite 后不再调用 useRecommendations——mock 模块未提供该导出，
     // 页面渲染成功本身就是回归证据；cart.tsx 消费路径由 hook 层 queryKey 隔离断言兜底
     const { getByTestId } = setup();
-    expect(getByTestId('home-recommend-load-more')).toBeTruthy();
-  });
-
-  it('批3 P2-1 修复：buy-again 板块「查看全部」入口存在且跳转常购清单页', () => {
-    const { getByTestId } = setup();
-    const entry = getByTestId('home-buy-again-view-all');
-    expect(entry).toBeTruthy();
-    fireEvent.press(entry);
-    expect(jest.requireMock('expo-router').router.push).toHaveBeenCalledWith(
-      '/product/frequently-bought',
-    );
+    expect(getByTestId('home-recommend-scroll')).toBeTruthy();
   });
 });

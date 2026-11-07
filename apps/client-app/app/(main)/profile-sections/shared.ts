@@ -57,8 +57,17 @@ export interface FunctionItem {
 }
 
 // P2 §3.4: 登录态功能菜单只留 地址/我的工单/帮助/设置/退出（收藏/优惠券已合并到 usercard 统计条）
+// 20261107 拍板方案A：常购清单入口迁入（原唯一入口是 home Buy Again「查看全部」，板块删除后
+//   /product/frequently-bought 成孤儿页，此处补菜单行承接）
 export const FUNCTION_ITEMS: FunctionItem[] = [
   { id: 'address', labelKey: 'address.list', icon: 'location_on', route: '/address/list' },
+  // 20261107：常购清单（B1 页）菜单入口
+  {
+    id: 'frequentlyBought',
+    labelKey: 'profile.frequentlyBought',
+    icon: 'history',
+    route: '/product/frequently-bought',
+  },
   // 替换品批2 工单化（2026-10-29）：我的工单入口（reportIssue 旁路建单的查询侧）
   {
     id: 'tickets',

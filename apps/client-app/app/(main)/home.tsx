@@ -2,7 +2,16 @@
 // 还原自 HomePage.html（511 行）。HTML → RN 行数比：511 → ~480（含样式），
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 94%）。
 // P6: 间距微调 + 分类网格 C2/角标/溢出 + PromoShortcut→PromoDock（方案二色条）
-import { StyleSheet, View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  Pressable,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 import { useCallback, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -38,17 +47,12 @@ import { Logo } from '@/components/cultural/Logo';
 import { UmaLulikSkyline } from '@/components/cultural/UmaLulikSkyline';
 import { Icon } from '@/components/ui/Icon';
 import { useCategories, useBanners } from '@/services/queries/useCatalog';
-import {
-  useRecommendationsInfinite,
-  useBuyAgain,
-  useFrequentBundle,
-} from '@/services/queries/useProducts';
+import { useRecommendationsInfinite, useFrequentBundle } from '@/services/queries/useProducts';
 import { usePromotions } from '@/services/queries/usePromotions';
 import { useAddToCart } from '@/services/queries/useCart';
 import { useUnreadCount } from '@/services/queries/useNotifications';
 import { Badge } from '@/components/ui/Badge';
 import { toast } from '@/store/toastStore';
-import { useAuthStore } from '@/store/authStore';
 import { useWeakNetworkUI } from '@/hooks/useWeakNetworkUI';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 import { PageSkeleton } from '@/components/feedback/PageSkeleton/PageSkeleton';
@@ -61,10 +65,10 @@ const ON_PRIMARY = '#ffffff';
 // Why: 黄底黑字固定（delivery tip amber 底），dark 不变 —— 审查 Q1
 const ON_AMBER = '#000000';
 
-// Buy Again 区块改用 useBuyAgain 从 mockDb 拉 p007-p010，避免与详情页数据脱节
-// Why: 换一批按钮 批2 —— 两板块每批数量常量（recommend 后端默认 6 / buy-again 原固定 4）
+// Why: 换一批按钮 批2 —— 推荐板块每批数量常量（recommend 后端默认 6）
 const RECOMMEND_LIMIT = 6;
-const BUY_AGAIN_LIMIT = 4;
+// 触底自动加载阈值（px）：距底不足该值即 fetchNextPage（拍板 20261107，替代加载更多按钮）
+const LOAD_MORE_THRESHOLD = 400;
 
 export default function HomePage() {
   const { colors } = useTheme();
@@ -87,7 +91,6 @@ export default function HomePage() {
   //   offset 后行为一致（mockCursor 同款回绕语义）。
   const [recommendBaseOffset, setRecommendBaseOffset] = useState(0);
   const [recommendCycle, setRecommendCycle] = useState(0);
-  const [buyAgainOffset, setBuyAgainOffset] = useState(0);
   const {
     data: recommendPages,
     isLoading,
@@ -110,10 +113,6 @@ export default function HomePage() {
   //   两列底部差收敛到一张卡内（原 i%2 加载到底左长右短，用户实测）
   const masonryCols = useMemo(() => splitMasonryBalanced(recommendList), [recommendList]);
   // Why: §9-4 瀑布流两列分发改 FlatList numColumns（C-P2-10，分发逻辑由列表承担）
-  const { data: buyAgainProducts, isFetching: buyAgainFetching } = useBuyAgain({
-    limit: BUY_AGAIN_LIMIT,
-    offset: buyAgainOffset,
-  });
   // Why: 换一批循环推进（20261023 第二轮修订）——「prev + 已加载页数」方案在用户先把
   //   加载更多点到底时失效：baseOffset 仍为 0、短页只在末尾，回绕算出 0 → 同 queryKey
   //   不重查 → 真·没反应（人工验收实证）。改为「固定步长 + 探测池终点」：
@@ -174,23 +173,19 @@ export default function HomePage() {
       setRecommendBaseOffset(0);
     }
   }, [isFetchingRecommend, isFetchingNextPage]);
-  // Why: 首页推荐展示 批2 ——「加载更多」三态：可点 fetchNextPage / isFetchingNextPage
-  //   loading（防连点，同换一批按钮范式）/ !hasNextPage 条件渲染移除（D4 按钮消失）
+  // Why: 20261107 拍板——「加载更多」按钮改触底自动加载（onScroll 距底 <400px 触发），
+  //   守卫同款：hasNextPage 且非加载中才追加，防连点重复请求
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-  const buyAgainCount = buyAgainProducts?.length ?? 0;
-  const handleBuyAgainChangeBatch = useCallback(() => {
-    setBuyAgainOffset((prev) => {
-      const next = prev + BUY_AGAIN_LIMIT;
-      return buyAgainCount < BUY_AGAIN_LIMIT ? 0 : next;
-    });
-  }, [buyAgainCount]);
-  // A-P2-2：useMemo 稳定引用（renderDashboardHeader 依赖数组要求引用稳定，空数组兜底不变）
-  const buyAgainList = useMemo(() => buyAgainProducts ?? [], [buyAgainProducts]);
-  // 批3 P2-1 修复：B1 常购清单入口——「查看全部」仅登录态展示（匿名看的是销量兜底切片
-  //   而非「你常买的」，入口跟着语义走；B1 页自身匿名分流见 frequently-bought.tsx）
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { contentSize, layoutMeasurement, contentOffset } = e.nativeEvent;
+      const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+      if (distanceFromBottom < LOAD_MORE_THRESHOLD) handleLoadMore();
+    },
+    [handleLoadMore],
+  );
   // Why: 客户画像批3 B8 常买组合（2026-10-18）——useFrequentBundle 拉打包组合（seed+伙伴），
   //   空组合（匿名/无历史/无共现/门禁关）整块隐藏；一键整包加购走 addToCartMutation 逐个 mutate
   const { data: bundle } = useFrequentBundle();
@@ -234,10 +229,10 @@ export default function HomePage() {
   // 未登录时 useUnreadCount 不请求（enabled: isAuthenticated）→ data undefined → 不显示角标
   const { data: unreadCount } = useUnreadCount();
 
-  // Why: Buy again 加购
+  // Why: 瀑布流卡/组合卡共用加购回调
   // C-P2-10: useCallback 稳定化——memo 化的 MasonryProductCard/SmallProductCard props 浅比较，
   //   回调不稳定会让 memo 失效（每渲染全列表重渲）
-  const handleBuyAgainAddToCart = useCallback(
+  const handleAddToCart = useCallback(
     (item: Product) => {
       addToCartMutation.mutate(
         { product: item, quantity: 1 },
@@ -293,16 +288,16 @@ export default function HomePage() {
         product={item}
         badge={resolveBadges(item, t)[0]}
         onPress={handleCardPress}
-        onAddToCart={handleBuyAgainAddToCart}
+        onAddToCart={handleAddToCart}
       />
     ),
-    [t, handleBuyAgainAddToCart, handleCardPress],
+    [t, handleAddToCart, handleCardPress],
   );
   // 历史决策链：C-P2-10/A-P2-2 曾改 FlatList(numColumns=2) 承担滚动（救虚拟化）；主理人
   //   实测发现 numColumns 行对齐导致「顶部对齐网格、非瀑布流」（方案A 拍板 20261016），
   //   改回奇偶分列 ScrollView（favorites/search 先例，真错落）——虚拟化让位视觉语义，
   //   量级一页 20 条内可接受（收藏页同款取舍）。dashboard 区块收 renderDashboardHeader、
-  //   Buy Again 横滑 renderBuyAgainFooter（实测Bug修复 #7B 板块顺序：推荐在前、再次购买在后）。
+  //   常买组合收 renderBundleSection（20261107 拍板：Buy Again 板块已删，推荐区触底自动加载）。
   //   loading/error/空列表三态时退回 ScrollView 包 dashboard 区（区块少非热路径）。
   const renderDashboardHeader = useCallback(
     () => (
@@ -466,7 +461,7 @@ export default function HomePage() {
               testID={`bundle-card-${item.id}`}
               product={item}
               onPress={handleCardPress}
-              onAddToCart={handleBuyAgainAddToCart}
+              onAddToCart={handleAddToCart}
             />
           ))}
         </View>
@@ -502,91 +497,9 @@ export default function HomePage() {
     colors,
     handleBundleAddAll,
     handleCardPress,
-    handleBuyAgainAddToCart,
+    handleAddToCart,
     t,
   ]);
-
-  const renderBuyAgainFooter = useCallback(
-    () => (
-      <View style={styles.buyAgainSection}>
-        <View style={[styles.sectionHeader, styles.buyAgainHeader]}>
-          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-            {t('order.actions.repurchase')}
-          </Text>
-          {/* Why: 换一批按钮 批2（清债微批修正）—— epoch++ 回首屏复位（D3 方案 B），isFetching 防连点 */}
-          {/* 追修 P3-4：换一批+history 包进右侧组——sectionHeader 是 space-between，
-              三顶层子元素会把按钮挤到正中间（推荐板块 headerActions 同款做法） */}
-          <View style={styles.headerActions}>
-            <Pressable
-              testID="home-buy-again-change-batch"
-              onPress={handleBuyAgainChangeBatch}
-              disabled={buyAgainFetching}
-              style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
-              accessibilityRole="button"
-              accessibilityLabel={t('home.changeBatch')}
-            >
-              <Icon
-                symbol="refresh"
-                size={16}
-                color={buyAgainFetching ? colors.outline : colors.primary}
-              />
-              <Text
-                style={[
-                  styles.seeAllText,
-                  { color: buyAgainFetching ? colors.outline : colors.primary },
-                ]}
-              >
-                {t('home.changeBatch')}
-              </Text>
-            </Pressable>
-            {/* 批3 P2-1 修复：B1 常购清单页导航入口（原孤儿页零入口）——
-                「查看全部」跳 /product/frequently-bought，复用 common.seeAll 现有 key；
-                仅登录态展示（匿名 buy-again 是销量兜底切片，入口跟语义走） */}
-            {isAuthenticated && (
-              <Pressable
-                testID="home-buy-again-view-all"
-                onPress={() => router.push('/product/frequently-bought')}
-                style={({ pressed }) => [styles.changeBatchBtn, pressed && { opacity: 0.7 }]}
-                accessibilityRole="button"
-                accessibilityLabel={t('common.seeAll')}
-              >
-                <Icon symbol="chevron_right" size={16} color={colors.primary} />
-                <Text style={[styles.seeAllText, { color: colors.primary }]}>
-                  {t('common.seeAll')}
-                </Text>
-              </Pressable>
-            )}
-            <Icon symbol="history" size={20} color={colors.outline} />
-          </View>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.hScroll}
-        >
-          {buyAgainList.map((item) => (
-            // Why: P1 - 替换内联 buyAgainCard 为统一 SmallProductCard（方案 §4）
-            <SmallProductCard
-              key={item.id}
-              product={item}
-              onPress={handleCardPress}
-              onAddToCart={handleBuyAgainAddToCart}
-            />
-          ))}
-        </ScrollView>
-      </View>
-    ),
-    [
-      buyAgainList,
-      colors,
-      handleBuyAgainAddToCart,
-      handleBuyAgainChangeBatch,
-      handleCardPress,
-      buyAgainFetching,
-      isAuthenticated,
-      t,
-    ],
-  );
 
   // B1 常购清单入口（批3 P2-1 修复）
   // A-P2-2: dashboard 三态（loading/error/空列表）退回 ScrollView——瀑布流无数据时
@@ -605,21 +518,11 @@ export default function HomePage() {
         ) : (
           <ErrorState message={t('errors.products')} onRetry={() => refetch()} />
         )}
-        {/* #7B：fallback 态 Buy Again 仍渲染（与 FlatList Footer 同源，板块不丢） */}
+        {/* #7B：fallback 态常买组合仍渲染（与主 ScrollView 同源，板块不丢） */}
         {renderBundleSection()}
-        {renderBuyAgainFooter()}
       </ScrollView>
     ),
-    [
-      bottomReserve,
-      colors,
-      isLoading,
-      refetch,
-      renderDashboardHeader,
-      renderBundleSection,
-      renderBuyAgainFooter,
-      t,
-    ],
+    [bottomReserve, colors, isLoading, refetch, renderDashboardHeader, renderBundleSection, t],
   );
 
   return (
@@ -700,6 +603,11 @@ export default function HomePage() {
             style={[styles.scrollArea, { backgroundColor: colors.background }]}
             contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomReserve }]}
             showsVerticalScrollIndicator={false}
+            // Why: 20261107 拍板——触底自动加载（距底 <400px 追加下一批推荐），scrollEventThrottle
+            //   限频 16ms 防每帧重算；handleLoadMore 内 hasNextPage/isFetchingNextPage 守卫兜底
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            testID="home-recommend-scroll"
           >
             {renderDashboardHeader()}
             <View style={styles.masonryRow}>
@@ -712,64 +620,42 @@ export default function HomePage() {
                 {masonryCols[1].map((item) => renderMasonryItem(item))}
               </View>
             </View>
-            {/* Why: 首页推荐展示 批2 ——「加载更多」三态（masonryRow 与 Buy Again 之间）：
-                hasNextPage 可点追加 / isFetchingNextPage loading 防连点 / 20261024 方案②
-                到底态换「收起推荐」文字链（D4 按钮消失改为收起入口，列表 >6 条才出现） */}
-            {hasNextPage ? (
+            {/* Why: 20261107 拍板——「加载更多」按钮改触底自动加载，按钮删除；加载中在列表尾部
+                露小 spinner（追加过渡可感知）；20261024 方案②到底态「已经到底啦+收起推荐」保留 */}
+            {isFetchingNextPage && (
               <View style={styles.loadMoreRow}>
+                <ActivityIndicator size="small" color={colors.primary} />
+              </View>
+            )}
+            {!hasNextPage && recommendList.length > RECOMMEND_LIMIT && (
+              // 20261024 人工验收修订：到底态拆左右两端——左侧居中提示「已经到底啦」，
+              // 右侧「收起推荐」文字链（原两态各占一行居中）
+              <View style={styles.recommendEndRow}>
+                <Text
+                  style={[styles.listEndText, { color: colors['on-surface-variant'], zIndex: 0 }]}
+                >
+                  {t('home.listEnd')}
+                </Text>
                 <Pressable
-                  testID="home-recommend-load-more"
-                  onPress={handleLoadMore}
-                  disabled={isFetchingNextPage}
+                  testID="home-recommend-collapse"
+                  onPress={handleRecommendCollapse}
+                  disabled={isFetchingRecommend || isFetchingNextPage}
                   style={({ pressed }) => [
-                    styles.loadMoreBtn,
-                    { borderColor: colors['outline-variant'] },
-                    pressed && !isFetchingNextPage && { opacity: 0.7 },
+                    styles.changeBatchBtn,
+                    { zIndex: 1 },
+                    pressed && { opacity: 0.7 },
                   ]}
                   accessibilityRole="button"
-                  accessibilityLabel={t('home.loadMore')}
+                  accessibilityLabel={t('home.collapseRecommend')}
                 >
-                  {isFetchingNextPage ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  ) : (
-                    <Text style={[styles.loadMoreText, { color: colors.primary }]}>
-                      {t('home.loadMore')}
-                    </Text>
-                  )}
+                  <Icon symbol="expand_less" size={16} color={colors.primary} />
+                  <Text style={[styles.loadMoreText, { color: colors.primary }]}>
+                    {t('home.collapseRecommend')}
+                  </Text>
                 </Pressable>
               </View>
-            ) : (
-              recommendList.length > RECOMMEND_LIMIT && (
-                // 20261024 人工验收修订：到底态拆左右两端——左侧居中提示「已经到底啦」，
-                // 右侧「收起推荐」文字链（原两态各占一行居中）
-                <View style={styles.recommendEndRow}>
-                  <Text
-                    style={[styles.listEndText, { color: colors['on-surface-variant'], zIndex: 0 }]}
-                  >
-                    {t('home.listEnd')}
-                  </Text>
-                  <Pressable
-                    testID="home-recommend-collapse"
-                    onPress={handleRecommendCollapse}
-                    disabled={isFetchingRecommend || isFetchingNextPage}
-                    style={({ pressed }) => [
-                      styles.changeBatchBtn,
-                      { zIndex: 1 },
-                      pressed && { opacity: 0.7 },
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('home.collapseRecommend')}
-                  >
-                    <Icon symbol="expand_less" size={16} color={colors.primary} />
-                    <Text style={[styles.loadMoreText, { color: colors.primary }]}>
-                      {t('home.collapseRecommend')}
-                    </Text>
-                  </Pressable>
-                </View>
-              )
             )}
             {renderBundleSection()}
-            {renderBuyAgainFooter()}
           </ScrollView>
         )}
       </SafeAreaWrapper>
@@ -923,11 +809,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout['container-margin'],
     marginBottom: spacing.md,
   },
-  hScroll: {
-    paddingHorizontal: layout['container-margin'],
-    gap: spacing.md,
-    paddingBottom: spacing.sm,
-  },
   // Why: §9-4 瀑布流两列容器（替 recommendCard 横滑）
   masonryRow: {
     // 方案A：奇偶分列行容器（favorites.tsx masonryRow 同构）——横向 padding + 列间距
@@ -940,20 +821,11 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.md,
   },
-  // Why: 首页推荐展示 批2 ——「加载更多」按钮行（居中，宽约 40% 收敛视觉）
+  // Why: 加载中尾部 spinner 行（触底自动加载，20261107 拍板——按钮已删，行样式复用居中）
   loadMoreRow: {
     alignItems: 'center',
     marginTop: spacing.lg,
     paddingHorizontal: layout['container-margin'],
-  },
-  loadMoreBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '50%',
-    paddingVertical: spacing.sm,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   loadMoreText: {
     ...typography['label-caps'],

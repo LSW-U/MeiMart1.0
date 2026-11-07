@@ -65,7 +65,6 @@ jest.mock('@/services/queries/useProducts', () => ({
     isFetchingNextPage: false,
     hasNextPage: false,
   }),
-  useBuyAgain: () => ({ data: [] }),
   useFrequentBundle: () => ({ data: mockBundle }),
 }));
 
