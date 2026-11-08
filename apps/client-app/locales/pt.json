@@ -704,8 +704,7 @@
     "scan": "Digitalizar",
     "pointsUnit": "Pontos",
     "featureComingSoon": "Funcionalidade em breve",
-    "unreadBadge": "Você tem {{count}} notificações não lidas",
-    "tickets": "Meus Tickets"
+    "unreadBadge": "Você tem {{count}} notificações não lidas"
   },
   "settings": {
     "title": "Definições",
@@ -1192,7 +1191,8 @@
     "shortcut": {
       "orders": "Os Meus Pedidos",
       "refunds": "Reembolsos",
-      "tracking": "Rastreio"
+      "tracking": "Rastreio",
+      "tickets": "Meus Tickets"
     },
     "feedback": {
       "title": "Feedback",

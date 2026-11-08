@@ -6,7 +6,16 @@ import { StyleSheet, View, Text, ScrollView, Pressable, Animated } from 'react-n
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, layout, typography, borderRadius, shadowPresets, serviceEntryThemes, type ServiceEntryThemeKey } from '@/theme';
+import {
+  useTheme,
+  spacing,
+  layout,
+  typography,
+  borderRadius,
+  shadowPresets,
+  serviceEntryThemes,
+  type ServiceEntryThemeKey,
+} from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -15,7 +24,7 @@ import { Icon } from '@/components/ui/Icon';
 import { openExternalLink } from '@/utils/linking';
 
 interface Shortcut {
-  id: 'orders' | 'refunds' | 'tracking';
+  id: 'orders' | 'refunds' | 'tracking' | 'tickets';
   icon: string;
   theme: ServiceEntryThemeKey;
   route: string;
@@ -25,10 +34,13 @@ interface Shortcut {
 //      tracking 入口原路由 '/order/tracking'（审查 Q1）：tracking 页是「订单上下文页」（useOrder
 //      以 params.id 为 enabled 守卫），无 id 跳入必落 ErrorState "Order not found"——与 orders
 //      页 track 按钮一致，改为先到订单列表让用户选订单。
+// 20261108 拍板：我的工单入口从 profile 功能菜单迁入（工单=订单异常处理进度查询，
+//      与退款/物流同语义层级；profile 菜单原位语义弱、空态突兀）。
 const SHORTCUTS: Shortcut[] = [
   { id: 'orders', icon: 'receipt_long', theme: 'info', route: '/(main)/orders' },
   { id: 'refunds', icon: 'assignment_return', theme: 'warning', route: '/(main)/refunds' },
   { id: 'tracking', icon: 'local_shipping', theme: 'success', route: '/(main)/orders' },
+  { id: 'tickets', icon: 'confirmation_number', theme: 'info', route: '/(main)/tickets' },
 ];
 
 // Why: P20 D3（Q1 拍板）—— 复用 help 中心前 4 条 FAQ 文案（零新增 key），
@@ -45,7 +57,9 @@ export default function CustomerServicePage() {
   //      useState 初始化函数建 Animated.Value（review.tsx:134 同款，避免 render 阶段触 ref）
   const [arrowAnim] = useState(() => new Animated.Value(0));
   const arrowStyle = {
-    transform: [{ rotate: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }],
+    transform: [
+      { rotate: arrowAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) },
+    ],
   };
   useEffect(() => {
     Animated.timing(arrowAnim, {
@@ -91,10 +105,7 @@ export default function CustomerServicePage() {
             </Text>
           </View>
           <View
-            style={[
-              styles.greetPill,
-              { backgroundColor: colors.semantic['positive-container'] },
-            ]}
+            style={[styles.greetPill, { backgroundColor: colors.semantic['positive-container'] }]}
           >
             <View style={[styles.greetPillDot, { backgroundColor: colors.semantic.positive }]} />
             <Text style={[styles.greetPillText, { color: colors.semantic.positive }]}>
@@ -122,7 +133,12 @@ export default function CustomerServicePage() {
               accessibilityRole="button"
               accessibilityLabel={t(`service.shortcut.${sc.id}`)}
             >
-              <View style={[styles.shortcutIcon, { backgroundColor: serviceEntryThemes[sc.theme].iconBg }]}>
+              <View
+                style={[
+                  styles.shortcutIcon,
+                  { backgroundColor: serviceEntryThemes[sc.theme].iconBg },
+                ]}
+              >
                 <Icon symbol={sc.icon} size={22} color="#ffffff" />
               </View>
               <Text style={[styles.shortcutLabel, { color: colors['on-surface'] }]}>
@@ -136,14 +152,17 @@ export default function CustomerServicePage() {
         <Text style={[styles.sectionTitle, { color: colors['on-surface-variant'] }]}>
           {t('service.contactTitle')}
         </Text>
-        <View style={[styles.contact, { backgroundColor: colors['surface-container-lowest'] }, shadowPresets.sm]}>
+        <View
+          style={[
+            styles.contact,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.sm,
+          ]}
+        >
           <Pressable
             testID="cs-contact-online"
             onPress={() => router.push('/service/feedback')}
-            style={({ pressed }) => [
-              styles.contactMain,
-              pressed && { opacity: 0.9 },
-            ]}
+            style={({ pressed }) => [styles.contactMain, pressed && { opacity: 0.9 }]}
             accessibilityRole="button"
             accessibilityLabel={t('service.contact.online')}
           >
@@ -169,7 +188,9 @@ export default function CustomerServicePage() {
               accessibilityRole="button"
               accessibilityLabel={t('service.callHotline')}
             >
-              <View style={[styles.contactSubIcon, { backgroundColor: serviceEntryThemes.success.bg }]}>
+              <View
+                style={[styles.contactSubIcon, { backgroundColor: serviceEntryThemes.success.bg }]}
+              >
                 <Icon symbol="call" size={20} color={serviceEntryThemes.success.iconBg} />
               </View>
               <Text style={[styles.contactSubLabel, { color: colors['on-surface'] }]}>
@@ -179,15 +200,21 @@ export default function CustomerServicePage() {
                 +670 7700 0000
               </Text>
             </Pressable>
-            <View style={[styles.contactSubDivider, { backgroundColor: colors['outline-variant'] }]} />
+            <View
+              style={[styles.contactSubDivider, { backgroundColor: colors['outline-variant'] }]}
+            />
             <Pressable
               testID="cs-contact-email"
-              onPress={() => openExternalLink('mailto:support@meimart.tl', t('errors.openLinkFailed'))}
+              onPress={() =>
+                openExternalLink('mailto:support@meimart.tl', t('errors.openLinkFailed'))
+              }
               style={({ pressed }) => [styles.contactSubRow, pressed && { opacity: 0.6 }]}
               accessibilityRole="button"
               accessibilityLabel={t('service.email')}
             >
-              <View style={[styles.contactSubIcon, { backgroundColor: serviceEntryThemes.warning.bg }]}>
+              <View
+                style={[styles.contactSubIcon, { backgroundColor: serviceEntryThemes.warning.bg }]}
+              >
                 <Icon symbol="mail" size={20} color={serviceEntryThemes.warning.iconBg} />
               </View>
               <Text style={[styles.contactSubLabel, { color: colors['on-surface'] }]}>
@@ -218,7 +245,13 @@ export default function CustomerServicePage() {
             <Icon symbol="chevron_right" size={15} color={colors['on-surface-variant']} />
           </Pressable>
         </View>
-        <View style={[styles.faqList, { backgroundColor: colors['surface-container-lowest'] }, shadowPresets.sm]}>
+        <View
+          style={[
+            styles.faqList,
+            { backgroundColor: colors['surface-container-lowest'] },
+            shadowPresets.sm,
+          ]}
+        >
           {FAQ_IDS.map((id, idx) => {
             const isOpen = expanded === id;
             return (
@@ -226,7 +259,10 @@ export default function CustomerServicePage() {
                 key={id}
                 style={[
                   styles.faqItem,
-                  idx > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors['outline-variant'] },
+                  idx > 0 && {
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderTopColor: colors['outline-variant'],
+                  },
                 ]}
               >
                 <Pressable
@@ -246,11 +282,7 @@ export default function CustomerServicePage() {
                   {/* Why: 审查 Q5 —— 展开态箭头随 expanded 旋转 180°（原型 .faq.open .ar），
                       视觉反馈 + accessibilityState.expanded 语义双通道 */}
                   <Animated.View style={arrowStyle}>
-                    <Icon
-                      symbol="expand_more"
-                      size={20}
-                      color={colors['on-surface-variant']}
-                    />
+                    <Icon symbol="expand_more" size={20} color={colors['on-surface-variant']} />
                   </Animated.View>
                 </Pressable>
                 {isOpen && (

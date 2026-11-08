@@ -704,8 +704,7 @@
     "scan": "Scan",
     "pointsUnit": "Points",
     "featureComingSoon": "Feature coming soon",
-    "unreadBadge": "You have {{count}} unread notifications",
-    "tickets": "My Tickets"
+    "unreadBadge": "You have {{count}} unread notifications"
   },
   "settings": {
     "title": "Settings",
@@ -1192,7 +1191,8 @@
     "shortcut": {
       "orders": "My Orders",
       "refunds": "Refunds",
-      "tracking": "Tracking"
+      "tracking": "Tracking",
+      "tickets": "My Tickets"
     },
     "feedback": {
       "title": "Feedback",

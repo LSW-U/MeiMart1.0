@@ -56,9 +56,11 @@ export interface FunctionItem {
   isError?: boolean;
 }
 
-// P2 §3.4: 登录态功能菜单只留 地址/我的工单/帮助/设置/退出（收藏/优惠券已合并到 usercard 统计条）
+// P2 §3.4: 登录态功能菜单只留 地址/常购清单/帮助/设置/退出（收藏/优惠券已合并到 usercard 统计条）
 // 20261107 拍板方案A：常购清单入口迁入（原唯一入口是 home Buy Again「查看全部」，板块删除后
 //   /product/frequently-bought 成孤儿页，此处补菜单行承接）
+// 20261108 拍板：「我的工单」迁出（→ /service 客服页快捷入口，与退款/物流同排；
+//   工单=订单异常进度查询，profile 菜单位置语义弱）
 export const FUNCTION_ITEMS: FunctionItem[] = [
   { id: 'address', labelKey: 'address.list', icon: 'location_on', route: '/address/list' },
   // 20261107：常购清单（B1 页）菜单入口
@@ -67,13 +69,6 @@ export const FUNCTION_ITEMS: FunctionItem[] = [
     labelKey: 'profile.frequentlyBought',
     icon: 'history',
     route: '/product/frequently-bought',
-  },
-  // 替换品批2 工单化（2026-10-29）：我的工单入口（reportIssue 旁路建单的查询侧）
-  {
-    id: 'tickets',
-    labelKey: 'profile.tickets',
-    icon: 'confirmation_number',
-    route: '/(main)/tickets',
   },
   { id: 'help', labelKey: 'profile.help', icon: 'help', route: '/service/help' },
   { id: 'settings', labelKey: 'profile.settings', icon: 'settings', route: '/settings' },

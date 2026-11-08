@@ -704,8 +704,7 @@
     "scan": "扫码",
     "pointsUnit": "积分",
     "featureComingSoon": "功能即将上线",
-    "unreadBadge": "你有 {{count}} 条未读消息",
-    "tickets": "我的工单"
+    "unreadBadge": "你有 {{count}} 条未读消息"
   },
   "settings": {
     "title": "设置",
@@ -1192,7 +1191,8 @@
     "shortcut": {
       "orders": "我的订单",
       "refunds": "退款",
-      "tracking": "物流"
+      "tracking": "物流",
+      "tickets": "我的工单"
     },
     "feedback": {
       "title": "意见反馈",

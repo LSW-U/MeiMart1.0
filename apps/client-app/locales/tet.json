@@ -704,8 +704,7 @@
     "scan": "Skanea",
     "pointsUnit": "Ponto",
     "featureComingSoon": "Funsaun sei mai kedas",
-    "unreadBadge": "Ita iha {{count}} notifikasaun seidauk lee",
-    "tickets": "Tiket mìn"
+    "unreadBadge": "Ita iha {{count}} notifikasaun seidauk lee"
   },
   "settings": {
     "title": "Konfigurasaun",
@@ -1192,7 +1191,8 @@
     "shortcut": {
       "orders": "Hau-nia Pedidu",
       "refunds": "Reembolso",
-      "tracking": "Segue"
+      "tracking": "Segue",
+      "tickets": "Tiket mìn"
     },
     "feedback": {
       "title": "Komentáriu",

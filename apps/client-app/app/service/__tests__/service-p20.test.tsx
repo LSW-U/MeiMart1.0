@@ -37,11 +37,18 @@ describe('CustomerServicePage（P20：快捷入口 + Contact 卡 + FAQ 折叠）
     linkingOpenURL = jest.spyOn(Linking, 'openURL').mockImplementation(() => Promise.resolve());
   });
 
-  it('渲染 3 个快捷入口（orders/refunds/tracking）', () => {
+  it('渲染 4 个快捷入口（orders/refunds/tracking/tickets，20261108 工单入口迁入）', () => {
     const { getByTestId } = render(<CustomerServicePage />, { wrapper });
     expect(getByTestId('cs-shortcut-orders')).toBeTruthy();
     expect(getByTestId('cs-shortcut-refunds')).toBeTruthy();
     expect(getByTestId('cs-shortcut-tracking')).toBeTruthy();
+    expect(getByTestId('cs-shortcut-tickets')).toBeTruthy();
+  });
+
+  it('20261108 拍板：tickets 快捷入口跳工单列表页', () => {
+    const { getByTestId } = render(<CustomerServicePage />, { wrapper });
+    fireEvent.press(getByTestId('cs-shortcut-tickets'));
+    expect(router.push).toHaveBeenCalledWith('/(main)/tickets');
   });
 
   it('审查 Q1 回归：tracking 快捷入口路由指向订单列表（非无 id 的 /order/tracking）', () => {
