@@ -358,7 +358,7 @@ export default function ProfilePage() {
                 accessibilityLabel={t(entry.labelKey)}
               >
                 <View style={styles.quickIcon}>
-                  <Icon symbol={entry.icon} size={22} color={colors.primary} />
+                  <Icon symbol={entry.icon} size={28} color={colors.primary} />
                 </View>
                 <Text style={[styles.quickLabel, { color: colors['on-surface-variant'] }]}>
                   {t(entry.labelKey)}
@@ -664,9 +664,10 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   quickIcon: {
-    // 20261110 拍板：40×40 固定方块→22 贴近 22px 图标（同 orderTileNew 40 档，占位方块是间隙根因）
-    width: 22,
-    height: 22,
+    // 20261110 拍板：40×40 固定方块→贴近图标（同 orderTileNew，占位方块是间隙根因）；
+    //   图标 22→28 后容器跟随 28×28（用户反馈发现格图标未变大）
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
