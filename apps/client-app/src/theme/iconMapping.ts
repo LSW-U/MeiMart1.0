@@ -109,11 +109,9 @@ const SYMBOL_TO_MC_LITERAL = {
   play_arrow: 'play',
   radio_button_checked: 'radiobox-marked',
   radio_button_unchecked: 'radiobox-blank',
-  receipt_long: 'clipboard-list-outline', // Why: 20261110 拍板 A——票据+文字线 30px 偏密，
-  //   换 clipboard-list-outline（细线剪贴板+清单行，「订单列表」语义，与去评价/历史同风格）
-  // Why: 20261110 拍板 A+A——cash-refund（实心钱币）30px 成大实心圆与整排 outline 不搭，
-  //   换 cart-arrow-down（购物车回退箭头，细线，「买的东西退回来」）
-  cash_refund: 'cart-arrow-down',
+  receipt_long: 'text-box-outline', // Why: 20261110 试档 B——clipboard-list-outline 后用户再试 B 档
+  // Why: 20261110 试档 B——cash_refund 换 autorenew（循环双箭头简约，语义偏换货/刷新泛化）；
+  cash_refund: 'autorenew',
   ac_unit: 'snowflake',
   restaurant: 'silverware-fork-knife',
   sell: 'tag-outline',
