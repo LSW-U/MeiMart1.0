@@ -98,6 +98,17 @@ export default function OrdersPage() {
     setSelected(new Set());
   }, []);
 
+  // 20261109 拍板：左上角返回钮——管理模式激活时先退管理模式（防误触丢勾选），否则弹栈
+  const handleBack = useCallback(() => {
+    if (selectMode) {
+      exitSelectMode();
+      return;
+    }
+    // useSafeBack：canGoBack 弹栈（profile push 进来），直链/刷新兜底 replace 回 profile
+    if (router.canGoBack()) router.back();
+    else router.replace('/(main)/profile');
+  }, [selectMode, exitSelectMode]);
+
   // 批3 审查 P2-1：管理模式下当前 tab 订单删空（切 tab 过滤/删除后）→ 空态与管理栏并存怪异，
   // 渲染期直接收敛（不 useEffect：setState-in-effect 级联渲染禁；条件收敛幂等无环）
   if (selectMode && !isLoading && orders.length === 0) {
@@ -249,6 +260,8 @@ export default function OrdersPage() {
           title={
             selectMode ? t('order.selectedTitle', { count: selected.size }) : t('profile.orders')
           }
+          showBack
+          onBackPress={handleBack}
           rightActions={
             selectMode ? (
               <Pressable

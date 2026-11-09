@@ -29,6 +29,7 @@ export interface OrderEntry {
 // 用户要求：去掉「待发货」+ 最后加「退款售后」入口（跳 /refunds 列表页）
 // 20261109 拍板 A2：常购清单从 FUNCTION_ITEMS 迁入宫格第 5 格（一行 5 格，flex:1 平分；
 //   badge 无值不显示，getCount ?? 0 同 'after-sales' 机制）
+// 20261109 拍板 C2：售前→售中→售后严格递进（退款售后先于去评价，淘宝式），足迹殿后
 export const ORDER_ENTRIES: OrderEntry[] = [
   {
     id: 'to-pay',
@@ -43,16 +44,16 @@ export const ORDER_ENTRIES: OrderEntry[] = [
     route: '/(main)/orders?tab=to-receive',
   },
   {
-    id: 'review',
-    labelKey: 'order.actions.review',
-    icon: 'rate_review',
-    route: '/(main)/orders?tab=review',
-  },
-  {
     id: 'after-sales',
     labelKey: 'profile.afterSales',
     icon: 'cash_refund',
     route: '/refunds',
+  },
+  {
+    id: 'review',
+    labelKey: 'order.actions.review',
+    icon: 'rate_review',
+    route: '/(main)/orders?tab=review',
   },
   {
     id: 'frequentlyBought',

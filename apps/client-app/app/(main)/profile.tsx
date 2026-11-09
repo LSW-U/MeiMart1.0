@@ -46,6 +46,9 @@ import {
 import { ProfileHeader } from './profile-sections/ProfileHeader';
 import { ProfileEmpty } from './profile-sections/ProfileEmpty';
 
+// 20261109 拍板 A：宫格横向滑动——吸附步长 = orderCell 宽 84 + gap 24（styles 同源，改一处必同步）
+const CELL_INTERVAL = 84 + 24;
+
 export default function ProfilePage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -286,7 +289,14 @@ export default function ProfilePage() {
                 <Icon symbol="chevron_right" size={14} color={colors['on-surface-variant']} />
               </Pressable>
             </View>
-            <View style={styles.ordersGrid}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={CELL_INTERVAL}
+              decelerationRate="fast"
+              style={styles.ordersGrid}
+              contentContainerStyle={styles.ordersGridContent}
+            >
               {ORDER_ENTRIES.map((entry) => (
                 <Pressable
                   key={entry.id}
@@ -317,7 +327,7 @@ export default function ProfilePage() {
                   </Text>
                 </Pressable>
               ))}
-            </View>
+            </ScrollView>
           </View>
 
           {/* 2. Discover 快捷功能宫格（透明底 primary 图标，Invite/Seller 标 NEW，§3.3） */}
@@ -574,11 +584,17 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   ordersGrid: {
-    flexDirection: 'row',
+    // 20261109 拍板 A：横向滑动分页——每页约 4 格，右侧露第 5 格半截提示可滑
+    flexGrow: 0,
+  },
+  ordersGridContent: {
     gap: spacing.lg, // §3.2 保持大间距 gap=24
+    paddingRight: spacing.md,
   },
   orderCell: {
-    flex: 1,
+    // 20261109 拍板 A：固定格宽（卡内 margin 参与吸附间距计算）——每页约 4 格，
+    //   第 5 格右侧露半截提示可滑；snapToInterval = 格宽 + gap
+    width: 84,
     alignItems: 'center',
     gap: 6,
   },
