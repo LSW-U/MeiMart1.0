@@ -17,6 +17,8 @@ type BadgeColorEntry = { bg: string; fg: string };
 // Why: badge 配色从 useTheme 派生（dark mode 自动适配），不再用模块级硬编码常量。
 // P0-4：fresh/top-rated 底走 badge-* 白字安全档（light #047857/#B45309 ≈5.2/4.7:1，
 // 原 semantic.success/warning 配白字仅 3.77/2.70:1；dark 复用亮色配 on-primary 深字）。
+// P3批1 冒烟收尾：near-expiry 沿 P0-4 同模式——token 外加深红底（#B91C1C，同详情
+// InfoSection tag 用色）保白字对比度，后续主题化时与详情侧统一收 token。
 function useBadgeColors(): Record<ProductBadgeVariant, BadgeColorEntry> {
   const { colors } = useTheme();
   return {
@@ -25,6 +27,7 @@ function useBadgeColors(): Record<ProductBadgeVariant, BadgeColorEntry> {
     new: { bg: colors.tertiary, fg: colors['on-primary'] },
     'top-rated': { bg: colors.semantic['badge-warning'], fg: colors['on-primary'] },
     local: { bg: `${colors.primary}1A`, fg: colors.primary }, // 1A = ~10% opacity
+    'near-expiry': { bg: '#B91C1C', fg: colors['on-primary'] },
   };
 }
 

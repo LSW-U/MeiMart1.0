@@ -15,6 +15,8 @@ const TOP_RATED_THRESHOLD = 4.8;
 
 /**
  * 按商品属性派生 badge（最多 2 个，避免遮挡）
+ * - NEAR EXPIRY：isNearExpiry（后端直出，P3批1）——数组首位最高优先级：卡片只渲染 [0]，
+ *   临期是时效/安全信号，应压过 Best Seller 等营销徽章
  * - NEW：createdAt 7 天内
  * - BEST SELLER：isCategoryTop3（后端直出，字段缺失不显示）
  * - TOP RATED：rating >= 4.8
@@ -22,6 +24,11 @@ const TOP_RATED_THRESHOLD = 4.8;
  */
 export function resolveBadges(product: Product, t: TFunction): ProductBadge[] {
   const badges: ProductBadge[] = [];
+
+  // P3批1 冒烟收尾：临期徽章置顶（unshift 保证 [0]，后续 badge 依次顺延，slice(0,2) 语义不变）
+  if (product.isNearExpiry === true) {
+    badges.push({ label: t('product.badgeNearExpiry'), variant: 'near-expiry' });
+  }
 
   if (product.createdAt) {
     const created = new Date(product.createdAt).getTime();

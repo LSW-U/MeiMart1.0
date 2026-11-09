@@ -1,6 +1,7 @@
 import type { Product } from '@/types';
 
-export type ProductBadgeVariant = 'fresh' | 'best-seller' | 'new' | 'top-rated' | 'local';
+export type ProductBadgeVariant =
+  'fresh' | 'best-seller' | 'new' | 'top-rated' | 'local' | 'near-expiry';
 
 export interface ProductBadge {
   label: string;
