@@ -93,10 +93,18 @@ export const FUNCTION_ITEMS: FunctionItem[] = [
 ];
 
 // P2 §8: 未登录态无 usercard 统计条 -> 收藏/优惠券入口必须留在功能菜单里
+// 20261110 拍板：补客服中心行（客服随 20261110 迁移只剩登录态菜单有入口，未登录用户
+//   最需要联系客服；插在帮助中心前与登录态菜单同位序）
 export const FUNCTION_ITEMS_EMPTY: FunctionItem[] = [
   { id: 'favorites', labelKey: 'profile.favorites', icon: 'favorite', route: '/favorites' },
   { id: 'coupons', labelKey: 'profile.coupons', icon: 'confirmation_number', route: '/coupons' },
   { id: 'address', labelKey: 'address.list', icon: 'location_on', route: '/address/list' },
+  {
+    id: 'customerService',
+    labelKey: 'profile.customerService',
+    icon: 'support_agent',
+    route: '/service',
+  },
   { id: 'help', labelKey: 'profile.help', icon: 'help', route: '/service/help' },
   { id: 'settings', labelKey: 'profile.settings', icon: 'settings', route: '/settings' },
 ];
@@ -105,14 +113,23 @@ export const FUNCTION_ITEMS_EMPTY: FunctionItem[] = [
 // isNew 角标已下线（2026-08-27 用户手调移除两处使用，字段+渲染分支+样式连根清，审查 Q3）
 // 20261109 融合拍板：浏览历史删格（并入订单宫格「常购清单」入口 → /product/history 双 tab，
 //   B1 本地 AsyncStorage 实现；本格原为 toast 占位无数据源）
-// 20261110 拍板：扫码删格迁页头右上角（真实入口语义）；剩余 2 格全部「功能开发中」占位——
-//   邀请/卖家转正需后端 referral/入驻端点，挂账待立项（发现模块扩充挂账 20261110）
+// 20261110 拍板：扫码删格迁页头右上角（真实入口语义）；invite/becomeSeller 仍「功能开发中」
+//   占位——转正需后端 referral/入驻端点，挂账待立项（发现模块扩充挂账 20261110）
+// 20261110 补：新增领券中心直达格（route 真实跳转，非占位）——复用 coupons.centerTitle key；
+//   与统计条入口语义区分：统计条看券数量（→/coupons），本格领券（→/coupons/claim）
 export interface DiscoverEntry {
   id: string;
   labelKey: string;
   icon: IconSymbol;
+  route?: string;
 }
 export const DISCOVER_ENTRIES: DiscoverEntry[] = [
   { id: 'invite', labelKey: 'profile.invite', icon: 'group_add' },
+  {
+    id: 'claimCoupons',
+    labelKey: 'coupons.centerTitle',
+    icon: 'confirmation_number',
+    route: '/coupons/claim',
+  },
   { id: 'becomeSeller', labelKey: 'profile.becomeSeller', icon: 'storefront' },
 ];

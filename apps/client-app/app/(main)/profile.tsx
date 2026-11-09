@@ -41,6 +41,7 @@ import {
   ORDER_ENTRIES,
   FUNCTION_ITEMS,
   DISCOVER_ENTRIES,
+  type DiscoverEntry,
   type FunctionItem,
 } from './profile-sections/shared';
 import { ProfileHeader } from './profile-sections/ProfileHeader';
@@ -107,7 +108,12 @@ export default function ProfilePage() {
   };
 
   // P2 §6: Discover 功能 C1 占位 -> toast「功能开发中」（功能按 F2->F1->F4->F3 后续实现）
-  const onDiscoverPress = () => {
+  // 20261110 补：带 route 的格（领券中心直达）真实跳转，无 route 的保持占位 toast
+  const onDiscoverPress = (entry: DiscoverEntry) => {
+    if (entry.route) {
+      router.push(entry.route);
+      return;
+    }
     toast.info(t('profile.featureComingSoon', { defaultValue: 'Feature coming soon' }));
   };
 
@@ -345,7 +351,7 @@ export default function ProfilePage() {
             {DISCOVER_ENTRIES.map((entry) => (
               <Pressable
                 key={entry.id}
-                onPress={onDiscoverPress}
+                onPress={() => onDiscoverPress(entry)}
                 style={({ pressed }) => [styles.quickCell, pressed && { opacity: 0.7 }]}
                 accessibilityRole="button"
                 accessibilityLabel={t(entry.labelKey)}
