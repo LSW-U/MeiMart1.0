@@ -287,17 +287,8 @@ export default function ProfilePage() {
               <Text style={[styles.ordersTitle, { color: colors['on-surface'] }]}>
                 {t('profile.orders')}
               </Text>
-              <Pressable
-                onPress={() => router.push('/orders')}
-                style={styles.viewAllBtn}
-                accessibilityRole="button"
-                accessibilityLabel={t('profile.viewAllOrders')}
-              >
-                <Text style={[styles.viewAllText, { color: colors['on-surface-variant'] }]}>
-                  {t('common.viewAll')}
-                </Text>
-                <Icon symbol="chevron_right" size={14} color={colors['on-surface-variant']} />
-              </Pressable>
+              {/* 20261110 拍板：右上角「查看全部」删除——入口迁宫格首位「全部订单」格
+                  （viewAllOrders key 仍被 ProfileEmpty 未登录态用，非孤儿） */}
             </View>
             <ScrollView
               horizontal
@@ -584,15 +575,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
   },
-  viewAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  viewAllText: {
-    ...typography['label-caps'],
-    fontSize: 10,
-  },
+  // 20261110 拍板：viewAllBtn/viewAllText 样式随右上角入口删除（ProfileEmpty 未登录态有自己副本）
   ordersGrid: {
     // 20261109 拍板 A：横向滑动分页——每页约 4 格，右侧露第 5 格半截提示可滑
     flexGrow: 0,

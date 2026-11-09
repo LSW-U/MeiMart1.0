@@ -15,6 +15,7 @@ export interface OrderEntry {
   // id: OrderGroupKey | 'after-sales'（退款售后非订单状态，放宽 string 让其可加；badge 查 orderCounts 时 'after-sales' 无值不显示）
   id: string;
   labelKey:
+    | 'order.allOrders'
     | 'order.statusToPay'
     | 'order.statusToShip'
     | 'order.statusToReceive'
@@ -32,7 +33,15 @@ export interface OrderEntry {
 // 20261109 拍板 C2：售前→售中→售后严格递进（退款售后先于去评价，淘宝式），足迹殿后
 // 20261109 拍板：来源参数 from=profile —— orders/refunds 返回钮凭此确定性回 profile
 //   （orders 组内 push 降级、refunds web 直开均会断栈，canGoBack 判断不可靠）
+// 20261110 拍板：首位插「全部订单」格（原右上角「查看全部」入口迁入宫格）；labelKey 新增
+//   order.allOrders（common.all「全部」与 tab 语义有歧义弃用）；badge 无值不显示同 after-sales
 export const ORDER_ENTRIES: OrderEntry[] = [
+  {
+    id: 'all',
+    labelKey: 'order.allOrders',
+    icon: 'receipt_long',
+    route: '/orders',
+  },
   {
     id: 'to-pay',
     labelKey: 'order.statusToPay',

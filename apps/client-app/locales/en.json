@@ -395,6 +395,7 @@
     "badgeColdChain": "Cold Chain"
   },
   "order": {
+    "allOrders": "All Orders",
     "status": {
       "pending": "Awaiting payment",
       "confirming": "Being confirmed",

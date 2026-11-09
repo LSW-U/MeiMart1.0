@@ -395,6 +395,7 @@
     "badgeColdChain": "Distribuisaun malirin"
   },
   "order": {
+    "allOrders": "Pedidu hotu",
     "status": {
       "pending": "Hein paga",
       "confirming": "Konfirma hela",

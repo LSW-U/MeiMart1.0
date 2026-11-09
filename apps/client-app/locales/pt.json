@@ -395,6 +395,7 @@
     "badgeColdChain": "Cadeia de Frio"
   },
   "order": {
+    "allOrders": "Todos os pedidos",
     "status": {
       "pending": "Aguarda pagamento",
       "confirming": "Em confirmação",

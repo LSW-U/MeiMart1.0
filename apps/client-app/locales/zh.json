@@ -395,6 +395,7 @@
     "badgeColdChain": "冷链配送"
   },
   "order": {
+    "allOrders": "全部订单",
     "status": {
       "pending": "待付款",
       "confirming": "待确认",
