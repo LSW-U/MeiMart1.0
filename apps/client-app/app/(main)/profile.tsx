@@ -47,8 +47,9 @@ import {
 import { ProfileHeader } from './profile-sections/ProfileHeader';
 import { ProfileEmpty } from './profile-sections/ProfileEmpty';
 
-// 20261109 拍板 A：宫格横向滑动——吸附步长 = orderCell 宽 88 + gap 16（styles 同源，改一处必同步）
-const CELL_INTERVAL = 88 + 16;
+// 20261109 拍板 A：宫格横向滑动——吸附步长 = orderCell 宽 100 + gap 8（styles 同源，改一处必同步）
+// 20261110 拍板：88+16→100+8 收紧空隙+调大按钮与字（用户反馈按钮小空隙大）
+const CELL_INTERVAL = 100 + 8;
 
 export default function ProfilePage() {
   const { colors } = useTheme();
@@ -312,7 +313,7 @@ export default function ProfilePage() {
                   accessibilityLabel={t(entry.labelKey)}
                 >
                   <View style={styles.orderTileNew}>
-                    <Icon symbol={entry.icon} size={26} color={colors.primary} />
+                    <Icon symbol={entry.icon} size={30} color={colors.primary} />
                     {/* §4.1 badge 接 useOrderCounts 派生计数，无值（0）隐藏不显示假数据 */}
                     {getCount(entry.id) > 0 ? (
                       <View
@@ -594,22 +595,23 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   ordersGridContent: {
-    gap: 16, // 20261109 拍板：24→16 收紧格间距（原 §3.2 gap=24 显空旷）
+    gap: 8, // 20261110 拍板：16→8 收紧格间距（用户反馈空隙偏大）
     paddingRight: spacing.md,
     // Why: ScrollView 四边裁剪溢出——badge top:-5 凸出图标块会被顶边裁掉，留 6px 顶部空间
     paddingTop: 6,
   },
   orderCell: {
-    // 20261109 拍板 A：固定格宽（卡内 margin 参与吸附间距计算）——每页约 4 格，
+    // 20261109 拍板 A：固定格宽（卡内 margin 参与吸附间距计算）——每页约 3.5 格，
     //   第 5 格右侧露半截提示可滑；snapToInterval = 格宽 + gap（CELL_INTERVAL 同源）
-    width: 88,
+    // 20261110 拍板：88→100 调大格（用户反馈按钮小）
+    width: 100,
     alignItems: 'center',
     gap: 6,
   },
   orderTileNew: {
     width: '100%',
     aspectRatio: 1,
-    maxWidth: 64,
+    maxWidth: 72, // 20261110 拍板：64→72 随格宽放大按钮块
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -633,7 +635,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   orderLabel: {
-    fontSize: 12,
+    fontSize: 13, // 20261110 拍板：12→13 调大（用户反馈字小）
     fontWeight: '600',
     textAlign: 'center',
   },
