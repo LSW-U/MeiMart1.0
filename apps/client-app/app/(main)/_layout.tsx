@@ -6,7 +6,6 @@ const TAB_ROUTES: Record<BottomTab, string> = {
   home: '/(main)/home',
   categories: '/(main)/categories',
   cart: '/(main)/cart',
-  orders: '/(main)/orders',
   account: '/(main)/profile',
 };
 
@@ -27,7 +26,6 @@ export default function MainLayout() {
       <Tabs.Screen name="home" options={{ title: 'Home' }} />
       <Tabs.Screen name="categories" options={{ title: 'Categories' }} />
       <Tabs.Screen name="cart" options={{ title: 'Cart' }} />
-      <Tabs.Screen name="orders" options={{ title: 'Orders' }} />
       <Tabs.Screen name="profile" options={{ title: 'Account' }} />
     </Tabs>
   );

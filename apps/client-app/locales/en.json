@@ -255,7 +255,6 @@
     "home": "Home",
     "categories": "Categories",
     "cart": "Cart",
-    "orders": "Orders",
     "account": "Account"
   },
   "cart": {
@@ -682,7 +681,7 @@
     "settings": "Settings",
     "favorites": "Favorites",
     "coupons": "Coupons",
-    "frequentlyBought": "Frequently bought",
+    "frequentlyBought": "Shopping footprint",
     "orders": "My orders",
     "afterSales": "After-sales",
     "addresses": "Addresses",

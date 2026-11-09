@@ -298,4 +298,4 @@ export interface TrackingStep {
 
 export type OrderTab = OrderStatus | 'all';
 
-export type BottomTab = 'home' | 'categories' | 'cart' | 'orders' | 'account';
+export type BottomTab = 'home' | 'categories' | 'cart' | 'account';

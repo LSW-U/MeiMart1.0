@@ -255,7 +255,6 @@
     "home": "Início",
     "categories": "Categorias",
     "cart": "Carrinho",
-    "orders": "Pedidos",
     "account": "Conta"
   },
   "cart": {
@@ -682,7 +681,7 @@
     "settings": "Definições",
     "favorites": "Favoritos",
     "coupons": "Cupões",
-    "frequentlyBought": "Comprados com frequência",
+    "frequentlyBought": "Itens comprados e vistos",
     "orders": "Os meus pedidos",
     "afterSales": "Pós-venda",
     "addresses": "Endereços",

@@ -27,13 +27,17 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 
 describe('BottomNav', () => {
   it('renders all tabs via i18n keys', () => {
-    const { getByLabelText } = render(<BottomNav activeTab="home" onTabPress={jest.fn()} />, {
-      wrapper,
-    });
+    const { getByLabelText, queryByLabelText } = render(
+      <BottomNav activeTab="home" onTabPress={jest.fn()} />,
+      {
+        wrapper,
+      },
+    );
     expect(getByLabelText('tabs.home')).toBeTruthy();
     expect(getByLabelText('tabs.categories')).toBeTruthy();
     expect(getByLabelText('tabs.cart')).toBeTruthy();
-    expect(getByLabelText('tabs.orders')).toBeTruthy();
+    // 20261109 拍板：底栏去「订单」tab——替代入口为 profile 订单宫格 + 查看全部
+    expect(queryByLabelText('tabs.orders')).toBeNull();
     expect(getByLabelText('tabs.account')).toBeTruthy();
   });
 

@@ -255,7 +255,6 @@
     "home": "Inísiu",
     "categories": "Kategoria",
     "cart": "Karrinho",
-    "orders": "Pedidu sira",
     "account": "Konta"
   },
   "cart": {
@@ -682,7 +681,7 @@
     "settings": "Konfigurasaun",
     "favorites": "Favoritu sira",
     "coupons": "Kupom sira",
-    "frequentlyBought": "Sasan sosa bebeik",
+    "frequentlyBought": "Sosa no haree fali",
     "orders": "Hau-nia pedidu sira",
     "afterSales": "Reklamasaun",
     "addresses": "Enderesu sira",

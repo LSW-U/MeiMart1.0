@@ -255,7 +255,6 @@
     "home": "首页",
     "categories": "分类",
     "cart": "购物车",
-    "orders": "订单",
     "account": "我的"
   },
   "cart": {
@@ -682,7 +681,7 @@
     "settings": "设置",
     "favorites": "我的收藏",
     "coupons": "优惠券",
-    "frequentlyBought": "常购清单",
+    "frequentlyBought": "购物足迹",
     "orders": "我的订单",
     "afterSales": "退款售后",
     "addresses": "收货地址",
