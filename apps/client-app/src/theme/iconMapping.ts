@@ -110,6 +110,9 @@ const SYMBOL_TO_MC_LITERAL = {
   radio_button_checked: 'radiobox-marked',
   radio_button_unchecked: 'radiobox-blank',
   receipt_long: 'receipt',
+  // Why: P3批2 冷链标识（tracking.tsx 冷链 banner）——Material Symbols ac_unit 雪花，
+  //   MC 对应 snowflake（cmap 已验证 U+F0857）
+  ac_unit: 'snowflake',
   restaurant: 'silverware-fork-knife',
   sell: 'tag-outline',
   shopping_basket: 'shopping',
