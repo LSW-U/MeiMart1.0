@@ -19,13 +19,16 @@ export interface OrderEntry {
     | 'order.statusToShip'
     | 'order.statusToReceive'
     | 'order.actions.review'
-    | 'profile.afterSales';
+    | 'profile.afterSales'
+    | 'profile.frequentlyBought';
   icon: IconSymbol;
   route?: string;
 }
 
 // 订单入口宫格（HTML 第 170-197 行）- badge 由 useOrderCounts 派生（id 对应 ORDER_COUNT_MAP）
 // 用户要求：去掉「待发货」+ 最后加「退款售后」入口（跳 /refunds 列表页）
+// 20261109 拍板 A2：常购清单从 FUNCTION_ITEMS 迁入宫格第 5 格（一行 5 格，flex:1 平分；
+//   badge 无值不显示，getCount ?? 0 同 'after-sales' 机制）
 export const ORDER_ENTRIES: OrderEntry[] = [
   {
     id: 'to-pay',
@@ -39,12 +42,18 @@ export const ORDER_ENTRIES: OrderEntry[] = [
     icon: 'local_shipping',
     route: '/(main)/orders',
   },
-  { id: 'review', labelKey: 'order.actions.review', icon: 'star_rate', route: '/(main)/orders' },
+  { id: 'review', labelKey: 'order.actions.review', icon: 'rate_review', route: '/(main)/orders' },
   {
     id: 'after-sales',
     labelKey: 'profile.afterSales',
-    icon: 'support_agent',
+    icon: 'cash_refund',
     route: '/(main)/refunds',
+  },
+  {
+    id: 'frequentlyBought',
+    labelKey: 'profile.frequentlyBought',
+    icon: 'history',
+    route: '/product/frequently-bought',
   },
 ];
 
@@ -56,20 +65,12 @@ export interface FunctionItem {
   isError?: boolean;
 }
 
-// P2 §3.4: 登录态功能菜单只留 地址/常购清单/帮助/设置/退出（收藏/优惠券已合并到 usercard 统计条）
-// 20261107 拍板方案A：常购清单入口迁入（原唯一入口是 home Buy Again「查看全部」，板块删除后
-//   /product/frequently-bought 成孤儿页，此处补菜单行承接）
+// P2 §3.4: 登录态功能菜单只留 地址/帮助/设置/退出（收藏/优惠券已合并到 usercard 统计条）
 // 20261108 拍板：「我的工单」迁出（→ /service 客服页快捷入口，与退款/物流同排；
 //   工单=订单异常进度查询，profile 菜单位置语义弱）
+// 20261109 拍板 A2：常购清单迁出（→ 订单宫格第 5 格，profile.frequentlyBought key 仍被宫格用非孤儿）
 export const FUNCTION_ITEMS: FunctionItem[] = [
   { id: 'address', labelKey: 'address.list', icon: 'location_on', route: '/address/list' },
-  // 20261107：常购清单（B1 页）菜单入口
-  {
-    id: 'frequentlyBought',
-    labelKey: 'profile.frequentlyBought',
-    icon: 'history',
-    route: '/product/frequently-bought',
-  },
   { id: 'help', labelKey: 'profile.help', icon: 'help', route: '/service/help' },
   { id: 'settings', labelKey: 'profile.settings', icon: 'settings', route: '/settings' },
   { id: 'logout', labelKey: 'profile.logout', icon: 'logout', isError: true },

@@ -123,6 +123,10 @@ const SYMBOL_TO_MC_LITERAL = {
   account_balance: 'bank',
   account_balance_wallet: 'wallet',
   account_circle: 'account-circle',
+  // Why: 20261109 profile 退款售后换图标（support_agent 与 ProfileHeader 客服中心撞图）；
+  //   service/index.tsx 的 assignment_return 此前缺映射静默渲染 circle-outline，一并补上
+  cash_refund: 'cash-refund',
+  assignment_return: 'arrow-u-left-top',
 
   // 系统状态
   battery_full: 'battery',
