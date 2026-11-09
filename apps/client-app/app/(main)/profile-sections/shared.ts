@@ -37,13 +37,13 @@ export const ORDER_ENTRIES: OrderEntry[] = [
     id: 'to-pay',
     labelKey: 'order.statusToPay',
     icon: 'account_balance_wallet',
-    route: '/(main)/orders?tab=to-pay&from=profile',
+    route: '/orders?tab=to-pay&from=profile',
   },
   {
     id: 'to-receive',
     labelKey: 'order.statusToReceive',
     icon: 'local_shipping',
-    route: '/(main)/orders?tab=to-receive&from=profile',
+    route: '/orders?tab=to-receive&from=profile',
   },
   {
     id: 'after-sales',
@@ -55,7 +55,7 @@ export const ORDER_ENTRIES: OrderEntry[] = [
     id: 'review',
     labelKey: 'order.actions.review',
     icon: 'rate_review',
-    route: '/(main)/orders?tab=review&from=profile',
+    route: '/orders?tab=review&from=profile',
   },
   {
     id: 'frequentlyBought',

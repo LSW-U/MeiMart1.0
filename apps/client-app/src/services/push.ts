@@ -147,7 +147,7 @@ function str(v: unknown): string | undefined {
 
 /**
  * 推送 data → 路由（P23 onPress 同款分流）：
- *   order + orderId → /order/:id；order 无 id → /(main)/orders
+ *   order + orderId → /order/:id；order 无 id → /orders
  *   promotion + productId → /product/:id；promotion 无 id → /coupons
  *   未知 type / 无 data → null（调用方降级进通知页，不报错）
  */
@@ -159,7 +159,7 @@ export function routeFromPushData(
   const orderId = str(data.orderId);
   const productId = str(data.productId);
   if (type === 'ORDER_UPDATE' || (type === undefined && orderId)) {
-    return { path: orderId ? `/order/${orderId}` : '/(main)/orders' };
+    return { path: orderId ? `/order/${orderId}` : '/orders' };
   }
   if (type === 'PROMOTION' || (type === undefined && productId)) {
     return { path: productId ? `/product/${productId}` : '/coupons' };

@@ -99,6 +99,6 @@ describe('navigateFromResponse 批3 A6 safeRoutePush 接线', () => {
     navigateFromResponse({
       notification: { request: { content: { data: { type: 'ORDER_UPDATE' } } } },
     });
-    expect(mockedPush).toHaveBeenCalledWith('/(main)/orders');
+    expect(mockedPush).toHaveBeenCalledWith('/orders');
   });
 });

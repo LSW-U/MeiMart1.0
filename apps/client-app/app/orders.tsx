@@ -14,6 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/store/toastStore';
 import { useTheme, spacing, layout, typography } from '@/theme';
@@ -110,9 +111,12 @@ export default function OrdersPage() {
     setSelected(new Set());
   }, []);
 
-  // 20261109 拍板：左上角返回钮——管理模式激活时先退管理模式（防误触丢勾选），否则弹栈
-  // from=profile（宫格入口）：orders 组内 push 降级无栈条目，canGoBack=true 但栈顶非来源页，
-  //   凭来源参数 replace 回 profile（service/notifications 等入口无参，走 canGoBack 原语义）
+  // 左上角返回钮——管理模式激活时先退管理模式（防误触丢勾选），否则弹栈。
+  // 20261110 拍板 B 治根：orders 移出 (main) 到根 stack——原 Tabs 组内 push 降级无栈条目，
+  //   左滑原生 pop 手势绕过本函数直接 pop 根 stack 回 home（人工验收实证）；现本屏有真实
+  //   栈条目，返回钮/左滑/断栈三路径语义一致。from=profile 保留为断栈兜底（web 直开/深链
+  //   无历史时确定性回 profile，同 refunds 先例），其余走 canGoBack 原语义
+  const safeBack = useSafeBack();
   const handleBack = useCallback(() => {
     if (selectMode) {
       exitSelectMode();
@@ -122,9 +126,8 @@ export default function OrdersPage() {
       router.replace('/(main)/profile');
       return;
     }
-    if (router.canGoBack()) router.back();
-    else router.replace('/(main)/profile');
-  }, [selectMode, exitSelectMode, from]);
+    safeBack();
+  }, [selectMode, exitSelectMode, from, safeBack]);
 
   // 批3 审查 P2-1：管理模式下当前 tab 订单删空（切 tab 过滤/删除后）→ 空态与管理栏并存怪异，
   // 渲染期直接收敛（不 useEffect：setState-in-effect 级联渲染禁；条件收敛幂等无环）

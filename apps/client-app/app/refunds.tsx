@@ -138,7 +138,7 @@ export default function RefundsPage() {
               description={t('refunds.emptyDesc')}
               icon="receipt_long"
               actionLabel={t('refunds.goOrders')}
-              onAction={() => router.push('/(main)/orders')}
+              onAction={() => router.push('/orders')}
             />
           </View>
         ) : (

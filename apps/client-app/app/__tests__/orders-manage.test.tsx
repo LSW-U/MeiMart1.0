@@ -11,7 +11,7 @@ import { Alert } from 'react-native';
 import { ThemeProvider } from '@/theme';
 import { router } from 'expo-router';
 import { toast } from '@/store/toastStore';
-import OrdersPage from '../(main)/orders';
+import OrdersPage from '../orders';
 
 const mockDeleteMutate = jest.fn();
 let mockDeletePending = false;

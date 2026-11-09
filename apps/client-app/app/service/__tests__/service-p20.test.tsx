@@ -56,7 +56,7 @@ describe('CustomerServicePage（P20：快捷入口 + Contact 卡 + FAQ 折叠）
     const { getByTestId } = render(<CustomerServicePage />, { wrapper });
     fireEvent.press(getByTestId('cs-shortcut-tracking'));
     // Why: '/order/tracking' 无 id 必落 ErrorState（useOrder enabled 守卫），改由订单列表选择
-    expect(router.push).toHaveBeenCalledWith('/(main)/orders');
+    expect(router.push).toHaveBeenCalledWith('/orders');
   });
 
   it('Contact 卡：online 主行 + phone/email 副行，phone 可点拉起 tel:', () => {

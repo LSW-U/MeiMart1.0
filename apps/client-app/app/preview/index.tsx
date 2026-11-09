@@ -23,7 +23,7 @@ const PAGES = [
   { id: 'home', label: '🏠 首页', path: '/(main)/home' },
   { id: 'categories', label: '📂 分类页', path: '/(main)/categories' },
   { id: 'cart', label: '🛒 购物车', path: '/(main)/cart' },
-  { id: 'orders', label: '📦 订单列表', path: '/(main)/orders' },
+  { id: 'orders', label: '📦 订单列表', path: '/orders' },
   { id: 'profile', label: '👤 个人中心', path: '/(main)/profile' },
   { id: 'product-detail', label: '🍎 商品详情', path: '/product/[id]' },
   { id: 'product-list', label: '📋 商品列表', path: '/product/list' },

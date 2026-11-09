@@ -185,7 +185,7 @@ export default function NotificationsPage() {
     if (item.type === 'order') {
       const orderId = str(item.data?.orderId);
       if (orderId) safeRoutePush((href) => router.push(href as never), '/order', orderId);
-      else router.push('/(main)/orders');
+      else router.push('/orders');
     } else if (item.type === 'promotion') {
       const productId = str(item.data?.productId);
       if (productId) safeRoutePush((href) => router.push(href as never), '/product', productId);
@@ -209,7 +209,7 @@ export default function NotificationsPage() {
       case 'confirmReplacement':
         // Q2 拍板：确认替换跳订单详情由详情页处理；无 orderId 一律降级订单列表
         if (orderId) safeRoutePush((href) => router.push(href as never), '/order', orderId);
-        else router.push('/(main)/orders');
+        else router.push('/orders');
         break;
       case 'shopNow':
       case 'buyNow':

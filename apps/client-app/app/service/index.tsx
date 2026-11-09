@@ -37,9 +37,9 @@ interface Shortcut {
 // 20261108 拍板：我的工单入口从 profile 功能菜单迁入（工单=订单异常处理进度查询，
 //      与退款/物流同语义层级；profile 菜单原位语义弱、空态突兀）。
 const SHORTCUTS: Shortcut[] = [
-  { id: 'orders', icon: 'receipt_long', theme: 'info', route: '/(main)/orders' },
+  { id: 'orders', icon: 'receipt_long', theme: 'info', route: '/orders' },
   { id: 'refunds', icon: 'assignment_return', theme: 'warning', route: '/refunds' },
-  { id: 'tracking', icon: 'local_shipping', theme: 'success', route: '/(main)/orders' },
+  { id: 'tracking', icon: 'local_shipping', theme: 'success', route: '/orders' },
   { id: 'tickets', icon: 'confirmation_number', theme: 'info', route: '/tickets' },
 ];
 

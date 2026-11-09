@@ -278,7 +278,7 @@ export default function ProfilePage() {
                 {t('profile.orders')}
               </Text>
               <Pressable
-                onPress={() => router.push('/(main)/orders')}
+                onPress={() => router.push('/orders')}
                 style={styles.viewAllBtn}
                 accessibilityRole="button"
                 accessibilityLabel={t('profile.viewAllOrders')}

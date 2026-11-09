@@ -53,7 +53,7 @@ describe('routeFromPushData（B2 深链分流，P23 onPress 同款）', () => {
 
   it('ORDER_UPDATE 无 orderId → 订单列表页（不报错）', () => {
     expect(routeFromPushData({ type: 'ORDER_UPDATE' }, 'ORDER_UPDATE')).toEqual({
-      path: '/(main)/orders',
+      path: '/orders',
     });
   });
 
@@ -76,12 +76,12 @@ describe('routeFromPushData（B2 深链分流，P23 onPress 同款）', () => {
     expect(routeFromPushData({ foo: 1 }, 'SYSTEM')).toEqual({ path: null });
     expect(routeFromPushData(undefined)).toEqual({ path: null });
     expect(routeFromPushData(null)).toEqual({ path: null });
-    expect(routeFromPushData({ orderId: '' }, 'ORDER_UPDATE')).toEqual({ path: '/(main)/orders' });
+    expect(routeFromPushData({ orderId: '' }, 'ORDER_UPDATE')).toEqual({ path: '/orders' });
   });
 
   it('type 明确时优先 type 分流（data 无 orderId 也走 order 降级而非 promotion）', () => {
     expect(routeFromPushData({ productId: 'p1' }, 'ORDER_UPDATE')).toEqual({
-      path: '/(main)/orders',
+      path: '/orders',
     });
   });
 });

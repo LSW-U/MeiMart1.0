@@ -11,7 +11,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { ThemeProvider } from '@/theme';
-import OrdersPage from '../(main)/orders';
+import OrdersPage from '../orders';
 
 // Why: let（jest.mock 工厂闭包引用外部变量须 mock 前缀命名；用例 beforeEach 重注入）
 let mockOrders: {
