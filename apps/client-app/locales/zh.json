@@ -384,7 +384,13 @@
     "restockAlertSubscribed": "补货后将第一时间通知你",
     "alertLoginRequired": "登录后可设置商品提醒",
     "alertOff": "已取消提醒",
-    "alertFailed": "设置提醒失败"
+    "alertFailed": "设置提醒失败",
+    "historyTab": "浏览历史",
+    "historyHint": "最近浏览在前，最多保留 50 条",
+    "historyClear": "清空",
+    "historyCleared": "浏览历史已清空",
+    "historyEmpty": "还没有浏览记录",
+    "historyEmptyDesc": "浏览过的商品会出现在这里"
   },
   "order": {
     "status": {
@@ -699,7 +705,6 @@
     "sectionDiscover": "发现",
     "sectionAccount": "账户与服务",
     "invite": "邀请好友",
-    "history": "浏览历史",
     "becomeSeller": "成为商家",
     "scan": "扫码",
     "pointsUnit": "积分",

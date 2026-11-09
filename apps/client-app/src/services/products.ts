@@ -179,6 +179,23 @@ export const productApi = {
     return transformProduct(res.data);
   },
 
+  // Why: 20261109 融合页 B1 —— 浏览历史按 id 批量取品（后端无 ids 批量端点，逐个 /detail
+  //   Promise.allSettled；已下架/404 项自然丢弃不渲染）。mock 分支内存直查零网络。
+  async getProductsByIds(ids: string[]): Promise<Product[]> {
+    if (ids.length === 0) return [];
+    if (isMockMode) {
+      const known = withMockCategoryTop3(mockDb.products);
+      return ids.map((id) => known.find((p) => p.id === id)).filter((p): p is Product => !!p);
+    }
+    const settled = await Promise.allSettled(ids.map((id) => this.getProduct(id)));
+    return settled
+      .filter(
+        (r): r is PromiseFulfilledResult<Product | undefined> =>
+          r.status === 'fulfilled' && !!r.value,
+      )
+      .map((r) => r.value as Product);
+  },
+
   // Why: 换一批按钮 批2（方案v2 20261017）——三层透传 offset：hook → service → api params。
   //   real 分支透传 limit/offset（后端批1 clampOffset 已兜底负值/NaN，上限 1000）；
   //   mock 分支用模块级游标切片（同款越界回 0 语义，会话级不落盘），否则 mock 模式按钮形同虚设。

@@ -58,7 +58,7 @@ export const ORDER_ENTRIES: OrderEntry[] = [
     id: 'frequentlyBought',
     labelKey: 'profile.frequentlyBought',
     icon: 'history',
-    route: '/product/frequently-bought',
+    route: '/product/history',
   },
 ];
 
@@ -92,6 +92,8 @@ export const FUNCTION_ITEMS_EMPTY: FunctionItem[] = [
 
 // P2 §6: Discover 快捷功能宫格 - C1 仅 UI + toast 占位，功能后续按 F2->F1->F4->F3 实现
 // isNew 角标已下线（2026-08-27 用户手调移除两处使用，字段+渲染分支+样式连根清，审查 Q3）
+// 20261109 融合拍板：浏览历史删格（并入订单宫格「常购清单」入口 → /product/history 双 tab，
+//   B1 本地 AsyncStorage 实现；本格原为 toast 占位无数据源）
 export interface DiscoverEntry {
   id: string;
   labelKey: string;
@@ -99,7 +101,6 @@ export interface DiscoverEntry {
 }
 export const DISCOVER_ENTRIES: DiscoverEntry[] = [
   { id: 'invite', labelKey: 'profile.invite', icon: 'group_add' },
-  { id: 'history', labelKey: 'profile.history', icon: 'history' },
   { id: 'becomeSeller', labelKey: 'profile.becomeSeller', icon: 'storefront' },
   { id: 'scan', labelKey: 'profile.scan', icon: 'qr_code_scanner' },
 ];

@@ -114,6 +114,25 @@ export function useBuyAgain(opts?: { limit?: number; offset?: number; enabled?: 
 }
 
 /**
+ * 浏览历史按 id 批量取品（20261109 融合页 B1 拍板）
+ *
+ * - 数据源：useBrowseHistory 本地 AsyncStorage id 列表 → productApi.getProductsByIds
+ *   （逐个 /detail allSettled，已下架/404 自然丢弃）
+ * - enabled 由调用方控制（entries 空时不必发请求）
+ * - placeholderData 保持上次结果：列表页重进时无 loading 闪烁
+ */
+export function useProductsByIds(ids: string[], enabled = true) {
+  return useQuery({
+    queryKey: ['product', 'byIds', [...ids].sort().join(',')] as const,
+    queryFn: () => productApi.getProductsByIds(ids),
+    enabled: enabled && ids.length > 0,
+    staleTime: STALE_TIME.productDetail,
+    networkMode: 'offlineFirst',
+    placeholderData: (prev) => prev,
+  });
+}
+
+/**
  * 客户画像批3 B8 常买组合（方案v2 §三 批3 2026-10-18）
  *
  * - 可选登录端点（OptionalAuth + no-store，同 buy-again 范式）：匿名/无历史/无共现返回空组合

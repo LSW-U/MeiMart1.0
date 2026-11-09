@@ -384,7 +384,13 @@
     "restockAlertSubscribed": "Ita sei rona nota bainhira produto fila fali",
     "alertLoginRequired": "Tama ka bo'ot atu konfigura notifikasaun",
     "alertOff": "Notifikasaun taka ona",
-    "alertFailed": "Falha atu konfigura notifikasaun"
+    "alertFailed": "Falha atu konfigura notifikasaun",
+    "historyTab": "Istória vizita",
+    "historyHint": "Vizita foun liulali, to'o 50 itens",
+    "historyClear": "Hamos hotu",
+    "historyCleared": "Istória vizita hamos tiha ona",
+    "historyEmpty": "Seidauk iha istória vizita",
+    "historyEmptyDesc": "Produtu ne'ebé ita vizita mos appears iha ne'e"
   },
   "order": {
     "status": {
@@ -699,7 +705,6 @@
     "sectionDiscover": "Deskobre",
     "sectionAccount": "Konta no Servisu",
     "invite": "Konvida",
-    "history": "Istória",
     "becomeSeller": "Vendór",
     "scan": "Skanea",
     "pointsUnit": "Ponto",

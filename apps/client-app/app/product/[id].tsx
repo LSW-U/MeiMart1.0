@@ -14,6 +14,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useSafeBack } from '@/hooks/useSafeBack';
+import { reportProductView } from '@/hooks/useBrowseHistory';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -146,6 +147,8 @@ export default function ProductDetailPage() {
       if (submittedId) setHighlightReviewId(submittedId);
       // 批5 G2 埋点：进详情页即报 VIEW（fire-and-forget，攒批 30s/20 条 flush，失败静默）
       if (id) trackProductView(id);
+      // 20261109 融合页 B1：本地浏览历史上报（useBrowseHistory AsyncStorage，去重置顶上限 50）
+      if (id) reportProductView(id);
     }, [id]),
   );
 

@@ -384,7 +384,13 @@
     "restockAlertSubscribed": "Avisaremos quando voltar ao estoque",
     "alertLoginRequired": "Entre para definir alertas de produto",
     "alertOff": "Alerta cancelado",
-    "alertFailed": "Falha ao definir alerta"
+    "alertFailed": "Falha ao definir alerta",
+    "historyTab": "Histórico de navegação",
+    "historyHint": "Mais recentes primeiro, até 50 itens",
+    "historyClear": "Limpar",
+    "historyCleared": "Histórico limpo",
+    "historyEmpty": "Ainda sem histórico de navegação",
+    "historyEmptyDesc": "Os produtos que você visualizar aparecerão aqui"
   },
   "order": {
     "status": {
@@ -699,7 +705,6 @@
     "sectionDiscover": "Descobrir",
     "sectionAccount": "Conta & Serviço",
     "invite": "Convidar",
-    "history": "Histórico",
     "becomeSeller": "Vendedor",
     "scan": "Digitalizar",
     "pointsUnit": "Pontos",

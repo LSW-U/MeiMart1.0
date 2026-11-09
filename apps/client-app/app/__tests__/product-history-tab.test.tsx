@@ -10,7 +10,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { View as RNView } from 'react-native';
 import { ThemeProvider } from '@/theme';
-import FrequentlyBoughtPage from '../product/frequently-bought';
+import FrequentlyBoughtPage from '../product/history';
 import { toast } from '@/store/toastStore';
 import type { Product } from '@/types';
 
@@ -36,7 +36,7 @@ const mockAddMutate = jest.fn();
 let mockIsAuthenticated = false;
 
 jest.mock('expo-router', () => ({
-  router: { back: jest.fn(), push: jest.fn(), replace: jest.fn() },
+  router: { back: jest.fn(), push: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
 }));
 
 jest.mock('react-i18next', () => ({
@@ -46,9 +46,11 @@ jest.mock('react-i18next', () => ({
 jest.mock('@/services/queries/useProducts', () => ({
   useBuyAgain: (opts?: { limit?: number; enabled?: boolean }) => {
     // 工厂禁外引（非 mock 前缀），改走 jest.requireActual 注入的 setter
-    require('./frequently-bought-b1.test.tsx').__setOpts(opts);
+    require('./product-history-tab.test.tsx').__setOpts(opts);
     return mockBuyAgain;
   },
+  // 20261109 融合页：页面新增浏览历史 tab 消费，mock 补齐避免 undefined 崩
+  useProductsByIds: () => ({ data: [], isLoading: false, isError: false, refetch: jest.fn() }),
 }));
 
 jest.mock('@/services/queries/useCart', () => ({
@@ -150,15 +152,14 @@ describe('批3 B1 常购清单页', () => {
     mockBuyAgain = { isLoading: false, isError: true, refetch: jest.fn() };
     render(<FrequentlyBoughtPage />, { wrapper });
     expect(screen.getByText('errors.products')).toBeTruthy();
-    // ErrorState 重试按钮（accessibilityRole button，页内两个：header 返回 + 重试）→ 全点，refetch 被触发
-    const retry = screen.root
+    // 20261109 融合页：常购 tab error 分支渲染 TabBar（2 个 tab 按钮）+ header 返回 + 重试。
+    // 重试 = error 态下唯一含「buy-again refetch」闭包的按钮——直接点 ErrorState 内 Button
+    // （label = common.retry），不再按 button 下标猜（TabBar 加位后原 [1] 落到 tab 上）
+    const retryBtn = screen.root
       .findAll((n) => n.props.accessibilityRole === 'button')
-      .find(
-        (n) => typeof n.props.onPress === 'function' && String(n.props.onPress).includes('refetch'),
-      );
-    fireEvent.press(
-      retry ?? screen.root.findAll((n) => n.props.accessibilityRole === 'button')[1]!,
-    );
+      .find((n) => n.props.accessibilityLabel === 'common.retry');
+    expect(retryBtn).toBeTruthy();
+    fireEvent.press(retryBtn!);
     expect(mockBuyAgain.refetch).toHaveBeenCalled();
   });
 
@@ -194,5 +195,95 @@ describe('批3 B1 常购清单页', () => {
     mockBuyAgain = { isLoading: true };
     render(<FrequentlyBoughtPage />, { wrapper });
     expect(screen.root.findByProps({ testID: 'page-skeleton' })).toBeTruthy();
+  });
+});
+
+// —— 20261109 融合页新增：浏览历史 tab（B1 本地 AsyncStorage） ——
+const mockHistoryEntries = { list: [] as { id: string; viewedAt: number }[], loaded: true };
+const mockClearHistory = jest.fn();
+jest.mock('@/hooks/useBrowseHistory', () => ({
+  useBrowseHistory: () => ({
+    entries: require('./product-history-tab.test.tsx').__histList,
+    loaded: true,
+    record: jest.fn(),
+    clear: require('./product-history-tab.test.tsx').__clearHist,
+  }),
+}));
+Object.defineProperty(require('./product-history-tab.test.tsx'), '__histList', {
+  get: () => mockHistoryEntries.list,
+});
+Object.defineProperty(require('./product-history-tab.test.tsx'), '__clearHist', {
+  get: () => mockClearHistory,
+});
+
+const mockViewedIds: string[][] = [];
+const mockProductFn = (id: string): Product =>
+  ({
+    id,
+    name: { en: `P${id}`, zh: `商品${id}`, tet: `P${id}`, pt: `P${id}` },
+    price: 10,
+    image: '',
+    category: 'c001',
+  }) as Product;
+jest.mock('@/services/queries/useProducts', () => ({
+  useBuyAgain: (opts?: { limit?: number; enabled?: boolean }) => {
+    require('./product-history-tab.test.tsx').__setOpts(opts);
+    return mockBuyAgain;
+  },
+  useProductsByIds: (ids: string[]) => {
+    mockViewedIds.push([...ids]);
+    return {
+      data: mockHistoryEntries.list
+        .map((e) => mockProductFn(e.id))
+        .filter((p) => ids.includes(p.id)),
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    };
+  },
+}));
+
+describe('融合页浏览历史 tab（B1 本地实现）', () => {
+  beforeEach(() => {
+    mockHistoryEntries.list = [];
+    mockViewedIds.length = 0;
+    mockClearHistory.mockClear();
+  });
+
+  it('切换到浏览历史 tab → useProductsByIds 收到本地 entries 的 id 列表', () => {
+    mockHistoryEntries.list = [
+      { id: 'a2', viewedAt: 2 },
+      { id: 'a1', viewedAt: 1 },
+    ];
+    render(<FrequentlyBoughtPage />, { wrapper });
+    fireEvent.press(screen.getByTestId('history-tab-viewed'));
+    // 最近浏览在前：entries 顺序即请求顺序（getProductsByIds 按 ids 映射保序）
+    expect(mockViewedIds.at(-1)).toEqual(['a2', 'a1']);
+    expect(screen.getByText('Pa2')).toBeTruthy();
+  });
+
+  it('常购 tab 活跃时不渲染浏览历史卡片（tab 隔离）', () => {
+    mockHistoryEntries.list = [{ id: 'a1', viewedAt: 1 }];
+    render(<FrequentlyBoughtPage />, { wrapper });
+    // mock 工厂每次渲染都执行（enabled 守卫在真 hook 内部，mock 无此语义），
+    // tab 隔离取证改为渲染面：常购 tab 下不出现历史 tab 的商品卡与清空钮
+    expect(screen.queryByTestId('history-clear')).toBeNull();
+    expect(screen.queryByText('Pa1')).toBeNull();
+  });
+
+  it('浏览历史空态 → 无记录文案 + 去逛逛', () => {
+    render(<FrequentlyBoughtPage />, { wrapper });
+    fireEvent.press(screen.getByTestId('history-tab-viewed'));
+    expect(screen.getByText('product.historyEmpty')).toBeTruthy();
+    expect(screen.getByText('home.frequentlyBoughtBrowse')).toBeTruthy();
+  });
+
+  it('清空 → useBrowseHistory.clear 调用 + toast 成功', () => {
+    mockHistoryEntries.list = [{ id: 'a1', viewedAt: 1 }];
+    render(<FrequentlyBoughtPage />, { wrapper });
+    fireEvent.press(screen.getByTestId('history-tab-viewed'));
+    fireEvent.press(screen.getByTestId('history-clear'));
+    expect(mockClearHistory).toHaveBeenCalled();
+    expect(toast.success).toHaveBeenCalledWith('product.historyCleared');
   });
 });

@@ -11,7 +11,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import { ThemeProvider } from '@/theme';
-import FrequentlyBoughtPage from '../product/frequently-bought';
+import FrequentlyBoughtPage from '../product/history';
 import { toast } from '@/store/toastStore';
 import type { Product } from '@/types';
 
@@ -41,11 +41,13 @@ jest.mock('react-i18next', () => ({
 
 jest.mock('@/services/queries/useProducts', () => ({
   useBuyAgain: () => ({
-    data: require('./frequently-bought-batchadd.test.tsx').__products,
+    data: require('./product-history-batchadd.test.tsx').__products,
     isLoading: false,
     isError: false,
     refetch: jest.fn(),
   }),
+  // 20261109 融合页：页面新增浏览历史 tab 消费，mock 补齐避免 undefined 崩
+  useProductsByIds: () => ({ data: [], isLoading: false, isError: false, refetch: jest.fn() }),
 }));
 
 jest.mock('@/services/queries/useCart', () => ({
@@ -79,7 +81,7 @@ export function __setProducts(list: Product[]) {
 }
 
 // 需在 mock 工厂内读取 → 用 getter（require 回环取本文件导出）
-Object.defineProperty(require('./frequently-bought-batchadd.test.tsx'), '__products', {
+Object.defineProperty(require('./product-history-batchadd.test.tsx'), '__products', {
   get() {
     return mockProducts;
   },
