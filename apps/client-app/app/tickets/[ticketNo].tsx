@@ -1,6 +1,6 @@
 // TicketDetailPage — 工单详情 + 时间线（替换品批2 工单化 2026-10-29）
 // 数据源：useTicket(ticketNo)（GET /client/tickets/:ticketNo）+ useTicketEvents（/:ticketNo/events 游标分页 D16）
-// 路由：/(main)/tickets/[ticketNo]，列表页卡片点击进入
+// 路由：/tickets/[ticketNo]，列表页卡片点击进入
 import { StyleSheet, View, Text, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';

@@ -13,7 +13,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/store/toastStore';
 import { useTheme, spacing, layout, typography } from '@/theme';
@@ -50,7 +50,12 @@ const ON_PRIMARY = '#ffffff';
 export default function OrdersPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const [active, setActive] = useState<OrderTabKey>('all');
+  // 20261109：profile 宫格带 ?tab= 直入对应 tab（去评价/待收货/待付款各有入口），
+  //   无参（tab 底栏/宫格「查看全部」）保持 all；非法值回落 all
+  const { tab: initialTab } = useLocalSearchParams<{ tab?: string }>();
+  const [active, setActive] = useState<OrderTabKey>(
+    ORDER_TABS.some((tb) => tb.key === initialTab) ? (initialTab as OrderTabKey) : 'all',
+  );
   const counts = useOrderCounts();
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useOrdersInfinite(active);

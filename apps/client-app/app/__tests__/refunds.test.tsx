@@ -10,7 +10,7 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { ThemeProvider } from '@/theme';
-import RefundsPage from '../(main)/refunds';
+import RefundsPage from '../refunds';
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), push: jest.fn() },

@@ -86,7 +86,7 @@ export default function TicketsPage() {
               <Pressable
                 onPress={() =>
                   router.push({
-                    pathname: '/(main)/tickets/[ticketNo]',
+                    pathname: '/tickets/[ticketNo]',
                     params: { ticketNo: item.ticketNo },
                   })
                 }

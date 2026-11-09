@@ -38,9 +38,9 @@ interface Shortcut {
 //      与退款/物流同语义层级；profile 菜单原位语义弱、空态突兀）。
 const SHORTCUTS: Shortcut[] = [
   { id: 'orders', icon: 'receipt_long', theme: 'info', route: '/(main)/orders' },
-  { id: 'refunds', icon: 'assignment_return', theme: 'warning', route: '/(main)/refunds' },
+  { id: 'refunds', icon: 'assignment_return', theme: 'warning', route: '/refunds' },
   { id: 'tracking', icon: 'local_shipping', theme: 'success', route: '/(main)/orders' },
-  { id: 'tickets', icon: 'confirmation_number', theme: 'info', route: '/(main)/tickets' },
+  { id: 'tickets', icon: 'confirmation_number', theme: 'info', route: '/tickets' },
 ];
 
 // Why: P20 D3（Q1 拍板）—— 复用 help 中心前 4 条 FAQ 文案（零新增 key），

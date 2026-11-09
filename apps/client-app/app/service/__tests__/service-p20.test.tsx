@@ -21,6 +21,7 @@ jest.mock('expo-router', () => ({
     push: jest.fn(),
     replace: jest.fn(),
   },
+  useLocalSearchParams: () => ({ tab: undefined }),
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -48,7 +49,7 @@ describe('CustomerServicePage（P20：快捷入口 + Contact 卡 + FAQ 折叠）
   it('20261108 拍板：tickets 快捷入口跳工单列表页', () => {
     const { getByTestId } = render(<CustomerServicePage />, { wrapper });
     fireEvent.press(getByTestId('cs-shortcut-tickets'));
-    expect(router.push).toHaveBeenCalledWith('/(main)/tickets');
+    expect(router.push).toHaveBeenCalledWith('/tickets');
   });
 
   it('审查 Q1 回归：tracking 快捷入口路由指向订单列表（非无 id 的 /order/tracking）', () => {

@@ -39,6 +39,7 @@ jest.mock('@/hooks/useSafeBack', () => ({
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), push: jest.fn(), replace: jest.fn() },
+  useLocalSearchParams: () => ({ tab: undefined }),
 }));
 
 jest.mock('@/hooks/useNetwork', () => ({
