@@ -1,6 +1,8 @@
 // Primary tais-pattern Header（HTML 第 142-144 行：h-14 顶栏 + h-48 tais-pattern 底色）
 // 已迁移到 PrimaryHeader 组件（CP-FIX P1-3），PrimaryHeader 内置 TaisPattern absolute 叠层（§3.5）
 // 批5 拆分：从 app/(main)/profile.tsx 原样搬移，行为零变更
+// 20261110 拍板：客服图标迁出（→ 账户与服务菜单 shared.ts FUNCTION_ITEMS），右上角换扫码
+//   占位（选项 A：扫码能力全仓不存在且业务场景未定义，先占入口保留 toast 行为，待立项）
 import { StyleSheet, View, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +11,7 @@ import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { Icon } from '@/components/ui/Icon';
 import { Badge } from '@/components/ui/Badge';
 import { useUnreadCount } from '@/services/queries/useNotifications';
+import { toast } from '@/store/toastStore';
 import { ON_PRIMARY } from './shared';
 
 export function ProfileHeader() {
@@ -16,6 +19,10 @@ export function ProfileHeader() {
   const { t } = useTranslation();
   // 批B B3：通知入口接真实未读数（现状无角标）；未登录 hook 内部不请求 → 不显示
   const { data: unreadCount } = useUnreadCount();
+  // 20261110 拍板 A：扫码占位——与 Discover 占位同款 toast，能力立项后替换
+  const onScanPress = () => {
+    toast.info(t('profile.featureComingSoon', { defaultValue: 'Feature coming soon' }));
+  };
   return (
     <View style={{ backgroundColor: colors.primary, ...shadowPresets.md }}>
       <PrimaryHeader
@@ -23,12 +30,12 @@ export function ProfileHeader() {
         rightActions={
           <View style={profileHeaderStyles.actions}>
             <Pressable
-              onPress={() => router.push('/service')}
+              onPress={onScanPress}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel={t('profile.customerService')}
+              accessibilityLabel={t('profile.scan')}
             >
-              <Icon symbol="support_agent" size={24} color={ON_PRIMARY} />
+              <Icon symbol="qr_code_scanner" size={24} color={ON_PRIMARY} />
             </Pressable>
             <Pressable
               onPress={() => router.push('/service/notifications')}

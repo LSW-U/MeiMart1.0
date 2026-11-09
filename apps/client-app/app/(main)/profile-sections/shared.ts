@@ -77,8 +77,16 @@ export interface FunctionItem {
 // 20261108 拍板：「我的工单」迁出（→ /service 客服页快捷入口，与退款/物流同排；
 //   工单=订单异常进度查询，profile 菜单位置语义弱）
 // 20261109 拍板 A2：常购清单迁出（→ 订单宫格第 5 格，profile.frequentlyBought key 仍被宫格用非孤儿）
+// 20261110 拍板：客服中心从页头右上角迁入本菜单（右上角换扫码入口，见 ProfileHeader）；
+//   超出原型的用户决策。插在帮助中心前（客服与帮助语义相邻）
 export const FUNCTION_ITEMS: FunctionItem[] = [
   { id: 'address', labelKey: 'address.list', icon: 'location_on', route: '/address/list' },
+  {
+    id: 'customerService',
+    labelKey: 'profile.customerService',
+    icon: 'support_agent',
+    route: '/service',
+  },
   { id: 'help', labelKey: 'profile.help', icon: 'help', route: '/service/help' },
   { id: 'settings', labelKey: 'profile.settings', icon: 'settings', route: '/settings' },
   { id: 'logout', labelKey: 'profile.logout', icon: 'logout', isError: true },
@@ -97,6 +105,8 @@ export const FUNCTION_ITEMS_EMPTY: FunctionItem[] = [
 // isNew 角标已下线（2026-08-27 用户手调移除两处使用，字段+渲染分支+样式连根清，审查 Q3）
 // 20261109 融合拍板：浏览历史删格（并入订单宫格「常购清单」入口 → /product/history 双 tab，
 //   B1 本地 AsyncStorage 实现；本格原为 toast 占位无数据源）
+// 20261110 拍板：扫码删格迁页头右上角（真实入口语义）；剩余 2 格全部「功能开发中」占位——
+//   邀请/卖家转正需后端 referral/入驻端点，挂账待立项（发现模块扩充挂账 20261110）
 export interface DiscoverEntry {
   id: string;
   labelKey: string;
@@ -105,5 +115,4 @@ export interface DiscoverEntry {
 export const DISCOVER_ENTRIES: DiscoverEntry[] = [
   { id: 'invite', labelKey: 'profile.invite', icon: 'group_add' },
   { id: 'becomeSeller', labelKey: 'profile.becomeSeller', icon: 'storefront' },
-  { id: 'scan', labelKey: 'profile.scan', icon: 'qr_code_scanner' },
 ];
