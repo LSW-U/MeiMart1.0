@@ -109,7 +109,10 @@ const SYMBOL_TO_MC_LITERAL = {
   play_arrow: 'play',
   radio_button_checked: 'radiobox-marked',
   radio_button_unchecked: 'radiobox-blank',
-  receipt_long: 'receipt',
+  // Why: 20261110 用户实测 receipt（实心票据+密集文字线）30px 渲染成「一团红」——
+  //   换 receipt-text-outline（细线票据+文字行，语义相同视觉轻盈）；refunds/after-sales-detail
+  //   等 6 处共用 symbol 一并受益
+  receipt_long: 'receipt-text-outline',
   // Why: P3批2 冷链标识（tracking.tsx 冷链 banner）——Material Symbols ac_unit 雪花，
   //   MC 对应 snowflake（cmap 已验证 U+F0857）
   ac_unit: 'snowflake',

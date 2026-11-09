@@ -52,7 +52,7 @@ import { ProfileEmpty } from './profile-sections/ProfileEmpty';
 // 20261110 终版：100→80（HTML 原型 grid-cols-4 在 390 宽下每格 ≈80；100 时 40 宽图标块
 //   居中左右各空 30px 格间 68px 偏大，60 则 4 字文字局促已回退）→ 80 两头兼顾，
 //   格间 68→48px；CELL_INTERVAL 108→88
-const CELL_INTERVAL = 80 + 8;
+const CELL_INTERVAL = 80 + 12;
 
 export default function ProfilePage() {
   const { colors } = useTheme();
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   ordersGridContent: {
-    gap: 8, // 20261110 拍板：16→8 收紧格间距（用户反馈空隙偏大）
+    gap: 8, // 20261110 二次拍板：8→12 格间稍松（用户反馈图标之间挤）
     paddingRight: spacing.md,
     // Why: ScrollView 四边裁剪溢出——badge top:-5 凸出图标块会被顶边裁掉，留 6px 顶部空间
     paddingTop: 6,
