@@ -337,13 +337,15 @@ export const orderApi = {
     return order;
   },
 
-  // Why: tracking 端点返回 {orderId, orderNo, orderStatus, paymentStatus, task}
+  // Why: tracking 端点返回 {orderId, orderNo, orderStatus, paymentStatus, isColdChain, task}
   // 主要给 WS 断线时 HTTP 轮询兜底用，service 返回原始结构由调用方处理
   async getTracking(id: string): Promise<{
     orderId: string;
     orderNo: string;
     orderStatus: OrderStatus;
     paymentStatus: string;
+    // P3批2：冷链订单标识（后端按分类 coldChain 派生直出）
+    isColdChain: boolean;
     task: {
       taskId: string;
       taskStatus: string;
@@ -361,6 +363,7 @@ export const orderApi = {
         orderNo: 'mock',
         orderStatus: 'OUT_FOR_DELIVERY' as OrderStatus,
         paymentStatus: 'PAID',
+        isColdChain: false,
         task: {
           taskId: 'mock-task',
           taskStatus: 'OUT_FOR_DELIVERY',
@@ -377,6 +380,7 @@ export const orderApi = {
       orderNo: string;
       orderStatus: OrderStatus;
       paymentStatus: string;
+      isColdChain?: boolean;
       task: unknown;
     }>(`/client/orders/${id}/tracking`);
     return res.data as Awaited<ReturnType<typeof orderApi.getTracking>>;

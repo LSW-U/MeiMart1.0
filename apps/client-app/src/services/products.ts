@@ -50,6 +50,10 @@ interface ProductRaw {
   rating?: number;
   // Why: 批D D3 模式 A — 批B 聚合接口直出（MeiMart 仓已实现未提交，契约同步后 raw 自然携带，本层零改动）
   isCategoryTop3?: boolean;
+  // Why: P3批1 临期标注 — 后端单点派生直出（isNearExpiry），前端只读不自行计算
+  isNearExpiry?: boolean;
+  // Why: P3批2 冷链标识 — 后端按分类 coldChain 单点派生直出（isColdChain），前端只读
+  isColdChain?: boolean;
   createdAt: string;
   updatedAt: string;
   // Why: 详情接口额外返回 skus，列表接口不返回
@@ -85,6 +89,10 @@ function transformProduct(raw: ProductRaw): Product {
     // P2-1（批D 审查修复）：后端为列表端点（/client/products、收藏、搜索等）补 isCategoryTop3 后，
     //   列表徽章 real 经此处透传自动恢复（resolveBadges 已消费该字段）
     isCategoryTop3: raw.isCategoryTop3,
+    // P3批1：临期标注透传（后端直出，字段缺失 undefined → 不显示徽章）
+    isNearExpiry: raw.isNearExpiry,
+    // P3批2：冷链标识透传（后端直出，字段缺失 undefined → 不显示标识）
+    isColdChain: raw.isColdChain,
     description: (raw.description ?? undefined) as Product['description'],
     defaultSkuId: activeSku?.id,
   };

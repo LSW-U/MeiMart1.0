@@ -43,6 +43,12 @@ export interface Product {
   //      前端不再按 salesCount>500 猜测（resolveBadges 的 500 阈值已删）。字段缺失（契约未同步/
   //      列表接口未带）时不显示徽章，宁缺毋假。
   isCategoryTop3?: boolean;
+  // Why: P3批1 临期标注（模式 A 后端直出）— catalog 单点派生（shelfLifeDays − createdAt 近似），
+  //      前端只读不自行计算；字段缺失（契约未同步）时不显示徽章，宁缺毋假。
+  isNearExpiry?: boolean;
+  // Why: P3批2 冷链标识（模式 A 后端直出）— 分类 coldChain 后端派生，前端只读；
+  //      字段缺失（契约未同步）时不显示标识，宁缺毋假。
+  isColdChain?: boolean;
 }
 
 /**

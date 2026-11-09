@@ -390,7 +390,9 @@
     "historyCleared": "浏览历史已清空",
     "historyEmpty": "还没有浏览记录",
     "historyEmptyDesc": "浏览过的商品会出现在这里",
-    "historyGoneDesc": "你浏览过的商品已下架或不再可用"
+    "historyGoneDesc": "你浏览过的商品已下架或不再可用",
+    "badgeNearExpiry": "临期",
+    "badgeColdChain": "冷链配送"
   },
   "order": {
     "status": {
@@ -599,7 +601,8 @@
     "deliveredTitle": "订单已送达",
     "deliveredSub": "感谢您的惠顾！",
     "redirectNote": "即将跳转订单详情，可查看售后入口",
-    "orderSummary": "订单汇总"
+    "orderSummary": "订单汇总",
+    "coldChainTag": "冷链配送"
   },
   "address": {
     "list": "收货地址",

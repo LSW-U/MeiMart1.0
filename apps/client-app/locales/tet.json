@@ -390,7 +390,9 @@
     "historyCleared": "Istória vizita hamos tiha ona",
     "historyEmpty": "Seidauk iha istória vizita",
     "historyEmptyDesc": "Produtu ne'ebé ita vizita mos appears iha ne'e",
-    "historyGoneDesc": "Sasan ne'e bainaka tiha ona laos disponivel oni"
+    "historyGoneDesc": "Sasan ne'e bainaka tiha ona laos disponivel oni",
+    "badgeNearExpiry": "Sasan prazu besik ona",
+    "badgeColdChain": "Distribuisaun malirin"
   },
   "order": {
     "status": {
@@ -599,7 +601,8 @@
     "deliveredTitle": "Pedidu entrega tiha ona",
     "deliveredSub": "Aproveita ita-nia sasan!",
     "redirectNote": "Redirese ba detaliu pedidu ba opsaun reklamasaun",
-    "orderSummary": "Rezumu Pedidu"
+    "orderSummary": "Rezumu Pedidu",
+    "coldChainTag": "Distribuisaun malirin"
   },
   "address": {
     "list": "Enderesu entrega sira",

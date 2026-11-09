@@ -19,6 +19,8 @@ export interface OrderTrackingState {
   lastOrderStatus: OrderStatus | null;
   // P11 ETA:任务创建时算的预估送达（now+45min），WS 不推，从 getTracking 拿
   estimatedArrival: string | null;
+  // P3批2：冷链订单标识（后端 getTracking 派生直出，WS 不推；复用同一 HTTP 拉取，零新订阅）
+  isColdChain: boolean;
 }
 
 /**
@@ -35,6 +37,7 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
     riderLocation: null,
     lastOrderStatus: null,
     estimatedArrival: null,
+    isColdChain: false,
   });
 
   // Why: 用 lazy ref 避免 useRef(Date.now()) 触发 react-hooks/purity 规则（render 期不允许 impure 调用）
@@ -91,7 +94,11 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
       .getTracking(orderId)
       .then((tracking) => {
         if (cancelled) return;
-        setState((s) => ({ ...s, estimatedArrival: tracking.task?.estimatedArrival ?? null }));
+        setState((s) => ({
+          ...s,
+          estimatedArrival: tracking.task?.estimatedArrival ?? null,
+          isColdChain: tracking.isColdChain ?? false,
+        }));
       })
       .catch(() => {
         // Why: 初始拿 eta 失败静默，banner 降级 etaPlaceholder
@@ -110,6 +117,7 @@ export function useOrderTracking(orderId: string | undefined): OrderTrackingStat
               ...s,
               lastOrderStatus: tracking.orderStatus,
               estimatedArrival: tracking.task?.estimatedArrival ?? null,
+              isColdChain: tracking.isColdChain ?? false,
               wsState: 'disconnected',
             }));
           } catch {

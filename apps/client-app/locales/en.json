@@ -390,7 +390,9 @@
     "historyCleared": "History cleared",
     "historyEmpty": "No browsing history yet",
     "historyEmptyDesc": "Products you view will show up here",
-    "historyGoneDesc": "Items you viewed are no longer available"
+    "historyGoneDesc": "Items you viewed are no longer available",
+    "badgeNearExpiry": "Near Expiry",
+    "badgeColdChain": "Cold Chain"
   },
   "order": {
     "status": {
@@ -599,7 +601,8 @@
     "deliveredTitle": "Order Delivered",
     "deliveredSub": "Enjoy your order!",
     "redirectNote": "Redirecting to order details for after-sales options",
-    "orderSummary": "Order Summary"
+    "orderSummary": "Order Summary",
+    "coldChainTag": "Cold Chain"
   },
   "address": {
     "list": "Shipping addresses",

@@ -81,7 +81,10 @@ export default function DeliveryTrackingPage() {
   // Why: Phase 6 启动 WS 配送追踪（join:order + 监听 order:location/order:status-changed + 5s 无消息降级 HTTP 轮询）。
   // Why: D5 接线 - riderLocation 地图骑手定位；lastOrderStatus 用于 Commit 3 流程收口（完成态判断）。
   // P11 ETA: estimatedArrival 接 task.estimatedArrival（后端 02d2a02 真实 ISO），banner 格式化展示
-  const { riderLocation, lastOrderStatus, estimatedArrival } = useOrderTracking(params.id);
+  // P3批2: isColdChain 冷链订单标识（getTracking 派生直出，复用同一 HTTP 拉取零新订阅）
+  const { riderLocation, lastOrderStatus, estimatedArrival, isColdChain } = useOrderTracking(
+    params.id,
+  );
   // Why: 取消订单 mutation（hooks 顶层，与 useOrder 同级；CONFIRMED 待发货状态用）
   const cancelMutation = useCancelOrder();
 
@@ -264,6 +267,28 @@ export default function DeliveryTrackingPage() {
               backgroundColor={statusTheme.badgeBg}
             />
           </View>
+
+          {/* P3批2：冷链订单标识 — isColdChain 后端 getTracking 派生直出，字段 false/缺失不显示 */}
+          {isColdChain && (
+            <View
+              style={[
+                styles.etaRow,
+                {
+                  backgroundColor: colors['primary-fixed'],
+                  borderColor: colors['outline-variant'],
+                },
+              ]}
+            >
+              <Icon symbol="ac_unit" size={20} color={colors.primary} />
+              <View style={styles.flex1}>
+                <Text style={[styles.etaLabel, { color: colors['on-surface-variant'] }]}>
+                  {t('tracking.coldChainTag', {
+                    defaultValue: 'Cold Chain Delivery',
+                  }).toUpperCase()}
+                </Text>
+              </View>
+            </View>
+          )}
 
           {/* ESTIMATED DELIVERY（HTML 第 168-174 行 — blue-50/50 bg；复用 pending 色板）*/}
           <View

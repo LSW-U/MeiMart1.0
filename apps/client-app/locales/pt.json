@@ -390,7 +390,9 @@
     "historyCleared": "Histórico limpo",
     "historyEmpty": "Ainda sem histórico de navegação",
     "historyEmptyDesc": "Os produtos que você visualizar aparecerão aqui",
-    "historyGoneDesc": "Os itens visualizados já não estão disponíveis"
+    "historyGoneDesc": "Os itens visualizados já não estão disponíveis",
+    "badgeNearExpiry": "Próximo do vencimento",
+    "badgeColdChain": "Cadeia de Frio"
   },
   "order": {
     "status": {
@@ -599,7 +601,8 @@
     "deliveredTitle": "Pedido entregue",
     "deliveredSub": "Aproveite a sua encomenda!",
     "redirectNote": "A redirecionar para os detalhes do pedido para opções de pós-venda",
-    "orderSummary": "Resumo do Pedido"
+    "orderSummary": "Resumo do Pedido",
+    "coldChainTag": "Cadeia de Frio"
   },
   "address": {
     "list": "Endereços de entrega",

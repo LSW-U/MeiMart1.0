@@ -74,6 +74,22 @@ export function InfoSection({
               </Text>
             </View>
           )}
+          {/* P3批1：临期标注 — 后端 isNearExpiry 直出（catalog 单点派生），前端只读不自行计算；字段缺失不显示 */}
+          {product.isNearExpiry && (
+            <View style={[styles.tagPrimary, { backgroundColor: '#B91C1C' }]}>
+              <Text style={[styles.tagPrimaryText, { color: colors['on-primary'] }]}>
+                {t('product.badgeNearExpiry')}
+              </Text>
+            </View>
+          )}
+          {/* P3批2：冷链标识 — 后端 isColdChain 直出（分类 coldChain 派生），前端只读；字段缺失不显示 */}
+          {product.isColdChain && (
+            <View style={[styles.tagPrimary, { backgroundColor: colors['primary-fixed'] }]}>
+              <Text style={[styles.tagPrimaryText, { color: colors.primary }]}>
+                {t('product.badgeColdChain')}
+              </Text>
+            </View>
+          )}
         </View>
         <Text style={[styles.h1, { color: colors['on-surface'] }]}>{localize(product.name)}</Text>
         <View style={styles.priceRow}>
