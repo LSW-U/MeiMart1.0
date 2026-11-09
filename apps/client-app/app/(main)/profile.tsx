@@ -47,9 +47,12 @@ import {
 import { ProfileHeader } from './profile-sections/ProfileHeader';
 import { ProfileEmpty } from './profile-sections/ProfileEmpty';
 
-// 20261109 拍板 A：宫格横向滑动——吸附步长 = orderCell 宽 100 + gap 8（styles 同源，改一处必同步）
+// 20261109 拍板 A：宫格横向滑动——吸附步长 = orderCell 宽 + gap（styles 同源，改一处必同步）
 // 20261110 拍板：88+16→100+8 收紧空隙+调大按钮与字（用户反馈按钮小空隙大）
-const CELL_INTERVAL = 100 + 8;
+// 20261110 终版：100→80（HTML 原型 grid-cols-4 在 390 宽下每格 ≈80；100 时 40 宽图标块
+//   居中左右各空 30px 格间 68px 偏大，60 则 4 字文字局促已回退）→ 80 两头兼顾，
+//   格间 68→48px；CELL_INTERVAL 108→88
+const CELL_INTERVAL = 80 + 8;
 
 export default function ProfilePage() {
   const { colors } = useTheme();
@@ -601,10 +604,10 @@ const styles = StyleSheet.create({
     paddingTop: 6,
   },
   orderCell: {
-    // 20261109 拍板 A：固定格宽（卡内 margin 参与吸附间距计算）——每页约 3.5 格，
-    //   第 5 格右侧露半截提示可滑；snapToInterval = 格宽 + gap（CELL_INTERVAL 同源）
-    // 20261110 拍板：88→100 调大格（用户反馈按钮小）
-    width: 100,
+    // 20261109 拍板 A：固定格宽（卡内 margin 参与吸附间距计算）——第 5 格右侧露半截提示可滑；
+    //   snapToInterval = 格宽 + gap（CELL_INTERVAL 同源）
+    // 20261110 终版：100→80（原型 4 列格宽；60 太窄已回退，100 格间空隙偏大）
+    width: 80,
     alignItems: 'center',
     gap: 3, // 20261110 拍板：6→3 缩小图标与文字间隙（用户反馈）
   },
