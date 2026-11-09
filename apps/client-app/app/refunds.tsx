@@ -1,9 +1,9 @@
 // RefundsListPage — profile「退款售后」入口，用户退款申请列表
 // 数据源：useRefunds（GET /client/refunds -> RefundRaw[]），useCreateRefund 乐观更新联动
 // 点击退款卡跳 /order/after-sales-detail（P14 售后详情页，传 refund.id）
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, View, Text, FlatList, Pressable, ScrollView } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { formatDate } from '@/utils/format';
@@ -61,7 +61,17 @@ export default function RefundsPage() {
   const { colors } = useTheme();
   const { t, i18n } = useTranslation();
   // 第四轮批4 P3：router.back() 换 useSafeBack（深链/通知直进无历史时兜底 home，防退出 app）
-  const handleBack = useSafeBack();
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  // 20261109 拍板：from=profile（宫格入口）web 直开/断栈时 back 不可靠，凭来源参数确定性回 profile；
+  //   其余入口（service 快捷区）维持 useSafeBack 原语义
+  const safeBack = useSafeBack();
+  const handleBack = useCallback(() => {
+    if (from === 'profile') {
+      router.replace('/(main)/profile');
+      return;
+    }
+    safeBack();
+  }, [from, safeBack]);
   const { isOffline } = useWeakNetworkUI();
   const [active, setActive] = useState<RefundTabKey>('all');
   const { data: refunds, isLoading, isError, refetch } = useRefunds();

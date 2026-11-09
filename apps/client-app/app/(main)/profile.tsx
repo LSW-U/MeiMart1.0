@@ -46,8 +46,8 @@ import {
 import { ProfileHeader } from './profile-sections/ProfileHeader';
 import { ProfileEmpty } from './profile-sections/ProfileEmpty';
 
-// 20261109 拍板 A：宫格横向滑动——吸附步长 = orderCell 宽 84 + gap 24（styles 同源，改一处必同步）
-const CELL_INTERVAL = 84 + 24;
+// 20261109 拍板 A：宫格横向滑动——吸附步长 = orderCell 宽 88 + gap 16（styles 同源，改一处必同步）
+const CELL_INTERVAL = 88 + 16;
 
 export default function ProfilePage() {
   const { colors } = useTheme();
@@ -588,13 +588,15 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   ordersGridContent: {
-    gap: spacing.lg, // §3.2 保持大间距 gap=24
+    gap: 16, // 20261109 拍板：24→16 收紧格间距（原 §3.2 gap=24 显空旷）
     paddingRight: spacing.md,
+    // Why: ScrollView 四边裁剪溢出——badge top:-5 凸出图标块会被顶边裁掉，留 6px 顶部空间
+    paddingTop: 6,
   },
   orderCell: {
     // 20261109 拍板 A：固定格宽（卡内 margin 参与吸附间距计算）——每页约 4 格，
-    //   第 5 格右侧露半截提示可滑；snapToInterval = 格宽 + gap
-    width: 84,
+    //   第 5 格右侧露半截提示可滑；snapToInterval = 格宽 + gap（CELL_INTERVAL 同源）
+    width: 88,
     alignItems: 'center',
     gap: 6,
   },
@@ -610,8 +612,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -5,
     right: -5,
-    minWidth: 17,
-    height: 17,
+    zIndex: 1, // Why: 防 icon 覆盖 + ScrollView 裁剪后仍可见（顶部空间由 ordersGridContent.paddingTop 提供）
+    minWidth: 18, // 20261109 拍板：17→18 两位数不被挤压截断
+    height: 18,
     paddingHorizontal: 4,
     borderRadius: 999,
     borderWidth: 2, // §3.2 badge 白描边圈

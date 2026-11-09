@@ -13,7 +13,9 @@ import { ThemeProvider } from '@/theme';
 import RefundsPage from '../refunds';
 
 jest.mock('expo-router', () => ({
-  router: { back: jest.fn(), push: jest.fn() },
+  router: { back: jest.fn(), push: jest.fn(), replace: jest.fn() },
+  // 20261109：页面新增 from 来源参数读取（宫格入口返回 profile）
+  useLocalSearchParams: () => ({ from: undefined }),
 }));
 
 jest.mock('@/hooks/useWeakNetworkUI', () => ({

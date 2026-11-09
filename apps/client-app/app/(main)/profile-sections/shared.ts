@@ -30,30 +30,32 @@ export interface OrderEntry {
 // 20261109 拍板 A2：常购清单从 FUNCTION_ITEMS 迁入宫格第 5 格（一行 5 格，flex:1 平分；
 //   badge 无值不显示，getCount ?? 0 同 'after-sales' 机制）
 // 20261109 拍板 C2：售前→售中→售后严格递进（退款售后先于去评价，淘宝式），足迹殿后
+// 20261109 拍板：来源参数 from=profile —— orders/refunds 返回钮凭此确定性回 profile
+//   （orders 组内 push 降级、refunds web 直开均会断栈，canGoBack 判断不可靠）
 export const ORDER_ENTRIES: OrderEntry[] = [
   {
     id: 'to-pay',
     labelKey: 'order.statusToPay',
     icon: 'account_balance_wallet',
-    route: '/(main)/orders?tab=to-pay',
+    route: '/(main)/orders?tab=to-pay&from=profile',
   },
   {
     id: 'to-receive',
     labelKey: 'order.statusToReceive',
     icon: 'local_shipping',
-    route: '/(main)/orders?tab=to-receive',
+    route: '/(main)/orders?tab=to-receive&from=profile',
   },
   {
     id: 'after-sales',
     labelKey: 'profile.afterSales',
     icon: 'cash_refund',
-    route: '/refunds',
+    route: '/refunds?from=profile',
   },
   {
     id: 'review',
     labelKey: 'order.actions.review',
     icon: 'rate_review',
-    route: '/(main)/orders?tab=review',
+    route: '/(main)/orders?tab=review&from=profile',
   },
   {
     id: 'frequentlyBought',

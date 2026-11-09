@@ -52,7 +52,7 @@ export default function OrdersPage() {
   const { t } = useTranslation();
   // 20261109：profile 宫格带 ?tab= 直入对应 tab（去评价/待收货/待付款各有入口），
   //   无参（tab 底栏/宫格「查看全部」）保持 all；非法值回落 all
-  const { tab: initialTab } = useLocalSearchParams<{ tab?: string }>();
+  const { tab: initialTab, from } = useLocalSearchParams<{ tab?: string; from?: string }>();
   const [active, setActive] = useState<OrderTabKey>(
     ORDER_TABS.some((tb) => tb.key === initialTab) ? (initialTab as OrderTabKey) : 'all',
   );
@@ -99,15 +99,20 @@ export default function OrdersPage() {
   }, []);
 
   // 20261109 拍板：左上角返回钮——管理模式激活时先退管理模式（防误触丢勾选），否则弹栈
+  // from=profile（宫格入口）：orders 组内 push 降级无栈条目，canGoBack=true 但栈顶非来源页，
+  //   凭来源参数 replace 回 profile（service/notifications 等入口无参，走 canGoBack 原语义）
   const handleBack = useCallback(() => {
     if (selectMode) {
       exitSelectMode();
       return;
     }
-    // useSafeBack：canGoBack 弹栈（profile push 进来），直链/刷新兜底 replace 回 profile
+    if (from === 'profile') {
+      router.replace('/(main)/profile');
+      return;
+    }
     if (router.canGoBack()) router.back();
     else router.replace('/(main)/profile');
-  }, [selectMode, exitSelectMode]);
+  }, [selectMode, exitSelectMode, from]);
 
   // 批3 审查 P2-1：管理模式下当前 tab 订单删空（切 tab 过滤/删除后）→ 空态与管理栏并存怪异，
   // 渲染期直接收敛（不 useEffect：setState-in-effect 级联渲染禁；条件收敛幂等无环）
