@@ -109,12 +109,11 @@ const SYMBOL_TO_MC_LITERAL = {
   play_arrow: 'play',
   radio_button_checked: 'radiobox-marked',
   radio_button_unchecked: 'radiobox-blank',
-  // Why: 20261110 用户实测 receipt（实心票据+密集文字线）30px 渲染成「一团红」——
-  //   换 receipt-text-outline（细线票据+文字行，语义相同视觉轻盈）；refunds/after-sales-detail
-  //   等 6 处共用 symbol 一并受益
-  receipt_long: 'receipt-text-outline',
-  // Why: P3批2 冷链标识（tracking.tsx 冷链 banner）——Material Symbols ac_unit 雪花，
-  //   MC 对应 snowflake（cmap 已验证 U+F0857）
+  receipt_long: 'clipboard-list-outline', // Why: 20261110 拍板 A——票据+文字线 30px 偏密，
+  //   换 clipboard-list-outline（细线剪贴板+清单行，「订单列表」语义，与去评价/历史同风格）
+  // Why: 20261110 拍板 A+A——cash-refund（实心钱币）30px 成大实心圆与整排 outline 不搭，
+  //   换 cart-arrow-down（购物车回退箭头，细线，「买的东西退回来」）
+  cash_refund: 'cart-arrow-down',
   ac_unit: 'snowflake',
   restaurant: 'silverware-fork-knife',
   sell: 'tag-outline',
@@ -130,8 +129,8 @@ const SYMBOL_TO_MC_LITERAL = {
   account_balance_wallet: 'wallet',
   account_circle: 'account-circle',
   // Why: 20261109 profile 退款售后换图标（support_agent 与 ProfileHeader 客服中心撞图）；
-  //   service/index.tsx 的 assignment_return 此前缺映射静默渲染 circle-outline，一并补上
-  cash_refund: 'cash-refund',
+  //   service/index.tsx 的 assignment_return 此前缺映射静默渲染 circle-outline，一并补上；
+  //   20261110 cash_refund 映射上移至 receipt_long 处统一注释（最终值 cart-arrow-down）
   assignment_return: 'arrow-u-left-top',
 
   // 系统状态
