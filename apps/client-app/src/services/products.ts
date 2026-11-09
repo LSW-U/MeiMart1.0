@@ -181,6 +181,8 @@ export const productApi = {
 
   // Why: 20261109 融合页 B1 —— 浏览历史按 id 批量取品（后端无 ids 批量端点，逐个 /detail
   //   Promise.allSettled；已下架/404 项自然丢弃不渲染）。mock 分支内存直查零网络。
+  // 20261109 保序修复：allSettled 结果按输入序对位，原 filter fulfilled 写法顺序跟随完成序
+  //   （并发完成时序不定→列表乱序）；改为 ids.map 按索引对位取 fulfilled 值，保 ids 序。
   async getProductsByIds(ids: string[]): Promise<Product[]> {
     if (ids.length === 0) return [];
     if (isMockMode) {
@@ -188,12 +190,12 @@ export const productApi = {
       return ids.map((id) => known.find((p) => p.id === id)).filter((p): p is Product => !!p);
     }
     const settled = await Promise.allSettled(ids.map((id) => this.getProduct(id)));
-    return settled
-      .filter(
-        (r): r is PromiseFulfilledResult<Product | undefined> =>
-          r.status === 'fulfilled' && !!r.value,
-      )
-      .map((r) => r.value as Product);
+    return ids
+      .map((_, i) => {
+        const r = settled[i];
+        return r.status === 'fulfilled' ? (r.value as Product | undefined) : undefined;
+      })
+      .filter((p): p is Product => !!p);
   },
 
   // Why: 换一批按钮 批2（方案v2 20261017）——三层透传 offset：hook → service → api params。
