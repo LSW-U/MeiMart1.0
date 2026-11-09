@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
   orderTileNew: {
     width: '100%',
     aspectRatio: 1,
-    maxWidth: 72, // 20261110 拍板：64→72 随格宽放大按钮块
+    maxWidth: 40, // 20261110 拍板：72→40 缩到贴近图标（用户反馈图标与文字间隙大；根因是方块占位 (72-30)/2≈21px 撑出空隙）
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -658,20 +658,21 @@ const styles = StyleSheet.create({
   quickCell: {
     flex: 1,
     alignItems: 'center',
-    gap: 6,
+    gap: 3, // 20261110 拍板：6→3 与订单宫格同改（用户反馈图标与文字间隙大）
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.xs,
     position: 'relative',
   },
   quickIcon: {
-    width: 40,
-    height: 40,
+    // 20261110 拍板：40×40 固定方块→22 贴近 22px 图标（同 orderTileNew 40 档，占位方块是间隙根因）
+    width: 22,
+    height: 22,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   quickLabel: {
-    fontSize: 12,
+    fontSize: 13, // 20261110 拍板：12→13 与订单宫格同改
     fontWeight: '600',
     textAlign: 'center',
   },
