@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
     // 20261110 拍板：88→100 调大格（用户反馈按钮小）
     width: 100,
     alignItems: 'center',
-    gap: 6,
+    gap: 3, // 20261110 拍板：6→3 缩小图标与文字间隙（用户反馈）
   },
   orderTileNew: {
     width: '100%',
