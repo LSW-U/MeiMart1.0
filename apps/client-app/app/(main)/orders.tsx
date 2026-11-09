@@ -56,6 +56,18 @@ export default function OrdersPage() {
   const [active, setActive] = useState<OrderTabKey>(
     ORDER_TABS.some((tb) => tb.key === initialTab) ? (initialTab as OrderTabKey) : 'all',
   );
+  // 审查 Q3（20261110）：宫格多入口带不同 ?tab= push 同屏——expo-router 同路由带参 push
+  //   复用屏实例不重跑 useState 初始化，参数变化需同步 active。⚠️ 只对「参数变化」收敛，
+  //   不与 active 对比（否则页内点 tab 后任意重渲染都会被参数值覆盖回去，V2-03 实证）。
+  //   lastParam 镜像 + 渲染期双收敛（幂等无环，同 selectMode 删空收敛先例）
+  const paramTab: OrderTabKey = ORDER_TABS.some((tb) => tb.key === initialTab)
+    ? (initialTab as OrderTabKey)
+    : 'all';
+  const [lastParamTab, setLastParamTab] = useState<OrderTabKey>(paramTab);
+  if (paramTab !== lastParamTab) {
+    setLastParamTab(paramTab);
+    setActive(paramTab);
+  }
   const counts = useOrderCounts();
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useOrdersInfinite(active);

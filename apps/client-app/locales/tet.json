@@ -389,7 +389,8 @@
     "historyClear": "Hamos hotu",
     "historyCleared": "Istória vizita hamos tiha ona",
     "historyEmpty": "Seidauk iha istória vizita",
-    "historyEmptyDesc": "Produtu ne'ebé ita vizita mos appears iha ne'e"
+    "historyEmptyDesc": "Produtu ne'ebé ita vizita mos appears iha ne'e",
+    "historyGoneDesc": "Sasan ne'e bainaka tiha ona laos disponivel oni"
   },
   "order": {
     "status": {

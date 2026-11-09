@@ -389,7 +389,8 @@
     "historyClear": "清空",
     "historyCleared": "浏览历史已清空",
     "historyEmpty": "还没有浏览记录",
-    "historyEmptyDesc": "浏览过的商品会出现在这里"
+    "historyEmptyDesc": "浏览过的商品会出现在这里",
+    "historyGoneDesc": "你浏览过的商品已下架或不再可用"
   },
   "order": {
     "status": {

@@ -389,7 +389,8 @@
     "historyClear": "Clear history",
     "historyCleared": "History cleared",
     "historyEmpty": "No browsing history yet",
-    "historyEmptyDesc": "Products you view will show up here"
+    "historyEmptyDesc": "Products you view will show up here",
+    "historyGoneDesc": "Items you viewed are no longer available"
   },
   "order": {
     "status": {

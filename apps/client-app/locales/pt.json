@@ -389,7 +389,8 @@
     "historyClear": "Limpar",
     "historyCleared": "Histórico limpo",
     "historyEmpty": "Ainda sem histórico de navegação",
-    "historyEmptyDesc": "Os produtos que você visualizar aparecerão aqui"
+    "historyEmptyDesc": "Os produtos que você visualizar aparecerão aqui",
+    "historyGoneDesc": "Os itens visualizados já não estão disponíveis"
   },
   "order": {
     "status": {

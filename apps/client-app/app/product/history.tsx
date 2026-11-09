@@ -291,7 +291,7 @@ export default function ProductHistoryPage() {
       ) : !historyLoaded ||
         (historyEntries.length > 0 && viewedLoading && viewedList.length === 0) ? (
         <PageSkeleton variant="grid" />
-      ) : historyEntries.length === 0 || viewedList.length === 0 ? (
+      ) : historyEntries.length === 0 ? (
         <EmptyState
           title={t('product.historyEmpty', { defaultValue: 'No browsing history yet' })}
           description={t('product.historyEmptyDesc', {
@@ -300,6 +300,15 @@ export default function ProductHistoryPage() {
           icon="history"
           actionLabel={t('home.frequentlyBoughtBrowse')}
           onAction={() => router.push('/product/list')}
+        />
+      ) : viewedList.length === 0 ? (
+        // 审查 Q2（20261110）：entries 有记录但商品全部下架/404 —— 区分文案，不误导为「没有浏览记录」
+        <EmptyState
+          title={t('product.historyEmpty', { defaultValue: 'No browsing history yet' })}
+          description={t('product.historyGoneDesc', {
+            defaultValue: 'Items you viewed are no longer available',
+          })}
+          icon="history"
         />
       ) : (
         <ScrollView

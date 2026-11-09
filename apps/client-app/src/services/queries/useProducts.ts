@@ -123,7 +123,14 @@ export function useBuyAgain(opts?: { limit?: number; offset?: number; enabled?: 
  */
 export function useProductsByIds(ids: string[], enabled = true) {
   return useQuery({
-    queryKey: ['product', 'byIds', [...ids].sort().join(',')] as const,
+    // Why: key 掺首位 id（审查 Q1 20261110）——重看集合内已有商品时 entries 置顶但
+    //   排序 id 集不变，原 key 不变 → staleTime 内展示旧顺序缓存；length:首 id 摘要使
+    //   置顶必变 key → 自动重查。集合内非首位重排（不可能：record 只置顶）不受影响
+    queryKey: [
+      'product',
+      'byIds',
+      ids.length > 0 ? `${ids.length}:${[...ids].sort()[0]}` : '',
+    ] as const,
     queryFn: () => productApi.getProductsByIds(ids),
     enabled: enabled && ids.length > 0,
     staleTime: STALE_TIME.productDetail,
