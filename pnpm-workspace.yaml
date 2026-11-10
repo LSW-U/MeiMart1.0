@@ -12,6 +12,10 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - expo-modules-jsi@56.0.14
 overrides:
-  # follow-redirects 2 条 high（GHSA-q3jh-wrc6-jgq8 / GHSA-8r9p-f939-6h3c，凭证头泄露）：
-  # axios ^1.16.0 范围内 1.16.1 已修（semver 可达），真消减不加 allowlist（2026-10-22）
-  'follow-redirects@<1.16.1': '>=1.16.1 <2'
+  # follow-redirects 3 条 high（GHSA-q3jh-wrc6-jgq8 / GHSA-8r9p-f939-6h3c 凭证头泄露 +
+  # GHSA-mrwp-f3q8-3g9p cross-realm 敏感头丢弃，1.16.3 修复）：真消减不加 allowlist
+  # （2026-10-22 首记；2026-11-11 CI 42729787965 audit 红扩到 1.16.3）
+  'follow-redirects@<1.16.3': '>=1.16.3 <2'
+  # decode-uri-component high（GHSA-qr28-fpjm-wq7f 百分号编码二次替换 DoS，0.5.1 修复）：
+  # 依赖链 query-string@7 → expo-router → @expo/cli（开发期工具链），0.2.2→0.5.1 无 API 变更
+  'decode-uri-component@<0.5.1': '^0.5.1'
