@@ -287,8 +287,9 @@ export default function ProfilePage() {
               <Text style={[styles.ordersTitle, { color: colors['on-surface'] }]}>
                 {t('profile.orders')}
               </Text>
-              {/* 20261110 拍板：右上角「查看全部」删除——入口迁宫格首位「全部订单」格
-                  （viewAllOrders key 仍被 ProfileEmpty 未登录态用，非孤儿） */}
+              {/* 20261110 拍板：右上角「查看全部」删除——入口迁宫格「全部订单」格
+                  （审查 B1 勘误：ProfileEmpty 未登录态用的是 viewAllOrdersLogin，
+                  viewAllOrders 已死 key 四语删除） */}
             </View>
             <ScrollView
               horizontal

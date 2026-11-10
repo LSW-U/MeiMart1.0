@@ -700,7 +700,6 @@
     "theme": "Theme",
     "goldMember": "Gold Member",
     "pointsValue": "{{count}} Points",
-    "viewAllOrders": "View all orders",
     "viewAllOrdersLogin": "View all orders (login required)",
     "loginHint": "Login to enjoy member exclusive discount",
     "loginRegister": "LOGIN / REGISTER",

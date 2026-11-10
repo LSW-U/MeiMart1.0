@@ -700,7 +700,6 @@
     "theme": "主题",
     "goldMember": "黄金会员",
     "pointsValue": "{{count}} 积分",
-    "viewAllOrders": "查看全部订单",
     "viewAllOrdersLogin": "查看全部订单（需登录）",
     "loginHint": "登录享受会员专属折扣",
     "loginRegister": "登录 / 注册",

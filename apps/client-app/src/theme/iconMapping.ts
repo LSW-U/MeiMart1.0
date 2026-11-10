@@ -110,7 +110,7 @@ const SYMBOL_TO_MC_LITERAL = {
   radio_button_checked: 'radiobox-marked',
   radio_button_unchecked: 'radiobox-blank',
   receipt_long: 'text-box-outline', // Why: 20261110 试档 B——clipboard-list-outline 后用户再试 B 档
-  // Why: 20261110 试档 B——cash_refund 换 autorenew（循环双箭头简约，语义偏换货/刷新泛化）；
+  // Why: 20261110 试档 B 定稿——cash_refund 换 autorenew（循环双箭头简约，语义偏换货/刷新泛化）；
   cash_refund: 'autorenew',
   ac_unit: 'snowflake',
   restaurant: 'silverware-fork-knife',
@@ -128,7 +128,7 @@ const SYMBOL_TO_MC_LITERAL = {
   account_circle: 'account-circle',
   // Why: 20261109 profile 退款售后换图标（support_agent 与 ProfileHeader 客服中心撞图）；
   //   service/index.tsx 的 assignment_return 此前缺映射静默渲染 circle-outline，一并补上；
-  //   20261110 cash_refund 映射上移至 receipt_long 处统一注释（最终值 cart-arrow-down）
+  //   20261110 cash_refund 映射上移统一注释（A+A 后定稿 B：autorenew）
   assignment_return: 'arrow-u-left-top',
 
   // 系统状态
