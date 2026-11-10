@@ -149,7 +149,8 @@ describe('批3 B1 常购清单页', () => {
   });
 
   it('error 态 → ErrorState + 重试触发 refetch', () => {
-    mockBuyAgain = { isLoading: false, isError: true, refetch: jest.fn() };
+    const refetch = jest.fn();
+    mockBuyAgain = { isLoading: false, isError: true, refetch };
     render(<FrequentlyBoughtPage />, { wrapper });
     expect(screen.getByText('errors.products')).toBeTruthy();
     // 20261109 融合页：常购 tab error 分支渲染 TabBar（2 个 tab 按钮）+ header 返回 + 重试。
@@ -160,7 +161,9 @@ describe('批3 B1 常购清单页', () => {
       .find((n) => n.props.accessibilityLabel === 'common.retry');
     expect(retryBtn).toBeTruthy();
     fireEvent.press(retryBtn!);
-    expect(mockBuyAgain.refetch).toHaveBeenCalled();
+    // fake-green 门禁补强：断言 refetch 被调且入参为空（真实重试语义，非误触任意按钮）
+    expect(refetch).toHaveBeenCalledTimes(1);
+    expect(refetch).toHaveBeenCalledWith();
   });
 
   it('空态（未登录）→ 引导登录文案 + 去逛逛', () => {
