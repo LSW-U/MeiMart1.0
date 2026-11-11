@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -5,
     right: -5,
-    zIndex: 1, // Why: 防 icon 覆盖 + ScrollView 裁剪后仍可见（顶部空间由 ordersGridContent.paddingTop 提供）
+    zIndex: 1, // Why: 防 icon 覆盖（凸出可见性由 ordersGridContent.paddingTop 提供；20261111 审查🟡2：原 ScrollView 裁剪理由已随横滑删除失效）
     minWidth: 18, // 20261109 拍板：17→18 两位数不被挤压截断
     height: 18,
     paddingHorizontal: 4,

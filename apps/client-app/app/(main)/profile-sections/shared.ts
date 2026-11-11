@@ -14,14 +14,14 @@ export const ON_PRIMARY = '#ffffff';
 export interface OrderEntry {
   // id: OrderGroupKey | 'after-sales'（退款售后非订单状态，放宽 string 让其可加；badge 查 orderCounts 时 'after-sales' 无值不显示）
   id: string;
+  // 20261111 审查🟡3：frequentlyBought 迁 DISCOVER_ENTRIES 后从联合类型移除（无 ORDER_ENTRIES 引用）
   labelKey:
     | 'order.allOrders'
     | 'order.statusToPay'
     | 'order.statusToShip'
     | 'order.statusToReceive'
     | 'order.actions.review'
-    | 'profile.afterSales'
-    | 'profile.frequentlyBought';
+    | 'profile.afterSales';
   icon: IconSymbol;
   route?: string;
 }
@@ -119,8 +119,9 @@ export const FUNCTION_ITEMS_EMPTY: FunctionItem[] = [
 // isNew 角标已下线（2026-08-27 用户手调移除两处使用，字段+渲染分支+样式连根清，审查 Q3）
 // 20261109 融合拍板：浏览历史删格（并入订单宫格「常购清单」入口 → /product/history 双 tab，
 //   B1 本地 AsyncStorage 实现；本格原为 toast 占位无数据源）
-// 20261110 拍板：扫码删格迁页头右上角（真实入口语义）；invite/becomeSeller 仍「功能开发中」
-//   占位——转正需后端 referral/入驻端点，挂账待立项（发现模块扩充挂账 20261110）
+// 20261110 拍板：扫码删格迁页头右上角（真实入口语义）；invite 仍「功能开发中」
+//   占位——转正需后端 referral 端点，挂账待立项（发现模块扩充挂账 20261110）
+// 20261111 审查🟡1 勘误：becomeSeller 格已换 membershipCenter（占位 toast 不变）
 // 20261110 补：新增领券中心直达格（route 真实跳转，非占位）——复用 coupons.centerTitle key；
 //   与统计条入口语义区分：统计条看券数量（→/coupons），本格领券（→/coupons/claim）
 // 20261111 拍板：常购清单从订单宫格迁入本模块（20261109「浏览历史删格并入宫格」随之回摆——
