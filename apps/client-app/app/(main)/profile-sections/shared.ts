@@ -132,19 +132,24 @@ export interface DiscoverEntry {
   route?: string;
 }
 export const DISCOVER_ENTRIES: DiscoverEntry[] = [
-  { id: 'invite', labelKey: 'profile.invite', icon: 'group_add' },
+  // 20261111 拍板：会员中心换入（原 becomeSeller 占位格；profile.membershipCenter 四语新增）+
+  //   invite 与会员中心对调（invite 殿后仍占位）
+  {
+    id: 'membershipCenter',
+    labelKey: 'profile.membershipCenter',
+    icon: 'workspace_premium',
+  },
   {
     id: 'claimCoupons',
     labelKey: 'coupons.centerTitle',
     icon: 'confirmation_number',
     route: '/coupons/claim',
   },
-  { id: 'becomeSeller', labelKey: 'profile.becomeSeller', icon: 'storefront' },
-  // 20261111 拍板：常购清单从订单宫格迁入（真功能排占位格前；key/icon/route 全复用零 i18n）
   {
     id: 'frequentlyBought',
     labelKey: 'profile.frequentlyBought',
     icon: 'history',
     route: '/product/history',
   },
+  { id: 'invite', labelKey: 'profile.invite', icon: 'group_add' },
 ];
