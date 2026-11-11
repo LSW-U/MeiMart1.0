@@ -391,6 +391,12 @@ export default function ProductDetailPage() {
                   localize={localize}
                 />
 
+                {/* 20261111 用户拍板段序：Details 图文卡紧跟商品信息区（原页尾位置与
+                  PRODUCT 落点重叠的历史见 DetailsSection 注释）；锚点同步跟随 */}
+                <View onLayout={recordSectionY('DETAILS')} testID="tab-anchor-details">
+                  <DetailsSection product={product} localize={localize} />
+                </View>
+
                 {/* §8 评论模块 - useReviews 驱动：评分卡（count>0）/ 加载骨架 / 空态 */}
                 <View onLayout={recordSectionY('REVIEWS')} testID="tab-anchor-reviews">
                   <ReviewsSection
@@ -412,12 +418,6 @@ export default function ProductDetailPage() {
                     localize={localize}
                     addRelatedToCart={addRelatedToCart}
                   />
-                </View>
-
-                {/* 20261111 DETAILS 锚落点改 DetailsSection（原 InfoSection 整段作锚与
-                  PRODUCT 回顶几乎同位）；段序对齐原型 details :283 → reviews :298 */}
-                <View onLayout={recordSectionY('DETAILS')} testID="tab-anchor-details">
-                  <DetailsSection product={product} localize={localize} />
                 </View>
               </View>
             </View>
