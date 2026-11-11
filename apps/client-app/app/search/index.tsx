@@ -6,7 +6,6 @@ import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
-import Svg, { Polygon } from 'react-native-svg';
 import { useTheme, spacing, layout, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -50,49 +49,6 @@ const SEARCH_HEADER_H = 90;
 
 // Why: 推荐商品改用 useProducts 真实数据（避免 mock id 'rec-*' 跳转详情 404）
 // Why: P7 §2.4 R4 - badge 改 resolveBadges 派生（删 getRecommendBadge 轮转）
-
-// Uma Lulik curve 锯齿底边（HTML clip-path polygon，22 个点 zigzag）
-function UmaLulikCurve({ color }: { color: string }) {
-  const width = 390;
-  const height = 176;
-  const points = [
-    '0,0',
-    `${width},0`,
-    `${width},149`,
-    '370.5,154',
-    '351,149',
-    '331.5,154',
-    '312,149',
-    '292.5,154',
-    '273,149',
-    '253.5,154',
-    '234,149',
-    '214.5,154',
-    '195,149',
-    '175.5,154',
-    '156,149',
-    '136.5,154',
-    '117,149',
-    '97.5,154',
-    '78,149',
-    '58.5,154',
-    '39,149',
-    '19.5,154',
-    '0,149',
-  ].join(' ');
-  return (
-    <Svg
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio="none"
-      style={StyleSheet.absoluteFill}
-      pointerEvents="none"
-    >
-      <Polygon points={points} fill={color} />
-    </Svg>
-  );
-}
 
 export default function SearchIndexPage() {
   const handleBack = useSafeBack();
@@ -295,10 +251,6 @@ export default function SearchIndexPage() {
             <View style={styles.headerPattern} pointerEvents="none">
               <TaisPattern width={390} height={SEARCH_HEADER_H} opacity={0.2} />
             </View>
-          </View>
-          {/* 锯齿底边覆盖（让 header 下方背景透出锯齿形状） */}
-          <View style={styles.curveLayer} pointerEvents="none">
-            <UmaLulikCurve color={colors.primary} />
           </View>
           <View style={styles.headerContent}>
             {/* Why: P7 用户要求 - 同其他页面顶部样式：arrow + SearchBar + 右图标同行（去标题） */}
@@ -592,13 +544,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   headerPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  curveLayer: {
     position: 'absolute',
     top: 0,
     left: 0,
