@@ -45,7 +45,7 @@ import { getApiErrorMessage } from '@/utils/error';
 import { PageErrorBoundary } from '@/components/feedback/PageErrorBoundary/PageErrorBoundary';
 import { TopBar } from './product-detail/sections/TopBar';
 import { Carousel } from './product-detail/sections/Carousel';
-import { InfoSection } from './product-detail/sections/InfoSection';
+import { InfoSection, DetailsSection } from './product-detail/sections/InfoSection';
 import { ReviewsSection } from './product-detail/sections/ReviewsSection';
 import { RelatedProductsSection } from './product-detail/sections/RelatedProductsSection';
 import {
@@ -372,29 +372,24 @@ export default function ProductDetailPage() {
             {/* Content Canvas — 外圈锚 View 量 canvas 自身 y（供锚点局部坐标换算） */}
             <View onLayout={(e) => (canvasYRef.current = e.nativeEvent.layout.y)}>
               <View style={styles.canvas}>
-                {/* 锚点段：onLayout y 是相对 canvas 的，canvas 在 ScrollView 内首个内容层，
-                  其自身 y 由 canvas 包一层锚 View 量（carousel 之下=carousel 高度）。
-                  换算：scrollY = canvasY + sectionY，见 handleTabPress 注释 */}
-                <View onLayout={recordSectionY('DETAILS')} testID="tab-anchor-details">
-                  <InfoSection
-                    product={product}
-                    stockState={stockState}
-                    isSoldOut={isSoldOut}
-                    alertEntry={alertEntry}
-                    variants={variants}
-                    variantSelection={variantSelection}
-                    selectVariant={selectVariant}
-                    warehouseData={warehouseData ?? null}
-                    warehouseText={warehouseText}
-                    warehouseColor={warehouseColor}
-                    quantity={quantity}
-                    qtyMax={qtyMax}
-                    decQty={decQty}
-                    incQty={incQty}
-                    defaultAddr={defaultAddr}
-                    localize={localize}
-                  />
-                </View>
+                <InfoSection
+                  product={product}
+                  stockState={stockState}
+                  isSoldOut={isSoldOut}
+                  alertEntry={alertEntry}
+                  variants={variants}
+                  variantSelection={variantSelection}
+                  selectVariant={selectVariant}
+                  warehouseData={warehouseData ?? null}
+                  warehouseText={warehouseText}
+                  warehouseColor={warehouseColor}
+                  quantity={quantity}
+                  qtyMax={qtyMax}
+                  decQty={decQty}
+                  incQty={incQty}
+                  defaultAddr={defaultAddr}
+                  localize={localize}
+                />
 
                 {/* §8 评论模块 - useReviews 驱动：评分卡（count>0）/ 加载骨架 / 空态 */}
                 <View onLayout={recordSectionY('REVIEWS')} testID="tab-anchor-reviews">
@@ -417,6 +412,12 @@ export default function ProductDetailPage() {
                     localize={localize}
                     addRelatedToCart={addRelatedToCart}
                   />
+                </View>
+
+                {/* 20261111 DETAILS 锚落点改 DetailsSection（原 InfoSection 整段作锚与
+                  PRODUCT 回顶几乎同位）；段序对齐原型 details :283 → reviews :298 */}
+                <View onLayout={recordSectionY('DETAILS')} testID="tab-anchor-details">
+                  <DetailsSection product={product} localize={localize} />
                 </View>
               </View>
             </View>

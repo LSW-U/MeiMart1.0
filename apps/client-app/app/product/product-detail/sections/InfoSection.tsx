@@ -397,33 +397,45 @@ export function InfoSection({
           })}
         </View>
       )}
-
-      {/* {t('product.detailsTitle')} Section */}
-      <View style={styles.section} collapsable={false}>
-        <View style={[styles.detailHeader, { backgroundColor: 'transparent' }]}>
-          <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
-            {t('product.detailsTitle')}
-          </Text>
-        </View>
-        <View style={[styles.detailVideo, shadowPresets.md]}>
-          <SafeImage
-            source={{ uri: product.image }}
-            style={styles.detailVideoImg}
-            resizeMode="cover"
-            variant="thumb"
-            recyclingKey={product.id}
-          />
-        </View>
-        <View style={styles.detailTextWrap}>
-          <Text style={[styles.detailH2, { color: colors['on-surface'] }]}>
-            {localize(product.name)}
-          </Text>
-          <Text style={[styles.detailBody, { color: colors['on-surface-variant'] }]}>
-            {product.description ? localize(product.description) : t('product.noDescription')}
-          </Text>
-        </View>
-      </View>
     </>
+  );
+}
+
+/**
+ * Details 图文卡（原型 #details :283-297）：大图 + 品名 + 描述段落。
+ * 20261111 从 InfoSection 尾部拆出独立导出：tab 锚点滚动修复中 DETAILS 锚
+ * 需落在本卡（原 InfoSection 整段作锚 → 落点=标题/价格区，与 PRODUCT 回顶
+ * 几乎同位，「点了没动」）。渲染在 ReviewsSection 之后（对齐原型段序
+ * details :283 → reviews :298，details 卡内容在页尾展示）。
+ */
+export function DetailsSection({ product, localize }: { product: Product; localize: Localize }) {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+  return (
+    <View style={styles.section} collapsable={false}>
+      <View style={[styles.detailHeader, { backgroundColor: 'transparent' }]}>
+        <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
+          {t('product.detailsTitle')}
+        </Text>
+      </View>
+      <View style={[styles.detailVideo, shadowPresets.md]}>
+        <SafeImage
+          source={{ uri: product.image }}
+          style={styles.detailVideoImg}
+          resizeMode="cover"
+          variant="thumb"
+          recyclingKey={product.id}
+        />
+      </View>
+      <View style={styles.detailTextWrap}>
+        <Text style={[styles.detailH2, { color: colors['on-surface'] }]}>
+          {localize(product.name)}
+        </Text>
+        <Text style={[styles.detailBody, { color: colors['on-surface-variant'] }]}>
+          {product.description ? localize(product.description) : t('product.noDescription')}
+        </Text>
+      </View>
+    </View>
   );
 }
 
