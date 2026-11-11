@@ -287,12 +287,9 @@ export default function ProfilePage() {
                   （审查 B1 勘误：ProfileEmpty 未登录态用的是 viewAllOrdersLogin，
                   viewAllOrders 已死 key 四语删除） */}
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.ordersGrid}
-              contentContainerStyle={styles.ordersGridContent}
-            >
+            {/* 20261111 拍板：滑动删后改普通 row View——horizontal ScrollView 下 flex:1
+                对主轴不分配宽度（格宽塌成内容宽，间隙失衡）；5 格一行摆满无需滚动 */}
+            <View style={styles.ordersGridContent}>
               {ORDER_ENTRIES.map((entry) => (
                 <Pressable
                   key={entry.id}
@@ -323,7 +320,7 @@ export default function ProfilePage() {
                   </Text>
                 </Pressable>
               ))}
-            </ScrollView>
+            </View>
           </View>
 
           {/* 2. Discover 快捷功能宫格（透明底 primary 图标，Invite/Seller 标 NEW，§3.3） */}
@@ -573,13 +570,12 @@ const styles = StyleSheet.create({
   // 20261110 拍板：viewAllBtn/viewAllText 样式随右上角入口删除（ProfileEmpty 未登录态有自己副本）
   // 20261111 拍板：滑动删后 5 格一行摆满——固定 80 宽 5×80+4×15=460 超屏，改 flex:1 平分
   //   （badge 凸出仍由 ordersGridContent.paddingTop 提供顶部空间）
-  ordersGrid: {
-    flexGrow: 0,
-  },
+  // 20261111 二次修：ScrollView→View（horizontal 容器主轴不参与 flex 分配，flex:1 失效
+  //   格宽塌成内容宽间隙失衡）；row 布局显式声明
   ordersGridContent: {
+    flexDirection: 'row',
     gap: 15, // 20261110 三调：12→15（用户验收试档）
-    // 20261111：滑动删后右侧 paddingRight 不再需要（无溢出内容），删除
-    // Why: ScrollView 四边裁剪溢出——badge top:-5 凸出图标块会被顶边裁掉，留 6px 顶部空间
+    // Why: 四边裁剪不存在了（View 不裁剪），badge top:-5 凸出仍需 6px 顶部空间防被父卡 overflow 裁
     paddingTop: 6,
   },
   orderCell: {
