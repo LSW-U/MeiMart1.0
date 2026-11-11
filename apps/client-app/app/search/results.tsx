@@ -2,7 +2,7 @@
 // HTML → RN 行数比：319 → ~370（含样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 116%）
 // Fix-11: Primary tais-pattern Header + 内嵌只读搜索 + 排序栏 + 结果计数 + Load More
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -24,6 +24,11 @@ import { useSafeBack } from '@/hooks/useSafeBack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
+// 20261112 拍板：搜索结果页底部悬浮购物车条（与 categories/search 同款）
+import {
+  FloatingCartBar,
+  type FloatingCartBarRef,
+} from '@/components/business/FloatingCartBar/FloatingCartBar';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -148,12 +153,17 @@ export default function SearchResultsPage() {
   //   masonry 列宽由 FlashList 布局分配，无「单卡尾行 flexBasis」问题，onLayout 量测不再需要。
 
   // P8-5 F3：ScrollView 触底加载下一页（distanceFromBottom < 200）
+  // 方案 C（20261112）：滚动超过 8px 收悬浮条面板（区分点击残留 vs 主动滑动）
+  const fcbRef = useRef<FloatingCartBarRef>(null);
+  const lastScrollY = useRef(0);
   const handleScroll = ({ nativeEvent }: { nativeEvent: NativeScrollEvent }) => {
     const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
     const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
     if (distanceFromBottom < 200 && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
+    if (Math.abs(contentOffset.y - lastScrollY.current) > 8) fcbRef.current?.dismissPanel();
+    lastScrollY.current = contentOffset.y;
   };
 
   // 20261105 拍板（1A）：推荐区同 index.tsx 迁 useRecommendationsInfinite——原 useProducts
@@ -356,15 +366,26 @@ export default function SearchResultsPage() {
 
   // A-P2-2: 排序栏/计数收进 ListHeaderComponent（旧版 FlatList 嵌 ScrollView
   //   (scrollEnabled=false) 使虚拟化失效、全量挂载）；onSort 稳定引用
-  // 20261111 排序回顶修复（用户反馈「点排序像页面跳转」）：activeSort 变 → queryKey 变
-  //   → results 换引用 → FlashList 换 data 视口静默回顶（maintainVisibleContentPosition
-  //   只保同 data 内布局变化，换数据集不保）。与其不可预期的闪跳，不如显式平滑回顶
-  //   （电商列表切排序/筛选的通用交互；排序后原商品大概率不在原位，维持位置反而错乱）。
+  // 20261112 排序回顶改瞬时（用户反馈「点价格排序页面乱跳」）：animated:true 的 250ms
+  //   滚动动画与 FlashList 换数据集（results 换引用 → masonry 全列重量高重排）赛跑——
+  //   动画半途回调数据到了、视口被重置再被动画拉扯，表现即乱跳。瞬时归零无动画窗口，
+  //   与换数据集的重置方向一致；数据落地后 effect 再兜底一次（防 keepPreviousData
+  //   窗口内用户已滚走、新数据插入时视口错位）。
   const listRef = useRef<FlashListRef<Product> | null>(null);
   const handleSortPress = useCallback((key: ProductSortKeyWithPending) => {
     setActiveSort(key);
-    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, []);
+  // 兜底归零：activeSort 变化后 data 落地（引用变化）时，视口若不在顶部再瞬时归零
+  const firstRenderRef = useRef(true);
+  useEffect(() => {
+    if (firstRenderRef.current) {
+      firstRenderRef.current = false;
+      return;
+    }
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+    // 仅随排序变化触发；results 引用变化（翻页追加）不应归零
+  }, [activeSort]);
 
   const renderListHeader = useCallback(
     () => (
@@ -479,7 +500,11 @@ export default function SearchResultsPage() {
           <ErrorState message={t('errors.products')} onRetry={() => refetch()} />
         ) : !results || results.length === 0 ? (
           // P8-6: empty 也给推荐延伸浏览（用户决策 2026-08-04）
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+          // 20261112：paddingBottom 预留悬浮购物车条高 56（防推荐流末尾被遮挡）
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 56 }}
+          >
             <EmptyState
               title={t('search.noResultTitle')}
               description={t('search.noResultDesc', { q: params.q ?? '' })}
@@ -537,6 +562,10 @@ export default function SearchResultsPage() {
           />
         )}
       </View>
+      {/* 20261112 拍板：悬浮购物车条（空车隐藏；组件自取 useCart）。
+          Why: 挂 SafeAreaWrapper 直下（FlashList 同级）——absolute bottom:0 参照 wrapper
+          底边，结果页无 BottomNav，即窗口底。 */}
+      <FloatingCartBar ref={fcbRef} onPress={() => router.push('/cart')} />
     </SafeAreaWrapper>
   );
 }
@@ -670,7 +699,8 @@ const styles = StyleSheet.create({
     //   见 renderResultItem 注释）——两列卡片间列距合成 gutter(12)，屏幕边缘保持 container-margin(20)
     paddingHorizontal: layout['container-margin'] - layout.gutter / 2,
     paddingTop: layout['container-margin'],
-    paddingBottom: spacing.xxl * 2,
+    // 20261112：悬浮购物车条高 56，预留防瀑布流末尾被遮挡（同 home bottomReserve 语义）
+    paddingBottom: spacing.xxl * 2 + 56,
   },
   // 20261107 瀑布流 masonry 卡片包裹层：列内行距 marginBottom（home masonryCol gap 同值
   //   spacing.md）+ 列间半 gutter（两列合成 gutter 12）。FlashList masonry 无原生 gap prop。

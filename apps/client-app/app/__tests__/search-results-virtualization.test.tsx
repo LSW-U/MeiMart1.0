@@ -153,6 +153,7 @@ describe('C-P2-10 虚拟化渲染计数（P3-3 证据；20261106 瀑布流续证
     const flashList = require('@shopify/flash-list');
     const calls = flashList.__getScrollCalls() as { offset: number; animated: boolean }[];
     expect(calls.length).toBeGreaterThanOrEqual(1);
-    expect(calls[calls.length - 1]).toMatchObject({ offset: 0, animated: true });
+    // 20261112 改瞬时回顶（animated:false）——动画与 FlashList 换数据集重排赛跑致乱跳
+    expect(calls[calls.length - 1]).toMatchObject({ offset: 0, animated: false });
   });
 });
