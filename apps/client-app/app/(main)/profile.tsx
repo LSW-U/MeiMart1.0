@@ -47,12 +47,8 @@ import {
 import { ProfileHeader } from './profile-sections/ProfileHeader';
 import { ProfileEmpty } from './profile-sections/ProfileEmpty';
 
-// 20261109 拍板 A：宫格横向滑动——吸附步长 = orderCell 宽 + gap（styles 同源，改一处必同步）
-// 20261110 拍板：88+16→100+8 收紧空隙+调大按钮与字（用户反馈按钮小空隙大）
-// 20261110 终版：100→80（HTML 原型 grid-cols-4 在 390 宽下每格 ≈80；100 时 40 宽图标块
-//   居中左右各空 30px 格间 68px 偏大，60 则 4 字文字局促已回退）→ 80 两头兼顾，
-//   格间 68→48px；CELL_INTERVAL 108→88
-const CELL_INTERVAL = 80 + 15;
+// 20261111 拍板：常购清单迁出宫格（→发现模块），宫格剩 5 格一行摆满，横向滑动整体
+//   删除（原 CELL_INTERVAL/snapToInterval/decelerationRate 随之删；见 shared.ts ORDER_ENTRIES）
 
 export default function ProfilePage() {
   const { colors } = useTheme();
@@ -294,8 +290,6 @@ export default function ProfilePage() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              snapToInterval={CELL_INTERVAL}
-              decelerationRate="fast"
               style={styles.ordersGrid}
               contentContainerStyle={styles.ordersGridContent}
             >
@@ -577,21 +571,19 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   // 20261110 拍板：viewAllBtn/viewAllText 样式随右上角入口删除（ProfileEmpty 未登录态有自己副本）
+  // 20261111 拍板：滑动删后 5 格一行摆满——固定 80 宽 5×80+4×15=460 超屏，改 flex:1 平分
+  //   （badge 凸出仍由 ordersGridContent.paddingTop 提供顶部空间）
   ordersGrid: {
-    // 20261109 拍板 A：横向滑动分页——每页约 4 格，右侧露第 5 格半截提示可滑
     flexGrow: 0,
   },
   ordersGridContent: {
     gap: 15, // 20261110 三调：12→15（用户验收试档）
-    paddingRight: spacing.md,
+    // 20261111：滑动删后右侧 paddingRight 不再需要（无溢出内容），删除
     // Why: ScrollView 四边裁剪溢出——badge top:-5 凸出图标块会被顶边裁掉，留 6px 顶部空间
     paddingTop: 6,
   },
   orderCell: {
-    // 20261109 拍板 A：固定格宽（卡内 margin 参与吸附间距计算）——第 5 格右侧露半截提示可滑；
-    //   snapToInterval = 格宽 + gap（CELL_INTERVAL 同源）
-    // 20261110 终版：100→80（原型 4 列格宽；60 太窄已回退，100 格间空隙偏大）
-    width: 80,
+    flex: 1,
     alignItems: 'center',
     gap: 8, // 20261110 试档：6→8 图标与文字再松一档（用户验收）
   },

@@ -36,6 +36,8 @@ export interface OrderEntry {
 // 20261110 拍板：插「全部订单」格（原右上角「查看全部」入口迁入宫格）；labelKey 新增
 //   order.allOrders（common.all「全部」与 tab 语义有歧义弃用）；badge 无值不显示同 after-sales
 // 20261110 二次拍板：全部订单移到去评价后（状态类在前、聚合入口殿后，视觉顺序更顺）
+// 20261111 拍板：常购清单迁出宫格 → 发现模块（浏览行为与订单状态语义分家）；宫格剩
+//   5 格一行摆满，横向滑动整体删除（CELL_INTERVAL/snapToInterval 随之删）
 export const ORDER_ENTRIES: OrderEntry[] = [
   {
     id: 'to-pay',
@@ -66,12 +68,6 @@ export const ORDER_ENTRIES: OrderEntry[] = [
     labelKey: 'order.allOrders',
     icon: 'receipt_long',
     route: '/orders',
-  },
-  {
-    id: 'frequentlyBought',
-    labelKey: 'profile.frequentlyBought',
-    icon: 'history',
-    route: '/product/history',
   },
 ];
 
@@ -127,6 +123,8 @@ export const FUNCTION_ITEMS_EMPTY: FunctionItem[] = [
 //   占位——转正需后端 referral/入驻端点，挂账待立项（发现模块扩充挂账 20261110）
 // 20261110 补：新增领券中心直达格（route 真实跳转，非占位）——复用 coupons.centerTitle key；
 //   与统计条入口语义区分：统计条看券数量（→/coupons），本格领券（→/coupons/claim）
+// 20261111 拍板：常购清单从订单宫格迁入本模块（20261109「浏览历史删格并入宫格」随之回摆——
+//   浏览行为归发现、订单状态归宫格语义分家）；key/icon/route 全复用零 i18n
 export interface DiscoverEntry {
   id: string;
   labelKey: string;
@@ -142,4 +140,11 @@ export const DISCOVER_ENTRIES: DiscoverEntry[] = [
     route: '/coupons/claim',
   },
   { id: 'becomeSeller', labelKey: 'profile.becomeSeller', icon: 'storefront' },
+  // 20261111 拍板：常购清单从订单宫格迁入（真功能排占位格前；key/icon/route 全复用零 i18n）
+  {
+    id: 'frequentlyBought',
+    labelKey: 'profile.frequentlyBought',
+    icon: 'history',
+    route: '/product/history',
+  },
 ];
