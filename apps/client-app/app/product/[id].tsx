@@ -5,7 +5,16 @@
 //   shared.tsx（常量/纯函数/StarsRow）、sections/{TopBar,Carousel,InfoSection,ReviewsSection,RelatedProductsSection}
 //   主文件保留路由壳 + 数据组装 + 底部操作栏，行为零变更（纯搬移）。
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Share } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  Share,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
+} from 'react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import Animated, {
   useSharedValue,
@@ -16,7 +25,7 @@ import Animated, {
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { reportProductView } from '@/hooks/useBrowseHistory';
 import { useTranslation } from 'react-i18next';
-import { useTheme, spacing, layout, typography, borderRadius } from '@/theme';
+import { shadowPresets, useTheme, spacing, layout, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -160,10 +169,30 @@ export default function ProductDetailPage() {
   const handleTabPress = useCallback((tab: TabKey) => {
     setActiveTab(tab);
     // PRODUCT = 回到列表顶部（原型 switchTab 'product' 锚 #product 即轮播顶）。
+    // 20261111 修复：PRODUCT 无锚点段（sectionYs 恒 undefined）原实现安全跳过——
+    //   「点商品 tab 不回顶」，改显式滚到 0。
+    if (tab === 'PRODUCT') {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+      return;
+    }
     // 其余 tab：scrollY = canvasY + sectionY（canvas 内锚点局部 y + canvas 自身在
     //   滚动内容里的 y，canvasYRef 由 canvas 外圈锚 View 的 onLayout 记录）。
     const y = sectionYs.current[tab];
     if (y != null) scrollRef.current?.scrollTo({ y: Math.max(y - 8, 0), animated: true });
+  }, []);
+
+  // 20261111 右下角悬浮回顶按钮（用户拍板，对齐首页 home.tsx 20261108 方案A 同款）：
+  //   滚过一屏（600px）出现、回顶后消失；布尔翻转才 setState（ScrollView 连续滚动
+  //   事件避免每帧重渲）。a11y 文案复用 home.backToTop（四语齐全，语义通用）。
+  const [showBackTop, setShowBackTop] = useState(false);
+  const BACK_TOP_THRESHOLD = 600;
+  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const next = e.nativeEvent.contentOffset.y > BACK_TOP_THRESHOLD;
+    setShowBackTop((prev) => (prev === next ? prev : next));
+  }, []);
+  const handleBackToTop = useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+    setActiveTab('PRODUCT');
   }, []);
 
   // §11.2 跨页提交高亮：评价页 submit 后回到本页 focus 时，读一次刚提交的评论 id（读后即清）
@@ -358,8 +387,15 @@ export default function ProductDetailPage() {
           cartCount={totalItems}
         />
 
-        {/* 20261111 Tab 锚点滚动：ScrollView 挂 ref，onLayout 锚点段记 y（相对 ScrollView 内容坐标） */}
-        <ScrollView ref={scrollRef} style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        {/* 20261111 Tab 锚点滚动：ScrollView 挂 ref，onLayout 锚点段记 y（相对 ScrollView 内容坐标）；
+          onScroll 驱动右下角回顶按钮显隐（滚过一屏出现） */}
+        <ScrollView
+          ref={scrollRef}
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+        >
           {/* 3.5 进场动画容器：Carousel + 内容 Canvas（loading/error 早退分支不包，骨架屏无动画） */}
           <Animated.View style={[{ flex: 1 }, contentAnimStyle]}>
             {/* Image Carousel（D-V4：对齐 P1 优化原型 slide 380px 满屏宽 + 分页圆点 + play 按钮） */}
@@ -423,6 +459,28 @@ export default function ProductDetailPage() {
             </View>
           </Animated.View>
         </ScrollView>
+
+        {/* 20261111 拍板：右下角悬浮回顶按钮（对齐首页 home.tsx 同款规格：44×44 圆形 +
+          surface-container-lowest + expand_less + shadow md；滚过一屏出现）。
+          浮在底部固定三键栏上方：栏高 ≈ paddingVertical 16×2 + 按钮内容 ≈ 80，
+          bottom 取 88 避让（无 BottomNav 的页面，无 safe inset 叠加需求——
+          SafeAreaWrapper edges bottom 已把内容区垫高） */}
+        {showBackTop && (
+          <Pressable
+            testID="product-back-to-top"
+            onPress={handleBackToTop}
+            style={({ pressed }) => [
+              styles.backToTopBtn,
+              { backgroundColor: colors['surface-container-lowest'] },
+              shadowPresets.md,
+              pressed && { opacity: 0.7 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.backToTop')}
+          >
+            <Icon symbol="expand_less" size={24} color={colors.primary} />
+          </Pressable>
+        )}
 
         {/* Sticky Bottom Actions — U4 三键：收藏(48px) + 立即购买(flex:1描边) + 加购(flex:1) */}
         <View
@@ -543,6 +601,17 @@ const styles = StyleSheet.create({
   favoriteText: {
     ...typography['label-caps'],
     fontSize: 10,
+  },
+  // Why: 20261111 拍板——右下角悬浮回顶按钮（44×44 圆形，浮在底部三键栏上方，对齐首页同款）
+  backToTopBtn: {
+    position: 'absolute',
+    right: layout['container-margin'],
+    bottom: 88,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buyNowBtn: {
     flex: 1,

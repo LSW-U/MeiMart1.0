@@ -516,3 +516,45 @@ describe('20261111 Tab 锚点滚动修复', () => {
     expect(screen.getByTestId('tab-anchor-recommended')).toBeTruthy();
   });
 });
+
+// 20261111 回顶修复（用户反馈「点商品 tab 不回顶」+ 拍板加右下角悬浮回顶按钮）：
+//   1) PRODUCT tab 原走 sectionYs 查锚点（PRODUCT 无锚恒 undefined → 安全跳过 =
+//      不回顶），修复后显式 scrollTo({y:0})；2) 悬浮回顶按钮对齐首页同款
+//      （滚过 600px 阈值出现、press 回顶）。取证口径：页面主 ScrollView 是
+//   唯一「vertical + onScroll」的 ScrollView（轮播是 horizontal，见 D1 取证先例），
+//   对它 fireEvent.scroll 翻转 showBackTop；回顶行为经 PRODUCT tab press 不抛错
+//   + 按钮挂载断言（jsdom 无真实布局，scrollTo 位移不可量测，同 Tab 锚点测试口径）。
+describe('20261111 回顶修复 + 悬浮回顶按钮', () => {
+  const findMainScrollView = () => {
+    const sv = screen.root.findAll(
+      (node) =>
+        typeof (node.props as { onScroll?: unknown }).onScroll === 'function' &&
+        (node.props as { pagingEnabled?: boolean }).pagingEnabled !== true,
+    );
+    if (sv.length === 0) throw new Error('main ScrollView (vertical+onScroll) not found');
+    return sv[0]!;
+  };
+
+  it('滚动超过 600px 阈值 → 回顶按钮出现（阈值内不出现）', () => {
+    setup({});
+    expect(screen.queryByTestId('product-back-to-top')).toBeNull();
+    const sv = findMainScrollView();
+    fireEvent.scroll(sv, { nativeEvent: { contentOffset: { x: 0, y: 300 } } });
+    expect(screen.queryByTestId('product-back-to-top')).toBeNull();
+    fireEvent.scroll(sv, { nativeEvent: { contentOffset: { x: 0, y: 700 } } });
+    expect(screen.getByTestId('product-back-to-top')).toBeTruthy();
+    // 回滚回阈值内 → 按钮消失
+    fireEvent.scroll(sv, { nativeEvent: { contentOffset: { x: 0, y: 100 } } });
+    expect(screen.queryByTestId('product-back-to-top')).toBeNull();
+  });
+
+  it('回顶按钮可点击（press 不抛错，handleBackToTop scrollTo y:0 安全守卫）', () => {
+    setup({});
+    const sv = findMainScrollView();
+    fireEvent.scroll(sv, { nativeEvent: { contentOffset: { x: 0, y: 700 } } });
+    expect(() => fireEvent.press(screen.getByTestId('product-back-to-top'))).not.toThrow();
+    // 回顶后 activeTab 复位 PRODUCT（下划线高亮同步），scroll 事件复位显隐
+    fireEvent.scroll(sv, { nativeEvent: { contentOffset: { x: 0, y: 0 } } });
+    expect(screen.queryByTestId('product-back-to-top')).toBeNull();
+  });
+});
