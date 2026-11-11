@@ -8,7 +8,8 @@ export const SCREEN_WIDTH = Dimensions.get('window').width;
 // D-V4：轮播 slide 固定高（P1 优化原型 .carousel .slide height:380px）
 export const CAROUSEL_HEIGHT = 380;
 
-export const TABS = ['PRODUCT', 'REVIEWS', 'RECOMMENDED', 'DETAILS'] as const;
+// 20261111 用户拍板：tab 序对齐页面段序（InfoSection→Details→Reviews→Recommended）
+export const TABS = ['PRODUCT', 'DETAILS', 'REVIEWS', 'RECOMMENDED'] as const;
 export type TabKey = (typeof TABS)[number];
 
 // 配对商品（HTML 第 376-408 行）— 用真实 mockDb id，数据从 useProducts 动态拉取
