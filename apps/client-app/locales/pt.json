@@ -331,10 +331,10 @@
     "notFound": "Produto não encontrado ou falha ao carregar",
     "selectAddress": "Selecionar endereço",
     "tab": {
-      "product": "PRODUTO",
-      "reviews": "AVALIAÇÕES",
-      "recommended": "RECOMENDADOS",
-      "details": "DETALHES"
+      "product": "Produto",
+      "reviews": "Avaliações",
+      "recommended": "Recomendados",
+      "details": "Detalhes"
     },
     "verifiedPurchase": "Compra verificada",
     "lowStock": "Stock baixo",
