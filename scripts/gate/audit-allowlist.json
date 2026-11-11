@@ -136,6 +136,18 @@
     {
       "key": "postcss-selector-parser@1243379::GHSA-rj75-hqrm-r3gf",
       "reason": "moderate：tailwindcss → postcss（样式构建期），仅开发期，不进 App 包"
+    },
+    {
+      "key": "node-forge@1246032::GHSA-w4xr-hqv8-ch44",
+      "reason": "moderate：Expo 工具链传递依赖（expo → @expo/cli → @expo/code-signing-certificates），仅开发/构建期，不进 App 包"
+    },
+    {
+      "key": "node-forge@1246033::GHSA-6cv4-p8m7-4r25",
+      "reason": "moderate：同上工具链，node-forge 新曝 advisory（20261111 CI 42988980804 实测补记账）"
+    },
+    {
+      "key": "node-forge@1246034::GHSA-j8rw-jp99-435v",
+      "reason": "moderate：同上工具链，node-forge 新曝 advisory（20261111 CI 42988980804 实测补记账）"
     }
   ]
 }
