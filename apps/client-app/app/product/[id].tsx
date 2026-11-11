@@ -606,7 +606,9 @@ const styles = StyleSheet.create({
   backToTopBtn: {
     position: 'absolute',
     right: layout['container-margin'],
-    bottom: 88,
+    // 20261111 用户拍板 A+B：栏高随按钮调矮 97→81，bottom 88→96（81+15 间距），
+    //   原值被加购按钮下缘遮挡
+    bottom: 96,
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -615,7 +617,9 @@ const styles = StyleSheet.create({
   },
   buyNowBtn: {
     flex: 1,
-    paddingVertical: spacing.lg,
+    // 20261111 用户拍板 B：paddingVertical lg(24) → md(16)，按钮 64→48px，
+    //   底部三键栏收薄（97→81px），商品区可见面积 +16px；仍 ≥44px a11y 热区
+    paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     alignItems: 'center',
@@ -628,7 +632,8 @@ const styles = StyleSheet.create({
   },
   cartBtn: {
     flex: 1,
-    paddingVertical: spacing.lg,
+    // 20261111 用户拍板 B：同 buyNowBtn，lg(24) → md(16) 对齐
+    paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
