@@ -331,10 +331,10 @@
     "notFound": "Product not found or failed to load",
     "selectAddress": "Select address",
     "tab": {
-      "product": "PRODUCT",
-      "reviews": "REVIEWS",
-      "recommended": "RECOMMENDED",
-      "details": "DETAILS"
+      "product": "Product",
+      "reviews": "Reviews",
+      "recommended": "Recommended",
+      "details": "Details"
     },
     "verifiedPurchase": "Verified Purchase",
     "lowStock": "Low Stock",

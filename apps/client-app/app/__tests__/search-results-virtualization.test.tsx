@@ -17,7 +17,7 @@
  * 20261106：结果区等高 FlatList → FlashList masonry（瀑布流），虚拟化参数断言随之换轨。
  */
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, fireEvent } from '@testing-library/react-native';
 import { ThemeProvider } from '@/theme';
 import type { Product } from '@/types';
 import SearchResultsPage from '../../app/search/results';
@@ -121,5 +121,38 @@ describe('C-P2-10 虚拟化渲染计数（P3-3 证据；20261106 瀑布流续证
     // ② 虚拟化参数（真机窗口裁剪的机制保证；jsdom 无视口无法直接计数）。
     //    20261106：FlatList 三件套 → FlashList v2 drawDistance（initialNumToRender 等已废弃）
     expect(Number(attrs['data-draw-distance'])).toBe(400);
+  });
+
+  // 20261111 排序回顶修复：点排序 → queryKey 变 → data 换引用 → FlashList 视口静默回顶；
+  //   修复后 handleSortPress 显式 scrollToOffset({offset:0, animated:true})——测试经 mock 壳
+  //   __getScrollCalls() 取证（ref 桩是唯一可靠取证口，host 节点存不住 data-*）。
+  it('点排序档位触发 scrollToOffset 回顶（20261111 修复取证）', () => {
+    const N = 6;
+    mockUseProductSearch.mockReturnValue({
+      data: { pages: [{ items: makeProducts(N), total: N }] },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    });
+    mockUseRecommendations.mockReturnValue({ data: { pages: [[]] }, isFetching: false });
+
+    render(<SearchResultsPage />, {
+      wrapper: ({ children }: { children: React.ReactNode }) => (
+        <ThemeProvider>{children}</ThemeProvider>
+      ),
+    });
+
+    // 多个排序档位同 a11y label（search.sort.a11y 插值 mock 后恒 key），取第一个即可——
+    //   回顶行为对任意档位一致
+    const sortPill = screen.getAllByLabelText('search.sort.a11y')[0];
+    fireEvent.press(sortPill);
+
+    const flashList = require('@shopify/flash-list');
+    const calls = flashList.__getScrollCalls() as { offset: number; animated: boolean }[];
+    expect(calls.length).toBeGreaterThanOrEqual(1);
+    expect(calls[calls.length - 1]).toMatchObject({ offset: 0, animated: true });
   });
 });

@@ -2,7 +2,7 @@
 // HTML → RN 行数比：319 → ~370（含样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 116%）
 // Fix-11: Primary tais-pattern Header + 内嵌只读搜索 + 排序栏 + 结果计数 + Load More
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -17,7 +17,7 @@ import {
 //   （optimizeItemArrangement 默认开，替代推荐区手写 splitMasonryBalanced）。
 //   ⚠️ v2 仅 New Architecture（RN 0.85.3 已硬编码默认开，scripts/cocoapods/new_architecture.rb:162）。
 //   单页试点：home/favorites/search-index 推荐区不动（仍 splitMasonryBalanced 手动分列）。
-import { FlashList } from '@shopify/flash-list';
+import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -356,7 +356,15 @@ export default function SearchResultsPage() {
 
   // A-P2-2: 排序栏/计数收进 ListHeaderComponent（旧版 FlatList 嵌 ScrollView
   //   (scrollEnabled=false) 使虚拟化失效、全量挂载）；onSort 稳定引用
-  const handleSortPress = useCallback((key: ProductSortKeyWithPending) => setActiveSort(key), []);
+  // 20261111 排序回顶修复（用户反馈「点排序像页面跳转」）：activeSort 变 → queryKey 变
+  //   → results 换引用 → FlashList 换 data 视口静默回顶（maintainVisibleContentPosition
+  //   只保同 data 内布局变化，换数据集不保）。与其不可预期的闪跳，不如显式平滑回顶
+  //   （电商列表切排序/筛选的通用交互；排序后原商品大概率不在原位，维持位置反而错乱）。
+  const listRef = useRef<FlashListRef<Product> | null>(null);
+  const handleSortPress = useCallback((key: ProductSortKeyWithPending) => {
+    setActiveSort(key);
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
 
   const renderListHeader = useCallback(
     () => (
@@ -487,6 +495,7 @@ export default function SearchResultsPage() {
           //   错落卡片；排序切换触发重查 → data 换引用重排，列内卡片跳位属已知代价（用户接受）。
           //   onScroll 分页沿旧 FlatList 手势语义（scrollEventThrottle 16 + distanceFromBottom<200）。
           <FlashList
+            ref={listRef}
             style={{ flex: 1 }}
             data={results}
             masonry

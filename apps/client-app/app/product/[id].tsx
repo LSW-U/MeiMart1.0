@@ -4,7 +4,7 @@
 // 批5 拆分（C-P3-14）：sections/hooks 抽到 product-detail/ 子目录——
 //   shared.tsx（常量/纯函数/StarsRow）、sections/{TopBar,Carousel,InfoSection,ReviewsSection,RelatedProductsSection}
 //   主文件保留路由壳 + 数据组装 + 底部操作栏，行为零变更（纯搬移）。
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Share } from 'react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import Animated, {
@@ -139,6 +139,32 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [variantSelection, setVariantSelection] = useState<Record<string, string>>({});
   const [highlightReviewId, setHighlightReviewId] = useState<string | null>(null);
+
+  // 20261111 Tab 锚点滚动修复（用户反馈「顶部导航点击没反应」）：activeTab 原本只被
+  //   TopBar 下划线高亮消费，内容区无条件全渲染——点击无任何内容反馈。HTML 原型
+  //   ProductDetailPage.html switchTab 就是锚点滚动（section.offsetTop - 64，smooth），
+  //   本实现对齐原型：三区块（详情/评价/推荐）onLayout 记 y，点 tab scrollTo 平滑滚过去
+  //   （PRODUCT=回到顶部 0）。DETAILS/RECOMMENDED 同指 InfoSection 尾/Related 区：
+  //   canvas 是 gap 布局，InfoSection 锚 y 与 Related 区锚 y 天然不同，各自独立量测。
+  const scrollRef = useRef<ScrollView | null>(null);
+  const sectionYs = useRef<Partial<Record<TabKey, number>>>({});
+  const canvasYRef = useRef(0);
+  const recordSectionY = useCallback(
+    (tab: TabKey) => (e: { nativeEvent: { layout: { y: number } } }) => {
+      // 锚点 View 的 y 相对 canvas（局部坐标），滚动时叠加 canvasY 换算成
+      // ScrollView 内容坐标（handleTabPress 注释详述层级）
+      sectionYs.current[tab] = e.nativeEvent.layout.y + canvasYRef.current;
+    },
+    [],
+  );
+  const handleTabPress = useCallback((tab: TabKey) => {
+    setActiveTab(tab);
+    // PRODUCT = 回到列表顶部（原型 switchTab 'product' 锚 #product 即轮播顶）。
+    // 其余 tab：scrollY = canvasY + sectionY（canvas 内锚点局部 y + canvas 自身在
+    //   滚动内容里的 y，canvasYRef 由 canvas 外圈锚 View 的 onLayout 记录）。
+    const y = sectionYs.current[tab];
+    if (y != null) scrollRef.current?.scrollTo({ y: Math.max(y - 8, 0), animated: true });
+  }, []);
 
   // §11.2 跨页提交高亮：评价页 submit 后回到本页 focus 时，读一次刚提交的评论 id（读后即清）
   useFocusEffect(
@@ -326,13 +352,14 @@ export default function ProductDetailPage() {
         {/* Top Bar with 4-Tab Navigation */}
         <TopBar
           activeTab={activeTab}
-          onTabPress={(t) => setActiveTab(t)}
+          onTabPress={handleTabPress}
           onBack={handleBack}
           onShare={shareProduct}
           cartCount={totalItems}
         />
 
-        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        {/* 20261111 Tab 锚点滚动：ScrollView 挂 ref，onLayout 锚点段记 y（相对 ScrollView 内容坐标） */}
+        <ScrollView ref={scrollRef} style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           {/* 3.5 进场动画容器：Carousel + 内容 Canvas（loading/error 早退分支不包，骨架屏无动画） */}
           <Animated.View style={[{ flex: 1 }, contentAnimStyle]}>
             {/* Image Carousel（D-V4：对齐 P1 优化原型 slide 380px 满屏宽 + 分页圆点 + play 按钮） */}
@@ -342,45 +369,56 @@ export default function ProductDetailPage() {
               onImageIndexChange={setActiveImage}
             />
 
-            {/* Content Canvas */}
-            <View style={styles.canvas}>
-              <InfoSection
-                product={product}
-                stockState={stockState}
-                isSoldOut={isSoldOut}
-                alertEntry={alertEntry}
-                variants={variants}
-                variantSelection={variantSelection}
-                selectVariant={selectVariant}
-                warehouseData={warehouseData ?? null}
-                warehouseText={warehouseText}
-                warehouseColor={warehouseColor}
-                quantity={quantity}
-                qtyMax={qtyMax}
-                decQty={decQty}
-                incQty={incQty}
-                defaultAddr={defaultAddr}
-                localize={localize}
-              />
+            {/* Content Canvas — 外圈锚 View 量 canvas 自身 y（供锚点局部坐标换算） */}
+            <View onLayout={(e) => (canvasYRef.current = e.nativeEvent.layout.y)}>
+              <View style={styles.canvas}>
+                {/* 锚点段：onLayout y 是相对 canvas 的，canvas 在 ScrollView 内首个内容层，
+                  其自身 y 由 canvas 包一层锚 View 量（carousel 之下=carousel 高度）。
+                  换算：scrollY = canvasY + sectionY，见 handleTabPress 注释 */}
+                <View onLayout={recordSectionY('DETAILS')} testID="tab-anchor-details">
+                  <InfoSection
+                    product={product}
+                    stockState={stockState}
+                    isSoldOut={isSoldOut}
+                    alertEntry={alertEntry}
+                    variants={variants}
+                    variantSelection={variantSelection}
+                    selectVariant={selectVariant}
+                    warehouseData={warehouseData ?? null}
+                    warehouseText={warehouseText}
+                    warehouseColor={warehouseColor}
+                    quantity={quantity}
+                    qtyMax={qtyMax}
+                    decQty={decQty}
+                    incQty={incQty}
+                    defaultAddr={defaultAddr}
+                    localize={localize}
+                  />
+                </View>
 
-              {/* §8 评论模块 - useReviews 驱动：评分卡（count>0）/ 加载骨架 / 空态 */}
-              <ReviewsSection
-                reviewsLoading={reviewsLoading}
-                reviewSummary={reviewSummary}
-                reviews={reviews}
-                highlightReviewId={highlightReviewId}
-                isSoldOut={isSoldOut}
-                formatRelTime={formatRelTime}
-                writeReview={writeReview}
-              />
+                {/* §8 评论模块 - useReviews 驱动：评分卡（count>0）/ 加载骨架 / 空态 */}
+                <View onLayout={recordSectionY('REVIEWS')} testID="tab-anchor-reviews">
+                  <ReviewsSection
+                    reviewsLoading={reviewsLoading}
+                    reviewSummary={reviewSummary}
+                    reviews={reviews}
+                    highlightReviewId={highlightReviewId}
+                    isSoldOut={isSoldOut}
+                    formatRelTime={formatRelTime}
+                    writeReview={writeReview}
+                  />
+                </View>
 
-              {/* {t('product.pairsWellWith')} / {t('product.relatedProducts')} 横滑 */}
-              <RelatedProductsSection
-                pairsWellWith={pairsWellWith}
-                youMayLike={youMayLike}
-                localize={localize}
-                addRelatedToCart={addRelatedToCart}
-              />
+                {/* {t('product.pairsWellWith')} / {t('product.relatedProducts')} 横滑 */}
+                <View onLayout={recordSectionY('RECOMMENDED')} testID="tab-anchor-recommended">
+                  <RelatedProductsSection
+                    pairsWellWith={pairsWellWith}
+                    youMayLike={youMayLike}
+                    localize={localize}
+                    addRelatedToCart={addRelatedToCart}
+                  />
+                </View>
+              </View>
             </View>
           </Animated.View>
         </ScrollView>

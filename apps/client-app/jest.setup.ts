@@ -49,8 +49,17 @@ jest.mock('@react-native-community/netinfo', () => ({
 jest.mock('@shopify/flash-list', () => {
   const React = require('react');
   const { View } = require('react-native');
-  const MockFlashList = (props: any) => {
+  // 20261111 排序回顶修复：mock 补 ref 透传（函数组件不自动收 ref，forwardRef 转发 +
+  //   scrollToOffset 调用记录进 scrollCalls，测试经 __getScrollCalls() 取证）
+  const scrollCalls: unknown[] = [];
+  const MockFlashList = React.forwardRef(function MockFlashList(props: any, ref: any) {
     const { data, renderItem, numColumns = 1, ListHeaderComponent, ListFooterComponent } = props;
+    // ref 透传：带 scrollToOffset 桩的实例写给页面 listRef，调用记录进模块级数组，
+    //   测试经 `require('@shopify/flash-list').__getScrollCalls()` 取证（挂 host 节点的
+    //   data-* 属性会被 react-test-renderer 丢弃，ref 桩是唯一可靠取证口）
+    React.useImperativeHandle(ref, () => ({
+      scrollToOffset: (p: unknown) => scrollCalls.push(p),
+    }));
     // 取证挂钩：虚拟化/布局 props 挂 host 节点会被 react-test-renderer 丢弃，塞进
     // dataAttrs（testID 同节点）供测试断言（numColumns/masonry/drawDistance/data）
     const dataAttrs = {
@@ -87,8 +96,13 @@ jest.mock('@shopify/flash-list', () => {
       { testID: props.testID ?? 'mock-flashlist', ...dataAttrs },
       [headerEl, ...rows, footerEl].filter(Boolean),
     );
+  });
+  return {
+    __esModule: true,
+    FlashList: MockFlashList,
+    // 测试取证口：排序回顶断言用（调用参数含 offset/animated）
+    __getScrollCalls: () => scrollCalls,
   };
-  return { __esModule: true, FlashList: MockFlashList };
 });
 
 // Mock react-native-reanimated（业务增强批3 3.5：商品详情页动画引入 reanimated 后的测试基建）。

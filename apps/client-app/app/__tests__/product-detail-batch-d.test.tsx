@@ -490,3 +490,29 @@ describe('批D 商品详情整合', () => {
     });
   });
 });
+
+// 20261111 Tab 锚点滚动修复（用户反馈「顶部导航点击没反应」）：TopBar 4-Tab 原本只改
+//   activeTab（仅下划线消费），内容无反馈。修复后 onTabPress=handleTabPress：
+//   PRODUCT→滚顶 / REVIEWS/RECOMMENDED/DETAILS→scrollTo 对应锚点段。jsdom 无真实布局
+//   （onLayout 不触发、scrollTo 无法量测位移），取证口径=结构性：1) TopBar 4 个 tab 可按
+//   a11y role=tab 找到且可 press（不抛错=handleTabPress 对无 y 数据安全守卫生效）；
+//   2) 锚点段 View 挂载（testID tab-anchor-*）。
+describe('20261111 Tab 锚点滚动修复', () => {
+  it('4 个 tab 可点击（handleTabPress 无 y 时安全跳过 scrollTo，不抛错）', () => {
+    setup({});
+    const tabs = screen.root.findAll(
+      (node) => (node.props as { accessibilityRole?: string }).accessibilityRole === 'tab',
+    );
+    // 12 = 4 tab × 文本节点/容器重复（a11y role 沿可访问树多节点命中），按去重后 >=4 断言；
+    //   全部 press 不抛错即取证（handleTabPress 无 y 数据安全跳过 scrollTo）
+    expect(tabs.length).toBeGreaterThanOrEqual(4);
+    expect(() => tabs.forEach((t) => fireEvent.press(t))).not.toThrow();
+  });
+
+  it('锚点段挂载：details/reviews/recommended 三 testID 存在', () => {
+    setup({});
+    expect(screen.getByTestId('tab-anchor-details')).toBeTruthy();
+    expect(screen.getByTestId('tab-anchor-reviews')).toBeTruthy();
+    expect(screen.getByTestId('tab-anchor-recommended')).toBeTruthy();
+  });
+});
