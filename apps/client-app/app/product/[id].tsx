@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: layout['container-margin'],
     // 20261111 用户拍板 A+B：栏高随按钮调矮 97→81，bottom 88→96（81+15 间距），
-    //   原值被加购按钮下缘遮挡
+    //   原值被加购按钮下缘遮挡。⚠️ 栏高若再调需同步本算式（另一消费方 home.tsx 同款按钮规格暂不分叉）
     bottom: 96,
     width: 44,
     height: 44,

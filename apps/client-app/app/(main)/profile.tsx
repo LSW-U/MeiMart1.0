@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
   ordersGridContent: {
     flexDirection: 'row',
     gap: 15, // 20261110 三调：12→15（用户验收试档）
-    // Why: 四边裁剪不存在了（View 不裁剪），badge top:-5 凸出仍需 6px 顶部空间防被父卡 overflow 裁
+    // Why: badge top:-5 凸出仍需 6px 顶部空间防被父卡 overflow 裁（8a95976 已由 ScrollView 换 View，View 不裁剪，本注释随段更新）
     paddingTop: 6,
   },
   orderCell: {

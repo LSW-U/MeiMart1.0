@@ -405,8 +405,8 @@ export function InfoSection({
  * Details 图文卡（原型 #details :283-297）：大图 + 品名 + 描述段落。
  * 20261111 从 InfoSection 尾部拆出独立导出：tab 锚点滚动修复中 DETAILS 锚
  * 需落在本卡（原 InfoSection 整段作锚 → 落点=标题/价格区，与 PRODUCT 回顶
- * 几乎同位，「点了没动」）。渲染在 ReviewsSection 之后（对齐原型段序
- * details :283 → reviews :298，details 卡内容在页尾展示）。
+ * 几乎同位，「点了没动」）。20261112 段序拍板（65e89bf）：紧跟 InfoSection 渲染
+ * （用户拍板覆盖原型页尾段序），锚点 View 随段移动。
  */
 export function DetailsSection({ product, localize }: { product: Product; localize: Localize }) {
   const { colors } = useTheme();
