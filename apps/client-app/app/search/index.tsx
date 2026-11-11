@@ -39,7 +39,9 @@ const ON_PRIMARY = '#ffffff';
 const ON_AMBER = '#000000';
 
 // P1-17：搜索 header 高度单源（headerWrap/headerBg/TaisPattern/suggestWrap 四点耦合，原 90 魔法数四处复制）
-const SEARCH_HEADER_H = 90;
+// 20261111 用户拍板（方案B）：90 → 64 对齐 results 页红带口径（搜索栏上下各 8px = spacing.sm，
+//   红带 48+8+8=64，与 results.tsx Header 一致）；原 90 是 (90-56)/2=17px 留白偏厚
+const SEARCH_HEADER_H = 64;
 
 // Why: P3 联调（2026-07-31）- 热搜榜接后端 GET /client/search/hot，删 POPULAR_SEARCHES 写死 + fallbackSales 派生
 //   后端返 { word, searchCount }[]，rank=idx+1，heat=searchCount 格式化，word 是实际词非 i18n key
@@ -566,7 +568,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     // Why: P7 - arrow + SearchBar(flex:1) + 右图标同行（去标题，同 PrimaryHeader 风格）
     gap: spacing.sm,
-    height: 56,
+    height: 48,
   },
   // Why: SearchBar 占满中间（arrow 与右图标之间）
   searchBarInline: {
