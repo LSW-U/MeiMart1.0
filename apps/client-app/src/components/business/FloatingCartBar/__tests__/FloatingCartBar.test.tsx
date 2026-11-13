@@ -264,6 +264,20 @@ describe('FloatingCartBar', () => {
     expect(queryByTestId('fcb-summary')).toBeNull();
   });
 
+  // 20261113 审查 🟡3 修复：discount 行恢复 discount>0 条件渲染——无折扣时不再恒显 -$0.00
+  it('明细卡：discount=0 时折扣行不渲染（券入口行承担无券展示）', async () => {
+    mockUseCart.mockReturnValue({ data: makeCart([makeItem('a', 'Apple', 3, 2)]) });
+    mockUseAddresses.mockReturnValue({ data: [{ id: 'addr1', isDefault: true }] });
+    mockUsePreview.mockReturnValue({
+      data: { itemsSubtotal: 6, deliveryFee: 2, discount: 0, payableAmount: 8 },
+    });
+    const { getByTestId, queryByText } = renderWithTheme(<FloatingCartBar testID="fcb" />);
+    await openPanel(getByTestId('fcb-bar'));
+    expect(getByTestId('fcb-summary')).toBeTruthy();
+    expect(queryByText('cart.discountLabel')).toBeNull();
+    expect(queryByText('-$0.00')).toBeNull();
+  });
+
   // 20261113 挂账 #1 闭环：ETA 行（cart.estimatedDelivery {{time}} 文案，结算页同源）
   it('明细卡：ETA 行按 estimatedDeliveryTime 渲染（formatEta 同源）；字段缺则整行隐藏', async () => {
     mockUseCart.mockReturnValue({ data: makeCart([makeItem('a', 'Apple', 3, 2)]) });

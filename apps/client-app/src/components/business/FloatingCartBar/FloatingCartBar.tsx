@@ -363,6 +363,10 @@ function SummaryRow({ label, value, accent }: { label: string; value: string; ac
 //   两处 preview 同时重查，SummaryCard 的 discount/payableAmount 自动跟进。
 //   无可用券且无折扣时整行不渲染；CouponPicker 是 ui/Modal 壳（组件库 Modal 非 RN
 //   Modal），与面板自身 RN Modal 不冲突。
+//   20261113 审查挂账（🟡1/🟡2，既有缺口非本批引入，与 checkout.tsx 两处一致）：
+//   ① couponValid 未消费——后端判券失效时 discount=0，UI 只显券码无报错提示；
+//   ② 门槛口径用 cart.totalPrice（全量）非选中项小计，未选商品计入可能放行
+//   后端按小计判无效的券。真机验收留意，后续立项「券失效反馈」统一治理。
 function CouponEntryWrapper() {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -452,8 +456,12 @@ function SummaryCard() {
 
   return (
     <View style={styles.summaryCard} testID="fcb-summary">
-      {/* 20261112 用户反馈：合计与胶囊条内合计重复，明细卡不再重复展示 */}
-      <SummaryRow label={t('cart.discountLabel')} value={`-${formatPrice(discount)}`} accent />
+      {/* 20261112 用户反馈：合计与胶囊条内合计重复，明细卡不再重复展示。
+        20261113 审查 🟡3 修复：恢复 discount>0 条件渲染——无券无折扣时恒显 -$0.00
+        冗余（券入口行已承担「无券」展示，且入口行右侧 -xx 与本行双展示重叠） */}
+      {discount > 0 && (
+        <SummaryRow label={t('cart.discountLabel')} value={`-${formatPrice(discount)}`} accent />
+      )}
       {/* 20261113 挂账 #3：券入口行——discount 行可点弹 CouponPicker；券码驱动
         useCheckoutPreview 重查（key 含券码，结算页同机制）。放 SummaryCard 外层
         （内部自取 addresses/coupons hooks，避免 hooks 顺序受 preview 早退影响） */}
