@@ -3,7 +3,7 @@
  */
 import { fireEvent, render } from '@testing-library/react';
 
-import { getBasePressables } from '../../test/rn-host-utils';
+import { getBaseViews } from '../../test/rn-host-utils';
 import type { DutyStatus } from '../../services/settings';
 import { DutyStatusMenu } from './DutyStatusMenu';
 
@@ -54,8 +54,8 @@ describe('DutyStatusMenu（Modal 基座迁移后）', () => {
 
   it('backdrop 与取消按钮都走 onClose；sheet 空白区点击不误关', () => {
     const { container, getByText } = renderMenu();
-    // 基座前两个 Pressable = backdrop / sheet 捕获层（具名访问见 rn-host-utils）
-    const [backdrop, sheet] = getBasePressables(container);
+    // 修复 20261027：web 分支基座 backdrop/sheet 改 View（消除 button 嵌套），前两个 View host
+    const [backdrop, sheet] = getBaseViews(container);
     fireEvent.click(sheet);
     expect(closeSpy).not.toHaveBeenCalled();
     fireEvent.click(backdrop);

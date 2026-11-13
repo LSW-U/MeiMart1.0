@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { Modal as NativeModal, Pressable, View } from 'react-native';
+import React, { type ReactNode } from 'react';
+import { Modal as NativeModal, Platform, Pressable, View } from 'react-native';
 
 type ModalProps = {
   visible: boolean;
@@ -26,8 +26,10 @@ export const formBackdropClass = 'flex-1 items-center justify-center bg-black/50
  * 对齐客户端能力：backdrop 点击关闭 + 对话框 role=alert + 插槽化（标题/内容/动作由调用方自排）。
  * 内层 sheet 用 Pressable 捕获触摸（native 抢占 responder）+ stopPropagation（web 端 click
  * 冒泡会误触 backdrop 关闭）——收编原 4 套弹窗各自复制的 onPress={()=>null} 阻冒泡。
- * a11y（审查修复 20261025）：backdrop 是关闭动作面 → role=button + 调用方注入 label；
- * 捕获层是触摸守卫非交互面 → 对读屏隐藏，内容语义由内层 role=alert 承载。
+ * a11y：backdrop 是关闭动作面 → role=button + 调用方注入 label；捕获层是触摸守卫非交互面
+ * → 对读屏隐藏，内容语义由内层 role=alert 承载。
+ * 双轨（修复 20261027）：web 端 backdrop/sheet 改 View（见实现内注释——RNW role=button
+ * 渲染成真 <button>，与内容交互元素嵌套非法）；native 保持原 Pressable 结构。
  */
 export function Modal({
   visible,
@@ -38,6 +40,33 @@ export function Modal({
   contentClassName = '',
   children,
 }: ModalProps) {
+  // 修复 20261027：web 端 RNW 把 role=button 的 Pressable 渲染成真 <button>，弹窗内容里任何
+  // role=button/radio 等交互元素全部成为嵌套非法 DOM（validateDOMNesting 警告 + 读屏语义污染）。
+  // 双轨：web 的 backdrop/sheet 改 View（RNW 把 onClick 透传 DOM，见 src/types/rn-web-view-click.d.ts），
+  // 关闭语义由 onRequestClose(Esc) + 内容内可见关闭钮兜底；native 无 button 嵌套问题，
+  // 保留 role=button（backdrop 读屏可名状）+ Pressable 捕获层（读屏隐藏）原样不动。
+  if (Platform.OS === 'web') {
+    return (
+      <NativeModal animationType="fade" onRequestClose={onClose} transparent visible={visible}>
+        {React.createElement(
+          View,
+          { className: backdropClassName, onClick: onClose },
+          // sheet 必须嵌在 backdrop 内：居中由 backdrop 的 flex-1 items-center justify-center
+          // 承载（初版双轨曾写成兄弟节点，sheet 被挤到 Modal 容器底部——20261113 修复回归嵌套）
+          React.createElement(
+            View,
+            {
+              className: sheetClassName,
+              onClick: (e: { stopPropagation(): void }) => e.stopPropagation(),
+            },
+            <View accessibilityRole="alert" className={contentClassName}>
+              {children}
+            </View>,
+          ),
+        )}
+      </NativeModal>
+    );
+  }
   return (
     <NativeModal animationType="fade" onRequestClose={onClose} transparent visible={visible}>
       <Pressable

@@ -31,7 +31,7 @@ function propToAttr(v) {
 
 function makeHost(name) {
   return function Host(props) {
-    const { onPress, disabled, children, ...rest } = props;
+    const { onPress, onClick, disabled, children, ...rest } = props;
     // Why: children 若作为 props 属性透传，DOM 不会渲染子节点——需作实际 children 传入，
     // 嵌套 element（Text/ActivityIndicator 等）才能出现在 DOM 里供查询断言
     const fnProps = {};
@@ -50,7 +50,9 @@ function makeHost(name) {
       {
         ref: attachFnProps,
         'data-rn-host': name,
-        onClick: disabled ? undefined : onPress,
+        // Modal web 分支（修复 20261027）backdrop/sheet 用 View onClick——mock 壳同 Cyrus
+        // Pressable 口径接线，fireEvent.click 才能触达
+        onClick: disabled ? undefined : (onClick ?? onPress),
         ...(rest.testID ? { 'data-testid': String(rest.testID) } : {}),
         ...fnProps,
         ...Object.fromEntries(Object.entries(rest).map(([k, v]) => [`data-prop-${k}`, propToAttr(v)])),

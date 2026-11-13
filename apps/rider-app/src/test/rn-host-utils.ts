@@ -8,3 +8,11 @@
 export function getBasePressables(container: HTMLElement): HTMLElement[] {
   return Array.from(container.querySelectorAll('[data-rn-host="Pressable"]')) as HTMLElement[];
 }
+
+/**
+ * getBaseViews：Modal web 分支（修复 20261027）的 backdrop / sheet View——
+ * 结构顺序契约与 getBasePressables 一致（前两个 View host），具名访问防下标漂移。
+ */
+export function getBaseViews(container: HTMLElement): HTMLElement[] {
+  return Array.from(container.querySelectorAll('[data-rn-host="View"]')) as HTMLElement[];
+}

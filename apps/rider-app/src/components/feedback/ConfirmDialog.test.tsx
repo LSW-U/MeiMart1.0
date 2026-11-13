@@ -3,7 +3,7 @@
  */
 import { fireEvent, render } from '@testing-library/react';
 
-import { getBasePressables } from '../../test/rn-host-utils';
+import { getBaseViews } from '../../test/rn-host-utils';
 import { ConfirmDialog } from './ConfirmDialog';
 
 /**
@@ -44,10 +44,8 @@ describe('ConfirmDialog（Modal 基座迁移后）', () => {
 
   it('backdrop 点击走 onCancel；sheet 内点击不误关', () => {
     const { container } = renderDialog();
-    // 基座前两个 Pressable = backdrop / sheet 捕获层（其后才是取消/确认按钮）
-    const [backdrop, sheet] = getBasePressables(container);
-    // 审查修复 20261025：backdrop 读屏标签 = 取消语义（props 注入，不 import i18n）
-    expect(backdrop.getAttribute('data-prop-accessibilitylabel')).toBe('取消');
+    // 修复 20261027：web 分支基座 backdrop/sheet 改 View（消除 button 嵌套），前两个 View host
+    const [backdrop, sheet] = getBaseViews(container);
     fireEvent.click(backdrop);
     expect(cancelSpy).toHaveBeenCalledTimes(1);
     fireEvent.click(sheet);

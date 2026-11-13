@@ -32,7 +32,12 @@ const mockPush = jest.fn();
 let mockTaskState: string = 'ASSIGNED';
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace, back: mockBack, canGoBack: () => true }),
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    back: mockBack,
+    canGoBack: () => true,
+  }),
   useLocalSearchParams: () => ({ id: 'internal-uuid-1' }),
 }));
 
@@ -46,9 +51,12 @@ jest.mock('../../../src/hooks/useGoBack', () => ({
 
 jest.mock('../../../src/services/queries/useTask', () => ({
   useTask: () => {
-    if (mockTaskState === 'loading') return { data: undefined, isLoading: true, isError: false, refetch: mockRefetch };
-    if (mockTaskState === 'error') return { data: undefined, isLoading: false, isError: true, refetch: mockRefetch };
-    if (mockTaskState === 'empty') return { data: null, isLoading: false, isError: false, refetch: mockRefetch };
+    if (mockTaskState === 'loading')
+      return { data: undefined, isLoading: true, isError: false, refetch: mockRefetch };
+    if (mockTaskState === 'error')
+      return { data: undefined, isLoading: false, isError: true, refetch: mockRefetch };
+    if (mockTaskState === 'empty')
+      return { data: null, isLoading: false, isError: false, refetch: mockRefetch };
     return {
       data: {
         id: 'internal-uuid-1',
@@ -82,7 +90,9 @@ jest.mock('../../../src/components/feedback/Toast', () => ({
 }));
 
 function renderPage() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
@@ -98,9 +108,14 @@ beforeEach(() => {
   showToastMock.mockClear();
   mockTaskState = 'ASSIGNED';
   // Platform 回归 web（默认分支）；Native-only 用例单独置 ios
-  (globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }).__RN_PLATFORM_OS__ = 'web';
+  (
+    globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }
+  ).__RN_PLATFORM_OS__ = 'web';
   imagePicker.__setRequestCameraPermissions({ status: 'granted' });
-  imagePicker.__setLaunchCameraAsync(async () => ({ canceled: false, assets: [{ uri: 'file://photo.jpg' }] }));
+  imagePicker.__setLaunchCameraAsync(async () => ({
+    canceled: false,
+    assets: [{ uri: 'file://photo.jpg' }],
+  }));
 });
 
 describe('三态接入（T3 §3.1）', () => {
@@ -173,7 +188,9 @@ describe('processing 语义 + 成功反馈（T3 §3.3/§3.4）', () => {
   it('提交成功：toast「订单已核对，开始配送」（success），跳转 pickups tab', async () => {
     mockMutateAsync.mockResolvedValueOnce(undefined);
     // Native 分支：拍照（mock 权限 granted + uri 回调）→ captured=true → 提交可点
-    (globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }).__RN_PLATFORM_OS__ = 'ios';
+    (
+      globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }
+    ).__RN_PLATFORM_OS__ = 'ios';
     const { getByText } = renderPage();
 
     await act(async () => {
@@ -183,7 +200,10 @@ describe('processing 语义 + 成功反馈（T3 §3.3/§3.4）', () => {
       fireEvent.click(getByText('确认并开始配送'));
     });
 
-    expect(mockMutateAsync).toHaveBeenCalledWith({ taskId: 'internal-uuid-1', evidence: { photoUri: 'file://photo.jpg' } });
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      taskId: 'internal-uuid-1',
+      evidence: { photoUri: 'file://photo.jpg' },
+    });
     expect(showToastMock).toHaveBeenCalledWith('订单已核对，开始配送。', 'success');
     expect(mockReplace).toHaveBeenCalledWith('/(main)/tasks?tab=pickups');
   });
@@ -209,7 +229,9 @@ describe('processing 语义 + 成功反馈（T3 §3.3/§3.4）', () => {
 
 describe('EvidenceUpload 权限/异常治理（T3 §3.5/§3.6，Native 分支）', () => {
   it('相机权限拒绝：toast 提示（非静默）', async () => {
-    (globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }).__RN_PLATFORM_OS__ = 'ios';
+    (
+      globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }
+    ).__RN_PLATFORM_OS__ = 'ios';
     imagePicker.__setRequestCameraPermissions({ status: 'denied' });
     const { getByText } = renderPage();
 
@@ -221,7 +243,9 @@ describe('EvidenceUpload 权限/异常治理（T3 §3.5/§3.6，Native 分支）
   });
 
   it('相机异常（launchCameraAsync reject）：toast 提示，不裸抛', async () => {
-    (globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }).__RN_PLATFORM_OS__ = 'ios';
+    (
+      globalThis as typeof globalThis & { __RN_PLATFORM_OS__?: 'web' | 'ios' | 'android' }
+    ).__RN_PLATFORM_OS__ = 'ios';
     imagePicker.__setLaunchCameraAsync(async () => {
       throw new Error('camera unavailable');
     });
@@ -241,5 +265,105 @@ describe('守卫（已有行为回归，T3 §7.1 拍板 A）', () => {
     renderPage();
 
     expect(mockReplace).toHaveBeenCalledWith('/task/internal-uuid-1/navigate');
+  });
+});
+
+/**
+ * Web 分支修复 20261113：handleFile 曾传占位尺寸 1×1 → generic minEdge:100 必抛
+ * E-UPLOAD-016（web 拍照全被拦死）。现 readAsDataURL 后 Image 解码取 naturalWidth/Height
+ * 走真实 precheck。jsdom 无图片解码能力，Image 用可控桩（naturalWidth/Height 注入 + onload/onerror）。
+ */
+describe('EvidenceUpload web 分支尺寸校验（修复 20261113）', () => {
+  // Image 桩：记录最后实例，测试按用例注入 naturalWidth/Height 并手动触发回调
+  let lastImg: {
+    naturalWidth: number;
+    naturalHeight: number;
+    src: string;
+    onload: (() => void) | null;
+    onerror: (() => void) | null;
+  } | null = null;
+
+  const realImage = window.Image;
+  const setFakeImage = (impl: unknown) => {
+    // jsdom 的 window 允许属性赋值覆盖（Image 可写），无需 defineProperty/as 断言
+    (window as { Image: unknown }).Image = impl;
+  };
+  beforeAll(() => {
+    setFakeImage(function FakeImage() {
+      const instance = {
+        naturalWidth: 0,
+        naturalHeight: 0,
+        src: '',
+        onload: null as (() => void) | null,
+        onerror: null as (() => void) | null,
+      };
+      lastImg = instance;
+      return instance;
+    });
+  });
+  afterAll(() => {
+    setFakeImage(realImage);
+    lastImg = null;
+  });
+
+  const fireChange = (container: HTMLElement, file: File) => {
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(input).not.toBeNull();
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    fireEvent.change(input);
+  };
+
+  // 1×1 透明 PNG（真实可解码字节，FileReader.readAsDataURL 同步可用）
+  const pngBase64 =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const makeFile = (sizeBytes = pngBase64.length) =>
+    new File(['x'.repeat(sizeBytes)], 'photo.jpg', { type: 'image/jpeg' });
+
+  it('小图（naturalWidth<100）：toast 图片尺寸过小，不进 captured 态', async () => {
+    const { container, getByText, queryByText } = renderPage();
+    fireChange(container, makeFile());
+    // FileReader 在 jsdom 里是宏任务级异步（~几十 ms），需等 reader.onload 跑完才创建 Image
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+    await act(async () => {
+      expect(lastImg).not.toBeNull();
+      lastImg!.naturalWidth = 50;
+      lastImg!.naturalHeight = 50;
+      lastImg!.onload!();
+    });
+
+    expect(showToastMock).toHaveBeenCalledWith('图片尺寸过小', 'error');
+    expect(queryByText('已捕获照片')).toBeNull();
+    expect(getByText('点击拍照')).toBeTruthy();
+  });
+
+  it('大图（≥100）：通过预校验，进入 captured 态显示已拍照片', async () => {
+    const { container, getByText } = renderPage();
+    fireChange(container, makeFile());
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+    await act(async () => {
+      lastImg!.naturalWidth = 1080;
+      lastImg!.naturalHeight = 1920;
+      lastImg!.onload!();
+    });
+
+    expect(showToastMock).not.toHaveBeenCalled();
+    expect(getByText('已捕获照片')).toBeTruthy();
+  });
+
+  it('解码失败（损坏图片）：onerror → toast 拍照出错，不裸抛', async () => {
+    const { container } = renderPage();
+    fireChange(container, makeFile());
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+    await act(async () => {
+      lastImg!.onerror!();
+    });
+
+    expect(showToastMock).toHaveBeenCalledWith('拍照出错，请重试', 'error');
   });
 });

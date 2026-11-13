@@ -159,30 +159,37 @@ function EvidenceUploadWeb({
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // D1 批4：Web 分支预校验（File 对象直接带 size/type；尺寸 web 拍照场景不做
-    // Image 解码——readAsDataURL 后无 naturalWidth 便捷点，尺寸交给后端 magic bytes 兜底）
-    // C-P2-4: Web 分支同款——PrecheckError 显因，非预校验异常走 onError
-    try {
-      precheckImage('generic', {
-        mimeType: file.type || undefined,
-        sizeBytes: file.size,
-        // 占位尺寸：generic 规则无 square/ratio 约束，minEdge 依赖真实宽高——
-        // web 端宽高校验跳过（传 0 触发 E-UPLOAD-016 误报，故直接不解码不传维度），
-        // 类型/大小两项仍拦
-        width: 1,
-        height: 1,
-      });
-    } catch (err) {
-      if (err instanceof PrecheckError) {
-        onPrecheckError?.(err.code);
-        return;
-      }
-      onError?.();
-      return;
-    }
+    // D1 批4 + 修复 20261113：web 分支尺寸校验曾传占位 1×1（注释声称"跳过宽高校验"），
+    // 但 generic 规则 minEdge:100 依赖真实宽高 → 任何照片必抛 E-UPLOAD-016（web 端拍照全被拦死）。
+    // 方案一：readAsDataURL 后用 Image 解码取 naturalWidth/Height，真实尺寸走 precheck，
+    // 与 Native 分支（asset.width/height）规则对称；解码失败兜底 onError。
+    // C-P2-4: PrecheckError 显因回调 onPrecheckError（调用方按 code 映射 errors.{code}），非预校验异常走 onError
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === 'string') onPress(reader.result);
+      if (typeof reader.result !== 'string') return;
+      const dataUrl = reader.result;
+      const img = new Image();
+      img.onload = () => {
+        try {
+          precheckImage('generic', {
+            mimeType: file.type || undefined,
+            sizeBytes: file.size,
+            width: img.naturalWidth,
+            height: img.naturalHeight,
+          });
+        } catch (err) {
+          if (err instanceof PrecheckError) {
+            onPrecheckError?.(err.code);
+            return;
+          }
+          onError?.();
+          return;
+        }
+        if (typeof dataUrl === 'string') onPress(dataUrl);
+      };
+      // 解码失败（损坏文件/不支持的格式）兜底——对称 Native catch→onError 治理
+      img.onerror = () => onError?.();
+      img.src = reader.result;
     };
     reader.onerror = () => {
       // Web 文件读取失败兜底（对称 Native onError 治理）
