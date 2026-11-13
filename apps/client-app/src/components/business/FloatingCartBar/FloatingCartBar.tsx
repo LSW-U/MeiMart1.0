@@ -25,8 +25,10 @@ import {
   useRemoveCartItem,
 } from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
+import { useCoupons } from '@/services/queries/usePromotion';
+import { CouponPicker } from '@/components/business/CouponPicker/CouponPicker';
 import { useLocalizer } from '@/i18n';
-import { formatPrice } from '@/utils/format';
+import { formatPrice, formatEta } from '@/utils/format';
 import type { CartItem } from '@/types';
 
 import type { FloatingCartBarProps, FloatingCartBarRef } from './FloatingCartBar.types';
@@ -319,7 +321,8 @@ export const FloatingCartBar = forwardRef<FloatingCartBarRef, FloatingCartBarPro
               </ScrollView>
               {/* 金额明细卡（方案 A，20261112 拍板）：运费/券折扣走 useCheckoutPreview（结算页同源），
                 无默认地址/未登录/mock 下 preview 为空 → 整卡隐藏不阻塞（弱网降级）。
-                预计送达 ETA 本期挂账（20261112 挂账清单 #1）。 */}
+                预计送达 ETA 20261113 挂账清单 #1 闭环：cart.estimatedDelivery 转正
+                （dead-i18n 基线条目已删）。 */}
               <SummaryCard />
               {/* 20261112 拍板：「去购物车」按钮取消——跳转语义迁至条上购物车 icon（点击直达） */}
             </View>
@@ -353,6 +356,69 @@ function SummaryRow({ label, value, accent }: { label: string; value: string; ac
   );
 }
 
+// 券入口行（20261113 挂账 #3 闭环）：discount 行可点 → 弹 CouponPicker 选券。
+//   couponCode 驱动 useCheckoutPreview(addressId, code) 重查（key 含券码，结算页同机制
+//   checkout.tsx:85-93 先例）——注意 key 在本组件与 SummaryCard 是同一个
+//   CHECKOUT_PREVIEW_KEY(defaultAddressId, code)：本组件 onSelect 置码后 key 变 →
+//   两处 preview 同时重查，SummaryCard 的 discount/payableAmount 自动跟进。
+//   无可用券且无折扣时整行不渲染；CouponPicker 是 ui/Modal 壳（组件库 Modal 非 RN
+//   Modal），与面板自身 RN Modal 不冲突。
+function CouponEntryWrapper() {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+  const { data: addresses } = useAddresses();
+  const { data: cart } = useCart();
+  // 与 SummaryCard 同 key（同地址 + 同券码）：选券后 RQ 同 key 重查一次，双订阅共享缓存
+  const [couponCode, setCouponCode] = useState<string | undefined>(undefined);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const defaultAddress = addresses?.find((a) => a.isDefault);
+  const { data: preview } = useCheckoutPreview(defaultAddress?.id, couponCode);
+  const { data: coupons } = useCoupons('available');
+
+  const discount = preview?.discount ?? 0;
+  // 无可用券且无折扣：整行不渲染（preview 未加载时外层已隐藏）
+  if (discount <= 0 && (coupons?.length ?? 0) === 0) return null;
+
+  return (
+    <>
+      <Pressable
+        onPress={() => setPickerOpen(true)}
+        style={styles.summaryRow}
+        accessibilityRole="button"
+        accessibilityLabel={couponCode ? t('checkout.coupon.change') : t('checkout.coupon.select')}
+        testID="fcb-coupon-entry"
+      >
+        <View style={styles.couponEntryLeft}>
+          <Icon symbol="confirmation_number" size={16} color={colors.semantic.positive} />
+          <Text
+            style={[textStyle('body-sm'), { color: colors.semantic.positive }]}
+            numberOfLines={1}
+          >
+            {couponCode ?? t('checkout.coupon.select')}
+          </Text>
+        </View>
+        <View style={styles.couponEntryRight}>
+          {discount > 0 && (
+            <Text style={[textStyle('body-sm'), { color: colors.semantic.positive }]}>
+              -{formatPrice(discount)}
+            </Text>
+          )}
+          <Icon symbol="chevron_right" size={16} color={colors['on-surface-variant']} />
+        </View>
+      </Pressable>
+      <CouponPicker
+        visible={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        coupons={coupons ?? []}
+        orderAmount={cart?.totalPrice ?? 0}
+        selectedCode={couponCode}
+        onSelect={setCouponCode}
+        testID="fcb-coupon-picker"
+      />
+    </>
+  );
+}
+
 // 金额明细卡：商品合计 + 券折扣 + 运费 + 预计实付（payableAmount 后端聚合）。
 //   preview 未加载（无默认地址/未登录/mock/弱网）整卡隐藏——数据行缺一不可，宁缺毋假。
 //   方案 B（20261113）：加减数/删除后 preview 重查有网络往返（方案 A 失效后 soft refetch），
@@ -361,7 +427,7 @@ function SummaryRow({ label, value, accent }: { label: string; value: string; ac
 //   场景 discount/deliveryFee 不随数量变，payable + delta 即实时正确值；preview refetch
 //   落地后 delta 归 0，自然切换回后端真值。delta 仅在确实有差额时应用（快照新鲜=0）。
 function SummaryCard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: addresses } = useAddresses();
   const { data: cart } = useCart();
   // 与结算页同口径取默认地址（checkout.tsx 用 resolveSmartDefaultAddress + 选择态；
@@ -378,18 +444,29 @@ function SummaryCard() {
   // 数量变动差额；无差额（快照新鲜）时 delta=0 不影响显示。负数合法（删除后 totalPrice 变小）
   const delta = cart ? cart.totalPrice - preview.itemsSubtotal : 0;
   const payable = preview.payableAmount + delta;
+  // 20261113 挂账 #1：ETA 文案——结算页同源（checkout.tsx:182 先例），非法/缺失日期
+  // formatEta 原样回退，但缺字段时为 undefined → 整行隐藏（宁缺毋假）
+  const etaText = preview.estimatedDeliveryTime
+    ? formatEta(preview.estimatedDeliveryTime, i18n.language)
+    : undefined;
 
   return (
     <View style={styles.summaryCard} testID="fcb-summary">
       {/* 20261112 用户反馈：合计与胶囊条内合计重复，明细卡不再重复展示 */}
-      {discount > 0 && (
-        <SummaryRow label={t('cart.discountLabel')} value={`-${formatPrice(discount)}`} accent />
-      )}
+      <SummaryRow label={t('cart.discountLabel')} value={`-${formatPrice(discount)}`} accent />
+      {/* 20261113 挂账 #3：券入口行——discount 行可点弹 CouponPicker；券码驱动
+        useCheckoutPreview 重查（key 含券码，结算页同机制）。放 SummaryCard 外层
+        （内部自取 addresses/coupons hooks，避免 hooks 顺序受 preview 早退影响） */}
+      {preview && <CouponEntryWrapper />}
       <SummaryRow
         label={t('cart.deliveryFeeLabel')}
         value={deliveryFee > 0 ? formatPrice(deliveryFee) : t('cart.freeDelivery')}
         accent={deliveryFee <= 0}
       />
+      {/* 20261113 挂账 #1 闭环：ETA 行——estimatedDeliveryTime 与结算页同源同格式
+        （formatEta + cart.estimatedDelivery {{time}} 文案，checkout.tsx:432 先例）。
+        时间已在 label 文案内（value 留空仅保行结构）；字段缺时整行隐藏，宁缺毋假 */}
+      {etaText && <SummaryRow label={t('cart.estimatedDelivery', { time: etaText })} value="" />}
       {/* 20261112 用户反馈：明细卡内分隔线删掉（仅留行间距） */}
       <SummaryRow label={t('cart.estimatedPayable')} value={formatPrice(payable)} />
     </View>
@@ -606,6 +683,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  // 券入口行左右分组（checkout.tsx couponEntryLeft/Right 同构）
+  couponEntryLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    flex: 1,
+  },
+  couponEntryRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   iconWrap: {
     position: 'relative',
