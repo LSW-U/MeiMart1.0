@@ -21,7 +21,6 @@ export function BottomBar({
   discountAmount,
   totalItems,
   isOffline,
-  soldOutCount = 0,
 }: {
   manageMode: boolean;
   allForDelete: boolean;
@@ -34,8 +33,6 @@ export function BottomBar({
   discountAmount: number;
   totalItems: number;
   isOffline: boolean;
-  /** 断货件数（库存感知批：>0 时结算栏显示提示行） */
-  soldOutCount?: number;
 }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -98,13 +95,6 @@ export function BottomBar({
         label={t('common.all')}
         accessibilityLabel={t('cart.selectAllLabel')}
       />
-
-      {/* 20261114 库存感知批：有断货项时提示（拍板 B——已自动取消勾选，此处仅解释性提示） */}
-      {soldOutCount > 0 && (
-        <Text style={[styles.soldOutNote, { color: colors.semantic.error }]}>
-          {t('cart.soldOutNote', { count: soldOutCount })}
-        </Text>
-      )}
 
       {/* 合计：有折扣时显示 DISCOUNT 行（后端 cart.discountAmount 有值才显示，无值隐藏） */}
       <View style={styles.totalBox}>
@@ -179,11 +169,6 @@ const styles = StyleSheet.create({
   },
   selectedLabel: {
     fontSize: 12,
-  },
-  // 断货提示行（库存感知批）：结算栏内小红字
-  soldOutNote: {
-    fontSize: 10,
-    fontWeight: '600',
   },
 
   // V5 DISCOUNT 行样式（有折扣时显示）

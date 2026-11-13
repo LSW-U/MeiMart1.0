@@ -301,7 +301,6 @@
     "detailHint": "Info",
     "outOfStockTag": "Out of stock",
     "soldOutHint": "Out of stock — unavailable for selection",
-    "soldOutNote": "{{count}} item(s) out of stock, removed from checkout",
     "a11y.soldOutItem": "Item out of stock, unavailable"
   },
   "product": {

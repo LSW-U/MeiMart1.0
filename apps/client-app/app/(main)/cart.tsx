@@ -88,7 +88,6 @@ export default function CartPage() {
     if (soldOutSelectedIds.length === 0) return;
     autoUntoggleMutate({ itemIds: soldOutSelectedIds, selected: false });
   }, [soldOutSelectedIds, autoUntoggleMutate]);
-  const soldOutCount = cart?.items.filter((i) => i.product.stock === 0).length ?? 0;
 
   // 管理态全选：checkbox 勾选 = 全部加入 selectedForDelete，取消 = 清空
   const allForDelete =
@@ -226,7 +225,6 @@ export default function CartPage() {
             discountAmount={discountAmount}
             totalItems={totalItems}
             isOffline={isOffline}
-            soldOutCount={soldOutCount}
           />
         )}
       </SafeAreaWrapper>

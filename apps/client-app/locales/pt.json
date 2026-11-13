@@ -301,7 +301,6 @@
     "detailHint": "Info",
     "outOfStockTag": "Esgotado",
     "soldOutHint": "Esgotado — indisponível para seleção",
-    "soldOutNote": "{{count}} item(ns) esgotado(s), removidos do checkout",
     "a11y.soldOutItem": "Item esgotado, indisponível"
   },
   "product": {

@@ -301,7 +301,6 @@
     "detailHint": "Info",
     "outOfStockTag": "Lais hela",
     "soldOutHint": "Lais hela — la bele hili",
-    "soldOutNote": "{{count}} sasan esgotadu, hasaé husi checkout",
     "a11y.soldOutItem": "Sasan lais hela, la bele hili"
   },
   "product": {
