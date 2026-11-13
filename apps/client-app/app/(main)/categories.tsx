@@ -3,7 +3,7 @@
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 128%）
 // Fix-15: Primary tais-pattern Header + 侧栏图标 + Daily Deals + 分类标题 + TaisDivider + HOT PRODUCTS + VIEW ALL + Skeleton
 // 优化: 商品卡片整体可点击跳转 + 加购按钮真正加购 + 真实商品替换 mock + 商品网格 2 列 8 个
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCategories, useSubCategories } from '@/services/queries/useCatalog';
 import { useProductsByCategory, useProducts } from '@/services/queries/useProducts';
 import { useAddToCart } from '@/services/queries/useCart';
+import {
+  FloatingCartBar,
+  type FloatingCartBarRef,
+} from '@/components/business/FloatingCartBar/FloatingCartBar';
 import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
 import type { Product, Category } from '@/types';
@@ -45,6 +49,13 @@ export default function CategoriesPage() {
   // Why: pickedId 只存"用户显式选择"，未选时回落到 URL 参数（同页复用 / 带新 categoryId 进入也能跟随），
   //       再回落到第一个分类。旧 bug：直连时分类 id 为 ''，查询拿到 undefined 被 enabled:false 禁用 → 热门商品恒空态
   const [pickedId, setPickedId] = useState<string | null>(null);
+  // 方案 C：滚动收面板——ref 命令式，8px 阈值在此把关（区分点击残留滚动 vs 主动滑动）
+  const fcbRef = useRef<FloatingCartBarRef>(null);
+  const lastScrollY = useRef(0);
+  const handleContentScroll = useCallback((y: number) => {
+    if (Math.abs(y - lastScrollY.current) > 8) fcbRef.current?.dismissPanel();
+    lastScrollY.current = y;
+  }, []);
   const requestedId = pickedId ?? urlCategoryId ?? null;
   // Why: categories 加载后兜底 —— requestedId 为空或不在列表里则取第一个分类。
   //       商品查询 / 侧栏高亮 / VIEW ALL 全部消费这一个值，保证三处永远一致
@@ -174,6 +185,8 @@ export default function CategoriesPage() {
               style={{ flex: 1 }}
               contentContainerStyle={styles.contentInner}
               showsVerticalScrollIndicator={false}
+              scrollEventThrottle={16}
+              onScroll={({ nativeEvent }) => handleContentScroll(nativeEvent.contentOffset.y)}
             >
               {/* 子分类圆形图标（hook 驱动，无数据隐藏；横向滚动） */}
               {subCategories.length > 0 && (
@@ -379,6 +392,10 @@ export default function CategoriesPage() {
           )}
         </View>
       </View>
+
+      {/* 20261111 拍板：底部悬浮购物车条（垫在 BottomNav 上方，空车隐藏；组件自取 useCart）。
+          方案 C：滚动商品流即收面板（8px 阈值在页面 handler 把关） */}
+      <FloatingCartBar ref={fcbRef} onPress={() => router.push('/(main)/cart')} />
     </SafeAreaWrapper>
   );
 }

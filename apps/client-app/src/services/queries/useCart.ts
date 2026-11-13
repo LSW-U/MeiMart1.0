@@ -1,8 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { cartApi, businessError } from '@/services/cart';
 import { isMockMode } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
-import { STALE_TIME, CART_ROOT_KEY, CART_QUERY_KEY, CHECKOUT_PREVIEW_KEY } from '@/lib/queryKeys';
+import {
+  STALE_TIME,
+  CART_ROOT_KEY,
+  CART_QUERY_KEY,
+  CHECKOUT_PREVIEW_ROOT_KEY,
+  CHECKOUT_PREVIEW_KEY,
+} from '@/lib/queryKeys';
 import type { Cart, CartItem, Product } from '@/types';
 
 // Why: 结算预览按地址 + 券码查（运费/仓库匹配/折扣），地址或券变 → key 变 → 自动重查
@@ -84,6 +90,14 @@ export function useAddToCart() {
   });
 }
 
+// 20261113：preview 一并失效——悬浮条明细卡/结算预览金额是后端快照（checkout-preview 独立
+//   query key），加减数/删除只失效 cart 的话金额不跟进（悬浮条面板实测踩坑）。前缀失效覆盖
+//   全部地址/券组合；preview 自带旧值过渡（RQ soft refetch 不闪空）
+const invalidateCartAndPreview = (qc: QueryClient) => {
+  void qc.invalidateQueries({ queryKey: CART_ROOT_KEY });
+  void qc.invalidateQueries({ queryKey: CHECKOUT_PREVIEW_ROOT_KEY });
+};
+
 export function useUpdateCartItem() {
   const qc = useQueryClient();
   return useMutation({
@@ -102,7 +116,7 @@ export function useUpdateCartItem() {
     onError: (_err, _vars, ctx) => {
       if (ctx?.previous) qc.setQueryData(CART_QUERY_KEY(), ctx.previous);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: CART_ROOT_KEY }),
+    onSettled: () => invalidateCartAndPreview(qc),
   });
 }
 
@@ -123,7 +137,7 @@ export function useRemoveCartItem() {
     onError: (_err, _vars, ctx) => {
       if (ctx?.previous) qc.setQueryData(CART_QUERY_KEY(), ctx.previous);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: CART_ROOT_KEY }),
+    onSettled: () => invalidateCartAndPreview(qc),
   });
 }
 

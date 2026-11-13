@@ -264,7 +264,13 @@
     "goShopping": "Ba sosa sasan",
     "selectAll": "Hili hotu",
     "total": "Total",
-    "checkout": "Remata sosa",
+    "selectedPreview": "Sasan hili ona",
+    "discountLabel": "Deskontu kupon",
+    "deliveryFeeLabel": "Taxa entrega",
+    "freeDelivery": "Entrega grátis",
+    "estimatedPayable": "Total estimadu",
+    "estimatedDelivery": "Entrega estimada",
+    "checkout": "Paga",
     "delete": "Hamos",
     "offlineBlock": "Laiha rede — la bele remata sosa",
     "removeConfirm": "Hamos artikulu ida ne'e?",
@@ -292,7 +298,8 @@
     },
     "quantity": "Kuantidade",
     "removed": "Sasan hamos tiha ona husi karrinho",
-    "discount": "DESKONTU"
+    "discount": "DESKONTU",
+    "detailHint": "Info"
   },
   "product": {
     "localBestsellers": "Sasan lokal faan di'ak liu",
@@ -331,10 +338,10 @@
     "notFound": "Produtu la hetan ka falla karga",
     "selectAddress": "Hili enderesu",
     "tab": {
-      "product": "PRODUTU",
-      "reviews": "AVALIASAUN",
-      "recommended": "REKOMENDA",
-      "details": "DETALIU"
+      "product": "Produtu",
+      "reviews": "Avaliasaun",
+      "recommended": "Rekomenda",
+      "details": "Detaliu"
     },
     "verifiedPurchase": "Sosa verifika ona",
     "lowStock": "Stoku menus",

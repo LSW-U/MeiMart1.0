@@ -500,10 +500,10 @@ export default function SearchResultsPage() {
           <ErrorState message={t('errors.products')} onRetry={() => refetch()} />
         ) : !results || results.length === 0 ? (
           // P8-6: empty 也给推荐延伸浏览（用户决策 2026-08-04）
-          // 20261112：paddingBottom 预留悬浮购物车条高 56（防推荐流末尾被遮挡）
+          // 20261112：paddingBottom 预留悬浮购物车条高 64（防推荐流末尾被遮挡）
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={{ flexGrow: 1, paddingBottom: 56 }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 64 }}
           >
             <EmptyState
               title={t('search.noResultTitle')}
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout['container-margin'] - layout.gutter / 2,
     paddingTop: layout['container-margin'],
     // 20261112：悬浮购物车条高 56，预留防瀑布流末尾被遮挡（同 home bottomReserve 语义）
-    paddingBottom: spacing.xxl * 2 + 56,
+    paddingBottom: spacing.xxl * 2 + 64, // 64=悬浮条增高后高度（20261112 56→64）
   },
   // 20261107 瀑布流 masonry 卡片包裹层：列内行距 marginBottom（home masonryCol gap 同值
   //   spacing.md）+ 列间半 gutter（两列合成 gutter 12）。FlashList masonry 无原生 gap prop。

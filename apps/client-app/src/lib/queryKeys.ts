@@ -117,8 +117,10 @@ export const PRODUCT_WAREHOUSE_AVAILABILITY_KEY = (
 // ============================================================================
 export const CART_ROOT_KEY = ['cart'] as const;
 export const CART_QUERY_KEY = () => [...CART_ROOT_KEY] as const;
+// 前缀根 key：购物车写操作（加减数/删除）后失效全部 preview 组合（悬浮条明细卡金额跟进，20261113）
+export const CHECKOUT_PREVIEW_ROOT_KEY = ['checkout-preview'] as const;
 export const CHECKOUT_PREVIEW_KEY = (addressId: string, couponCode: string) =>
-  ['checkout-preview', addressId, couponCode] as const;
+  [...CHECKOUT_PREVIEW_ROOT_KEY, addressId, couponCode] as const;
 
 // ============================================================================
 // coupons 优惠券 / promotions 活动入口

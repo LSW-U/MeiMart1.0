@@ -2,7 +2,7 @@
 // HTML → RN 行数比：337 → ~390（含样式）
 // 满足 CLAUDE.md 规则 #28 的 30% 门槛（实际 116%）
 // Fix-10: 重建 5 个缺失模块（Primary Header / Filter Tags / Recent / Popular / Recommended）
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
@@ -17,6 +17,11 @@ import { shouldSuggest } from '@/utils/searchSuggestGate';
 import { TaisPattern } from '@/components/cultural/TaisPattern';
 import { Icon } from '@/components/ui/Icon';
 import { CartIconButton } from '@/components/business/CartIconButton/CartIconButton';
+// 20261112 拍板：搜索页底部悬浮购物车条（与 categories 同款）
+import {
+  FloatingCartBar,
+  type FloatingCartBarRef,
+} from '@/components/business/FloatingCartBar/FloatingCartBar';
 import { useRecommendationsInfinite } from '@/services/queries/useProducts';
 import { splitMasonryBalanced } from '@/utils/splitMasonryBalanced';
 import { useSearchHot } from '@/services/queries/useSearchHot';
@@ -57,6 +62,13 @@ export default function SearchIndexPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
+  // 方案 C：滚动收悬浮条面板——ref 命令式，8px 阈值把关（区分点击残留 vs 主动滑动）
+  const fcbRef = useRef<FloatingCartBarRef>(null);
+  const lastScrollY = useRef(0);
+  const handleContentScroll = useCallback((y: number) => {
+    if (Math.abs(y - lastScrollY.current) > 8) fcbRef.current?.dismissPanel();
+    lastScrollY.current = y;
+  }, []);
   // C方案 §4.1/§4.5 - suggestOpen 控制面板显隐（失焦收起），debounce 300ms 防抖
   const [suggestOpen, setSuggestOpen] = useState(true);
   const debouncedQuery = useDebounce(query, 300);
@@ -245,6 +257,8 @@ export default function SearchIndexPage() {
         style={{ flex: 1, backgroundColor: colors.background }}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={({ nativeEvent }) => handleContentScroll(nativeEvent.contentOffset.y)}
       >
         {/* Primary Header — 176px + uma-lulik-curve 锯齿底边 */}
         <View style={styles.headerWrap}>
@@ -525,13 +539,18 @@ export default function SearchIndexPage() {
           />
         </View>
       )}
+      {/* 20261112 拍板：悬浮购物车条与 categories 同款（空车隐藏；组件自取 useCart）。
+          Why: 挂 SafeAreaWrapper 直下（ScrollView 同级）——absolute bottom:0 参照 wrapper
+          底边，搜索页无 BottomNav，即窗口底。suggestWrap zIndex:10 悬浮其上不冲突。 */}
+      <FloatingCartBar ref={fcbRef} onPress={() => router.push('/cart')} />
     </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingBottom: spacing.xxl * 2,
+    // 20261112：悬浮购物车条高 56，预留 48+56 防推荐流末尾被遮挡（同 home.tsx bottomReserve 语义）
+    paddingBottom: spacing.xxl * 2 + 64, // 64=悬浮条增高后高度（20261112 56→64）
   },
   headerWrap: {
     position: 'relative',

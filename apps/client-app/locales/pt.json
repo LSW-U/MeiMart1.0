@@ -264,7 +264,13 @@
     "goShopping": "Ir às compras",
     "selectAll": "Selecionar tudo",
     "total": "Total",
-    "checkout": "Finalizar compra",
+    "selectedPreview": "Itens selecionados",
+    "discountLabel": "Desconto do cupão",
+    "deliveryFeeLabel": "Taxa de entrega",
+    "freeDelivery": "Entrega grátis",
+    "estimatedPayable": "Total estimado",
+    "estimatedDelivery": "Entrega estimada",
+    "checkout": "Pagar",
     "delete": "Eliminar",
     "offlineBlock": "Offline — finalização indisponível",
     "removeConfirm": "Remover este artigo?",
@@ -292,7 +298,8 @@
     },
     "quantity": "Quantidade",
     "removed": "Artigo removido do carrinho",
-    "discount": "DESCONTO"
+    "discount": "DESCONTO",
+    "detailHint": "Info"
   },
   "product": {
     "localBestsellers": "Mais vendidos locais",
