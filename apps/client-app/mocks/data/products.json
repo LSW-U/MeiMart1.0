@@ -20,7 +20,20 @@
     },
     "createdAt": "2026-07-25T00:00:00Z",
     "isLocal": true,
-    "defaultSkuId": "sku-p001"
+    "defaultSkuId": "sku-p001",
+    "skus": [
+      {
+        "id": "sku-p001",
+        "name": {
+          "zh": "新鲜红富士苹果",
+          "en": "Fresh Red Fuji Apple",
+          "tet": "Maçã Fuji Vermelha Frescu"
+        },
+        "price": 25.9,
+        "stock": 85,
+        "imageUrl": "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400"
+      }
+    ]
   },
   {
     "id": "p002",
@@ -42,7 +55,20 @@
       "tet": "Tolun manu sirku livre, simu fresku"
     },
     "createdAt": "2026-07-26T00:00:00Z",
-    "defaultSkuId": "sku-p002"
+    "defaultSkuId": "sku-p002",
+    "skus": [
+      {
+        "id": "sku-p002",
+        "name": {
+          "zh": "本地土鸡蛋 30枚装",
+          "en": "Free-Range Eggs (30 pack)",
+          "tet": "Manu Tolun 30"
+        },
+        "price": 38.5,
+        "stock": 12,
+        "imageUrl": "https://images.unsplash.com/photo-1582722872445-44dc5f43e784?w=400"
+      }
+    ]
   },
   {
     "id": "p003",
@@ -58,7 +84,20 @@
     "salesCount": 890,
     "stock": 0,
     "isLocal": true,
-    "defaultSkuId": "sku-p003"
+    "defaultSkuId": "sku-p003",
+    "skus": [
+      {
+        "id": "sku-p003",
+        "name": {
+          "zh": "东北珍珠米 5kg",
+          "en": "Pearl Rice 5kg",
+          "tet": "Horas Mutin 5kg"
+        },
+        "price": 49.9,
+        "stock": 0,
+        "imageUrl": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400"
+      }
+    ]
   },
   {
     "id": "p004",
@@ -74,7 +113,20 @@
     "rating": 4.6,
     "salesCount": 1560,
     "stock": 50,
-    "defaultSkuId": "sku-p004"
+    "defaultSkuId": "sku-p004",
+    "skus": [
+      {
+        "id": "sku-p004",
+        "name": {
+          "zh": "金龙鱼食用油 5L",
+          "en": "Cooking Oil 5L",
+          "tet": "Minan Tahan 5L"
+        },
+        "price": 78.0,
+        "stock": 50,
+        "imageUrl": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400"
+      }
+    ]
   },
   {
     "id": "p005",
@@ -90,7 +142,20 @@
     "salesCount": 3200,
     "stock": 3,
     "createdAt": "2026-07-24T00:00:00Z",
-    "defaultSkuId": "sku-p005"
+    "defaultSkuId": "sku-p005",
+    "skus": [
+      {
+        "id": "sku-p005",
+        "name": {
+          "zh": "蒙牛纯牛奶 250ml×12",
+          "en": "Pure Milk 250ml × 12",
+          "tet": "Sasán Lét 250ml × 12"
+        },
+        "price": 42.9,
+        "stock": 3,
+        "imageUrl": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400"
+      }
+    ]
   },
   {
     "id": "p006",
@@ -106,7 +171,20 @@
     "rating": 4.7,
     "salesCount": 1890,
     "stock": 40,
-    "defaultSkuId": "sku-p006"
+    "defaultSkuId": "sku-p006",
+    "skus": [
+      {
+        "id": "sku-p006",
+        "name": {
+          "zh": "青岛啤酒 500ml×12",
+          "en": "Tsingtao Beer 500ml × 12",
+          "tet": "Bir Tsingtao 500ml × 12"
+        },
+        "price": 58.0,
+        "stock": 40,
+        "imageUrl": "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400"
+      }
+    ]
   },
   {
     "id": "p007",
@@ -121,7 +199,20 @@
     "rating": 4.5,
     "salesCount": 980,
     "stock": 25,
-    "defaultSkuId": "sku-p007"
+    "defaultSkuId": "sku-p007",
+    "skus": [
+      {
+        "id": "sku-p007",
+        "name": {
+          "zh": "薯片零食大礼包",
+          "en": "Snacks Variety Pack",
+          "tet": "Pakote Snack"
+        },
+        "price": 35.9,
+        "stock": 25,
+        "imageUrl": "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400"
+      }
+    ]
   },
   {
     "id": "p008",
@@ -136,7 +227,20 @@
     "rating": 4.9,
     "salesCount": 4500,
     "stock": 0,
-    "defaultSkuId": "sku-p008"
+    "defaultSkuId": "sku-p008",
+    "skus": [
+      {
+        "id": "sku-p008",
+        "name": {
+          "zh": "中华牙膏套装 3支装",
+          "en": "Toothpaste Set (3 pack)",
+          "tet": "Pasta Ihan 3"
+        },
+        "price": 29.9,
+        "stock": 0,
+        "imageUrl": "https://images.unsplash.com/photo-1559591937-abc5e0e8e21a?w=400"
+      }
+    ]
   },
   {
     "id": "p009",
@@ -152,7 +256,20 @@
     "rating": 4.8,
     "salesCount": 5200,
     "stock": 18,
-    "defaultSkuId": "sku-p009"
+    "defaultSkuId": "sku-p009",
+    "skus": [
+      {
+        "id": "sku-p009",
+        "name": {
+          "zh": "清风原木抽纸 24包",
+          "en": "Tissue Paper 24 pack",
+          "tet": "Surat Tisu 24"
+        },
+        "price": 45.0,
+        "stock": 18,
+        "imageUrl": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400"
+      }
+    ]
   },
   {
     "id": "p010",
@@ -167,7 +284,20 @@
     "rating": 4.9,
     "salesCount": 670,
     "stock": 60,
-    "defaultSkuId": "sku-p010"
+    "defaultSkuId": "sku-p010",
+    "skus": [
+      {
+        "id": "sku-p010",
+        "name": {
+          "zh": "进口三文鱼 200g",
+          "en": "Imported Salmon 200g",
+          "tet": "Salmaun Importadu 200g"
+        },
+        "price": 89.9,
+        "stock": 60,
+        "imageUrl": "https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400"
+      }
+    ]
   },
   {
     "id": "p011",
@@ -189,7 +319,20 @@
       "tet": "Brocolu temporada, verde no meten"
     },
     "createdAt": "2026-08-01T00:00:00Z",
-    "defaultSkuId": "sku-p011"
+    "defaultSkuId": "sku-p011",
+    "skus": [
+      {
+        "id": "sku-p011",
+        "name": {
+          "zh": "本地西兰花 500g",
+          "en": "Fresh Broccoli (500g)",
+          "tet": "Brocolu Fresku 500g"
+        },
+        "price": 12.9,
+        "stock": 40,
+        "imageUrl": "https://images.unsplash.com/photo-1584270354949-c26b0d5b4a0c?w=400"
+      }
+    ]
   },
   {
     "id": "p012",
@@ -210,7 +353,20 @@
       "tet": "Tomate suku, diak ba tein no kante"
     },
     "createdAt": "2026-08-02T00:00:00Z",
-    "defaultSkuId": "sku-p012"
+    "defaultSkuId": "sku-p012",
+    "skus": [
+      {
+        "id": "sku-p012",
+        "name": {
+          "zh": "精选番茄 1kg",
+          "en": "Selected Tomatoes (1kg)",
+          "tet": "Tomate Selecionado 1kg"
+        },
+        "price": 9.5,
+        "stock": 65,
+        "imageUrl": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400"
+      }
+    ]
   },
   {
     "id": "p013",
@@ -232,7 +388,20 @@
       "tet": "Tema organiku, kresu no hado"
     },
     "createdAt": "2026-08-03T00:00:00Z",
-    "defaultSkuId": "sku-p013"
+    "defaultSkuId": "sku-p013",
+    "skus": [
+      {
+        "id": "sku-p013",
+        "name": {
+          "zh": "有机胡萝卜 750g",
+          "en": "Organic Carrots (750g)",
+          "tet": "Suni Moris Organiku 750g"
+        },
+        "price": 8.9,
+        "stock": 52,
+        "imageUrl": "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400"
+      }
+    ]
   },
   {
     "id": "p014",
@@ -254,7 +423,20 @@
       "tet": "Ba tinan 12-36, susu importadu"
     },
     "createdAt": "2026-08-04T00:00:00Z",
-    "defaultSkuId": "sku-p014"
+    "defaultSkuId": "sku-p014",
+    "skus": [
+      {
+        "id": "sku-p014",
+        "name": {
+          "zh": "婴儿配方奶粉 3段 800g",
+          "en": "Infant Formula Stage 3 (800g)",
+          "tet": "Fórmula Bebé Faze 3 800g"
+        },
+        "price": 168.0,
+        "stock": 18,
+        "imageUrl": "https://images.unsplash.com/photo-1556909212-d5b604d0c90d?w=400"
+      }
+    ]
   },
   {
     "id": "p015",
@@ -275,7 +457,20 @@
       "tet": "La iha alkool, kalmu ba kulit"
     },
     "createdAt": "2026-08-05T00:00:00Z",
-    "defaultSkuId": "sku-p015"
+    "defaultSkuId": "sku-p015",
+    "skus": [
+      {
+        "id": "sku-p015",
+        "name": {
+          "zh": "婴儿湿巾 80抽×3包",
+          "en": "Baby Wipes 80pc × 3 packs",
+          "tet": "Toalin Uman Bebé 80 × 3"
+        },
+        "price": 29.9,
+        "stock": 90,
+        "imageUrl": "https://images.unsplash.com/photo-1522771930-78848d9293e8?w=400"
+      }
+    ]
   },
   {
     "id": "p016",
@@ -297,7 +492,20 @@
       "tet": "Arroz importadu Tailândia, diak"
     },
     "createdAt": "2026-08-06T00:00:00Z",
-    "defaultSkuId": "sku-p016"
+    "defaultSkuId": "sku-p016",
+    "skus": [
+      {
+        "id": "sku-p016",
+        "name": {
+          "zh": "泰国香米 2kg",
+          "en": "Thai Jasmine Rice 2kg",
+          "tet": "Arroz Jasmim Tailândia 2kg"
+        },
+        "price": 32.5,
+        "stock": 45,
+        "imageUrl": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400"
+      }
+    ]
   },
   {
     "id": "p017",
@@ -318,7 +526,20 @@
       "tet": "Arroz fibra aas, isin diak"
     },
     "createdAt": "2026-08-07T00:00:00Z",
-    "defaultSkuId": "sku-p017"
+    "defaultSkuId": "sku-p017",
+    "skus": [
+      {
+        "id": "sku-p017",
+        "name": {
+          "zh": "糙米 1kg",
+          "en": "Brown Rice 1kg",
+          "tet": "Arroz Integral 1kg"
+        },
+        "price": 18.9,
+        "stock": 30,
+        "imageUrl": "https://images.unsplash.com/photo-1516684732162-798a0062be99?w=400"
+      }
+    ]
   },
   {
     "id": "p018",
@@ -340,7 +561,20 @@
       "tet": "Mamuk i metin, diak ba hamriik"
     },
     "createdAt": "2026-08-08T00:00:00Z",
-    "defaultSkuId": "sku-p018"
+    "defaultSkuId": "sku-p018",
+    "skus": [
+      {
+        "id": "sku-p018",
+        "name": {
+          "zh": "糯米 1kg",
+          "en": "Glutinous Rice 1kg",
+          "tet": "Arroz Glutinózu 1kg"
+        },
+        "price": 15.5,
+        "stock": 25,
+        "imageUrl": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400"
+      }
+    ]
   },
   {
     "id": "p019",
@@ -361,7 +595,20 @@
       "tet": "Milhetu ba kanja"
     },
     "createdAt": "2026-08-09T00:00:00Z",
-    "defaultSkuId": "sku-p019"
+    "defaultSkuId": "sku-p019",
+    "skus": [
+      {
+        "id": "sku-p019",
+        "name": {
+          "zh": "小米 500g",
+          "en": "Millet 500g",
+          "tet": "Milhetu 500g"
+        },
+        "price": 12.0,
+        "stock": 20,
+        "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400"
+      }
+    ]
   },
   {
     "id": "p020",
@@ -383,6 +630,19 @@
       "tet": "Aveia ba rain lok"
     },
     "createdAt": "2026-08-10T00:00:00Z",
-    "defaultSkuId": "sku-p020"
+    "defaultSkuId": "sku-p020",
+    "skus": [
+      {
+        "id": "sku-p020",
+        "name": {
+          "zh": "燕麦片 1kg",
+          "en": "Rolled Oats 1kg",
+          "tet": "Aveia 1kg"
+        },
+        "price": 21.9,
+        "stock": 60,
+        "imageUrl": "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=400"
+      }
+    ]
   }
 ]

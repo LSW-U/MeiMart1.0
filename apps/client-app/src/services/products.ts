@@ -1,7 +1,7 @@
 import { api, isMockMode } from './api';
 import { mockDb, mockResponse } from './mockDb';
 import { getCurrentLocale, pickLocalized } from '@/i18n';
-import type { Product, WarehouseAvailability } from '@/types';
+import type { Product, WarehouseAvailability, LocalizableText } from '@/types';
 
 // Why: 换一批按钮 批2 —— mock 分支翻页游标：请求 offset 越界（≥ pool 长度）回绕 0，
 //   与视图层「短批回绕」语义一致（方案v2 批2 §3）；会话级不落盘。
@@ -30,6 +30,9 @@ interface SkuRaw {
   name: Record<string, string>;
   price: number;
   status: string;
+  // Why: 20261114 Q1-A 后端补齐 — per-SKU 全仓聚合库存；仅 /detail 端点返回
+  stock?: number;
+  imageUrl?: string | null;
 }
 interface ProductRaw {
   id: string;
@@ -95,6 +98,17 @@ function transformProduct(raw: ProductRaw): Product {
     isColdChain: raw.isColdChain,
     description: (raw.description ?? undefined) as Product['description'],
     defaultSkuId: activeSku?.id,
+    // 20261114 详情页规格选择器接真实 SKU：ACTIVE SKU 映射为选项（price 分→元、stock 透传）。
+    // 仅 /detail 携带 skus；列表端点调用方已显式置 undefined，此处按 presence 透传。
+    skus: raw.skus
+      ?.filter((s) => s.status === 'ACTIVE')
+      .map((s) => ({
+        id: s.id,
+        name: (s.name ?? {}) as LocalizableText,
+        price: s.price / 100,
+        stock: s.stock,
+        imageUrl: s.imageUrl ?? null,
+      })) as Product['skus'],
   };
 }
 
@@ -183,7 +197,8 @@ export const productApi = {
     // 删能力开关与回退分支，直打 /detail（带 isCategoryTop3/skus/images）；错误原样抛
     // （RQ 可重试、监控不丢）。
     const res = await api.get<ProductRaw>(`/client/products/${id}/detail`);
-    // Why: /detail 聚合端点额外返回 skus，前端 Product 类型暂未消费，忽略以保持兼容
+    // 20261114 规格选择器接真实 SKU：skus 已消费（transformProduct → Product.skus），
+    // 注释随之更新；列表端点本就不带 skus，transformProduct 按 presence 透传
     return transformProduct(res.data);
   },
 

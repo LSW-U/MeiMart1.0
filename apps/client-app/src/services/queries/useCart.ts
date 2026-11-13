@@ -54,19 +54,32 @@ export function useCheckoutPreview(addressId: string | undefined, couponCode?: s
 export function useAddToCart() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ product, quantity = 1 }: { product: Product; quantity?: number }) => {
+    mutationFn: ({
+      product,
+      quantity = 1,
+      skuId,
+    }: {
+      product: Product;
+      quantity?: number;
+      // 20261114 规格选择器接真实 SKU：详情页传选中 SKU，未选走 defaultSkuId（service 层 resolve）
+      skuId?: string;
+    }) => {
       // Why: §7.3 加购前库存二次校验。读当前购物车缓存，断货/超限抛错触发组件 onError toast，防止超卖。
       //      错误 message 用稳定标识（SOLD_OUT / STOCK_EXCEEDED），组件层按文案映射 i18n。
       //      批3#11（批2 转办 P2-2）：这类确定性业务失败抛 name==='BusinessError'——
       //      useOfflineMutation 守卫不入队（重试也不会成功，入队只造成失败重放循环）。
       //      message 仍以 'SOLD_OUT'/'STOCK_EXCEEDED' 结尾，组件层按 includes 匹配不变。
-      if (product.stock != null) {
+      // 20261114：选定 SKU 时校验口径切到 per-SKU stock（选择器已禁用缺货 SKU，这里兜底）；
+      //   未选 SKU 沿用 product.stock 聚合口径不变。
+      const selectedSku = skuId ? product.skus?.find((s) => s.id === skuId) : undefined;
+      const stockCap = selectedSku?.stock ?? product.stock;
+      if (stockCap != null) {
         const cart = qc.getQueryData<Cart>(CART_QUERY_KEY());
         const existingQty = cart?.items.find((i) => i.product.id === product.id)?.quantity ?? 0;
-        if (product.stock === 0) throw businessError('SOLD_OUT');
-        if (existingQty + quantity > product.stock) throw businessError('STOCK_EXCEEDED');
+        if (stockCap === 0) throw businessError('SOLD_OUT');
+        if (existingQty + quantity > stockCap) throw businessError('STOCK_EXCEEDED');
       }
-      return cartApi.addItem(product, quantity);
+      return cartApi.addItem(product, quantity, skuId);
     },
     onMutate: async ({ product, quantity = 1 }) => {
       await qc.cancelQueries({ queryKey: CART_ROOT_KEY });

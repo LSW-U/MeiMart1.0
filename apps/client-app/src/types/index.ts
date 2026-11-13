@@ -49,6 +49,22 @@ export interface Product {
   // Why: P3批2 冷链标识（模式 A 后端直出）— 分类 coldChain 后端派生，前端只读；
   //      字段缺失（契约未同步）时不显示标识，宁缺毋假。
   isColdChain?: boolean;
+  // Why: 20261114 详情页规格选择器接真实 SKU — /detail 端点返回 skus[]（列表端点无），
+  //      price 单位分（展示层 /100）；stock 为该 SKU 全仓聚合（后端 Q1-A 补齐）。
+  //      mock 数据无 skus → undefined，选择器隐藏（与旧行为一致）。
+  skus?: SkuOption[];
+}
+
+/** 规格选择器选项（Product.skus 元素，20261114 接真实 SKU 替代 variantTemplates 本地模板） */
+export interface SkuOption {
+  id: string;
+  /** SKU 名（4 语，后端 name jsonb），pill 文案（拍板 Q2-A） */
+  name: LocalizableText;
+  /** 单位：分（展示 /100） */
+  price: number;
+  /** 全仓聚合库存；后端未返回（契约未同步）时 undefined → 不做缺货禁用 */
+  stock?: number;
+  imageUrl?: string | null;
 }
 
 /**

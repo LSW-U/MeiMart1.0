@@ -91,15 +91,16 @@ export const cartApi = {
   },
 
   // Why: 加购走 skuId（后端 CartItem 主键是 skuId）。
-  // 列表接口不返回 skus，product.defaultSkuId 可能为空，需先查详情获取 SKU。
-  async addItem(product: Product, quantity = 1): Promise<Cart> {
+  // 20261114 规格选择器接真实 SKU：调用方（详情页）可传 selectedSkuId，选择器选中的
+  // SKU 直接透传 0 次 resolve；未传（购物车页推荐等旧调用方）走 resolveSkuId 原路径。
+  async addItem(product: Product, quantity = 1, skuId?: string): Promise<Cart> {
     if (isMockMode) {
       addOrIncrement(product, quantity);
       recalculateCart();
       return mockResponse(mockDb.cart);
     }
-    const skuId = await this.resolveSkuId(product);
-    await api.post('/client/cart/items', { skuId, quantity });
+    const skuIdResolved = skuId ?? (await this.resolveSkuId(product));
+    await api.post('/client/cart/items', { skuId: skuIdResolved, quantity });
     return this.getCart();
   },
 

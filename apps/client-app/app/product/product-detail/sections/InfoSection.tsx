@@ -5,10 +5,11 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, typography, borderRadius, shadowPresets } from '@/theme';
+import { toast } from '@/store/toastStore';
 import { Icon } from '@/components/ui/Icon';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { formatCompactNumber, formatPrice } from '@/utils/format';
-import type { Product, LocalizableText } from '@/types';
+import type { Product, SkuOption, LocalizableText } from '@/types';
 import type { StockState } from '../shared';
 
 type Localize = (text: LocalizableText) => string;
@@ -18,9 +19,9 @@ export function InfoSection({
   stockState,
   isSoldOut,
   alertEntry,
-  variants,
-  variantSelection,
-  selectVariant,
+  skus,
+  selectedSkuId,
+  selectSku,
   warehouseData,
   warehouseText,
   warehouseColor,
@@ -41,9 +42,9 @@ export function InfoSection({
     disabled: boolean;
     onPress: () => void;
   } | null;
-  variants: import('@/config/variantTemplates').VariantGroup[];
-  variantSelection: Record<string, string>;
-  selectVariant: (groupName: string, label: string) => void;
+  skus: SkuOption[];
+  selectedSkuId: string | null;
+  selectSku: (skuId: string) => void;
   warehouseData: import('@/types').WarehouseAvailability | null;
   warehouseText: string;
   warehouseColor: string;
@@ -333,68 +334,62 @@ export function InfoSection({
         </Pressable>
       </View>
 
-      {/* §9 Q1 规格选择器：按 category 从 variantTemplates 查；无规格则整体隐藏（§11.4） */}
-      {variants.length > 0 && (
+      {/* 规格选择器（20261114 接真实 SKU，拍板 Q1-A/Q2-A）：product.skus 非空才渲染，
+          无 skus（旧契约/mock 单品）整体隐藏——与旧 variantTemplates 行为一致。
+          pill 文案 = SKU 名（4语 localize，拍板 Q2-A）；stock 缺失不做缺货禁用（宁缺毋假）。
+          点击缺货 pill toast 提示（对齐购物车断货 hint 交互）。 */}
+      {skus.length > 0 && (
         <View style={styles.section}>
           <View>
             <Text style={[styles.sectionTitle, { color: colors['on-surface'] }]}>
               {t('product.selectVariant')}
             </Text>
           </View>
-          {variants.map((group) => {
-            // C-P3-7（批4）：variantTemplates name/label 现为 i18n key，展示层 t() 解析
-            //（原硬编码英文直接渲染；variantSelection 仍按原始 key 索引，选中态不受影响）
-            const groupName = t(group.name);
-            const selectedLabel =
-              variantSelection[group.name] ?? group.options.find((o) => !o.disabled)?.label;
-            return (
-              <View key={group.name} style={styles.variantGroup}>
-                <Text style={[styles.variantGroupName, { color: colors['on-surface-variant'] }]}>
-                  {groupName}
-                </Text>
-                <View style={styles.grindRow}>
-                  {group.options.map((opt) => {
-                    const active = opt.label === selectedLabel;
-                    return (
-                      <Pressable
-                        key={opt.label}
-                        onPress={() => !opt.disabled && selectVariant(group.name, opt.label)}
-                        disabled={opt.disabled}
-                        style={[
-                          styles.grindPill,
-                          {
-                            backgroundColor: active
-                              ? colors.primary
-                              : colors['surface-container-lowest'],
-                            borderColor: active ? colors.primary : colors.outline,
-                            opacity: opt.disabled ? 0.4 : 1,
-                          },
-                        ]}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: active, disabled: opt.disabled }}
-                        accessibilityLabel={t('product.a11y.variantOption', {
-                          group: groupName,
-                          option: t(opt.label),
-                        })}
-                      >
-                        <Text
-                          style={[
-                            styles.grindText,
-                            {
-                              color: active ? colors['on-primary'] : colors['on-surface-variant'],
-                              textDecorationLine: opt.disabled ? 'line-through' : 'none',
-                            },
-                          ]}
-                        >
-                          {t(opt.label)}
-                        </Text>
-                      </Pressable>
-                    );
+          <View style={styles.grindRow}>
+            {skus.map((sku) => {
+              const active = sku.id === selectedSkuId;
+              const disabled = sku.stock != null && sku.stock === 0;
+              const label = localize(sku.name);
+              return (
+                <Pressable
+                  key={sku.id}
+                  onPress={() => {
+                    if (disabled) {
+                      toast.info(t('product.soldOut'));
+                      return;
+                    }
+                    selectSku(sku.id);
+                  }}
+                  style={[
+                    styles.grindPill,
+                    {
+                      backgroundColor: active ? colors.primary : colors['surface-container-lowest'],
+                      borderColor: active ? colors.primary : colors.outline,
+                      opacity: disabled ? 0.4 : 1,
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active, disabled }}
+                  accessibilityLabel={t('product.a11y.variantOption', {
+                    group: t('product.selectVariant'),
+                    option: label,
                   })}
-                </View>
-              </View>
-            );
-          })}
+                >
+                  <Text
+                    style={[
+                      styles.grindText,
+                      {
+                        color: active ? colors['on-primary'] : colors['on-surface-variant'],
+                        textDecorationLine: disabled ? 'line-through' : 'none',
+                      },
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
       )}
     </>
@@ -624,14 +619,8 @@ const styles = StyleSheet.create({
     ...typography['body-sm'],
     fontWeight: '600',
   },
-  // 规格组容器
-  variantGroup: {
-    gap: spacing.xs,
-  },
-  variantGroupName: {
-    ...typography['label-caps'],
-    fontSize: 11,
-  },
+  // 规格组容器（variantGroup/variantGroupName 已随 variantTemplates 模板选择器删除——
+  // 20261114 选择器改单行 SKU pills，无组名行）
   section: {
     gap: spacing.md,
   },

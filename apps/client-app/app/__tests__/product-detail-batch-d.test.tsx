@@ -394,16 +394,101 @@ describe('批D 商品详情整合', () => {
   });
 
   describe('D6 加购回归', () => {
-    it('底部栏加购仍触发 mutate（product, quantity=1 起步）', () => {
+    it('底部栏加购仍触发 mutate（product, quantity=1, skuId=undefined 无 skus 数据）', () => {
       setup({});
       fireEvent.press(screen.getByText('product.addToCart'));
       expect(mockMutate).toHaveBeenCalledWith(
-        { product: expect.objectContaining({ id: 'p001' }), quantity: 1 },
+        {
+          product: expect.objectContaining({ id: 'p001' }),
+          quantity: 1,
+          // 20261114 规格选择器接真实 SKU：makeProduct 无 skus → selectedSkuId null → undefined
+          skuId: undefined,
+        },
         expect.objectContaining({
           onSuccess: expect.any(Function),
           onError: expect.any(Function),
         }),
       );
+    });
+  });
+
+  // ===== 20261114 规格选择器接真实 SKU（拍板 Q1-A/Q2-A，替代 variantTemplates 模板）=====
+  describe('规格选择器接真实 SKU', () => {
+    const makeSkus = (
+      over: Partial<Product['skus'] extends (infer S)[] | undefined ? S : never> = {},
+    ) => [
+      {
+        id: 'sku-small',
+        name: { en: 'Small', zh: '小号', tet: 'Small', pt: 'Pequeno' },
+        price: 5.99,
+        stock: 0, // 缺货 SKU（Small——还原削皮器验收场景）
+        imageUrl: null,
+        ...over,
+      },
+      {
+        id: 'sku-large',
+        name: { en: 'Large', zh: '大号', tet: 'Large', pt: 'Grande' },
+        price: 10.78,
+        stock: 190,
+        imageUrl: null,
+      },
+    ];
+
+    it('有 skus → 渲染 pill（SKU 名 localize），默认选中第一个有货 SKU（跳过缺货 Small）', () => {
+      setup({ skus: makeSkus() });
+      expect(screen.getByText('Small')).toBeTruthy();
+      expect(screen.getByText('Large')).toBeTruthy();
+      // 默认选中 large（Small stock=0 被跳过）——a11y selected 态取证
+      expect(
+        screen.getByLabelText('product.a11y.variantOption:group=product.selectVariant|option=Large')
+          .props.accessibilityState.selected,
+      ).toBe(true);
+      expect(
+        screen.getByLabelText('product.a11y.variantOption:group=product.selectVariant|option=Small')
+          .props.accessibilityState.selected,
+      ).toBe(false);
+    });
+
+    it('缺货 SKU pill 禁用态 + 点击不切换选中（stock=0 判定，Q1-A per-SKU stock）', () => {
+      setup({ skus: makeSkus() });
+      const small = screen.getByLabelText(
+        'product.a11y.variantOption:group=product.selectVariant|option=Small',
+      );
+      expect(small.props.accessibilityState.disabled).toBe(true);
+      fireEvent.press(small);
+      // 点击后选中态仍在 Large（缺货 pill 不接管选中）
+      expect(
+        screen.getByLabelText('product.a11y.variantOption:group=product.selectVariant|option=Large')
+          .props.accessibilityState.selected,
+      ).toBe(true);
+    });
+
+    it('点有货 SKU 切换选中 + 加购携带该 skuId（cartApi.addItemById 链路参数源）', () => {
+      setup({ skus: makeSkus() });
+      fireEvent.press(
+        screen.getByLabelText(
+          'product.a11y.variantOption:group=product.selectVariant|option=Large',
+        ),
+      );
+      fireEvent.press(screen.getByText('product.addToCart'));
+      expect(mockMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ quantity: 1, skuId: 'sku-large' }),
+        expect.anything(),
+      );
+    });
+
+    it('无 skus（旧契约/单品）→ 选择器整体隐藏（queryByText 为空）', () => {
+      setup({});
+      expect(screen.queryByText('Small')).toBeNull();
+      expect(screen.queryByText('Large')).toBeNull();
+    });
+
+    it('切 SKU 后加购步进上限跟随所选 SKU stock（选缺货后 rawQtyMax=0 → qtyMax 兜底 1）', () => {
+      // 渲染期派生钳制（不用 effect setState）：缺货 SKU 理论上限 0，Math.max(1, …) 兜底 1
+      setup({ skus: makeSkus() });
+      // 默认选中 large（stock 190）→ + 可按到 2（步进器 label 复用 cart.a11y.*）
+      fireEvent.press(screen.getByLabelText('cart.a11y.increaseQty'));
+      expect(screen.getByText('2')).toBeTruthy();
     });
   });
 

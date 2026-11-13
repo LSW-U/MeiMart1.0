@@ -44,7 +44,6 @@ import { useFavorites, useToggleFavorite } from '@/services/queries/useFavorites
 import { useAuthStore } from '@/store/authStore';
 import { useAddresses } from '@/services/queries/useAddress';
 import { useReviews, consumeLastSubmittedReviewId } from '@/services/queries/useReviews';
-import { getVariantGroups } from '@/config/variantTemplates';
 import { getRelativeTimeUnit, formatPrice } from '@/utils/format';
 import { useLocalizer } from '@/i18n';
 import { toast } from '@/store/toastStore';
@@ -146,8 +145,15 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('PRODUCT');
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [variantSelection, setVariantSelection] = useState<Record<string, string>>({});
   const [highlightReviewId, setHighlightReviewId] = useState<string | null>(null);
+
+  // ===== 20261114 规格选择器接真实 SKU（拍板 Q1-A + Q2-A）=====
+  // 状态从 variantSelection（模板 label 索引）换为 selectedSkuId。无 effect 初始化——
+  // selectedSkuId 只存「用户显式选择」（null = 未选），渲染期派生有效选中：
+  // 未选/失效（品切换后旧 id 不在新 SKU 集）→ 回落默认 = 第一个有货 SKU（全缺货兜底第一个）。
+  // 用户显式选择永远优先（点过缺货外的任意 SKU 后，切品回来不覆盖）。
+  const [userSkuId, setUserSkuId] = useState<string | null>(null);
+  const selectSku = useCallback((id: string) => setUserSkuId(id), []);
 
   // 20261111 Tab 锚点滚动修复（用户反馈「顶部导航点击没反应」）：activeTab 原本只被
   //   TopBar 下划线高亮消费，内容区无条件全渲染——点击无任何内容反馈。HTML 原型
@@ -255,7 +261,6 @@ export default function ProductDetailPage() {
   // §7 库存 + §8 评论 + §9 Q1 规格 + §9 Q2 地址 — 全部从字段/接口派生，不再写死
   const stockState = computeStockState(product.stock);
   const isSoldOut = stockState === 'out';
-  const variants = getVariantGroups(product.category);
   const reviews = reviewData?.reviews ?? [];
   const reviewSummary = reviewData?.summary;
 
@@ -289,13 +294,24 @@ export default function ProductDetailPage() {
     warehouseText = t('product.warehouseNoStock');
   }
 
-  // 步进器上限 = stock（stock 未知时不限）
-  const qtyMax = product.stock != null ? product.stock : Number.MAX_SAFE_INTEGER;
+  // ===== 规格选择器派生（hook 声明见 early-return 之前）=====
+  // 选择器只在 product.skus 非空时渲染（mock 无多 SKU 数据也天然兼容）。
+  // 有效选中 = 用户显式选择（仍在 SKU 集内）否则默认 = 第一个有货 SKU（全缺货兜底第一个）。
+  // 步进器上限 = 选中 SKU 的 stock（未选/无 skus 用聚合 stock）；quantity 超限渲染期钳制
+  //（incQty/decQty 的 Math.min 兜住交互路径，不用 effect setState 级联）。
+  const skus = product.skus ?? [];
+  const selectedSkuId = userSkuId && skus.some((s) => s.id === userSkuId) ? userSkuId : null;
+  const selectedSku =
+    (selectedSkuId && skus.find((s) => s.id === selectedSkuId)) ||
+    skus.find((s) => (s.stock ?? 1) > 0) ||
+    skus[0] ||
+    null;
+  const rawQtyMax =
+    selectedSku?.stock ?? (product.stock != null ? product.stock : Number.MAX_SAFE_INTEGER);
+  // 步进上限 = max(1, stock)（断货 SKU 兜底 1 可减不可加）；incQty 内 Math.min 再钳交互
+  const qtyMax = Math.max(1, rawQtyMax);
   const decQty = () => setQuantity((q) => Math.max(1, q - 1));
   const incQty = () => setQuantity((q) => Math.min(qtyMax, q + 1));
-
-  const selectVariant = (groupName: string, label: string) =>
-    setVariantSelection((prev) => ({ ...prev, [groupName]: label }));
 
   // 评论相对时间：ISO -> i18n 文案（common.relTime.*）
   const formatRelTime = (iso: string): string => {
@@ -323,7 +339,7 @@ export default function ProductDetailPage() {
   const buyNow = async () => {
     if (!product) return;
     try {
-      await addToCartMutation.mutateAsync({ product, quantity });
+      await addToCartMutation.mutateAsync({ product, quantity, skuId: selectedSkuId ?? undefined });
       await cartApi.selectOnly(product.id);
       await queryClient.invalidateQueries({ queryKey: CART_ROOT_KEY });
       router.push('/order/checkout');
@@ -413,9 +429,9 @@ export default function ProductDetailPage() {
                   stockState={stockState}
                   isSoldOut={isSoldOut}
                   alertEntry={alertEntry}
-                  variants={variants}
-                  variantSelection={variantSelection}
-                  selectVariant={selectVariant}
+                  skus={skus}
+                  selectedSkuId={selectedSku?.id ?? null}
+                  selectSku={selectSku}
                   warehouseData={warehouseData ?? null}
                   warehouseText={warehouseText}
                   warehouseColor={warehouseColor}
@@ -542,7 +558,7 @@ export default function ProductDetailPage() {
           <Pressable
             onPress={() =>
               addToCartMutation.mutate(
-                { product, quantity },
+                { product, quantity, skuId: selectedSkuId ?? undefined },
                 { onSuccess: onCartSuccess, onError: onCartError },
               )
             }
