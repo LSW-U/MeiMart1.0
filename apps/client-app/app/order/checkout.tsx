@@ -27,7 +27,12 @@ import { Icon } from '@/components/ui/Icon';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 import { CouponPicker } from '@/components/business/CouponPicker/CouponPicker';
 import { CheckoutAddressModal } from '@/components/business/CheckoutAddressModal/CheckoutAddressModal';
-import { useCart, useCheckoutPreview, useClearCart } from '@/services/queries/useCart';
+import {
+  useCart,
+  useCheckoutPreview,
+  useClearCart,
+  useToggleCartItems,
+} from '@/services/queries/useCart';
 import { useAddresses } from '@/services/queries/useAddress';
 import { useAddressSelectionStore } from '@/store/addressSelectionStore';
 import { useFrequentAddressStore, resolveSmartDefaultAddress } from '@/store/frequentAddressStore';
@@ -71,6 +76,8 @@ export default function CheckoutPage() {
   const { data: paymentMethods } = usePaymentMethods();
   const createOrder = useCreateOrder();
   const clearCart = useClearCart();
+  // 20261114 库存感知批（拍板 乙）：提交时发现断货选中项 → 批量取消勾选（同购物车页 B 逻辑复用）
+  const { mutate: toggleSoldOutMutate } = useToggleCartItems();
   const selectedItems = cart?.items.filter((i) => i.selected) ?? [];
   const defaultAddress = resolveSmartDefaultAddress(addresses, selectedAddressId, frequentCounts);
   // Why: B6 提示条件 —— 预填命中来自本地频次（非手选/非 isDefault/非第一条兜底）才显示来源提示；
@@ -241,6 +248,18 @@ export default function CheckoutPage() {
       // 替换品批1（D9/D13）：SPECIFY 白名单空 → 拦截（后端 superRefine 也会拒，这里前置提示）
       if (specifyInvalid) {
         toast.error(t('checkout.replacement.specifyEmpty'));
+        return;
+      }
+      // 20261114 库存感知批（拍板 乙）：TOCTOU 窗口兜底——购物车页已自动取消断货勾选，
+      // 但提交时数据可能刚变 stock=0。检测到即自动取消勾选（同购物车页 B 逻辑）+ toast，
+      // 不打后端 409。mock 模式 stock 恒 undefined（mockDb 无该字段）不触发
+      const soldOutSelected = selectedItems.filter((i) => i.product.stock === 0);
+      if (soldOutSelected.length > 0 && !isMockMode) {
+        toggleSoldOutMutate({
+          itemIds: soldOutSelected.map((i) => i.id),
+          selected: false,
+        });
+        toast.error(t('checkout.soldOutBlock'));
         return;
       }
       // C-P2-9: 后端 createOrder 期望 skuId——购物车 transformCartItem 已透传 product.defaultSkuId

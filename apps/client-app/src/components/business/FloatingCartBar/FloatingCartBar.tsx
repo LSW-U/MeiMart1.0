@@ -482,6 +482,8 @@ function PanelRow({ item, onNavigate }: { item: CartItem; onNavigate: () => void
   const localize = useLocalizer();
   const { mutate: updateItem } = useUpdateCartItem();
   const { mutate: removeItem } = useRemoveCartItem();
+  // 20261114 库存感知批：断货行（stock===0）badge + 「+」禁用（防往断货品上加量）
+  const soldOut = item.product.stock === 0;
 
   const setQuantity = (qty: number) => {
     if (qty < 1) return;
@@ -516,12 +518,19 @@ function PanelRow({ item, onNavigate }: { item: CartItem; onNavigate: () => void
         <View style={styles.panelThumb}>
           <SafeImage source={{ uri: item.product.image }} variant="thumb" style={styles.thumbImg} />
         </View>
-        <Text
-          style={[styles.panelName, textStyle('body-sm'), { color: colors['on-surface'] }]}
-          numberOfLines={2}
-        >
-          {localize(item.product.name)}
-        </Text>
+        <View style={styles.panelNameCol}>
+          <Text
+            style={[styles.panelName, textStyle('body-sm'), { color: colors['on-surface'] }]}
+            numberOfLines={2}
+          >
+            {localize(item.product.name)}
+          </Text>
+          {soldOut && (
+            <Text style={[styles.panelSoldOutTag, { color: colors.semantic.error }]}>
+              {t('cart.outOfStockTag')}
+            </Text>
+          )}
+        </View>
       </Pressable>
       <View style={styles.qtyStepper}>
         {/* 步进器 −/+：内层 Pressable 不设 role/label（web <button> 嵌套规避，见函数头注释）。
@@ -540,11 +549,20 @@ function PanelRow({ item, onNavigate }: { item: CartItem; onNavigate: () => void
         </Text>
         <Pressable
           onPress={() => setQuantity(item.quantity + 1)}
+          disabled={soldOut}
           hitSlop={10}
-          style={[styles.qtyBtn, { borderColor: colors['outline-variant'] }]}
+          style={[
+            styles.qtyBtn,
+            { borderColor: colors['outline-variant'] },
+            soldOut && { opacity: 0.4 },
+          ]}
           testID={`fcb-qty-plus-${item.id}`}
         >
-          <MaterialCommunityIcons name="plus" size={14} color={colors.primary} />
+          <MaterialCommunityIcons
+            name="plus"
+            size={14}
+            color={soldOut ? colors.outline : colors.primary}
+          />
         </Pressable>
       </View>
       <Text style={[textStyle('body-md'), { color: colors.primary, fontWeight: '700' }]}>
@@ -628,6 +646,17 @@ const styles = StyleSheet.create({
   },
   panelName: {
     flex: 1,
+  },
+  // 品名列（库存感知批）：品名 + 断货 badge 纵排，替代原品名直挂 panelLead
+  panelNameCol: {
+    flex: 1,
+    gap: 2,
+  },
+  // 断货 badge（库存感知批）：品名下小红字
+  panelSoldOutTag: {
+    ...textStyle('label-caps'),
+    fontSize: 10,
+    fontWeight: '700',
   },
   // 图+品名整体点击区（跳详情）：flex:1 吃掉行内剩余宽度，步进器/小计靠右
   panelLead: {

@@ -115,6 +115,7 @@ jest.mock('@/services/queries/useCart', () => ({
   useCart: () => ({ data: { items: [] }, isLoading: false, isError: false, refetch: jest.fn() }),
   useCheckoutPreview: () => ({ data: undefined }),
   useClearCart: () => ({ mutateAsync: jest.fn() }),
+  useToggleCartItems: () => ({ mutate: jest.fn() }),
 }));
 
 jest.mock('@/services/queries/useAddress', () => ({

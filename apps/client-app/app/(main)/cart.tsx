@@ -7,7 +7,7 @@
 //   BottomBar（管理态删除栏/结算栏）抽 sections；主文件保留路由壳 + 数据组装 + 状态管理，
 //   行为零变更（纯搬移，先例：order/[id].tsx 批5 拆分同款模式）。
 // 行数比例（规则28）：拆分后壳 228 + ItemsSection 335 + BottomBar 220 = 783 ≥ HTML 358×30%。
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View, Pressable, Alert, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -72,6 +72,23 @@ export default function CartPage() {
     if (toggleAllTargets.length === 0) return;
     toggleAllMutation.mutate({ itemIds: toggleAllTargets, selected: !allSelected });
   }, [toggleAllTargets, allSelected, toggleAllMutation]);
+
+  // ===== 20261114 库存感知批（拍板 B）：断货自动取消勾选 =====
+  // stock===0（全仓聚合为 0，铁定断货）的勾选项 → 进页/数据刷新时自动置 unselected，
+  // 一次 useToggleCartItems 批量 mutation（不逐项 PATCH）。幂等守卫：只取
+  // selected && stock===0，置 false 后不再进触发集，effect 不会反复翻转。
+  // mutate 引用稳定（RQ v5 内部绑定），直接进 deps（P1-2 结论的反面：解构出的
+  // mutate 稳定可依赖，不稳定的是 result 对象整体）
+  const { mutate: autoUntoggleMutate } = toggleAllMutation;
+  const soldOutSelectedIds = useMemo(
+    () => cart?.items.filter((i) => i.selected && i.product.stock === 0).map((i) => i.id) ?? [],
+    [cart],
+  );
+  useEffect(() => {
+    if (soldOutSelectedIds.length === 0) return;
+    autoUntoggleMutate({ itemIds: soldOutSelectedIds, selected: false });
+  }, [soldOutSelectedIds, autoUntoggleMutate]);
+  const soldOutCount = cart?.items.filter((i) => i.product.stock === 0).length ?? 0;
 
   // 管理态全选：checkbox 勾选 = 全部加入 selectedForDelete，取消 = 清空
   const allForDelete =
@@ -191,6 +208,7 @@ export default function CartPage() {
             toggleDeleteSelect={toggleDeleteSelect}
             removeOne={removeOne}
             toggleMutate={toggleMutate}
+            soldOutHint={t('cart.soldOutHint')}
           />
         )}
 
@@ -208,6 +226,7 @@ export default function CartPage() {
             discountAmount={discountAmount}
             totalItems={totalItems}
             isOffline={isOffline}
+            soldOutCount={soldOutCount}
           />
         )}
       </SafeAreaWrapper>

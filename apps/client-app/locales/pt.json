@@ -292,12 +292,17 @@
       "decreaseQty": "Diminuir quantidade",
       "increaseQty": "Aumentar quantidade",
       "deleteItem": "Eliminar artigo",
-      "itemCount": "Carrinho com {{count}} artigos"
+      "itemCount": "Carrinho com {{count}} artigos",
+      "soldOutItem": "Item esgotado, indisponível"
     },
     "quantity": "Quantidade",
     "removed": "Artigo removido do carrinho",
     "discount": "DESCONTO",
-    "detailHint": "Info"
+    "detailHint": "Info",
+    "outOfStockTag": "Esgotado",
+    "soldOutHint": "Esgotado — indisponível para seleção",
+    "soldOutNote": "{{count}} item(ns) esgotado(s), removidos do checkout",
+    "a11y.soldOutItem": "Item esgotado, indisponível"
   },
   "product": {
     "localBestsellers": "Mais vendidos locais",
@@ -918,7 +923,8 @@
       "detailRequired": "Indique o endereço detalhado",
       "savedSelected": "Endereço guardado e selecionado",
       "parseFailed": "Não foi possível reconhecer nome ou telefone"
-    }
+    },
+    "soldOutBlock": "Alguns itens estão esgotados e foram removidos do checkout. Reveja e tente novamente"
   },
   "result": {
     "title": "Pagamento bem-sucedido",

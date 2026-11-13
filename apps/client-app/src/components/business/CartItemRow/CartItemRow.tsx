@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme, textStyle, spacing, borderRadius } from '@/theme';
 import { useLocalizer } from '@/i18n';
+import { toast } from '@/store/toastStore';
 import { PriceText } from '@/components/ui/PriceText';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -17,6 +18,8 @@ function CartItemRowBase({
   onDelete,
   checkedOverride,
   showControls = true,
+  soldOut = false,
+  soldOutHint,
   testID,
 }: CartItemRowProps) {
   const { colors } = useTheme();
@@ -34,16 +37,32 @@ function CartItemRowBase({
         {
           backgroundColor: colors['surface-container-lowest'],
           borderColor: colors['outline-variant'],
+          // 断货行整体灰显（拍板 B：灰显+缺货 badge）
+          opacity: soldOut ? 0.55 : 1,
         },
       ]}
     >
-      {showControls && (
-        <Checkbox
-          checked={isChecked}
-          onPress={() => onPress?.(item)}
-          accessibilityLabel={t('cart.a11y.selectItem')}
-        />
-      )}
+      {showControls &&
+        // 断货行（拍板 B）：Checkbox disabled 自带视觉（opacity 0.5 + accessibilityState），
+        // 但 Pressable disabled 会吞掉点击 → toast 提示到不了，外包一层 Pressable 拦截
+        // （Checkbox disabled 后自身不响应，外层接管；非断货时外层透传不拦截）
+        (soldOut ? (
+          <Pressable
+            onPress={() => soldOutHint && toast.info(soldOutHint)}
+            hitSlop={8}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: isChecked, disabled: true }}
+            accessibilityLabel={t('cart.a11y.soldOutItem')}
+          >
+            <Checkbox checked={isChecked} disabled />
+          </Pressable>
+        ) : (
+          <Checkbox
+            checked={isChecked}
+            onPress={() => onPress?.(item)}
+            accessibilityLabel={t('cart.a11y.selectItem')}
+          />
+        ))}
       {/* Why: 外层用 View 而非 Pressable，避免 Pressable 嵌套 Pressable
           （RN Web 渲染为 <button> 嵌套 <button>，违反 HTML 规范导致 hydration 错误） */}
       <Pressable
@@ -79,7 +98,14 @@ function CartItemRowBase({
             </Text>
           ) : null}
           <View style={styles.bottomRow}>
-            <PriceText value={product.price} size="sm" />
+            {soldOut ? (
+              // 断货 badge 替代价格（拍板 B：缺货标识；红字 badge，对齐 semantic.error）
+              <Text style={[styles.soldOutTag, { color: colors.semantic.error }]}>
+                {t('cart.outOfStockTag')}
+              </Text>
+            ) : (
+              <PriceText value={product.price} size="sm" />
+            )}
             {!showControls && (
               <Text style={[textStyle('body-sm'), { color: colors['on-surface-variant'] }]}>
                 × {quantity}
@@ -159,6 +185,12 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   info: { flex: 1, gap: 4 },
+  // 断货 badge（20261114 库存感知批）：label-caps 红字，替代价格位
+  soldOutTag: {
+    ...textStyle('label-caps'),
+    fontSize: 11,
+    fontWeight: '700',
+  },
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',

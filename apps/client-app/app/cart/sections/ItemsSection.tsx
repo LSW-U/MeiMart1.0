@@ -30,6 +30,7 @@ export function ItemsSection({
   toggleDeleteSelect,
   removeOne,
   toggleMutate,
+  soldOutHint,
 }: {
   manageMode: boolean;
   cart: { items: CartItem[] };
@@ -40,6 +41,8 @@ export function ItemsSection({
   toggleDeleteSelect: (item: CartItem) => void;
   removeOne: (item: CartItem) => void;
   toggleMutate: (vars: { itemId: string; selected: boolean }) => void;
+  /** 断货行 checkbox 点击 toast 文案（库存感知批拍板 B 透传） */
+  soldOutHint?: string;
 }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -190,6 +193,9 @@ export function ItemsSection({
               onQuantityChange={makeRowQuantityChange(item)}
               onDelete={manageMode ? removeOne : undefined}
               showControls
+              // 20261114 库存感知批（拍板 B）：断货行灰显+badge+禁勾（stock===0 铁定断货）
+              soldOut={item.product.stock === 0}
+              soldOutHint={soldOutHint}
             />
           </View>
         ))}

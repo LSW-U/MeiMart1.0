@@ -15,6 +15,9 @@ interface CartItemRaw {
   unitPrice: number;
   quantity: number;
   isSelected: boolean;
+  // 20261114 库存感知批：后端 CartItemView.stock（全仓聚合实时查，cart.service.ts batchGetSkuStock）
+  //   原先前端未声明未透传 → UI 层恒 undefined，checkout stockLow 警告成死代码。undefined=无库存信息
+  stock?: number;
   addedAt: string;
 }
 
@@ -49,16 +52,20 @@ function transformCartItem(raw: CartItemRaw): CartItem {
   //   对每个选中项额外 getProduct 查 defaultSkuId（N 次详情请求），现从购物车数据直接取。
   // 批1 A4 透传（D9 删本地 pickLocalized）：productName 多语 JSON 原样透传，渲染层 localize() 取值，
   // 切语言即翻（原烘焙成 {zh,en} 同值双键 tet/pt 恒回退已废）。
+  // 20261114 库存感知批：stock（后端全仓聚合实时查）透传进嵌套 Product——Product 类型已有
+  // stock?: number（§7 库存接入），购物车行/FCB/结算消费。undefined=后端无库存信息，不注入
+  const baseProduct = {
+    id: raw.productId ?? '',
+    name: (raw.productName ?? {}) as Product['name'],
+    price: (raw.unitPrice ?? 0) / 100,
+    image: raw.productImage ?? '',
+    category: '',
+    defaultSkuId: raw.skuId ?? undefined,
+  } as Product;
+  if (raw.stock !== undefined) baseProduct.stock = raw.stock;
   return {
     id: raw.id ?? '',
-    product: {
-      id: raw.productId ?? '',
-      name: (raw.productName ?? {}) as Product['name'],
-      price: (raw.unitPrice ?? 0) / 100,
-      image: raw.productImage ?? '',
-      category: '',
-      defaultSkuId: raw.skuId ?? undefined,
-    } as Product,
+    product: baseProduct,
     quantity: raw.quantity ?? 1,
     selected: raw.isSelected ?? false,
   };

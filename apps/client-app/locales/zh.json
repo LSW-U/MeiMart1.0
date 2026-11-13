@@ -292,12 +292,17 @@
       "decreaseQty": "减少数量",
       "increaseQty": "增加数量",
       "deleteItem": "删除商品",
-      "itemCount": "购物车 {{count}} 件商品"
+      "itemCount": "购物车 {{count}} 件商品",
+      "soldOutItem": "商品缺货，不可选择"
     },
     "quantity": "数量",
     "removed": "已移除商品",
     "discount": "折扣",
-    "detailHint": "详情"
+    "detailHint": "详情",
+    "outOfStockTag": "缺货",
+    "soldOutHint": "商品缺货，暂不可选",
+    "soldOutNote": "{{count}} 件商品缺货，已移出结算",
+    "a11y.soldOutItem": "商品缺货，不可选择"
   },
   "product": {
     "localBestsellers": "本地热销",
@@ -918,7 +923,8 @@
       "detailRequired": "请填写详细地址",
       "savedSelected": "地址已保存并选中",
       "parseFailed": "未能识别出姓名或电话"
-    }
+    },
+    "soldOutBlock": "购物车中有缺货商品，已移出结算，请处理后重试"
   },
   "result": {
     "title": "支付成功",

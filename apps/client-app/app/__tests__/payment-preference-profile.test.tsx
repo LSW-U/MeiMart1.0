@@ -130,6 +130,7 @@ jest.mock('@/services/queries/useCart', () => ({
   }),
   useCheckoutPreview: () => ({ data: undefined }),
   useClearCart: () => ({ mutateAsync: jest.fn() }),
+  useToggleCartItems: () => ({ mutate: jest.fn() }),
 }));
 
 jest.mock('@/store/toastStore', () => ({

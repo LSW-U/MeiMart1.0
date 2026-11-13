@@ -77,6 +77,7 @@ jest.mock('@/services/queries/useCart', () => ({
   }),
   useCheckoutPreview: () => ({ data: undefined }),
   useClearCart: () => ({ mutateAsync: jest.fn() }),
+  useToggleCartItems: () => ({ mutate: jest.fn() }),
 }));
 
 // 批3 转办①：defaultSkuId 缺失兜底链路的注入点（个别用例改写此返回值）

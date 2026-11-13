@@ -63,4 +63,36 @@ describe('CartItemRow', () => {
     fireEvent.press(checkbox);
     expect(onPress).toHaveBeenCalledWith(item);
   });
+
+  // 20261114 库存感知批（拍板 B）：断货行灰显 + 缺货 badge + checkbox 禁用（点击 toast 不 toggle）
+  describe('soldOut (stock-awareness batch)', () => {
+    it('shows out-of-stock badge instead of price and dims the row', () => {
+      const { getByText, queryByText } = render(
+        <CartItemRow item={item} soldOut showControls={false} />,
+        { wrapper },
+      );
+      expect(getByText('cart.outOfStockTag')).toBeTruthy();
+      expect(queryByText('$18.50')).toBeNull();
+    });
+
+    it('disables checkbox: press fires toast hint, not onPress toggle', () => {
+      const onPress = jest.fn();
+      const { getByLabelText } = render(
+        <CartItemRow item={item} soldOut soldOutHint="hint-text" onPress={onPress} />,
+        { wrapper },
+      );
+      const checkbox = getByLabelText('cart.a11y.soldOutItem');
+      expect(checkbox.props.accessibilityState?.disabled).toBe(true);
+      fireEvent.press(checkbox);
+      expect(onPress).not.toHaveBeenCalled();
+    });
+
+    it('normal row keeps price and original a11y label (soldOut=false default)', () => {
+      const { getByText, getByLabelText } = render(<CartItemRow item={item} showControls />, {
+        wrapper,
+      });
+      expect(getByText('$18.50')).toBeTruthy();
+      expect(getByLabelText('cart.a11y.selectItem')).toBeTruthy();
+    });
+  });
 });

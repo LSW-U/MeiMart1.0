@@ -292,12 +292,17 @@
       "decreaseQty": "Decrease quantity",
       "increaseQty": "Increase quantity",
       "deleteItem": "Delete item",
-      "itemCount": "Cart with {{count}} items"
+      "itemCount": "Cart with {{count}} items",
+      "soldOutItem": "Item out of stock, unavailable"
     },
     "quantity": "Quantity",
     "removed": "Item removed from cart",
     "discount": "DISCOUNT",
-    "detailHint": "Info"
+    "detailHint": "Info",
+    "outOfStockTag": "Out of stock",
+    "soldOutHint": "Out of stock — unavailable for selection",
+    "soldOutNote": "{{count}} item(s) out of stock, removed from checkout",
+    "a11y.soldOutItem": "Item out of stock, unavailable"
   },
   "product": {
     "localBestsellers": "Local Bestsellers",
@@ -918,7 +923,8 @@
       "detailRequired": "Address detail is required",
       "savedSelected": "Address saved and selected",
       "parseFailed": "Could not recognize name or phone"
-    }
+    },
+    "soldOutBlock": "Some items are out of stock and were removed from checkout. Please review and retry"
   },
   "result": {
     "title": "Payment Success",

@@ -363,6 +363,31 @@ describe('FloatingCartBar', () => {
     expect(mockUpdateMutate).toHaveBeenCalledWith({ itemId: 'a', updates: { quantity: 1 } });
   });
 
+  // 20261114 库存感知批：断货行（stock===0）badge + 「+」禁用（防往断货品上加量）
+  it('面板行：断货商品渲染缺货 badge 且 + 禁用（− 仍可用减量）', async () => {
+    mockUseCart.mockReturnValue({ data: makeCart([makeItem('a', 'Apple', 3, 2)]) });
+    // 断货：stock=0 注入 makeCart 产物
+    mockUseCart.mockReturnValue({
+      data: {
+        ...makeCart([makeItem('a', 'Apple', 3, 2)]),
+        items: [
+          {
+            ...makeItem('a', 'Apple', 3, 2),
+            product: { ...makeItem('a', 'Apple', 3, 2).product, stock: 0 },
+          },
+        ],
+      },
+    });
+    const { getByTestId, getByText } = renderWithTheme(<FloatingCartBar testID="fcb" />);
+    await openPanel(getByTestId('fcb-bar'));
+    expect(getByText('cart.outOfStockTag')).toBeTruthy();
+    const plus = getByTestId('fcb-qty-plus-a');
+    expect(plus.props.accessibilityState?.disabled ?? plus.props.disabled).toBeTruthy();
+    // − 仍可用（用户可减量/删除）
+    fireEvent.press(getByTestId('fcb-qty-minus-a'));
+    expect(mockUpdateMutate).toHaveBeenCalledWith({ itemId: 'a', updates: { quantity: 1 } });
+  });
+
   it('面板行：数量 1 时按 − 弹 Alert 确认，确认后调 useRemoveCartItem', async () => {
     mockUseCart.mockReturnValue({ data: makeCart([makeItem('a', 'Apple', 3, 1)]) });
     const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});

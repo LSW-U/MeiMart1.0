@@ -146,6 +146,7 @@ jest.mock('@/services/queries/useCart', () => ({
   }),
   useCheckoutPreview: () => ({ data: undefined }),
   useClearCart: () => mockClearCart,
+  useToggleCartItems: () => ({ mutate: jest.fn() }),
 }));
 
 jest.mock('@/services/payment', () => ({

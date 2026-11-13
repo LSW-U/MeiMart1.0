@@ -292,12 +292,17 @@
       "decreaseQty": "Hamenus kuantidade",
       "increaseQty": "Aumenta kuantidade",
       "deleteItem": "Hamos sasan",
-      "itemCount": "Karrinho ho sasan {{count}}"
+      "itemCount": "Karrinho ho sasan {{count}}",
+      "soldOutItem": "Sasan lais hela, la bele hili"
     },
     "quantity": "Kuantidade",
     "removed": "Sasan hamos tiha ona husi karrinho",
     "discount": "DESKONTU",
-    "detailHint": "Info"
+    "detailHint": "Info",
+    "outOfStockTag": "Lais hela",
+    "soldOutHint": "Lais hela — la bele hili",
+    "soldOutNote": "{{count}} sasan esgotadu, hasaé husi checkout",
+    "a11y.soldOutItem": "Sasan lais hela, la bele hili"
   },
   "product": {
     "localBestsellers": "Sasan lokal faan di'ak liu",
@@ -918,7 +923,8 @@
       "detailRequired": "Presiza enderesu detalhadu",
       "savedSelected": "Enderesu rai ona no hili tiha ona",
       "parseFailed": "La konsege rekoñese naran ka telefone"
-    }
+    },
+    "soldOutBlock": "Sasan balun lais hela no hasaé husi checkout. Lao háu no kona fali"
   },
   "result": {
     "title": "Paga ho suksesu",
