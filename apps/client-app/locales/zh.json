@@ -298,7 +298,8 @@
     "quantity": "数量",
     "removed": "已移除商品",
     "discount": "折扣",
-    "detailHint": "详情"
+    "detailHint": "详情",
+    "estimatedDelivery": "预计送达"
   },
   "product": {
     "localBestsellers": "本地热销",

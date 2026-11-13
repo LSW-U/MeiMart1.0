@@ -298,7 +298,8 @@
     "quantity": "Quantity",
     "removed": "Item removed from cart",
     "discount": "DISCOUNT",
-    "detailHint": "Info"
+    "detailHint": "Info",
+    "estimatedDelivery": "Estimated delivery"
   },
   "product": {
     "localBestsellers": "Local Bestsellers",

@@ -298,7 +298,8 @@
     "quantity": "Kuantidade",
     "removed": "Sasan hamos tiha ona husi karrinho",
     "discount": "DESKONTU",
-    "detailHint": "Info"
+    "detailHint": "Info",
+    "estimatedDelivery": "Entrega estimada"
   },
   "product": {
     "localBestsellers": "Sasan lokal faan di'ak liu",

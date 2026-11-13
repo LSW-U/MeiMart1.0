@@ -298,7 +298,8 @@
     "quantity": "Quantidade",
     "removed": "Artigo removido do carrinho",
     "discount": "DESCONTO",
-    "detailHint": "Info"
+    "detailHint": "Info",
+    "estimatedDelivery": "Entrega estimada"
   },
   "product": {
     "localBestsellers": "Mais vendidos locais",
