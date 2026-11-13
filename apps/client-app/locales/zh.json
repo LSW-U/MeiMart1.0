@@ -299,7 +299,7 @@
     "removed": "已移除商品",
     "discount": "折扣",
     "detailHint": "详情",
-    "estimatedDelivery": "预计送达"
+    "estimatedDelivery": "预计 {{time}} 送达"
   },
   "product": {
     "localBestsellers": "本地热销",

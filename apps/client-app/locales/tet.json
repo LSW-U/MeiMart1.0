@@ -299,7 +299,7 @@
     "removed": "Sasan hamos tiha ona husi karrinho",
     "discount": "DESKONTU",
     "detailHint": "Info",
-    "estimatedDelivery": "Entrega estimada"
+    "estimatedDelivery": "Previsaun entrega {{time}}"
   },
   "product": {
     "localBestsellers": "Sasan lokal faan di'ak liu",

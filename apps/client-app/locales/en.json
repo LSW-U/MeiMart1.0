@@ -299,7 +299,7 @@
     "removed": "Item removed from cart",
     "discount": "DISCOUNT",
     "detailHint": "Info",
-    "estimatedDelivery": "Estimated delivery"
+    "estimatedDelivery": "Est. delivery {{time}}"
   },
   "product": {
     "localBestsellers": "Local Bestsellers",
