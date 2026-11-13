@@ -265,10 +265,9 @@
     "selectAll": "Hili hotu",
     "total": "Total",
     "selectedPreview": "Sasan hili ona",
-    "discountLabel": "Deskontu kupon",
     "deliveryFeeLabel": "Taxa entrega",
     "freeDelivery": "Entrega grátis",
-    "estimatedPayable": "Total estimadu",
+    "estimatedPayable": "Total estimadu ( Depois kupon)",
     "checkout": "Paga",
     "delete": "Hamos",
     "offlineBlock": "Laiha rede — la bele remata sosa",
@@ -298,8 +297,7 @@
     "quantity": "Kuantidade",
     "removed": "Sasan hamos tiha ona husi karrinho",
     "discount": "DESKONTU",
-    "detailHint": "Info",
-    "estimatedDelivery": "Previsaun entrega {{time}}"
+    "detailHint": "Info"
   },
   "product": {
     "localBestsellers": "Sasan lokal faan di'ak liu",

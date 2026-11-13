@@ -28,7 +28,7 @@ import { useAddresses } from '@/services/queries/useAddress';
 import { useCoupons } from '@/services/queries/usePromotion';
 import { CouponPicker } from '@/components/business/CouponPicker/CouponPicker';
 import { useLocalizer } from '@/i18n';
-import { formatPrice, formatEta } from '@/utils/format';
+import { formatPrice } from '@/utils/format';
 import type { CartItem } from '@/types';
 
 import type { FloatingCartBarProps, FloatingCartBarRef } from './FloatingCartBar.types';
@@ -321,8 +321,7 @@ export const FloatingCartBar = forwardRef<FloatingCartBarRef, FloatingCartBarPro
               </ScrollView>
               {/* 金额明细卡（方案 A，20261112 拍板）：运费/券折扣走 useCheckoutPreview（结算页同源），
                 无默认地址/未登录/mock 下 preview 为空 → 整卡隐藏不阻塞（弱网降级）。
-                预计送达 ETA 20261113 挂账清单 #1 闭环：cart.estimatedDelivery 转正
-                （dead-i18n 基线条目已删）。 */}
+                20261113 用户拍板：折扣+实付合并为「券后预计实付」一行；ETA 不放预览。 */}
               <SummaryCard />
               {/* 20261112 拍板：「去购物车」按钮取消——跳转语义迁至条上购物车 icon（点击直达） */}
             </View>
@@ -431,7 +430,7 @@ function CouponEntryWrapper() {
 //   场景 discount/deliveryFee 不随数量变，payable + delta 即实时正确值；preview refetch
 //   落地后 delta 归 0，自然切换回后端真值。delta 仅在确实有差额时应用（快照新鲜=0）。
 function SummaryCard() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { data: addresses } = useAddresses();
   const { data: cart } = useCart();
   // 与结算页同口径取默认地址（checkout.tsx 用 resolveSmartDefaultAddress + 选择态；
@@ -441,28 +440,19 @@ function SummaryCard() {
 
   // 全部明细可用才渲染（payableAmount 恒有；deliveryFee/discount 可为 0 合法值）
   if (!preview) return null;
-  const discount = preview.discount;
   const deliveryFee = preview.deliveryFee;
   // 本地差额补偿（方案 B）：cart.totalPrice 是全部商品合计（选中+未选），preview 快照
   // 的 itemsSubtotal 基线也是全量口径（后端 checkout-preview 按整单聚合），直接相减即
   // 数量变动差额；无差额（快照新鲜）时 delta=0 不影响显示。负数合法（删除后 totalPrice 变小）
   const delta = cart ? cart.totalPrice - preview.itemsSubtotal : 0;
   const payable = preview.payableAmount + delta;
-  // 20261113 挂账 #1：ETA 文案——结算页同源（checkout.tsx:182 先例），非法/缺失日期
-  // formatEta 原样回退，但缺字段时为 undefined → 整行隐藏（宁缺毋假）
-  const etaText = preview.estimatedDeliveryTime
-    ? formatEta(preview.estimatedDeliveryTime, i18n.language)
-    : undefined;
 
   return (
     <View style={styles.summaryCard} testID="fcb-summary">
-      {/* 20261112 用户反馈：合计与胶囊条内合计重复，明细卡不再重复展示。
-        20261113 审查 🟡3 修复：恢复 discount>0 条件渲染——无券无折扣时恒显 -$0.00
-        冗余（券入口行已承担「无券」展示，且入口行右侧 -xx 与本行双展示重叠） */}
-      {discount > 0 && (
-        <SummaryRow label={t('cart.discountLabel')} value={`-${formatPrice(discount)}`} accent />
-      )}
-      {/* 20261113 挂账 #3：券入口行——discount 行可点弹 CouponPicker；券码驱动
+      {/* 20261113 用户拍板：折扣行删除——discount 已聚合进 payableAmount，单独展示与
+        「券后预计实付」重复；券侧信息由券入口行承担（券码 + 右侧 -xx 实时折扣）。
+        20261113 审查 🟡3（恒显 -$0.00 冗余）随行删除一并消解 */}
+      {/* 20261113 挂账 #3：券入口行——可点弹 CouponPicker；券码驱动
         useCheckoutPreview 重查（key 含券码，结算页同机制）。放 SummaryCard 外层
         （内部自取 addresses/coupons hooks，避免 hooks 顺序受 preview 早退影响） */}
       {preview && <CouponEntryWrapper />}
@@ -471,11 +461,8 @@ function SummaryCard() {
         value={deliveryFee > 0 ? formatPrice(deliveryFee) : t('cart.freeDelivery')}
         accent={deliveryFee <= 0}
       />
-      {/* 20261113 挂账 #1 闭环：ETA 行——estimatedDeliveryTime 与结算页同源同格式
-        （formatEta + cart.estimatedDelivery {{time}} 文案，checkout.tsx:432 先例）。
-        时间已在 label 文案内（value 留空仅保行结构）；字段缺时整行隐藏，宁缺毋假 */}
-      {etaText && <SummaryRow label={t('cart.estimatedDelivery', { time: etaText })} value="" />}
-      {/* 20261112 用户反馈：明细卡内分隔线删掉（仅留行间距） */}
+      {/* 20261113 用户拍板：ETA 不放预览——送达时间由结算页承担。
+        cart.estimatedDelivery 消费端随之删除 → 基线条目回落（dead-i18n 记账） */}
       <SummaryRow label={t('cart.estimatedPayable')} value={formatPrice(payable)} />
     </View>
   );

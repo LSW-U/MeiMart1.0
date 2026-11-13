@@ -243,14 +243,14 @@ describe('FloatingCartBar', () => {
         estimatedDeliveryTime: '2026-11-12T18:00:00Z',
       },
     });
-    const { getByTestId, getByText, getAllByText } = renderWithTheme(
+    const { getByTestId, queryByText, getByText } = renderWithTheme(
       <FloatingCartBar testID="fcb" />,
     );
     await openPanel(getByTestId('fcb-bar'));
     expect(getByTestId('fcb-summary')).toBeTruthy();
-    expect(getByText('cart.discountLabel')).toBeTruthy();
-    // 折扣行 + 券入口行都渲染 -$1.50（discount>0 时入口行右侧也带金额）——getAllByText 断言
-    expect(getAllByText('-$1.50').length).toBeGreaterThan(0);
+    // 20261113 拍板：折扣行已删（合并进券后预计实付）；折扣金额只在券入口行右侧展示
+    expect(queryByText('cart.discountLabel')).toBeNull();
+    expect(getByText('-$1.50')).toBeTruthy(); // 券入口行右侧折扣
     expect(getByText('cart.freeDelivery')).toBeTruthy(); // deliveryFee=0 走免运费文案
     expect(getByText('cart.estimatedPayable')).toBeTruthy();
     expect(getByText('$4.50')).toBeTruthy();
@@ -264,45 +264,30 @@ describe('FloatingCartBar', () => {
     expect(queryByTestId('fcb-summary')).toBeNull();
   });
 
-  // 20261113 审查 🟡3 修复：discount 行恢复 discount>0 条件渲染——无折扣时不再恒显 -$0.00
-  it('明细卡：discount=0 时折扣行不渲染（券入口行承担无券展示）', async () => {
-    mockUseCart.mockReturnValue({ data: makeCart([makeItem('a', 'Apple', 3, 2)]) });
-    mockUseAddresses.mockReturnValue({ data: [{ id: 'addr1', isDefault: true }] });
-    mockUsePreview.mockReturnValue({
-      data: { itemsSubtotal: 6, deliveryFee: 2, discount: 0, payableAmount: 8 },
-    });
-    const { getByTestId, queryByText } = renderWithTheme(<FloatingCartBar testID="fcb" />);
-    await openPanel(getByTestId('fcb-bar'));
-    expect(getByTestId('fcb-summary')).toBeTruthy();
-    expect(queryByText('cart.discountLabel')).toBeNull();
-    expect(queryByText('-$0.00')).toBeNull();
-  });
-
-  // 20261113 挂账 #1 闭环：ETA 行（cart.estimatedDelivery {{time}} 文案，结算页同源）
-  it('明细卡：ETA 行按 estimatedDeliveryTime 渲染（formatEta 同源）；字段缺则整行隐藏', async () => {
+  // 20261113 用户拍板：折扣行删——discount 聚合进「券后预计实付」；ETA 不放预览
+  it('明细卡：折扣行/ETA 行不渲染（合并为券后预计实付，ETA 归结算页）', async () => {
     mockUseCart.mockReturnValue({ data: makeCart([makeItem('a', 'Apple', 3, 2)]) });
     mockUseAddresses.mockReturnValue({ data: [{ id: 'addr1', isDefault: true }] });
     mockUsePreview.mockReturnValue({
       data: {
         itemsSubtotal: 6,
         deliveryFee: 2,
-        discount: 0,
-        payableAmount: 8,
+        discount: 1.5,
+        payableAmount: 6.5,
         estimatedDeliveryTime: '2026-11-13T18:00:00Z',
       },
     });
-    const { getByTestId, getByText } = renderWithTheme(<FloatingCartBar testID="fcb" />);
+    const { getByTestId, queryByText, getByText } = renderWithTheme(
+      <FloatingCartBar testID="fcb" />,
+    );
     await openPanel(getByTestId('fcb-bar'));
-    // t 返 key 本身，插值文案经 i18n 拼接 → 断言含 key 前缀的 ETA 文案节点存在
-    expect(getByText(/cart\.estimatedDelivery/)).toBeTruthy();
-    // 字段缺：ETA 行隐藏，其余明细行仍在
-    mockUsePreview.mockReturnValue({
-      data: { itemsSubtotal: 6, deliveryFee: 2, discount: 0, payableAmount: 8 },
-    });
-    const { getByTestId: g2, queryByText: q2 } = renderWithTheme(<FloatingCartBar testID="fcb" />);
-    await openPanel(g2('fcb-bar'));
-    expect(q2(/cart\.estimatedDelivery/)).toBeNull();
-    expect(g2('fcb-summary')).toBeTruthy();
+    expect(getByTestId('fcb-summary')).toBeTruthy();
+    // 折扣行删（券侧信息由券入口行承担）
+    expect(queryByText('cart.discountLabel')).toBeNull();
+    // ETA 行删（estimatedDeliveryTime 有值也不渲染）
+    expect(queryByText(/cart\.estimatedDelivery/)).toBeNull();
+    // 券后预计实付行仍在
+    expect(getByText('cart.estimatedPayable')).toBeTruthy();
   });
 
   // 20261113 挂账 #3 闭环：券入口行 → CouponPicker 选券

@@ -265,10 +265,9 @@
     "selectAll": "Select all",
     "total": "Total",
     "selectedPreview": "Selected items",
-    "discountLabel": "Coupon discount",
     "deliveryFeeLabel": "Delivery fee",
     "freeDelivery": "Free delivery",
-    "estimatedPayable": "Estimated payable",
+    "estimatedPayable": "Estimated payable (after coupon)",
     "checkout": "Pay",
     "delete": "Delete",
     "offlineBlock": "Offline — checkout unavailable",
@@ -298,8 +297,7 @@
     "quantity": "Quantity",
     "removed": "Item removed from cart",
     "discount": "DISCOUNT",
-    "detailHint": "Info",
-    "estimatedDelivery": "Est. delivery {{time}}"
+    "detailHint": "Info"
   },
   "product": {
     "localBestsellers": "Local Bestsellers",

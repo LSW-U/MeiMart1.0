@@ -265,10 +265,9 @@
     "selectAll": "Selecionar tudo",
     "total": "Total",
     "selectedPreview": "Itens selecionados",
-    "discountLabel": "Desconto do cupão",
     "deliveryFeeLabel": "Taxa de entrega",
     "freeDelivery": "Entrega grátis",
-    "estimatedPayable": "Total estimado",
+    "estimatedPayable": "Total estimado (após cupão)",
     "checkout": "Pagar",
     "delete": "Eliminar",
     "offlineBlock": "Offline — finalização indisponível",
@@ -298,8 +297,7 @@
     "quantity": "Quantidade",
     "removed": "Artigo removido do carrinho",
     "discount": "DESCONTO",
-    "detailHint": "Info",
-    "estimatedDelivery": "Entrega prevista {{time}}"
+    "detailHint": "Info"
   },
   "product": {
     "localBestsellers": "Mais vendidos locais",

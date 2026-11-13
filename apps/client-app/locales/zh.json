@@ -265,10 +265,9 @@
     "selectAll": "全选",
     "total": "合计",
     "selectedPreview": "已选商品",
-    "discountLabel": "券折扣",
     "deliveryFeeLabel": "运费",
     "freeDelivery": "免运费",
-    "estimatedPayable": "预计实付",
+    "estimatedPayable": "券后预计实付",
     "checkout": "结算",
     "delete": "删除",
     "offlineBlock": "网络连接已断开，结算暂不可用",
@@ -298,8 +297,7 @@
     "quantity": "数量",
     "removed": "已移除商品",
     "discount": "折扣",
-    "detailHint": "详情",
-    "estimatedDelivery": "预计 {{time}} 送达"
+    "detailHint": "详情"
   },
   "product": {
     "localBestsellers": "本地热销",
