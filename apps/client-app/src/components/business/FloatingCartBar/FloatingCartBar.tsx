@@ -215,7 +215,7 @@ export const FloatingCartBar = forwardRef<FloatingCartBarRef, FloatingCartBarPro
           >
             {formatPrice(total)}
           </Text>
-          {/* 20261212 拍板：合计区加展开指示箭头——面板开合入口可感知化（用户反馈「多数直接
+          {/* 20261112 拍板：合计区加展开指示箭头——面板开合入口可感知化（用户反馈「多数直接
             误点购物车 icon 跳走」）。开面板 expand_more(↑收起提示) 旋转语义：closed=expand_less
             (可展开) / open=expand_more(可收起)，静态切换不引动画 */}
         </View>

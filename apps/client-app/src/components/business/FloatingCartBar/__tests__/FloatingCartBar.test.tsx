@@ -193,7 +193,7 @@ describe('FloatingCartBar', () => {
     expect(queryByText('cart.selectedPreview')).toBeNull();
   });
 
-  it('合计区箭头钮：开面板 expand_less→expand_more，点箭头也能关面板（20261212 入口可感知化）', async () => {
+  it('合计区箭头钮：开面板 expand_less→expand_more，点箭头也能关面板（20261112 入口可感知化）', async () => {
     mockUseCart.mockReturnValue({ data: makeCart([makeItem('a', 'Apple', 3, 2)]) });
     const { getByTestId, queryByText } = renderWithTheme(<FloatingCartBar testID="fcb" />);
     // 关态箭头存在（expand_less 经 iconMapping 渲染为 chevron-up 的 Icon，以热区 testID 取证）

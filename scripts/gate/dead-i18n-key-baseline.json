@@ -799,6 +799,10 @@
     {
       "key": "checkout.addressModal.detailRequired",
       "reason": "zod schema 校验 message（运行时经 FormInput tError→t() 渲染，静态扫描不可见；业务增强批1 5.5）"
+    },
+    {
+      "key": "cart.estimatedDelivery",
+      "reason": "ETA 挂账 #1 待消费（FloatingCartBar 明细卡「预计送达」行未实施，fa2e00e 批次审查 B1 记账；实施时删本条目转正）"
     }
   ],
   "_note": "批3 基线建立时点（HEAD 9d2bd29）死 key 196 个（存量记账，不拦截）。清理须「删 key 与删引用原子 commit」，逐批吸收时同步删本基线条目。"
