@@ -17,6 +17,8 @@ jest.mock('@/services/behavior', () => ({
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), back: jest.fn(), setParams: jest.fn() },
+  // 20261114 B1（42da0c6 审查）：FCB 新增 useRouter() 跳结算，mock 补 useRouter 缺口
+  useRouter: () => ({ push: jest.fn() }),
   useLocalSearchParams: () => ({ q: 'coffee' }),
 }));
 
