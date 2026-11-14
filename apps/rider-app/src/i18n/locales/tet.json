@@ -122,7 +122,6 @@
   "common.loadError.title": "Fallaka karga",
   "common.locationPermDenied": "Permisau lokalizasaun sei mamuk. La bele simu pedidu ka reporta lokalizasaun. Habu iha sistem nian configurasaun.",
   "common.menu": "Menu",
-  "common.minutes": "{minutes} minutu",
   "common.networkError": "Sala rede, koko fali",
   "common.noDeliveries": "La iha entrega",
   "common.noDeliveriesDesc": "Pedidu ne'ebé simu tiha ona sei aparece iha ne'e to'o konclui.",
@@ -151,6 +150,7 @@
   "common.view": "Haree",
   "common.wsDisconnected": "Koneksaun loss, konecta fali…",
   "common.yesterday": "Orsamlul",
+  "common.deliverApprox": "Kalkulos minutu {minutes}",
   "deposit.badge.a11y.paid": "Depositu pai ona",
   "deposit.badge.a11y.pending": "Depositu hein konfirmasaun",
   "deposit.badge.confirmed": "Konfirmadu",
@@ -611,5 +611,10 @@
   "tasks.oos.photoAdd": "Sarefa foto",
   "tasks.oos.photoUploading": "Atu halo upload...",
   "tasks.oos.photoFailed": "Fallu atu halo upload foto",
-  "tasks.oos.photoRemove": "Hamos foto"
+  "tasks.oos.photoRemove": "Hamos foto",
+  "tasks.deliverBy": "Entrega mole {time}",
+  "tasks.deliverByOverdue": "Temin ona ({time})",
+  "tasks.timeLeft": "Minutu {minutes} hela",
+  "tasks.distanceRefOnly": "Distansia línia toos, de'it referensia",
+  "tasks.codTag": "Folia iha entrega · kobrak osan Bainaka"
 }

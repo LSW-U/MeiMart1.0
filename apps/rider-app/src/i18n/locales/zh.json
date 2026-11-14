@@ -122,7 +122,6 @@
   "common.loadError.title": "加载失败",
   "common.locationPermDenied": "定位权限未开启，无法接单和上报位置。请在系统设置中允许定位权限。",
   "common.menu": "菜单",
-  "common.minutes": "{minutes} 分钟",
   "common.networkError": "网络异常，请重试",
   "common.noDeliveries": "暂无配送任务",
   "common.noDeliveriesDesc": "已取货订单将显示在此直到完成。",
@@ -151,6 +150,7 @@
   "common.view": "查看",
   "common.wsDisconnected": "连接已断开，正在重连…",
   "common.yesterday": "昨日",
+  "common.deliverApprox": "约 {minutes} 分钟",
   "deposit.badge.a11y.paid": "保证金已缴纳",
   "deposit.badge.a11y.pending": "保证金缴纳待确认",
   "deposit.badge.confirmed": "已确认",
@@ -611,5 +611,10 @@
   "tasks.oos.photoAdd": "拍照",
   "tasks.oos.photoUploading": "上传中...",
   "tasks.oos.photoFailed": "照片上传失败",
-  "tasks.oos.photoRemove": "删除照片"
+  "tasks.oos.photoRemove": "删除照片",
+  "tasks.deliverBy": "需在 {time} 前送达",
+  "tasks.deliverByOverdue": "已超时（{time}）",
+  "tasks.timeLeft": "剩 {minutes} 分钟",
+  "tasks.distanceRefOnly": "全程直线距离，仅参考",
+  "tasks.codTag": "货到付款 · 需代收现金"
 }

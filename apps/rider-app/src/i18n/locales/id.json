@@ -122,7 +122,6 @@
   "common.loadError.title": "Gagal memuat",
   "common.locationPermDenied": "Izin lokasi belum aktif. Tidak dapat menerima pesanan atau melaporkan lokasi. Aktifkan di pengaturan sistem.",
   "common.menu": "Menu",
-  "common.minutes": "{minutes} mnt",
   "common.networkError": "Galat jaringan, silakan coba lagi",
   "common.noDeliveries": "Tidak ada pengantaran",
   "common.noDeliveriesDesc": "Pesanan yang diambil akan muncul di sini hingga selesai.",
@@ -151,6 +150,7 @@
   "common.view": "Lihat",
   "common.wsDisconnected": "Koneksi terputus, menyambung ulang…",
   "common.yesterday": "Kemarin",
+  "common.deliverApprox": "Sekitar {minutes} menit",
   "deposit.badge.a11y.paid": "Deposit dibayar",
   "deposit.badge.a11y.pending": "Deposit menunggu konfirmasi",
   "deposit.badge.confirmed": "Dikonfirmasi",
@@ -611,5 +611,10 @@
   "tasks.oos.photoAdd": "Ambil foto",
   "tasks.oos.photoUploading": "Mengunggah...",
   "tasks.oos.photoFailed": "Gagal mengunggah foto",
-  "tasks.oos.photoRemove": "Hapus foto"
+  "tasks.oos.photoRemove": "Hapus foto",
+  "tasks.deliverBy": "Antar sebelum {time}",
+  "tasks.deliverByOverdue": "Terlambat ({time})",
+  "tasks.timeLeft": "{minutes} menit lagi",
+  "tasks.distanceRefOnly": "Jarak garis lurus, hanya referensi",
+  "tasks.codTag": "Bayar di tempat · tagih tunai saat tiba"
 }

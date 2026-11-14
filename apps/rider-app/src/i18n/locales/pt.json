@@ -122,7 +122,6 @@
   "common.loadError.title": "Falha ao carregar",
   "common.locationPermDenied": "Permissão de localização desativada. Não é possível receber pedidos nem reportar localização. Ative nas definições do sistema.",
   "common.menu": "Menu",
-  "common.minutes": "{minutes} min",
   "common.networkError": "Erro de rede, tente novamente",
   "common.noDeliveries": "Sem entregas",
   "common.noDeliveriesDesc": "Os pedidos recolhidos aparecerão aqui até à conclusão.",
@@ -151,6 +150,7 @@
   "common.view": "Ver",
   "common.wsDisconnected": "Conexão perdida, a reconectar…",
   "common.yesterday": "Ontem",
+  "common.deliverApprox": "Cerca de {minutes} min",
   "deposit.badge.a11y.paid": "Depósito pago",
   "deposit.badge.a11y.pending": "Depósito pendente de confirmação",
   "deposit.badge.confirmed": "Confirmado",
@@ -611,5 +611,10 @@
   "tasks.oos.photoAdd": "Tirar foto",
   "tasks.oos.photoUploading": "A carregar...",
   "tasks.oos.photoFailed": "Falha ao carregar a foto",
-  "tasks.oos.photoRemove": "Remover foto"
+  "tasks.oos.photoRemove": "Remover foto",
+  "tasks.deliverBy": "Entregar até {time}",
+  "tasks.deliverByOverdue": "Atrasado ({time})",
+  "tasks.timeLeft": "Faltam {minutes} min",
+  "tasks.distanceRefOnly": "Distância em linha reta, apenas referência",
+  "tasks.codTag": "Pagamento na entrega · cobrar em dinheiro"
 }

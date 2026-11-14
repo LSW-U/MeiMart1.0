@@ -28,10 +28,22 @@ type FeeBreakdown = {
 type TaskCardProps = {
   badge?: string;
   timeLabel: string;
+  /**
+   * 时间主行下的副行（20261115 ⑤B 锚点批）：「剩 23 分钟 · 约 3.7 km」组合信息。
+   * undefined → 不渲染（零改动面）。临期红色由 timeTone='error' 统一控制主行；
+   * 副行随 error 档同变红（紧迫信息不该半红半灰弱化）。
+   */
+  timeSub?: string;
   /** T2 审查 P3-1：终态卡片 time 显示状态文本（已送达/配送失败）+ 中性/错误色（原型终态 tcard-time 无 clock 图标语义） */
   timeTone?: 'default' | 'neutral' | 'error';
   fee?: string;
   feeNote?: string;
+  /**
+   * 大厅 COD 提醒（20261114）：paymentMethod='COD' 时金额下方的黄 tag（「货到付款」）。
+   * 与 feeNote（灰色大写标注）不同，此为琥珀 badge 样式（对齐 items tag 配色）——
+   * 骑手抢单前需要显眼知道送达要收现金。undefined → 不渲染。
+   */
+  codNote?: string;
   /** 距离计费批次1：配送费明细「基础 $X + 距离 $Y」展示在 fee 下方；缺失不显 */
   feeBreakdown?: FeeBreakdown;
   orderId?: string;
@@ -66,9 +78,11 @@ type TaskCardProps = {
 export const TaskCard = memo(function TaskCard({
   badge,
   timeLabel,
+  timeSub,
   timeTone = 'default',
   fee,
   feeNote,
+  codNote,
   feeBreakdown,
   orderId,
   points,
@@ -127,6 +141,14 @@ export const TaskCard = memo(function TaskCard({
             ) : null}
             <Text className={`text-lg font-semibold ${timeTextClass}`}>{timeLabel}</Text>
           </View>
+          {/* ⑤B 锚点批（20261115）：副行「剩 n 分钟 · 约 x km」；error 档随主行同红 */}
+          {timeSub ? (
+            <Text
+              className={`mt-0.5 text-xs ${timeTone === 'error' ? 'text-error' : 'text-on-surface-variant'}`}
+            >
+              {timeSub}
+            </Text>
+          ) : null}
           {orderId ? (
             <Text className="mt-1 self-start rounded bg-surface-container px-2 py-1 text-xs font-bold text-on-surface-variant">
               {orderId}
@@ -164,6 +186,13 @@ export const TaskCard = memo(function TaskCard({
               <Text className="mt-1 max-w-36 text-right text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                 {feeNote}
               </Text>
+            ) : null}
+            {/* 大厅 COD 提醒（20261114）：琥珀 badge（对齐 items tag 配色 accent-amber），
+                比 feeNote 灰字显眼——代收现金是骑手强相关决策信息 */}
+            {codNote ? (
+              <View className="mt-1 rounded border border-accent-amber/40 bg-accent-amber/15 px-2 py-1">
+                <Text className="text-xs font-bold text-amber-text">{codNote}</Text>
+              </View>
             ) : null}
           </View>
         ) : null}

@@ -48,6 +48,15 @@ export type DeliveryTask = {
   paymentMethod?: string;
   /** 订单应付金额（COD 实收参考，单位：分） */
   payableAmount?: number;
+  /**
+   * 业务订单号（MMxxx，大厅卡 20261114 补显用）。
+   * ⚠️ orderId 是 delivery_tasks.order_id 内部 UUID 外键（7c47aacc-… 形态），
+   * 不适合展示；orderNo 才是骑手到店报单号用的业务单号。
+   * 后端 toView 已透传（dispatch.service.ts orderNo: t.order.orderNo），但
+   * api-contract 的 rider DeliveryTask schema 未声明（admin 视角 TaskOrderSummary 才有）——
+   * 前端防御性可选，缺失（历史单/契约滞后）回退 orderId。
+   */
+  orderNo?: string;
   /** T6 联系拨号：客户电话（后端从 order.deliveryAddress.phone 透传，历史订单可能无） */
   contactPhone?: string;
   /**
@@ -93,6 +102,13 @@ export type DeliveryTask = {
    * {time} 后可接」，无需再改类型。当前 real/mock 数据恒 undefined → 标注不渲染。
    */
   scheduledFor?: string | null;
+  /**
+   * 送达 deadline 锚点（ISO，骑手大厅卡片-后端配合需求②/⑤B 20261115）。
+   * 来源 delivery_tasks.estimated_arrival（建单时刻 + 45min 静态值，接单不刷新——
+   * 已知瑕疵记录不阻塞，实时 ETA 方案 C 另立项）。
+   * 缺失（历史单/契约滞后）→ 前端降级「约 X 分钟」分钟口径文案，绝不报错。
+   */
+  estimatedArrival?: string | null;
   // ── 兼容字段（旧 UI 引用 task.pickup.title / task.fee 等） ──
   // service 层 fromView() 保证 real 模式也填充这些字段。
   // P0-1/P6 #7 修复（2026-08-25）：fee/distanceKm/estimatedMinutes 已由后端透传，

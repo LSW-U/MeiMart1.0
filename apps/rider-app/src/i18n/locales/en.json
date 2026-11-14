@@ -122,7 +122,6 @@
   "common.loadError.title": "Failed to load",
   "common.locationPermDenied": "Location permission is off. You cannot receive orders or report location. Enable it in system settings.",
   "common.menu": "Menu",
-  "common.minutes": "{minutes} Minutes",
   "common.networkError": "Network error, please retry",
   "common.noDeliveries": "No deliveries",
   "common.noDeliveriesDesc": "Picked-up orders will appear here until completion.",
@@ -151,6 +150,7 @@
   "common.view": "View",
   "common.wsDisconnected": "Connection lost, reconnecting…",
   "common.yesterday": "Yesterday",
+  "common.deliverApprox": "About {minutes} min",
   "deposit.badge.a11y.paid": "Deposit paid",
   "deposit.badge.a11y.pending": "Deposit payment pending",
   "deposit.badge.confirmed": "Confirmed",
@@ -611,5 +611,10 @@
   "tasks.oos.photoAdd": "Take photo",
   "tasks.oos.photoUploading": "Uploading...",
   "tasks.oos.photoFailed": "Photo upload failed",
-  "tasks.oos.photoRemove": "Remove photo"
+  "tasks.oos.photoRemove": "Remove photo",
+  "tasks.deliverBy": "Deliver by {time}",
+  "tasks.deliverByOverdue": "Overdue ({time})",
+  "tasks.timeLeft": "{minutes} min left",
+  "tasks.distanceRefOnly": "Straight-line distance, for reference only",
+  "tasks.codTag": "Cash on delivery · collect on arrival"
 }
