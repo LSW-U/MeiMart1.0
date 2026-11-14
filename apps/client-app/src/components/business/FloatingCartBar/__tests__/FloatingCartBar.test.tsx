@@ -229,6 +229,15 @@ describe('FloatingCartBar', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
     expect(queryByText('cart.selectedPreview')).toBeNull(); // 跳转前收面板
   });
+  it('结算块点击：跳结算页 /order/checkout 并收面板（20261114 方案 A，不再只是开面板）', async () => {
+    mockUseCart.mockReturnValue({ data: makeCart([makeItem('a', 'Apple', 3, 2)]) });
+    const { getByTestId, queryByText } = renderWithTheme(<FloatingCartBar testID="fcb" />);
+    await openPanel(getByTestId('fcb-bar'));
+    expect(queryByText('cart.selectedPreview')).toBeTruthy(); // 面板先开着
+    fireEvent.press(getByTestId('fcb-checkout'));
+    expect(mockPush).toHaveBeenCalledWith('/order/checkout');
+    expect(queryByText('cart.selectedPreview')).toBeNull(); // 跳转前收面板
+  });
   it('明细卡：preview 加载后显示 折扣/运费/预计实付（免运费绿字）', async () => {
     mockUseCart.mockReturnValue({ data: makeCart([makeItem('a', 'Apple', 3, 2)]) });
     mockUseAddresses.mockReturnValue({

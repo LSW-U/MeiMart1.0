@@ -49,6 +49,8 @@ export const FloatingCartBar = forwardRef<FloatingCartBarRef, FloatingCartBarPro
   ) {
     const { colors } = useTheme();
     const { t } = useTranslation();
+    // 20261114 方案 A：结算块独立点击 → 结算页（hook 须在早退前调用）
+    const router = useRouter();
     const { data: cart } = useCart();
     const [panelOpen, setPanelOpen] = useState(false);
     // Modal 脱离 SafeAreaWrapper，bottom 定位需自行补 safe-area inset（hooks 须在早退前调用）
@@ -110,6 +112,13 @@ export const FloatingCartBar = forwardRef<FloatingCartBarRef, FloatingCartBarPro
     const handleCartJump = () => {
       setPanelOpen(false);
       onPress?.();
+    };
+
+    // 20261114 方案 A：结算块独立点击 → 结算页。跳转前收面板（同 handleCartJump 先例），
+    //   避免返回时面板仍开着。购物车空在这里不可达（count<=0 整条不渲染，line 103）
+    const handleCheckout = () => {
+      setPanelOpen(false);
+      router.push('/order/checkout');
     };
 
     // 20261112 用户反馈：右上角 X 取消，改「点击面板外任意处收回」。
@@ -249,13 +258,25 @@ export const FloatingCartBar = forwardRef<FloatingCartBarRef, FloatingCartBarPro
             />
           </View>
         </Pressable>
-        {/* Why: 20261111 用户反馈 web hydration <button> 嵌套——内层去掉 role/label
-          （读屏语义由外层整条 aria-label 承担，点结算=点整条开面板），仅保留视觉 */}
-        <View style={[styles.checkoutBtn, { backgroundColor: colors.primary }]}>
-          <Text style={[textStyle('body-md'), { color: colors['on-primary'], fontWeight: '700' }]}>
-            {t('cart.checkout')}
-          </Text>
-        </View>
+        {/* 20261114 方案 A 拍板：结算块恢复独立点击 → 跳结算页（此前 20261111 去嵌套时
+          连 onPress 一并去掉，「点结算=开面板」是权宜不是语义）。web hydration 嵌套规避
+          沿本组件 iconBtn / total-toggle 两处成熟先例：内层仅 onPress+testID，不设
+          role/label——读屏仍走外层整条 aria-label，RN 合法嵌套（内层优先命中），
+          RN-web 不会把无 role 的内层编成 <button>，不复现 <button> 嵌 <button>。
+          面板开着时点结算：先收面板再跳（同 handleCartJump 先收面板先例） */}
+        <Pressable
+          onPress={handleCheckout}
+          hitSlop={4}
+          testID={testID ? `${testID}-checkout` : undefined}
+        >
+          <View style={[styles.checkoutBtn, { backgroundColor: colors.primary }]}>
+            <Text
+              style={[textStyle('body-md'), { color: colors['on-primary'], fontWeight: '700' }]}
+            >
+              {t('cart.checkout')}
+            </Text>
+          </View>
+        </Pressable>
       </Pressable>
     );
 
