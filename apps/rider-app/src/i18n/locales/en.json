@@ -486,6 +486,7 @@
   "sign.title": "Confirm Delivery",
   "splash.status": "Synchronizing",
   "tasks.accept": "Accept",
+  "tasks.codTag": "Cash on delivery · collect on arrival",
   "tasks.acceptBlockedOffline": "Can't accept offline, please retry when online",
   "tasks.acceptFailed": "Failed to accept task",
   "tasks.address.nanlu": "1757 Nanlu Highway, Pudong, Shanghai",
@@ -616,5 +617,5 @@
   "tasks.deliverByOverdue": "Overdue ({time})",
   "tasks.timeLeft": "{minutes} min left",
   "tasks.distanceRefOnly": "Straight-line distance, for reference only",
-  "tasks.codTag": "Cash on delivery · collect on arrival"
+  "common.itemsSummaryKinds": "Items: {totalQty} units · {kinds} kinds"
 }

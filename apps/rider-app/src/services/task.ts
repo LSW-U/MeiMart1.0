@@ -235,7 +235,9 @@ function fromView(view: DeliveryTask): DeliveryTask {
     //   顶层 `...view` 已带，无需再映射；仅在缺失时保持 undefined 由组件降级隐藏。
     //   （旧 UI 读 task.distanceKm / task.estimatedMinutes，顶层字段已满足。）
     // TODO(W6-backend): 后端补 items 字段后删 ?? []
-    items: view.items ?? [],
+    // 20261115：后端改为透传 itemsSummary（件数摘要，对齐行业惯例——接单看件数不看明细），
+    // 明细 items 恒空；大厅卡 items 位改由 itemsSummary 渲染（tasks.tsx formatItemsSummary）。
+    items: [],
   };
 }
 

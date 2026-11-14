@@ -95,6 +95,12 @@ export type DeliveryTask = {
    */
   estimatedMinutes?: number;
   /**
+   * 商品摘要（骑手大厅卡片 20261115）：totalQty=总件数（Σ quantity），kinds=去重 SKU 数。
+   * 后端从 order.items 派生；未 include（历史单/契约滞后）→ undefined，卡片降级隐藏。
+   * 行业惯例：接单决策看件数不看明细，无商品图片。
+   */
+  itemsSummary?: { totalQty: number; kinds: number };
+  /**
    * 批B B3（保证金批A T5-c 契约同步 2026-09-11）：预约单开门时间（打烊时段下单的
    * 该仓下一次开门时间；即时单 null/undefined）。
    * 防御性可选字段：后端 DeliveryTaskView 当前未透传 scheduledFor（后端大厅/候选已按

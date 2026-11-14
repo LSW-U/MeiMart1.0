@@ -486,6 +486,7 @@
   "sign.title": "Konfirmasi Pengiriman",
   "splash.status": "Menyinkronkan",
   "tasks.accept": "Terima",
+  "tasks.codTag": "Bayar di tempat · tagih tunai saat tiba",
   "tasks.acceptBlockedOffline": "Tidak bisa menerima saat offline, coba lagi saat online",
   "tasks.acceptFailed": "Gagal menerima tugas",
   "tasks.address.nanlu": "1757 Nanlu Highway, Pudong, Shanghai",
@@ -616,5 +617,5 @@
   "tasks.deliverByOverdue": "Terlambat ({time})",
   "tasks.timeLeft": "{minutes} menit lagi",
   "tasks.distanceRefOnly": "Jarak garis lurus, hanya referensi",
-  "tasks.codTag": "Bayar di tempat · tagih tunai saat tiba"
+  "common.itemsSummaryKinds": "Barang: {totalQty} unit · {kinds} jenis"
 }

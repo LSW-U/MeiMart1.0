@@ -486,6 +486,7 @@
   "sign.title": "Confirmar Entrega",
   "splash.status": "A sincronizar",
   "tasks.accept": "Aceitar",
+  "tasks.codTag": "Pagamento na entrega · cobrar em dinheiro",
   "tasks.acceptBlockedOffline": "Não é possível aceitar offline, tente novamente quando estiver online",
   "tasks.acceptFailed": "Falha ao aceitar a tarefa",
   "tasks.address.nanlu": "1757 Nanlu Highway, Pudong, Xangai",
@@ -616,5 +617,5 @@
   "tasks.deliverByOverdue": "Atrasado ({time})",
   "tasks.timeLeft": "Faltam {minutes} min",
   "tasks.distanceRefOnly": "Distância em linha reta, apenas referência",
-  "tasks.codTag": "Pagamento na entrega · cobrar em dinheiro"
+  "common.itemsSummaryKinds": "Itens: {totalQty} unidades · {kinds} tipos"
 }

@@ -486,6 +486,7 @@
   "sign.title": "确认送达",
   "splash.status": "同步中",
   "tasks.accept": "接单",
+  "tasks.codTag": "货到付款 · 需代收现金",
   "tasks.acceptBlockedOffline": "离线无法抢单，请连网后重试",
   "tasks.acceptFailed": "接单失败，请稍后重试",
   "tasks.address.nanlu": "上海浦东南陆公路 1757 号",
@@ -616,5 +617,5 @@
   "tasks.deliverByOverdue": "已超时（{time}）",
   "tasks.timeLeft": "剩 {minutes} 分钟",
   "tasks.distanceRefOnly": "全程直线距离，仅参考",
-  "tasks.codTag": "货到付款 · 需代收现金"
+  "common.itemsSummaryKinds": "商品：{totalQty} 件 · {kinds} 种"
 }

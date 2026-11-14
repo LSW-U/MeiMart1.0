@@ -486,6 +486,7 @@
   "sign.title": "Konfirma Entrega",
   "splash.status": "Sinkroniza hela",
   "tasks.accept": "Simu",
+  "tasks.codTag": "Folia iha entrega · kobrak osan Bainaka",
   "tasks.acceptBlockedOffline": "La bele simu bainhira offline, favor koko fali bainhira online",
   "tasks.acceptFailed": "Falla simu tarefa, favor koko fali",
   "tasks.address.nanlu": "1757 Nanlu Highway, Pudong, Shanghai",
@@ -616,5 +617,5 @@
   "tasks.deliverByOverdue": "Temin ona ({time})",
   "tasks.timeLeft": "Minutu {minutes} hela",
   "tasks.distanceRefOnly": "Distansia línia toos, de'it referensia",
-  "tasks.codTag": "Folia iha entrega · kobrak osan Bainaka"
+  "common.itemsSummaryKinds": "Sasan: {totalQty} unit · {kinds} sorte"
 }
