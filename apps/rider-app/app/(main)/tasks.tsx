@@ -19,15 +19,15 @@ import { getTaskAction } from '../../src/services/task-flow';
 import { useRiderSettings, useUpdateRiderSettings } from '../../src/services/queries/useSettings';
 import {
   dutyStatusOptions,
-  localeTagFor,
-  type AppLanguage,
   type DutyStatus,
 } from '../../src/services/settings';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { colors } from '../../src/theme/colors';
 import type { DeliveryTask } from '../../src/types/task';
-import { computeDeadline } from '../../src/utils/deadline';
-import { formatCurrency, formatDistance } from '../../src/utils/format';
+// 时间锚点统一（20261115 批3）：buildDeadlineLabels/withDistance 抽共享模块——
+// 大厅卡/待取货 tab/配送中 tab/详情页四处同源，详情页也引用本模块（防复制漂移）
+import { buildDeadlineLabels, withDistance } from '../../src/utils/deadline-labels';
+import { formatCurrency } from '../../src/utils/format';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
 
@@ -43,45 +43,22 @@ const formatItems = (
 ) => t('common.items', { items: items.join(' · ') });
 
 /**
- * ⑤B 锚点批（20261115）：大厅卡时间区三档降级链（HTML 方案拍板）。
- * - 有锚点（estimatedArrival 有效）：主行「需在 HH:mm 前送达」，副行「剩 n 分钟 · 约 x km」；
- *   临期（<10min）timeTone error 红；超时「已超时（HH:mm）」红。
- * - 无锚点（历史单/解析失败）：主行「约 n 分钟」（A 文案诚实化——去掉「内送达」承诺语气），
- *   副行仅距离。
- * - 连距离也无：副行不渲染。绝不出「undefined 分钟」。
- * localeTagFor/language 依赖由调用方 useMemo deps 保证，本函数仅在回调内消费。
+ * 商品摘要文案（20261115）：优先 itemsSummary（后端派生件数），缺 kinds 时只显件数。
+ * 对齐行业惯例：接单决策看件数不看明细——明细/图片无使用场景，不展示。
  */
-const buildDeadlineLabels = (
+const formatItemsSummary = (
   task: DeliveryTask,
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
-  language: AppLanguage,
-): { timeLabel: string; timeSub?: string; timeTone?: 'default' | 'error' } => {
-  const dl = computeDeadline(task.estimatedArrival);
-  const distancePart = withDistance('common.totalDistance', task.distanceKm, t);
-  if (dl) {
-    const hhmm = dl.date.toLocaleTimeString(localeTagFor(language), {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-    if (dl.overdue) {
-      return {
-        timeLabel: t('tasks.deliverByOverdue', { time: hhmm }),
-        timeSub: distancePart,
-        timeTone: 'error',
-      };
-    }
-    return {
-      timeLabel: t('tasks.deliverBy', { time: hhmm }),
-      timeSub: `${t('tasks.timeLeft', { minutes: dl.minutesLeft })}${distancePart ? ` · ${distancePart}` : ''}`,
-      timeTone: dl.urgent ? 'error' : 'default',
-    };
-  }
-  // A 文案诚实化：无锚点回退「约 n 分钟」，不承诺「内送达」
-  return {
-    timeLabel: t('common.deliverApprox', { minutes: String(task.estimatedMinutes ?? 0) }),
-    timeSub: distancePart,
-  };
+): string | undefined => {
+  const s = task.itemsSummary;
+  if (!s || s.totalQty <= 0) return undefined;
+  return s.kinds > 0 && s.kinds !== s.totalQty
+    ? t('common.itemsSummaryKinds', { totalQty: s.totalQty, kinds: s.kinds })
+    : t('common.itemsCount', { count: s.totalQty });
 };
+
+// buildDeadlineLabels/withDistance 已抽至 src/utils/deadline-labels.ts（20261115 批3），
+// 详情页 [id].tsx 也引用同模块——四处（大厅卡/两 tab/详情）同源防复制漂移。
 
 /**
  * 距离计费批次1（2026-08-27）：配送费明细格式化。
@@ -105,19 +82,7 @@ const formatFeeBreakdown = (
   };
 };
 
-/**
- * 距离计费批次1 #5 收尾（2026-08-27）：formatDistance 返回 string|undefined，
- * t() 的 vars 不接受 undefined。本 helper 先格式化，仅在非空时套 i18n 模板，
- * 避免历史订单无坐标时把 undefined 塞进 t() 触发 TS 报错 + 渲染「undefinedkm」。
- */
-const withDistance = (
-  templateKey: 'common.totalDistance' | 'common.fromPickup' | 'tasks.billingDistance',
-  km: number | undefined,
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
-): string | undefined => {
-  const dist = formatDistance(km);
-  return dist != null ? t(templateKey, { distance: dist }) : undefined;
-};
+// withDistance 已抽至 src/utils/deadline-labels.ts（20261115 批3，同 buildDeadlineLabels）。
 
 // T6 §3.1: 联系按钮拨号回调工厂（tasks.tsx 3 处 active 卡共用；Linking 在调用方，组件不感知 task）
 const contactHandler = (
@@ -275,13 +240,12 @@ export default function TasksPage() {
             fee: formatCurrency((task.fee ?? 0) / 100, currency, {
               decimals: (task.fee ?? 0) % 100 === 0 ? 0 : 1,
             }),
-            // 距离计费批次1（2026-08-27）：明细 + 计费距离（billingDistanceKm 与骑行 distanceKm 分开展示）
             // 大厅 COD 标记（20261114）：paymentMethod='COD' 时金额下黄 tag 提示代收——
             // 骑手抢单前知道送达要收现金；paymentMethod 缺失（历史单）不渲染
             codNote: task.paymentMethod === 'COD' ? t('tasks.codTag') : undefined,
             // 距离计费批次1（2026-08-27）：明细 + 计费距离（billingDistanceKm 与骑行 distanceKm 分开展示）
             feeBreakdown: formatFeeBreakdown(task, currency, t),
-            items: task.items.length ? formatItems(task.items, t) : undefined,
+            items: formatItemsSummary(task, t) ?? (task.items.length ? formatItems(task.items, t) : undefined),
             note: task.note ?? undefined,
             points: [
               {
@@ -325,9 +289,10 @@ export default function TasksPage() {
                 ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}`
                 : undefined,
               feeBreakdown: formatFeeBreakdown(task, currency, t),
-              items: task.items.length ? formatItems(task.items, t) : undefined,
+              items: formatItemsSummary(task, t) ?? (task.items.length ? formatItems(task.items, t) : undefined),
               note: task.note ?? undefined,
-              orderId: task.orderId,
+              // 单号修复（20261115 批1）：orderId 是内部 UUID 外键，展示业务单号 orderNo（历史单缺失降级回退）
+              orderId: task.orderNo ?? task.orderId,
               points: [
                 {
                   label: 'P' as const,
@@ -343,7 +308,12 @@ export default function TasksPage() {
                   subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t),
                 },
               ],
-              timeLabel: t('common.remaining', { minutes: String(task.estimatedMinutes) }),
+              // 时间锚点统一（20261115 批3）：与大厅卡同源 buildDeadlineLabels 降级链——
+              // 有锚点→「需在 HH:mm 前送达 · 剩 n 分钟」（临期/超时红）；无锚点→「约 n 分钟」；
+              // 修复旧逻辑两问题：estimatedArrival 已超时仍显示「剩 45 分钟」+ estimatedMinutes
+              // undefined 时渲染「剩 undefined 分钟」。预约单标注 scheduledFor 一并透传（与大厅卡同源）。
+              ...buildDeadlineLabels(task, t, language),
+              scheduledFor: task.scheduledFor,
               actionTarget: action?.target,
             },
           ];
@@ -370,7 +340,8 @@ export default function TasksPage() {
             // T6 审查 P1-1：note 只放真实客户备注（尾号已在联系按钮 contactSuffix 展示，
             // 原「有电话时 note 被尾号覆盖」会吞掉配送环节最关键的留言信息）
             note: task.note ?? undefined,
-            orderId: task.orderId,
+            // 单号修复（20261115 批1）：orderId 是内部 UUID 外键，展示业务单号 orderNo（历史单缺失降级回退）
+            orderId: task.orderNo ?? task.orderId,
             points: [
               {
                 label: 'P' as const,
@@ -385,7 +356,8 @@ export default function TasksPage() {
                 subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t),
               },
             ],
-            timeLabel: t('common.remaining', { minutes: String(task.estimatedMinutes) }),
+            // 时间锚点统一（20261115 批3）：同上 buildDeadlineLabels 降级链（配送中 tab 与大厅/取货同源）
+            ...buildDeadlineLabels(task, t, language),
           },
         ]),
       ),
