@@ -67,12 +67,8 @@ export const ORDER_ENTRIES: OrderEntry[] = [
     icon: 'cash_refund',
     route: '/refunds?from=profile',
   },
-  {
-    id: 'review',
-    labelKey: 'order.actions.review',
-    icon: 'rate_review',
-    route: '/orders?tab=review&from=profile',
-  },
+  // 20261114：原「去评价」格删除——同日发现宫格 invite 格改「去评价」承接该入口
+  //   （订单状态归宫格/评价动作归发现区，与常购清单 20261111 迁移同一语义分家逻辑）
   {
     id: 'all',
     labelKey: 'order.allOrders',

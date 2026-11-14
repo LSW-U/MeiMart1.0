@@ -11,10 +11,10 @@ const { ORDER_ENTRIES, DISCOVER_ENTRIES } =
     DISCOVER_ENTRIES: { id: string; labelKey: string; icon: string; route?: string }[];
   };
 
-describe('profile 宫格 20261114 改造（待发货格 + invite 迁移）', () => {
-  it('订单宫格：待发货在待付款之后、待收货之前（6 格）', () => {
+describe('profile 宫格 20261114 改造（待发货格回归 + 去评价迁发现区）', () => {
+  it('订单宫格：待发货在待付款之后、待收货之前（20261114 补拍板：原去评价格随迁发现区删除，宫格 5 格）', () => {
     const ids = ORDER_ENTRIES.map((e) => e.id);
-    expect(ids).toEqual(['to-pay', 'to-ship', 'to-receive', 'after-sales', 'review', 'all']);
+    expect(ids).toEqual(['to-pay', 'to-ship', 'to-receive', 'after-sales', 'all']);
   });
 
   it('待发货格：labelKey=order.statusToShip、icon、route 带 tab=to-ship&from=profile', () => {
@@ -25,7 +25,8 @@ describe('profile 宫格 20261114 改造（待发货格 + invite 迁移）', () 
     expect(entry!.route).toBe('/orders?tab=to-ship&from=profile');
   });
 
-  it('发现宫格：invite 已移除，去评价格接 /orders?tab=review&from=profile', () => {
+  it('发现宫格：invite 已移除，去评价格迁入接 /orders?tab=review&from=profile（订单宫格原 review 格删除）', () => {
+    expect(ORDER_ENTRIES.map((e) => e.id)).not.toContain('review');
     const ids = DISCOVER_ENTRIES.map((e) => e.id);
     expect(ids).not.toContain('invite');
     const review = DISCOVER_ENTRIES.find((e) => e.id === 'review');
