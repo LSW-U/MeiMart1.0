@@ -69,7 +69,9 @@ export default function PickupConfirmPage() {
         onAction={() => router.push('/help')}
       />
 
-      {/* T3 §3.2: 订单号用 task.orderId（后端真实订单号），原路由 id（内部 UUID）冒充错误；
+      {/* T3 §3.2: 订单号用业务单号（20261115 修复：原用 task.orderId 是 delivery_tasks.order_id
+          内部 UUID 外键，骑手没法拿去报给商家；改 orderNo ?? orderId 降级回退。
+          原路由 id（内部 UUID）冒充错误早已随 T3 修）；
           loading 期无 task 不渲染编号区，由下方骨架承载整页三态 */}
       {taskOrNull ? (
         <View className="bg-surface-container-low px-5 py-4">
@@ -78,11 +80,13 @@ export default function PickupConfirmPage() {
           </Text>
           <Text className="text-center text-base text-on-surface-variant">
             {t('pickup.instructionPrefix')}{' '}
-            {/* A5：模板已带 # 前缀（订单 #{order}），orderId 值自带 #（mock 'TL Delivery #104'）
-                会在渲染成「订单 #TL Delivery #104」双 #——以 # 开头时 trim；real orderId 若为
-                纯数字则保留模板 # 分隔，两态都正确 */}
+            {/* A5：模板已带 # 前缀（订单 #{order}），值自带 #（mock 'TL Delivery #104'）
+                会在渲染成「订单 #TL Delivery #104」双 #——以 # 开头时 trim；real orderNo
+                （MMxxx）不带 # 则保留模板 # 分隔，两态都正确 */}
             <Text className="font-bold text-primary">
-              {t('pickup.orderLabel', { order: taskOrNull.orderId.replace(/^#/, '') })}
+              {t('pickup.orderLabel', {
+                order: (taskOrNull.orderNo ?? taskOrNull.orderId).replace(/^#/, ''),
+              })}
             </Text>
           </Text>
         </View>

@@ -258,7 +258,9 @@ export default function TaskDetailPage() {
                 }
                 items={detail.items.length ? formatItems(detail.items, t) : undefined}
                 note={detail.note ?? undefined}
-                orderId={detail.orderId}
+                // 单号修复（20261115）：orderId 是内部 UUID 外键，展示用业务单号 orderNo
+                // （历史单缺失降级回退，不比现状差）
+                orderId={detail.orderNo ?? detail.orderId}
                 fee={formatCurrency((detail.fee ?? 0) / 100, t('common.currency'), {
                   decimals: (detail.fee ?? 0) % 100 === 0 ? 0 : 1,
                 })}

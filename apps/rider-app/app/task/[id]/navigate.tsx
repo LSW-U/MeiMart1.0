@@ -13,15 +13,17 @@ import { colors } from '../../../src/theme/colors';
 import { defaultHitSlop } from '../../../src/theme/commonPresets';
 import { useNetwork } from '../../../src/hooks/useNetwork';
 import { useTranslation } from '../../../src/i18n/useTranslation';
+import { localeTagFor } from '../../../src/services/settings';
 import { ApiError } from '../../../src/services/api';
 import { useStartDelivering, useTask } from '../../../src/services/queries/useTask';
 import type { DeliveryTask } from '../../../src/types/task';
+import { computeDeadline } from '../../../src/utils/deadline';
 import { formatCurrency, formatDistance } from '../../../src/utils/format';
 
 export default function TaskNavigatePage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   // T4 §3.1: 三态接入（B3）--loading 骨架 / error 重试 / null 才是任务不存在
   const { data, isLoading, isError, refetch } = useTask(id);
   const task: DeliveryTask | null = data ?? null;
@@ -159,13 +161,45 @@ export default function TaskNavigatePage() {
                     <Text className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
                       {t('tasks.etaLabel')}
                     </Text>
-                    <Text className="text-[22px] font-extrabold leading-tight text-primary">
-                      {t('common.minutes', { minutes: String(taskData.estimatedMinutes) })}
-                    </Text>
-                    <Text className="text-[11px] text-on-surface-variant">
-                      {formatDistance(taskData.distanceKm)} ·{' '}
-                      {t('tasks.deliveryProgress.delivering')}
-                    </Text>
+                    {/* ⑤B 锚点批（20261115）：有锚点 → 真倒计时「剩 n 分钟」+ 副行绝对时刻；
+                        临期 <10min 红；无锚点（历史单/解析失败）回退「约 n 分钟」现状文案 */}
+                    {(() => {
+                      const dl = computeDeadline(taskData.estimatedArrival);
+                      const distPart = formatDistance(taskData.distanceKm);
+                      if (dl) {
+                        const hhmm = dl.date.toLocaleTimeString(localeTagFor(language), {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        });
+                        return (
+                          <>
+                            <Text
+                              className={`text-[22px] font-extrabold leading-tight ${dl.urgent || dl.overdue ? 'text-error' : 'text-primary'}`}
+                            >
+                              {dl.overdue
+                                ? t('tasks.deliverByOverdue', { time: hhmm })
+                                : t('tasks.timeLeft', { minutes: dl.minutesLeft })}
+                            </Text>
+                            <Text className="text-[11px] text-on-surface-variant">
+                              {t('tasks.deliverBy', { time: hhmm })}
+                              {distPart ? ` · ${distPart}` : ''}
+                            </Text>
+                          </>
+                        );
+                      }
+                      return (
+                        <>
+                          <Text className="text-[22px] font-extrabold leading-tight text-primary">
+                            {t('common.deliverApprox', {
+                              minutes: String(taskData.estimatedMinutes ?? 0),
+                            })}
+                          </Text>
+                          <Text className="text-[11px] text-on-surface-variant">
+                            {distPart} · {t('tasks.deliveryProgress.delivering')}
+                          </Text>
+                        </>
+                      );
+                    })()}
                   </View>
                   <View className="items-end gap-0.5">
                     <Text className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
@@ -176,7 +210,10 @@ export default function TaskNavigatePage() {
                         decimals: (taskData.fee ?? 0) % 100 === 0 ? 0 : 1,
                       })}
                     </Text>
-                    <Text className="text-[11px] text-on-surface-variant">{taskData.orderId}</Text>
+                    {/* 单号修复（20261115）：orderId 是内部 UUID，展示业务单号 orderNo（缺失降级回退） */}
+                    <Text className="text-[11px] text-on-surface-variant">
+                      {taskData.orderNo ?? taskData.orderId}
+                    </Text>
                   </View>
                 </View>
               </View>
