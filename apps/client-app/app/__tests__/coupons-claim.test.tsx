@@ -13,13 +13,33 @@ import ClaimPage from '../coupons/claim';
 
 const mockRefetch = jest.fn();
 let mockAvailable: {
-  data: { id: string; code: string; name: string; description: null; type: 'FIXED_AMOUNT'; value: number; minOrderAmount: number; maxDiscountAmount: null; startAt: string; endAt: string; status: 'available' }[];
+  data: {
+    id: string;
+    code: string;
+    name: string;
+    description: null;
+    type: 'FIXED_AMOUNT';
+    value: number;
+    minOrderAmount: number;
+    maxDiscountAmount: null;
+    startAt: string;
+    endAt: string;
+    status: 'available';
+  }[];
   isLoading: boolean;
   isError: boolean;
   refetch: typeof mockRefetch;
 };
 
 const mockMutate = jest.fn();
+
+jest.mock('@/store/toastStore', () => ({
+  toast: { info: jest.fn(), success: jest.fn(), error: jest.fn() },
+}));
+// Why requireMock 取 spy：jest.mock 工厂在 import 阶段（hoist 后）即执行，此时外部
+// const mockToastInfo 尚未初始化（undefined 捕获进工厂→toast.info not a function，
+// 20261114 实测）；工厂内联 jest.fn()，测试侧经 requireMock 拿同一实例断言
+const mockToastInfo = jest.requireMock('@/store/toastStore').toast.info as jest.Mock;
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), push: jest.fn() },
@@ -96,5 +116,13 @@ describe('CouponClaimPage', () => {
     const { getByText } = render(<ClaimPage />, { wrapper });
     fireEvent.press(getByText('common.retry'));
     expect(mockRefetch).toHaveBeenCalled();
+  });
+
+  // 20261114 邀请好友入口卡（迁自 profile 发现宫格）：三态之外恒渲染 + 占位 toast
+  it('邀请好友入口卡：loading/错误/空态下仍渲染，点击弹 featureComingSoon toast', () => {
+    const { getByTestId } = render(<ClaimPage />, { wrapper });
+    expect(getByTestId('claim-invite-entry')).toBeTruthy();
+    fireEvent.press(getByTestId('claim-invite-entry'));
+    expect(mockToastInfo).toHaveBeenCalledWith('profile.featureComingSoon');
   });
 });

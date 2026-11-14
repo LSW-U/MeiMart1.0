@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import { useTranslation } from 'react-i18next';
 import { useTheme, spacing, layout, shadowPresets } from '@/theme';
+import { Icon } from '@/components/ui/Icon';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -104,6 +105,34 @@ export default function CouponClaimPage() {
             )}
           />
         )}
+
+        {/* 20261114 拍板：邀请好友从 profile 发现宫格迁入本页（原占位 toast「功能开发中」）。
+          底部独立入口卡（增长位不埋券列表）；listFooterComponent 内嵌会让占位/错误态丢入口，
+          故挂在三态分支之外恒渲染 */}
+        <Pressable
+          onPress={() => toast.info(t('profile.featureComingSoon'))}
+          style={({ pressed }) => [
+            styles.inviteCard,
+            { backgroundColor: colors['surface-container-lowest'] },
+            pressed && { opacity: 0.7 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.invite')}
+          testID="claim-invite-entry"
+        >
+          <View style={[styles.inviteIconWrap, { backgroundColor: colors['surface-container'] }]}>
+            <Icon symbol="group_add" size={22} color={colors.primary} />
+          </View>
+          <View style={styles.inviteTextWrap}>
+            <Text style={[styles.inviteTitle, { color: colors['on-surface'] }]}>
+              {t('profile.invite')}
+            </Text>
+            <Text style={[styles.inviteDesc, { color: colors['on-surface-variant'] }]}>
+              {t('profile.inviteDesc')}
+            </Text>
+          </View>
+          <Icon symbol="chevron_right" size={20} color={colors.outline} />
+        </Pressable>
       </SafeAreaWrapper>
     </PageErrorBoundary>
   );
@@ -125,6 +154,35 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: layout['container-margin'],
-    paddingBottom: spacing.xxl * 2,
+    paddingBottom: spacing.md,
+  },
+  // 20261114 邀请好友入口卡（迁自 profile 发现宫格）
+  inviteCard: {
+    marginHorizontal: layout['container-margin'],
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
+    padding: spacing.md,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  inviteIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inviteTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  inviteTitle: {
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  inviteDesc: {
+    fontSize: 12,
   },
 });

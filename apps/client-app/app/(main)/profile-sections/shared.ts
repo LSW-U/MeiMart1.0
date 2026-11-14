@@ -36,14 +36,24 @@ export interface OrderEntry {
 // 20261110 拍板：插「全部订单」格（原右上角「查看全部」入口迁入宫格）；labelKey 新增
 //   order.allOrders（common.all「全部」与 tab 语义有歧义弃用）；badge 无值不显示同 after-sales
 // 20261110 二次拍板：全部订单移到去评价后（状态类在前、聚合入口殿后，视觉顺序更顺）
+// 20261114 拍板（方案定稿）：待收货前插回「待发货」格（20261109 曾去掉，现恢复）——
+//   id/labelKey/route 走既有 to-ship 链路（ORDER_STATUS_GROUPS / useOrderCounts /
+//   orders?tab=to-ship 直入）零新增 i18n；宫格 5→6 格同行 flex:1 平分
 // 20261111 拍板：常购清单迁出宫格 → 发现模块（浏览行为与订单状态语义分家）；宫格剩
 //   5 格一行摆满，横向滑动整体删除（CELL_INTERVAL/snapToInterval 随之删）
+//   ↑ 20261114 起 6 格，摆满假设由 5 改 6
 export const ORDER_ENTRIES: OrderEntry[] = [
   {
     id: 'to-pay',
     labelKey: 'order.statusToPay',
     icon: 'account_balance_wallet',
     route: '/orders?tab=to-pay&from=profile',
+  },
+  {
+    id: 'to-ship',
+    labelKey: 'order.statusToShip',
+    icon: 'inventory_2',
+    route: '/orders?tab=to-ship&from=profile',
   },
   {
     id: 'to-receive',
@@ -152,5 +162,12 @@ export const DISCOVER_ENTRIES: DiscoverEntry[] = [
     icon: 'history',
     route: '/product/history',
   },
-  { id: 'invite', labelKey: 'profile.invite', icon: 'group_add' },
+  // 20261114 拍板：invite 格改「去评价」真实入口（/orders?tab=review 直入）——invite 迁
+  //   领券中心页底部入口卡（profile.invite key 迁移不删，无孤儿）；占位 toast 语义随之消失
+  {
+    id: 'review',
+    labelKey: 'order.actions.review',
+    icon: 'rate_review',
+    route: '/orders?tab=review&from=profile',
+  },
 ];
