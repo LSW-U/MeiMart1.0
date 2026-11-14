@@ -19,6 +19,8 @@ import { useAcceptTask, useReportOutOfStock, useTask } from '../../src/services/
 import { useRiderSettings } from '../../src/services/queries/useSettings';
 import type { DutyStatus } from '../../src/services/settings';
 import { getTaskAction } from '../../src/services/task-flow';
+// 时间锚点统一（20261115 批3）：与列表页同源降级链（绝对时刻+倒计时 / 约 n 分钟 / 超时红）
+import { buildDeadlineLabels } from '../../src/utils/deadline-labels';
 import { colors } from '../../src/theme/colors';
 import type { DeliveryTask } from '../../src/types/task';
 import { formatDistance, formatCurrency } from '../../src/utils/format';
@@ -91,7 +93,7 @@ function isDepositBlockError(e: unknown): 'E-DEPOSIT-201' | 'E-DEPOSIT-202' | nu
 export default function TaskDetailPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const goBack = useGoBack('/(main)/tasks');
   // B3: 三态——loading 骨架 / error 重试（弱网不再误报"任务不存在"）/ null 才是未找到
   // B5: isFetching 供底栏刷新 spinner 反馈
@@ -279,21 +281,25 @@ export default function TaskDetailPage() {
                     subtitle: withDistance('tasks.billingDistance', detail.billingDistanceKm, t),
                   },
                 ]}
-                // T2 审查 P3-1：终态 time 显示状态文本 + 中性/错误色（原型 372/431 行），
-                // 非终态保持「剩余 N 分钟」+ clock 图标
-                timeLabel={
-                  detail.status === 'DELIVERED' || detail.status === 'FAILED'
-                    ? detail.status === 'DELIVERED'
-                      ? t('tasks.terminalDelivered')
-                      : t('tasks.terminalFailed')
-                    : t('common.remaining', { minutes: String(detail.estimatedMinutes) })
-                }
+                // 时间锚点统一（20261115 批3）：与大厅/两 tab 同源——有锚点→「需在 HH:mm 前送达」
+                // （临期/超时红）；无锚点→「约 n 分钟」。修复旧逻辑：超时单仍显示「剩 X 分钟」
+                // （与列表页同单「已超时」矛盾）+ estimatedMinutes undefined 时「剩 undefined 分钟」。
+                // 终态（DELIVERED/FAILED）仍显示状态文本，优先级最高。
+                {...(detail.status === 'DELIVERED' || detail.status === 'FAILED'
+                  ? {
+                      timeLabel:
+                        detail.status === 'DELIVERED'
+                          ? t('tasks.terminalDelivered')
+                          : t('tasks.terminalFailed'),
+                    }
+                  : buildDeadlineLabels(detail, t, language))}
                 timeTone={
                   detail.status === 'DELIVERED'
                     ? 'neutral'
                     : detail.status === 'FAILED'
                       ? 'error'
-                      : 'default'
+                      : // 非终态由锚点派生：临期/超时红（buildDeadlineLabels 返回 error），其余 default
+                        buildDeadlineLabels(detail, t, language).timeTone ?? 'default'
                 }
                 // 批B B3：预约单防御标注（与列表卡同源；直链进入未到时预约单时可见）
                 scheduledFor={detail.scheduledFor}

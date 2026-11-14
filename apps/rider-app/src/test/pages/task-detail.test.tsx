@@ -207,11 +207,14 @@ describe('终态 banner（T2 §3.4）', () => {
     expect(getByText('已到取货点')).toBeTruthy();
   });
 
-  it('非终态（ASSIGNED）：time 显示「剩余 N 分钟」+ clock 图标（default tone）', () => {
+  it('非终态（ASSIGNED）：无锚点降级「约 30 分钟」+ clock 图标（default tone，20261115 批3 时间锚点统一）', () => {
     mockTaskStatus = 'ASSIGNED';
     const { getByText, container } = renderPage();
 
-    expect(getByText(/剩余 30 分钟/)).toBeTruthy();
+    // 20261115 批3：详情页 time 接入 buildDeadlineLabels 同源降级链——
+    // mock fixture 无 estimatedArrival → 无锚点档「约 n 分钟」（诚实化文案），
+    // 不再是旧「剩余 N 分钟」；有锚点/临期/超时三档由 tasks-deadline.test.tsx 覆盖
+    expect(getByText(/约 30 分钟/)).toBeTruthy();
     expect(container.querySelector('[data-testid="icon-clock-outline"]')).not.toBeNull();
   });
 });
