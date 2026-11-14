@@ -24,7 +24,9 @@ async function writeMockSideEffects(task: DeliveryTask): Promise<void> {
   if (!isMockMode) return;
   await orderApi.add({
     id: task.id,
-    orderNo: `#${task.id}`,
+    // mock 模式单号（20261115 批4）：任务卡/详情页同源——mock 任务无 orderNo 字段，
+    // 用任务 id 保持原有 # 风格（real 模式历史走后端 /rider/orders/history 真单号，不经此处）
+    orderNo: `#${task.orderNo ?? task.orderId}`,
     status: 'completed',
     completedAt: Date.now(),
     pickupName: task.pickup?.title ?? task.pickupAddress,
@@ -40,7 +42,9 @@ async function writeMockSideEffects(task: DeliveryTask): Promise<void> {
     category: 'order',
     titleKey: 'notification.template.orderSigned.title',
     messageKey: 'notification.template.orderSigned.message',
-    vars: { orderId: task.orderId },
+    // 单号修复（20261115 批2）：orderId 是内部 UUID 外键，通知文案显示业务单号 orderNo
+    // （历史单缺失降级回退，与大厅卡/详情页同规则）
+    vars: { orderId: task.orderNo ?? task.orderId },
     link: `/order/${task.id}`,
   });
 }
