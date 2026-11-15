@@ -234,5 +234,28 @@ describe('useStartDelivering', () => {
     const detail = qc.getQueryData<DeliveryTask>(taskDetailKey('A'));
     expect(detail?.status).toBe('PICKED_UP');
   });
-});
 
+  // 20261116 三步流统一：delivery 任务同样调 startDelivering（E-DISPATCH-020 已移除），
+  // 乐观跨 list 移动与 return 任务一致（refundId=null 后端不写 refund）
+  it('delivery 任务（20261116 三步流统一）：乐观跨 list 移动同 return', async () => {
+    const taskD = makeTask('PICKED_UP', { id: 'D', taskType: 'delivery', refundId: null });
+    seedLists(qc, { available: [], pickups: [taskD], deliveries: [] });
+    qc.setQueryData(taskDetailKey('D'), taskD);
+    mockStartDelivering.mockResolvedValue({ ...taskD, status: 'DELIVERING' });
+
+    const { result } = renderHook(() => useStartDelivering(), { wrapper: makeWrapper(qc) });
+
+    await act(async () => {
+      result.current.mutate('D');
+      await Promise.resolve();
+    });
+
+    const lists = readLists(qc);
+    expect(lists?.pickups).toHaveLength(0);
+    expect(lists?.deliveries).toHaveLength(1);
+    expect(lists?.deliveries[0].id).toBe('D');
+    expect(lists?.deliveries[0].status).toBe('DELIVERING');
+    const detail = qc.getQueryData<DeliveryTask>(taskDetailKey('D'));
+    expect(detail?.status).toBe('DELIVERING');
+  });
+});

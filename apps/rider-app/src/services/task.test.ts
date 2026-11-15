@@ -18,14 +18,13 @@ import { makeTask } from './__fixtures__/makeTask';
 // （测真实双端点路径）。factory 不引用外层变量，仅用 jest.fn（jest.mock 工厂约束）。
 jest.mock('./api', () => ({
   api: { get: jest.fn(), post: jest.fn() },
-  buildQuery: jest.fn(
-    (params: Record<string, string> = {}) =>
-      Object.keys(params).length === 0
-        ? ''
-        : '?' +
-          Object.entries(params)
-            .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-            .join('&'),
+  buildQuery: jest.fn((params: Record<string, string> = {}) =>
+    Object.keys(params).length === 0
+      ? ''
+      : '?' +
+        Object.entries(params)
+          .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+          .join('&'),
   ),
   isMockMode: false,
 }));
@@ -62,8 +61,9 @@ describe('taskApi.getLists', () => {
     const lists = await taskApi.getLists();
 
     expect(lists.available.map((t) => t.id)).toEqual(['p1', 'p2']);
-    expect(lists.pickups.map((t) => t.id)).toEqual(['a1', 'a2']);
-    expect(lists.deliveries.map((t) => t.id)).toEqual(['d1']);
+    // 20261116 三步流统一：pickups 只收 ASSIGNED；deliveries 收 PICKED_UP + DELIVERING
+    expect(lists.pickups.map((t) => t.id)).toEqual(['a1']);
+    expect(lists.deliveries.map((t) => t.id)).toEqual(['a2', 'd1']);
   });
 
   it('S2 弱网降级：my-tasks 失败 → pickups/deliveries 落空，available 仍展示 + warn', async () => {

@@ -38,7 +38,12 @@ let mockLinkingCanOpen = true;
 let mockLinkingOpen: ((url: string) => Promise<void>) | null = null;
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace, back: mockBack, canGoBack: () => true }),
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    back: mockBack,
+    canGoBack: () => true,
+  }),
   useLocalSearchParams: () => ({ id: 'task-1' }),
 }));
 
@@ -52,16 +57,23 @@ jest.mock('../../../src/hooks/useGoBack', () => ({
 
 jest.mock('../../../src/services/queries/useTask', () => ({
   useTask: () => {
-    if (mockTaskState === 'loading') return { data: undefined, isLoading: true, isError: false, refetch: mockRefetch };
-    if (mockTaskState === 'error') return { data: undefined, isLoading: false, isError: true, refetch: mockRefetch };
-    if (mockTaskState === 'empty') return { data: null, isLoading: false, isError: false, refetch: mockRefetch };
+    if (mockTaskState === 'loading')
+      return { data: undefined, isLoading: true, isError: false, refetch: mockRefetch };
+    if (mockTaskState === 'error')
+      return { data: undefined, isLoading: false, isError: true, refetch: mockRefetch };
+    if (mockTaskState === 'empty')
+      return { data: null, isLoading: false, isError: false, refetch: mockRefetch };
     return {
       data: {
         id: 'task-1',
         orderId: 'TL Delivery #102',
         status: mockTaskState,
         taskType: 'DELIVERY',
-        pickup: { title: 'Lita Store (Colmera)', address: 'Rua de Colmera, Dili', coordinates: { latitude: -8.55, longitude: 125.56 } },
+        pickup: {
+          title: 'Lita Store (Colmera)',
+          address: 'Rua de Colmera, Dili',
+          coordinates: { latitude: -8.55, longitude: 125.56 },
+        },
         dropoff: {
           title: 'Timor Plaza Apartments, Unit 4B',
           address: 'Avenida Presidente Nicolau Lobato, Dili',
@@ -92,7 +104,9 @@ jest.mock('../../../src/components/feedback/Toast', () => ({
 }));
 
 function renderPage() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
@@ -111,9 +125,11 @@ beforeEach(() => {
   mockContactName = 'Resident 4B';
   mockLinkingCanOpen = true;
   mockLinkingOpen = null;
-  (Linking as unknown as { canOpenURL: jest.Mock }).canOpenURL = jest.fn(async () => mockLinkingCanOpen);
-  (Linking as unknown as { openURL: jest.Mock }).openURL = jest.fn(
-    async (url: string) => (mockLinkingOpen ? mockLinkingOpen(url) : undefined),
+  (Linking as unknown as { canOpenURL: jest.Mock }).canOpenURL = jest.fn(
+    async () => mockLinkingCanOpen,
+  );
+  (Linking as unknown as { openURL: jest.Mock }).openURL = jest.fn(async (url: string) =>
+    mockLinkingOpen ? mockLinkingOpen(url) : undefined,
   );
 });
 
@@ -222,7 +238,9 @@ describe('联系客人入口（T4 §3.6 · B1 裁决 B 40×40 图标钮形态）
     await act(async () => {
       fireEvent.click(callBtn);
     });
-    expect((Linking as unknown as { openURL: jest.Mock }).openURL).toHaveBeenCalledWith('tel:+670 7733 4072');
+    expect((Linking as unknown as { openURL: jest.Mock }).openURL).toHaveBeenCalledWith(
+      'tel:+670 7733 4072',
+    );
   });
 
   it('无 contactPhone：致电钮禁用（电话行显示「无电话」），点击无动作', async () => {
@@ -233,7 +251,7 @@ describe('联系客人入口（T4 §3.6 · B1 裁决 B 40×40 图标钮形态）
 
     const callBtn = container.querySelector('[data-prop-accessibilitylabel="无电话"]')!;
     // B1：禁用态 neutral-bg 浅底（原型 .contact-btn.disabled）
-    expect((callBtn.getAttribute('data-prop-classname') ?? '')).toContain('bg-neutral-bg');
+    expect(callBtn.getAttribute('data-prop-classname') ?? '').toContain('bg-neutral-bg');
 
     await act(async () => {
       fireEvent.click(callBtn);
@@ -308,7 +326,46 @@ describe('底栏双 CTA（T4 §7.9/§3.5）', () => {
     expect(showToastMock).toHaveBeenCalledWith('无法打开导航', 'error');
   });
 
-  it('主按钮（delivery + PICKED_UP）：直接跳 sign（不 startDelivering）', async () => {
+  it('20261116 三步流统一：主按钮（delivery + PICKED_UP）先 startDelivering 再跳 sign', async () => {
+    mockStartDelivering.mockResolvedValueOnce(undefined);
+    const { getByText } = renderPage();
+
+    await act(async () => {
+      fireEvent.click(getByText('去签收'));
+    });
+    expect(mockStartDelivering).toHaveBeenCalledWith('task-1');
+    expect(mockPush).toHaveBeenCalledWith('/task/task-1/sign');
+  });
+
+  it('startDelivering 失败：ApiError toast 开始配送失败留 navigate 页（非 ApiError→网络异常文案）', async () => {
+    mockStartDelivering.mockRejectedValueOnce(new Error('E-DISPATCH-004'));
+    const { getByText } = renderPage();
+
+    await act(async () => {
+      fireEvent.click(getByText('去签收'));
+    });
+    expect(mockStartDelivering).toHaveBeenCalledWith('task-1');
+    expect(mockPush).not.toHaveBeenCalled();
+    // 裸 Error（非 ApiError）走 common.networkError 分支（S6 差异化 toast）
+    expect(showToastMock).toHaveBeenCalledWith('网络异常，请重试', 'error');
+  });
+
+  it('startDelivering 失败（ApiError）：toast 开始配送失败，留在 navigate 页（不跳 sign）', async () => {
+    mockStartDelivering.mockRejectedValueOnce(
+      new (require('../../../src/services/api').ApiError)(409, 'E-DISPATCH-004', 'conflict'),
+    );
+    const { getByText } = renderPage();
+
+    await act(async () => {
+      fireEvent.click(getByText('去签收'));
+    });
+    expect(mockStartDelivering).toHaveBeenCalledWith('task-1');
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(showToastMock).toHaveBeenCalledWith('开始配送失败，请重试', 'error');
+  });
+
+  it('DELIVERING（三步流第二步）：直接跳 sign（不再调 startDelivering）', async () => {
+    mockTaskState = 'DELIVERING';
     const { getByText } = renderPage();
 
     await act(async () => {
