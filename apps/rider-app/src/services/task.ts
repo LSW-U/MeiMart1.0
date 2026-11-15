@@ -6,6 +6,7 @@ import type {
 } from '@/src/types/task';
 
 import { api, buildQuery, isMockMode } from './api';
+import { getCurrentLanguage } from './settings';
 
 export type TaskLists = {
   available: DeliveryTask[];
@@ -217,8 +218,15 @@ export function fromView(view: DeliveryTask): DeliveryTask {
     //   title 兜底用地址（真实模式 P/D 行此前渲染空串）。注意 warehouses.name（仓库名）
     //   后端暂未透传——B 修（后端 toView 富化 pickupTitle/contactName）落地后此处自动
     //   被 view.pickup 覆盖，兜底保留作断链/旧版防御。
+    // 20261116 B 修（方案v2 §4）：后端已透传 pickupTitleI18n（warehouses.name jsonb 5 语包）+
+    //   dropoffContactName（order.deliveryAddress.name）。title 按 locale 自取 + en fallback，
+    //   断链/旧版（字段 null/undefined）继续走地址兜底。
     pickup: view.pickup ?? {
-      title: view.pickupAddress ?? '',
+      title:
+        view.pickupTitleI18n?.[getCurrentLanguage()] ??
+        view.pickupTitleI18n?.en ??
+        view.pickupAddress ??
+        '',
       address: view.pickupAddress,
       coordinates: { latitude: view.pickupLat, longitude: view.pickupLng },
       lat: view.pickupLat,
@@ -233,6 +241,8 @@ export function fromView(view: DeliveryTask): DeliveryTask {
       // T6 联系拨号：后端 toView 从 order.deliveryAddress.phone 透传（顶层字段），
       // 映射到 dropoff.contactPhone 供 TaskCard 联系按钮/尾号展示消费
       contactPhone: view.contactPhone,
+      // B 修：收件人姓名（navigate/sign 页联系人展示消费）
+      contactName: view.dropoffContactName ?? undefined,
     },
     // P0-1 修复（2026-08-25）：后端透传 deliveryFee（order.deliveryFee，单位分），
     //   旧 UI 用 task.fee 展示配送费，此处映射；历史订单无 deliveryFee → 回退 0。

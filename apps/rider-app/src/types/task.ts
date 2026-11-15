@@ -59,6 +59,10 @@ export type DeliveryTask = {
   orderNo?: string;
   /** T6 联系拨号：客户电话（后端从 order.deliveryAddress.phone 透传，历史订单可能无） */
   contactPhone?: string;
+  /** 仓库名多语言包（后端 warehouses.name jsonb，en/id/pt/zh/tet；按 locale 自取，断链/旧数据 null） */
+  pickupTitleI18n?: Record<string, string> | null;
+  /** 收件人姓名（后端从 order.deliveryAddress.name 透传，历史订单可能无） */
+  dropoffContactName?: string;
   /**
    * 配送费（单位：分，P0-1 修复 2026-08-25）
    * 后端从 order.deliveryFee 透传；历史订单可能无 → undefined。
