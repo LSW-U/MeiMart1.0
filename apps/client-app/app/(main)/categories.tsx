@@ -39,8 +39,9 @@ export default function CategoriesPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   // Why: 底部留白动态算——浮动 BottomNav(56) + 底部手势条 inset + 余量 8 + 购物车条(64)。
-  //   此前静态 96px 盖住滚动到底的入口按钮（20261116 用户实测反馈），已抽 useBottomReserve 单点收敛
-  const bottomReserve = useBottomReserve({ withCartBar: true });
+  //   此前静态 96px 盖住滚动到底的入口按钮（20261116 用户实测反馈），已抽 useBottomReserve 单点收敛。
+  //   20261116 用户调参：两侧各收 24px（覆盖组件实际高度比留白小，全量留白偏空）
+  const bottomReserve = useBottomReserve({ withCartBar: true }) - 24;
   // 原因：批1 A4 透传后 Category.name 是 LocalizableText，渲染层 localize() 取值
   const localize = useLocalizer();
   const { categoryId: urlCategoryId } = useLocalSearchParams<{ categoryId?: string }>();
