@@ -3676,6 +3676,26 @@ components:
           type: string
           nullable: true
           format: uuid
+        customer:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            phone:
+              type: string
+            name:
+              type: string
+              nullable: true
+            avatarUrl:
+              type: string
+              nullable: true
+          required:
+            - id
+            - phone
+            - name
+            - avatarUrl
         paymentMethod:
           type: string
           enum: &a18
@@ -5314,6 +5334,16 @@ components:
         updatedAt:
           type: string
           format: date-time
+        orderNo:
+          type: string
+        scheduledFor:
+          type: string
+          nullable: true
+          format: date-time
+        estimatedArrival:
+          type: string
+          nullable: true
+          format: date-time
         contactPhone:
           type: string
         deliveryFee:
@@ -5334,6 +5364,18 @@ components:
         estimatedMinutes:
           type: integer
           minimum: 0
+        itemsSummary:
+          type: object
+          properties:
+            totalQty:
+              type: integer
+              minimum: 0
+            kinds:
+              type: integer
+              minimum: 0
+          required:
+            - totalQty
+            - kinds
       required:
         - id
         - orderId
@@ -5358,10 +5400,6 @@ components:
         - $ref: "#/components/schemas/DeliveryTask"
         - type: object
           properties:
-            estimatedArrival:
-              type: string
-              nullable: true
-              format: date-time
             warehouseCode:
               type: string
             order:
@@ -5399,7 +5437,6 @@ components:
                 - riderName
                 - phone
           required:
-            - estimatedArrival
             - warehouseCode
             - order
             - rider
@@ -5481,6 +5518,16 @@ components:
                   updatedAt:
                     type: string
                     format: date-time
+                  orderNo:
+                    type: string
+                  scheduledFor:
+                    type: string
+                    nullable: true
+                    format: date-time
+                  estimatedArrival:
+                    type: string
+                    nullable: true
+                    format: date-time
                   contactPhone:
                     type: string
                   deliveryFee:
@@ -5501,10 +5548,18 @@ components:
                   estimatedMinutes:
                     type: integer
                     minimum: 0
-                  estimatedArrival:
-                    type: string
-                    nullable: true
-                    format: date-time
+                  itemsSummary:
+                    type: object
+                    properties:
+                      totalQty:
+                        type: integer
+                        minimum: 0
+                      kinds:
+                        type: integer
+                        minimum: 0
+                    required:
+                      - totalQty
+                      - kinds
                   warehouseCode:
                     type: string
                   order:
@@ -5560,7 +5615,6 @@ components:
                   - note
                   - createdAt
                   - updatedAt
-                  - estimatedArrival
                   - warehouseCode
                   - order
                   - rider
@@ -17971,6 +18025,26 @@ paths:
                     type: string
                     nullable: true
                     format: uuid
+                  customer:
+                    type: object
+                    nullable: true
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      phone:
+                        type: string
+                      name:
+                        type: string
+                        nullable: true
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - phone
+                      - name
+                      - avatarUrl
                   paymentMethod:
                     type: string
                     enum: *a18
@@ -18271,6 +18345,26 @@ paths:
                       type: string
                       nullable: true
                       format: uuid
+                    customer:
+                      type: object
+                      nullable: true
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        phone:
+                          type: string
+                        name:
+                          type: string
+                          nullable: true
+                        avatarUrl:
+                          type: string
+                          nullable: true
+                      required:
+                        - id
+                        - phone
+                        - name
+                        - avatarUrl
                     paymentMethod:
                       type: string
                       enum: *a18
@@ -20266,6 +20360,26 @@ paths:
                     type: string
                     nullable: true
                     format: uuid
+                  customer:
+                    type: object
+                    nullable: true
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      phone:
+                        type: string
+                      name:
+                        type: string
+                        nullable: true
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - phone
+                      - name
+                      - avatarUrl
                   paymentMethod:
                     type: string
                     enum: *a18
@@ -23033,6 +23147,16 @@ paths:
                             updatedAt:
                               type: string
                               format: date-time
+                            orderNo:
+                              type: string
+                            scheduledFor:
+                              type: string
+                              nullable: true
+                              format: date-time
+                            estimatedArrival:
+                              type: string
+                              nullable: true
+                              format: date-time
                             contactPhone:
                               type: string
                             deliveryFee:
@@ -23053,10 +23177,18 @@ paths:
                             estimatedMinutes:
                               type: integer
                               minimum: 0
-                            estimatedArrival:
-                              type: string
-                              nullable: true
-                              format: date-time
+                            itemsSummary:
+                              type: object
+                              properties:
+                                totalQty:
+                                  type: integer
+                                  minimum: 0
+                                kinds:
+                                  type: integer
+                                  minimum: 0
+                              required:
+                                - totalQty
+                                - kinds
                             warehouseCode:
                               type: string
                             order:
@@ -23112,7 +23244,6 @@ paths:
                             - note
                             - createdAt
                             - updatedAt
-                            - estimatedArrival
                             - warehouseCode
                             - order
                             - rider
@@ -27372,6 +27503,26 @@ paths:
                               type: string
                               nullable: true
                               format: uuid
+                            customer:
+                              type: object
+                              nullable: true
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                phone:
+                                  type: string
+                                name:
+                                  type: string
+                                  nullable: true
+                                avatarUrl:
+                                  type: string
+                                  nullable: true
+                              required:
+                                - id
+                                - phone
+                                - name
+                                - avatarUrl
                             paymentMethod:
                               type: string
                               enum: *a18
@@ -27727,6 +27878,26 @@ paths:
                         type: string
                         nullable: true
                         format: uuid
+                      customer:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          phone:
+                            type: string
+                          name:
+                            type: string
+                            nullable: true
+                          avatarUrl:
+                            type: string
+                            nullable: true
+                        required:
+                          - id
+                          - phone
+                          - name
+                          - avatarUrl
                       paymentMethod:
                         type: string
                         enum: *a18
@@ -28053,6 +28224,26 @@ paths:
                         type: string
                         nullable: true
                         format: uuid
+                      customer:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          phone:
+                            type: string
+                          name:
+                            type: string
+                            nullable: true
+                          avatarUrl:
+                            type: string
+                            nullable: true
+                        required:
+                          - id
+                          - phone
+                          - name
+                          - avatarUrl
                       paymentMethod:
                         type: string
                         enum: *a18
@@ -34829,10 +35020,10 @@ paths:
     post:
       tags:
         - dispatch
-      description: P14 ④：骑手开始配送（PICKED_UP -> DELIVERING）。仅 taskType=return 任务可调，打通原
-        DELIVERING 死状态（return 三步 PICKED_UP->DELIVERING->DELIVERED；delivery 两步跳过
-        DELIVERING 走 deliver）。事务内：deliveryTask.update(DELIVERING) +
-        refund.update(pickedAt)（前端 P14 时间轴 picked 步骤展示）。
+      description: P14 ④：骑手开始配送（PICKED_UP -> DELIVERING）。所有任务类型可调（20261116 拍板统一三步，原「仅
+        taskType=return」限制 E-DISPATCH-020
+        已移除）。事务内：deliveryTask.update(DELIVERING) + refund.update(pickedAt)（仅
+        return 任务）。
       parameters:
         - schema:
             type: string
