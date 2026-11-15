@@ -209,19 +209,23 @@ function buildMockLists(): TaskLists {
 //   - baseFee/distanceFee/billingDistanceKm：订单快照字段，缺失保持 undefined（不回退 0），
 //     卡片只显总额 deliveryFee，不显「基础+距离」明细与「计费距离」。
 //   - items：后端 W6 暂未透传订单明细，仍回退 []，待后端补。
-function fromView(view: DeliveryTask): DeliveryTask {
+export function fromView(view: DeliveryTask): DeliveryTask {
   // 后端 view 字段精简，pickup/dropoff 嵌套结构由本地构造（缺失填默认空值避免组件 break）
   return {
     ...view,
+    // 20261116 P/D 空标题修复（A 修）：后端 DeliveryTaskView 无 pickup/dropoff 嵌套对象，
+    //   title 兜底用地址（真实模式 P/D 行此前渲染空串）。注意 warehouses.name（仓库名）
+    //   后端暂未透传——B 修（后端 toView 富化 pickupTitle/contactName）落地后此处自动
+    //   被 view.pickup 覆盖，兜底保留作断链/旧版防御。
     pickup: view.pickup ?? {
-      title: '',
+      title: view.pickupAddress ?? '',
       address: view.pickupAddress,
       coordinates: { latitude: view.pickupLat, longitude: view.pickupLng },
       lat: view.pickupLat,
       lng: view.pickupLng,
     },
     dropoff: view.dropoff ?? {
-      title: '',
+      title: view.dropoffAddress ?? '',
       address: view.dropoffAddress,
       coordinates: { latitude: view.dropoffLat, longitude: view.dropoffLng },
       lat: view.dropoffLat,
