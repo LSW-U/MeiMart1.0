@@ -7,6 +7,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, spacing, typography, borderRadius } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { PrimaryHeader } from '@/components/layout/PrimaryHeader';
@@ -37,6 +38,11 @@ import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
 export default function CategoriesPage() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  // Why: 底部留白动态算（同 home.tsx bottomReserve 先例）—— 浮动 BottomNav(56) +
+  //   底部手势条 inset + 余量 8。categories 内容区/viewAll 按钮此前只留固定 96px，
+  //   悬浮购物车条(64，20261111 上线)盖住滚动到底的入口按钮（20261116 用户实测反馈）
+  const insets = useSafeAreaInsets();
+  const bottomReserve = 56 + insets.bottom + 8 + 64; // 64=悬浮购物车条高（FCB bar 20261112 增高）
   // 原因：批1 A4 透传后 Category.name 是 LocalizableText，渲染层 localize() 取值
   const localize = useLocalizer();
   const { categoryId: urlCategoryId } = useLocalSearchParams<{ categoryId?: string }>();
@@ -160,7 +166,10 @@ export default function CategoriesPage() {
             },
           ]}
         >
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: bottomReserve }}
+          >
             {categories.map((cat) => (
               <SidebarItem
                 key={cat.id}
@@ -183,7 +192,7 @@ export default function CategoriesPage() {
           ) : (
             <ScrollView
               style={{ flex: 1 }}
-              contentContainerStyle={styles.contentInner}
+              contentContainerStyle={[styles.contentInner, { paddingBottom: bottomReserve }]}
               showsVerticalScrollIndicator={false}
               scrollEventThrottle={16}
               onScroll={({ nativeEvent }) => handleContentScroll(nativeEvent.contentOffset.y)}
@@ -565,7 +574,9 @@ const styles = StyleSheet.create({
   },
   contentInner: {
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xxl * 2,
+    // Why: paddingBottom 改运行时 bottomReserve 注入（home.tsx 同款对齐 20261116）——
+    //   静态 96px 不够覆盖 BottomNav(56)+inset+FCB(64)，静态段也拿不到 insets
+    //   （styles 静态段引 colors/useTheme 同款坑，见 client-app-styles-static-color-trap）
   },
   subGrid: {
     flexDirection: 'row',
