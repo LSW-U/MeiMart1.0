@@ -124,7 +124,7 @@
   "common.menu": "Menu",
   "common.networkError": "Erro de rede, tente novamente",
   "common.noDeliveries": "Sem entregas",
-  "common.noDeliveriesDesc": "Os pedidos recolhidos aparecerão aqui até à conclusão.",
+  "common.noDeliveriesDesc": "Pedidos retirados ou em entrega aparecerão aqui até a conclusão.",
   "common.noNewTasks": "Sem novas tarefas",
   "common.noNewTasksDesc": "Puxe para atualizar ou aguarde pedidos próximos.",
   "common.noPickups": "Sem recolhas",
@@ -617,5 +617,6 @@
   "tasks.deliverByOverdue": "Atrasado ({time})",
   "tasks.timeLeft": "Faltam {minutes} min",
   "tasks.distanceRefOnly": "Distância em linha reta, apenas referência",
-  "common.itemsSummaryKinds": "Itens: {totalQty} unidades · {kinds} tipos"
+  "common.itemsSummaryKinds": "Itens: {totalQty} unidades · {kinds} tipos",
+  "tasks.returnTag": "Devolução"
 }

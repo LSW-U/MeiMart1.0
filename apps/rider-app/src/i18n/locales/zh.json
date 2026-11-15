@@ -124,7 +124,7 @@
   "common.menu": "菜单",
   "common.networkError": "网络异常，请重试",
   "common.noDeliveries": "暂无配送任务",
-  "common.noDeliveriesDesc": "已取货订单将显示在此直到完成。",
+  "common.noDeliveriesDesc": "已取货或配送中的订单将显示在此直到完成。",
   "common.noNewTasks": "暂无新任务",
   "common.noNewTasksDesc": "下拉刷新或等待附近订单。",
   "common.noPickups": "暂无取货任务",
@@ -617,5 +617,6 @@
   "tasks.deliverByOverdue": "已超时（{time}）",
   "tasks.timeLeft": "剩 {minutes} 分钟",
   "tasks.distanceRefOnly": "全程直线距离，仅参考",
-  "common.itemsSummaryKinds": "商品：{totalQty} 件 · {kinds} 种"
+  "common.itemsSummaryKinds": "商品：{totalQty} 件 · {kinds} 种",
+  "tasks.returnTag": "退货取件"
 }

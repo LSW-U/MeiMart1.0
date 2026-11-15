@@ -44,6 +44,12 @@ type TaskCardProps = {
    * 骑手抢单前需要显眼知道送达要收现金。undefined → 不渲染。
    */
   codNote?: string;
+  /**
+   * 退货取件 tag（20261116 方案 α）：taskType='return' 时卡片显示琥珀 badge
+   * 「退货取件」——与 codNote 同款样式（accent-amber），区分普通配送单。
+   * 大厅 available 卡不传（return 单不经大厅）。undefined → 不渲染。
+   */
+  returnNote?: string;
   /** 距离计费批次1：配送费明细「基础 $X + 距离 $Y」展示在 fee 下方；缺失不显 */
   feeBreakdown?: FeeBreakdown;
   orderId?: string;
@@ -83,6 +89,7 @@ export const TaskCard = memo(function TaskCard({
   fee,
   feeNote,
   codNote,
+  returnNote,
   feeBreakdown,
   orderId,
   points,
@@ -197,6 +204,16 @@ export const TaskCard = memo(function TaskCard({
           </View>
         ) : null}
       </View>
+
+      {/* 退货取件 tag（20261116 方案 α）：与 codNote 同款琥珀 badge。
+          ⚠️ 放卡头左列尾部（orderId/scheduled 之后）而非 fee 列——fee 列在
+          deliveries/pickups props 均不传 fee（整列不渲染），放里面 tag 会静默消失
+          （tasks-three-step 页测实证）。 */}
+      {returnNote ? (
+        <View className="self-start rounded border border-accent-amber/40 bg-accent-amber/15 px-2 py-1">
+          <Text className="text-xs font-bold text-amber-text">{returnNote}</Text>
+        </View>
+      ) : null}
 
       <View className="h-px bg-surface-variant" />
 

@@ -124,7 +124,7 @@
   "common.menu": "Menu",
   "common.networkError": "Galat jaringan, silakan coba lagi",
   "common.noDeliveries": "Tidak ada pengantaran",
-  "common.noDeliveriesDesc": "Pesanan yang diambil akan muncul di sini hingga selesai.",
+  "common.noDeliveriesDesc": "Pesanan yang sudah diambil atau sedang dikirim akan muncul di sini hingga selesai.",
   "common.noNewTasks": "Tidak ada tugas baru",
   "common.noNewTasksDesc": "Tarik untuk menyegarkan atau tunggu pesanan terdekat.",
   "common.noPickups": "Tidak ada penjemputan",
@@ -617,5 +617,6 @@
   "tasks.deliverByOverdue": "Terlambat ({time})",
   "tasks.timeLeft": "{minutes} menit lagi",
   "tasks.distanceRefOnly": "Jarak garis lurus, hanya referensi",
-  "common.itemsSummaryKinds": "Barang: {totalQty} unit · {kinds} jenis"
+  "common.itemsSummaryKinds": "Barang: {totalQty} unit · {kinds} jenis",
+  "tasks.returnTag": "Pengambilan retur"
 }

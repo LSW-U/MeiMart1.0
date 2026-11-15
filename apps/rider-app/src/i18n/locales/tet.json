@@ -124,7 +124,7 @@
   "common.menu": "Menu",
   "common.networkError": "Sala rede, koko fali",
   "common.noDeliveries": "La iha entrega",
-  "common.noDeliveriesDesc": "Pedidu ne'ebé simu tiha ona sei aparece iha ne'e to'o konclui.",
+  "common.noDeliveriesDesc": "Pedidu ne'ebé hetan tiang ona ka sedaun entrega bele mosu iha ne'e to'o hotu.",
   "common.noNewTasks": "La iha tarefa foun",
   "common.noNewTasksDesc": "Huso atu recarrega ka hein pedidu besik.",
   "common.noPickups": "La iha simu sasan",
@@ -617,5 +617,6 @@
   "tasks.deliverByOverdue": "Temin ona ({time})",
   "tasks.timeLeft": "Minutu {minutes} hela",
   "tasks.distanceRefOnly": "Distansia línia toos, de'it referensia",
-  "common.itemsSummaryKinds": "Sasan: {totalQty} unit · {kinds} sorte"
+  "common.itemsSummaryKinds": "Sasan: {totalQty} unit · {kinds} sorte",
+  "tasks.returnTag": "Devolusaun fo hela"
 }

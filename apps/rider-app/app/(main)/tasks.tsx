@@ -17,10 +17,7 @@ import { useNetwork } from '../../src/hooks/useNetwork';
 import { useTaskLists } from '../../src/services/queries/useTask';
 import { getTaskAction } from '../../src/services/task-flow';
 import { useRiderSettings, useUpdateRiderSettings } from '../../src/services/queries/useSettings';
-import {
-  dutyStatusOptions,
-  type DutyStatus,
-} from '../../src/services/settings';
+import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { colors } from '../../src/theme/colors';
 import type { DeliveryTask } from '../../src/types/task';
@@ -245,7 +242,9 @@ export default function TasksPage() {
             codNote: task.paymentMethod === 'COD' ? t('tasks.codTag') : undefined,
             // 距离计费批次1（2026-08-27）：明细 + 计费距离（billingDistanceKm 与骑行 distanceKm 分开展示）
             feeBreakdown: formatFeeBreakdown(task, currency, t),
-            items: formatItemsSummary(task, t) ?? (task.items.length ? formatItems(task.items, t) : undefined),
+            items:
+              formatItemsSummary(task, t) ??
+              (task.items.length ? formatItems(task.items, t) : undefined),
             note: task.note ?? undefined,
             points: [
               {
@@ -289,7 +288,9 @@ export default function TasksPage() {
                 ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}`
                 : undefined,
               feeBreakdown: formatFeeBreakdown(task, currency, t),
-              items: formatItemsSummary(task, t) ?? (task.items.length ? formatItems(task.items, t) : undefined),
+              items:
+                formatItemsSummary(task, t) ??
+                (task.items.length ? formatItems(task.items, t) : undefined),
               note: task.note ?? undefined,
               // 单号修复（20261115 批1）：orderId 是内部 UUID 外键，展示业务单号 orderNo（历史单缺失降级回退）
               orderId: task.orderNo ?? task.orderId,
@@ -327,39 +328,45 @@ export default function TasksPage() {
   const deliveryTaskProps = useMemo(
     () =>
       new Map(
-        taskLists.deliveries.map((task) => [
-          task.id,
-          {
-            actionLabel: t('tasks.arrivedDelivery'),
-            chatLabel: t('tasks.chat'),
-            contactLabel: t('tasks.contact'),
-            contactSuffix: task.dropoff.contactPhone
-              ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}`
-              : undefined,
-            feeBreakdown: formatFeeBreakdown(task, currency, t),
-            // T6 审查 P1-1：note 只放真实客户备注（尾号已在联系按钮 contactSuffix 展示，
-            // 原「有电话时 note 被尾号覆盖」会吞掉配送环节最关键的留言信息）
-            note: task.note ?? undefined,
-            // 单号修复（20261115 批1）：orderId 是内部 UUID 外键，展示业务单号 orderNo（历史单缺失降级回退）
-            orderId: task.orderNo ?? task.orderId,
-            points: [
-              {
-                label: 'P' as const,
-                title: task.pickup.title,
-                distance: withDistance('common.totalDistance', task.distanceKm, t),
-              },
-              // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
-              {
-                label: 'D' as const,
-                title: task.dropoff.title,
-                distance: withDistance('common.fromPickup', task.distanceKm, t),
-                subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t),
-              },
-            ],
-            // 时间锚点统一（20261115 批3）：同上 buildDeadlineLabels 降级链（配送中 tab 与大厅/取货同源）
-            ...buildDeadlineLabels(task, t, language),
-          },
-        ]),
+        taskLists.deliveries.map((task) => {
+          // 20261116 三步流统一：deliveries 现含 PICKED_UP（开始配送）+ DELIVERING（去签收），
+          // 按钮文案/目标走 getTaskAction 同源（原硬编码 arrivedDelivery 对 PICKED_UP 语义错位）
+          const action = getTaskAction(task);
+          return [
+            task.id,
+            {
+              actionLabel: action ? t(action.labelKey) : t('tasks.arrivedDelivery'),
+              chatLabel: t('tasks.chat'),
+              contactLabel: t('tasks.contact'),
+              contactSuffix: task.dropoff.contactPhone
+                ? `${t('tasks.recipientSuffix')} ${task.dropoff.contactPhone.slice(-4)}`
+                : undefined,
+              feeBreakdown: formatFeeBreakdown(task, currency, t),
+              // T6 审查 P1-1：note 只放真实客户备注（尾号已在联系按钮 contactSuffix 展示，
+              // 原「有电话时 note 被尾号覆盖」会吞掉配送环节最关键的留言信息）
+              note: task.note ?? undefined,
+              // 单号修复（20261115 批1）：orderId 是内部 UUID 外键，展示业务单号 orderNo（历史单缺失降级回退）
+              orderId: task.orderNo ?? task.orderId,
+              points: [
+                {
+                  label: 'P' as const,
+                  title: task.pickup.title,
+                  distance: withDistance('common.totalDistance', task.distanceKm, t),
+                },
+                // 计费距离 billingDistanceKm 独立展示在 dropoff（距离费基准，区别于骑行 distanceKm）
+                {
+                  label: 'D' as const,
+                  title: task.dropoff.title,
+                  distance: withDistance('common.fromPickup', task.distanceKm, t),
+                  subtitle: withDistance('tasks.billingDistance', task.billingDistanceKm, t),
+                },
+              ],
+              // 时间锚点统一（20261115 批3）：同上 buildDeadlineLabels 降级链（配送中 tab 与大厅/取货同源）
+              ...buildDeadlineLabels(task, t, language),
+              actionTarget: action?.target,
+            },
+          ];
+        }),
       ),
     // 原因：t 每渲染新建（useTranslation.ts:48），deps 用 language 替代（语言不变 t 行为等价，t 仅在回调内消费）——审查 P1-1 拍板
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -392,7 +399,11 @@ export default function TasksPage() {
       map.set(task.id, () => action && router.push(`/task/${task.id}/${action.target}`));
     }
     for (const task of taskLists.deliveries) {
-      map.set(task.id, () => router.push(`/task/${task.id}/sign`));
+      // 20261116 三步流统一修复：原硬编码跳 sign——PICKED_UP 落入 deliveries 后会
+      // 绕过 startDelivering 静默跳步（sign 守卫允许 PICKED_UP 进入，状态不推进）。
+      // 与 pickups 同款走 getTaskAction：PICKED_UP→navigate / DELIVERING→sign
+      const action = getTaskAction(task);
+      map.set(task.id, () => action && router.push(`/task/${task.id}/${action.target}`));
     }
     return map;
   }, [router, taskLists.available, taskLists.pickups, taskLists.deliveries]);
@@ -415,30 +426,38 @@ export default function TasksPage() {
         <TaskCard
           key={task.id}
           {...cardProps}
+          returnNote={task.taskType === 'return' ? t('tasks.returnTag') : undefined}
           variant="active"
           onContact={contactHandlers.get(task.id)}
           onAction={actionHandlers.get(task.id)}
         />
       );
     },
-    [pickupTaskProps, contactHandlers, actionHandlers],
+    // 原因：t 每渲染新建（useTranslation.ts:48），deps 用 language 替代（同 deliveryTaskProps 口径）——审查 P1-1 拍板
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pickupTaskProps, contactHandlers, actionHandlers, language],
   );
 
   const renderDeliveryTask = useCallback(
     (task: DeliveryTask) => {
       const props = deliveryTaskProps.get(task.id);
       if (!props) return null;
+      // 20261116 方案 α：退货 tag（内部路由参数，不下传 TaskCard）
+      const { actionTarget, ...cardProps } = props;
       return (
         <TaskCard
           key={task.id}
-          {...props}
+          {...cardProps}
+          returnNote={task.taskType === 'return' ? t('tasks.returnTag') : undefined}
           variant="active"
           onContact={contactHandlers.get(task.id)}
           onAction={actionHandlers.get(task.id)}
         />
       );
     },
-    [deliveryTaskProps, contactHandlers, actionHandlers],
+    // 原因：t 每渲染新建（useTranslation.ts:48），deps 用 language 替代（同 deliveryTaskProps 口径）——审查 P1-1 拍板
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [deliveryTaskProps, contactHandlers, actionHandlers, language],
   );
 
   // R-P1-4 + C-P2-5：renderItem useCallback 工厂（按 tab 一个稳定引用）；
