@@ -79,8 +79,9 @@ export function useAcceptTask() {
 }
 
 /**
- * P14 ④ B1：return 任务开始配送（PICKED_UP → DELIVERING）
- * 仅 return 任务调（delivery 跳过 DELIVERING）。后端事务内同步写 refund.pickedAt。
+ * P14 ④ B1 → 20261116 拍板：开始配送（PICKED_UP → DELIVERING，所有任务类型可调）
+ * 原「仅 return 任务调」限制已随三步流统一移除（后端 E-DISPATCH-020 移除）。
+ * return 任务后端事务内同步写 refund.pickedAt（delivery 无 refundId 不写）。
  * 乐观更新 lists + detail，失败 rollback。跨 list 移动（pickups→deliveries，审查 C3/N3 方案 A）。
  */
 export function useStartDelivering() {
@@ -89,7 +90,7 @@ export function useStartDelivering() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // CLAUDE.md 规则 12：离线入队（return 任务 PICKED_UP→DELIVERING），恢复后重放真 API。
+      // CLAUDE.md 规则 12：离线入队（PICKED_UP→DELIVERING），恢复后重放真 API。
       // 审查 S1：离线直接 enqueue + return（对齐 pickup），不读 detail、不 throw。
       if (isOffline) {
         await enqueue({ type: 'startDelivering', payload: { taskId: id } });

@@ -48,35 +48,31 @@ export default function TaskNavigatePage() {
     [task],
   );
 
-  // P14 ④ B1 + M1: 守卫按 taskType 理清
-  // - delivery: 只允许 PICKED_UP（两步跳过 DELIVERING）
-  // - return: 允许 PICKED_UP（开始配送前）+ DELIVERING（已开始配送，去签收）
+  // P14 ④ B1 + M1 → 20261116 拍板（三步流统一）：守卫不分 taskType
+  // - 所有任务类型：允许 PICKED_UP（开始配送前）+ DELIVERING（已开始配送，去签收）
   // Why: navigate 是取货后导航送货；其他状态弹回详情页
   // 基于缓存：守卫读 useTask 缓存（S3），极端竞态下仍可能 409，由提交 toast 兜底（审查 A4）
   // T4 §7.1 拍板 A：守卫读顶层 task（loading 期 data=undefined->null->守卫 return，数据到达 re-run）
   useEffect(() => {
     if (!task) return;
-    const isReturn = task.taskType === 'return';
-    const allowed = isReturn
-      ? task.status === 'PICKED_UP' || task.status === 'DELIVERING'
-      : task.status === 'PICKED_UP';
+    const allowed = task.status === 'PICKED_UP' || task.status === 'DELIVERING';
     if (!allowed) {
       router.replace(`/task/${id}`);
     }
   }, [task, id, router]);
 
-  // B1: return 任务 PICKED_UP 先 startDelivering 进 DELIVERING，再跳 sign
-  // delivery 任务 + return 的 DELIVERING：直接跳 sign
+  // B1 → 20261116 拍板：所有任务 PICKED_UP 一律先 startDelivering 进 DELIVERING，再跳 sign
+  // DELIVERING（return 任务或已开始配送的普通单）：直接跳 sign
   const handleNavigateAction = async () => {
     if (!task) return;
     // S5: 防重复点击（startDelivering in-flight 期间禁用）
     if (startDelivering.isPending) return;
-    if (task.taskType === 'return' && task.status === 'PICKED_UP') {
+    if (task.status === 'PICKED_UP') {
       try {
         await startDelivering.mutateAsync(id);
         if (isOffline) showToast(t('common.savedOffline'), 'info');
       } catch (e) {
-        // S6: 按 ApiError 差异化（return 任务 startDelivering 失败）
+        // S6: 按 ApiError 差异化（startDelivering 失败）
         const msg =
           e instanceof ApiError ? t('tasks.startDeliveringFailed') : t('common.networkError');
         showToast(msg, 'error');

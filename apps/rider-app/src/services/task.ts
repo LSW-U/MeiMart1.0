@@ -184,12 +184,14 @@ function mockDelay<T>(value: T, ms = 400): Promise<T> {
 
 function buildMockLists(): TaskLists {
   const tasks = getMockTasks();
+  // 20261116 拍板：三步流统一——pickups 只收待到店（ASSIGNED），已取货（PICKED_UP）
+  // 归 deliveries（与 DELIVERING 同列「配送中」tab），real getLists 同口径
   return {
     available: tasks.filter((task) => task.status === 'PENDING_ASSIGN').map(cloneTask),
-    pickups: tasks
-      .filter((task) => task.status === 'ASSIGNED' || task.status === 'PICKED_UP')
+    pickups: tasks.filter((task) => task.status === 'ASSIGNED').map(cloneTask),
+    deliveries: tasks
+      .filter((task) => task.status === 'PICKED_UP' || task.status === 'DELIVERING')
       .map(cloneTask),
-    deliveries: tasks.filter((task) => task.status === 'DELIVERING').map(cloneTask),
   };
 }
 
@@ -261,10 +263,11 @@ export const taskApi = {
     }
     const pending = pendingSettled.value.data.items.map(fromView);
     const mine = mySettled.status === 'fulfilled' ? mySettled.value.data.items.map(fromView) : [];
+    // 20261116 拍板：三步流统一——pickups 只收 ASSIGNED，PICKED_UP+DELIVERING 归 deliveries
     return {
       available: pending.filter((t) => t.status === 'PENDING_ASSIGN'),
-      pickups: mine.filter((t) => t.status === 'ASSIGNED' || t.status === 'PICKED_UP'),
-      deliveries: mine.filter((t) => t.status === 'DELIVERING'),
+      pickups: mine.filter((t) => t.status === 'ASSIGNED'),
+      deliveries: mine.filter((t) => t.status === 'PICKED_UP' || t.status === 'DELIVERING'),
     };
   },
 
@@ -308,18 +311,16 @@ export const taskApi = {
   },
 
   /**
-   * P14 ④ B1：开始配送（PICKED_UP → DELIVERING，仅 return 任务可调）
-   * 后端 dispatch.service.ts:511 startDelivering：校验 taskType==='return'（否则 E-DISPATCH-020），
-   * 事务内 deliveryTask.update(DELIVERING) + refund.update(pickedAt)。
-   * delivery 任务保持两步（跳过 DELIVERING），不调本方法。
+   * P14 ④ B1 → 20261116 拍板：开始配送（PICKED_UP → DELIVERING，所有任务类型可调）
+   * 后端 dispatch.service.ts startDelivering：E-DISPATCH-020 taskType 拦截已移除
+   * （原「仅 return 可调」作废，普通单统一三步），校验收敛为 E-DISPATCH-004 状态校验
+   * + assertTaskTransition；事务内 deliveryTask.update(DELIVERING)
+   * + refund.update(pickedAt)（仅 return 任务有 refundId）。
    */
   async startDelivering(id: string, note?: string): Promise<DeliveryTask> {
     if (isMockMode) {
       const task = findMockTask(id);
       if (!task) throw new Error(`Task not found: ${id}`);
-      // mock 校验对齐后端 E-DISPATCH-020（仅 return 可调）
-      if (task.taskType !== 'return')
-        throw new Error('E-DISPATCH-020: startDelivering only for return task');
       return mockDelay(await mutateMockStatus(id, 'DELIVERING'), 400);
     }
     const res = await api.post<DeliveryTask>(
