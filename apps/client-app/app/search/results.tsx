@@ -21,6 +21,7 @@ import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
+import { useBottomReserve } from '@/hooks/useBottomReserve';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, spacing, layout, typography, borderRadius, shadowPresets } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
@@ -82,6 +83,8 @@ const WEB_MAX_WIDTH = 720;
 
 export default function SearchResultsPage() {
   const { colors } = useTheme();
+  // 底部留白：根 stack 页无 BottomNav，但挂 FloatingCartBar(64)——useBottomReserve 收敛（20261116）
+  const bottomReserve = useBottomReserve({ withoutNav: true, withCartBar: true });
   const params = useLocalSearchParams<{ q: string; categoryId?: string; preset?: string }>();
   // Filter Tags 联动（2026-11-05）：index 页分类胶囊跳入带 categoryId（q 可空）——
   //   空词+纯分类过滤（后端 listProducts 独立支持），useProductSearch enabled 已放行此路径
@@ -526,7 +529,7 @@ export default function SearchResultsPage() {
             masonry
             numColumns={2}
             keyExtractor={(item: Product) => item.id}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomReserve }]}
             renderItem={renderResultItem}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={
@@ -699,8 +702,8 @@ const styles = StyleSheet.create({
     //   见 renderResultItem 注释）——两列卡片间列距合成 gutter(12)，屏幕边缘保持 container-margin(20)
     paddingHorizontal: layout['container-margin'] - layout.gutter / 2,
     paddingTop: layout['container-margin'],
-    // 20261112：悬浮购物车条高 56，预留防瀑布流末尾被遮挡（同 home bottomReserve 语义）
-    paddingBottom: spacing.xxl * 2 + 64, // 64=悬浮条增高后高度（20261112 56→64）
+    // 底部留白运行时注入（useBottomReserve=手势条inset+8+FCB 64；20261116 收敛，
+    //   原静态 xxl*2+64=160px 偏大且不兜 inset）
   },
   // 20261107 瀑布流 masonry 卡片包裹层：列内行距 marginBottom（home masonryCol gap 同值
   //   spacing.md）+ 列间半 gutter（两列合成 gutter 12）。FlashList masonry 无原生 gap prop。

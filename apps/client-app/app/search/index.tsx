@@ -6,6 +6,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeBack } from '@/hooks/useSafeBack';
+import { useBottomReserve } from '@/hooks/useBottomReserve';
 import { useTheme, spacing, layout, typography } from '@/theme';
 import { SafeAreaWrapper } from '@/components/layout/SafeAreaWrapper';
 import { StatusBarConfig } from '@/components/layout/StatusBar';
@@ -59,6 +60,8 @@ const SEARCH_HEADER_H = 64;
 
 export default function SearchIndexPage() {
   const handleBack = useSafeBack();
+  // 底部留白：根 stack 页无 BottomNav，但挂 FloatingCartBar(64)——useBottomReserve 收敛（20261116）
+  const bottomReserve = useBottomReserve({ withoutNav: true, withCartBar: true });
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
@@ -255,7 +258,7 @@ export default function SearchIndexPage() {
       <StatusBarConfig />
       <ScrollView
         style={{ flex: 1, backgroundColor: colors.background }}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomReserve }]}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         onScroll={({ nativeEvent }) => handleContentScroll(nativeEvent.contentOffset.y)}
@@ -549,8 +552,8 @@ export default function SearchIndexPage() {
 
 const styles = StyleSheet.create({
   scrollContent: {
-    // 20261112：悬浮购物车条高 56，预留 48+56 防推荐流末尾被遮挡（同 home.tsx bottomReserve 语义）
-    paddingBottom: spacing.xxl * 2 + 64, // 64=悬浮条增高后高度（20261112 56→64）
+    // 底部留白运行时注入（useBottomReserve=手势条inset+8+FCB 64；20261116 收敛，
+    //   原静态 xxl*2+64=160px 偏大且不兜 inset）
   },
   headerWrap: {
     position: 'relative',
