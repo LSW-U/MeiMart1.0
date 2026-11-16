@@ -552,6 +552,7 @@
   "tasks.settings": "设置",
   "tasks.startDeliveringFailed": "开始配送失败，请重试",
   "tasks.startDelivery": "开始配送",
+  "tasks.startReturn": "开始返仓",
   "tasks.status.onDuty": "工作中",
   "tasks.tabs.deliveries0": "配送中 (0)",
   "tasks.tabs.deliveries1": "配送中 (1)",
@@ -618,6 +619,7 @@
   "tasks.timeLeft": "剩 {minutes} 分钟",
   "tasks.pickupTimeLeft": "取货剩 {minutes} 分钟",
   "tasks.pickupOverdue": "取货已超时",
+  "tasks.overdue": "已超时",
   "tasks.distanceRefOnly": "全程直线距离，仅参考",
   "common.itemsSummaryKinds": "商品：{totalQty} 件 · {kinds} 种",
   "tasks.returnTag": "退货取件"

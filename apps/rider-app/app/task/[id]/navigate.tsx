@@ -116,10 +116,12 @@ export default function TaskNavigatePage() {
     }
   };
 
-  // return + PICKED_UP: 显示"开始配送"；其他（delivery + PICKED_UP / return + DELIVERING）: 显示"去签收"
+  // 20261117 F2：与 getTaskAction 同源（task-flow.ts PICKED_UP 分支）——
+  // return 任务是「开始返仓」（货从客人处取回，下一步回仓库非配送客人）；
+  // 其他（delivery + PICKED_UP / DELIVERING）: "去签收"（DELIVERING 普通单已进配送段）
   const actionLabel =
     task?.taskType === 'return' && task?.status === 'PICKED_UP'
-      ? t('tasks.startDelivery')
+      ? t('tasks.startReturn')
       : t('tasks.goSignoff');
 
   return (

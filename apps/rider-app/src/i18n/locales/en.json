@@ -552,6 +552,7 @@
   "tasks.settings": "Settings",
   "tasks.startDeliveringFailed": "Failed to start delivery",
   "tasks.startDelivery": "Start Delivery",
+  "tasks.startReturn": "Start Return",
   "tasks.status.onDuty": "On Duty",
   "tasks.tabs.deliveries0": "Deliveries (0)",
   "tasks.tabs.deliveries1": "Deliveries (1)",
@@ -618,6 +619,7 @@
   "tasks.timeLeft": "{minutes} min left",
   "tasks.pickupTimeLeft": "Pickup in {minutes} min",
   "tasks.pickupOverdue": "Pickup overdue",
+  "tasks.overdue": "Overdue",
   "tasks.distanceRefOnly": "Straight-line distance, for reference only",
   "common.itemsSummaryKinds": "Items: {totalQty} units · {kinds} kinds",
   "tasks.returnTag": "Return pickup"

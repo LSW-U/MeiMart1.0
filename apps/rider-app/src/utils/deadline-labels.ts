@@ -114,9 +114,11 @@ function buildWorkPart(
     const pickupLeft = Math.floor(SLA_PICKUP_MINUTES - elapsed);
     if (deadlineMinutesLeft != null && deadlineMinutesLeft < pickupLeft) {
       // 送达死线比取货 SLA 更紧：以死线为准（最紧约束原则）
+      // 超时（<=0）不走数字模板——「剩 -4280 分钟」实锤（20261117 真机），改「已超时」
+      if (deadlineMinutesLeft <= 0) return { text: t('tasks.overdue'), urgent: true };
       return {
         text: t('tasks.timeLeft', { minutes: deadlineMinutesLeft }),
-        urgent: deadlineMinutesLeft <= 0 || deadlineMinutesLeft < DEADLINE_URGENT_MINUTES,
+        urgent: deadlineMinutesLeft < DEADLINE_URGENT_MINUTES,
       };
     }
     if (pickupLeft <= 0) return { text: t('tasks.pickupOverdue'), urgent: true };
@@ -129,9 +131,11 @@ function buildWorkPart(
     (task.status === 'PICKED_UP' || task.status === 'DELIVERING') &&
     deadlineMinutesLeft != null
   ) {
+    // 同上：超时改「已超时」，不透出负数分钟
+    if (deadlineMinutesLeft <= 0) return { text: t('tasks.overdue'), urgent: true };
     return {
       text: t('tasks.timeLeft', { minutes: deadlineMinutesLeft }),
-      urgent: deadlineMinutesLeft <= 0 || deadlineMinutesLeft < DEADLINE_URGENT_MINUTES,
+      urgent: deadlineMinutesLeft < DEADLINE_URGENT_MINUTES,
     };
   }
   return undefined;

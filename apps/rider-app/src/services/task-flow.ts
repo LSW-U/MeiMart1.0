@@ -27,6 +27,12 @@ export function getTaskAction(task: DeliveryTask): TaskAction | undefined {
     case 'ASSIGNED':
       return { labelKey: 'tasks.arrivedPickup', target: 'pickup' };
     case 'PICKED_UP':
+      // 20261117 F2 拍板：return 任务取货后语义是「返仓」非「配送」，独立文案
+      // （navigate 页 actionLabel 判断同步，两处同源靠本 helper——navigate.tsx 也走 getTaskAction? 否，
+      // navigate.tsx:120 自判 taskType，修复批同步改；此处 labelKey 供列表卡）
+      if (task.taskType === 'return') {
+        return { labelKey: 'tasks.startReturn', target: 'navigate' };
+      }
       // 所有任务类型都先跳 navigate（navigate 页「开始配送」先 startDelivering 再进 sign）
       return { labelKey: 'tasks.startDelivery', target: 'navigate' };
     case 'DELIVERING':

@@ -24,6 +24,7 @@ const t = (key: string, vars?: Record<string, unknown>) => {
     'tasks.timeLeft': '剩 {minutes} 分钟',
     'tasks.pickupTimeLeft': '取货剩 {minutes} 分钟',
     'tasks.pickupOverdue': '取货已超时',
+    'tasks.overdue': '已超时',
     'common.deliverApprox': '约 {minutes} 分钟',
     'common.totalDistance': '全程 {distance}',
   };
@@ -118,6 +119,27 @@ describe('buildDeadlineLabels B 方案：作业计时副行', () => {
 
   it('SLA 常量为 15 分钟（语义登记，防止无意改动）', () => {
     expect(SLA_PICKUP_MINUTES).toBe(15);
+  });
+
+  it('PICKED_UP 死线已超时（负剩余）：副行「已超时」非负数分钟（20261117 真机 -4280min 实锤）', () => {
+    const task = makeStatusTask('PICKED_UP', {
+      estimatedArrival: new Date(NOW - 4280 * 60_000).toISOString(),
+    });
+    const r = buildDeadlineLabels(task, t, 'zh', NOW);
+    expect(r.timeLabel).toContain('已超时');
+    expect(r.timeSub).toContain('已超时');
+    expect(r.timeSub).not.toMatch(/-\d+/);
+    expect(r.timeTone).toBe('error');
+  });
+
+  it('ASSIGNED 最紧约束分支死线负剩余：同样「已超时」不透出负数', () => {
+    const task = makeStatusTask('ASSIGNED', {
+      assignedAt: new Date(NOW - 1 * 60_000).toISOString(),
+      estimatedArrival: new Date(NOW - 30 * 60_000).toISOString(),
+    });
+    const r = buildDeadlineLabels(task, t, 'zh', NOW);
+    expect(r.timeSub).not.toMatch(/-\d+/);
+    expect(r.timeTone).toBe('error');
   });
 });
 

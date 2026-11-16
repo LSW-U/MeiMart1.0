@@ -552,6 +552,7 @@
   "tasks.settings": "Pengaturan",
   "tasks.startDeliveringFailed": "Gagal memulai pengantaran",
   "tasks.startDelivery": "Mulai Pengantaran",
+  "tasks.startReturn": "Mulai Pengembalian",
   "tasks.status.onDuty": "Sedang Bertugas",
   "tasks.tabs.deliveries0": "Pengantaran (0)",
   "tasks.tabs.deliveries1": "Pengantaran (1)",
@@ -618,6 +619,7 @@
   "tasks.timeLeft": "{minutes} menit lagi",
   "tasks.pickupTimeLeft": "Ambil dalam {minutes} mnt",
   "tasks.pickupOverdue": "Pengambilan terlambat",
+  "tasks.overdue": "Terlambat",
   "tasks.distanceRefOnly": "Jarak garis lurus, hanya referensi",
   "common.itemsSummaryKinds": "Barang: {totalQty} unit · {kinds} jenis",
   "tasks.returnTag": "Pengambilan retur"

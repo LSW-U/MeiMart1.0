@@ -552,6 +552,7 @@
   "tasks.settings": "Konfigurasaun",
   "tasks.startDeliveringFailed": "Entrega hahu falla, favor koko fali",
   "tasks.startDelivery": "Hahu Entrega",
+  "tasks.startReturn": "Hahu Fila Fail",
   "tasks.status.onDuty": "Iha Servisu",
   "tasks.tabs.deliveries0": "Entrega (0)",
   "tasks.tabs.deliveries1": "Entrega (1)",
@@ -618,6 +619,7 @@
   "tasks.timeLeft": "Minutu {minutes} hela",
   "tasks.pickupTimeLeft": "PICKUP {minutes} minutu liu",
   "tasks.pickupOverdue": "PICKUP tempu liu ona",
+  "tasks.overdue": "Tempu liu ona",
   "tasks.distanceRefOnly": "Distansia línia toos, de'it referensia",
   "common.itemsSummaryKinds": "Sasan: {totalQty} unit · {kinds} sorte",
   "tasks.returnTag": "Devolusaun fo hela"

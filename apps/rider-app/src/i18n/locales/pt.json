@@ -552,6 +552,7 @@
   "tasks.settings": "Definições",
   "tasks.startDeliveringFailed": "Falha ao iniciar a entrega",
   "tasks.startDelivery": "Iniciar Entrega",
+  "tasks.startReturn": "Iniciar Devolução",
   "tasks.status.onDuty": "Em Serviço",
   "tasks.tabs.deliveries0": "Entregas (0)",
   "tasks.tabs.deliveries1": "Entregas (1)",
@@ -618,6 +619,7 @@
   "tasks.timeLeft": "Faltam {minutes} min",
   "tasks.pickupTimeLeft": "Recolha em {minutes} min",
   "tasks.pickupOverdue": "Recolha em atraso",
+  "tasks.overdue": "Atrasado",
   "tasks.distanceRefOnly": "Distância em linha reta, apenas referência",
   "common.itemsSummaryKinds": "Itens: {totalQty} unidades · {kinds} tipos",
   "tasks.returnTag": "Devolução"
