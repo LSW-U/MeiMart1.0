@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Linking, Pressable, RefreshControl, Text, View } from 'react-native';
 
 import { DutyStatusMenu } from '../../src/components/business/DutyStatusMenu';
@@ -159,6 +159,17 @@ export default function TasksPage() {
     pendingDeposit !== null ? 'pending' : bondPaid ? 'none' : 'unpaid';
   void rider; // rider 仅剩兜底（depositStatus 未加载时不拦截，保守可用）
   const activeTasksExist = taskLists.pickups.length + taskLists.deliveries.length > 0;
+
+  // 方案 C（20261117 拍板③）：liveEta 变化要重新 getLists 才可见（useMinuteTick 只是
+  // 重渲染 tick 不拉数据）。有活跃任务（pickups/deliveries 非空）时，60s tick 顺带
+  // refetch 一次——等单空档（都空）不轮询；离线守卫（同 §7.2 下拉刷新，不守卫会
+  // reject 后 QueryBoundary 切 error 态覆盖缓存）；活任务通常 1-3 条，负载可忽略。
+  useEffect(() => {
+    if (!activeTasksExist || isOffline) return;
+    if (minuteTick > 0) void refetchTasks();
+    // refetchTasks 引用稳定（react-query），不需要进 deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minuteTick, activeTasksExist, isOffline]);
   const currency = t('common.currency');
   // C-P2-5 依赖稳定性（审查 P1-1）：rider useTranslation 的 t 每渲染新建（useTranslation.ts:48），
   //   下述 useMemo deps 不能用 t——改依赖 language（语言不变则 t 行为等价，闭包捕获的

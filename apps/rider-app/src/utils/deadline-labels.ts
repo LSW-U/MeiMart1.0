@@ -33,6 +33,11 @@ export const withDistance = (
 
 /**
  * B+D 方案（20261116 拍板）：承诺死线 + 作业计时分离。
+ * 方案 C 增量（20261117）：主行死线锚点优先取 task.liveEta（后端读时计算自骑手实时
+ * 位置的动态 ETA）——存在时主行显示动态时刻（文案复用 deliverBy），null/undefined
+ * 回退静态死线 estimatedArrival（建单+45min），降级链原样保留。
+ * 副行作业计时（B 方案）不动：仍按静态死线剩余计算（liveEta 只换主行锚点，
+ * 副行「作业剩 n 分钟」语义是死线剩余，两锚点并存时以承诺死线为准不漂移）。
  *
  * 主行语义恒为「系统对客户的送达死线」（estimated_arrival，建单+45min，接单不漂移——
  * 方案 A 会漂移客户承诺已否决）。副行按任务阶段叠加作业计时：
@@ -51,7 +56,8 @@ export function buildDeadlineLabels(
   language: AppLanguage,
   now: number = Date.now(),
 ): { timeLabel: string; timeSub?: string; timeTone?: 'default' | 'error' } {
-  const dl = computeDeadline(task.estimatedArrival, now);
+  // 方案 C：主行锚点优先动态 liveEta（骑手移动后逐步修正），null/undefined 回退静态死线
+  const dl = computeDeadline(task.liveEta ?? task.estimatedArrival, now);
   const distancePart = withDistance('common.totalDistance', task.distanceKm, t);
   // 作业计时副行（B 方案）：ASSIGNED 阶段算取货剩余，取货后算送达剩余——
   // 时间源 assignedAt（接单时刻，DB 无独立 acceptedAt 列，acceptTask 写 assigned_at）

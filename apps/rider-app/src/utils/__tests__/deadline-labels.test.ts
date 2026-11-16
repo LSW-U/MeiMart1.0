@@ -36,7 +36,11 @@ const t = (key: string, vars?: Record<string, unknown>) => {
 
 function makeStatusTask(
   status: DeliveryTask['status'],
-  overrides: { assignedAt?: string | null; estimatedArrival?: string | null } = {},
+  overrides: {
+    assignedAt?: string | null;
+    estimatedArrival?: string | null;
+    liveEta?: string | null;
+  } = {},
 ): DeliveryTask {
   const base = makeTask(status, { id: 'x1', distanceKm: 2.0 });
   return {
@@ -46,6 +50,7 @@ function makeStatusTask(
       overrides.estimatedArrival !== undefined
         ? overrides.estimatedArrival
         : new Date(NOW + 40 * 60_000).toISOString(),
+    liveEta: overrides.liveEta,
   } as DeliveryTask;
 }
 
@@ -113,5 +118,45 @@ describe('buildDeadlineLabels B 方案：作业计时副行', () => {
 
   it('SLA 常量为 15 分钟（语义登记，防止无意改动）', () => {
     expect(SLA_PICKUP_MINUTES).toBe(15);
+  });
+});
+
+/**
+ * 方案 C（20261117）：主行锚点优先动态 liveEta，null/undefined 回退静态死线。
+ */
+describe('buildDeadlineLabels 方案 C：动态 liveEta 主行锚点', () => {
+  const staticDeadline = new Date(NOW + 40 * 60_000).toISOString();
+  const liveEta = new Date(NOW + 12 * 60_000).toISOString();
+
+  it('liveEta 存在：主行显示动态时刻（比静态死线早 → 剩余分钟取 liveEta）', () => {
+    const task = makeStatusTask('PICKED_UP', {
+      estimatedArrival: staticDeadline,
+      liveEta,
+    });
+    const r = buildDeadlineLabels(task, t, 'zh', NOW);
+    // 副行「剩 n 分钟」按主行锚点（liveEta=12min）计算——computeDeadline 同源
+    expect(r.timeSub).toContain('剩 12 分钟');
+    expect(r.timeSub).not.toContain('剩 40 分钟');
+    expect(r.timeLabel).toContain('需在');
+  });
+
+  it('liveEta null：回退静态死线（剩 40 分钟），降级链原样', () => {
+    const task = makeStatusTask('PICKED_UP', {
+      estimatedArrival: staticDeadline,
+      liveEta: null,
+    });
+    const r = buildDeadlineLabels(task, t, 'zh', NOW);
+    expect(r.timeSub).toContain('剩 40 分钟');
+  });
+
+  it('liveEta undefined（历史单/契约滞后）：回退静态死线不崩', () => {
+    const task = makeStatusTask('ASSIGNED', {
+      assignedAt: new Date(NOW - 10 * 60_000).toISOString(),
+      estimatedArrival: staticDeadline,
+    });
+    expect(task.liveEta).toBeUndefined();
+    const r = buildDeadlineLabels(task, t, 'zh', NOW);
+    expect(r.timeLabel).toContain('需在');
+    expect(r.timeSub).toContain('取货剩 5 分钟');
   });
 });

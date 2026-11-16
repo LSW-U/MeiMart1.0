@@ -119,6 +119,13 @@ export type DeliveryTask = {
    * 缺失（历史单/契约滞后）→ 前端降级「约 X 分钟」分钟口径文案，绝不报错。
    */
   estimatedArrival?: string | null;
+  /**
+   * 动态 ETA（ISO 时刻，实时动态 ETA 方案 C 2026-11-17）。
+   * 后端读时计算自骑手最新位置（rider:loc Redis → 目标点 Haversine ÷ 20km/h + 缓冲）；
+   * 位置不新鲜/键缺失/Redis 异常/非进行中 → null。null/undefined → 前端回退静态死线
+   * estimatedArrival（三档降级链原样保留）。
+   */
+  liveEta?: string | null;
   // ── 兼容字段（旧 UI 引用 task.pickup.title / task.fee 等） ──
   // service 层 fromView() 保证 real 模式也填充这些字段。
   // P0-1/P6 #7 修复（2026-08-25）：fee/distanceKm/estimatedMinutes 已由后端透传，
