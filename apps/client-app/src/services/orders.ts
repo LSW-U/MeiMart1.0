@@ -42,7 +42,13 @@ interface OrderRaw {
   deliveryFee: number;
   discountAmount: number;
   payableAmount: number;
-  deliveryAddress: unknown;
+  deliveryAddress: {
+    name?: string;
+    phone?: string;
+    detail?: string;
+    lat?: number | null;
+    lng?: number | null;
+  } | null;
   remark: string | null;
   riderId: string | null;
   // 替换品批1（2026-10-29 D9/D13）：下单替换策略 + SPECIFY 白名单（可空，向后兼容）——
@@ -148,6 +154,25 @@ function transformOrder(raw: OrderRaw): Order {
     // Why: P10 §8.1 D1/D2 - 费用 + 支付方式（后端分→元 / paymentMethod 透传枚举字符串）
     deliveryFee: (raw.deliveryFee ?? 0) / 100,
     discountAmount: (raw.discountAmount ?? 0) / 100,
+    // Why: 地址快照映射修复（20261117 T6 后续）——后端 deliveryAddress（AddressSnapshot
+    //   {name,phone,detail,lat,lng}）一直有返回，transform 漏映射导致 real 模式
+    //   Order.address 恒 undefined：详情页地址卡整卡不渲染、物流页显「Address not available」
+    //   （mock 给全字段掩盖，同 select 白名单断链前科，断在前端 transform 层）。
+    //   快照无 province/city/district 三级，置空串由渲染层过滤空段
+    address: raw.deliveryAddress
+      ? {
+          id: '',
+          name: raw.deliveryAddress.name ?? '',
+          phone: raw.deliveryAddress.phone ?? '',
+          province: '',
+          city: '',
+          district: '',
+          detail: raw.deliveryAddress.detail ?? '',
+          isDefault: false,
+          lat: raw.deliveryAddress.lat ?? null,
+          lng: raw.deliveryAddress.lng ?? null,
+        }
+      : undefined,
     paymentMethod: raw.paymentMethod ?? undefined,
     // Why: P10 §3.5 + P11 §3.2 骑手详情映射（OrderRaw.rider → Order.rider: RiderInfo，后端项 1 就绪后透传；rating Decimal→number）
     rider: raw.rider

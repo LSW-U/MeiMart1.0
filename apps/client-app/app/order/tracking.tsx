@@ -13,7 +13,7 @@ import {
   Share,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { formatDate, maskPhone } from '@/utils/format';
+import { formatDate, maskPhone, formatPrice } from '@/utils/format';
 import { useTranslation } from 'react-i18next';
 import { useSafeBack } from '@/hooks/useSafeBack';
 import {
@@ -364,7 +364,10 @@ export default function DeliveryTrackingPage() {
             </Text>
             <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
               {address
-                ? `${address.detail}, ${address.district}, ${address.city}, ${address.province}`
+                ? // 地址快照只有 detail 无省市区三级（AddressSnapshot 契约），过滤空段防 ", , ,"
+                  [address.detail, address.district, address.city, address.province]
+                    .filter(Boolean)
+                    .join(', ')
                 : t('tracking.unknownAddress', { defaultValue: 'Address not available' })}
             </Text>
             {address?.phone ? (
@@ -447,7 +450,39 @@ export default function DeliveryTrackingPage() {
             {t('tracking.orderSummary')}
           </Text>
           <View style={styles.summaryGap}>
-            {/* TODO(长期): 后端订单返回 subtotal/deliveryFee/discount 字段后恢复分项显示 */}
+            {/* Why: T7 更正（20261117）——后端早返回 deliveryFee/discountAmount（transformOrder 已转元），
+                P10 详情页 [id].tsx 同款四行 Summary 先例；本页补齐，撤「等后端」误判。
+                subtotal 反推 + Math.max(0) 防负（运费>商品小计的异常数据显示 0）同 [id].tsx:102-105 口径 */}
+            <View style={styles.summaryRow}>
+              <Text style={[styles.bodySm, { color: colors['on-surface'] }]}>
+                {t('order.subtotal', { defaultValue: 'Subtotal' })}
+              </Text>
+              <Text style={[styles.bodySm, { color: colors['on-surface'], fontWeight: '600' }]}>
+                {formatPrice(
+                  Math.max(
+                    0,
+                    order.totalPrice + (order.discountAmount ?? 0) - (order.deliveryFee ?? 0),
+                  ),
+                )}
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={[styles.bodySm, { color: colors['on-surface'] }]}>
+                {t('order.shipping', { defaultValue: 'Shipping' })}
+              </Text>
+              <Text style={[styles.bodySm, { color: colors['on-surface'], fontWeight: '600' }]}>
+                {formatPrice(order.deliveryFee ?? 0)}
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={[styles.bodySm, { color: colors['on-surface'] }]}>
+                {t('order.discount', { defaultValue: 'Discount' })}
+              </Text>
+              <Text style={[styles.bodySm, { color: colors.semantic.success, fontWeight: '600' }]}>
+                {/* 批2 M3 同款：sign 档负值显示（-$x.xx），不手拼前缀 */}
+                {formatPrice(-(order.discountAmount ?? 0), 'USD', 2, { sign: true })}
+              </Text>
+            </View>
             <View style={[styles.totalRow, { borderTopColor: colors['outline-variant'] }]}>
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
                 {t('order.total', { defaultValue: 'Total' })}
@@ -877,6 +912,12 @@ const styles = StyleSheet.create({
   summaryGap: {
     gap: spacing.sm,
     marginTop: spacing.sm,
+  },
+  // Why: T7 更正批恢复——原 T9 删的是无引用死样式，现 Summary 分项行实际使用（与 [id].tsx 同名同构）
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   // Why: summaryRow 已删——原 subtotal/discount 分项行样式，TODO(长期) 恢复分项时随 T7 挂账重写
   totalRow: {

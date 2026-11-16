@@ -313,10 +313,15 @@ export default function OrderDetailPage() {
                 {maskPhone(order.address.phone)}
               </Text>
               <Text style={[styles.bodySm, { color: colors['on-surface-variant'] }]}>
-                {order.address.province}
-                {order.address.city}
-                {order.address.district}
-                {order.address.detail}
+                {/* 地址快照只有 detail 无省市区三级（AddressSnapshot 契约），过滤空段防 ", , ," */}
+                {[
+                  order.address.detail,
+                  order.address.district,
+                  order.address.city,
+                  order.address.province,
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
               </Text>
             </View>
           </View>
