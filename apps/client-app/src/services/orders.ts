@@ -159,6 +159,9 @@ function transformOrder(raw: OrderRaw): Order {
     //   Order.address 恒 undefined：详情页地址卡整卡不渲染、物流页显「Address not available」
     //   （mock 给全字段掩盖，同 select 白名单断链前科，断在前端 transform 层）。
     //   快照无 province/city/district 三级，置空串由渲染层过滤空段
+    //   ⚠️ id:''/isDefault:false 是为满足 Address 类型的硬造占位（快照无此数据）——
+    //   禁止消费（当前 detail/tracking 只读 name/phone/detail/lat/lng，已核）；
+    //   后续若需按 id 操作地址，须回查 addresses 表而非读快照（审查🟡3 拍板：注释标注）
     address: raw.deliveryAddress
       ? {
           id: '',

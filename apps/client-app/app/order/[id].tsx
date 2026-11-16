@@ -100,6 +100,8 @@ export default function OrderDetailPage() {
       : t(visual.bannerValueKey);
   // Why: P10 §8.1 D1 - 费用从 transformOrder 映射的字段读取，消除 2.0/5.0 写死（mock 无字段时降级 0）
   // C-P3-3（批4）：Math.max(0, ...) 防负值——异常数据（运费>商品小计）时 subtotal 显示 0 而非负数
+  // ⚠️ 反推隐含假设=契约只有 商品/折扣/运费 三项；后端加第四项（平台费/小费）会静默
+  // 失真，届时改用后端显式 subtotal 字段（与 tracking.tsx:455 注释互锁，审查 20261117）
   const shippingFee = order.deliveryFee ?? 0;
   const discount = order.discountAmount ?? 0;
   const subtotal = Math.max(0, order.totalPrice + discount - shippingFee);
@@ -289,20 +291,8 @@ export default function OrderDetailPage() {
                   {t('order.shippingInfo', { defaultValue: 'Delivery Address' })}
                 </Text>
               </View>
-              <Pressable
-                onPress={() =>
-                  // A-P2-7（D6）: 订单页地址入口维持管理模式，D6 选择语义不再使用
-                  //（审查 P2-1 拍板 a，20261010）
-                  router.push('/address/list')
-                }
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={t('checkout.address.change', { defaultValue: 'Edit' })}
-              >
-                <Text style={[styles.editText, { color: colors.primary }]}>
-                  {t('checkout.address.change', { defaultValue: 'EDIT' }).toUpperCase()}
-                </Text>
-              </Pressable>
+              {/* T6 拍板 A 对齐（20261117 审查🟡2）：订单地址是下单快照不回写，
+                  与物流页 a2218a7 同口径删 EDIT 死入口（跳 /address/list 改了不生效） */}
             </View>
             <View style={styles.addressBody}>
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
@@ -801,6 +791,9 @@ const styles = StyleSheet.create({
   priceDisplayLg: {
     ...typography['price-display'],
     fontSize: 24,
+    // Why: 20261117 真机验收发现总额被裁半——token lineHeight=20 装不下覆盖后的 fontSize 24，
+    //   文字垂直裁切。同步放大行高修复（tracking 页走 PriceText size=lg 无此问题）。
+    lineHeight: 28,
     fontWeight: '700',
   },
   bodySm: {
@@ -844,11 +837,6 @@ const styles = StyleSheet.create({
   addressTitle: {
     ...typography['body-md'],
     fontWeight: '700',
-  },
-  editText: {
-    ...typography['label-caps'],
-    fontSize: 11,
-    textDecorationLine: 'underline',
   },
   addressBody: {
     paddingLeft: 28,

@@ -447,12 +447,15 @@ export default function DeliveryTrackingPage() {
           ]}
         >
           <Text style={[styles.labelCaps, { color: colors['on-surface-variant'] }]}>
-            {t('tracking.orderSummary')}
+            {t('tracking.orderSummary').toUpperCase()}
           </Text>
           <View style={styles.summaryGap}>
             {/* Why: T7 更正（20261117）——后端早返回 deliveryFee/discountAmount（transformOrder 已转元），
                 P10 详情页 [id].tsx 同款四行 Summary 先例；本页补齐，撤「等后端」误判。
-                subtotal 反推 + Math.max(0) 防负（运费>商品小计的异常数据显示 0）同 [id].tsx:102-105 口径 */}
+                subtotal 反推 + Math.max(0) 防负（运费>商品小计的异常数据显示 0）同 [id].tsx:102-105 口径。
+                ⚠️ 反推隐含假设=契约只有 商品/折扣/运费 三项；后端若加平台费/小费等
+                第四项，此处会静默把它算进 Subtotal——届时须改用后端显式 subtotal 字段
+                （审查小改进 20261117，两侧注释互锁，[id].tsx 同款锚点） */}
             <View style={styles.summaryRow}>
               <Text style={[styles.bodySm, { color: colors['on-surface'] }]}>
                 {t('order.subtotal', { defaultValue: 'Subtotal' })}
@@ -485,9 +488,13 @@ export default function DeliveryTrackingPage() {
             </View>
             <View style={[styles.totalRow, { borderTopColor: colors['outline-variant'] }]}>
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
-                {t('order.total', { defaultValue: 'Total' })}
+                {/* 20261117 对齐批：与详情页 [id].tsx 同 key 同 defaultValue（「Total Amount」两页一致） */}
+                {t('order.total', { defaultValue: 'Total Amount' })}
               </Text>
-              <PriceText value={order.totalPrice} size="lg" />
+              {/* 20261117 对齐批：Total 金额改 priceDisplayLg 同款 24 号（原 PriceText lg=20 与详情页不一致） */}
+              <Text style={[styles.priceDisplayLg, { color: colors.primary }]}>
+                {formatPrice(order.totalPrice)}
+              </Text>
             </View>
           </View>
         </View>
@@ -920,6 +927,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   // Why: summaryRow 已删——原 subtotal/discount 分项行样式，TODO(长期) 恢复分项时随 T7 挂账重写
+  // 20261117 对齐批：新增 priceDisplayLg 与详情页 [id].tsx 同款（token + fontSize 24 + lineHeight 28），
+  //   Summary Total 行金额字号两页统一
+  priceDisplayLg: {
+    ...typography['price-display'],
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: '700',
+  },
   totalRow: {
     flexDirection: 'row',
     alignItems: 'center',
