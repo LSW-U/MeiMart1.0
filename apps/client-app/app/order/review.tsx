@@ -461,7 +461,12 @@ export default function OrderReviewPage() {
             <TaisPattern width={400} height={60} opacity={0.15} />
           </View>
           <View style={styles.productRow}>
-            <View style={[styles.productImgWrap, { backgroundColor: colors['surface-container'] }]}>
+            <View
+              style={[
+                styles.productImgWrap,
+                { backgroundColor: colors['surface-container-lowest'] },
+              ]}
+            >
               <SafeImage
                 source={{ uri: product?.image ?? REVIEW_FALLBACK_IMG }}
                 style={styles.productImg}

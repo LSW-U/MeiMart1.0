@@ -373,7 +373,10 @@ export default function AfterSalesApplyPage() {
                     {selected ? <Icon symbol="check" size={15} color={ON_PRIMARY} /> : null}
                   </Pressable>
                   <View
-                    style={[styles.itemThumb, { backgroundColor: colors['surface-container'] }]}
+                    style={[
+                      styles.itemThumb,
+                      { backgroundColor: colors['surface-container-lowest'] },
+                    ]}
                   >
                     {it.product.image ? (
                       <SafeImage
