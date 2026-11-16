@@ -54,7 +54,9 @@ export const SmallProductCard = memo(function SmallProductCard({
         accessibilityRole="button"
         accessibilityLabel={t('product.viewItem', { name })}
       >
-        <View style={[styles.imageWrap, { backgroundColor: colors['surface-container'] }]}>
+        {/* Why: B1 拍板（20261116）——图片占位色改纯白（原 #fff0ee 暖粉图未加载时整卡呈粉），
+            与 MasonryProductCard 同批；其余 surface-container 使用处非图片占位不动 */}
+        <View style={[styles.imageWrap, { backgroundColor: colors['surface-container-lowest'] }]}>
           <SafeImage
             source={{ uri: product.image }}
             style={styles.image}

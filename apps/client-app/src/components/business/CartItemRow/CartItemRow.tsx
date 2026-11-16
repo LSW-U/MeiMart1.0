@@ -72,7 +72,7 @@ function CartItemRowBase({
         accessibilityRole={onItemPress ? 'button' : undefined}
         accessibilityLabel={onItemPress ? t('cart.a11y.viewItem', { name }) : undefined}
       >
-        <View style={[styles.imageWrap, { backgroundColor: colors['surface-container'] }]}>
+        <View style={[styles.imageWrap, { backgroundColor: colors['surface-container-lowest'] }]}>
           <SafeImage
             source={{ uri: product.image }}
             style={styles.image}

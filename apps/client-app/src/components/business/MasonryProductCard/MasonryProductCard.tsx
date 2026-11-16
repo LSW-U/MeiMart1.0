@@ -56,7 +56,10 @@ export const MasonryProductCard = memo(function MasonryProductCard({
     <View
       style={[
         styles.imageWrap,
-        { height: imageHeight, backgroundColor: colors['surface-container'] },
+        // Why: B1 拍板（20261116）——占位色用纯白（surface-container-lowest）对齐卡片本体，
+        //   原 surface-container #fff0ee 暖粉在图未加载/透明底 PNG 时整卡呈粉（用户反馈）；
+        //   边界感由卡片自带 outline-variant 描边承担。favorites/search 同构卡片一并生效
+        { height: imageHeight, backgroundColor: colors['surface-container-lowest'] },
       ]}
     >
       {/* 批3 P2-2：瀑布流卡片（排除区外的管理态卡片），thumb+lazy+recyclingKey */}
