@@ -171,6 +171,27 @@ describe('buildDeadlineLabels 方案 C：动态 liveEta 主行锚点', () => {
     expect(r.timeSub).toContain('剩 40 分钟');
   });
 
+  it('静态死线已过期但 liveEta 宽裕：以静态死线裁定超时，liveEta 不得「续命」（挂账 #6 真机实锤）', () => {
+    // 真机案例：estimated_arrival 过期 3 天，liveEta=now+49min 把「已超时」盖成「剩 49 分钟」
+    const task = makeStatusTask('PICKED_UP', {
+      estimatedArrival: new Date(NOW - 3 * 24 * 60_000).toISOString(), // 静态死线 3 天前
+      liveEta: new Date(NOW + 49 * 60_000).toISOString(), // liveEta 宽裕
+    });
+    const r = buildDeadlineLabels(task, t, 'zh', NOW);
+    expect(r.timeLabel).toContain('已超时');
+    expect(r.timeSub).not.toContain('剩 49 分钟');
+    expect(r.timeTone).toBe('error');
+  });
+
+  it('静态死线未过期 + liveEta 更早：正常取 liveEta（C 方案正常路径不受影响）', () => {
+    const task = makeStatusTask('PICKED_UP', {
+      estimatedArrival: staticDeadline, // 40min
+      liveEta, // 12min
+    });
+    const r = buildDeadlineLabels(task, t, 'zh', NOW);
+    expect(r.timeSub).toContain('剩 12 分钟');
+  });
+
   it('liveEta undefined（历史单/契约滞后）：回退静态死线不崩', () => {
     const task = makeStatusTask('ASSIGNED', {
       assignedAt: new Date(NOW - 10 * 60_000).toISOString(),

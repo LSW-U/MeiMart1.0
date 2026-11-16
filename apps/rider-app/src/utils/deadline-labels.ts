@@ -56,8 +56,12 @@ export function buildDeadlineLabels(
   language: AppLanguage,
   now: number = Date.now(),
 ): { timeLabel: string; timeSub?: string; timeTone?: 'default' | 'error' } {
-  // 方案 C：主行锚点优先动态 liveEta（骑手移动后逐步修正），null/undefined 回退静态死线
-  const dl = computeDeadline(task.liveEta ?? task.estimatedArrival, now);
+  // 方案 C：主行锚点优先动态 liveEta（骑手移动后逐步修正），null/undefined 回退静态死线。
+  // ⚠️ 挂账 #6 裁定（20261117 真机：-4280min 单被 liveEta「续命」成剩 49 分钟）：
+  // liveEta 公式只算「还要多久」不感知「是否已超时」——静态死线（estimatedArrival）
+  // 已过期时超时态必须以静态死线裁定，liveEta 不得掩盖（否则过期单永远显示宽裕）。
+  const staticDl = computeDeadline(task.estimatedArrival, now);
+  const dl = staticDl?.overdue ? staticDl : (computeDeadline(task.liveEta, now) ?? staticDl);
   const distancePart = withDistance('common.totalDistance', task.distanceKm, t);
   // 作业计时副行（B 方案）：ASSIGNED 阶段算取货剩余，取货后算送达剩余——
   // 时间源 assignedAt（接单时刻，DB 无独立 acceptedAt 列，acceptTask 写 assigned_at）
