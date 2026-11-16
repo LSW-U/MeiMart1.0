@@ -11,6 +11,7 @@ import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 import { DepositBlockDialog } from '../../src/components/feedback/DepositBlockDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
 import { showToast } from '../../src/components/feedback/Toast';
+import { useMinuteTick } from '../../src/hooks/useMinuteTick';
 import { useDepositStatus } from '../../src/services/queries/useDeposit';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { useNetwork } from '../../src/hooks/useNetwork';
@@ -97,6 +98,10 @@ const contactHandler = (
 export default function TasksPage() {
   const router = useRouter();
   const { t, language } = useTranslation();
+  // B+D 方案（20261116）：每 60s tick 强制重渲——倒计时分钟数在页面停留时也会跳，
+  // 不再依赖 refetch/切 tab 才刷新。tick 值进 useMemo deps → 三处 props map 重建
+  // → 仅时间文案变的卡片重渲（TaskCard memo 下其余 bail out）。
+  const minuteTick = useMinuteTick();
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
   const [activeTab, setActiveTab] = useState<TaskTab>(
     tabParam === 'pickups' ? 'pickups' : tabParam === 'deliveries' ? 'deliveries' : 'new',
@@ -269,7 +274,7 @@ export default function TasksPage() {
       ),
     // 原因：t 每渲染新建（useTranslation.ts:48），deps 用 language 替代（语言不变 t 行为等价，t 仅在回调内消费）——审查 P1-1 拍板
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [taskLists.available, language, currency],
+    [taskLists.available, language, currency, minuteTick],
   );
 
   const pickupTaskProps = useMemo(
@@ -322,7 +327,7 @@ export default function TasksPage() {
       ),
     // 原因：t 每渲染新建（useTranslation.ts:48），deps 用 language 替代（语言不变 t 行为等价，t 仅在回调内消费）——审查 P1-1 拍板
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [taskLists.pickups, language, currency],
+    [taskLists.pickups, language, currency, minuteTick],
   );
 
   const deliveryTaskProps = useMemo(
@@ -370,7 +375,7 @@ export default function TasksPage() {
       ),
     // 原因：t 每渲染新建（useTranslation.ts:48），deps 用 language 替代（语言不变 t 行为等价，t 仅在回调内消费）——审查 P1-1 拍板
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [taskLists.deliveries, language, currency],
+    [taskLists.deliveries, language, currency, minuteTick],
   );
 
   // C-P2-5：contactHandler 柯里化（TaskCard.tsx 原 :76）每渲染新函数也是不稳定引用——

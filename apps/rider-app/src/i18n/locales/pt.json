@@ -616,6 +616,8 @@
   "tasks.deliverBy": "Entregar até {time}",
   "tasks.deliverByOverdue": "Atrasado ({time})",
   "tasks.timeLeft": "Faltam {minutes} min",
+  "tasks.pickupTimeLeft": "Recolha em {minutes} min",
+  "tasks.pickupOverdue": "Recolha em atraso",
   "tasks.distanceRefOnly": "Distância em linha reta, apenas referência",
   "common.itemsSummaryKinds": "Itens: {totalQty} unidades · {kinds} tipos",
   "tasks.returnTag": "Devolução"

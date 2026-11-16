@@ -616,6 +616,8 @@
   "tasks.deliverBy": "Deliver by {time}",
   "tasks.deliverByOverdue": "Overdue ({time})",
   "tasks.timeLeft": "{minutes} min left",
+  "tasks.pickupTimeLeft": "Pickup in {minutes} min",
+  "tasks.pickupOverdue": "Pickup overdue",
   "tasks.distanceRefOnly": "Straight-line distance, for reference only",
   "common.itemsSummaryKinds": "Items: {totalQty} units · {kinds} kinds",
   "tasks.returnTag": "Return pickup"

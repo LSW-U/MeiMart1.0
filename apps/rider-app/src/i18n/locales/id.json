@@ -616,6 +616,8 @@
   "tasks.deliverBy": "Antar sebelum {time}",
   "tasks.deliverByOverdue": "Terlambat ({time})",
   "tasks.timeLeft": "{minutes} menit lagi",
+  "tasks.pickupTimeLeft": "Ambil dalam {minutes} mnt",
+  "tasks.pickupOverdue": "Pengambilan terlambat",
   "tasks.distanceRefOnly": "Jarak garis lurus, hanya referensi",
   "common.itemsSummaryKinds": "Barang: {totalQty} unit · {kinds} jenis",
   "tasks.returnTag": "Pengambilan retur"

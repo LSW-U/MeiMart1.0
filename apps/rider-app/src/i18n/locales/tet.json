@@ -616,6 +616,8 @@
   "tasks.deliverBy": "Entrega mole {time}",
   "tasks.deliverByOverdue": "Temin ona ({time})",
   "tasks.timeLeft": "Minutu {minutes} hela",
+  "tasks.pickupTimeLeft": "PICKUP {minutes} minutu liu",
+  "tasks.pickupOverdue": "PICKUP tempu liu ona",
   "tasks.distanceRefOnly": "Distansia línia toos, de'it referensia",
   "common.itemsSummaryKinds": "Sasan: {totalQty} unit · {kinds} sorte",
   "tasks.returnTag": "Devolusaun fo hela"

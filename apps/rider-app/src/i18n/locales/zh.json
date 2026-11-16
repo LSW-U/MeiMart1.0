@@ -616,6 +616,8 @@
   "tasks.deliverBy": "需在 {time} 前送达",
   "tasks.deliverByOverdue": "已超时（{time}）",
   "tasks.timeLeft": "剩 {minutes} 分钟",
+  "tasks.pickupTimeLeft": "取货剩 {minutes} 分钟",
+  "tasks.pickupOverdue": "取货已超时",
   "tasks.distanceRefOnly": "全程直线距离，仅参考",
   "common.itemsSummaryKinds": "商品：{totalQty} 件 · {kinds} 种",
   "tasks.returnTag": "退货取件"
