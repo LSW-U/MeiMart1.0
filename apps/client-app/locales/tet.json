@@ -864,7 +864,6 @@
     },
     "placingOrder": "Halo pedidu hela...",
     "address": {
-      "change": "Troka",
       "changeA11y": "Troka enderesu",
       "addNew": "Enderesu foun",
       "addNewA11y": "Aumenta enderesu foun la sai husi checkout"

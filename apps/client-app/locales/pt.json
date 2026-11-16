@@ -864,7 +864,6 @@
     },
     "placingOrder": "A fazer pedido...",
     "address": {
-      "change": "Alterar",
       "changeA11y": "Alterar endereço",
       "addNew": "Novo endereço",
       "addNewA11y": "Adicionar novo endereço sem sair do checkout"

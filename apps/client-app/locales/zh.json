@@ -864,7 +864,6 @@
     },
     "placingOrder": "下单中...",
     "address": {
-      "change": "修改",
       "changeA11y": "修改地址",
       "addNew": "新增地址",
       "addNewA11y": "新增地址，不离开结算页"

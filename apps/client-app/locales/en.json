@@ -864,7 +864,6 @@
     },
     "placingOrder": "Placing order...",
     "address": {
-      "change": "Change",
       "changeA11y": "Change address",
       "addNew": "New address",
       "addNewA11y": "Add a new address without leaving checkout"
