@@ -357,20 +357,6 @@ export default function DeliveryTrackingPage() {
                 {t('order.shippingInfo', { defaultValue: 'Delivery Address' })}
               </Text>
             </View>
-            <Pressable
-              onPress={() =>
-                // A-P2-7（D6）: 订单页地址入口维持管理模式，D6 选择语义不再使用
-                //（审查 P2-1 拍板 a，20261010）
-                router.push('/address/list')
-              }
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t('checkout.address.change', { defaultValue: 'Change' })}
-            >
-              <Text style={[styles.editText, { color: colors.primary }]}>
-                {t('checkout.address.change', { defaultValue: 'Change' }).toUpperCase()}
-              </Text>
-            </Pressable>
           </View>
           <View style={styles.addressBody}>
             <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
@@ -488,13 +474,39 @@ export default function DeliveryTrackingPage() {
               {t('order.paymentMethodLabel', { defaultValue: 'Payment Method' }).toUpperCase()}
             </Text>
             <View style={styles.paymentRow}>
-              <View style={[styles.laisPayBadge, { backgroundColor: colors.primary }]}>
-                <Text style={styles.laisPayText}>
-                  {t(`order.paymentMethodShort.${(order.paymentMethod ?? 'cod').toLowerCase()}`, {
-                    defaultValue: order.paymentMethod ?? '-',
-                  })}
-                </Text>
-              </View>
+              {(() => {
+                const pm = (order.paymentMethod ?? 'cod').toLowerCase();
+                // Why: T11 拍板 A（20261117）——COD 是货到付款非在线渠道，不套品牌红徽章（观感像
+                //   在线钱包），降级中性 chip；在线支付（bankTransfer/wechat/paypal/stripe）保留红徽章
+                const isCod = pm === 'cod';
+                return (
+                  <View
+                    style={[
+                      styles.payBadge,
+                      isCod
+                        ? [
+                            styles.payBadgeNeutral,
+                            {
+                              backgroundColor: colors['surface-container'],
+                              borderColor: colors['outline-variant'],
+                            },
+                          ]
+                        : { backgroundColor: colors.primary },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.payBadgeText,
+                        isCod && { color: colors['on-surface-variant'], fontStyle: 'normal' },
+                      ]}
+                    >
+                      {t(`order.paymentMethodShort.${pm}`, {
+                        defaultValue: order.paymentMethod ?? '-',
+                      })}
+                    </Text>
+                  </View>
+                );
+              })()}
               <Text style={[styles.bodyMdBold, { color: colors['on-surface'] }]}>
                 {t(`order.paymentMethod.${(order.paymentMethod ?? 'cod').toLowerCase()}`, {
                   defaultValue: order.paymentMethod ?? '-',
@@ -807,11 +819,8 @@ const styles = StyleSheet.create({
     ...typography['body-md'],
     fontWeight: '700',
   },
-  editText: {
-    ...typography['label-caps'],
-    fontSize: 11,
-    textDecorationLine: 'underline',
-  },
+  // Why: editText 已删——T6 拍板 A（20261117）：订单地址是下单快照不回写，
+  //   物流页只读化（与 P10 详情页口径对齐），原 Change 跳 /address/list 是误导死入口
   addressBody: {
     // 28 = location_on 20 + headerRow gap 8（对齐图标右缘）
     paddingLeft: 28,
@@ -889,14 +898,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  laisPayBadge: {
-    width: 40,
+  // Why: T11 拍板 A——原 laisPayBadge 40×24 固定宽装不下 PayPal 等长 code，改自适应
+  //   paddingHorizontal + 双形态（在线=品牌红 / COD=中性 chip 描边）
+  payBadge: {
+    minWidth: 40,
     height: 24,
     borderRadius: 4,
+    paddingHorizontal: spacing.xs,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  laisPayText: {
+  payBadgeNeutral: {
+    borderWidth: 1,
+    borderRadius: 999,
+  },
+  payBadgeText: {
     color: ON_PRIMARY,
     fontSize: 8,
     fontWeight: '700',
