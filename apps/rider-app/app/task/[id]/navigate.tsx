@@ -193,7 +193,10 @@ export default function TaskNavigatePage() {
                             })}
                           </Text>
                           <Text className="text-[11px] text-on-surface-variant">
-                            {distPart} · {t('tasks.deliveryProgress.delivering')}
+                            {/* 审查二批🔴重申（20261117 消掉）：distPart 可能 undefined，
+                                不允许字面 "undefined" 拼接（:183 同文件正确写法对齐） */}
+                            {distPart ? `${distPart} · ` : ''}
+                            {t('tasks.deliveryProgress.delivering')}
                           </Text>
                         </>
                       );
