@@ -428,7 +428,8 @@
       "refund": "申请退款",
       "confirm": "确认收货",
       "afterSales": "申请售后",
-      "contactSeller": "联系卖家"
+      "contactSeller": "联系卖家",
+      "cancelling": "取消中…"
     },
     "empty": "暂无订单",
     "emptyTitle": "暂无订单",
@@ -477,7 +478,7 @@
       "stripe": "信用卡"
     },
     "shareMessage": "MeiMart 订单 {{orderNo}}",
-    "shareCopied": "订单链接已复制",
+    "shareCopied": "已复制",
     "shareA11y": "分享订单 {{orderNo}}",
     "riderDefault": "配送员",
     "riderOnTheWay": "配送中",
@@ -588,7 +589,7 @@
   "tracking": {
     "title": "订单追踪",
     "estimatedDelivery": "预计送达",
-    "etaPlaceholder": "今天送达",
+    "etaPlaceholder": "配送中",
     "mapA11y": "显示配送路线的地图",
     "liveTracking": "实时追踪",
     "minAway": "{{count}} 分钟后到达",

@@ -449,7 +449,8 @@
       "refund": "Pedir reembolso",
       "confirm": "Confirmar receção",
       "afterSales": "Pós-venda",
-      "contactSeller": "Contactar o vendedor"
+      "contactSeller": "Contactar o vendedor",
+      "cancelling": "A cancelar…"
     },
     "empty": "Sem pedidos",
     "emptyTitle": "Ainda sem pedidos",
@@ -498,7 +499,7 @@
       "stripe": "Cartão de crédito"
     },
     "shareMessage": "Pedido MeiMart {{orderNo}}",
-    "shareCopied": "Link do pedido copiado",
+    "shareCopied": "Copiado",
     "shareA11y": "Partilhar pedido {{orderNo}}",
     "riderDefault": "Estafeta",
     "riderOnTheWay": "A CAMINHO",
@@ -588,7 +589,7 @@
   "tracking": {
     "title": "Rastreio do pedido",
     "estimatedDelivery": "Entrega prevista",
-    "etaPlaceholder": "Chega hoje",
+    "etaPlaceholder": "Em entrega",
     "mapA11y": "Mapa com a rota de entrega",
     "liveTracking": "Rastreio em tempo real",
     "minAway": "a {{count}} min",

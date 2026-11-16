@@ -39,6 +39,7 @@ import { buildTimelineSteps, formatTimelineTime, type TimelineStepData } from '@
 import { RiderCard, getRiderStatusTag } from '@/components/business/RiderCard';
 import { MapPlaceholder } from '@/components/business/MapPlaceholder';
 import { useOrder, useCancelOrder } from '@/services/queries/useOrders';
+import { useBottomReserve } from '@/hooks/useBottomReserve';
 import { useLocalizer } from '@/i18n';
 import type { OrderStatus } from '@/types';
 import { SafeImage } from '@/components/ui/SafeImage/SafeImage';
@@ -55,8 +56,17 @@ const ON_PRIMARY = '#ffffff';
 // Why: P11 Commit 3 D4 - StatusBadge 文案按 status 动态（复用 order.status.* 既有 i18n）
 // P10 审查 B1：PENDING_CONFIRM/CONFIRMED 从 paid 拆到 confirming/confirmed（与详情页 STATUS_VISUAL 同步，
 // 否则同一订单详情页显 "Confirmed"、物流页显 "AWAITING SHIPMENT" 两页矛盾）
-function getStatusBadgeKey(status: OrderStatus): string {
-  const map: Record<OrderStatus, string> = {
+// Why: 返回受控字面量联合而非 string——t() 动态 key 门禁扫不到，字面量保证 key 拼错编译期报错
+type StatusBadgeKey =
+  | 'order.status.pending'
+  | 'order.status.confirming'
+  | 'order.status.confirmed'
+  | 'order.status.shipped'
+  | 'order.status.delivered'
+  | 'order.status.cancelled';
+
+function getStatusBadgeKey(status: OrderStatus): StatusBadgeKey {
+  const map: Record<OrderStatus, StatusBadgeKey> = {
     PENDING_PAYMENT: 'order.status.pending',
     PENDING_CONFIRM: 'order.status.confirming',
     CONFIRMED: 'order.status.confirmed',
@@ -87,6 +97,8 @@ export default function DeliveryTrackingPage() {
   );
   // Why: 取消订单 mutation（hooks 顶层，与 useOrder 同级；CONFIRMED 待发货状态用）
   const cancelMutation = useCancelOrder();
+  // Why: 底部操作条预留（本页根 stack 无 BottomNav/FCB，纯 insets+缓冲；替代静态 paddingBottom 120）
+  const bottomReserve = useBottomReserve({ withoutNav: true }) + 72;
 
   // Why: P11 Commit 3 决策 3 - 配送结束（DELIVERED*/COMPLETED）延迟 1.5s 自动跳回 P10 订单详情（hooks 顶层，loading 态前；P10 显示完成态 + 骑手卡 + 售后入口）
   useEffect(() => {
@@ -182,8 +194,10 @@ export default function DeliveryTrackingPage() {
     'local_shipping',
   );
   const timelineActiveIndex = timelineSteps.findIndex((s) => s.state === 'active');
+  // Why: CANCELLED 时间轴只有 cancelled 一个 active 步骤（utils/timeline.ts 特例），进度按 1/4 档
+  //   与普通单（activeIdx+1）/len 对齐，不再用「找不到 active 就 100%」的兜底（取消单显示全满进度条语义矛盾）
   const timelineProgress =
-    timelineActiveIndex < 0 ? 1 : (timelineActiveIndex + 1) / timelineSteps.length;
+    timelineActiveIndex < 0 ? 0.25 : (timelineActiveIndex + 1) / timelineSteps.length;
 
   return (
     <SafeAreaWrapper
@@ -198,7 +212,7 @@ export default function DeliveryTrackingPage() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: bottomReserve }]}
         showsVerticalScrollIndicator={false}
       >
         {/* V8 配送完成态：done-hero 送达视觉 + redirect-note 提示卡（跳转前先展示） */}
@@ -310,7 +324,7 @@ export default function DeliveryTrackingPage() {
               <Text style={[styles.etaValue, { color: statusTheme.bannerValueColor }]}>
                 {estimatedArrival
                   ? formatTimelineTime(estimatedArrival, i18n.language)
-                  : t('tracking.etaPlaceholder', { defaultValue: 'Arriving Today' })}
+                  : t('tracking.etaPlaceholder', { defaultValue: 'In delivery' })}
               </Text>
             </View>
           </View>
@@ -398,8 +412,21 @@ export default function DeliveryTrackingPage() {
                 },
               ]}
             >
-              <View style={[styles.itemImageWrap, { backgroundColor: colors['surface-variant'] }]}>
-                <SafeImage source={{ uri: item.product.image }} style={styles.itemImage} />
+              {/* Why: B1 口径（20261116）——图片占位纯白，原 surface-variant #fae8e6 比暖粉更重；
+                  thumb+lazy 按规则 43 列表渲染点口径 */}
+              <View
+                style={[
+                  styles.itemImageWrap,
+                  { backgroundColor: colors['surface-container-lowest'] },
+                ]}
+              >
+                <SafeImage
+                  source={{ uri: item.product.image }}
+                  style={styles.itemImage}
+                  variant="thumb"
+                  lazy
+                  recyclingKey={item.id}
+                />
               </View>
               <View style={styles.itemInfo}>
                 <View>
@@ -494,16 +521,21 @@ export default function DeliveryTrackingPage() {
         {(currentStatus === 'PENDING_CONFIRM' || currentStatus === 'CONFIRMED') && (
           <Pressable
             onPress={handleCancel}
+            disabled={cancelMutation.isPending}
             style={({ pressed }) => [
               styles.outlineBtn,
               { backgroundColor: colors['surface-container'] },
               pressed && { transform: [{ scale: 0.95 }] },
+              cancelMutation.isPending && { opacity: 0.6 },
             ]}
             accessibilityRole="button"
             accessibilityLabel={t('order.actions.cancel', { defaultValue: 'Cancel Order' })}
+            accessibilityState={{ busy: cancelMutation.isPending }}
           >
             <Text style={[styles.btnText, { color: colors.primary }]}>
-              {t('order.actions.cancel', { defaultValue: 'Cancel Order' })}
+              {cancelMutation.isPending
+                ? t('order.actions.cancelling', { defaultValue: 'Cancelling…' })
+                : t('order.actions.cancel', { defaultValue: 'Cancel Order' })}
             </Text>
           </Pressable>
         )}
@@ -568,7 +600,10 @@ function Header({ title, orderNo }: { title: string; orderNo?: string }) {
               });
               if (Platform.OS === 'web') {
                 if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                  navigator.clipboard.writeText(message).catch(() => {});
+                  navigator.clipboard
+                    .writeText(message)
+                    .then(() => toast.success(t('order.shareCopied', { defaultValue: 'Copied' })))
+                    .catch(() => {});
                 }
               } else {
                 Share.share({ message }).catch(() => {});
@@ -667,7 +702,8 @@ const styles = StyleSheet.create({
   scroll: {
     padding: layout['container-margin'],
     gap: spacing.md,
-    paddingBottom: 120,
+    // Why: paddingBottom 运行时注入 bottomReserve（useBottomReserve + 72 操作条高度），
+    //   静态段读不到 insets（同 styles-static-color-trap 一类问题）；静态值原为 120
   },
   flex1: {
     flex: 1,
@@ -777,6 +813,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   addressBody: {
+    // 28 = location_on 20 + headerRow gap 8（对齐图标右缘）
     paddingLeft: 28,
     gap: 2,
   },
@@ -832,11 +869,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.sm,
   },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+  // Why: summaryRow 已删——原 subtotal/discount 分项行样式，TODO(长期) 恢复分项时随 T7 挂账重写
   totalRow: {
     flexDirection: 'row',
     alignItems: 'center',

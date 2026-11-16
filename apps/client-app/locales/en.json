@@ -428,7 +428,8 @@
       "refund": "Request refund",
       "confirm": "Confirm Received",
       "afterSales": "After-Sales",
-      "contactSeller": "Contact seller"
+      "contactSeller": "Contact seller",
+      "cancelling": "Cancelling…"
     },
     "empty": "No orders",
     "emptyTitle": "No orders yet",
@@ -477,7 +478,7 @@
       "stripe": "Credit Card"
     },
     "shareMessage": "MeiMart order {{orderNo}}",
-    "shareCopied": "Order link copied",
+    "shareCopied": "Copied",
     "shareA11y": "Share order {{orderNo}}",
     "riderDefault": "Delivery Rider",
     "riderOnTheWay": "ON THE WAY",
@@ -588,7 +589,7 @@
   "tracking": {
     "title": "Order Tracking",
     "estimatedDelivery": "Estimated delivery",
-    "etaPlaceholder": "Arriving Today",
+    "etaPlaceholder": "In delivery",
     "mapA11y": "Map showing delivery route",
     "liveTracking": "Live tracking",
     "minAway": "{{count}} min away",

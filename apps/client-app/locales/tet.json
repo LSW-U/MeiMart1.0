@@ -428,7 +428,8 @@
       "refund": "Reklama reembolso",
       "confirm": "Konfirma Simu",
       "afterSales": "Reklamasaun",
-      "contactSeller": "Kontaktu vendór"
+      "contactSeller": "Kontaktu vendór",
+      "cancelling": "Atensaun... kansela"
     },
     "empty": "Laiha pedidu",
     "emptyTitle": "Seidauk iha pedidu",
@@ -477,7 +478,7 @@
       "stripe": "Kartaun kreditu"
     },
     "shareMessage": "Pedidu MeiMart {{orderNo}}",
-    "shareCopied": "Link pedidu nakopia ona",
+    "shareCopied": "Kopia tiha ona",
     "shareA11y": "Partilha pedidu {{orderNo}}",
     "riderDefault": "Estafeta",
     "riderOnTheWay": "IHA DALAN",
@@ -588,7 +589,7 @@
   "tracking": {
     "title": "Segue Pedidu",
     "estimatedDelivery": "Previsaun entrega",
-    "etaPlaceholder": "Sei chega ohin",
+    "etaPlaceholder": "Sei iha entrega",
     "mapA11y": "Mapa husi rota entrega",
     "liveTracking": "Segue tempu real",
     "minAway": "minutu {{count}} atu mai",
