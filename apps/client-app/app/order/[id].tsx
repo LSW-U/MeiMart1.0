@@ -990,7 +990,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 8,
     fontWeight: '700',
-    fontStyle: 'italic',
+    // Why: 20261118 删 italic（同 tracking.tsx payBadgeText）——中文徽章伪斜体发糊
   },
   // Bottom Bar
   bottomBar: {

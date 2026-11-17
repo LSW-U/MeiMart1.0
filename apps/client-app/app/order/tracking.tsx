@@ -518,30 +518,12 @@ export default function DeliveryTrackingPage() {
             <View style={styles.paymentRow}>
               {(() => {
                 const pm = (order.paymentMethod ?? 'cod').toLowerCase();
-                // Why: T11 拍板 A（20261117）——COD 是货到付款非在线渠道，不套品牌红徽章（观感像
-                //   在线钱包），降级中性 chip；在线支付（bankTransfer/wechat/paypal/stripe）保留红徽章
+                // 20261118 试验（用户）：COD 也套品牌红徽章（原 T11 拍板 A 的中性 chip 推翻回看效果）
                 const isCod = pm === 'cod';
+                void isCod;
                 return (
-                  <View
-                    style={[
-                      styles.payBadge,
-                      isCod
-                        ? [
-                            styles.payBadgeNeutral,
-                            {
-                              backgroundColor: colors['surface-container'],
-                              borderColor: colors['outline-variant'],
-                            },
-                          ]
-                        : { backgroundColor: colors.primary },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.payBadgeText,
-                        isCod && { color: colors['on-surface-variant'], fontStyle: 'normal' },
-                      ]}
-                    >
+                  <View style={[styles.payBadge, { backgroundColor: colors.primary }]}>
+                    <Text style={styles.payBadgeText}>
                       {t(`order.paymentMethodShort.${pm}`, {
                         defaultValue: order.paymentMethod ?? '-',
                       })}
@@ -972,7 +954,8 @@ const styles = StyleSheet.create({
     color: ON_PRIMARY,
     fontSize: 8,
     fontWeight: '700',
-    fontStyle: 'italic',
+    // Why: 20261118 删 italic——i18n 后徽章文案是中文（银行/微信），中文无真斜体字形，
+    //   伪斜体渲染发糊导致 COD（拉丁）与中文徽章「字体不一样」观感；统一正体
   },
   // Timeline（HTML 原型 B 方案：rail + fill + node-head/desc + 20×20 dot，与 P10 同源）
   timelineWrap: {
