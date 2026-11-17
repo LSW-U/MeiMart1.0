@@ -321,7 +321,9 @@ export async function dispatchAction(action: QueueAction): Promise<void> {
         }
       }
       for (const uri of Object.values(action.payload.evidence ?? {})) {
-        if (uri) {
+        // 审查 🟡2：远端 URL（useReportIssue 离线分支透传的 evidenceUrls）非本地
+        // 文件，不能 deleteEvidenceFile；也无缓存可回收
+        if (uri && !uri.startsWith('http://') && !uri.startsWith('https://')) {
           deleteEvidenceFile(uri);
           forgetUploadedUrl(uri);
         }

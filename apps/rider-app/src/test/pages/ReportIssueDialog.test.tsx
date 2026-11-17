@@ -70,6 +70,40 @@ describe('ReportIssueDialog（F3/§4）', () => {
     expect(onSubmit).toHaveBeenCalledWith({ reason: 'ORDER_CANCELLED', note: undefined });
   });
 
+  it('审查 🟡1：reason/note/photo 跨开残留重置——再次 visible 时回 reasons[0]', () => {
+    // dialog 常驻挂载（visible 切换不卸载 children），必须 useEffect 重置
+    const onSubmit = jest.fn();
+    const props = {
+      visible: true,
+      reasons: ['ORDER_CANCELLED'] as const,
+      noteRequired: false,
+      onSubmit,
+      submitting: false,
+      onDismiss: jest.fn(),
+    };
+    const { rerender } = render(<ReportIssueDialog {...props} />);
+    // 第一次打开：选第一个 chip + 输入 note
+    fireEvent.click(screen.getByText('订单已取消，货在骑手手上'));
+    const input = document.querySelector('[data-rn-host="TextInput"]') as unknown as {
+      __fnProps: { onChangeText: (v: string) => void };
+    };
+    act(() => {
+      input.__fnProps.onChangeText('旧备注');
+    });
+    // 关闭 → 以不同 reasons 再次打开（模拟超时单 → 取消单序列）
+    rerender(<ReportIssueDialog {...props} visible={false} />);
+    rerender(
+      <ReportIssueDialog {...props} reasons={['DEADLINE_OVERDUE_RETURN'] as const} noteRequired />,
+    );
+    // 旧 reason chip 不在 DOM（reasons 子集换掉），选中态落到新 reasons[0]
+    expect(screen.queryByText('订单已取消，货在骑手手上')).toBeNull();
+    expect(screen.getByText('送达超时，申请返仓')).toBeTruthy();
+    // note 已重置：直接提交被必填校验拦下
+    fireEvent.click(screen.getByText('提交'));
+    expect(mockShowToast).toHaveBeenCalledWith('请填写备注说明情况', 'error');
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('§4 noteRequired=true：空备注 toast 拦下不提交', () => {
     const { onSubmit } = setup({
       reasons: ['DEADLINE_OVERDUE_RETURN'] as const,

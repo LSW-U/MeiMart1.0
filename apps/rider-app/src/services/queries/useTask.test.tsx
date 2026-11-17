@@ -290,7 +290,38 @@ describe('useReportIssue', () => {
     expect(enqueue).not.toHaveBeenCalled();
   });
 
+  it('审查 🟡2：离线入队带 evidenceUrls——透传 payload.evidence（远端 URL 直通语义）', async () => {
+    // 本文件 useNetwork 桩恒 isOffline=false，此用例临时覆写 hook 返回（同 useStartDelivering 既有收窄写法）
+    const networkMod = jest.requireMock('../../hooks/useNetwork') as {
+      useNetwork: () => { isOffline: boolean };
+    };
+    networkMod.useNetwork = () => ({ isOffline: true });
+    const enqueueMock = enqueue as jest.Mock;
+    enqueueMock.mockReset().mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useReportIssue(), { wrapper: makeWrapper(qc) });
+    await act(async () => {
+      await result.current.mutateAsync({
+        taskId: 'Y',
+        body: { reason: 'DEADLINE_OVERDUE_RETURN', note: 'n', evidenceUrls: ['https://cdn/x.jpg'] },
+      });
+    });
+
+    networkMod.useNetwork = () => ({ isOffline: false }); // 还原桩，防泄漏到后续用例
+    expect(enqueueMock).toHaveBeenCalledWith({
+      type: 'reportIssue',
+      payload: {
+        taskId: 'Y',
+        reason: 'DEADLINE_OVERDUE_RETURN',
+        note: 'n',
+        evidence: { photoUri: 'https://cdn/x.jpg' },
+      },
+    });
+    expect(taskApi.reportIssue as jest.Mock).not.toHaveBeenCalled();
+  });
+
   it('onSettled：失败后 invalidate 不抛（队列语义兜底由 sync.test.ts 覆盖）', async () => {
+    (enqueue as jest.Mock).mockClear(); // 🟡2 用例可能残留调用计数
     const reportIssue = taskApi.reportIssue as jest.Mock;
     reportIssue.mockRejectedValue(new Error('boom'));
 

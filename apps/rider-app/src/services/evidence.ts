@@ -70,6 +70,15 @@ export function deleteEvidenceFile(uri: string): void {
  */
 const uploadedUrlCache = new Map<string, string>();
 
+/**
+ * 审查 🟡2（已取消订单出口 1de9626 修复）：已是远端 URL（http/https）的证据值
+ * 无需再上传——useReportIssue 离线分支把 dialog 已上传的 evidenceUrls 透传进队列
+ * payload.evidence，此处直通返回，避免对 http(s) 串走 uploadImageFileWithRetry。
+ */
+function isRemoteUrl(uri: string): boolean {
+  return uri.startsWith('http://') || uri.startsWith('https://');
+}
+
 /** P2-2：命中缓存直接返回，未命中才真上传并回填缓存（uploadEvidence 语义不变） */
 export async function uploadEvidenceCached(
   evidence?: PersistedEvidence,
@@ -78,6 +87,11 @@ export async function uploadEvidenceCached(
   if (!evidence) return urls;
   for (const [field, uri] of Object.entries(evidence)) {
     if (!uri) continue;
+    // 远端 URL 直通（见 isRemoteUrl 注释）；不进 uploadedUrlCache（URL 自身即键值，无缓存意义）
+    if (isRemoteUrl(uri)) {
+      urls[field] = uri;
+      continue;
+    }
     const cached = uploadedUrlCache.get(uri);
     if (cached) {
       urls[field] = cached;
@@ -85,7 +99,9 @@ export async function uploadEvidenceCached(
     }
   }
   const fresh = await uploadEvidence(
-    Object.fromEntries(Object.entries(evidence).filter(([field, uri]) => uri && !urls[field])),
+    Object.fromEntries(
+      Object.entries(evidence).filter(([field, uri]) => uri && !urls[field] && !isRemoteUrl(uri)),
+    ),
   );
   for (const [field, url] of Object.entries(fresh)) {
     urls[field] = url;

@@ -46,11 +46,16 @@ jest.mock('../services/task', () => ({
 
 jest.mock('../services/evidence', () => ({
   uploadEvidence: jest.fn(async () => ({})),
-  // uploadEvidenceCached：无缓存场景直透传底层 uploadEvidence（单文件用例语义一致）
+  // uploadEvidenceCached：无缓存场景直透传底层 uploadEvidence（单文件用例语义一致）；
+  // 远端 URL 直通（🟡2 修复语义，与真实现 isRemoteUrl 分支一致）
   uploadEvidenceCached: jest.fn(async (evidence?: Record<string, string>) => ({
     ...evidence,
     ...(evidence
-      ? Object.fromEntries(Object.keys(evidence).map((k) => [k, `https://mock-url/${k}.jpg`]))
+      ? Object.fromEntries(
+          Object.entries(evidence)
+            .filter(([, uri]) => uri && !uri.startsWith('http://') && !uri.startsWith('https://'))
+            .map(([k]) => [k, `https://mock-url/${k}.jpg`]),
+        )
       : {}),
   })),
   deleteEvidenceFile: jest.fn(),
@@ -97,9 +102,17 @@ beforeEach(() => {
   mockUploadEvidence.mockReset().mockResolvedValue({});
   mockUploadEvidenceCached
     .mockReset()
-    .mockImplementation(async (evidence?: Record<string, string>) =>
-      Object.fromEntries(Object.keys(evidence ?? {}).map((k) => [k, `https://mock-url/${k}.jpg`])),
-    );
+    .mockImplementation(async (evidence?: Record<string, string>) => {
+      const out: Record<string, string> = {};
+      for (const [k, uri] of Object.entries(evidence ?? {})) {
+        // 远端 URL 直通（🟡2 修复语义）；本地 uri 模拟上传产物
+        out[k] =
+          uri && (uri.startsWith('http://') || uri.startsWith('https://'))
+            ? uri
+            : `https://mock-url/${k}.jpg`;
+      }
+      return out;
+    });
   mockDeleteEvidenceFile.mockReset();
   mockForgetUploadedUrl.mockReset();
   mockRefreshAccessToken.mockReset().mockResolvedValue(undefined);
@@ -438,6 +451,31 @@ describe('F3/§4 reportIssue 路由（20261117 立项）', () => {
     });
     expect(mockDeleteEvidenceFile).toHaveBeenCalledWith('file://p/overdue.jpg');
     expect(mockForgetUploadedUrl).toHaveBeenCalledWith('file://p/overdue.jpg');
+  });
+
+  it('审查 🟡2：evidence 为远端 URL——uploadEvidenceCached 直通不重传，成功后不删「文件」', async () => {
+    // useReportIssue 离线分支把 dialog 已上传的 https URL 透传进 payload.evidence；
+    // uploadEvidenceCached 对远端 URL 直通返回（🟡2 修复），sync 侧不得对 URL 调 deleteEvidenceFile
+    await enqueue({
+      type: 'reportIssue',
+      payload: {
+        taskId: 'T22',
+        reason: 'DEADLINE_OVERDUE_RETURN',
+        note: '超时返仓',
+        evidence: { photoUri: 'https://cdn/already-uploaded.jpg' },
+      },
+    });
+
+    const result = await processQueue();
+
+    expect(result).toEqual({ synced: 1, failed: 0 });
+    expect(mockReportIssue).toHaveBeenCalledWith('T22', {
+      reason: 'DEADLINE_OVERDUE_RETURN',
+      note: '超时返仓',
+      evidenceUrls: ['https://cdn/already-uploaded.jpg'],
+    });
+    expect(mockDeleteEvidenceFile).not.toHaveBeenCalled();
+    expect(mockForgetUploadedUrl).not.toHaveBeenCalled();
   });
 
   it('reportIssue 401 → 刷新重试；重放 409（B4 未覆盖的极端态）走 permanent 立即死信', async () => {

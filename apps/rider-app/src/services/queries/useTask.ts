@@ -191,6 +191,10 @@ export function useReportIssue() {
             taskId,
             reason: body.reason,
             note: body.note,
+            // 审查 🟡2：在线拍照已上传拿到远端 URL，提交瞬间断网时不能静默丢
+            // 取证——dialog 的 evidenceUrls 就是 http(s) 远端地址，透传给队列，
+            // sync 侧 uploadEvidenceCached 对远端 URL 直通不重传（见 isRemoteUrl）。
+            evidence: body.evidenceUrls?.length ? { photoUri: body.evidenceUrls[0] } : undefined,
           },
         });
         return null;

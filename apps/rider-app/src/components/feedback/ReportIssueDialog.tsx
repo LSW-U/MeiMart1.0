@@ -49,6 +49,21 @@ export function ReportIssueDialog({
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  // 审查 🟡1：dialog 常驻挂载（visible 切换不卸载 children），reason/note/photo 是跨开
+  // 残留 state——上开超时单选中 DEADLINE_OVERDUE_RETURN 后再开取消单，选中态与
+  // reasons[0] 不一致，UI 无选中却带旧 reason 提交。不用 useEffect 重置（react-hooks
+  // set-state-in-effect 禁），用 React 官方「props 变化时渲染期调整 state」模式：
+  // visible false→true 跳变时同步重置回初值（每次打开恰好触发一次）。
+  const [prevVisible, setPrevVisible] = useState(visible);
+  if (visible !== prevVisible) {
+    setPrevVisible(visible);
+    if (visible) {
+      setReason(reasons[0]);
+      setNote('');
+      setPhotoUri(null);
+      setEvidenceUrl(null);
+    }
+  }
 
   async function handlePhoto(uri: string) {
     setPhotoUri(uri);
