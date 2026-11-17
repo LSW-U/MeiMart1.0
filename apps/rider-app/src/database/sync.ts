@@ -1,6 +1,7 @@
 import { database } from './index';
 import type { OfflineQueueEntry } from './models';
 import { taskApi } from '../services/task';
+import type { ReportIssueReason } from '../types/task';
 import { deleteEvidenceFile, forgetUploadedUrl, uploadEvidenceCached } from '../services/evidence';
 import { ApiError, refreshAccessToken } from '../services/api';
 
@@ -25,6 +26,20 @@ export type QueueAction =
       payload: {
         taskId: string;
         collectedAmount?: number;
+        note?: string;
+        evidence?: Record<string, string>;
+      };
+    }
+  /**
+   * F3/§4 已取消订单出口（20261117 立项）：reportIssue 离线入队。
+   * 重放 200 由后端 B4 幂等保证（task FAILED + note [ISSUE: 标记 → 返回既有视图），
+   * 不会撞 409 PermanentSyncError 死信。reason/evidenceUrls 随 payload 序列化。
+   */
+  | {
+      type: 'reportIssue';
+      payload: {
+        taskId: string;
+        reason: ReportIssueReason;
         note?: string;
         evidence?: Record<string, string>;
       };
@@ -258,6 +273,43 @@ export async function dispatchAction(action: QueueAction): Promise<void> {
           await retryAfterTokenRefresh(() =>
             taskApi.deliver(action.payload.taskId, {
               collectedAmount: action.payload.collectedAmount,
+              note: action.payload.note,
+              evidenceUrls,
+            }),
+          );
+        } else if (e instanceof ApiError && isPermanentStatus(e.status)) {
+          throw new PermanentSyncError(`[${e.status}] ${e.message}`);
+        } else {
+          throw e;
+        }
+      }
+      for (const uri of Object.values(action.payload.evidence ?? {})) {
+        if (uri) {
+          deleteEvidenceFile(uri);
+          forgetUploadedUrl(uri);
+        }
+      }
+      break;
+    }
+    case 'reportIssue': {
+      // F3/§4（20261117 立项）：同 pickup——证据先上传拿远端 URL，再报工单
+      const evidenceUrls = action.payload.evidence
+        ? Object.values(await uploadEvidenceCached(action.payload.evidence)).filter(
+            (u): u is string => Boolean(u),
+          )
+        : [];
+      try {
+        await taskApi.reportIssue(action.payload.taskId, {
+          reason: action.payload.reason,
+          note: action.payload.note,
+          evidenceUrls,
+        });
+      } catch (e) {
+        // C17：同 pickup——401 先刷新重试；B4 后端幂等保证重放 200 不撞 409
+        if (e instanceof ApiError && e.status === 401) {
+          await retryAfterTokenRefresh(() =>
+            taskApi.reportIssue(action.payload.taskId, {
+              reason: action.payload.reason,
               note: action.payload.note,
               evidenceUrls,
             }),

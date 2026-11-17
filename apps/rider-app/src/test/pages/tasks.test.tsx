@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { type ReactNode } from 'react';
 
 import TasksPage from '../../../app/(main)/tasks';
@@ -39,6 +39,14 @@ let mockSettingsState = 'ok';
 let mockDepositBlock: 'none' | 'unpaid' | 'pending' = 'none';
 // 批B B1：router.push 捕获（跳转目标断言——未缴态改跳 /settings/deposit/pay）
 const mockPush = jest.fn();
+// F2/§4：tab 参数桩（badge 用例注 pickups 任务需 activeTab='pickups'）
+let mockTabParam: string | undefined;
+// F2/§4（20261117 立项）：任务桶桩——默认空，CANCELLED badge 用例注入
+let mockTaskListsState: {
+  available: never[];
+  pickups: unknown[];
+  deliveries: unknown[];
+} = { available: [], pickups: [], deliveries: [] };
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({
@@ -47,7 +55,7 @@ jest.mock('expo-router', () => ({
     back: jest.fn(),
     canGoBack: () => false,
   }),
-  useLocalSearchParams: () => ({}),
+  useLocalSearchParams: () => ({ tab: mockTabParam }),
 }));
 
 // BottomActionBar/TaskDetailHeader 链上的 safe-area：jsdom 无 native runtime（同
@@ -58,11 +66,16 @@ jest.mock('react-native-safe-area-context', () => ({
 
 jest.mock('../../../src/services/queries/useTask', () => ({
   useTaskLists: () => ({
-    data: { available: [], pickups: [], deliveries: [] },
+    // F2/§4：默认空三桶；CANCELLED badge 用例经 mockTaskListsState 注入任务
+    data: mockTaskListsState,
     isLoading: false,
     isError: false,
     isFetching: false,
     refetch: mockRefetch,
+  }),
+  useReportIssue: () => ({
+    isPending: false,
+    mutateAsync: jest.fn().mockResolvedValue({ ticketNo: 'TK-TEST' }),
   }),
 }));
 
@@ -309,5 +322,68 @@ describe('保证金拦截弹窗（批B B1：抽公共 + 未缴态改跳 pay 缴�
 
     expect(queryByText('需要缴纳保证金')).toBeNull();
     expect(queryByText('保证金待确认')).toBeNull();
+  });
+});
+
+describe('F2/§4（20261117 立项）：CANCELLED 订单卡片红 badge + 上报异常按钮', () => {
+  it('orderStatus=CANCELLED：卡片渲染红 badge「订单已取消」+ 按钮文案「上报异常」', () => {
+    mockTaskListsState = {
+      available: [],
+      pickups: [
+        {
+          id: 'T-CXL',
+          status: 'ASSIGNED',
+          taskType: 'pickup',
+          orderStatus: 'CANCELLED',
+          orderNo: 'MM-1',
+          pickup: { title: '店A', address: 'x' },
+          dropoff: { title: '客B', address: 'y' },
+          items: [],
+          itemCount: 1,
+          payableAmount: 0,
+          paymentMethod: 'PREPAID',
+        },
+      ],
+      deliveries: [],
+    } as never;
+    mockTabParam = 'pickups';
+    try {
+      renderPage();
+      expect(screen.getByText('订单已取消')).toBeTruthy(); // tasks.orderCancelledBadge（TaskCard cancelledNote 红徽）
+      expect(screen.getByText('上报异常')).toBeTruthy(); // issueMode actionLabel
+    } finally {
+      mockTaskListsState = { available: [], pickups: [], deliveries: [] };
+      mockTabParam = undefined;
+    }
+  });
+
+  it('未取消任务不渲染 cancelledNote badge', () => {
+    mockTaskListsState = {
+      available: [],
+      pickups: [
+        {
+          id: 'T-OK',
+          status: 'ASSIGNED',
+          taskType: 'pickup',
+          orderStatus: 'CONFIRMED',
+          orderNo: 'MM-2',
+          pickup: { title: '店A', address: 'x' },
+          dropoff: { title: '客B', address: 'y' },
+          items: [],
+          itemCount: 1,
+          payableAmount: 0,
+          paymentMethod: 'PREPAID',
+        },
+      ],
+      deliveries: [],
+    } as never;
+    mockTabParam = 'pickups';
+    try {
+      renderPage();
+      expect(screen.queryByText('订单已取消')).toBeNull();
+    } finally {
+      mockTaskListsState = { available: [], pickups: [], deliveries: [] };
+      mockTabParam = undefined;
+    }
   });
 });

@@ -40,6 +40,7 @@ jest.mock('../services/task', () => ({
     pickup: jest.fn(),
     startDelivering: jest.fn(),
     deliver: jest.fn(),
+    reportIssue: jest.fn(), // F3/§4（20261117 立项）：队列路由用例
   },
 }));
 
@@ -82,6 +83,8 @@ const mockRefreshAccessToken = refreshAccessToken as jest.Mock;
 const mockPickup = taskApi.pickup as jest.Mock;
 const mockStartDelivering = taskApi.startDelivering as jest.Mock;
 const mockDeliver = taskApi.deliver as jest.Mock;
+// F3/§4（20261117 立项）：reportIssue 队列路由用例
+const mockReportIssue = taskApi.reportIssue as jest.Mock;
 
 type Ctx = ReturnType<typeof makeTestDatabase>;
 let ctx: Ctx;
@@ -90,6 +93,7 @@ beforeEach(() => {
   mockPickup.mockReset().mockResolvedValue(undefined);
   mockStartDelivering.mockReset().mockResolvedValue(undefined);
   mockDeliver.mockReset().mockResolvedValue(undefined);
+  mockReportIssue.mockReset().mockResolvedValue({ id: 'T', ticketNo: 'TK-TEST' });
   mockUploadEvidence.mockReset().mockResolvedValue({});
   mockUploadEvidenceCached
     .mockReset()
@@ -392,6 +396,69 @@ describe('R-P1-2/R-P1-3：evidence 链 + permanent 分型', () => {
     expect(result).toEqual({ synced: 1, failed: 0 });
     expect(mockUploadEvidenceCached).not.toHaveBeenCalled();
     expect(mockPickup).toHaveBeenCalledWith('T18', { note: undefined, evidenceUrls: [] });
+  });
+});
+
+describe('F3/§4 reportIssue 路由（20261117 立项）', () => {
+  it('reportIssue 无 evidence——路由 taskApi.reportIssue（B4 幂等保证重放 200），不调上传不删文件', async () => {
+    await enqueue({
+      type: 'reportIssue',
+      payload: { taskId: 'T19', reason: 'ORDER_CANCELLED', note: '客户已取消' },
+    });
+
+    const result = await processQueue();
+
+    expect(result).toEqual({ synced: 1, failed: 0 });
+    expect(mockReportIssue).toHaveBeenCalledWith('T19', {
+      reason: 'ORDER_CANCELLED',
+      note: '客户已取消',
+      evidenceUrls: [],
+    });
+    expect(mockUploadEvidenceCached).not.toHaveBeenCalled();
+    expect((await fetchEntries()).length).toBe(0); // 成功软删
+  });
+
+  it('reportIssue 带 evidence——先 uploadEvidenceCached 拿 URL 再报，成功后删本地文件+回收缓存', async () => {
+    mockUploadEvidenceCached.mockResolvedValue({ photoUri: 'https://cdn/issue.jpg' });
+    await dispatchAction({
+      type: 'reportIssue',
+      payload: {
+        taskId: 'T20',
+        reason: 'DEADLINE_OVERDUE_RETURN',
+        note: '超时返仓',
+        evidence: { photoUri: 'file://p/overdue.jpg' },
+      },
+    });
+
+    expect(mockUploadEvidenceCached).toHaveBeenCalledWith({ photoUri: 'file://p/overdue.jpg' });
+    expect(mockReportIssue).toHaveBeenCalledWith('T20', {
+      reason: 'DEADLINE_OVERDUE_RETURN',
+      note: '超时返仓',
+      evidenceUrls: ['https://cdn/issue.jpg'],
+    });
+    expect(mockDeleteEvidenceFile).toHaveBeenCalledWith('file://p/overdue.jpg');
+    expect(mockForgetUploadedUrl).toHaveBeenCalledWith('file://p/overdue.jpg');
+  });
+
+  it('reportIssue 401 → 刷新重试；重放 409（B4 未覆盖的极端态）走 permanent 立即死信', async () => {
+    mockReportIssue
+      .mockRejectedValueOnce(new ApiError(401, 'AUTH', 'token expired'))
+      .mockRejectedValueOnce(new ApiError(409, 'RACE', 'task not in issue window'));
+    await enqueue({
+      type: 'reportIssue',
+      payload: { taskId: 'T21', reason: 'ORDER_CANCELLED' },
+    });
+
+    await processQueue();
+
+    expect(mockRefreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(mockReportIssue).toHaveBeenCalledTimes(2);
+    const entries = await fetchEntries();
+    expect(entries).toHaveLength(1);
+    expect(entries[0].attempts).toBe(1); // 401→刷新重试 409 permanent——本轮只记 1 次失败（与 pickup 422 分型同语义）
+    // ApiError message 不含 status（422 分型用例也是拼进 PermanentSyncError 前缀后仍只断言
+    // code/内容）；此处对齐：断言业务 message 本体
+    expect(entries[0].lastError).toContain('task not in issue window');
   });
 });
 

@@ -133,6 +133,10 @@ jest.mock('../../../src/services/queries/useTask', () => ({
     isFetching: false,
     refetch: mockRefetch,
   }),
+  useReportIssue: () => ({
+    isPending: false,
+    mutateAsync: jest.fn().mockResolvedValue({ ticketNo: 'TK-TEST' }),
+  }),
 }));
 
 function renderPage() {

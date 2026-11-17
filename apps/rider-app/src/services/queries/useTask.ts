@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { enqueue } from '@/src/database/sync';
 import { useNetwork } from '@/src/hooks/useNetwork';
-import type { DeliveryTask, TaskStatus } from '@/src/types/task';
+import type { DeliveryTask, ReportIssueReason, TaskStatus } from '@/src/types/task';
 
 import { taskApi } from '../task';
 import type { TaskLists } from '../task';
@@ -161,6 +161,45 @@ export function useReportOutOfStock() {
       void queryClient.invalidateQueries({ queryKey: taskListsKey });
       void queryClient.invalidateQueries({ queryKey: ['tasks', 'detail'] });
       void variables;
+    },
+  });
+}
+
+/**
+ * F3/§4（20261117 立项）：上报异常 mutation（report-issue 端点）。
+ * - 在线：直接调 taskApi.reportIssue，成功 toast 由调用方出（带 ticketNo 回显）。
+ * - 离线（规则 12）：入队 sync.ts 'reportIssue' case，恢复后重放；重放 200
+ *   由后端 B4 幂等保证，不撞 409 死信。
+ * onSettled 刷 lists + detail（report-issue 会把任务置 FAILED，列表归属要变）。
+ */
+export function useReportIssue() {
+  const queryClient = useQueryClient();
+  const { isOffline } = useNetwork();
+
+  return useMutation({
+    mutationFn: async ({
+      taskId,
+      body,
+    }: {
+      taskId: string;
+      body: { reason: ReportIssueReason; note?: string; evidenceUrls?: string[] };
+    }) => {
+      if (isOffline) {
+        await enqueue({
+          type: 'reportIssue',
+          payload: {
+            taskId,
+            reason: body.reason,
+            note: body.note,
+          },
+        });
+        return null;
+      }
+      return taskApi.reportIssue(taskId, body);
+    },
+    onSettled: (_data, _error, variables) => {
+      void queryClient.invalidateQueries({ queryKey: taskListsKey });
+      void queryClient.invalidateQueries({ queryKey: taskDetailKey(variables.taskId) });
     },
   });
 }

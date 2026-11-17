@@ -47,9 +47,13 @@ export default function SignConfirmPage() {
   //   基于缓存：守卫读 useTask 缓存（S3），极端竞态下仍可能 409，由提交 toast 兜底（审查 A4）
   useEffect(() => {
     if (!task) return;
+    // F5（20261117 立项）：订单已取消 → toast 指引上报异常（不硬拦，守卫不变）
+    if (task.orderStatus === 'CANCELLED') {
+      showToast(t('tasks.cancelledOrderToast'), 'info');
+    }
     if (task.status === 'PICKED_UP' || task.status === 'DELIVERING') return;
     router.replace(`/task/${id}`);
-  }, [task, id, router]);
+  }, [task, id, router, t]);
 
   // COD 判断（loading 时 task=undefined → isCod=false，底栏正确禁用；应收展示在 QueryBoundary children 内基于 detail 计算）
   const isCod = task?.paymentMethod === 'COD';

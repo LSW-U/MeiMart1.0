@@ -126,6 +126,23 @@ export type DeliveryTask = {
    * estimatedArrival（三档降级链原样保留）。
    */
   liveEta?: string | null;
+  /**
+   * 关联订单状态（F3 已取消订单出口 20261117 立项 B1/B2）。
+   * 后端 ORDER_SELECT 单源透传（dispatch.service.ts toView）；CANCELLED →
+   * 进行中任务卡渲染「订单已取消」红 badge +「上报异常」入口。
+   * 旧数据/契约滞后 → undefined，badge 不渲染（防御性可选）。
+   */
+  orderStatus?:
+    | 'PENDING_PAYMENT'
+    | 'PENDING_CONFIRM'
+    | 'CONFIRMED'
+    | 'PICKED'
+    | 'OUT_FOR_DELIVERY'
+    | 'DELIVERED_PAID'
+    | 'DELIVERED'
+    | 'DELIVERED_UNPAID'
+    | 'COMPLETED'
+    | 'CANCELLED';
   // ── 兼容字段（旧 UI 引用 task.pickup.title / task.fee 等） ──
   // service 层 fromView() 保证 real 模式也填充这些字段。
   // P0-1/P6 #7 修复（2026-08-25）：fee/distanceKm/estimatedMinutes 已由后端透传，
@@ -136,9 +153,15 @@ export type DeliveryTask = {
   items: string[];
 };
 
-// Report issue 端点的 reason 枚举
+// Report issue 端点的 reason 枚举（F3/§4 20261117 立项 D1：+ORDER_CANCELLED / DEADLINE_OVERDUE_RETURN）
 export type ReportIssueReason =
-  'CUSTOMER_UNREACHABLE' | 'CUSTOMER_REJECTED' | 'ADDRESS_NOT_FOUND' | 'TRAFFIC_ACCIDENT' | 'OTHER';
+  | 'CUSTOMER_UNREACHABLE'
+  | 'CUSTOMER_REJECTED'
+  | 'ADDRESS_NOT_FOUND'
+  | 'TRAFFIC_ACCIDENT'
+  | 'ORDER_CANCELLED'
+  | 'DEADLINE_OVERDUE_RETURN'
+  | 'OTHER';
 
 /**
  * 替换品批2 工单化（2026-10-29 D20）：reportIssue 响应增量字段（只增不改）。

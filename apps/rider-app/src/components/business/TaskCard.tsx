@@ -50,6 +50,12 @@ type TaskCardProps = {
    * 大厅 available 卡不传（return 单不经大厅）。undefined → 不渲染。
    */
   returnNote?: string;
+  /**
+   * 已取消订单红 badge（F3 20261117 立项）：orderStatus==='CANCELLED' 时卡片显示
+   * 「订单已取消」——与 returnNote 同位置但 danger 配色（订单没了是骑手强相关
+   * 止损信号，琥珀不够）。主 action 由调用方改「上报异常」。undefined → 不渲染。
+   */
+  cancelledNote?: string;
   /** 距离计费批次1：配送费明细「基础 $X + 距离 $Y」展示在 fee 下方；缺失不显 */
   feeBreakdown?: FeeBreakdown;
   orderId?: string;
@@ -90,6 +96,7 @@ export const TaskCard = memo(function TaskCard({
   feeNote,
   codNote,
   returnNote,
+  cancelledNote,
   feeBreakdown,
   orderId,
   points,
@@ -212,6 +219,14 @@ export const TaskCard = memo(function TaskCard({
       {returnNote ? (
         <View className="self-start rounded border border-accent-amber/40 bg-accent-amber/15 px-2 py-1">
           <Text className="text-xs font-bold text-amber-text">{returnNote}</Text>
+        </View>
+      ) : null}
+
+      {/* F3 已取消订单红 badge（20261117 立项）：同 returnNote 位置，danger 配色
+          （colors.error 系 class——text-error/border-error 已有时点消费先例） */}
+      {cancelledNote ? (
+        <View className="self-start rounded border border-error/40 bg-error/15 px-2 py-1">
+          <Text className="text-xs font-bold text-error">{cancelledNote}</Text>
         </View>
       ) : null}
 

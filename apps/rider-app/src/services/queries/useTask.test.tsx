@@ -259,3 +259,51 @@ describe('useStartDelivering', () => {
     expect(detail?.status).toBe('DELIVERING');
   });
 });
+
+// ── F3/§4（20261117 立项）：useReportIssue ──
+describe('useReportIssue', () => {
+  const { useReportIssue } = jest.requireActual('./useTask') as typeof import('./useTask');
+  const { enqueue } = jest.requireMock('../../database/sync') as {
+    enqueue: jest.Mock;
+  };
+
+  let qc: QueryClient;
+  beforeEach(() => {
+    qc = createQueryClient();
+    (taskApi.reportIssue as jest.Mock).mockReset();
+  });
+
+  it('在线：调 taskApi.reportIssue，成功不入队', async () => {
+    mockStartDelivering.mockReset();
+    const reportIssue = taskApi.reportIssue as jest.Mock;
+    reportIssue.mockResolvedValue({ ...makeTask('FAILED'), ticketNo: 'TK1' });
+
+    const { result } = renderHook(() => useReportIssue(), { wrapper: makeWrapper(qc) });
+    await act(async () => {
+      await result.current.mutateAsync({
+        taskId: 'X',
+        body: { reason: 'ORDER_CANCELLED', note: 'n' },
+      });
+    });
+
+    expect(reportIssue).toHaveBeenCalledWith('X', { reason: 'ORDER_CANCELLED', note: 'n' });
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it('onSettled：失败后 invalidate 不抛（队列语义兜底由 sync.test.ts 覆盖）', async () => {
+    const reportIssue = taskApi.reportIssue as jest.Mock;
+    reportIssue.mockRejectedValue(new Error('boom'));
+
+    const { result } = renderHook(() => useReportIssue(), { wrapper: makeWrapper(qc) });
+    await act(async () => {
+      await expect(
+        result.current.mutateAsync({ taskId: 'Z', body: { reason: 'OTHER' } }),
+      ).rejects.toThrow('boom');
+    });
+
+    // 离线入队路径（isOffline 分支）在本文件 useNetwork 桩（恒 false）下不可达——
+    // 由 sync.test.ts 'reportIssue 路由' describe 真库覆盖重放语义
+    expect(reportIssue).toHaveBeenCalledTimes(1);
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+});

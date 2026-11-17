@@ -10,21 +10,25 @@ import { ConfirmDialog } from '../../src/components/feedback/ConfirmDialog';
 // 批B B1：保证金拦截弹窗抽公共组件（task/[id].tsx B2 接单失败拦截复用同款）
 import { DepositBlockDialog } from '../../src/components/feedback/DepositBlockDialog';
 import { EmptyState } from '../../src/components/feedback/EmptyState';
+// F3/§4（20261117 立项）：上报异常弹层（已取消单 + 超时返仓共用）
+import { ReportIssueDialog } from '../../src/components/feedback/ReportIssueDialog';
 import { showToast } from '../../src/components/feedback/Toast';
 import { useMinuteTick } from '../../src/hooks/useMinuteTick';
 import { useDepositStatus } from '../../src/services/queries/useDeposit';
 import { useTranslation, type TranslationKey } from '../../src/i18n/useTranslation';
 import { useNetwork } from '../../src/hooks/useNetwork';
-import { useTaskLists } from '../../src/services/queries/useTask';
+// F3/§4：useReportIssue（report-issue mutation + 离线入队）
+import { useReportIssue, useTaskLists } from '../../src/services/queries/useTask';
 import { getTaskAction } from '../../src/services/task-flow';
 import { useRiderSettings, useUpdateRiderSettings } from '../../src/services/queries/useSettings';
 import { dutyStatusOptions, type DutyStatus } from '../../src/services/settings';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { colors } from '../../src/theme/colors';
-import type { DeliveryTask } from '../../src/types/task';
+import type { DeliveryTask, ReportIssueReason } from '../../src/types/task';
 // 时间锚点统一（20261115 批3）：buildDeadlineLabels/withDistance 抽共享模块——
 // 大厅卡/待取货 tab/配送中 tab/详情页四处同源，详情页也引用本模块（防复制漂移）
 import { buildDeadlineLabels, withDistance } from '../../src/utils/deadline-labels';
+import { computeDeadline } from '../../src/utils/deadline';
 import { formatCurrency } from '../../src/utils/format';
 
 type TaskTab = 'new' | 'pickups' | 'deliveries';
@@ -143,6 +147,14 @@ export default function TasksPage() {
     pickups: [] as DeliveryTask[],
     deliveries: [] as DeliveryTask[],
   };
+  // F3/§4（20261117 立项）：上报异常弹层状态 + mutation
+  const reportIssue = useReportIssue();
+  // 弹层当前针对的任务 + 原因子集（F3 传 ['ORDER_CANCELLED']；§4 超时返仓传 ['DEADLINE_OVERDUE_RETURN'] 且 note 必填）
+  const [issueTarget, setIssueTarget] = useState<{
+    taskId: string;
+    reasons: readonly ReportIssueReason[];
+    noteRequired: boolean;
+  } | null>(null);
   const rider = useAuthStore((s) => s.rider);
   // §7.2 拍板：下拉刷新离线守卫——onlineManager 未配置，Query 不会自动拦离线 refetch，
   // 不守卫会真发请求 reject 后 QueryBoundary 切 error 态覆盖已有缓存数据
@@ -294,10 +306,23 @@ export default function TasksPage() {
         taskLists.pickups.map((task) => {
           // S4: 用共享 helper（与详情页 statusAction 同源），避免两处状态机分散维护
           const action = getTaskAction(task);
+          // F2/§4（20261117 立项）：CANCELLED 单 / 超时普通单按钮改「上报异常」
+          // （与 actionHandlers 同条件，两处判断必须同步——见 actionHandlers 注释）
+          const issueMode =
+            task.orderStatus === 'CANCELLED' ||
+            (task.taskType === 'delivery' &&
+              computeDeadline(task.estimatedArrival)?.overdue === true);
           return [
             task.id,
             {
-              actionLabel: action ? t(action.labelKey) : t('tasks.arrivedPickup'),
+              actionLabel: issueMode
+                ? t('tasks.reportIssue')
+                : action
+                  ? t(action.labelKey)
+                  : t('tasks.arrivedPickup'),
+              // F3 红 badge「订单已取消」（danger 配色，TaskCard cancelledNote 槽位）
+              cancelledNote:
+                task.orderStatus === 'CANCELLED' ? t('tasks.orderCancelledBadge') : undefined,
               chatLabel: t('tasks.chat'),
               contactLabel: t('tasks.contact'),
               contactSuffix: task.dropoff.contactPhone
@@ -348,10 +373,21 @@ export default function TasksPage() {
           // 20261116 三步流统一：deliveries 现含 PICKED_UP（开始配送）+ DELIVERING（去签收），
           // 按钮文案/目标走 getTaskAction 同源（原硬编码 arrivedDelivery 对 PICKED_UP 语义错位）
           const action = getTaskAction(task);
+          // F2/§4（20261117 立项）：同 pickupTaskProps——CANCELLED 单 / 超时普通单改「上报异常」
+          const issueMode =
+            task.orderStatus === 'CANCELLED' ||
+            (task.taskType === 'delivery' &&
+              computeDeadline(task.estimatedArrival)?.overdue === true);
           return [
             task.id,
             {
-              actionLabel: action ? t(action.labelKey) : t('tasks.arrivedDelivery'),
+              actionLabel: issueMode
+                ? t('tasks.reportIssue')
+                : action
+                  ? t(action.labelKey)
+                  : t('tasks.arrivedDelivery'),
+              cancelledNote:
+                task.orderStatus === 'CANCELLED' ? t('tasks.orderCancelledBadge') : undefined,
               chatLabel: t('tasks.chat'),
               contactLabel: t('tasks.contact'),
               contactSuffix: task.dropoff.contactPhone
@@ -405,12 +441,35 @@ export default function TasksPage() {
   );
 
   // C-P2-5：onAction 回调按 task.id 稳定缓存（避免 renderXxx 内联箭头使 memo 失效）
+  // F2/§4（20261117 立项）：进行中任务若 orderStatus==='CANCELLED' → 按钮改「上报异常」，
+  //   onAction 打开弹层（reason=ORDER_CANCELLED）而非正常流转——订单没了继续配送必 409。
+  //   §4：普通单（taskType==='delivery'）送达死线已超时 → 按钮改「上报异常」，
+  //   弹层 reason=DEADLINE_OVERDUE_RETURN 且 note 必填（拍板）。与 return 任务
+  //   PICKED_UP 的「开始返仓」（getTaskAction startReturn，正常流转）语义区分。
   const actionHandlers = useMemo(() => {
     const map = new Map<string, () => void>();
     for (const task of taskLists.available) {
       map.set(task.id, () => router.push(`/task/${task.id}`));
     }
     for (const task of taskLists.pickups) {
+      const cancelled = task.orderStatus === 'CANCELLED';
+      // 与 props map 层 issueMode 同条件（那边管文案，这边管动作）；
+      // buildDeadlineLabels 的 t/language 只影响文案，不影响 overdue 裁定——
+      // 此处直接 computeDeadline 判静态死线超时（同挂账#6 裁定：liveEta 不掩盖超时）
+      const overdue =
+        !cancelled &&
+        task.taskType === 'delivery' &&
+        computeDeadline(task.estimatedArrival)?.overdue === true;
+      if (cancelled || overdue) {
+        map.set(task.id, () =>
+          setIssueTarget({
+            taskId: task.id,
+            reasons: cancelled ? ['ORDER_CANCELLED'] : ['DEADLINE_OVERDUE_RETURN'],
+            noteRequired: !cancelled, // §4 拍板：超时返仓备注必填
+          }),
+        );
+        continue;
+      }
       const action = getTaskAction(task);
       map.set(task.id, () => action && router.push(`/task/${task.id}/${action.target}`));
     }
@@ -418,11 +477,28 @@ export default function TasksPage() {
       // 20261116 三步流统一修复：原硬编码跳 sign——PICKED_UP 落入 deliveries 后会
       // 绕过 startDelivering 静默跳步（sign 守卫允许 PICKED_UP 进入，状态不推进）。
       // 与 pickups 同款走 getTaskAction：PICKED_UP→navigate / DELIVERING→sign
+      const cancelled = task.orderStatus === 'CANCELLED';
+      const overdue =
+        !cancelled &&
+        task.taskType === 'delivery' &&
+        computeDeadline(task.estimatedArrival)?.overdue === true;
+      if (cancelled || overdue) {
+        map.set(task.id, () =>
+          setIssueTarget({
+            taskId: task.id,
+            reasons: cancelled ? ['ORDER_CANCELLED'] : ['DEADLINE_OVERDUE_RETURN'],
+            noteRequired: !cancelled,
+          }),
+        );
+        continue;
+      }
       const action = getTaskAction(task);
       map.set(task.id, () => action && router.push(`/task/${task.id}/${action.target}`));
     }
     return map;
   }, [router, taskLists.available, taskLists.pickups, taskLists.deliveries]);
+  // ⚠️ deps 不含 t/language：issueMode 判定只用 computeDeadline（纯函数），文案在
+  //   props map 层（deps 已含 language）取——保持 onAction 引用稳定（C-P2-5 memo 契约）。
 
   const renderNewTask = useCallback(
     (task: DeliveryTask) => {
@@ -573,6 +649,28 @@ export default function TasksPage() {
     );
   };
 
+  // F3/§4：上报异常提交（在线直调；离线由 useReportIssue 入队，成功 toast 由 mutationFn resolve 后区分）
+  const handleReportIssueSubmit = async (body: {
+    reason: ReportIssueReason;
+    note?: string;
+    evidenceUrls?: string[];
+  }) => {
+    if (!issueTarget) return;
+    try {
+      const res = await reportIssue.mutateAsync({ taskId: issueTarget.taskId, body });
+      if (!res) {
+        // 离线入队成功（mutationFn 返回 null）
+        showToast(t('tasks.issue.offlineSaved'), 'info');
+      } else {
+        // 在线成功：ticketNo 回显（D20 响应增量字段）
+        showToast(t('tasks.issue.success', { ticketNo: res.ticketNo ?? '' }), 'success');
+      }
+      setIssueTarget(null);
+    } catch {
+      showToast(t('tasks.issue.failed'), 'error');
+    }
+  };
+
   return (
     <View className="flex-1 bg-background">
       <TaskDetailHeader
@@ -650,6 +748,15 @@ export default function TasksPage() {
         backdropCloseLabel={t('common.close')}
         onCancel={() => setBlockVisible(false)}
         onOk={() => setBlockVisible(false)}
+      />
+      {/* F3/§4：上报异常弹层（reason 子集/note 必填由 issueTarget 圈定） */}
+      <ReportIssueDialog
+        noteRequired={issueTarget?.noteRequired ?? false}
+        reasons={issueTarget?.reasons ?? ['ORDER_CANCELLED']}
+        submitting={reportIssue.isPending}
+        visible={issueTarget !== null}
+        onDismiss={() => setIssueTarget(null)}
+        onSubmit={(body) => void handleReportIssueSubmit(body)}
       />
     </View>
   );

@@ -55,11 +55,16 @@ export default function TaskNavigatePage() {
   // T4 §7.1 拍板 A：守卫读顶层 task（loading 期 data=undefined->null->守卫 return，数据到达 re-run）
   useEffect(() => {
     if (!task) return;
+    // F5（20261117 立项）：订单已取消 → toast 指引上报异常（不硬拦——骑手可能
+    // 仍需看地址返仓；守卫逻辑不变，PICKED_UP/DELIVERING 仍可停留）
+    if (task.orderStatus === 'CANCELLED') {
+      showToast(t('tasks.cancelledOrderToast'), 'info');
+    }
     const allowed = task.status === 'PICKED_UP' || task.status === 'DELIVERING';
     if (!allowed) {
       router.replace(`/task/${id}`);
     }
-  }, [task, id, router]);
+  }, [task, id, router, t]);
 
   // B1 → 20261116 拍板：所有任务 PICKED_UP 一律先 startDelivering 进 DELIVERING，再跳 sign
   // DELIVERING（return 任务或已开始配送的普通单）：直接跳 sign
