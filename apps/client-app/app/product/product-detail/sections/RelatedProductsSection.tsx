@@ -54,7 +54,15 @@ export function RelatedProductsSection({
                 accessibilityRole="button"
                 accessibilityLabel={t('product.viewItem', { name: localize(p.name) })}
               >
-                <View style={[styles.relatedImage, { backgroundColor: colors['surface-variant'] }]}>
+                <View
+                  style={[
+                    styles.relatedImage,
+                    {
+                      // Why: 20261118 图片占位白底（B1 口径，原 surface-variant 粉底显脏）
+                      backgroundColor: colors['surface-container-lowest'],
+                    },
+                  ]}
+                >
                   <SafeImage source={{ uri: p.image }} style={styles.relatedImg} />
                 </View>
                 <View style={styles.relatedInfo}>
@@ -125,7 +133,15 @@ export function RelatedProductsSection({
               accessibilityRole="button"
               accessibilityLabel={t('product.viewItem', { name: localize(p.name) })}
             >
-              <View style={[styles.relatedImage, { backgroundColor: colors['surface-variant'] }]}>
+              <View
+                style={[
+                  styles.relatedImage,
+                  {
+                    // Why: 20261118 图片占位白底（B1 口径，原 surface-variant 粉底显脏）
+                    backgroundColor: colors['surface-container-lowest'],
+                  },
+                ]}
+              >
                 <SafeImage source={{ uri: p.image }} style={styles.relatedImg} />
               </View>
               <View style={styles.relatedInfo}>

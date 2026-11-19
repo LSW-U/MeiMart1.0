@@ -16,7 +16,14 @@ export function Carousel({
 }) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.carousel, { backgroundColor: colors['surface-variant'], paddingTop: 0 }]}>
+    <View
+      style={[
+        styles.carousel,
+        // Why: 20261118 图片占位白底（对齐 tracking B1 口径）——原 surface-variant #fae8e6
+        //   粉底比暖粉更重视觉显脏；dark 下 surface-container-lowest 是近黑，同为占位安全色
+        { backgroundColor: colors['surface-container-lowest'], paddingTop: 0 },
+      ]}
+    >
       <ScrollView
         horizontal
         pagingEnabled

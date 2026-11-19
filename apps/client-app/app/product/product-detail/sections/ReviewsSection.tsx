@@ -243,7 +243,7 @@ export function ReviewCard({
             <SafeImage
               key={idx}
               source={{ uri }}
-              style={[styles.reviewImage, { backgroundColor: colors['surface-variant'] }]}
+              style={[styles.reviewImage, { backgroundColor: colors['surface-container-lowest'] }]}
             />
           ))}
         </View>
