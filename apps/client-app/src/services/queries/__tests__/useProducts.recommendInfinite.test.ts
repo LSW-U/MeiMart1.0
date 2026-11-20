@@ -97,9 +97,13 @@ describe('useRecommendationsInfinite — 追加式真分页', () => {
     mockGetRecommendations.mockResolvedValueOnce(makePage(0, 6)).mockResolvedValueOnce([]);
     const qc = createTestQueryClient();
     const { result } = renderHookWithClient(() => useRecommendationsInfinite({ limit: 6 }), qc);
+    // 20261121 CI flaky 修复：先等首屏 success 再翻页——否则 fetchNextPage 与首屏请求
+    //   并发抢 mock 队列，hasNextPage 断言读的是翻页前旧值（--ci 调度时序下实证，本地常绿）
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
     await act(async () => {
       await result.current.fetchNextPage();
     });
+    await waitFor(() => expect(result.current.hasNextPage).toBe(false));
     expect(result.current.hasNextPage).toBe(false);
   });
 
