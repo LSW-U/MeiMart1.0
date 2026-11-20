@@ -349,8 +349,21 @@ describe('F2/§4（20261117 立项）：CANCELLED 订单卡片红 badge + 上报
     mockTabParam = 'pickups';
     try {
       renderPage();
-      expect(screen.getByText('订单已取消')).toBeTruthy(); // tasks.orderCancelledBadge（TaskCard cancelledNote 红徽）
-      expect(screen.getByText('上报异常')).toBeTruthy(); // issueMode actionLabel
+      // 假绿门禁补强（20261121 CI gate-fake-green 拦截）：断言从 toBeTruthy 升级为
+      // 文案 + 容器 class 双重负向校验——红徽必须挂在 error 色容器上（text-error），
+      // 防止任意文本命中即假绿；上报异常按钮同时断言 role=button（可点实体非死文本）
+      // TaskCard L228-229：badge 容器 class 含 text-error（红徽）——沿 deposit.test.tsx
+      //   data-rn-host + data-prop-className 取证模式断言负向配色，非任意文本命中
+      const cancelledBadge = screen.getByText('订单已取消'); // tasks.orderCancelledBadge
+      expect(cancelledBadge).toBeTruthy();
+      expect(
+        cancelledBadge.closest('[data-rn-host="Text"]')?.getAttribute('data-prop-className'),
+      ).toContain('text-error');
+      // Button 壳 Pressable accessibilityRole=button——mock 壳不产 role attr，
+      //   走 data-rn-host="Pressable" host 断言（可点实体非死文本）
+      const issueBtn = screen.getByText('上报异常'); // issueMode actionLabel
+      expect(issueBtn).toBeTruthy();
+      expect(issueBtn.closest('[data-rn-host="Pressable"]')).not.toBeNull();
     } finally {
       mockTaskListsState = { available: [], pickups: [], deliveries: [] };
       mockTabParam = undefined;
