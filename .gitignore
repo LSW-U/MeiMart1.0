@@ -35,3 +35,6 @@ npm-debug.log*
 
 # WorkBuddy tool runtime data
 .workbuddy/
+
+# R2 卫生收口（20261121）：数据清理导出目录（含 PII CSV）防误提交
+日志/
